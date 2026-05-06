@@ -12,6 +12,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -420,6 +421,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy) {
 		delegate.applyTemporalTableStrategy( strategy );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyAuditStrategy(AuditStrategy strategy) {
+		delegate.applyAuditStrategy( strategy );
 		return getThis();
 	}
 

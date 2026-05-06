@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.audit.AuditException;
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.audit.spi.AuditWriter;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -39,6 +40,7 @@ import org.hibernate.sql.model.internal.MutationGroupSingle;
 import org.hibernate.sql.model.internal.MutationGroupStandard;
 
 import static org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.getPropertiesToInsert;
+import static org.hibernate.audit.AuditStrategy.VALIDITY;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -55,6 +57,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 	protected final BasicBatchKey auditBatchKey;
 	private final boolean useServerTransactionTimestamps;
 	private final String currentTimestampFunctionName;
+	private final AuditStrategy auditStrategy;
 	private final MutationOperationGroup staticAuditInsertGroup;
 	private final MutationOperationGroup transactionEndUpdateGroup;
 
@@ -72,11 +75,12 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 		this.useServerTransactionTimestamps =
 				factory.getChangesetCoordinator().useServerTimestamp( dialect() );
 		this.currentTimestampFunctionName = useServerTransactionTimestamps ? dialect().currentTimestamp() : null;
+		this.auditStrategy = factory.getSessionFactoryOptions().getAuditStrategy();
 		this.auditBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_INSERT" );
 		this.staticAuditInsertGroup = entityPersister.isDynamicInsert()
 				? null
 				: buildAuditInsertGroup( applyAuditMask( entityPersister.getPropertyInsertability() ), null, null );
-		this.transactionEndUpdateGroup = buildTransactionEndUpdateGroup();
+		this.transactionEndUpdateGroup = auditStrategy == VALIDITY ? buildTransactionEndUpdateGroup() : null;
 	}
 
 	private EntityTableMapping[] buildAuditTableMappings(EntityPersister persister, AuditMapping auditMapping) {

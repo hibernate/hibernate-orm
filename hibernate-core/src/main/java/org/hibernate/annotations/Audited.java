@@ -46,13 +46,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * increasing changeset id. Changeset ids can be supplied in
  * two ways:
  * <ul>
- * <li>A {@link Changelog @Changelog} may be
- *     defined in the domain model. An instance is
- *     automatically persisted once per transaction, and its
- *     generated primary key serves as the changeset id.
- *     A changelog entity will also carry metadata such as its
- *     creation timestamp and, optionally, additional information
- *     such as the current user or a comment.
+ * <li>A {@link Changelog @Changelog} entity may be defined in
+ *     the domain model. A new instance is automatically persisted
+ *     once per transaction, and its generated primary key serves
+ *     as the changeset id. A changelog entity also carries
+ *     metadata such as its creation timestamp and, optionally,
+ *     additional information such as the current user or a
+ *     comment.
  * <li>A custom
  *     {@link org.hibernate.temporal.spi.ChangesetIdentifierSupplier}
  *     may be specified via the configuration property
@@ -174,8 +174,9 @@ public @interface Audited {
 		 * The name of the column holding the identifier of
 		 * the changeset which invalidates an audit row when the
 		 * {@linkplain StateManagementSettings#AUDIT_STRATEGY
-		 * audit strategy} is set to {@code "validity"}. When
-		 * a new audit row is written, the previous row's
+		 * audit strategy} is set to
+		 * {@link org.hibernate.audit.AuditStrategy#VALIDITY}.
+		 * When a new audit row is written, the previous row's
 		 * invalidating changeset id column is updated with the
 		 * current changeset id, marking it as superseded. A
 		 * {@code null} value indicates the row is current
@@ -188,8 +189,9 @@ public @interface Audited {
 		 * The name of the column holding the timestamp of the
 		 * instant at which an audit row was superseded when the
 		 * {@linkplain StateManagementSettings#AUDIT_STRATEGY
-		 * audit strategy} is set to {@code "validity"} and this
-		 * attribute is set to a non-empty value.
+		 * audit strategy} is set to
+		 * {@link org.hibernate.audit.AuditStrategy#VALIDITY}
+		 * and this attribute is set to a nonempty value.
 		 */
 		String invalidationTimestampColumn() default "";
 	}

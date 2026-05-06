@@ -30,6 +30,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.MultiTenancy;
@@ -89,6 +90,7 @@ import jakarta.persistence.criteria.Nulls;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
+import static org.hibernate.boot.model.internal.AuditHelper.determineAuditStrategy;
 import static org.hibernate.cfg.AvailableSettings.*;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
@@ -166,6 +168,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
 	private TemporalTableStrategy temporalTableStrategy;
+	private AuditStrategy auditStrategy;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
@@ -378,6 +381,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		if ( temporalTableStrategy == TemporalTableStrategy.AUTO ) {
 			temporalTableStrategy = dialect.getTemporalTableSupport().getDefaultTemporalTableStrategy();
 		}
+		auditStrategy = determineAuditStrategy( settings );
 
 		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
 		currentTenantIdentifierResolver = MultiTenancy.getTenantIdentifierResolver( settings, serviceRegistry );
@@ -1162,6 +1166,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return temporalTableStrategy;
 	}
 
+	@Override
+	public AuditStrategy getAuditStrategy() {
+		return auditStrategy;
+	}
+
 	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return tempTableDdlTransactionHandling;
@@ -1633,6 +1642,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyTemporalTableStrategy(TemporalTableStrategy strategy) {
 		this.temporalTableStrategy = strategy;
+	}
+
+	public void applyAuditStrategy(AuditStrategy strategy) {
+		this.auditStrategy = strategy;
 	}
 
 	@Deprecated(forRemoval = true)

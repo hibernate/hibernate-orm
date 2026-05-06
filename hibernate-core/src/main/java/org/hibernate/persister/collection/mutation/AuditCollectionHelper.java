@@ -7,6 +7,7 @@ package org.hibernate.persister.collection.mutation;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -19,6 +20,7 @@ import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 
+import static org.hibernate.audit.AuditStrategy.VALIDITY;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -31,6 +33,7 @@ public final class AuditCollectionHelper {
 	private final SelectableMapping changesetIdMapping;
 	private final SelectableMapping modificationTypeMapping;
 	private final SelectableMapping transactionEndMapping;
+	private final AuditStrategy auditStrategy;
 	private final boolean useServerTransactionTimestamps;
 	private final String currentTimestampFunctionName;
 	private final boolean[] indexColumnIsSettable;
@@ -61,6 +64,7 @@ public final class AuditCollectionHelper {
 		this.changesetIdMapping = auditMapping.getChangesetIdMapping( collectionTableName );
 		this.modificationTypeMapping = auditMapping.getModificationTypeMapping( collectionTableName );
 		this.transactionEndMapping = auditMapping.getInvalidatingChangesetIdMapping( collectionTableName );
+		this.auditStrategy = sessionFactory.getSessionFactoryOptions().getAuditStrategy();
 
 		final var dialect = sessionFactory.getJdbcServices().getDialect();
 		this.useServerTransactionTimestamps =
@@ -99,7 +103,7 @@ public final class AuditCollectionHelper {
 	}
 
 	MutationOperationGroup getTransactionEndUpdateGroup() {
-		if ( transactionEndUpdateGroup == null && transactionEndMapping != null ) {
+		if ( transactionEndUpdateGroup == null && auditStrategy == VALIDITY && transactionEndMapping != null ) {
 			transactionEndUpdateGroup = buildTransactionEndUpdateGroup();
 		}
 		return transactionEndUpdateGroup;

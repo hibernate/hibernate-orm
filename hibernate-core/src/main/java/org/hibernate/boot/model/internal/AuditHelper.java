@@ -16,14 +16,13 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Changelog;
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.audit.ChangesetListener;
 import org.hibernate.audit.spi.ChangelogSupplier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.AuxiliaryTableHolder;
 import org.hibernate.mapping.Backref;
@@ -51,6 +50,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static org.hibernate.annotations.Audited.Table.DEFAULT_CHANGESET_ID_COLUMN_NAME;
 import static org.hibernate.annotations.Audited.Table.DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME;
 import static org.hibernate.annotations.Audited.Table.DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
+import static org.hibernate.audit.AuditStrategy.VALIDITY;
+import static org.hibernate.cfg.StateManagementSettings.AUDIT_STRATEGY;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 
@@ -685,10 +686,7 @@ public final class AuditHelper {
 	}
 
 	private static boolean isValidityStrategy(MetadataBuildingContext context) {
-		final var value = context.getBootstrapContext().getServiceRegistry()
-				.requireService( ConfigurationService.class )
-				.getSetting( StateManagementSettings.AUDIT_STRATEGY, String.class, "default" );
-		return "validity".equalsIgnoreCase( value );
+		return context.getAuditStrategy() == VALIDITY;
 	}
 
 	private static void addTransactionEndColumns(
@@ -844,5 +842,20 @@ public final class AuditHelper {
 					&& persister.isPropertyAuditedExcluded( attr.getStateArrayPosition() );
 		}
 		return false;
+	}
+
+	public static AuditStrategy determineAuditStrategy(Map<String, Object> configurationSettings) {
+		final Object setting = configurationSettings.get( AUDIT_STRATEGY );
+		if ( setting instanceof AuditStrategy auditStrategy ) {
+			return auditStrategy;
+		}
+		else if ( setting instanceof String string ) {
+			for ( var strategy : AuditStrategy.values() ) {
+				if ( strategy.name().equalsIgnoreCase( string ) ) {
+					return strategy;
+				}
+			}
+		}
+		return AuditStrategy.DEFAULT;
 	}
 }

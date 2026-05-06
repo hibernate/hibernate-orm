@@ -23,6 +23,7 @@
  *
  * @see org.hibernate.annotations.Audited
  * @see org.hibernate.annotations.Changelog
+ * @see org.hibernate.audit.AuditStrategy
  * @see org.hibernate.audit.AuditLog
  * @see org.hibernate.audit.AuditLogFactory
  */

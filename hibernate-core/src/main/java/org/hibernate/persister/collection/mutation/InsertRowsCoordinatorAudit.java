@@ -208,17 +208,6 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 						ParameterUsage.SET
 				);
 
-				// SET REVEND_TSTMP = :tstmp (if configured)
-				final var revEndTsMapping = auditMapping.getInvalidationTimestampMapping( collectionTableName );
-				if ( revEndTsMapping != null ) {
-					jdbcValueBindings.bindValue(
-							java.time.Instant.now(),
-							tableName,
-							revEndTsMapping.getSelectionExpression(),
-							ParameterUsage.SET
-					);
-				}
-
 				// WHERE: bind key + index/element columns (same as INSERT but RESTRICT)
 				bindings.bindRestrictValues(
 						collection,

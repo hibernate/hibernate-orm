@@ -184,16 +184,6 @@ public @interface Audited {
 		 */
 		String invalidatingChangesetIdColumn()
 				default DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME;
-
-		/**
-		 * The name of the column holding the timestamp of the
-		 * instant at which an audit row was superseded when the
-		 * {@linkplain StateManagementSettings#AUDIT_STRATEGY
-		 * audit strategy} is set to
-		 * {@link org.hibernate.audit.AuditStrategy#VALIDITY}
-		 * and this attribute is set to a nonempty value.
-		 */
-		String invalidationTimestampColumn() default "";
 	}
 
 	/**

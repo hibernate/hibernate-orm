@@ -165,13 +165,6 @@ public final class AuditCollectionHelper {
 			updateBuilder.addValueColumn( "?", transactionEndMapping );
 		}
 
-		// SET REVEND_TSTMP = ? (if configured)
-		final var revEndTsMapping = mutationTarget.getTargetPart().getAuditMapping()
-				.getInvalidationTimestampMapping( mutationTarget.getCollectionTableMapping().getTableName() );
-		if ( revEndTsMapping != null ) {
-			updateBuilder.addValueColumn( "?", revEndTsMapping );
-		}
-
 		// WHERE: same identity columns as the INSERT (key + index/identifier + element)
 		attributeMapping.getKeyDescriptor()
 				.getKeyPart()

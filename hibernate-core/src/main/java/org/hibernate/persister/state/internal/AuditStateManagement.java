@@ -50,7 +50,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.boot.model.internal.AuditHelper.MODIFICATION_TYPE;
 import static org.hibernate.boot.model.internal.AuditHelper.INVALIDATING_CHANGESET_ID;
-import static org.hibernate.boot.model.internal.AuditHelper.INVALIDATION_TIMESTAMP;
 import static org.hibernate.boot.model.internal.AuditHelper.CHANGESET_ID;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.resolveMutationTarget;
@@ -191,9 +190,6 @@ public class AuditStateManagement implements StateManagement {
 			if ( rootInfo.invalidatingChangesetMapping() != null ) {
 				extras.add( rootInfo.invalidatingChangesetMapping().getSelectionExpression() );
 			}
-			if ( rootInfo.invalidationTimestampMapping() != null ) {
-				extras.add( rootInfo.invalidationTimestampMapping().getSelectionExpression() );
-			}
 			extraColumns = extras;
 		}
 		else {
@@ -268,8 +264,7 @@ public class AuditStateManagement implements StateManagement {
 						auditSubquery,
 						rootInfo.changesetIdMapping(),
 						rootInfo.modificationTypeMapping(),
-						rootInfo.invalidatingChangesetMapping(),
-						rootInfo.invalidationTimestampMapping()
+						rootInfo.invalidatingChangesetMapping()
 				)
 		);
 	}
@@ -317,12 +312,6 @@ public class AuditStateManagement implements StateManagement {
 						auditTableName,
 						holder.getAuxiliaryColumn( INVALIDATING_CHANGESET_ID ),
 						csIdJdbcMapping,
-						creationProcess
-				),
-				toSelectableMapping(
-						auditTableName,
-						holder.getAuxiliaryColumn( INVALIDATION_TIMESTAMP ),
-						resolveJdbcMapping( typeConfiguration, java.time.Instant.class ),
 						creationProcess
 				)
 		);

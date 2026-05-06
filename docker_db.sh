@@ -845,12 +845,18 @@ EOF
 ###############################################################################
 
 cockroachdb() {
-  cockroachdb_25_4
+  cockroachdb_26_1
+}
+
+cockroachdb_26_1() {
+  compose_down "latest/cockroachdb/docker-compose.yaml" "cockroach"
+  compose_up "latest/cockroachdb/docker-compose.yaml"
+  cockroachdb_post_setup
 }
 
 cockroachdb_25_4() {
-  compose_down "latest/cockroachdb/docker-compose.yaml" "cockroach"
-  compose_up "latest/cockroachdb/docker-compose.yaml"
+  compose_down "versioned/cockroachdb-25.4/docker-compose.yaml" "cockroach"
+  compose_up "versioned/cockroachdb-25.4/docker-compose.yaml"
   cockroachdb_post_setup
 }
 
@@ -1097,6 +1103,7 @@ if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
     echo -e "\tcockroachdb"
+    echo -e "\tcockroachdb_26_1"
     echo -e "\tcockroachdb_25_4"
     echo -e "\tcockroachdb_24_3"
     echo -e "\tcockroachdb_24_1"

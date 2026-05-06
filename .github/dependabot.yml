@@ -158,11 +158,25 @@ updates:
       - dependency-name: "org.slf4j:*"
         update-types: ["version-update:semver-major"]
   # Monitor docker images in compose files for database version updates
-  - package-ecosystem: docker
-    directory: "/docker-compose/latest"
+  - package-ecosystem: docker-compose
+    directories:
+      - "/docker-compose/latest/cockroachdb"
+      - "/docker-compose/latest/db2"
+      - "/docker-compose/latest/db2_spatial"
+      - "/docker-compose/latest/edb"
+      - "/docker-compose/latest/gaussdb"
+      - "/docker-compose/latest/hana"
+      - "/docker-compose/latest/informix"
+      - "/docker-compose/latest/mariadb"
+      - "/docker-compose/latest/mssql"
+      - "/docker-compose/latest/mysql"
+      - "/docker-compose/latest/oracle"
+      - "/docker-compose/latest/postgresql"
+      - "/docker-compose/latest/spanner"
+      - "/docker-compose/latest/sybase"
+      - "/docker-compose/latest/tidb"
     schedule:
       interval: monthly
-    open-pull-requests-limit: 10
     groups:
       database-images:
         patterns:

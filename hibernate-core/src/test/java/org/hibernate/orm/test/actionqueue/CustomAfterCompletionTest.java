@@ -4,14 +4,20 @@
  */
 package org.hibernate.orm.test.actionqueue;
 
+import java.sql.Connection;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.HibernateException;
+import org.hibernate.TransactionException;
 
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,6 +30,9 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DomainModel(annotatedClasses = {CustomAfterCompletionTest.SimpleEntity.class})
 @SessionFactory
@@ -81,6 +90,33 @@ public class CustomAfterCompletionTest {
 					.uniqueResult();
 			assertEquals( 1L, count );
 		} );
+	}
+
+	@Test
+	public void callbackRunsOnJdbcCommitFailure(SessionFactoryScope scope) {
+		class Work implements Consumer<SessionImplementor> {
+			Boolean successful;
+			TransactionStatus status;
+			@Override
+			public void accept(SessionImplementor session) {
+				session.unwrap( EventSource.class ).getActionQueue()
+						.registerCallback( (success, s) -> successful = success );
+
+				var transaction = session.beginTransaction();
+				transaction.runAfterCompletion( status -> this.status = status );
+				session.doWork( Connection::close );
+
+				var exception = assertThrows( TransactionException.class, transaction::commit );
+				assertThat( exception.getMessage(),
+						containsString( "Unable to commit against JDBC Connection" ) );
+
+				assertNotNull( successful );
+				assertFalse( successful );
+				assertNotNull( status );
+				assertEquals( TransactionStatus.ROLLED_BACK, status );
+			}
+		}
+		scope.inSession( new Work() );
 	}
 
 	@Entity(name = "SimpleEntity")

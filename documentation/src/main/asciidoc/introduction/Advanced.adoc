@@ -239,7 +239,7 @@ class Document {
 ----
 
 By default, a session or stateless session reads the currently effective version of any temporal entity.
-To read historical versions effective at a given instant, we must specify the instant set when creating the session or stateless session.
+To read historical versions effective at a given instant, we must specify the instant when creating the session or stateless session.
 
 [source,java]
 ----
@@ -249,11 +249,12 @@ try (var session = factory.withOptions().asOf(instant).open()) {
             // read the version of the document
             // effective at the specified instant
             session.find(Document.class, documentId);
+    ...
 }
 ----
 
-A temporal entity tracks its state as it changes over time, but it doesn't keep any record of the _changes themselves_.
-For this we must use need an audit log.
+A temporal entity tracks its state as it changes over time, but it doesn't keep any record of the _changes themselves_, nor about how modifications to the temporal entity relate to other modifications as part of a _changeset_ involving multiple entities.
+For this we need an audit log.
 
 [[audit-logs]]
 === Audit logs
@@ -308,7 +309,7 @@ The functionality provided by the `@Audited` annotation is completely new, but i
 To make use of audited entities, we need a source of changeset ids.
 There are two approaches we could take:
 
-1. create an entity class which holds information about each changeset, and annotate it link:{doc-javadoc-url}org/hibernate/annotations/Changelog.html[`Changelog`] or,
+1. create an entity class which holds information about each changeset, and annotate it link:{doc-javadoc-url}org/hibernate/annotations/Changelog.html[`@Changelog`] or,
 2. supply our own custom implementation of link:{doc-javadoc-url}org/hibernate/temporal/spi/ChangesetIdentifierSupplier.html[`ChangesetIdentifierSupplier`] to assign changeset ids to transactions.
 
 With the first (recommended) approach, Hibernate automatically persists a new instance of the `@Changelog` entity in each transaction, using the `@ChangesetId` field--typically the generated identifier of the entity--as the changeset id.
@@ -340,7 +341,7 @@ For those familiar with Envers, the changelog entity fills the role of the Enver
 |===
 | Configuration property name           | Purpose
 
-| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#TRANSACTION_ID_SUPPLIER[`hibernate.temporal.changeset_id_supplier`] | Specify a custom `ChangesetIdentifierSupplier`
+| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#CHANGESET_ID_SUPPLIER[`hibernate.temporal.changeset_id_supplier`] | Specify a custom `ChangesetIdentifierSupplier`
 | link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#AUDIT_STRATEGY[`hibernate.audit.strategy`]  | Specifies whether there is a column holding the id of the changeset which superseded a revision
 |===
 
@@ -366,7 +367,7 @@ try (var auditLog = AuditLogFactory.create(factory)) {
     for (var changesetId : auditLog.getChangesets(Document.class, documentId)) {
         // iterate over the changesets which modified the given document
         try (var session = factory.withOptions().atChangeset(changesetId).open()) {
-            // ...
+             ...
         }
     }
 }

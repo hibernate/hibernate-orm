@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.Set;
 
 import org.hibernate.annotations.Audited;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditException;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.ChangesetListener;
@@ -32,33 +32,33 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test demonstrating {@link ChangesetEntity @ChangesetEntity}
+ * Test demonstrating {@link Changelog @Changelog}
  * auto-detection with a custom changeset entity and
  * {@link ChangesetListener}.
  */
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		AuditChangesetEntityTest.MyEntity.class,
-		AuditChangesetEntityTest.RevisionInfo.class
+		AuditChangelogTest.MyEntity.class,
+		AuditChangelogTest.RevisionInfo.class
 })
-class AuditChangesetEntityTest {
+class AuditChangelogTest {
 
 	/**
 	 * Custom changeset entity with a {@link ChangesetListener}
 	 * that populates the {@code username} field.
 	 */
-	@ChangesetEntity(listener = UsernameChangesetListener.class)
+	@Changelog(listener = UsernameChangesetListener.class)
 	@Entity(name = "RevisionInfo")
 	@Table(name = "REVINFO")
 	static class RevisionInfo {
 		@Id
 		@GeneratedValue
-		@ChangesetEntity.ChangesetId
+		@Changelog.ChangesetId
 		@Column(name = "REV")
 		int id;
 
-		@ChangesetEntity.Timestamp
+		@Changelog.Timestamp
 		@Column(name = "REVTSTMP")
 		Instant timestamp = Instant.now();
 
@@ -82,7 +82,7 @@ class AuditChangesetEntityTest {
 	}
 
 	@Test
-	void testChangesetEntitySupplier(SessionFactoryScope scope) {
+	void testChangelogSupplier(SessionFactoryScope scope) {
 		// Create
 		scope.getSessionFactory().inTransaction( session -> {
 			final var entity = new MyEntity();

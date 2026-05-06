@@ -5,25 +5,25 @@
 package org.hibernate.audit;
 
 
+import org.hibernate.annotations.Changelog;
+
 /**
  * A callback invoked when a new
- * {@linkplain org.hibernate.annotations.ChangesetEntity
- * changeset entity} is created, allowing the application to
+ * {@linkplain Changelog
+ * changelog entity} is created, allowing the application to
  * populate custom fields such as the current user or a comment.
  *
- * @see org.hibernate.annotations.ChangesetEntity
- *
  * @author Marco Belladelli
+ * @see Changelog
  * @since 7.4
  */
 public interface ChangesetListener {
 	/**
-	 * Called when a new changeset entity is created, before it
-	 * is persisted. The implementation should set any custom
-	 * properties on the changeset entity.
+	 * Called when a new changelog entity is created, before
+	 * it is persisted. The implementation should set any
+	 * custom properties on the changelog entity.
 	 *
-	 * @param changesetEntity the new instance of the changeset
-	 *                        entity
+	 * @param changelog the new changelog entity instance
 	 */
-	void newChangeset(Object changesetEntity);
+	void newChangeset(Object changelog);
 }

@@ -10,7 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Audited;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -23,29 +23,29 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * Tests that {@link ChangesetEntity @ChangesetEntity} auto-detection
+ * Tests that {@link Changelog @Changelog} auto-detection
  * works without an explicit {@code hibernate.temporal.changeset_id_supplier}
  * setting.
  */
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		ChangesetEntityAnnotationTest.Book.class,
-		ChangesetEntityAnnotationTest.MyRevisionInfo.class
+		ChangelogAnnotationTest.Book.class,
+		ChangelogAnnotationTest.MyRevisionInfo.class
 })
-class ChangesetEntityAnnotationTest {
+class ChangelogAnnotationTest {
 
-	@ChangesetEntity
+	@Changelog
 	@Entity(name = "MyRevisionInfo")
 	@Table(name = "REVINFO")
 	static class MyRevisionInfo {
 		@Id
 		@GeneratedValue
-		@ChangesetEntity.ChangesetId
+		@Changelog.ChangesetId
 		@Column(name = "REV")
 		int id;
 
-		@ChangesetEntity.Timestamp
+		@Changelog.Timestamp
 		@Column(name = "REVTSTMP")
 		long timestamp;
 	}
@@ -59,7 +59,7 @@ class ChangesetEntityAnnotationTest {
 	}
 
 	@Test
-	void testAutoDetectedChangesetEntity(SessionFactoryScope scope) {
+	void testAutoDetectedChangelog(SessionFactoryScope scope) {
 		// Create
 		scope.getSessionFactory().inTransaction( session -> {
 			final var book = new Book();
@@ -113,7 +113,7 @@ class ChangesetEntityAnnotationTest {
 	}
 
 	@Test
-	void testGetHistoryWithAutoDetectedChangesetEntity(SessionFactoryScope scope) {
+	void testGetHistoryWithAutoDetectedChangelog(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction( session -> {
 			final var book = new Book();
 			book.id = 2L;

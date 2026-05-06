@@ -18,8 +18,13 @@ package org.hibernate.query;
  * @see org.hibernate.annotations.NamedQuery#flush
  * @see org.hibernate.annotations.NamedNativeQuery#flush
  *
+ * @deprecated Starting in 4.0, Jakarta Persistence defines its owm
+ * {@code jakarta.persistence.QueryFlushMode} with the same name, values
+ * and intent as this one.
+ *
  * @author Gavin King
  */
+@Deprecated(since = "7.4", forRemoval = true)
 public enum QueryFlushMode {
 	/**
 	 * Flush before executing the query.

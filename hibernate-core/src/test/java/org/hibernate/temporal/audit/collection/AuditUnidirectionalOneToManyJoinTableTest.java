@@ -141,10 +141,10 @@ class AuditUnidirectionalOneToManyJoinTableTest {
 	void testWriteSide(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// Team: ADD + 2 collection changes + DEL = 4 revisions
-			assertEquals( 4, auditLog.getRevisions( Team.class, 1L ).size(),
+			assertEquals( 4, auditLog.getChangesets( Team.class, 1L ).size(),
 					"Team should have 4 revisions (ADD + 2 collection changes + DEL)" );
-			assertEquals( 1, auditLog.getRevisions( Player.class, 1L ).size() );
-			assertEquals( 1, auditLog.getRevisions( Player.class, 2L ).size() );
+			assertEquals( 1, auditLog.getChangesets( Player.class, 1L ).size() );
+			assertEquals( 1, auditLog.getChangesets( Player.class, 2L ).size() );
 		}
 	}
 
@@ -200,7 +200,7 @@ class AuditUnidirectionalOneToManyJoinTableTest {
 
 		// Team: ADD + recreate = 2 revisions (not more)
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertEquals( 2, auditLog.getRevisions( Team.class, 10L ).size(),
+			assertEquals( 2, auditLog.getChangesets( Team.class, 10L ).size(),
 					"Team should have exactly 2 revisions (ADD + recreate)" );
 		}
 

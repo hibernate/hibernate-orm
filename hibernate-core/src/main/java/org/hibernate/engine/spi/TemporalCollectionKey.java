@@ -11,9 +11,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A {@link CollectionKey} for a temporal (historical) snapshot of a collection,
- * loaded from an audit table at a specific transaction identifier.
+ * loaded from an audit table at a specific changeset identifier.
  * <p>
- * The transaction identifier is included in {@code equals()}/{@code hashCode()}
+ * The changeset identifier is included in {@code equals()}/{@code hashCode()}
  * so that the persistence context naturally isolates collections at different
  * points in time.
  *
@@ -22,24 +22,24 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @since 7.4
  */
 public final class TemporalCollectionKey extends CollectionKey {
-	private final Object txId;
+	private final Object changesetId;
 
 	/**
 	 * Construct a unique identifier for a temporal snapshot of a collection.
 	 *
 	 * @param persister The collection persister
 	 * @param key The collection key (owner FK)
-	 * @param txId The audit transaction identifier (must not be null)
+	 * @param changesetId The changeset identifier (must not be null)
 	 */
-	public TemporalCollectionKey(CollectionPersister persister, Object key, Object txId) {
+	public TemporalCollectionKey(CollectionPersister persister, Object key, Object changesetId) {
 		super(
 				persister.getRole(),
 				key,
 				persister.getKeyType().getTypeForEqualsHashCode(),
 				persister.getFactory(),
-				txId.hashCode()
+				changesetId.hashCode()
 		);
-		this.txId = txId;
+		this.changesetId = changesetId;
 	}
 
 	TemporalCollectionKey(
@@ -47,14 +47,14 @@ public final class TemporalCollectionKey extends CollectionKey {
 			@Nullable Object key,
 			@Nullable Type keyType,
 			SessionFactoryImplementor factory,
-			Object txId) {
-		super( role, key, keyType, factory, txId.hashCode() );
-		this.txId = txId;
+			Object changesetId) {
+		super( role, key, keyType, factory, changesetId.hashCode() );
+		this.changesetId = changesetId;
 	}
 
 	@Override
 	public Object getChangesetId() {
-		return txId;
+		return changesetId;
 	}
 
 	@Override
@@ -64,6 +64,6 @@ public final class TemporalCollectionKey extends CollectionKey {
 
 	@Override
 	public String toString() {
-		return super.toString() + "@tx" + txId;
+		return super.toString() + "@" + changesetId;
 	}
 }

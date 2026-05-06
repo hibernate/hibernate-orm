@@ -857,9 +857,9 @@ public class EntityInitializerImpl
 							discriminatorAssembler, entityDescriptor );
 			assert concreteDescriptor != null;
 		}
-		final Object txId = resolveChangesetId( data );
-		data.entityKey = txId != null
-				? new TemporalEntityKey( id, concreteDescriptor, txId )
+		final Object changesetId = resolveChangesetId( data );
+		data.entityKey = changesetId != null
+				? new TemporalEntityKey( id, concreteDescriptor, changesetId )
 				: new EntityKey( id, concreteDescriptor );
 	}
 

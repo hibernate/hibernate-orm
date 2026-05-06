@@ -151,15 +151,15 @@ class AuditBidirectionalManyToManyTest {
 	void testWriteSide(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// Owning side: ing1 at [1, 2, 3, 4, 5], ing2 at [1, 2]
-			assertEquals( 5, auditLog.getRevisions( OwningEntity.class, 3 ).size(),
+			assertEquals( 5, auditLog.getChangesets( OwningEntity.class, 3 ).size(),
 					"ing1 should have 5 revisions" );
-			assertEquals( 2, auditLog.getRevisions( OwningEntity.class, 4 ).size(),
+			assertEquals( 2, auditLog.getChangesets( OwningEntity.class, 4 ).size(),
 					"ing2 should have 2 revisions" );
 
 			// Inverse side: only ADD revisions, no MOD from relationship changes
-			assertEquals( 1, auditLog.getRevisions( OwnedEntity.class, 1 ).size(),
+			assertEquals( 1, auditLog.getChangesets( OwnedEntity.class, 1 ).size(),
 					"ed1 should have 1 revision (ADD only)" );
-			assertEquals( 1, auditLog.getRevisions( OwnedEntity.class, 2 ).size(),
+			assertEquals( 1, auditLog.getChangesets( OwnedEntity.class, 2 ).size(),
 					"ed2 should have 1 revision (ADD only)" );
 		}
 	}
@@ -220,7 +220,7 @@ class AuditBidirectionalManyToManyTest {
 
 		// Owning entity: ADD + recreate = 2 revisions (not more)
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertEquals( 2, auditLog.getRevisions( OwningEntity.class, 12 ).size(),
+			assertEquals( 2, auditLog.getChangesets( OwningEntity.class, 12 ).size(),
 					"Owning entity should have exactly 2 revisions (ADD + recreate)" );
 		}
 

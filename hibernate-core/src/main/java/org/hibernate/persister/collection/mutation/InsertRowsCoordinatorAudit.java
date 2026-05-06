@@ -190,7 +190,7 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 		);
 		try {
 			final var tableName = getAuditHelper().getAuditTableMapping().getTableName();
-			final var txId = session.getCurrentChangesetIdentifier();
+			final var changesetId = session.getCurrentChangesetIdentifier();
 			final var auditMapping = mutationTarget.getTargetPart().getAuditMapping();
 			final var collectionTableName = mutationTarget.getCollectionTableMapping().getTableName();
 			final var revEndMapping = auditMapping.getInvalidatingChangesetIdMapping( collectionTableName );
@@ -200,9 +200,9 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 			for ( var change : changes ) {
 				final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
-				// SET REVEND = :txId
+				// SET REVEND = :changesetId
 				jdbcValueBindings.bindValue(
-						txId,
+						changesetId,
 						tableName,
 						revEndMapping.getSelectionExpression(),
 						ParameterUsage.SET

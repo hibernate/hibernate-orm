@@ -136,7 +136,7 @@ class AuditChangesetEntityTest {
 
 		// Verify revision reads via atTransaction
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( MyEntity.class, 1L );
+			final var revisions = auditLog.getChangesets( MyEntity.class, 1L );
 			assertEquals( 3, revisions.size() );
 
 			final int rev1 = ( (Number) revisions.get( 0 ) ).intValue();
@@ -178,7 +178,7 @@ class AuditChangesetEntityTest {
 		);
 
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( MyEntity.class, 10L );
+			final var revisions = auditLog.getChangesets( MyEntity.class, 10L );
 			assertEquals( 2, revisions.size() );
 			final var delRevision = revisions.get( 1 );
 
@@ -220,10 +220,10 @@ class AuditChangesetEntityTest {
 		} );
 
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( MyEntity.class, 30L );
+			final var revisions = auditLog.getChangesets( MyEntity.class, 30L );
 			assertEquals( 1, revisions.size() );
 
-			final Instant timestamp = auditLog.getTransactionTimestamp( revisions.get( 0 ) );
+			final Instant timestamp = auditLog.getChangesetTimestamp( revisions.get( 0 ) );
 			assertNotNull( timestamp );
 			assertTrue( timestamp.isAfter( Instant.now().minusSeconds( 60 ) ) );
 		}
@@ -234,7 +234,7 @@ class AuditChangesetEntityTest {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			assertThrows(
 					AuditException.class,
-					() -> auditLog.getTransactionTimestamp( 999999 )
+					() -> auditLog.getChangesetTimestamp( 999999 )
 			);
 		}
 	}
@@ -280,10 +280,10 @@ class AuditChangesetEntityTest {
 		} );
 
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( MyEntity.class, 50L );
+			final var revisions = auditLog.getChangesets( MyEntity.class, 50L );
 			final var txId = revisions.get( 0 );
 
-			RevisionInfo revInfo = auditLog.findRevision( txId );
+			RevisionInfo revInfo = auditLog.findChangeset( RevisionInfo.class, txId );
 			assertNotNull( revInfo );
 			assertEquals( "test-user", revInfo.username );
 			assertNotNull( revInfo.timestamp );
@@ -295,7 +295,7 @@ class AuditChangesetEntityTest {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			assertThrows(
 					AuditException.class,
-					() -> auditLog.findRevision( 999999 )
+					() -> auditLog.findChangeset( RevisionInfo.class, 999999 )
 			);
 		}
 	}
@@ -313,10 +313,10 @@ class AuditChangesetEntityTest {
 		);
 
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( MyEntity.class, 60L );
+			final var revisions = auditLog.getChangesets( MyEntity.class, 60L );
 			assertEquals( 2, revisions.size() );
 
-			final var revMap = auditLog.<RevisionInfo>findRevisions( Set.copyOf( revisions ) );
+			final var revMap = auditLog.findChangesets( RevisionInfo.class, Set.copyOf( revisions ) );
 			assertEquals( 2, revMap.size() );
 			for ( var entry : revMap.values() ) {
 				assertEquals( "test-user", entry.username );

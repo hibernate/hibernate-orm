@@ -189,7 +189,7 @@ class AuditElementCollectionTest {
 	@Order(1)
 	void testIndexedList(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertThat( auditLog.getRevisions( ListEntity.class, 1L ) ).hasSize( 2 );
+			assertThat( auditLog.getChangesets( ListEntity.class, 1L ) ).hasSize( 2 );
 		}
 
 		// At revListCreate: [alpha, beta]
@@ -226,7 +226,7 @@ class AuditElementCollectionTest {
 	@Order(2)
 	void testStringMap(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertThat( auditLog.getRevisions( MapEntity.class, 1L ) ).hasSize( 2 );
+			assertThat( auditLog.getChangesets( MapEntity.class, 1L ) ).hasSize( 2 );
 		}
 
 		// At revMapCreate: {key1=value1, key2=value2}
@@ -272,7 +272,7 @@ class AuditElementCollectionTest {
 	@Order(3)
 	void testEmbeddableSet(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertThat( auditLog.getRevisions( EmbeddableSetEntity.class, 1L ) ).hasSize( 2 );
+			assertThat( auditLog.getChangesets( EmbeddableSetEntity.class, 1L ) ).hasSize( 2 );
 		}
 
 		// At revEmbCreate: {Alice/90, Bob/85}
@@ -309,7 +309,7 @@ class AuditElementCollectionTest {
 	@Order(4)
 	void testStringArray(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertThat( auditLog.getRevisions( ArrayEntity.class, 1L ) ).hasSize( 2 );
+			assertThat( auditLog.getChangesets( ArrayEntity.class, 1L ) ).hasSize( 2 );
 		}
 
 		// At revArrCreate: [alpha, beta]
@@ -342,7 +342,7 @@ class AuditElementCollectionTest {
 	@Order(5)
 	void testSortedSet(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertThat( auditLog.getRevisions( SortedSetEntity.class, 1L ) ).hasSize( 2 );
+			assertThat( auditLog.getChangesets( SortedSetEntity.class, 1L ) ).hasSize( 2 );
 		}
 
 		// At revSsCreate: {alpha, beta} (sorted)

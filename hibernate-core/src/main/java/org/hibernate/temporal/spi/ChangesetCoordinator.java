@@ -41,7 +41,7 @@ import org.hibernate.service.Service;
 @Incubating
 public interface ChangesetCoordinator extends Service {
 	/**
-	 * The Java type of the transaction identifiers or timestamps.
+	 * The Java type of the changeset identifiers or timestamps.
 	 */
 	Class<?> getIdentifierType();
 
@@ -66,7 +66,7 @@ public interface ChangesetCoordinator extends Service {
 	boolean useServerTimestamp(Dialect dialect);
 
 	/**
-	 * Whether the transaction identifiers are actually timestamps.
+	 * Whether the changeset identifiers are actually timestamps.
 	 */
 	boolean isIdentifierTypeInstant();
 
@@ -79,7 +79,7 @@ public interface ChangesetCoordinator extends Service {
 	 * configuration.
 	 *
 	 * @param supplier the supplier to use
-	 * @param identifierType the Java type of transaction identifiers
+	 * @param identifierType the Java type of changeset identifiers
 	 *        produced by the supplier
 	 */
 	default <T> void contributeIdentifierSupplier(ChangesetIdentifierSupplier<T> supplier, Class<T> identifierType) {

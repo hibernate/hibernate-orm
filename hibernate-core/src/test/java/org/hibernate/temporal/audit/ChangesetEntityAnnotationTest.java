@@ -82,7 +82,7 @@ class ChangesetEntityAnnotationTest {
 
 		// Verify changeset entity was auto-configured
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( Book.class, 1L );
+			final var revisions = auditLog.getChangesets( Book.class, 1L );
 			assertEquals( 3, revisions.size() );
 
 			final int rev1 = (int) revisions.get( 0 );

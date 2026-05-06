@@ -12,7 +12,7 @@ import org.hibernate.temporal.spi.ChangesetCoordinator;
 import java.util.Map;
 
 /**
- * A service that acts as a source of transaction identifiers.
+ * A service that acts as a source of changeset identifiers.
  *
  * @author Gavin King
  */

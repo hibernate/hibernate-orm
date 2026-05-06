@@ -81,7 +81,7 @@ public class TrackingModifiedEntitiesChangesetMapping extends ChangesetMapping {
 
 	@Override
 	public String toString() {
-		return "TrackingModifiedEntitiesRevisionMapping(" + super.toString()
+		return "TrackingModifiedEntitiesChangesetMapping(" + super.toString()
 			+ ", modifiedEntityNames = " + modifiedEntityNames + ")";
 	}
 }

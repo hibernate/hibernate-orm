@@ -164,14 +164,14 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 	void testWriteSide(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// Department: REV 1 (ADD) + REV 2 (collection change) + REV 3 (collection change) + REV 4 (DEL)
-			var deptRevs = auditLog.getRevisions( Department.class, 1L );
+			var deptRevs = auditLog.getChangesets( Department.class, 1L );
 			assertEquals( 4, deptRevs.size(),
 					"Department should have 4 revisions (ADD + 2 collection changes + DEL)" );
 
 			// Employees: only ADD revisions (FK changes tracked on parent side, not child)
-			assertEquals( 1, auditLog.getRevisions( Employee.class, 1L ).size(),
+			assertEquals( 1, auditLog.getChangesets( Employee.class, 1L ).size(),
 					"Employee 1 should have 1 revision (ADD only)" );
-			assertEquals( 1, auditLog.getRevisions( Employee.class, 2L ).size(),
+			assertEquals( 1, auditLog.getChangesets( Employee.class, 2L ).size(),
 					"Employee 2 should have 1 revision (ADD only)" );
 		}
 	}
@@ -231,7 +231,7 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 
 		// Department: ADD + recreate = 2 revisions (not more)
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertEquals( 2, auditLog.getRevisions( Department.class, 10L ).size(),
+			assertEquals( 2, auditLog.getChangesets( Department.class, 10L ).size(),
 					"Department should have exactly 2 revisions (ADD + recreate)" );
 		}
 
@@ -261,10 +261,10 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 
 		// Employee should have 2 revisions (ADD + MOD)
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertEquals( 2, auditLog.getRevisions( Employee.class, 20L ).size(),
+			assertEquals( 2, auditLog.getChangesets( Employee.class, 20L ).size(),
 					"Employee should have 2 revisions (ADD + property update)" );
 			// Department: only 1 revision (initial persist), no collection change
-			assertEquals( 1, auditLog.getRevisions( Department.class, 20L ).size(),
+			assertEquals( 1, auditLog.getChangesets( Department.class, 20L ).size(),
 					"Department should still have 1 revision" );
 		}
 

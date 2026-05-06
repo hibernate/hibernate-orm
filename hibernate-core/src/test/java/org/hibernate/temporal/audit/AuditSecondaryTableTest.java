@@ -205,7 +205,7 @@ class AuditSecondaryTableTest {
 		);
 
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			var revisions = auditLog.getRevisions( Employee.class, 30L );
+			var revisions = auditLog.getChangesets( Employee.class, 30L );
 			assertEquals( 3, revisions.size() );
 			assertEquals( 301, revisions.get( 0 ) );
 			assertEquals( 302, revisions.get( 1 ) );

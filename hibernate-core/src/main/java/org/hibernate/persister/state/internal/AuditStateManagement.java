@@ -158,7 +158,7 @@ public class AuditStateManagement implements StateManagement {
 		final var changesetCoordinator =
 				creationContext.getSessionFactory()
 						.getChangesetCoordinator();
-		final var txIdJdbcMapping =
+		final var csIdJdbcMapping =
 				resolveJdbcMapping( typeConfiguration,
 						changesetCoordinator.getIdentifierType() );
 		final var modTypeJdbcMapping = resolveJdbcMapping( typeConfiguration, ModificationType.class );
@@ -172,7 +172,7 @@ public class AuditStateManagement implements StateManagement {
 				rootClass.getAuxiliaryTable(),
 				rootClass,
 				persister,
-				txIdJdbcMapping,
+				csIdJdbcMapping,
 				modTypeJdbcMapping,
 				creationProcess
 		);
@@ -210,7 +210,7 @@ public class AuditStateManagement implements StateManagement {
 						join.getAuxiliaryTable(),
 						join,
 						persister,
-						txIdJdbcMapping,
+						csIdJdbcMapping,
 						modTypeJdbcMapping,
 						creationProcess
 				);
@@ -226,7 +226,7 @@ public class AuditStateManagement implements StateManagement {
 						subclass.getAuxiliaryTable(),
 						subclass,
 						persister,
-						txIdJdbcMapping,
+						csIdJdbcMapping,
 						modTypeJdbcMapping,
 						creationProcess
 				);
@@ -280,21 +280,21 @@ public class AuditStateManagement implements StateManagement {
 			Table auditTable,
 			AuxiliaryTableHolder holder,
 			AbstractEntityPersister persister,
-			JdbcMapping txIdJdbcMapping,
+			JdbcMapping csIdJdbcMapping,
 			JdbcMapping modTypeJdbcMapping,
 			MappingModelCreationProcess creationProcess) {
 		final String originalTableName = persister.determineTableName( originalTable );
 		final String auditTableName = persister.determineTableName( auditTable );
 		map.put(
 				originalTableName,
-				createTableAuditInfo( auditTableName, holder, txIdJdbcMapping, modTypeJdbcMapping, creationProcess )
+				createTableAuditInfo( auditTableName, holder, csIdJdbcMapping, modTypeJdbcMapping, creationProcess )
 		);
 	}
 
 	private static AuditMappingImpl.TableAuditInfo createTableAuditInfo(
 			String auditTableName,
 			AuxiliaryTableHolder holder,
-			JdbcMapping txIdJdbcMapping,
+			JdbcMapping csIdJdbcMapping,
 			JdbcMapping modTypeJdbcMapping,
 			MappingModelCreationProcess creationProcess) {
 		final var creationContext = creationProcess.getCreationContext();
@@ -304,7 +304,7 @@ public class AuditStateManagement implements StateManagement {
 				toSelectableMapping(
 						auditTableName,
 						holder.getAuxiliaryColumn( CHANGESET_ID ),
-						txIdJdbcMapping,
+						csIdJdbcMapping,
 						creationProcess
 				),
 				toSelectableMapping(
@@ -316,7 +316,7 @@ public class AuditStateManagement implements StateManagement {
 				toSelectableMapping(
 						auditTableName,
 						holder.getAuxiliaryColumn( INVALIDATING_CHANGESET_ID ),
-						txIdJdbcMapping,
+						csIdJdbcMapping,
 						creationProcess
 				),
 				toSelectableMapping(
@@ -375,7 +375,7 @@ public class AuditStateManagement implements StateManagement {
 		final var changesetCoordinator =
 				creationContext.getSessionFactory()
 						.getChangesetCoordinator();
-		final var txIdJdbcMapping =
+		final var csIdJdbcMapping =
 				resolveJdbcMapping( typeConfiguration,
 						changesetCoordinator.getIdentifierType() );
 		final var modTypeJdbcMapping = resolveJdbcMapping( typeConfiguration, ModificationType.class );
@@ -385,7 +385,7 @@ public class AuditStateManagement implements StateManagement {
 						createTableAuditInfo(
 								auditTableName,
 								bootDescriptor,
-								txIdJdbcMapping,
+								csIdJdbcMapping,
 								modTypeJdbcMapping,
 								creationProcess
 						)

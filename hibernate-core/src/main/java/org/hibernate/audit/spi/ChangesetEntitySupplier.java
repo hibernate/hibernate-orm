@@ -107,7 +107,7 @@ public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T
 			listener.newChangeset( changesetEntity );
 		}
 		final var childSession = persistChangesetEntity( session, changesetEntity );
-		sessionImpl.getAuditWorkQueue().setRevisionContext( changesetEntity, childSession );
+		sessionImpl.getAuditWorkQueue().setChangesetContext( changesetEntity, childSession );
 		return (T) readChangesetId( changesetEntity, persister, sessionImpl );
 	}
 
@@ -121,23 +121,23 @@ public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T
 			Object changesetEntity,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
-		final Object txId;
-		final var txIdAttr = persister.findAttributeMapping( changesetIdProperty );
-		if ( txIdAttr != null ) {
-			txId = persister.getValue( changesetEntity, txIdAttr.getStateArrayPosition() );
+		final Object changesetId;
+		final var changesetIdAttr = persister.findAttributeMapping( changesetIdProperty );
+		if ( changesetIdAttr != null ) {
+			changesetId = persister.getValue( changesetEntity, changesetIdAttr.getStateArrayPosition() );
 		}
 		else {
 			// @ChangesetId is the @Id
-			txId = persister.getIdentifier( changesetEntity, session );
+			changesetId = persister.getIdentifier( changesetEntity, session );
 		}
-		if ( txId == null ) {
+		if ( changesetId == null ) {
 			throw new AuditException(
 					"@ChangesetEntity.ChangesetId property '" + changesetIdProperty
 					+ "' is null after persisting changeset entity '"
 					+ changesetEntityClass.getName() + "'"
 			);
 		}
-		return txId;
+		return changesetId;
 	}
 
 	/**

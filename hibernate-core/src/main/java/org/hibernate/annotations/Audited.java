@@ -42,34 +42,50 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     creation, 1 for modification, and 2 for deletion.
  * </ul>
  * <p>
- * Audited entities are typically used when a supplier of changeset
- * identifiers is available to Hibernate. A custom supplier may be
- * specified via the configuration property
- * {@value StateManagementSettings#CHANGESET_ID_SUPPLIER}.
- * Changeset ids must be unique and comparable and must increase
- * monotonically. Typically, such an id is obtained by persisting
- * an instance of an application-defined entity class with a
- * generated id which represents the current changeset. This
- * entity associates the changeset id with other information about
- * the work being performed, such as the current timestamp, current
- * application user, and so on. If no supplier is provided, the
- * {@linkplain java.time.Instant#now() current JVM instant} is used
- * as the changeset identifier, but relying on this default behavior
- * is not recommended.
- * <p>
- * To query historical revisions from the audit log:
+ * Each changeset is identified by a unique, monotonically
+ * increasing changeset id. Changeset ids can be supplied in
+ * two ways:
  * <ul>
- * <li>specify a changeset id via
- *     {@link org.hibernate.SessionBuilder#atChangeset atChangeset}
- *     when opening a session, or
- * <li>use an {@link org.hibernate.audit.AuditLog AuditLog}.
+ * <li>A {@link ChangesetEntity @ChangesetEntity} may be
+ *     defined in the domain model. An instance is
+ *     automatically persisted once per transaction, and its
+ *     generated primary key serves as the changeset id.
+ *     A changeset entity will also carry metadata such as its
+ *     creation timestamp and, optionally, additional information
+ *     such as the current user or a comment.
+ * <li>A custom
+ *     {@link org.hibernate.temporal.spi.ChangesetIdentifierSupplier}
+ *     may be specified via the configuration property
+ *     {@value StateManagementSettings#CHANGESET_ID_SUPPLIER}.
+ * </ul>
+ * If neither is provided, the
+ * {@linkplain java.time.Instant#now() current JVM instant}
+ * is used as the changeset identifier, but relying on this
+ * default behavior is not recommended.
+ * <p>
+ * To query the audit log:
+ * <ul>
+ * <li>use {@link org.hibernate.SessionBuilder#atChangeset
+ *     atChangeset()} when opening a session to transparently
+ *     read entity state as of a specific changeset,
+ * <li>use
+ *     {@link org.hibernate.audit.AuditLog AuditLog} for
+ *     programmatic access to revision history, modification
+ *     types, and cross-entity queries, or
+ * <li>open a session with
+ *     {@link org.hibernate.audit.AuditLog#ALL_CHANGESETS
+ *     ALL_CHANGESETS} and write custom HQL queries using
+ *     the {@code changesetId()} and {@code modificationType()}
+ *     functions.
  * </ul>
  * <p>
  * Use the nested {@link Table @Audited.Table} annotation to
  * customize the audit log's table name, schema, catalog, or
  * column names for the audit log.
  *
+ * @see ChangesetEntity
  * @see org.hibernate.audit.AuditLog
+ * @see org.hibernate.audit.AuditLogFactory
  *
  * @author Gavin King
  * @author Marco Belladelli
@@ -137,7 +153,7 @@ public @interface Audited {
 
 		/**
 		 * The name of the column holding the identifier of the
-		 * changeset in which a revision was introduced.
+		 * changeset in which an audit row was introduced.
 		 *
 		 * @see org.hibernate.engine.spi.SharedSessionContractImplementor#getCurrentChangesetIdentifier()
 		 */
@@ -156,7 +172,7 @@ public @interface Audited {
 
 		/**
 		 * The name of the column holding the identifier of
-		 * the changeset which invalidates a revision when the
+		 * the changeset which invalidates an audit row when the
 		 * {@linkplain StateManagementSettings#AUDIT_STRATEGY
 		 * audit strategy} is set to {@code "validity"}. When
 		 * a new audit row is written, the previous row's
@@ -170,7 +186,7 @@ public @interface Audited {
 
 		/**
 		 * The name of the column holding the timestamp of the
-		 * instant at which a revision was superseded when the
+		 * instant at which an audit row was superseded when the
 		 * {@linkplain StateManagementSettings#AUDIT_STRATEGY
 		 * audit strategy} is set to {@code "validity"} and this
 		 * attribute is set to a non-empty value.

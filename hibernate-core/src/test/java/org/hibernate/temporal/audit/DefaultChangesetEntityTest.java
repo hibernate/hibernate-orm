@@ -70,7 +70,7 @@ class DefaultChangesetEntityTest {
 		// Verify REVINFO rows for this test (book id=1)
 		scope.getSessionFactory().inTransaction( session -> {
 			final var auditLog = AuditLogFactory.create( session );
-			final var revisionIds = auditLog.getRevisions( Book.class, 1L );
+			final var revisionIds = auditLog.getChangesets( Book.class, 1L );
 			assertEquals( 3, revisionIds.size() );
 
 			final var revisions = session.createSelectionQuery(

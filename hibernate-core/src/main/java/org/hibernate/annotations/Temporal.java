@@ -138,14 +138,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Temporal {
 	/**
 	 * The name of the column holding the starting timestamp
-	 * or transaction id of a revision; the timestamp or id
+	 * or changeset id of a revision; the timestamp or id
 	 * representing the moment the revision became effective;
 	 * that is, the "effective from" timestamp.
 	 */
 	String rowStart() default "effective";
 	/**
 	 * The name of the column holding the ending timestamp
-	 * or transaction id of a revision; the timestamp or id
+	 * or changeset id of a revision; the timestamp or id
 	 * representing the moment the revision was superseded;
 	 * that is, the "effective to" timestamp.
 	 */

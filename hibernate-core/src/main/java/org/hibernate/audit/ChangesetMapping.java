@@ -87,7 +87,7 @@ public class ChangesetMapping implements Serializable {
 
 	@Override
 	public String toString() {
-		return "RevisionMapping(id = " + id
+		return "ChangesetMapping(id = " + id
 			+ ", timestamp = " + getRevisionInstant() + ")";
 	}
 }

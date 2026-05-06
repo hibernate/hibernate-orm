@@ -170,9 +170,9 @@ class AuditToOneAssociationTest {
 	void testWriteSideRevisionCounts(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// Book(1): create, update, reassign, null = 4 revisions
-			assertEquals( 4, auditLog.getRevisions( Book.class, 1L ).size() );
+			assertEquals( 4, auditLog.getChangesets( Book.class, 1L ).size() );
 			// Person(1): create, reassign, null = 3 revisions
-			assertEquals( 3, auditLog.getRevisions( Person.class, 1L ).size() );
+			assertEquals( 3, auditLog.getChangesets( Person.class, 1L ).size() );
 		}
 	}
 

@@ -14,7 +14,7 @@ package org.hibernate.audit;
  *   <li>the changeset entity instance
  *       (e.g. {@link DefaultChangesetEntity}), if one is
  *       configured, or
- *   <li>the plain transaction identifier
+ *   <li>the plain changeset identifier
  *       (e.g. {@code Instant}, {@code Integer}) otherwise.
  * </ul>
  *

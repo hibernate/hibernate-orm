@@ -18,7 +18,7 @@ import java.util.Set;
  * entities, complementing the transparent point-in-time
  * reads available via
  * {@link org.hibernate.SessionBuilder#atChangeset(Object)
- * atTransaction()} sessions.
+ * atChangeset()} sessions.
  * <p>
  * Obtain an instance via {@link AuditLogFactory#create}.
  * The instance manages an internal session for audit queries;
@@ -68,20 +68,20 @@ public interface AuditLog extends AutoCloseable {
 	 * @param entityClass the audited entity class
 	 * @param id the entity identifier
 	 *
-	 * @return the list of transaction identifiers
+	 * @return the list of changeset identifiers
 	 */
-	List<Object> getRevisions(Class<?> entityClass, Object id);
+	List<Object> getChangesets(Class<?> entityClass, Object id);
 
 	/**
 	 * Get the {@linkplain ModificationType modification type}
 	 * (ADD/MOD/DEL) for an entity at a specific changeset.
 	 *
 	 * @param entityClass the audited entity class
-	 * @param id the entity identifier
-	 * @param changesetId the transaction identifier
+	 * @param id "at the entity identifier
+	 * @param changesetId the changeset identifier
 	 *
 	 * @return the modification type, or {@code null} if the
-	 * entity was not modified at that transaction
+	 * entity was not modified in that changeset
 	 */
 	ModificationType getModificationType(Class<?> entityClass, Object id, Object changesetId);
 
@@ -105,7 +105,7 @@ public interface AuditLog extends AutoCloseable {
 	 * @param changesetId the changeset identifier
 	 * @param <T> the entity type
 	 *
-	 * @return the entity state at that transaction, or
+	 * @return the entity state in that changeset, or
 	 * {@code null} if the entity did not exist
 	 * (e.g. before creation or after deletion)
 	 */
@@ -128,7 +128,7 @@ public interface AuditLog extends AutoCloseable {
 	 * @param includeDeletions whether to include deleted entities
 	 * @param <T> the entity type
 	 *
-	 * @return the entity state at that transaction
+	 * @return the entity state in that changeset
 	 */
 	<T> T find(Class<T> entityClass, Object id, Object changesetId, boolean includeDeletions);
 
@@ -153,7 +153,7 @@ public interface AuditLog extends AutoCloseable {
 	 * @param changesetId the changeset identifier
 	 * @param <T> the entity type
 	 *
-	 * @return the entity snapshots at that transaction
+	 * @return the entity snapshots modified in that changeset
 	 */
 	<T> List<T> findEntitiesModifiedAt(Class<T> entityClass, Object changesetId);
 
@@ -173,7 +173,7 @@ public interface AuditLog extends AutoCloseable {
 
 	/**
 	 * Find all entity snapshots of the given type that
-	 * were modified at a specific transaction, grouped
+	 * were modified in a specific changeset, grouped
 	 * by modification type (ADD, MOD, DEL).
 	 *
 	 * @param entityClass the audited entity class
@@ -188,7 +188,7 @@ public interface AuditLog extends AutoCloseable {
 
 	/**
 	 * Get the full audit history for an entity, ordered
-	 * chronologically by transaction identifier.
+	 * chronologically by changeset identifier.
 	 * <p>
 	 * Each entry contains the entity snapshot, the changeset
 	 * identifier (or changeset entity), and the
@@ -199,18 +199,18 @@ public interface AuditLog extends AutoCloseable {
 	 * at the moment of deletion.
 	 *
 	 * @param entityClass the audited entity class
-	 * @param id the changeset identifier
+	 * @param id the entity identifier
 	 * @param <T> the entity type
 	 *
 	 * @return the audit history as a list of {@link AuditEntry}
 	 */
 	<T> List<AuditEntry<T>> getHistory(Class<T> entityClass, Object id);
 
-	// --- Cross-type revision queries ---
+	// --- Cross-type changeset queries ---
 
 	/**
-	 * Get the set of entity types that were modified at the
-	 * given transaction.
+	 * Get the set of entity types that were modified in the
+	 * given changeset.
 	 * <p>
 	 * Requires a {@link ChangesetEntity @ChangesetEntity} with a
 	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
@@ -218,7 +218,7 @@ public interface AuditLog extends AutoCloseable {
 	 *
 	 * @param changesetId the changeset identifier
 	 *
-	 * @return the set of entity classes modified at that transaction
+	 * @return the set of entity classes modified in that changeset
 	 *
 	 * @throws AuditException if entity change tracking is not enabled
 	 */
@@ -281,12 +281,12 @@ public interface AuditLog extends AutoCloseable {
 	 *
 	 * @param changesetId the changeset identifier
 	 *
-	 * @return the changeset transaction timestamp
+	 * @return the changeset timestamp
 	 *
 	 * @throws AuditException if no changeset entity is configured
-	 * or the transaction does not exist
+	 * or the changeset does not exist
 	 */
-	Instant getTransactionTimestamp(Object changesetId);
+	Instant getChangesetTimestamp(Object changesetId);
 
 	/**
 	 * Get the changeset identifier that was current at or
@@ -308,6 +308,7 @@ public interface AuditLog extends AutoCloseable {
 	 * Load the changeset entity for the given changeset identifier.
 	 * Requires a {@link ChangesetEntity @ChangesetEntity}.
 	 *
+	 * @param changesetEntityClass the changeset entity class
 	 * @param changesetId the changeset identifier
 	 * @param <T> the changeset entity type
 	 *
@@ -316,17 +317,18 @@ public interface AuditLog extends AutoCloseable {
 	 * @throws AuditException if no changeset entity is configured
 	 * or the changeset does not exist
 	 */
-	<T> T findRevision(Object changesetId);
+	<T> T findChangeset(Class<T> changesetEntityClass, Object changesetId);
 
 	/**
 	 * Load changeset entities for multiple changeset identifiers.
 	 * Requires a {@link ChangesetEntity @ChangesetEntity}.
 	 *
+	 * @param changesetEntityClass the changeset entity class
 	 * @param changesetIds the changeset identifiers
 	 * @param <T> the changeset entity type
 	 *
-	 * @return a map from transaction identifier to changeset entity
+	 * @return a map from changeset identifier to changeset entity
 	 */
-	<T> Map<Object, T> findRevisions(Set<?> changesetIds);
+	<T> Map<Object, T> findChangesets(Class<T> changesetEntityClass, Set<?> changesetIds);
 
 }

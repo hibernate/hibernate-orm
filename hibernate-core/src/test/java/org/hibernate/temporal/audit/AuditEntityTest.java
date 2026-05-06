@@ -244,7 +244,7 @@ class AuditEntityTest {
 
 		// Verify via AuditLog: exactly 2 revisions for this entity
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditEntity.class, 99L );
+			final var revisions = auditLog.getChangesets( AuditEntity.class, 99L );
 			assertEquals( 2, revisions.size() );
 		}
 	}
@@ -268,7 +268,7 @@ class AuditEntityTest {
 
 		// Verify: no audit rows exist for this entity
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditEntity.class, 88L );
+			final var revisions = auditLog.getChangesets( AuditEntity.class, 88L );
 			assertEquals( 0, revisions.size() );
 		}
 	}
@@ -351,7 +351,7 @@ class AuditEntityTest {
 
 		// Verify: no entity audit rows
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditEntity.class, 55L );
+			final var revisions = auditLog.getChangesets( AuditEntity.class, 55L );
 			assertEquals( 0, revisions.size() );
 		}
 

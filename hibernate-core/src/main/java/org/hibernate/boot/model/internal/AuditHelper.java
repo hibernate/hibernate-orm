@@ -94,20 +94,20 @@ public final class AuditHelper {
 		final String explicitAuditTableName;
 		final String auditSchema;
 		final String auditCatalog;
-		final String txIdColumnName;
+		final String csIdColumnName;
 		final String modTypeColumnName;
 		if ( auditTable != null ) {
 			explicitAuditTableName = auditTable.name();
 			auditSchema = auditTable.schema();
 			auditCatalog = auditTable.catalog();
-			txIdColumnName = auditTable.changesetIdColumn();
+			csIdColumnName = auditTable.changesetIdColumn();
 			modTypeColumnName = auditTable.modificationTypeColumn();
 		}
 		else {
 			explicitAuditTableName = "";
 			auditSchema = "";
 			auditCatalog = "";
-			txIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
 			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
 		final boolean hasExplicitAuditTableName = !isBlank( explicitAuditTableName );
@@ -141,7 +141,7 @@ public final class AuditHelper {
 					: Set.<String>of();
 			copyTableColumns( table, auditLogTable, excludedColumns );
 			final var changesetIdColumn =
-					createAuditColumn( txIdColumnName,
+					createAuditColumn( csIdColumnName,
 							getChangesetIdType( context ), auditLogTable, context );
 			final var modificationTypeColumn =
 					createAuditColumn( modTypeColumnName,
@@ -167,16 +167,16 @@ public final class AuditHelper {
 			RootClass rootClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
-		final String txIdColumnName;
+		final String csIdColumnName;
 		final String auditSchema;
 		final String auditCatalog;
 		if ( auditTable != null ) {
-			txIdColumnName = auditTable.changesetIdColumn();
+			csIdColumnName = auditTable.changesetIdColumn();
 			auditSchema = auditTable.schema();
 			auditCatalog = auditTable.catalog();
 		}
 		else {
-			txIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
 			auditSchema = null;
 			auditCatalog = null;
 		}
@@ -192,7 +192,7 @@ public final class AuditHelper {
 				final String customName = secondaryAuditTableNames.get( sourceTable.getName() );
 				final var secondaryAuditTable = createAuditTable(
 						sourceTable,
-						txIdColumnName,
+						csIdColumnName,
 						resolveExcludedColumns( join.getProperties() ),
 						nullIfBlank( auditSchema ),
 						nullIfBlank( auditCatalog ),
@@ -211,14 +211,14 @@ public final class AuditHelper {
 			Audited.@Nullable Table auditTable,
 			RootClass rootClass,
 			MetadataBuildingContext context) {
-		final String txIdColumnName;
+		final String csIdColumnName;
 		final String modTypeColumnName;
 		if ( auditTable != null ) {
-			txIdColumnName = auditTable.changesetIdColumn();
+			csIdColumnName = auditTable.changesetIdColumn();
 			modTypeColumnName = auditTable.modificationTypeColumn();
 		}
 		else {
-			txIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
 			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
 		// Defer to second pass since subclasses haven't been added to rootClass yet
@@ -226,7 +226,7 @@ public final class AuditHelper {
 				bindSubclassAuditTables(
 						rootClass,
 						auditTable,
-						txIdColumnName,
+						csIdColumnName,
 						modTypeColumnName,
 						context
 				)
@@ -240,7 +240,7 @@ public final class AuditHelper {
 	private static void bindSubclassAuditTables(
 			PersistentClass parent,
 			Audited.@Nullable Table auditTable,
-			String txIdColumnName,
+			String csIdColumnName,
 			String modTypeColumnName,
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
@@ -253,7 +253,7 @@ public final class AuditHelper {
 				final var effective = subclassTable != null ? subclassTable : auditTable;
 				final var subclassAuditTable = createAuditTable(
 						subclass.getTable(),
-						txIdColumnName,
+						csIdColumnName,
 						resolveExcludedColumns( subclass.getProperties() ),
 						effective != null ? nullIfBlank( effective.schema() ) : null,
 						effective != null ? nullIfBlank( effective.catalog() ) : null,
@@ -280,7 +280,7 @@ public final class AuditHelper {
 				}
 				subclass.setAuxiliaryTable( subclassAuditTable );
 				// Recurse into this subclass's children
-				bindSubclassAuditTables( subclass, auditTable, txIdColumnName, modTypeColumnName, context );
+				bindSubclassAuditTables( subclass, auditTable, csIdColumnName, modTypeColumnName, context );
 			}
 		}
 	}
@@ -324,18 +324,18 @@ public final class AuditHelper {
 
 		final String auditSchema;
 		final String auditCatalog;
-		final String txIdColumnName;
+		final String csIdColumnName;
 		final String modTypeColumnName;
 		if ( auditTable != null ) {
 			auditSchema = auditTable.schema();
 			auditCatalog = auditTable.catalog();
-			txIdColumnName = auditTable.changesetIdColumn();
+			csIdColumnName = auditTable.changesetIdColumn();
 			modTypeColumnName = auditTable.modificationTypeColumn();
 		}
 		else {
 			auditSchema = "";
 			auditCatalog = "";
-			txIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
 			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
 		final String schema = collectionAuditTable != null && !isBlank( collectionAuditTable.schema() )
@@ -373,7 +373,7 @@ public final class AuditHelper {
 			}
 			// Audit columns
 			final var changesetIdColumn = createAuditColumn(
-					txIdColumnName,
+					csIdColumnName,
 					getChangesetIdType( context ),
 					middleAuditTable,
 					context
@@ -585,7 +585,7 @@ public final class AuditHelper {
 	 */
 	private static Table createAuditTable(
 			Table sourceTable,
-			String txIdColumnName,
+			String csIdColumnName,
 			Set<String> excludedColumns,
 			@Nullable String schemaOverride,
 			@Nullable String catalogOverride,
@@ -605,7 +605,7 @@ public final class AuditHelper {
 				sourceTable.getNameIdentifier().isExplicit()
 		);
 		copyTableColumns( sourceTable, auditTable, excludedColumns );
-		final var revColumn = createAuditColumn( txIdColumnName, getChangesetIdType( context ), auditTable, context );
+		final var revColumn = createAuditColumn( csIdColumnName, getChangesetIdType( context ), auditTable, context );
 		auditTable.addColumn( revColumn );
 		createAuditPrimaryKey( auditTable, revColumn, sourceTable.getPrimaryKey().getColumns() );
 		createChangesetForeignKey( auditTable, revColumn, context );

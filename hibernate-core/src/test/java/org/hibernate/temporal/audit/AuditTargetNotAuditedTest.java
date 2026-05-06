@@ -106,7 +106,7 @@ class AuditTargetNotAuditedTest {
 	@Test
 	void testManyToOneWriteSide(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertEquals( 3, auditLog.getRevisions( Product.class, 1L ).size() );
+			assertEquals( 3, auditLog.getChangesets( Product.class, 1L ).size() );
 		}
 	}
 
@@ -300,7 +300,7 @@ class AuditTargetNotAuditedTest {
 
 		// Verify audit rows for the entity
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertEquals( 3, auditLog.getRevisions( Product.class, 10L ).size() );
+			assertEquals( 3, auditLog.getChangesets( Product.class, 10L ).size() );
 		}
 
 		// Point-in-time: tags should be loaded from current table
@@ -334,7 +334,7 @@ class AuditTargetNotAuditedTest {
 
 		// Verify audit rows for the entity
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertEquals( 2, auditLog.getRevisions( Product.class, 20L ).size() );
+			assertEquals( 2, auditLog.getChangesets( Product.class, 20L ).size() );
 		}
 
 		// Point-in-time

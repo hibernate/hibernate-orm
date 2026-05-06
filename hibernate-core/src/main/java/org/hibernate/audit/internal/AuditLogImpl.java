@@ -82,7 +82,7 @@ public class AuditLogImpl implements AuditLog {
 	}
 
 	@Override
-	public List<Object> getRevisions(Class<?> entityClass, Object id) {
+	public List<Object> getChangesets(Class<?> entityClass, Object id) {
 		requireNonNull( entityClass, "Entity class" );
 		requireNonNull( id, "Primary key" );
 		final var entityName = requireAuditedEntityName( entityClass );
@@ -98,15 +98,15 @@ public class AuditLogImpl implements AuditLog {
 	public ModificationType getModificationType(Class<?> entityClass, Object id, Object changesetId) {
 		requireNonNull( entityClass, "Entity class" );
 		requireNonNull( id, "Primary key" );
-		requireNonNull( changesetId, "Transaction identifier" );
+		requireNonNull( changesetId, "Changeset identifier" );
 		final var entityName = requireAuditedEntityName( entityClass );
 		return auditSession.createSelectionQuery(
 						"select modificationType(e) from " + entityName + " e"
 								+ " where e.id = :id"
-								+ " and changesetId(e) = :txId",
+								+ " and changesetId(e) = :csId",
 						ModificationType.class
 				).setParameter( "id", id )
-				.setParameter( "txId", changesetId )
+				.setParameter( "csId", changesetId )
 				.getSingleResultOrNull();
 	}
 
@@ -131,7 +131,7 @@ public class AuditLogImpl implements AuditLog {
 
 	private <T> T doFind(String entityName, Object id, Object changesetId, boolean includeDeletions) {
 		requireNonNull( id, "Primary key" );
-		requireNonNull( changesetId, "Transaction identifier" );
+		requireNonNull( changesetId, "Changeset identifier" );
 		final var persister = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
 		return persister.getAuditMapping()
 				.getEntityLoader()
@@ -146,7 +146,7 @@ public class AuditLogImpl implements AuditLog {
 	@Override
 	public <T> List<T> findEntitiesModifiedAt(Class<T> entityClass, Object changesetId) {
 		requireNonNull( entityClass, "Entity class" );
-		requireNonNull( changesetId, "Transaction identifier" );
+		requireNonNull( changesetId, "Changeset identifier" );
 		return doFindEntitiesModifiedAt(
 				requireAuditedEntityName( entityClass ),
 				changesetId,
@@ -161,7 +161,7 @@ public class AuditLogImpl implements AuditLog {
 			Object changesetId,
 			ModificationType modificationType) {
 		requireNonNull( entityClass, "Entity class" );
-		requireNonNull( changesetId, "Transaction identifier" );
+		requireNonNull( changesetId, "Changeset identifier" );
 		requireNonNull( modificationType, "Modification type" );
 		return doFindEntitiesModifiedAt(
 				requireAuditedEntityName( entityClass ),
@@ -176,7 +176,7 @@ public class AuditLogImpl implements AuditLog {
 			Class<T> entityClass,
 			Object changesetId) {
 		requireNonNull( entityClass, "Entity class" );
-		requireNonNull( changesetId, "Transaction identifier" );
+		requireNonNull( changesetId, "Changeset identifier" );
 		return doFindEntitiesGroupedByModificationType(
 				requireAuditedEntityName( entityClass ),
 				changesetId,
@@ -189,13 +189,13 @@ public class AuditLogImpl implements AuditLog {
 			Object changesetId,
 			@Nullable ModificationType modificationType,
 			Class<T> resultType) {
-		var hql = "from " + entityName + " e where changesetId(e) = :txId";
+		var hql = "from " + entityName + " e where changesetId(e) = :csId";
 		if ( modificationType != null ) {
 			hql += " and modificationType(e) = :modType";
 		}
 		final var query = auditSession
 				.createSelectionQuery( hql, resultType )
-				.setParameter( "txId", changesetId );
+				.setParameter( "csId", changesetId );
 		if ( modificationType != null ) {
 			query.setParameter( "modType", modificationType );
 		}
@@ -212,9 +212,9 @@ public class AuditLogImpl implements AuditLog {
 		}
 		final List<Object[]> rows = auditSession.createSelectionQuery(
 				"select e, modificationType(e) from " + entityName + " e"
-						+ " where changesetId(e) = :txId",
+						+ " where changesetId(e) = :csId",
 				Object[].class
-		).setParameter( "txId", changesetId ).getResultList();
+		).setParameter( "csId", changesetId ).getResultList();
 		for ( var row : rows ) {
 			result.get( (ModificationType) row[1] ).add( (T) row[0] );
 		}
@@ -263,7 +263,7 @@ public class AuditLogImpl implements AuditLog {
 
 	@Override
 	public Set<Class<?>> getEntityTypesModifiedAt(Object changesetId) {
-		requireNonNull( changesetId, "Transaction identifier" );
+		requireNonNull( changesetId, "Changeset identifier" );
 		requireEntityChangeTracking();
 		final var entityNames = queryRevChangesEntityNames( changesetId );
 		final Set<Class<?>> result = new HashSet<>();
@@ -275,7 +275,7 @@ public class AuditLogImpl implements AuditLog {
 
 	@Override
 	public List<Object> findAllEntitiesModifiedAt(Object changesetId) {
-		requireNonNull( changesetId, "Transaction identifier" );
+		requireNonNull( changesetId, "Changeset identifier" );
 		requireEntityChangeTracking();
 		final var entityNames = queryRevChangesEntityNames( changesetId );
 		final List<Object> result = new ArrayList<>();
@@ -287,7 +287,7 @@ public class AuditLogImpl implements AuditLog {
 
 	@Override
 	public List<Object> findAllEntitiesModifiedAt(Object changesetId, ModificationType modificationType) {
-		requireNonNull( changesetId, "Transaction identifier" );
+		requireNonNull( changesetId, "Changeset identifier" );
 		requireNonNull( modificationType, "Modification type" );
 		requireEntityChangeTracking();
 		final var entityNames = queryRevChangesEntityNames( changesetId );
@@ -300,7 +300,7 @@ public class AuditLogImpl implements AuditLog {
 
 	@Override
 	public Map<ModificationType, List<Object>> findAllEntitiesGroupedByModificationType(Object changesetId) {
-		requireNonNull( changesetId, "Transaction identifier" );
+		requireNonNull( changesetId, "Changeset identifier" );
 		requireEntityChangeTracking();
 		final var values = ModificationType.values();
 		final Map<ModificationType, List<Object>> result = new HashMap<>( values.length );
@@ -318,9 +318,9 @@ public class AuditLogImpl implements AuditLog {
 		return auditSession.createSelectionQuery(
 				"select element(r." + modifiedEntitiesProperty + ")"
 						+ " from " + changesetEntityName + " r"
-						+ " where r." + changesetIdProperty + " = :txId",
+						+ " where r." + changesetIdProperty + " = :csId",
 				String.class
-		).setParameter( "txId", changesetId ).getResultList();
+		).setParameter( "csId", changesetId ).getResultList();
 	}
 
 	private void requireEntityChangeTracking() {
@@ -333,11 +333,11 @@ public class AuditLogImpl implements AuditLog {
 		}
 	}
 
-	// --- Revision entity queries ---
+	// --- Changeset entity queries ---
 
 	@Override
-	public Instant getTransactionTimestamp(Object changesetId) {
-		requireNonNull( changesetId, "Transaction identifier" );
+	public Instant getChangesetTimestamp(Object changesetId) {
+		requireNonNull( changesetId, "Changeset identifier" );
 		requireChangesetEntity();
 		final String hql = "select e." + timestampProperty
 				+ " from " + changesetEntityName + " e"
@@ -347,7 +347,7 @@ public class AuditLogImpl implements AuditLog {
 				.setParameter( "rev", changesetId )
 				.getSingleResultOrNull();
 		if ( result == null ) {
-			throw new AuditException( "Revision does not exist: " + changesetId );
+			throw new AuditException( "Changeset does not exist: " + changesetId );
 		}
 		return toInstant( result );
 	}
@@ -359,22 +359,20 @@ public class AuditLogImpl implements AuditLog {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T findRevision(Object changesetId) {
+	public <T> T findChangeset(Class<T> changesetEntityClass, Object changesetId) {
 		requireChangesetEntity();
 		final var result = auditSession.createSelectionQuery(
 				"from " + changesetEntityName + " where " + changesetIdProperty + " = :rev",
-				Object.class
+				changesetEntityClass
 		).setParameter( "rev", changesetId ).getSingleResultOrNull();
 		if ( result == null ) {
-			throw new AuditException( "Revision does not exist: " + changesetId );
+			throw new AuditException( "Changeset does not exist: " + changesetId );
 		}
-		return (T) result;
+		return result;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> Map<Object, T> findRevisions(Set<?> changesetIds) {
+	public <T> Map<Object, T> findChangesets(Class<T> changesetEntityClass, Set<?> changesetIds) {
 		requireChangesetEntity();
 		final var results = auditSession.createSelectionQuery(
 				"select r." + changesetIdProperty + ", r"
@@ -385,8 +383,7 @@ public class AuditLogImpl implements AuditLog {
 		).setParameter( "revs", changesetIds ).getResultList();
 		final Map<Object, T> map = new LinkedHashMap<>();
 		for ( var row : results ) {
-			//noinspection unchecked
-			map.put( row[0], (T) row[1] );
+			map.put( row[0], changesetEntityClass.cast( row[1] ) );
 		}
 		return map;
 	}

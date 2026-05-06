@@ -108,7 +108,7 @@ public interface StateManagementSettings {
 	 * <li>{@code "validity"}: each audit row carries a
 	 *     {@code REVEND} column marking when it was superseded;
 	 *     point-in-time queries use a simple range predicate
-	 *     ({@code REV <= :txId AND (REVEND > :txId OR REVEND IS NULL)})
+	 *     ({@code REV <= :changesetId AND (REVEND > :changesetId OR REVEND IS NULL)})
 	 *     instead of a subquery, which is significantly faster for
 	 *     large audit tables.
 	 * </ul>

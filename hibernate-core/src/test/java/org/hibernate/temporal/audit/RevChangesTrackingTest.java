@@ -129,7 +129,7 @@ class RevChangesTrackingTest {
 			session.persist( author );
 		} );
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			rev1 = auditLog.getRevisions( Book.class, 1L ).get( 0 );
+			rev1 = auditLog.getChangesets( Book.class, 1L ).get( 0 );
 		}
 
 		// Rev 2: update Book only
@@ -137,7 +137,7 @@ class RevChangesTrackingTest {
 				session.find( Book.class, 1L ).title = "Hibernate in Action 2e"
 		);
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( Book.class, 1L );
+			final var revisions = auditLog.getChangesets( Book.class, 1L );
 			rev2 = revisions.get( revisions.size() - 1 );
 		}
 
@@ -146,7 +146,7 @@ class RevChangesTrackingTest {
 				session.remove( session.find( Author.class, 1L ) )
 		);
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( Author.class, 1L );
+			final var revisions = auditLog.getChangesets( Author.class, 1L );
 			rev3 = revisions.get( revisions.size() - 1 );
 		}
 	}
@@ -289,7 +289,7 @@ class RevChangesTrackingTest {
 	void testChangesetEntityHasModifiedEntityNames(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// Load the changeset entity and verify modifiedEntityNames was populated
-			TrackingRevisionInfo revInfo = auditLog.findRevision( rev1 );
+			TrackingRevisionInfo revInfo = auditLog.findChangeset( TrackingRevisionInfo.class, rev1 );
 			assertNotNull( revInfo.modifiedEntityNames );
 			assertEquals( 2, revInfo.modifiedEntityNames.size() );
 			// Entity names are FQN of the @Entity name mapping

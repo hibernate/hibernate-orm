@@ -38,7 +38,7 @@ import static java.util.Collections.singletonList;
 /**
  * HQL function for accessing audit columns of temporal entities.
  * <ul>
- *   <li>{@code changesetId(e)}: returns the transaction identifier
+ *   <li>{@code changesetId(e)}: returns the changeset identifier
  *   <li>{@code modificationType(e)}: returns the modification type
  * </ul>
  * These functions are only valid for

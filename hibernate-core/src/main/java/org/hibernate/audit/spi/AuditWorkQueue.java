@@ -207,7 +207,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}).
 	 * Called from {@link ChangesetEntitySupplier#generateIdentifier}.
 	 */
-	public void setRevisionContext(Object changesetEntity, Session changesetSession) {
+	public void setChangesetContext(Object changesetEntity, Session changesetSession) {
 		this.changesetEntity = changesetEntity;
 		this.changesetSession = changesetSession;
 	}

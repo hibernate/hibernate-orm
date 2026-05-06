@@ -140,10 +140,10 @@ class AuditManyToManyTest {
 	void testWriteSide(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// Student: ADD + 2 collection changes + DEL = 4 revisions
-			assertEquals( 4, auditLog.getRevisions( Student.class, 1L ).size(),
+			assertEquals( 4, auditLog.getChangesets( Student.class, 1L ).size(),
 					"Student should have 4 revisions (ADD + 2 collection changes + DEL)" );
-			assertEquals( 1, auditLog.getRevisions( Course.class, 1L ).size() );
-			assertEquals( 1, auditLog.getRevisions( Course.class, 2L ).size() );
+			assertEquals( 1, auditLog.getChangesets( Course.class, 1L ).size() );
+			assertEquals( 1, auditLog.getChangesets( Course.class, 2L ).size() );
 		}
 	}
 
@@ -199,7 +199,7 @@ class AuditManyToManyTest {
 
 		// Student: ADD + recreate = 2 revisions (not more)
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertEquals( 2, auditLog.getRevisions( Student.class, 10L ).size(),
+			assertEquals( 2, auditLog.getChangesets( Student.class, 10L ).size(),
 					"Student should have exactly 2 revisions (ADD + recreate)" );
 		}
 

@@ -155,8 +155,8 @@ class AuditTablePerClassInheritanceTest {
 	@Order(1)
 	void testWriteSide(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertThat( auditLog.getRevisions( SportsCar.class, 1L ) ).hasSize( 3 );
-			assertThat( auditLog.getRevisions( Truck.class, 2L ) ).hasSize( 2 );
+			assertThat( auditLog.getChangesets( SportsCar.class, 1L ) ).hasSize( 3 );
+			assertThat( auditLog.getChangesets( Truck.class, 2L ) ).hasSize( 2 );
 		}
 	}
 
@@ -229,8 +229,8 @@ class AuditTablePerClassInheritanceTest {
 		final var sf = scope.getSessionFactory();
 
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertThat( auditLog.getRevisions( Car.class, 30L ) ).hasSize( 1 );
-			assertThat( auditLog.getRevisions( SportsCar.class, 31L ) ).hasSize( 2 );
+			assertThat( auditLog.getChangesets( Car.class, 30L ) ).hasSize( 1 );
+			assertThat( auditLog.getChangesets( SportsCar.class, 31L ) ).hasSize( 2 );
 		}
 
 		try (var s = sf.withOptions().atChangeset( revDeepCreate ).openSession()) {

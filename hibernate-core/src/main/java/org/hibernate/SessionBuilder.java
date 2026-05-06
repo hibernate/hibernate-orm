@@ -258,9 +258,10 @@ public interface SessionBuilder extends CommonBuilder {
 	/**
 	 * Specify the
 	 * {@linkplain StateManagementSettings#CHANGESET_ID_SUPPLIER
-	 * transaction id} for reading {@linkplain org.hibernate.annotations.Temporal
-	 * temporal} entity data. Instances of temporal entities retrieved in the
-	 * session represent revisions effective at the end of the given transaction.
+	 * changeset id} for reading {@linkplain org.hibernate.annotations.Temporal
+	 * temporal} or {@linkplain org.hibernate.annotations.Audited audited}
+	 * entity data. Instances of temporal or audited entities retrieved in
+	 * the session represent the state effective at the given changeset.
 	 */
 	SessionBuilder atChangeset(Object changesetId);
 }

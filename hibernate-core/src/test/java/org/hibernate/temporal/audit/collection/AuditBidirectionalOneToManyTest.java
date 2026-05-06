@@ -157,11 +157,11 @@ class AuditBidirectionalOneToManyTest {
 	void testWriteSideRevisionCounts(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// Parent is inverse side: only 1 revision (initial persist)
-			assertEquals( 1, auditLog.getRevisions( Parent.class, 1L ).size() );
+			assertEquals( 1, auditLog.getChangesets( Parent.class, 1L ).size() );
 			// Child A: ADD + MOD (name update) + DEL
-			assertEquals( 3, auditLog.getRevisions( Child.class, 1L ).size() );
+			assertEquals( 3, auditLog.getChangesets( Child.class, 1L ).size() );
 			// Child B: ADD only
-			assertEquals( 1, auditLog.getRevisions( Child.class, 2L ).size() );
+			assertEquals( 1, auditLog.getChangesets( Child.class, 2L ).size() );
 		}
 	}
 
@@ -226,7 +226,7 @@ class AuditBidirectionalOneToManyTest {
 		final var sf = scope.getSessionFactory();
 
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertEquals( 1, auditLog.getRevisions( Parent.class, 10L ).size(),
+			assertEquals( 1, auditLog.getChangesets( Parent.class, 10L ).size(),
 					"Parent should have 1 revision (inverse side)" );
 		}
 
@@ -255,9 +255,9 @@ class AuditBidirectionalOneToManyTest {
 		final var sf = scope.getSessionFactory();
 
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertEquals( 2, auditLog.getRevisions( Child.class, 20L ).size(),
+			assertEquals( 2, auditLog.getChangesets( Child.class, 20L ).size(),
 					"Child should have 2 revisions (ADD + property update)" );
-			assertEquals( 1, auditLog.getRevisions( Parent.class, 20L ).size(),
+			assertEquals( 1, auditLog.getChangesets( Parent.class, 20L ).size(),
 					"Parent should still have 1 revision" );
 		}
 

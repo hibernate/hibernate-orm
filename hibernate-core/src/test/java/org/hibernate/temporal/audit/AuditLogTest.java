@@ -140,13 +140,13 @@ class AuditLogTest {
 		}
 	}
 
-	// --- getRevisions ---
+	// --- getChangesets ---
 
 	@Test
 	@Order(2)
 	void testGetRevisionsForEntity1(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 1L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 1L );
 
 			// Entity 1 was: created (rev1), updated (rev2), deleted (rev4)
 			assertEquals( 3, revisions.size() );
@@ -160,7 +160,7 @@ class AuditLogTest {
 	@Order(3)
 	void testGetRevisionsForEntity2(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 2L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 2L );
 
 			// Entity 2 was: created (rev2), updated (rev3)
 			assertEquals( 2, revisions.size() );
@@ -173,7 +173,7 @@ class AuditLogTest {
 	@Order(4)
 	void testGetRevisionsChronologicalOrder(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 1L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 1L );
 
 			// Should be in ascending order
 			for ( int i = 1; i < revisions.size(); i++ ) {
@@ -189,7 +189,7 @@ class AuditLogTest {
 	@Order(5)
 	void testGetRevisionsForNonExistentEntity(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 999L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 999L );
 			assertTrue( revisions.isEmpty() );
 		}
 	}
@@ -305,8 +305,8 @@ class AuditLogTest {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// The non-audited entity was persisted in a separate transaction
 			// but should NOT have created any audit rows
-			final var revisions1 = auditLog.getRevisions( AuditedEntity.class, 1L );
-			final var revisions2 = auditLog.getRevisions( AuditedEntity.class, 2L );
+			final var revisions1 = auditLog.getChangesets( AuditedEntity.class, 1L );
+			final var revisions2 = auditLog.getChangesets( AuditedEntity.class, 2L );
 
 			// No revision should exist beyond revDelete for entity 1
 			// or beyond revUpdate for entity 2
@@ -328,7 +328,7 @@ class AuditLogTest {
 			final var sf = scope.getSessionFactory();
 
 			// Use AuditLog to get revisions, then read entity state via atTransaction
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 1L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 1L );
 			assertEquals( 3, revisions.size() );
 
 			// First revision: entity was created with name "first"

@@ -11,7 +11,7 @@
  * and delete is recorded in a companion audit table. Point-in-time
  * reads are available via
  * {@link org.hibernate.SessionBuilder#atChangeset(Object)
- * atTransaction()} sessions, while the {@link org.hibernate.audit.AuditLog}
+ * atChangeset()} sessions, while the {@link org.hibernate.audit.AuditLog}
  * interface provides programmatic access to revision history,
  * modification types, and cross-entity change queries.
  * <p>

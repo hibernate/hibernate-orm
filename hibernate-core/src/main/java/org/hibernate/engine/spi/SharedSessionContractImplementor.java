@@ -220,7 +220,7 @@ public interface SharedSessionContractImplementor
 	CacheTransactionSynchronization getCacheTransactionSynchronization();
 
 	/**
-	 * A changset id representing the beginning of the current transaction,
+	 * The changeset id associated with the current unit of work,
 	 * for use with {@linkplain org.hibernate.annotations.Temporal temporal}
 	 * effectivity columns and with
 	 * {@linkplain org.hibernate.annotations.Audited.Table#changesetIdColumn

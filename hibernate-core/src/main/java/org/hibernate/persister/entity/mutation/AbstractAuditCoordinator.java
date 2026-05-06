@@ -220,13 +220,13 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 
 			// Audit columns (on every audit table)
 			final var sourceTableName = sourceMapping.getTableName();
-			final var txIdMapping = auditMapping.getChangesetIdMapping( sourceTableName );
+			final var csIdMapping = auditMapping.getChangesetIdMapping( sourceTableName );
 			final var modTypeMapping = auditMapping.getModificationTypeMapping( sourceTableName );
 			if ( useServerTransactionTimestamps ) {
-				insertBuilder.addValueColumn( currentTimestampFunctionName, txIdMapping );
+				insertBuilder.addValueColumn( currentTimestampFunctionName, csIdMapping );
 			}
 			else {
-				insertBuilder.addValueColumn( "?", txIdMapping );
+				insertBuilder.addValueColumn( "?", csIdMapping );
 			}
 			if ( modTypeMapping != null ) {
 				insertBuilder.addValueColumn( "?", modTypeMapping );
@@ -356,7 +356,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 					continue;
 				}
 
-				// SET REVEND = :txId
+				// SET REVEND = :changesetId
 				jdbcValueBindings.bindValue(
 						session.getCurrentChangesetIdentifier(),
 						tableName,

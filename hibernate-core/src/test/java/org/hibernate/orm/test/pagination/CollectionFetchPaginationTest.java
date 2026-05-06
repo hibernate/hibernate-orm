@@ -354,6 +354,33 @@ public class CollectionFetchPaginationTest {
 		} );
 	}
 
+	@Test
+	void fetchJoinWithCollectionOrderMaxResultsAsStream(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( s -> {
+			sql.clear();
+
+			final List<Book> books;
+			try ( var stream = s.createSelectionQuery(
+					"from Book b left join fetch b.authors a where b.isbn like 'isbn-%' "
+					+ "order by a.name desc, b.title",
+					Book.class
+			).setMaxResults( 2 ).getResultStream() ) {
+				books = stream.distinct().toList();
+			}
+
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-4", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-3", books.get( 1 ).getIsbn() );
+			for ( Book b : books ) {
+				assertEquals( 3, b.getAuthors().size() );
+			}
+
+			// the limit can't be applied in this case, because the order by clause is weird
+			assertFalse( sql.getSqlQueries().get( 0 ).toLowerCase().contains( "from (select" ) );
+		} );
+	}
+
 	/**
 	 * {@code select distinct b} together with a fetch + limit. {@code usesDistinct}
 	 * sets {@code needsDistinct=true} via a different path than the implicit
@@ -446,6 +473,58 @@ public class CollectionFetchPaginationTest {
 			assertEquals( "isbn-1", rows.get( 1 ).book().getIsbn() );
 			assertEquals( "Acme", rows.get( 0 ).publisher().getName() );
 			assertEquals( "Zenith", rows.get( 1 ).publisher().getName() );
+
+			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
+			assertTrue( generated.contains( "from (select" ) );
+		} );
+	}
+
+	@Test
+	void fetchJoinWithMultipleRootsAndPositionalOrderBy(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( s -> {
+			sql.clear();
+
+			record BookPublisherName(Book book, String publisherName) {}
+
+			final List<BookPublisherName> rows = s.createSelectionQuery(
+							"select b, p.name from Book b left join fetch b.authors, Publisher p "
+							+ "where b.publisher = p order by 2, b.isbn",
+							BookPublisherName.class
+					).setMaxResults( 2 ).list()
+					.stream().distinct().toList();
+
+			assertEquals( 2, rows.size() );
+			assertEquals( "isbn-0", rows.get( 0 ).book().getIsbn() );
+			assertEquals( "isbn-2", rows.get( 1 ).book().getIsbn() );
+			assertEquals( "Acme", rows.get( 0 ).publisherName() );
+			assertEquals( "Acme", rows.get( 1 ).publisherName() );
+
+			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
+			assertTrue( generated.contains( "from (select" ) );
+		} );
+	}
+
+	@Test
+	void fetchJoinWithMultipleRootsAndPositionalExpressionOrderBy(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( s -> {
+			sql.clear();
+
+			record BookPublisherName(Book book, String publisherName) {}
+
+			final List<BookPublisherName> rows = s.createSelectionQuery(
+							"select b, lower(p.name) from Book b left join fetch b.authors, Publisher p "
+							+ "where b.publisher = p order by 2, b.isbn",
+							BookPublisherName.class
+					).setMaxResults( 2 ).list()
+					.stream().distinct().toList();
+
+			assertEquals( 2, rows.size() );
+			assertEquals( "isbn-0", rows.get( 0 ).book().getIsbn() );
+			assertEquals( "isbn-2", rows.get( 1 ).book().getIsbn() );
+			assertEquals( "acme", rows.get( 0 ).publisherName() );
+			assertEquals( "acme", rows.get( 1 ).publisherName() );
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
 			assertTrue( generated.contains( "from (select" ) );

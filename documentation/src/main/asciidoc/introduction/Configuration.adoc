@@ -311,8 +311,6 @@ If we're using programmatic configuration, but we don't want to put certain conf
 ----
 # PostgreSQL
 jakarta.persistence.jdbc.url=jdbc:postgresql://localhost/example
-# Google Cloud Spanner (PostgreSQL dialect)
-jakarta.persistence.jdbc.url=jdbc:cloudspanner:/projects/my-project/instances/my-instance/databases/my-db?dialect=postgresql;defaultsequencekind=bit_reversed_positive
 # Credentials
 jakarta.persistence.jdbc.user=hibernate
 jakarta.persistence.jdbc.password=zAh7mY$2MNshzAQ5

@@ -10,7 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Audited;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.EntityTrackingChangesetListener;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -104,7 +104,7 @@ class EntityTrackingChangesetListenerTest {
 	}
 
 	@Test
-	void testChangesetEntityAccessible(SessionFactoryScope scope) {
+	void testChangelogAccessible(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction( session -> {
 			var entity = new TrackedEntity();
 			entity.id = 20L;
@@ -149,17 +149,17 @@ class EntityTrackingChangesetListenerTest {
 
 	// ---- Entities ----
 
-	@ChangesetEntity(listener = TrackingListener.class)
+	@Changelog(listener = TrackingListener.class)
 	@Entity(name = "TrackingRevisionInfo")
 	@Table(name = "REVINFO")
 	static class TrackingRevisionInfo {
 		@Id
 		@GeneratedValue
-		@ChangesetEntity.ChangesetId
+		@Changelog.ChangesetId
 		@Column(name = "REV")
 		int id;
 
-		@ChangesetEntity.Timestamp
+		@Changelog.Timestamp
 		@Column(name = "REVTSTMP")
 		long timestamp;
 

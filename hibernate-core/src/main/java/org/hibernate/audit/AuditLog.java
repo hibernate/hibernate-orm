@@ -4,7 +4,7 @@
  */
 package org.hibernate.audit;
 
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 
 import java.time.Instant;
 import java.util.List;
@@ -191,7 +191,7 @@ public interface AuditLog extends AutoCloseable {
 	 * chronologically by changeset identifier.
 	 * <p>
 	 * Each entry contains the entity snapshot, the changeset
-	 * identifier (or changeset entity), and the
+	 * identifier (or changelog entity), and the
 	 * {@linkplain ModificationType modification type}
 	 * (ADD/MOD/DEL).
 	 * <p>
@@ -212,9 +212,9 @@ public interface AuditLog extends AutoCloseable {
 	 * Get the set of entity types that were modified in the
 	 * given changeset.
 	 * <p>
-	 * Requires a {@link ChangesetEntity @ChangesetEntity} with a
-	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
-	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangesetEntity}).
+	 * Requires a {@link Changelog @Changelog} with a
+	 * {@link Changelog.ModifiedEntities @ModifiedEntities} property
+	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangelog}).
 	 *
 	 * @param changesetId the changeset identifier
 	 *
@@ -228,9 +228,9 @@ public interface AuditLog extends AutoCloseable {
 	 * Find all entity snapshots across all audited types that
 	 * were modified in the given changeset.
 	 * <p>
-	 * Requires a {@link ChangesetEntity @ChangesetEntity} with a
-	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
-	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangesetEntity}).
+	 * Requires a {@link Changelog @Changelog} with a
+	 * {@link Changelog.ModifiedEntities @ModifiedEntities} property
+	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangelog}).
 	 *
 	 * @param changesetId the changeset identifier
 	 *
@@ -245,9 +245,9 @@ public interface AuditLog extends AutoCloseable {
 	 * were modified in the given changeset with the specified
 	 * modification type.
 	 * <p>
-	 * Requires a {@link ChangesetEntity @ChangesetEntity} with a
-	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
-	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangesetEntity}).
+	 * Requires a {@link Changelog @Changelog} with a
+	 * {@link Changelog.ModifiedEntities @ModifiedEntities} property
+	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangelog}).
 	 *
 	 * @param changesetId the changeset identifier
 	 * @param modificationType the modification type filter
@@ -262,9 +262,9 @@ public interface AuditLog extends AutoCloseable {
 	 * Find all entity snapshots modified in the given changeset,
 	 * grouped by modification type (ADD, MOD, DEL).
 	 * <p>
-	 * Requires a {@link ChangesetEntity @ChangesetEntity} with a
-	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
-	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangesetEntity}).
+	 * Requires a {@link Changelog @Changelog} with a
+	 * {@link Changelog.ModifiedEntities @ModifiedEntities} property
+	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangelog}).
 	 *
 	 * @param changesetId the changeset identifier
 	 *
@@ -276,14 +276,14 @@ public interface AuditLog extends AutoCloseable {
 
 	/**
 	 * Get the timestamp of a specific changeset. Requires
-	 * a {@link ChangesetEntity @ChangesetEntity} with a
-	 * {@link ChangesetEntity.Timestamp @Timestamp} field.
+	 * a {@link Changelog @Changelog} with a
+	 * {@link Changelog.Timestamp @Timestamp} field.
 	 *
 	 * @param changesetId the changeset identifier
 	 *
 	 * @return the changeset timestamp
 	 *
-	 * @throws AuditException if no changeset entity is configured
+	 * @throws AuditException if no changelog entity is configured
 	 * or the changeset does not exist
 	 */
 	Instant getChangesetTimestamp(Object changesetId);
@@ -291,8 +291,8 @@ public interface AuditLog extends AutoCloseable {
 	/**
 	 * Get the changeset identifier that was current at or
 	 * before the given instant. Requires a
-	 * {@link ChangesetEntity @ChangesetEntity} with a
-	 * {@link ChangesetEntity.Timestamp @Timestamp} field.
+	 * {@link Changelog @Changelog} with a
+	 * {@link Changelog.Timestamp @Timestamp} field.
 	 *
 	 * @param instant the point in time
 	 *
@@ -305,30 +305,30 @@ public interface AuditLog extends AutoCloseable {
 	Object getChangesetId(Instant instant);
 
 	/**
-	 * Load the changeset entity for the given changeset identifier.
-	 * Requires a {@link ChangesetEntity @ChangesetEntity}.
+	 * Load the changelog entity for the given changeset identifier.
+	 * Requires a {@link Changelog @Changelog}.
 	 *
-	 * @param changesetEntityClass the changeset entity class
+	 * @param changelogClass the changelog entity class
 	 * @param changesetId the changeset identifier
-	 * @param <T> the changeset entity type
+	 * @param <T> the changelog entity type
 	 *
-	 * @return the changeset entity
+	 * @return the changelog entity
 	 *
-	 * @throws AuditException if no changeset entity is configured
+	 * @throws AuditException if no changelog entity is configured
 	 * or the changeset does not exist
 	 */
-	<T> T findChangeset(Class<T> changesetEntityClass, Object changesetId);
+	<T> T findChangeset(Class<T> changelogClass, Object changesetId);
 
 	/**
 	 * Load changeset entities for multiple changeset identifiers.
-	 * Requires a {@link ChangesetEntity @ChangesetEntity}.
+	 * Requires a {@link Changelog @Changelog}.
 	 *
-	 * @param changesetEntityClass the changeset entity class
+	 * @param changelogClass the changelog entity class
 	 * @param changesetIds the changeset identifiers
-	 * @param <T> the changeset entity type
+	 * @param <T> the changelog entity type
 	 *
-	 * @return a map from changeset identifier to changeset entity
+	 * @return a map from changeset identifier to changelog entity
 	 */
-	<T> Map<Object, T> findChangesets(Class<T> changesetEntityClass, Set<?> changesetIds);
+	<T> Map<Object, T> findChangesets(Class<T> changelogClass, Set<?> changesetIds);
 
 }

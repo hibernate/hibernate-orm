@@ -9,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Transient;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
@@ -23,25 +23,25 @@ import java.time.Instant;
  * via {@link CreationTimestamp}.
  * <p>
  * Extend this class to create a custom
- * {@link ChangesetEntity @ChangesetEntity}. For entity change
- * tracking, extend {@link TrackingModifiedEntitiesChangesetMapping}
+ * {@link Changelog @Changelog}. For entity change
+ * tracking, extend {@link TrackingModifiedEntitiesChangelogMapping}
  * instead.
  *
  * @author Marco Belladelli
- * @see DefaultChangesetEntity
- * @see TrackingModifiedEntitiesChangesetMapping
+ * @see DefaultChangelog
+ * @see TrackingModifiedEntitiesChangelogMapping
  * @since 7.4
  */
 @MappedSuperclass
-public class ChangesetMapping implements Serializable {
+public class ChangelogMapping implements Serializable {
 	@Id
 	@GeneratedValue
-	@ChangesetEntity.ChangesetId
+	@Changelog.ChangesetId
 	@Column(name = "REV")
 	private long id;
 
 	@CreationTimestamp
-	@ChangesetEntity.Timestamp
+	@Changelog.Timestamp
 	@Column(name = "REVTSTMP")
 	private long timestamp;
 
@@ -71,7 +71,7 @@ public class ChangesetMapping implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof ChangesetMapping that) ) {
+		if ( !(o instanceof ChangelogMapping that) ) {
 			return false;
 		}
 		return id == that.id
@@ -87,7 +87,7 @@ public class ChangesetMapping implements Serializable {
 
 	@Override
 	public String toString() {
-		return "ChangesetMapping(id = " + id
+		return "ChangelogMapping(id = " + id
 			+ ", timestamp = " + getRevisionInstant() + ")";
 	}
 }

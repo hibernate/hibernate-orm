@@ -12,7 +12,7 @@ import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.EntityTrackingChangesetListener;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -81,7 +81,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 	private final Map<EntityKey, QueuedEntry> entries = new LinkedHashMap<>();
 	private final Map<CollectionKey, QueuedCollectionEntry> collectionEntries = new LinkedHashMap<>();
 	private EntityTrackingChangesetListener trackingListener;
-	private Object changesetEntity;
+	private Object changelog;
 	private @Nullable Session changesetSession;
 	private boolean registered;
 
@@ -201,14 +201,14 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 	}
 
 	/**
-	 * Store the changeset entity and the child session used to
+	 * Store the changelog entity and the child session used to
 	 * persist it. The child session is kept open for deferred
 	 * flush of {@code @ElementCollection} changes (e.g.
-	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}).
-	 * Called from {@link ChangesetEntitySupplier#generateIdentifier}.
+	 * {@link Changelog.ModifiedEntities @ModifiedEntities}).
+	 * Called from {@link ChangelogSupplier#generateIdentifier}.let's
 	 */
-	public void setChangesetContext(Object changesetEntity, Session changesetSession) {
-		this.changesetEntity = changesetEntity;
+	public void setChangesetContext(Object changelog, Session changesetSession) {
+		this.changelog = changelog;
 		this.changesetSession = changesetSession;
 	}
 
@@ -231,7 +231,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 							entityKey.getPersister().getMappedClass(),
 							entityKey.getIdentifier(),
 							entry.modificationType,
-							changesetEntity
+							changelog
 					);
 				}
 			}
@@ -244,32 +244,32 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 						session
 				);
 			}
-			// Populate @ModifiedEntities on the changeset entity
+			// Populate @ModifiedEntities on the changelog entity
 			populateModifiedEntityNames( session );
 		}
 		finally {
 			entries.clear();
 			collectionEntries.clear();
 			trackingListener = null;
-			changesetEntity = null;
+			changelog = null;
 			changesetSession = null;
 			registered = false;
 		}
 	}
 
 	private void populateModifiedEntityNames(SharedSessionContractImplementor session) {
-		final var supplier = ChangesetEntitySupplier.resolve( session.getFactory().getServiceRegistry() );
+		final var supplier = ChangelogSupplier.resolve( session.getFactory().getServiceRegistry() );
 		if ( supplier != null && supplier.getModifiedEntitiesProperty() != null ) {
 			final var persister = session.getEntityPersister(
-					supplier.getChangesetEntityClass().getName(),
-					changesetEntity
+					supplier.getChangelogClass().getName(),
+					changelog
 			);
 			final var attr = persister.findAttributeMapping( supplier.getModifiedEntitiesProperty() );
 			//noinspection unchecked
-			var entityNames = (Set<String>) persister.getValue( changesetEntity, attr.getStateArrayPosition() );
+			var entityNames = (Set<String>) persister.getValue( changelog, attr.getStateArrayPosition() );
 			if ( entityNames == null ) {
 				entityNames = new HashSet<>();
-				persister.setValue( changesetEntity, attr.getStateArrayPosition(), entityNames );
+				persister.setValue( changelog, attr.getStateArrayPosition(), entityNames );
 			}
 			for ( var entityKey : entries.keySet() ) {
 				entityNames.add( entityKey.getEntityName() );
@@ -280,7 +280,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 
 	private static EntityTrackingChangesetListener resolveTrackingListener(
 			SharedSessionContractImplementor session) {
-		final var supplier = ChangesetEntitySupplier.resolve( session.getFactory().getServiceRegistry() );
+		final var supplier = ChangelogSupplier.resolve( session.getFactory().getServiceRegistry() );
 		if ( supplier != null && supplier.getListener() instanceof EntityTrackingChangesetListener etrl ) {
 			return etrl;
 		}

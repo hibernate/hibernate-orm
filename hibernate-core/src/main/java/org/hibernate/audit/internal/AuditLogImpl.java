@@ -10,7 +10,7 @@ import org.hibernate.audit.AuditEntry;
 import org.hibernate.audit.AuditException;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.audit.spi.ChangesetEntitySupplier;
+import org.hibernate.audit.spi.ChangelogSupplier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -43,8 +43,8 @@ import static java.util.Objects.requireNonNull;
 public class AuditLogImpl implements AuditLog {
 	private final SessionFactoryImplementor sessionFactory;
 	private final SharedSessionContractImplementor auditSession;
-	private final @Nullable ChangesetEntitySupplier<?> changesetEntitySupplier;
-	private final @Nullable String changesetEntityName;
+	private final @Nullable ChangelogSupplier<?> changelogSupplier;
+	private final @Nullable String changelogName;
 	private final @Nullable String changesetIdProperty;
 	private final @Nullable String timestampProperty;
 	private final @Nullable String modifiedEntitiesProperty;
@@ -57,24 +57,24 @@ public class AuditLogImpl implements AuditLog {
 	public AuditLogImpl(SharedSessionContractImplementor auditSession) {
 		this.auditSession = auditSession;
 		this.sessionFactory = auditSession.getSessionFactory();
-		final var supplier = ChangesetEntitySupplier.resolve( sessionFactory.getServiceRegistry() );
+		final var supplier = ChangelogSupplier.resolve( sessionFactory.getServiceRegistry() );
 		if ( supplier != null ) {
-			this.changesetEntitySupplier = supplier;
-			this.changesetEntityName = sessionFactory.getMappingMetamodel()
-					.getEntityDescriptor( supplier.getChangesetEntityClass() )
+			this.changelogSupplier = supplier;
+			this.changelogName = sessionFactory.getMappingMetamodel()
+					.getEntityDescriptor( supplier.getChangelogClass() )
 					.getEntityName();
 			this.changesetIdProperty = supplier.getChangesetIdProperty();
 			this.timestampProperty = supplier.getTimestampProperty();
 			this.modifiedEntitiesProperty = supplier.getModifiedEntitiesProperty();
 			this.timestampFieldType = sessionFactory.getMappingMetamodel()
-					.getEntityDescriptor( supplier.getChangesetEntityClass() )
+					.getEntityDescriptor( supplier.getChangelogClass() )
 					.findAttributeMapping( supplier.getTimestampProperty() )
 					.getJavaType().getJavaTypeClass();
 		}
 		else {
 			this.modifiedEntitiesProperty = null;
-			this.changesetEntitySupplier = null;
-			this.changesetEntityName = null;
+			this.changelogSupplier = null;
+			this.changelogName = null;
 			this.changesetIdProperty = null;
 			this.timestampProperty = null;
 			this.timestampFieldType = null;
@@ -231,10 +231,10 @@ public class AuditLogImpl implements AuditLog {
 		requireNonNull( id, "Primary key" );
 
 		final String hql;
-		if ( changesetEntityName != null ) {
+		if ( changelogName != null ) {
 			hql = "select e, r, modificationType(e)"
 					+ " from " + entityName + " e"
-					+ " join " + changesetEntityName + " r"
+					+ " join " + changelogName + " r"
 					+ " on r." + changesetIdProperty + " = changesetId(e)"
 					+ " where e.id = :id"
 					+ " order by changesetId(e)";
@@ -317,7 +317,7 @@ public class AuditLogImpl implements AuditLog {
 	private List<String> queryRevChangesEntityNames(Object changesetId) {
 		return auditSession.createSelectionQuery(
 				"select element(r." + modifiedEntitiesProperty + ")"
-						+ " from " + changesetEntityName + " r"
+						+ " from " + changelogName + " r"
 						+ " where r." + changesetIdProperty + " = :csId",
 				String.class
 		).setParameter( "csId", changesetId ).getResultList();
@@ -327,8 +327,8 @@ public class AuditLogImpl implements AuditLog {
 		if ( modifiedEntitiesProperty == null ) {
 			throw new AuditException(
 					"Entity change tracking is not enabled. "
-							+ "Use a @ChangesetEntity with a @ChangesetEntity.ModifiedEntities property "
-							+ "(e.g. DefaultTrackingModifiedEntitiesChangesetEntity)."
+							+ "Use a @Changelog with a @Changelog.ModifiedEntities property "
+							+ "(e.g. DefaultTrackingModifiedEntitiesChangelog)."
 			);
 		}
 	}
@@ -338,9 +338,9 @@ public class AuditLogImpl implements AuditLog {
 	@Override
 	public Instant getChangesetTimestamp(Object changesetId) {
 		requireNonNull( changesetId, "Changeset identifier" );
-		requireChangesetEntity();
+		requireChangelog();
 		final String hql = "select e." + timestampProperty
-				+ " from " + changesetEntityName + " e"
+				+ " from " + changelogName + " e"
 				+ " where e." + changesetIdProperty + " = :rev";
 		final var result = auditSession
 				.createSelectionQuery( hql, Object.class )
@@ -359,11 +359,11 @@ public class AuditLogImpl implements AuditLog {
 	}
 
 	@Override
-	public <T> T findChangeset(Class<T> changesetEntityClass, Object changesetId) {
-		requireChangesetEntity();
+	public <T> T findChangeset(Class<T> changelogClass, Object changesetId) {
+		requireChangelog();
 		final var result = auditSession.createSelectionQuery(
-				"from " + changesetEntityName + " where " + changesetIdProperty + " = :rev",
-				changesetEntityClass
+				"from " + changelogName + " where " + changesetIdProperty + " = :rev",
+				changelogClass
 		).setParameter( "rev", changesetId ).getSingleResultOrNull();
 		if ( result == null ) {
 			throw new AuditException( "Changeset does not exist: " + changesetId );
@@ -372,18 +372,18 @@ public class AuditLogImpl implements AuditLog {
 	}
 
 	@Override
-	public <T> Map<Object, T> findChangesets(Class<T> changesetEntityClass, Set<?> changesetIds) {
-		requireChangesetEntity();
+	public <T> Map<Object, T> findChangesets(Class<T> changelogClass, Set<?> changesetIds) {
+		requireChangelog();
 		final var results = auditSession.createSelectionQuery(
 				"select r." + changesetIdProperty + ", r"
-						+ " from " + changesetEntityName + " r"
+						+ " from " + changelogName + " r"
 						+ " where r." + changesetIdProperty + " in :revs"
 						+ " order by r." + changesetIdProperty,
 				Object[].class
 		).setParameter( "revs", changesetIds ).getResultList();
 		final Map<Object, T> map = new LinkedHashMap<>();
 		for ( var row : results ) {
-			map.put( row[0], changesetEntityClass.cast( row[1] ) );
+			map.put( row[0], changelogClass.cast( row[1] ) );
 		}
 		return map;
 	}
@@ -391,9 +391,9 @@ public class AuditLogImpl implements AuditLog {
 	// --- Helpers ---
 
 	private Object resolveChangesetIdForTimestamp(Object timestampValue) {
-		requireChangesetEntity();
+		requireChangelog();
 		final String hql = "select max(e." + changesetIdProperty + ")"
-				+ " from " + changesetEntityName + " e"
+				+ " from " + changelogName + " e"
 				+ " where e." + timestampProperty + " <= :ts";
 		final var result = auditSession
 				.createSelectionQuery( hql, Object.class )
@@ -406,7 +406,7 @@ public class AuditLogImpl implements AuditLog {
 	}
 
 	/**
-	 * Convert an {@link Instant} to match the changeset entity's
+	 * Convert an {@link Instant} to match the changelog entity's
 	 * timestamp field type.
 	 */
 	private Object resolveTimestampValue(Instant instant) {
@@ -424,12 +424,12 @@ public class AuditLogImpl implements AuditLog {
 		}
 	}
 
-	private void requireChangesetEntity() {
-		if ( changesetEntitySupplier == null ) {
+	private void requireChangelog() {
+		if ( changelogSupplier == null ) {
 			throw new AuditException(
-					"No @ChangesetEntity configured. "
-							+ "This operation requires a changeset entity with "
-							+ "@ChangesetEntity.ChangesetId and @ChangesetEntity.Timestamp fields."
+					"No @Changelog configured. "
+							+ "This operation requires a changelog entity with "
+							+ "@Changelog.ChangesetId and @Changelog.Timestamp fields."
 			);
 		}
 	}

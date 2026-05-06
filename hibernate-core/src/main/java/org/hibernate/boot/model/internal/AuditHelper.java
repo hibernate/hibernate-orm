@@ -15,9 +15,9 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Audited;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.ChangesetListener;
-import org.hibernate.audit.spi.ChangesetEntitySupplier;
+import org.hibernate.audit.spi.ChangelogSupplier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -128,7 +128,7 @@ public final class AuditHelper {
 
 		// Defer audit column creation to a second pass so the transaction
 		// ID type is resolved after all entities are bound, including any
-		// @ChangesetEntity contributed by mapping contributors
+		// @Changelog contributed by mapping contributors
 		collector.addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
 			// Auto-exclude @Version property from audit tables
 			if ( auditable instanceof RootClass rootClass && rootClass.isVersioned() ) {
@@ -393,20 +393,18 @@ public final class AuditHelper {
 		} );
 	}
 
-	static void bindChangesetEntity(
-			ChangesetEntity changesetEntity,
+	static void bindChangelog(
+			Changelog changelog,
 			RootClass rootClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 
-		// todo : @ChangesetEntity currently requires @Entity;
-		//  could we automatically imply @Entity for @ChangesetEntity classes
-		//  so users don't need both annotations?
+		// note : @Changelog currently requires @Entity as well
 
 		// The entity must not be audited
 		if ( classDetails.hasAnnotationUsage( Audited.class, modelsContext ) ) {
-			throw new MappingException( "The @ChangesetEntity entity cannot be audited" );
+			throw new MappingException( "The @Changelog entity cannot be audited" );
 		}
 
 		// Scan class members (including supertypes) for @ChangesetId,
@@ -421,19 +419,19 @@ public final class AuditHelper {
 				revNumberMember = checkAnnotation(
 						member,
 						revNumberMember,
-						ChangesetEntity.ChangesetId.class,
+						Changelog.ChangesetId.class,
 						classDetails
 				);
 				revTimestampMember = checkAnnotation(
 						member,
 						revTimestampMember,
-						ChangesetEntity.Timestamp.class,
+						Changelog.Timestamp.class,
 						classDetails
 				);
 				modifiedEntityNamesMember = checkAnnotation(
 						member,
 						modifiedEntityNamesMember,
-						ChangesetEntity.ModifiedEntities.class,
+						Changelog.ModifiedEntities.class,
 						classDetails
 				);
 			}
@@ -441,19 +439,19 @@ public final class AuditHelper {
 				revNumberMember = checkAnnotation(
 						member,
 						revNumberMember,
-						ChangesetEntity.ChangesetId.class,
+						Changelog.ChangesetId.class,
 						classDetails
 				);
 				revTimestampMember = checkAnnotation(
 						member,
 						revTimestampMember,
-						ChangesetEntity.Timestamp.class,
+						Changelog.Timestamp.class,
 						classDetails
 				);
 				modifiedEntityNamesMember = checkAnnotation(
 						member,
 						modifiedEntityNamesMember,
-						ChangesetEntity.ModifiedEntities.class,
+						Changelog.ModifiedEntities.class,
 						classDetails
 				);
 			}
@@ -461,25 +459,25 @@ public final class AuditHelper {
 
 		if ( revNumberMember == null ) {
 			throw new MappingException(
-					"@ChangesetEntity '" + classDetails.getName()
-							+ "' must have a property annotated with @ChangesetEntity.ChangesetId"
+					"@Changelog '" + classDetails.getName()
+							+ "' must have a property annotated with @Changelog.ChangesetId"
 			);
 		}
 		if ( revTimestampMember == null ) {
 			throw new MappingException(
-					"@ChangesetEntity '" + classDetails.getName()
-							+ "' must have a property annotated with @ChangesetEntity.Timestamp"
+					"@Changelog '" + classDetails.getName()
+							+ "' must have a property annotated with @Changelog.Timestamp"
 			);
 		}
 
 		// Configure the supplier eagerly
 		final var serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final var listenerClass = changesetEntity.listener();
+		final var listenerClass = changelog.listener();
 		final var listener = listenerClass != ChangesetListener.class
 				? serviceRegistry.requireService( ManagedBeanRegistry.class )
 						.getBean( listenerClass ).getBeanInstance()
 				: null;
-		final var supplier = new ChangesetEntitySupplier<>(
+		final var supplier = new ChangelogSupplier<>(
 				classDetails.toJavaClass(),
 				revNumberMember.resolveAttributeName(),
 				revTimestampMember.resolveAttributeName(),
@@ -497,7 +495,7 @@ public final class AuditHelper {
 		final String revNumberName = revNumberMember.resolveAttributeName();
 		final String revTimestampName = revTimestampMember.resolveAttributeName();
 		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored ->
-				validateChangesetEntity( entityName, revNumberName, revTimestampName, context )
+				validateChangelog( entityName, revNumberName, revTimestampName, context )
 		);
 	}
 
@@ -513,7 +511,7 @@ public final class AuditHelper {
 		if ( member.hasDirectAnnotationUsage( annotationType ) ) {
 			if ( existing != null ) {
 				throw new MappingException(
-						"@ChangesetEntity '" + classDetails.getName()
+						"@Changelog '" + classDetails.getName()
 								+ "' has multiple members annotated with @"
 								+ annotationType.getSimpleName()
 				);
@@ -524,11 +522,11 @@ public final class AuditHelper {
 	}
 
 	/**
-	 * Second-pass validation: verify {@code @ChangesetEntity.ChangesetId}
-	 * and {@code @ChangesetEntity.Timestamp} are mapped as basic properties,
+	 * Second-pass validation: verify {@code @Changelog.ChangesetId}
+	 * and {@code @Changelog.Timestamp} are mapped as basic properties,
 	 * and add a unique constraint on non-ID {@code @ChangesetId}.
 	 */
-	private static void validateChangesetEntity(
+	private static void validateChangelog(
 			String entityName,
 			String revNumberName,
 			String revTimestampName,
@@ -540,9 +538,9 @@ public final class AuditHelper {
 		final var revNumberProperty = requireBasicProperty(
 				entityBinding,
 				revNumberName,
-				"@ChangesetEntity.ChangesetId"
+				"@Changelog.ChangesetId"
 		);
-		requireBasicProperty( entityBinding, revTimestampName, "@ChangesetEntity.Timestamp" );
+		requireBasicProperty( entityBinding, revTimestampName, "@Changelog.Timestamp" );
 		// Add unique constraint on non-ID @ChangesetId
 		if ( revNumberProperty != entityBinding.getIdentifierProperty() ) {
 			for ( var column : revNumberProperty.getColumns() ) {
@@ -565,7 +563,7 @@ public final class AuditHelper {
 		catch (MappingException e) {
 			throw new MappingException(
 					annotationName + " member '" + propertyName
-							+ "' is not mapped as a property on @ChangesetEntity '"
+							+ "' is not mapped as a property on @Changelog '"
 							+ entityBinding.getEntityName() + "'"
 			);
 		}
@@ -581,7 +579,7 @@ public final class AuditHelper {
 	/**
 	 * Create an audit table for the given source table: copy columns,
 	 * add the REV column, create the composite PK, and add the
-	 * REV -> REVINFO FK (if a changeset entity is configured).
+	 * REV -> REVINFO FK (if a changelog entity is configured).
 	 */
 	private static Table createAuditTable(
 			Table sourceTable,
@@ -725,19 +723,19 @@ public final class AuditHelper {
 
 	/**
 	 * Create a FK from the audit table's REV (or REVEND) column to the
-	 * changeset entity's PK. Only applies when {@code @ChangesetEntity}
+	 * changelog entity's PK. Only applies when {@code @Changelog}
 	 * is configured.
 	 */
 	private static void createChangesetForeignKey(
 			Table auditTable,
 			Column revColumn,
 			MetadataBuildingContext context) {
-		final String changesetEntityName = getChangesetEntityName( context );
-		if ( changesetEntityName != null ) {
+		final String changelogName = getChangelogName( context );
+		if ( changelogName != null ) {
 			auditTable.createForeignKey(
 					null,
 					List.of( revColumn ),
-					changesetEntityName,
+					changelogName,
 					null,
 					null
 			);
@@ -763,9 +761,9 @@ public final class AuditHelper {
 		fk.setReferencedTable( referencedAuditTable );
 	}
 
-	private static @Nullable String getChangesetEntityName(MetadataBuildingContext context) {
-		final var supplier = ChangesetEntitySupplier.resolve( context.getBootstrapContext().getServiceRegistry() );
-		return supplier != null ? supplier.getChangesetEntityClass().getName() : null;
+	private static @Nullable String getChangelogName(MetadataBuildingContext context) {
+		final var supplier = ChangelogSupplier.resolve( context.getBootstrapContext().getServiceRegistry() );
+		return supplier != null ? supplier.getChangelogClass().getName() : null;
 	}
 
 	private static Set<String> resolveExcludedColumns(Iterable<Property> properties) {

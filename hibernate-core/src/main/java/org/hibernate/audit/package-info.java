@@ -17,12 +17,12 @@
  * <p>
  * This package also contains the base classes and contracts for
  * defining custom
- * {@linkplain org.hibernate.annotations.ChangesetEntity changeset
+ * {@linkplain org.hibernate.annotations.Changelog changeset
  * entities} and {@linkplain org.hibernate.audit.ChangesetListener
  * changeset listeners}.
  *
  * @see org.hibernate.annotations.Audited
- * @see org.hibernate.annotations.ChangesetEntity
+ * @see org.hibernate.annotations.Changelog
  * @see org.hibernate.audit.AuditLog
  * @see org.hibernate.audit.AuditLogFactory
  */

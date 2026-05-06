@@ -46,11 +46,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * increasing changeset id. Changeset ids can be supplied in
  * two ways:
  * <ul>
- * <li>A {@link ChangesetEntity @ChangesetEntity} may be
+ * <li>A {@link Changelog @Changelog} may be
  *     defined in the domain model. An instance is
  *     automatically persisted once per transaction, and its
  *     generated primary key serves as the changeset id.
- *     A changeset entity will also carry metadata such as its
+ *     A changelog entity will also carry metadata such as its
  *     creation timestamp and, optionally, additional information
  *     such as the current user or a comment.
  * <li>A custom
@@ -83,7 +83,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * customize the audit log's table name, schema, catalog, or
  * column names for the audit log.
  *
- * @see ChangesetEntity
+ * @see Changelog
  * @see org.hibernate.audit.AuditLog
  * @see org.hibernate.audit.AuditLogFactory
  *

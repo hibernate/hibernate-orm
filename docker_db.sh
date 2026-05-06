@@ -109,6 +109,12 @@ mysql_9_5() {
 }
 
 mysql_9_6() {
+    compose_down "versioned/mysql-9.6/docker-compose.yaml" "mysql"
+    compose_up "versioned/mysql-9.6/docker-compose.yaml"
+    mysql_post_setup
+}
+
+mysql_9_7() {
     compose_down "latest/mysql/docker-compose.yaml" "mysql"
     compose_up "latest/mysql/docker-compose.yaml"
     mysql_post_setup
@@ -1132,6 +1138,7 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_9_7"
     echo -e "\tmysql_9_6"
     echo -e "\tmysql_9_5"
     echo -e "\tmysql_9_4"

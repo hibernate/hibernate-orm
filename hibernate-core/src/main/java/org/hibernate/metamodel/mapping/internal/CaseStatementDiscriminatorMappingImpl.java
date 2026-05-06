@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -283,7 +284,12 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 				SqlAppender sqlAppender,
 				SqlAstTranslator<?> walker,
 				SessionFactoryImplementor sessionFactory) {
-			buildCaseExpression().accept( walker );
+			getCaseExpression().accept( walker );
+		}
+
+		@Override
+		public void accept(SqlAstWalker sqlTreeWalker) {
+			getCaseExpression().accept( sqlTreeWalker );
 		}
 
 		/**
@@ -291,7 +297,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		 * and returns it. Exposed so transformations can access the case
 		 * expression's column references before SQL rendering.
 		 */
-		public CaseSearchedExpression buildCaseExpression() {
+		public CaseSearchedExpression getCaseExpression() {
 			//
 			CaseSearchedExpression expression = caseSearchedExpression;
 			if ( expression == null ) {

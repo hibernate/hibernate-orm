@@ -8,12 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
+import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SelfRenderingWindowFunctionSqlAstExpression;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -120,7 +124,31 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	private void doReplaceExpression(SqlAstNode expression) {
+		assert isLeafExpression( expression );
 		returnedNode = replaceExpression( expression );
+	}
+
+	protected boolean isLeafExpression(SqlAstNode expression) {
+		return expression instanceof ColumnReference
+				|| expression instanceof AggregateColumnWriteExpression
+				|| expression instanceof ExtractUnit
+				|| expression instanceof Format
+				|| expression instanceof Star
+				|| expression instanceof TrimSpecification
+				|| expression instanceof CastTarget
+				|| expression instanceof SqlSelectionExpression
+				|| expression instanceof EntityTypeLiteral
+				|| expression instanceof EmbeddableTypeLiteral
+				|| expression instanceof Collation
+				|| expression instanceof JdbcParameter
+				|| expression instanceof JdbcLiteral<?>
+				|| expression instanceof QueryLiteral<?>
+				|| expression instanceof UnparsedNumericLiteral<?>
+				|| expression instanceof DurationUnit
+				|| expression instanceof SqlFragmentPredicate
+				|| expression instanceof SelfRenderingExpression
+					&& !(expression instanceof AliasedExpression)
+					&& !(expression instanceof SelfRenderingFunctionSqlAstExpression);
 	}
 
 	@Override
@@ -360,8 +388,8 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 			|| newEndExpression != endExpression ) {
 			returnedNode = new Over<>(
 					newExpression,
-					newPartitions,
-					newOrderList,
+					newPartitions != null ? newPartitions : partitions,
+					newOrderList != null ? newOrderList : orderList,
 					over.getMode(),
 					over.getStartKind(),
 					newStartExpression,
@@ -377,8 +405,109 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		if ( expression instanceof CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression discriminatorExpression ) {
-			visitCaseSearchedExpression( discriminatorExpression.buildCaseExpression() );
+		if ( expression instanceof AliasedExpression aliasExpression ) {
+			final var aliasedExpression = aliasExpression.getExpression();
+			final var newExpression = replaceExpressions( aliasedExpression );
+			if ( aliasedExpression != newExpression ) {
+				returnedNode = new AliasedExpression( newExpression, aliasExpression.getAlias() );
+			}
+			else {
+				returnedNode = aliasedExpression;
+			}
+		}
+		else if ( expression instanceof SelfRenderingFunctionSqlAstExpression<?> functionExpression ) {
+			final var arguments = functionExpression.getArguments();
+			List<SqlAstNode> newArguments = null;
+			for ( int i = 0; i < arguments.size(); i++ ) {
+				final var argument = arguments.get( i );
+				final var newArgument = replaceExpressions( argument );
+				if ( newArgument != newArguments ) {
+					if ( newArguments == null ) {
+						newArguments = new ArrayList<>( arguments );
+					}
+					newArguments.set( i, newArgument );
+				}
+			}
+			if ( expression instanceof SelfRenderingAggregateFunctionSqlAstExpression<?> aggregate ) {
+				final var filter = aggregate.getFilter();
+				final var newFilter = replaceExpressions( filter );
+				if ( expression instanceof SelfRenderingOrderedSetAggregateFunctionSqlAstExpression<?> setAggregate ) {
+					final var withinGroup = setAggregate.getWithinGroup();
+					List<SortSpecification> newWithinGroup = null;
+					for ( int i = 0; i < withinGroup.size(); i++ ) {
+						final var sortSpecification = withinGroup.get( i );
+						final var newSortSpecification = replaceExpressions( sortSpecification );
+						if ( newSortSpecification != sortSpecification ) {
+							if ( newWithinGroup == null ) {
+								newWithinGroup = new ArrayList<>( withinGroup );
+							}
+							newWithinGroup.set( i, newSortSpecification );
+						}
+					}
+					if ( newArguments != null || newFilter != filter || newWithinGroup != null ) {
+						returnedNode = new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression<>(
+								functionExpression.getFunctionName(),
+								functionExpression.getFunctionRenderer(),
+								newArguments != null ? newArguments : arguments,
+								newFilter,
+								newWithinGroup != null ? newWithinGroup : withinGroup,
+								functionExpression.getType(),
+								functionExpression.getExpressible()
+						);
+					}
+					else {
+						returnedNode = functionExpression;
+					}
+				}
+				else {
+					if ( newArguments != null || newFilter != filter ) {
+						returnedNode = new SelfRenderingAggregateFunctionSqlAstExpression<>(
+								functionExpression.getFunctionName(),
+								functionExpression.getFunctionRenderer(),
+								newArguments != null ? newArguments : arguments,
+								newFilter,
+								functionExpression.getType(),
+								functionExpression.getExpressible()
+						);
+					}
+					else {
+						returnedNode = functionExpression;
+					}
+				}
+			}
+			else if ( expression instanceof SelfRenderingWindowFunctionSqlAstExpression<?> window ) {
+				final var filter = window.getFilter();
+				final var newFilter = replaceExpressions( filter );
+				if ( newArguments != null || newFilter != filter ) {
+					returnedNode = new SelfRenderingWindowFunctionSqlAstExpression<>(
+							functionExpression.getFunctionName(),
+							functionExpression.getFunctionRenderer(),
+							newArguments != null ? newArguments : arguments,
+							newFilter,
+							window.getRespectNulls(),
+							window.getFromFirst(),
+							functionExpression.getType(),
+							functionExpression.getExpressible()
+					);
+				}
+				else {
+					returnedNode = functionExpression;
+				}
+			}
+			else {
+				if ( newArguments != null ) {
+					returnedNode = new SelfRenderingFunctionSqlAstExpression<>(
+							functionExpression.getFunctionName(),
+							functionExpression.getFunctionRenderer(),
+							newArguments,
+							functionExpression.getType(),
+							functionExpression.getExpressible()
+					);
+				}
+				else {
+					returnedNode = functionExpression;
+				}
+			}
 		}
 		else {
 			doReplaceExpression( expression );

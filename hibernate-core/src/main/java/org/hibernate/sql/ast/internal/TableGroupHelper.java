@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
@@ -227,11 +226,6 @@ public class TableGroupHelper extends AbstractSqlAstWalker {
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
 		if ( expression instanceof SelfRenderingSqlFragmentExpression selfRenderingSqlFragmentExpression ) {
 			checkSql( selfRenderingSqlFragmentExpression.getExpression() );
-		}
-		else if ( expression instanceof CaseStatementDiscriminatorExpression caseStatementDiscriminatorExpression ) {
-			for ( TableReference usedTableReference : caseStatementDiscriminatorExpression.getUsedTableReferences() ) {
-				usedTableReference.accept( this );
-			}
 		}
 		else {
 			super.visitSelfRenderingExpression( expression );

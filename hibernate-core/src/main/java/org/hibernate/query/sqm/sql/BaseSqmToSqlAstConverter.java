@@ -109,6 +109,7 @@ import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpr
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.SqmPathVisitor;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
@@ -140,6 +141,7 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmPluralJoin;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
@@ -2260,6 +2262,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// fallback rather than emit unsupported SQL.
 				return false;
 			}
+			else if ( ordersByPluralFetchBeforeOwner( (SqmQuerySpec<?>) sqmQueryPart ) ) {
+				// When a query orders by a collection element before the owner,
+				// pushing the owner table into a paginated subquery is not safe,
+				// because the pagination ordering depends on the collection element.
+				// This is arguably silly, but let's play safe here and disable the transformation in this case.
+				return false;
+			}
 			else if ( sqmQueryPart.getFetchExpression() != null
 					|| sqmQueryPart.getOffsetExpression() != null ) {
 				return true;
@@ -2293,6 +2302,74 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		return false;
+	}
+
+	private static Set<SqmPath<?>> collectNonPluralPaths(SqmFromClause fromClause) {
+		final var nonPluralPaths = new HashSet<SqmPath<?>>();
+		for ( SqmRoot<?> root : fromClause.getRoots() ) {
+			collectPaths( root, nonPluralPaths, true );
+		}
+		return nonPluralPaths;
+	}
+
+	private static void collectPaths(SqmFrom<?, ?> from, HashSet<SqmPath<?>> paths, boolean nonPluralFetchOnly) {
+		paths.add( from );
+		for ( SqmJoin<?, ?> sqmJoin : from.getSqmJoins() ) {
+			if ( nonPluralFetchOnly
+					&& sqmJoin instanceof SqmAttributeJoin<?,?> attributeJoin
+					&& attributeJoin.isFetched() ) {
+				if ( !(sqmJoin instanceof AbstractSqmPluralJoin<?, ?, ?>) ) {
+					collectPaths( sqmJoin, paths, true );
+				}
+			}
+			else {
+				collectPaths( sqmJoin, paths, false );
+			}
+		}
+		for ( SqmTreatedFrom<?, ?, ?> sqmTreat : from.getSqmTreats() ) {
+			collectPaths( sqmTreat, paths, nonPluralFetchOnly );
+		}
+	}
+
+	public static boolean ordersByPluralFetchBeforeOwner(SqmQuerySpec<?> sqmQuerySpec) {
+		final var allowedPaths = collectNonPluralPaths( sqmQuerySpec.getFromClause() );
+		final var referencedPaths = new ArrayList<SqmPath<?>>();
+		final SqmPathVisitor pathVisitor = new SqmPathVisitor( referencedPaths::add );
+		boolean referencesPluralFetch = false;
+		for ( var sortSpecification : sqmQuerySpec.getSortSpecifications() ) {
+			referencedPaths.clear();
+			final SqmExpression<?> sortExpression = sortSpecification.getSortExpression();
+			if ( sortExpression instanceof SqmAliasedNodeRef aliasedNodeRef ) {
+				final var sqmSelection =
+						sqmQuerySpec.getSelectClause().getSelections().get( aliasedNodeRef.getPosition() - 1 );
+				sqmSelection.accept( pathVisitor );
+			}
+			else {
+				sortExpression.accept( pathVisitor );
+			}
+			for ( SqmPath<?> referencedPath : referencedPaths ) {
+				if ( isPluralFetchPath( referencedPath, allowedPaths ) ) {
+					referencesPluralFetch = true;
+					break;
+				}
+				else {
+					if ( referencesPluralFetch ) {
+						return true;
+					}
+				}
+			}
+		}
+		return referencesPluralFetch;
+	}
+
+	private static boolean isPluralFetchPath(SqmPath<?> referencedPath, Set<SqmPath<?>> allowedPaths) {
+		if ( referencedPath instanceof SqmFrom<?,?> ) {
+			return !allowedPaths.contains( referencedPath );
+		}
+		else {
+			assert referencedPath.getLhs() != null;
+			return !allowedPaths.contains( referencedPath.getLhs() );
+		}
 	}
 
 	/**

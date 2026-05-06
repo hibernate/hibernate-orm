@@ -33,6 +33,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.internal.GeneratorTypeHelper;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -565,8 +566,15 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public Generator createGenerator(RuntimeModelCreationContext context) {
-		return generatorCreator == null ? null :
-				generatorCreator.createGenerator( new PropertyGeneratorCreationContext( context ) );
+		if ( generatorCreator == null ) {
+			return null;
+		}
+		else {
+			final var creationContext = new PropertyGeneratorCreationContext( context );
+			final var generator = generatorCreator.createGenerator( creationContext );
+			GeneratorTypeHelper.checkGeneratorGeneratedType( generator, creationContext );
+			return generator;
+		}
 	}
 
 	public Property copy() {

@@ -82,10 +82,17 @@ public class SelectGenerator
 	public static final String KEY = "key";
 
 	private String uniqueKeyPropertyName;
+	private Class<?> generatedType;
 
 	@Override
 	public void configure(GeneratorCreationContext creationContext, Properties parameters) {
 		uniqueKeyPropertyName = parameters.getProperty( KEY );
+		generatedType = creationContext.getType().getReturnedClass();
+	}
+
+	@Override
+	public Class<?> getGeneratedType() {
+		return generatedType;
 	}
 
 	@Override

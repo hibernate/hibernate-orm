@@ -26,6 +26,7 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 
 	private final String entityName;
 	private final String propertyName;
+	private final Class<?> generatedType;
 
 	public TenantIdGeneration(TenantId annotation, GeneratorCreationContext context) {
 		final var persistentClass = context.getPersistentClass();
@@ -35,6 +36,7 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 						// it's an attribute of an embeddable
 						: context.getMemberDetails().toJavaMember().getDeclaringClass().getName();
 		propertyName = context.getProperty().getName();
+		generatedType = context.getType().getReturnedClass();
 	}
 
 	/**
@@ -43,6 +45,11 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 	@Override
 	public EnumSet<EventType> getEventTypes() {
 		return INSERT_ONLY;
+	}
+
+	@Override
+	public Class<?> getGeneratedType() {
+		return generatedType;
 	}
 
 	@Override

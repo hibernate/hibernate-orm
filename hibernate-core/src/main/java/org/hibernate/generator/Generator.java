@@ -4,6 +4,7 @@
  */
 package org.hibernate.generator;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -157,6 +158,20 @@ public interface Generator extends Serializable {
 	 * @return a set of {@link EventType}s.
 	 */
 	EnumSet<EventType> getEventTypes();
+
+	/**
+	 * The Java type of the generated values.
+	 *
+	 * @return the generated type, or {@code null} if the type is not known
+	 *
+	 * @apiNote Intended only for use in validation and error reporting.
+	 *
+	 * @since 7.4
+	 */
+	@Incubating
+	default @Nullable Class<?> getGeneratedType() {
+		return null;
+	}
 
 	/**
 	 * Determine if this generator allows identifier values to be manually assigned to the entity

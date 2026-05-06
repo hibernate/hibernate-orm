@@ -99,11 +99,16 @@ public class CustomAfterCompletionTest {
 			TransactionStatus status;
 			@Override
 			public void accept(SessionImplementor session) {
+
+				// Register a custom after-completion callback before starting the transaction so we can verify
+				// that JDBC commit failures still drive the ActionQueue completion callbacks.
 				session.unwrap( EventSource.class ).getActionQueue()
 						.registerCallback( (success, s) -> successful = success );
 
 				var transaction = session.beginTransaction();
 				transaction.runAfterCompletion( status -> this.status = status );
+				// Closing the connection makes the following commit fail while still exercising the normal
+				// transaction completion path.
 				session.doWork( Connection::close );
 
 				var exception = assertThrows( TransactionException.class, transaction::commit );

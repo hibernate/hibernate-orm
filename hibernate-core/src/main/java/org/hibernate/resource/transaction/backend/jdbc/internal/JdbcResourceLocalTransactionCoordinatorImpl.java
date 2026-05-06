@@ -11,6 +11,7 @@ import java.util.List;
 import jakarta.persistence.RollbackException;
 import jakarta.transaction.Status;
 
+import org.hibernate.resource.transaction.backend.jta.internal.StatusTranslator;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
@@ -178,10 +179,10 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		}
 	}
 
-	private void afterCompletionCallback(boolean successful) {
+	private void afterCompletionCallback(int status) {
 		JDBC_LOGGER.notifyingResourceLocalObserversAfterCompletion();
-		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_ROLLEDBACK;
-		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
+		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( status );
+		final boolean successful = status == Status.STATUS_COMMITTED;
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
 		for ( var transactionObserver : observers() ) {
 			transactionObserver.afterCompletion( successful, false );
@@ -260,7 +261,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 					e.addSuppressed( e2 );
 				}
 				try {
-					afterCompletionCallback( false );
+					afterCompletionCallback( StatusTranslator.STATUS_FAILED_ROLLBACK );
 				}
 				catch (RuntimeException e2) {
 					e.addSuppressed( e2 );
@@ -274,7 +275,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			catch (RuntimeException e) {
 				// commit failed
 				try {
-					afterCompletionCallback( false );
+					afterCompletionCallback( StatusTranslator.STATUS_FAILED_COMMIT );
 				}
 				catch (RuntimeException e2) {
 					e.addSuppressed( e2 );
@@ -282,7 +283,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 				throw e;
 			}
 			// commit successful
-			afterCompletionCallback( true );
+			afterCompletionCallback( Status.STATUS_COMMITTED );
 		}
 
 		private void commitRollbackOnly() {
@@ -297,7 +298,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		public void rollback() {
 			if ( isActive() ) {
 				jdbcResourceTransaction.rollback();
-				afterCompletionCallback( false );
+				afterCompletionCallback( Status.STATUS_ROLLEDBACK );
 			}
 		}
 

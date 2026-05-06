@@ -56,7 +56,7 @@ public enum TransactionStatus {
 	}
 
 	public boolean isOneOf(TransactionStatus... statuses) {
-		for ( TransactionStatus status : statuses ) {
+		for ( var status : statuses ) {
 			if ( this == status ) {
 				return true;
 			}

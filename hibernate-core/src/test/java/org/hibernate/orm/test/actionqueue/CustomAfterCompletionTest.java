@@ -113,7 +113,7 @@ public class CustomAfterCompletionTest {
 				assertNotNull( successful );
 				assertFalse( successful );
 				assertNotNull( status );
-				assertEquals( TransactionStatus.ROLLED_BACK, status );
+				assertEquals( TransactionStatus.FAILED_COMMIT, status );
 			}
 		}
 		scope.inSession( new Work() );

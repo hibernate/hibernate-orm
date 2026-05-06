@@ -90,7 +90,7 @@ gaussdb = "506.0.0.b058"
 sybase = "1.3.1"
 teradata = "20.00.00.51"
 altibase = "7.3.0.1.1"
-spanner = "2.35.5"
+spanner = "2.38.0"
 
 # Maven
 maven = "3.9.14"

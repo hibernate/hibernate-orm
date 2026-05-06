@@ -103,6 +103,12 @@ are mapped. This is the correct behavior, but it means that applications which h
 `import.sql` file on the classpath by accident may now see it executed when it was
 previously ignored.
 
+=== Migration of Spanner PostgreSQL Dialect to core
+
+The `SpannerPostgreSQLDialect`, which was previously part of the `hibernate-community-dialects` artifact under the package name `org.hibernate.community.dialect`, has been migrated to the `hibernate-core` artifact and package name `org.hibernate.dialect`.
+
+Users currently using the community dialect must update their dialect configuration to use `org.hibernate.dialect.SpannerPostgreSQLDialect` (or rely on Hibernate's automatic dialect resolution).
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -115,3 +115,8 @@ The `@Nationalized` annotation may now be placed on a package descriptor, acting
 == New Services
 
 The SPI interfaces `BatchBuilder`, `StatisticsFactory`, `MutationExecutorService`, and `SchemaManagementTool` are now Java services, allowing customization via the service loader mechanism.
+
+[[spanner-postgres-dialect]]
+== Support for Google Cloud Spanner PostgreSQL-compatible Dialect
+
+The dialect for Google Cloud Spanner's PostgreSQL-compatible interface (`SpannerPostgreSQLDialect`) is now fully integrated into Hibernate ORM Core, and is officially tested and supported out of the box.

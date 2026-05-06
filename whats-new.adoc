@@ -32,6 +32,8 @@ Historical temporal data may be queried at a given effective data/time.
 
 Audited data is mapped to a regular table along with an audit log which is backward compatible with Hibernate Envers.
 
+For examples and more details, see the _Audit Logs_ section of the link:{versionDocBase}/introduction/html_single/Hibernate_Introduction.html#audit-logs[Introduction].
+
 [[limit-fetch-join]]
 == Limits and Fetch Joins
 

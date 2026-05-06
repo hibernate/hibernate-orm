@@ -31,6 +31,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.LimitJdbcParameter;
+import org.hibernate.sql.exec.internal.OffsetJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -111,7 +113,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 								? makeRowTransformerTupleTransformerAdapter( sqm, executionContext.getQueryOptions() )
 								: rowTransformer,
 						null,
-						resultCountEstimate( sqmInterpretation, jdbcParameterBindings ),
+						resultCountEstimate( sqmInterpretation, jdbcParameterBindings, executionContext ),
 						resultsConsumer
 				);
 			}
@@ -140,7 +142,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 								: rowTransformer,
 						(Class<R>) executionContext.getResultType(),
 						uniqueSemantic,
-						resultCountEstimate( sqmInterpretation, jdbcParameterBindings )
+						resultCountEstimate( sqmInterpretation, jdbcParameterBindings, executionContext )
 				);
 			}
 			finally {
@@ -161,7 +163,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						executionContext.getQueryOptions().getTupleTransformer() != null
 								? makeRowTransformerTupleTransformerAdapter( sqm, executionContext.getQueryOptions() )
 								: rowTransformer,
-						resultCountEstimate( sqmInterpretation, jdbcParameterBindings )
+						resultCountEstimate( sqmInterpretation, jdbcParameterBindings, executionContext )
 				);
 			}
 			finally {
@@ -172,13 +174,20 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	private static int resultCountEstimate(
 			CacheableSqmInterpretation<SelectStatement, JdbcSelect> sqmInterpretation,
-			JdbcParameterBindings jdbcParameterBindings) {
-		return resultCountEstimate( jdbcParameterBindings,
-				sqmInterpretation.statement().getQueryPart().getFetchClauseExpression() );
+			JdbcParameterBindings jdbcParameterBindings,
+			DomainQueryExecutionContext executionContext) {
+		return resultCountEstimate(
+				jdbcParameterBindings,
+				sqmInterpretation.statement().getQueryPart().getFetchClauseExpression(),
+				executionContext
+		);
 	}
 
-	private static int resultCountEstimate(JdbcParameterBindings jdbcParameterBindings, Expression fetchExpression) {
-		return fetchExpression == null ? -1 : interpretIntExpression( fetchExpression, jdbcParameterBindings );
+	private static int resultCountEstimate(
+			JdbcParameterBindings jdbcParameterBindings,
+			Expression fetchExpression,
+			DomainQueryExecutionContext executionContext) {
+		return fetchExpression == null ? -1 : interpretIntExpression( fetchExpression, jdbcParameterBindings, executionContext );
 	}
 
 	protected static SqmJdbcExecutionContextAdapter listInterpreterExecutionContext(
@@ -189,12 +198,23 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return new MySqmJdbcExecutionContextAdapter( executionContext, jdbcSelect, subSelectFetchKeyHandler, hql );
 	}
 
-	protected static int interpretIntExpression(Expression expression, JdbcParameterBindings jdbcParameterBindings) {
+	protected static int interpretIntExpression(
+			Expression expression,
+			JdbcParameterBindings jdbcParameterBindings,
+			DomainQueryExecutionContext executionContext) {
 		if ( expression instanceof Literal literal ) {
 			return ( (Number) literal.getLiteralValue() ).intValue();
 		}
 		else if ( expression instanceof JdbcParameter jdbcParameter ) {
-			return (int) jdbcParameterBindings.getBinding( jdbcParameter ).getBindValue();
+			if ( jdbcParameter instanceof LimitJdbcParameter ) {
+				return executionContext.getQueryOptions().peekOriginalLimit().getMaxRowsJpa();
+			}
+			else if ( jdbcParameter instanceof OffsetJdbcParameter ) {
+				return executionContext.getQueryOptions().peekOriginalLimit().getFirstRowJpa();
+			}
+			else {
+				return (int) jdbcParameterBindings.getBinding( jdbcParameter ).getBindValue();
+			}
 		}
 		else if ( expression instanceof SqmParameterInterpretation parameterInterpretation ) {
 			final JdbcParameter jdbcParameter = (JdbcParameter) parameterInterpretation.getResolvedExpression();

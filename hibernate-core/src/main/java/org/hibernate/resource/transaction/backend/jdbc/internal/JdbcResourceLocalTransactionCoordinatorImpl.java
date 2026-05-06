@@ -259,7 +259,12 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 				catch (RuntimeException e2) {
 					e.addSuppressed( e2 );
 				}
-				afterCompletionCallback( false );
+				try {
+					afterCompletionCallback( false );
+				}
+				catch (RuntimeException e2) {
+					e.addSuppressed( e2 );
+				}
 				throw e;
 			}
 
@@ -268,7 +273,12 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			}
 			catch (RuntimeException e) {
 				// commit failed
-				afterCompletionCallback( false );
+				try {
+					afterCompletionCallback( false );
+				}
+				catch (RuntimeException e2) {
+					e.addSuppressed( e2 );
+				}
 				throw e;
 			}
 			// commit successful

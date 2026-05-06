@@ -127,6 +127,86 @@ A unique constraint is now added to the table mapped by an `@ElementCollection` 
 
 A column mapped by a `@CreationTimestamp` or `@UpdateTimestamp` generator now has a `NOT NULL` constraint added automatically.
 
+[[envers-migration]]
+== Optional: Migrating from Hibernate Envers to core `@Audited`
+
+NOTE: This migration is entirely optional. Hibernate Envers continues to work as before in {version}. However, if you wish to take advantage of the new core `@Audited` functionality, this section describes the steps involved.
+
+The new core audit support provides very similar functionality to Envers with a simpler programming model: you can use standard `Session` APIs (and even HQL queries!) within a temporal session opened via `atChangeset()`, or the more specialized `AuditLog` functionality, to access the audit logs of your entities.
+
+=== Annotation changes
+
+[cols="2,3"]
+|===
+| Envers | Core
+
+| `@org.hibernate.envers.Audited`
+| `@org.hibernate.annotations.Audited`
+
+| `@org.hibernate.envers.NotAudited`
+| `@org.hibernate.annotations.Audited.Excluded`
+
+| `@org.hibernate.envers.RevisionEntity`
+| `@org.hibernate.annotations.Changelog`
+
+| `@org.hibernate.envers.RevisionNumber`
+| `@org.hibernate.annotations.Changelog.ChangesetId`
+
+| `@org.hibernate.envers.RevisionTimestamp`
+| `@org.hibernate.annotations.Changelog.Timestamp`
+
+| `RevisionListener`
+| `org.hibernate.audit.ChangesetListener` (method: `newChangeset()`)
+
+| `EntityTrackingRevisionListener`
+| `org.hibernate.audit.EntityTrackingChangesetListener`
+|===
+
+=== Map your REVINFO table
+
+Define a `@Changelog` entity that maps to the existing `REVINFO` table (or use the built-in `DefaultChangelog`):
+
+[source,java]
+----
+@Entity
+@Table(name = "REVINFO")
+@Changelog(listener = MyChangesetListener.class)
+public class MyRevision extends ChangelogMapping { ... }
+----
+
+=== API changes
+
+[cols="2,3"]
+|===
+| Envers | Core
+
+| `AuditReader.find(Foo.class, id, rev)`
+| `auditLog.find(Foo.class, id, rev)` or `sf.withOptions().atChangeset(rev).openSession().find(Foo.class, id)`
+
+| `reader.getRevisions(Foo.class, id)`
+| `auditLog.getChangesets(Foo.class, id)`
+
+| `reader.getRevisionDate(rev)`
+| `auditLog.getChangesetTimestamp(rev)`
+
+| `reader.findRevision(RevInfo.class, rev)`
+| `auditLog.findChangeset(RevInfo.class, rev)`
+
+| `reader.createQuery().forEntitiesAtRevision(...)`
+| HQL in `atChangeset()` session
+
+| `reader.createQuery().forRevisionsOfEntity(...)`
+| `auditLog.getHistory(Foo.class, id)`
+
+| Custom `AuditQuery` criteria
+| HQL with `changesetId()` / `modificationType()` functions
+|===
+
+=== Schema compatibility
+
+No DDL changes are needed. The default `REV`/`REVTYPE` column names and encoding match between Envers and core. The `REVINFO` table rows continue the same sequence.
+
+
 [[dependency-changes]]
 == Changes in Dependencies
 

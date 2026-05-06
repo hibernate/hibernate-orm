@@ -372,6 +372,33 @@ try (var auditLog = AuditLogFactory.create(factory)) {
 }
 ----
 
+For even more control, we can open a session with `ALL_CHANGESETS` and write custom HQL queries using the `changesetId()` and `modificationType()` functions:
+
+[source,java]
+----
+try (var session = factory.withOptions()
+        .atChangeset(AuditLog.ALL_CHANGESETS).open()) {
+    // find all documents deleted in a specific changeset
+    var deleted = session.createSelectionQuery(
+            "from Document d"
+                + " where changesetId(d) = :csId"
+                + " and modificationType(d) = :type",
+            Document.class)
+        .setParameter("csId", targetChangesetId)
+        .setParameter("type", ModificationType.DEL)
+        .getResultList();
+
+    // count modifications per changeset
+    var counts = session.createSelectionQuery(
+            "select changesetId(d), count(d)"
+                + " from Document d"
+                + " group by changesetId(d)"
+                + " order by changesetId(d)",
+            Object[].class)
+        .getResultList();
+}
+----
+
 You'll find much more information about these new APIs in the Javadoc.
 
 // [[envers]]

@@ -32,20 +32,20 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test demonstrating {@link ChangesetEntity @RevisionEntity}
- * auto-detection with a custom revision entity and
+ * Test demonstrating {@link ChangesetEntity @ChangesetEntity}
+ * auto-detection with a custom changeset entity and
  * {@link ChangesetListener}.
  */
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		AuditRevisionEntityTest.MyEntity.class,
-		AuditRevisionEntityTest.RevisionInfo.class
+		AuditChangesetEntityTest.MyEntity.class,
+		AuditChangesetEntityTest.RevisionInfo.class
 })
-class AuditRevisionEntityTest {
+class AuditChangesetEntityTest {
 
 	/**
-	 * Custom revision entity with a {@link ChangesetListener}
+	 * Custom changeset entity with a {@link ChangesetListener}
 	 * that populates the {@code username} field.
 	 */
 	@ChangesetEntity(listener = UsernameChangesetListener.class)
@@ -82,7 +82,7 @@ class AuditRevisionEntityTest {
 	}
 
 	@Test
-	void testRevisionEntitySupplier(SessionFactoryScope scope) {
+	void testChangesetEntitySupplier(SessionFactoryScope scope) {
 		// Create
 		scope.getSessionFactory().inTransaction( session -> {
 			final var entity = new MyEntity();
@@ -105,14 +105,14 @@ class AuditRevisionEntityTest {
 														).getSingleResult()
 		);
 
-		// Read current entity via find(). No revision entity should be created
+		// Read current entity via find(). No changeset entity should be created
 		scope.getSessionFactory().inTransaction( session -> {
 			final var entity = session.find( MyEntity.class, 1L );
 			assertNotNull( entity );
 			assertEquals( "updated", entity.name );
 		} );
 
-		// Read current entity via HQL. No revision entity should be created
+		// Read current entity via HQL. No changeset entity should be created
 		scope.getSessionFactory().inTransaction( session -> {
 			final var entity = session.createSelectionQuery(
 					"from MyEntity where id = 1", MyEntity.class
@@ -125,7 +125,7 @@ class AuditRevisionEntityTest {
 			final long revCount = session.createSelectionQuery(
 					"select count(*) from RevisionInfo", Long.class
 			).getSingleResult();
-			assertEquals( baseline[0], revCount, "Read-only queries must not create revision entities" );
+			assertEquals( baseline[0], revCount, "Read-only queries must not create changeset entities" );
 		} );
 
 		// Delete
@@ -240,7 +240,7 @@ class AuditRevisionEntityTest {
 	}
 
 	@Test
-	void testGetTransactionIdForDate(SessionFactoryScope scope) throws InterruptedException {
+	void testGetChangesetIdForDate(SessionFactoryScope scope) throws InterruptedException {
 		scope.getSessionFactory().inTransaction( session -> {
 			var entity = new MyEntity();
 			entity.id = 40L;
@@ -251,7 +251,7 @@ class AuditRevisionEntityTest {
 		Thread.sleep( 50 );
 
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var txId = auditLog.getTransactionId( Instant.now() );
+			final var txId = auditLog.getChangesetId( Instant.now() );
 			assertNotNull( txId );
 
 			final var entity = auditLog.find( MyEntity.class, 40L, txId );
@@ -261,11 +261,11 @@ class AuditRevisionEntityTest {
 	}
 
 	@Test
-	void testGetTransactionIdForDateTooEarly(SessionFactoryScope scope) {
+	void testGetChangesetIdForDateTooEarly(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			assertThrows(
 					AuditException.class,
-					() -> auditLog.getTransactionId( Instant.parse( "2000-01-01T00:00:00Z" ) )
+					() -> auditLog.getChangesetId( Instant.parse( "2000-01-01T00:00:00Z" ) )
 			);
 		}
 	}

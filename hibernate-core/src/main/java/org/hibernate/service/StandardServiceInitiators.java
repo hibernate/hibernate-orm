@@ -37,7 +37,7 @@ import org.hibernate.query.sqm.mutation.internal.SqmMultiTableMutationStrategyPr
 import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
-import org.hibernate.service.internal.TransactionIdentifierServiceInitiator;
+import org.hibernate.service.internal.ChangesetCoordinatorInitiator;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyInitiator;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerProviderInitiator;
 import org.hibernate.tool.schema.internal.SchemaManagementToolInitiator;
@@ -124,8 +124,8 @@ public final class StandardServiceInitiators {
 		// JdbcServices
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );
 
-		// TransactionIdentifierService
-		serviceInitiators.add( TransactionIdentifierServiceInitiator.INSTANCE );
+		// ChangesetCoordinator
+		serviceInitiators.add( ChangesetCoordinatorInitiator.INSTANCE );
 
 		// RefCursorSupport
 		serviceInitiators.add( RefCursorSupportInitiator.INSTANCE );

@@ -32,7 +32,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	private @Nullable Fetch identifierFetch;
 	private BasicFetch<?> discriminatorFetch;
 	private DomainResult<Object> rowIdResult;
-	private @Nullable DomainResult<?> auditTransactionIdResult;
+	private @Nullable DomainResult<?> auditChangesetIdResult;
 	private final EntityValuedModelPart fetchContainer;
 
 	public AbstractEntityResultGraphNode(EntityValuedModelPart referencedModelPart, NavigablePath navigablePath) {
@@ -53,7 +53,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 		rowIdResult = rowIdResult( creationState, navigablePath, entityTableGroup );
 		if ( fetchParent == this ) {
-			auditTransactionIdResult = auditTransactionIdResult( creationState, entityTableGroup );
+			auditChangesetIdResult = auditChangesetIdResult( creationState, entityTableGroup );
 		}
 
 		super.afterInitialize( fetchParent, creationState );
@@ -94,7 +94,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		}
 	}
 
-	private @Nullable DomainResult<?> auditTransactionIdResult(
+	private @Nullable DomainResult<?> auditChangesetIdResult(
 			DomainResultCreationState creationState,
 			TableGroup entityTableGroup) {
 		final var entityMappingType = getEntityValuedModelPart().getEntityMappingType();
@@ -103,22 +103,22 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			final var influencers = creationState.getSqlAstCreationState().getLoadQueryInfluencers();
 			if ( influencers.isAllRevisions() && auditMapping.useAuxiliaryTable( influencers ) ) {
 				final String originalTable = entityMappingType.getMappedTableDetails().getTableName();
-				final var transactionIdMapping = auditMapping.getChangesetIdMapping( originalTable );
+				final var changesetIdMapping = auditMapping.getChangesetIdMapping( originalTable );
 				final var sqlAstCreationState = creationState.getSqlAstCreationState();
 				final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 				final var tableReference = entityTableGroup.resolveTableReference(
 						auditMapping.resolveTableName( originalTable ) );
-				final var expression = expressionResolver.resolveSqlExpression( tableReference, transactionIdMapping );
+				final var expression = expressionResolver.resolveSqlExpression( tableReference, changesetIdMapping );
 				final var sqlSelection = expressionResolver.resolveSqlSelection(
 						expression,
-						transactionIdMapping.getJdbcMapping().getJdbcJavaType(),
+						changesetIdMapping.getJdbcMapping().getJdbcJavaType(),
 						null,
 						sqlAstCreationState.getCreationContext().getTypeConfiguration()
 				);
 				return new BasicResult<>(
 						sqlSelection.getValuesArrayPosition(),
 						"audit_txn_id",
-						transactionIdMapping.getJdbcMapping()
+						changesetIdMapping.getJdbcMapping()
 				);
 			}
 		}
@@ -157,8 +157,8 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		return rowIdResult;
 	}
 
-	public @Nullable DomainResult<?> getAuditTransactionIdResult() {
-		return auditTransactionIdResult;
+	public @Nullable DomainResult<?> getAuditChangesetIdResult() {
+		return auditChangesetIdResult;
 	}
 
 	@Override

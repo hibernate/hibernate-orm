@@ -36,7 +36,7 @@ public final class TemporalEntityKey extends EntityKey {
 	}
 
 	@Override
-	public Object getTransactionId() {
+	public Object getChangesetId() {
 		return txId;
 	}
 

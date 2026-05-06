@@ -229,7 +229,7 @@ class AuditUnidirectionalOneToManyJoinTableTest {
 		final var sf = scope.getSessionFactory();
 		// Use separate point-in-time sessions within an ALL_REVISIONS session
 		// to verify collection isolation across revisions
-		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			var teams = s.createSelectionQuery( "from Team where id = :id", Team.class )
 					.setParameter( "id", 1L )
 					.getResultList();

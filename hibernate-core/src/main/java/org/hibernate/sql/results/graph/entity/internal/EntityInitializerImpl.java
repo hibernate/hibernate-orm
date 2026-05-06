@@ -73,7 +73,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.audit.AuditLog.ALL_REVISIONS;
+import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -124,7 +124,7 @@ public class EntityInitializerImpl
 	private final @Nullable BasicResultAssembler<?> discriminatorAssembler;
 	private final @Nullable DomainResultAssembler<?> versionAssembler;
 	private final @Nullable DomainResultAssembler<Object> rowIdAssembler;
-	private final @Nullable DomainResultAssembler<?> auditTransactionIdAssembler;
+	private final @Nullable DomainResultAssembler<?> auditChangesetIdAssembler;
 
 	private final DomainResultAssembler<?>[][] assemblers;
 	private final @Nullable Initializer<?>[] allInitializers;
@@ -175,7 +175,7 @@ public class EntityInitializerImpl
 				canUseEmbeddedIdentifierInstanceAsEntity = false;
 			}
 			hasCallbackActions = rowProcessingState.hasCallbackActions();
-			allRevisions = initializer.auditTransactionIdAssembler != null
+			allRevisions = initializer.auditChangesetIdAssembler != null
 					&& rowProcessingState.getSession().getLoadQueryInfluencers().isAllRevisions();
 			defaultConcreteDescriptor =
 					hasConcreteDescriptor( rowProcessingState, initializer.discriminatorAssembler, entityDescriptor )
@@ -220,7 +220,7 @@ public class EntityInitializerImpl
 			@Nullable Fetch discriminatorFetch,
 			@Nullable DomainResult<?> keyResult,
 			@Nullable DomainResult<Object> rowIdResult,
-			@Nullable DomainResult<?> auditTransactionIdResult,
+			@Nullable DomainResult<?> auditChangesetIdResult,
 			NotFoundAction notFoundAction,
 			boolean affectedByFilter,
 			@Nullable InitializerParent<?> parent,
@@ -301,10 +301,10 @@ public class EntityInitializerImpl
 						? null :
 						rowIdResult.createResultAssembler( this, creationState );
 
-		auditTransactionIdAssembler =
-				auditTransactionIdResult == null
+		auditChangesetIdAssembler =
+				auditChangesetIdResult == null
 						? null
-						: auditTransactionIdResult.createResultAssembler( this, creationState );
+						: auditChangesetIdResult.createResultAssembler( this, creationState );
 
 		final int fetchableCount = entityDescriptor.getNumberOfFetchables();
 		final var subMappingTypes = rootEntityDescriptor.getSubMappingTypes();
@@ -857,21 +857,23 @@ public class EntityInitializerImpl
 							discriminatorAssembler, entityDescriptor );
 			assert concreteDescriptor != null;
 		}
-		final Object txId = resolveTransactionId( data );
+		final Object txId = resolveChangesetId( data );
 		data.entityKey = txId != null
 				? new TemporalEntityKey( id, concreteDescriptor, txId )
 				: new EntityKey( id, concreteDescriptor );
 	}
 
-	protected Object resolveTransactionId(EntityInitializerData data) {
-		// For audited entities, include the per-row transaction identifier in the key
+	protected Object resolveChangesetId(EntityInitializerData data) {
+		// For audited entities, include the per-row changeset identifier in the key
 		// so the PC distinguishes the same entity at different points in time
-		final var temporalIdentifier = data.getRowProcessingState().getLoadQueryInfluencers().getTemporalIdentifier();
-		if ( auditTransactionIdAssembler != null ) {
-			return auditTransactionIdAssembler.assemble( data.getRowProcessingState() );
+		final var temporalIdentifier =
+				data.getRowProcessingState().getLoadQueryInfluencers()
+						.getTemporalIdentifier();
+		if ( auditChangesetIdAssembler != null ) {
+			return auditChangesetIdAssembler.assemble( data.getRowProcessingState() );
 		}
 		else if ( entityDescriptor.getAuditMapping() != null
-				&& temporalIdentifier != null && temporalIdentifier != ALL_REVISIONS ) {
+				&& temporalIdentifier != null && temporalIdentifier != ALL_CHANGESETS ) {
 			return temporalIdentifier;
 		}
 		else {
@@ -1262,7 +1264,7 @@ public class EntityInitializerImpl
 				// Set the per-row temporal identifier so that association loads use the correct revision
 				data.getRowProcessingState().getSession()
 						.getLoadQueryInfluencers()
-						.setTemporalIdentifier( data.entityKey.getTransactionId() );
+						.setTemporalIdentifier( data.entityKey.getChangesetId() );
 			}
 
 			if ( useEmbeddedIdentifierInstanceAsEntity( data ) ) {
@@ -1613,7 +1615,7 @@ public class EntityInitializerImpl
 		if ( data.allRevisions ) {
 			data.getRowProcessingState().getSession()
 					.getLoadQueryInfluencers()
-					.setTemporalIdentifier( ALL_REVISIONS );
+					.setTemporalIdentifier( ALL_CHANGESETS );
 		}
 	}
 

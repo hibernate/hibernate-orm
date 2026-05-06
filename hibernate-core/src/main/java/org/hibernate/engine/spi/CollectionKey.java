@@ -84,10 +84,10 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 	}
 
 	/**
-	 * The audit transaction identifier for this key, or {@code null} for
+	 * The audit changeset identifier for this key, or {@code null} for
 	 * non-temporal collections.
 	 */
-	public @Nullable Object getTransactionId() {
+	public @Nullable Object getChangesetId() {
 		return null;
 	}
 
@@ -111,13 +111,13 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 		if ( this == other ) {
 			return true;
 		}
-		if ( other == null || !(other instanceof CollectionKey that) ) {
+		if ( !(other instanceof CollectionKey that) ) {
 			return false;
 		}
 
 		return that.role.equals( role )
 			&& sameKey( that )
-			&& sameTransactionId( that );
+			&& sameChangesetId( that );
 	}
 
 	private boolean sameKey(final CollectionKey that) {
@@ -129,10 +129,10 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 	 * Compare transaction identifiers without virtual dispatch, using
 	 * instanceof on the sealed hierarchy for optimal JIT performance.
 	 */
-	private boolean sameTransactionId(final CollectionKey otherKey) {
+	private boolean sameChangesetId(final CollectionKey otherKey) {
 		if ( this instanceof TemporalCollectionKey t1 ) {
 			return otherKey instanceof TemporalCollectionKey t2
-				&& t1.getTransactionId().equals( t2.getTransactionId() );
+				&& t1.getChangesetId().equals( t2.getChangesetId() );
 		}
 		return !(otherKey instanceof TemporalCollectionKey);
 	}
@@ -154,7 +154,7 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 		oos.writeObject( role );
 		oos.writeObject( key );
 		oos.writeObject( keyType );
-		oos.writeObject( getTransactionId() );
+		oos.writeObject( getChangesetId() );
 	}
 
 	/**

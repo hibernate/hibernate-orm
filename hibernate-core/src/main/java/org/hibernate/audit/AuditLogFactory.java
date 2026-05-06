@@ -52,7 +52,7 @@ public final class AuditLogFactory {
 		final var sf = (SessionFactoryImplementor) sessionFactory;
 		final var session = (SharedSessionContractImplementor)
 				sf.withOptions()
-						.atChangeset( AuditLog.ALL_REVISIONS )
+						.atChangeset( AuditLog.ALL_CHANGESETS )
 						.openSession();
 		return new AuditLogImpl( session );
 	}
@@ -103,7 +103,7 @@ public final class AuditLogFactory {
 		final var childSession = (SharedSessionContractImplementor)
 				session.sessionWithOptions()
 						.connection()
-						.atChangeset( AuditLog.ALL_REVISIONS )
+						.atChangeset( AuditLog.ALL_CHANGESETS )
 						.openSession();
 		return new AuditLogImpl( childSession );
 	}

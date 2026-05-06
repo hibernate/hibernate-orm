@@ -365,9 +365,9 @@ public class EntityBinder {
 			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context );
 		}
 		else {
-			final var revisionEntity = extract( ChangesetEntity.class, classDetails, context );
-			if ( revisionEntity != null ) {
-				AuditHelper.bindRevisionEntity( revisionEntity, rootClass, classDetails, context );
+			final var changesetEntity = extract( ChangesetEntity.class, classDetails, context );
+			if ( changesetEntity != null ) {
+				AuditHelper.bindChangesetEntity( changesetEntity, rootClass, classDetails, context );
 			}
 		}
 	}

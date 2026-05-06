@@ -108,7 +108,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public boolean isAllRevisions() {
-		return temporalIdentifier == AuditLog.ALL_REVISIONS;
+		return temporalIdentifier == AuditLog.ALL_CHANGESETS;
 	}
 
 

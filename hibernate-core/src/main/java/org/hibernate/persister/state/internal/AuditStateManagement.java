@@ -155,12 +155,12 @@ public class AuditStateManagement implements StateManagement {
 			MappingModelCreationProcess creationProcess) {
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
-		final var transactionIdentifierService =
+		final var changesetCoordinator =
 				creationContext.getSessionFactory()
 						.getChangesetCoordinator();
 		final var txIdJdbcMapping =
 				resolveJdbcMapping( typeConfiguration,
-						transactionIdentifierService.getIdentifierType() );
+						changesetCoordinator.getIdentifierType() );
 		final var modTypeJdbcMapping = resolveJdbcMapping( typeConfiguration, ModificationType.class );
 
 		final var map = new HashMap<String, AuditMappingImpl.TableAuditInfo>();

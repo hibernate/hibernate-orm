@@ -366,7 +366,7 @@ class AuditElementCollectionTest {
 	@Order(6)
 	void testCollectionRevisionIsolation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
-		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			var entities = s.createSelectionQuery( "from ArrayEntity where id = :id", ArrayEntity.class )
 					.setParameter( "id", 1L )
 					.getResultList();

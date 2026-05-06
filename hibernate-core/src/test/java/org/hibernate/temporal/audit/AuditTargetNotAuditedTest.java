@@ -212,12 +212,12 @@ class AuditTargetNotAuditedTest {
 	@Test
 	void testManyToOneJoinFetchAllRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions()
-				.atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
+				.atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			final var rows = session.createSelectionQuery(
-					"select e, transactionId(e), modificationType(e)"
+					"select e, changesetId(e), modificationType(e)"
 					+ " from Product e left join fetch e.category"
 					+ " where e.id = :id"
-					+ " order by transactionId(e)",
+					+ " order by changesetId(e)",
 					Object[].class
 			).setParameter( "id", 1L ).getResultList();
 

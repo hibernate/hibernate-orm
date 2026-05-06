@@ -491,10 +491,10 @@ class AuditLogTest {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			final var history = auditLog.getHistory( AuditedEntity.class, 1L );
 
-			// Without a RevisionEntitySupplier, revision should be the plain txId
-			assertEquals( revCreate1, history.get( 0 ).revision() );
-			assertEquals( revCreate2, history.get( 1 ).revision() );
-			assertEquals( revDelete, history.get( 2 ).revision() );
+			// Without a ChangesetEntitySupplier, revision should be the plain txId
+			assertEquals( revCreate1, history.get( 0 ).changeset() );
+			assertEquals( revCreate2, history.get( 1 ).changeset() );
+			assertEquals( revDelete, history.get( 2 ).changeset() );
 		}
 	}
 

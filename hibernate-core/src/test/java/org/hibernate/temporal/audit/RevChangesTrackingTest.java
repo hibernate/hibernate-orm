@@ -40,11 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests cross-type entity change tracking via a custom
- * {@link ChangesetEntity @RevisionEntity} with
- * {@link ChangesetEntity.ModifiedEntities @RevisionEntity.ModifiedEntities}.
+ * {@link ChangesetEntity @ChangesetEntity} with
+ * {@link ChangesetEntity.ModifiedEntities @ChangesetEntity.ModifiedEntities}.
  * <p>
  * Exercises the REVCHANGES write-side (via {@code @ElementCollection}
- * on the revision entity) and the read-side APIs on {@code AuditLog}.
+ * on the changeset entity) and the read-side APIs on {@code AuditLog}.
  */
 @AuditedTest
 @SessionFactory
@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class RevChangesTrackingTest {
 
-	// --- Custom revision entity with @RevisionEntity.ModifiedEntities ---
+	// --- Custom changeset entity with @ChangesetEntity.ModifiedEntities ---
 
 	@ChangesetEntity
 	@Entity(name = "TrackingRevisionInfo")
@@ -286,9 +286,9 @@ class RevChangesTrackingTest {
 
 	@Test
 	@Order(11)
-	void testRevisionEntityHasModifiedEntityNames(SessionFactoryScope scope) {
+	void testChangesetEntityHasModifiedEntityNames(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			// Load the revision entity and verify modifiedEntityNames was populated
+			// Load the changeset entity and verify modifiedEntityNames was populated
 			TrackingRevisionInfo revInfo = auditLog.findRevision( rev1 );
 			assertNotNull( revInfo.modifiedEntityNames );
 			assertEquals( 2, revInfo.modifiedEntityNames.size() );

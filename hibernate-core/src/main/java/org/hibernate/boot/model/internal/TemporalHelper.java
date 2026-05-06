@@ -65,13 +65,13 @@ public class TemporalHelper {
 
 		final int secondPrecision = temporal.secondPrecision();
 		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
-		final var transactionIdType = getTransactionIdType( context );
+		final var changesetIdType = getChangesetIdType( context );
 		final var rowStartColumn =
 				createTemporalColumn( temporal.rowStart(),
-						table, false, precision, transactionIdType, context );
+						table, false, precision, changesetIdType, context );
 		final var rowEndColumn =
 				createTemporalColumn( temporal.rowEnd(),
-						table, true, precision, transactionIdType, context );
+						table, true, precision, changesetIdType, context );
 		handleTemporalColumnGeneration( rowStartColumn, rowEndColumn, context );
 
 		final var temporalTable =
@@ -121,7 +121,7 @@ public class TemporalHelper {
 				.suppressesTemporalTablePrimaryKeys( partitioned ) );
 	}
 
-	private static Class<?> getTransactionIdType(MetadataBuildingContext context) {
+	private static Class<?> getChangesetIdType(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getServiceRegistry()
 				.requireService( ChangesetCoordinator.class )
 				.getIdentifierType();
@@ -287,12 +287,12 @@ public class TemporalHelper {
 			Table table,
 			boolean nullable,
 			Integer temporalPrecision,
-			Class<?> transactionIdJavaType,
+			Class<?> changesetIdJavaType,
 			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
 		final var basicValue = new BasicValue( context, table );
-		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> transactionIdJavaType );
-		if ( Instant.class.equals( transactionIdJavaType ) ) {
+		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> changesetIdJavaType );
+		if ( Instant.class.equals( changesetIdJavaType ) ) {
 			final var temporalColumnType = database.getDialect().getTemporalTableSupport().getTemporalColumnType();
 			basicValue.setExplicitJdbcTypeAccess( typeConfiguration ->
 					typeConfiguration.getJdbcTypeRegistry().findDescriptor( temporalColumnType ) );
@@ -303,7 +303,7 @@ public class TemporalHelper {
 		basicValue.addColumn( column );
 		setTemporalColumnName( columnName, column, database,
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
-		setTemporalColumnType( temporalPrecision, column, database, transactionIdJavaType );
+		setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType );
 		return column;
 	}
 
@@ -311,11 +311,11 @@ public class TemporalHelper {
 			Integer temporalPrecision,
 			Column column,
 			Database database,
-			Class<?> transactionIdJavaType) {
+			Class<?> changesetIdJavaType) {
 		if ( temporalPrecision != null ) {
 			column.setTemporalPrecision( temporalPrecision );
 		}
-		else if ( Instant.class.equals( transactionIdJavaType ) ) {
+		else if ( Instant.class.equals( changesetIdJavaType ) ) {
 			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
 			column.setTemporalPrecision( temporalTableSupport.getTemporalColumnPrecision() );
 			column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );

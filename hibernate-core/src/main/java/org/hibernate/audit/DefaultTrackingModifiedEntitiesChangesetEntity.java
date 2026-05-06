@@ -11,21 +11,21 @@ import org.hibernate.annotations.ChangesetEntity;
 
 
 /**
- * A built-in revision entity with entity change tracking.
- * Drop-in replacement for {@link DefaultRevisionEntity} that
+ * A built-in changeset entity with entity change tracking.
+ * Drop-in replacement for {@link DefaultChangesetEntity} that
  * additionally creates a {@code REVCHANGES} table recording
- * which entity types were modified in each revision.
+ * which entity types were modified in each changeset.
  * <p>
- * Use this entity instead of {@link DefaultRevisionEntity}
+ * Use this entity instead of {@link DefaultChangesetEntity}
  * when cross-type revision queries are needed.
  *
  * @author Marco Belladelli
- * @see TrackingModifiedEntitiesRevisionMapping
+ * @see TrackingModifiedEntitiesChangesetMapping
  * @see ChangesetEntity.ModifiedEntities
  * @since 7.4
  */
 @ChangesetEntity
-@Entity(name = "DefaultTrackingModifiedEntitiesRevisionEntity")
+@Entity(name = "DefaultTrackingModifiedEntitiesChangesetEntity")
 @Table(name = "REVINFO")
-public final class DefaultTrackingModifiedEntitiesRevisionEntity extends TrackingModifiedEntitiesRevisionMapping {
+public final class DefaultTrackingModifiedEntitiesChangesetEntity extends TrackingModifiedEntitiesChangesetMapping {
 }

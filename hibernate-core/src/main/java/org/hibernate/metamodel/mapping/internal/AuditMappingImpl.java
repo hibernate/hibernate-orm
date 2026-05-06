@@ -256,9 +256,9 @@ public class AuditMappingImpl implements AuditMapping {
 		);
 		subQuerySpec.getFromClause().addRoot( subTableGroup );
 
-		final var transactionId = new ColumnReference( subTableReference, info.changesetIdMapping );
+		final var changesetId = new ColumnReference( subTableReference, info.changesetIdMapping );
 		subQuerySpec.getSelectClause()
-				.addSqlSelection( new SqlSelectionImpl( buildMaxExpression( transactionId ) ) );
+				.addSqlSelection( new SqlSelectionImpl( buildMaxExpression( changesetId ) ) );
 
 		// Subquery WHERE: id columns match + REV <= upperBound
 		final var subPredicate = new Junction( Junction.Nature.CONJUNCTION );
@@ -269,7 +269,7 @@ public class AuditMappingImpl implements AuditMapping {
 					new ColumnReference( tableReference, selectableMapping )
 			) );
 		}
-		subPredicate.add( new ComparisonPredicate( transactionId, LESS_THAN_OR_EQUAL, upperBound ) );
+		subPredicate.add( new ComparisonPredicate( changesetId, LESS_THAN_OR_EQUAL, upperBound ) );
 		subQuerySpec.applyPredicate( subPredicate );
 
 		// Main predicate: REV = (subquery) AND optionally REVTYPE <> DEL

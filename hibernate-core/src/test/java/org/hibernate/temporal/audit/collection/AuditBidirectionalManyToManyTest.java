@@ -247,7 +247,7 @@ class AuditBidirectionalManyToManyTest {
 	@Order(5)
 	void testCollectionRevisionIsolation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
-		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			var entities = s.createSelectionQuery( "from OwningEntity where id = :id", OwningEntity.class )
 					.setParameter( "id", 3 )
 					.getResultList();

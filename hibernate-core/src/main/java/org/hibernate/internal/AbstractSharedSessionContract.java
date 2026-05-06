@@ -220,7 +220,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		final var statementInspector = interpret( options.getStatementInspector() );
 
-		changesetIdSupplier = initializeTransactionIdSupplier( factory );
+		changesetIdSupplier = initializeChangesetIdSupplier( factory );
 
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
@@ -262,7 +262,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
-	private static ChangesetIdentifierSupplier<?> initializeTransactionIdSupplier(SessionFactoryImplementor factory) {
+	private static ChangesetIdentifierSupplier<?> initializeChangesetIdSupplier(SessionFactoryImplementor factory) {
 		final var changesetCoordinator = factory.getChangesetCoordinator();
 		return changesetCoordinator.useServerTimestamp( factory.getJdbcServices().getDialect() )
 				? null
@@ -629,15 +629,15 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			return currentChangesetId;
 		}
 		else if ( isTransactionInProgress() ) {
-			initializeCurrentTransactionIdentifier();
+			initializeCurrentChangesetIdentifier();
 			return currentChangesetId;
 		}
 		else {
-			return generateCurrentTransactionIdentifier();
+			return generateCurrentChangesetIdentifier();
 		}
 	}
 
-	private Object generateCurrentTransactionIdentifier() {
+	private Object generateCurrentChangesetIdentifier() {
 		return changesetIdSupplier == null
 				? null
 				: changesetIdSupplier.generateIdentifier( this );
@@ -647,8 +647,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public void afterTransactionBegin() {
 	}
 
-	protected void initializeCurrentTransactionIdentifier() {
-		currentChangesetId = generateCurrentTransactionIdentifier();
+	protected void initializeCurrentChangesetIdentifier() {
+		currentChangesetId = generateCurrentChangesetIdentifier();
 	}
 
 	protected void clearTransactionStartInstant() {
@@ -868,7 +868,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	@Override
 	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
 		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
-		return temporalId != null && temporalId != AuditLog.ALL_REVISIONS
+		return temporalId != null && temporalId != AuditLog.ALL_CHANGESETS
 				? new TemporalEntityKey( id, persister, temporalId )
 				: new EntityKey( id, persister );
 	}
@@ -876,7 +876,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	@Override
 	public CollectionKey generateCollectionKey(CollectionPersister persister, Object key) {
 		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
-		return temporalId != null && temporalId != AuditLog.ALL_REVISIONS
+		return temporalId != null && temporalId != AuditLog.ALL_CHANGESETS
 				? new TemporalCollectionKey( persister, key, temporalId )
 				: new CollectionKey( persister, key );
 	}
@@ -1845,7 +1845,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
-		changesetIdSupplier = initializeTransactionIdSupplier( factory );
+		changesetIdSupplier = initializeChangesetIdSupplier( factory );
 	}
 
 }

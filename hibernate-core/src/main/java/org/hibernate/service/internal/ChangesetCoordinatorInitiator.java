@@ -16,8 +16,8 @@ import java.util.Map;
  *
  * @author Gavin King
  */
-public class TransactionIdentifierServiceInitiator implements StandardServiceInitiator<ChangesetCoordinator> {
-	public static final TransactionIdentifierServiceInitiator INSTANCE = new TransactionIdentifierServiceInitiator();
+public class ChangesetCoordinatorInitiator implements StandardServiceInitiator<ChangesetCoordinator> {
+	public static final ChangesetCoordinatorInitiator INSTANCE = new ChangesetCoordinatorInitiator();
 
 	@Override
 	public Class<ChangesetCoordinator> getServiceInitiated() {

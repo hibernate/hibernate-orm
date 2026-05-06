@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A service for querying audit metadata. Provides access
+ * A service for querying the audit log. Provides access
  * to revision history and modification types for
  * {@linkplain org.hibernate.annotations.Audited audited}
  * entities, complementing the transparent point-in-time
@@ -38,17 +38,17 @@ public interface AuditLog extends AutoCloseable {
 	void close();
 
 	/**
-	 * A special transaction identifier that selects all
-	 * revisions from the audit table without filtering.
-	 * Pass this to
+	 * A special changeset identifier that selects all
+	 * historical revisions from an audit log table without
+	 * filtering. Pass this magic value to
 	 * {@link org.hibernate.SessionBuilder#atChangeset(Object)
-	 * atTransaction()} to open a session that reads all audit
+	 * atChangeset()} to obtain a session that reads all audit
 	 * rows, including deletions.
 	 * <p>
 	 * Usage:
 	 * <pre>
 	 * try (var s = sf.withOptions()
-	 *         .atTransaction(AuditLog.ALL_REVISIONS).open()) {
+	 *         .atChangeset(AuditLog.ALL_CHANGESETS).open()) {
 	 *     var history = s.createSelectionQuery(
 	 *             "from MyEntity where id = :id",
 	 *             MyEntity.class)
@@ -59,10 +59,10 @@ public interface AuditLog extends AutoCloseable {
 	 *
 	 * @see #getHistory(Class, Object)
 	 */
-	Object ALL_REVISIONS = new Object();
+	Object ALL_CHANGESETS = new Object();
 
 	/**
-	 * List all transaction identifiers where the given entity
+	 * List all changeset identifiers where the given entity
 	 * was modified, ordered chronologically.
 	 *
 	 * @param entityClass the audited entity class
@@ -74,16 +74,16 @@ public interface AuditLog extends AutoCloseable {
 
 	/**
 	 * Get the {@linkplain ModificationType modification type}
-	 * (ADD/MOD/DEL) for an entity at a specific transaction.
+	 * (ADD/MOD/DEL) for an entity at a specific changeset.
 	 *
 	 * @param entityClass the audited entity class
 	 * @param id the entity identifier
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the transaction identifier
 	 *
 	 * @return the modification type, or {@code null} if the
 	 * entity was not modified at that transaction
 	 */
-	ModificationType getModificationType(Class<?> entityClass, Object id, Object transactionId);
+	ModificationType getModificationType(Class<?> entityClass, Object id, Object changesetId);
 
 	/**
 	 * Check if an entity type is audited.
@@ -95,23 +95,25 @@ public interface AuditLog extends AutoCloseable {
 	boolean isAudited(Class<?> entityClass);
 
 	/**
-	 * Find an entity snapshot as of a specific transaction.
+	 * Find an entity snapshot as of a specific changeset,
+	 * that is, immediately after the changeset was applied.
 	 * Returns the state at the most recent revision at or
-	 * before the given transaction.
+	 * before the given changeset.
 	 *
 	 * @param entityClass the audited entity class
 	 * @param id the entity identifier
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 * @param <T> the entity type
 	 *
 	 * @return the entity state at that transaction, or
 	 * {@code null} if the entity did not exist
 	 * (e.g. before creation or after deletion)
 	 */
-	<T> T find(Class<T> entityClass, Object id, Object transactionId);
+	<T> T find(Class<T> entityClass, Object id, Object changesetId);
 
 	/**
-	 * Find an entity snapshot as of a specific transaction,
+	 * Find an entity snapshot as of a specific changeset,
+	 * that is, immediately after the changeset was applied,
 	 * optionally including deleted entities.
 	 * <p>
 	 * When {@code includeDeletions} is {@code false}, this
@@ -122,13 +124,13 @@ public interface AuditLog extends AutoCloseable {
 	 *
 	 * @param entityClass the audited entity class
 	 * @param id the entity identifier
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 * @param includeDeletions whether to include deleted entities
 	 * @param <T> the entity type
 	 *
 	 * @return the entity state at that transaction
 	 */
-	<T> T find(Class<T> entityClass, Object id, Object transactionId, boolean includeDeletions);
+	<T> T find(Class<T> entityClass, Object id, Object changesetId, boolean includeDeletions);
 
 	/**
 	 * Find an entity snapshot as of the given instant. Returns
@@ -145,29 +147,29 @@ public interface AuditLog extends AutoCloseable {
 
 	/**
 	 * Find all entity snapshots of the given type that
-	 * were modified at a specific transaction.
+	 * were modified in a specific changeset.
 	 *
 	 * @param entityClass the audited entity class
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 * @param <T> the entity type
 	 *
 	 * @return the entity snapshots at that transaction
 	 */
-	<T> List<T> findEntitiesModifiedAt(Class<T> entityClass, Object transactionId);
+	<T> List<T> findEntitiesModifiedAt(Class<T> entityClass, Object changesetId);
 
 	/**
 	 * Find all entity snapshots of the given type that
-	 * were modified at a specific transaction with the
+	 * were modified in a specific changeset with the
 	 * specified modification type.
 	 *
 	 * @param entityClass the audited entity class
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 * @param modificationType the modification type filter
 	 * @param <T> the entity type
 	 *
 	 * @return the matching entity snapshots
 	 */
-	<T> List<T> findEntitiesModifiedAt(Class<T> entityClass, Object transactionId, ModificationType modificationType);
+	<T> List<T> findEntitiesModifiedAt(Class<T> entityClass, Object changesetId, ModificationType modificationType);
 
 	/**
 	 * Find all entity snapshots of the given type that
@@ -175,21 +177,21 @@ public interface AuditLog extends AutoCloseable {
 	 * by modification type (ADD, MOD, DEL).
 	 *
 	 * @param entityClass the audited entity class
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 * @param <T> the entity type
 	 *
 	 * @return entity snapshots grouped by modification type
 	 */
 	<T> Map<ModificationType, List<T>> findEntitiesGroupedByModificationType(
 			Class<T> entityClass,
-			Object transactionId);
+			Object changesetId);
 
 	/**
 	 * Get the full audit history for an entity, ordered
 	 * chronologically by transaction identifier.
 	 * <p>
-	 * Each entry contains the entity snapshot, the transaction
-	 * identifier (or revision entity), and the
+	 * Each entry contains the entity snapshot, the changeset
+	 * identifier (or changeset entity), and the
 	 * {@linkplain ModificationType modification type}
 	 * (ADD/MOD/DEL).
 	 * <p>
@@ -197,7 +199,7 @@ public interface AuditLog extends AutoCloseable {
 	 * at the moment of deletion.
 	 *
 	 * @param entityClass the audited entity class
-	 * @param id the entity identifier
+	 * @param id the changeset identifier
 	 * @param <T> the entity type
 	 *
 	 * @return the audit history as a list of {@link AuditEntry}
@@ -210,121 +212,121 @@ public interface AuditLog extends AutoCloseable {
 	 * Get the set of entity types that were modified at the
 	 * given transaction.
 	 * <p>
-	 * Requires a {@link ChangesetEntity @RevisionEntity} with a
+	 * Requires a {@link ChangesetEntity @ChangesetEntity} with a
 	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
-	 * (e.g. {@link DefaultTrackingModifiedEntitiesRevisionEntity}).
+	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangesetEntity}).
 	 *
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 *
 	 * @return the set of entity classes modified at that transaction
 	 *
 	 * @throws AuditException if entity change tracking is not enabled
 	 */
-	Set<Class<?>> getEntityTypesModifiedAt(Object transactionId);
+	Set<Class<?>> getEntityTypesModifiedAt(Object changesetId);
 
 	/**
 	 * Find all entity snapshots across all audited types that
-	 * were modified at the given transaction.
+	 * were modified in the given changeset.
 	 * <p>
-	 * Requires a {@link ChangesetEntity @RevisionEntity} with a
+	 * Requires a {@link ChangesetEntity @ChangesetEntity} with a
 	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
-	 * (e.g. {@link DefaultTrackingModifiedEntitiesRevisionEntity}).
+	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangesetEntity}).
 	 *
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 *
-	 * @return all entity snapshots modified at that transaction
+	 * @return all entity snapshots modified in that changeset
 	 *
 	 * @throws AuditException if entity change tracking is not enabled
 	 */
-	List<Object> findAllEntitiesModifiedAt(Object transactionId);
+	List<Object> findAllEntitiesModifiedAt(Object changesetId);
 
 	/**
 	 * Find all entity snapshots across all audited types that
-	 * were modified at the given transaction with the specified
+	 * were modified in the given changeset with the specified
 	 * modification type.
 	 * <p>
-	 * Requires a {@link ChangesetEntity @RevisionEntity} with a
+	 * Requires a {@link ChangesetEntity @ChangesetEntity} with a
 	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
-	 * (e.g. {@link DefaultTrackingModifiedEntitiesRevisionEntity}).
+	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangesetEntity}).
 	 *
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 * @param modificationType the modification type filter
 	 *
 	 * @return the matching entity snapshots
 	 *
 	 * @throws AuditException if entity change tracking is not enabled
 	 */
-	List<Object> findAllEntitiesModifiedAt(Object transactionId, ModificationType modificationType);
+	List<Object> findAllEntitiesModifiedAt(Object changesetId, ModificationType modificationType);
 
 	/**
-	 * Find all entity snapshots modified at the given transaction,
+	 * Find all entity snapshots modified in the given changeset,
 	 * grouped by modification type (ADD, MOD, DEL).
 	 * <p>
-	 * Requires a {@link ChangesetEntity @RevisionEntity} with a
+	 * Requires a {@link ChangesetEntity @ChangesetEntity} with a
 	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
-	 * (e.g. {@link DefaultTrackingModifiedEntitiesRevisionEntity}).
+	 * (e.g. {@link DefaultTrackingModifiedEntitiesChangesetEntity}).
 	 *
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 *
 	 * @return entity snapshots grouped by modification type
 	 *
 	 * @throws AuditException if entity change tracking is not enabled
 	 */
-	Map<ModificationType, List<Object>> findAllEntitiesGroupedByModificationType(Object transactionId);
+	Map<ModificationType, List<Object>> findAllEntitiesGroupedByModificationType(Object changesetId);
 
 	/**
-	 * Get the timestamp of a specific revision. Requires
-	 * a {@link ChangesetEntity @RevisionEntity} with a
+	 * Get the timestamp of a specific changeset. Requires
+	 * a {@link ChangesetEntity @ChangesetEntity} with a
 	 * {@link ChangesetEntity.Timestamp @Timestamp} field.
 	 *
-	 * @param transactionId the transaction identifier
+	 * @param changesetId the changeset identifier
 	 *
-	 * @return the revision timestamp
+	 * @return the changeset transaction timestamp
 	 *
-	 * @throws AuditException if no revision entity is configured
+	 * @throws AuditException if no changeset entity is configured
 	 * or the transaction does not exist
 	 */
-	Instant getTransactionTimestamp(Object transactionId);
+	Instant getTransactionTimestamp(Object changesetId);
 
 	/**
-	 * Get the transaction identifier that was current at or
+	 * Get the changeset identifier that was current at or
 	 * before the given instant. Requires a
-	 * {@link ChangesetEntity @RevisionEntity} with a
+	 * {@link ChangesetEntity @ChangesetEntity} with a
 	 * {@link ChangesetEntity.Timestamp @Timestamp} field.
 	 *
 	 * @param instant the point in time
 	 *
-	 * @return the most recent transaction identifier at or
+	 * @return the most recent changeset identifier at or
 	 * before the given instant
 	 *
-	 * @throws AuditException if no transaction exists at or
+	 * @throws AuditException if no changeset exists at or
 	 * before the given instant
 	 */
-	Object getTransactionId(Instant instant);
+	Object getChangesetId(Instant instant);
 
 	/**
-	 * Load the revision entity for the given transaction identifier.
-	 * Requires a {@link ChangesetEntity @RevisionEntity}.
+	 * Load the changeset entity for the given changeset identifier.
+	 * Requires a {@link ChangesetEntity @ChangesetEntity}.
 	 *
-	 * @param transactionId the transaction identifier
-	 * @param <T> the revision entity type
+	 * @param changesetId the changeset identifier
+	 * @param <T> the changeset entity type
 	 *
-	 * @return the revision entity
+	 * @return the changeset entity
 	 *
-	 * @throws AuditException if no revision entity is configured
-	 * or the revision does not exist
+	 * @throws AuditException if no changeset entity is configured
+	 * or the changeset does not exist
 	 */
-	<T> T findRevision(Object transactionId);
+	<T> T findRevision(Object changesetId);
 
 	/**
-	 * Load revision entities for multiple transaction identifiers.
-	 * Requires a {@link ChangesetEntity @RevisionEntity}.
+	 * Load changeset entities for multiple changeset identifiers.
+	 * Requires a {@link ChangesetEntity @ChangesetEntity}.
 	 *
-	 * @param transactionIds the transaction identifiers
-	 * @param <T> the revision entity type
+	 * @param changesetIds the changeset identifiers
+	 * @param <T> the changeset entity type
 	 *
-	 * @return a map from transaction identifier to revision entity
+	 * @return a map from transaction identifier to changeset entity
 	 */
-	<T> Map<Object, T> findRevisions(Set<?> transactionIds);
+	<T> Map<Object, T> findRevisions(Set<?> changesetIds);
 
 }

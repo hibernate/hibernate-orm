@@ -17,9 +17,9 @@
  * <p>
  * This package also contains the base classes and contracts for
  * defining custom
- * {@linkplain org.hibernate.annotations.ChangesetEntity revision
+ * {@linkplain org.hibernate.annotations.ChangesetEntity changeset
  * entities} and {@linkplain org.hibernate.audit.ChangesetListener
- * revision listeners}.
+ * changeset listeners}.
  *
  * @see org.hibernate.annotations.Audited
  * @see org.hibernate.annotations.ChangesetEntity

@@ -81,8 +81,8 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 	private final Map<EntityKey, QueuedEntry> entries = new LinkedHashMap<>();
 	private final Map<CollectionKey, QueuedCollectionEntry> collectionEntries = new LinkedHashMap<>();
 	private EntityTrackingChangesetListener trackingListener;
-	private Object revisionEntity;
-	private @Nullable Session revisionSession;
+	private Object changesetEntity;
+	private @Nullable Session changesetSession;
 	private boolean registered;
 
 	/**
@@ -201,15 +201,15 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 	}
 
 	/**
-	 * Store the revision entity and the child session used to
+	 * Store the changeset entity and the child session used to
 	 * persist it. The child session is kept open for deferred
 	 * flush of {@code @ElementCollection} changes (e.g.
 	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}).
 	 * Called from {@link ChangesetEntitySupplier#generateIdentifier}.
 	 */
-	public void setRevisionContext(Object revisionEntity, Session revisionSession) {
-		this.revisionEntity = revisionEntity;
-		this.revisionSession = revisionSession;
+	public void setRevisionContext(Object changesetEntity, Session changesetSession) {
+		this.changesetEntity = changesetEntity;
+		this.changesetSession = changesetSession;
 	}
 
 	@Override
@@ -231,7 +231,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 							entityKey.getPersister().getMappedClass(),
 							entityKey.getIdentifier(),
 							entry.modificationType,
-							revisionEntity
+							changesetEntity
 					);
 				}
 			}
@@ -244,15 +244,15 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 						session
 				);
 			}
-			// Populate @ModifiedEntities on the revision entity
+			// Populate @ModifiedEntities on the changeset entity
 			populateModifiedEntityNames( session );
 		}
 		finally {
 			entries.clear();
 			collectionEntries.clear();
 			trackingListener = null;
-			revisionEntity = null;
-			revisionSession = null;
+			changesetEntity = null;
+			changesetSession = null;
 			registered = false;
 		}
 	}
@@ -261,20 +261,20 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 		final var supplier = ChangesetEntitySupplier.resolve( session.getFactory().getServiceRegistry() );
 		if ( supplier != null && supplier.getModifiedEntitiesProperty() != null ) {
 			final var persister = session.getEntityPersister(
-					supplier.getRevisionEntityClass().getName(),
-					revisionEntity
+					supplier.getChangesetEntityClass().getName(),
+					changesetEntity
 			);
 			final var attr = persister.findAttributeMapping( supplier.getModifiedEntitiesProperty() );
 			//noinspection unchecked
-			var entityNames = (Set<String>) persister.getValue( revisionEntity, attr.getStateArrayPosition() );
+			var entityNames = (Set<String>) persister.getValue( changesetEntity, attr.getStateArrayPosition() );
 			if ( entityNames == null ) {
 				entityNames = new HashSet<>();
-				persister.setValue( revisionEntity, attr.getStateArrayPosition(), entityNames );
+				persister.setValue( changesetEntity, attr.getStateArrayPosition(), entityNames );
 			}
 			for ( var entityKey : entries.keySet() ) {
 				entityNames.add( entityKey.getEntityName() );
 			}
-			castNonNull( revisionSession ).flush();
+			castNonNull( changesetSession ).flush();
 		}
 	}
 

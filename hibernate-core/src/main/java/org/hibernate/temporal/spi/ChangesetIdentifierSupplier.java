@@ -46,10 +46,10 @@ import org.hibernate.SharedSessionContract;
 public interface ChangesetIdentifierSupplier<T> {
 
 	/**
-	 * Called once per transaction to obtain the transaction identifier
+	 * Called once per transaction to obtain the changeset identifier
 	 *
 	 * @param session the current session
-	 * @return the transaction identifier
+	 * @return the changeset identifier
 	 */
 	T generateIdentifier(SharedSessionContract session);
 }

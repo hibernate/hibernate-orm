@@ -194,7 +194,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		if ( sameFk ) {
 			final var currentTxId = data.getRowProcessingState()
 					.getLoadQueryInfluencers().getTemporalIdentifier();
-			return Objects.equals( oldKey.getTransactionId(), currentTxId );
+			return Objects.equals( oldKey.getChangesetId(), currentTxId );
 		}
 		else {
 			return false;

@@ -57,9 +57,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * as the changeset identifier, but relying on this default behavior
  * is not recommended.
  * <p>
+ * To query historical revisions from the audit log:
+ * <ul>
+ * <li>specify a changeset id via
+ *     {@link org.hibernate.SessionBuilder#atChangeset atChangeset}
+ *     when opening a session, or
+ * <li>use an {@link org.hibernate.audit.AuditLog AuditLog}.
+ * </ul>
+ * <p>
  * Use the nested {@link Table @Audited.Table} annotation to
  * customize the audit log's table name, schema, catalog, or
  * column names for the audit log.
+ *
+ * @see org.hibernate.audit.AuditLog
  *
  * @author Gavin King
  * @author Marco Belladelli

@@ -38,13 +38,13 @@ import static java.util.Collections.singletonList;
 /**
  * HQL function for accessing audit columns of temporal entities.
  * <ul>
- *   <li>{@code transactionId(e)}: returns the transaction identifier
+ *   <li>{@code changesetId(e)}: returns the transaction identifier
  *   <li>{@code modificationType(e)}: returns the modification type
  * </ul>
  * These functions are only valid for
  * {@linkplain org.hibernate.annotations.Audited audited} entities
  * queried in
- * {@linkplain org.hibernate.audit.AuditLog#ALL_REVISIONS all-revisions}
+ * {@linkplain org.hibernate.audit.AuditLog#ALL_CHANGESETS all-changesets}
  * mode.
  *
  * @author Marco Belladelli
@@ -52,21 +52,21 @@ import static java.util.Collections.singletonList;
  */
 public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 
-	public static final String TRANSACTION_ID_FUNCTION = "transactionId";
+	public static final String CHANGESET_ID_FUNCTION = "changesetId";
 	public static final String MODIFICATION_TYPE_FUNCTION = "modificationType";
 
 	private static final FunctionRenderer PASSTHROUGH_RENDERER =
 			(sqlAppender, sqlAstArguments, returnType, walker)
 					-> sqlAstArguments.get( 0 ).accept( walker );
 
-	private final boolean transactionId;
+	private final boolean changesetId;
 
-	public AuditColumnFunction(String name, boolean transactionId, TypeConfiguration typeConfiguration) {
+	public AuditColumnFunction(String name, boolean changesetId, TypeConfiguration typeConfiguration) {
 		super(
 				name,
 				StandardArgumentsValidators.exactly( 1 ),
-				transactionId
-						// transactionId: type is unknown at registration time, resolved at SQL AST conversion
+				changesetId
+						// changesetId: type is unknown at registration time, resolved at SQL AST conversion
 						? StandardFunctionReturnTypeResolvers.invariant(
 						new BasicTypeImpl<>( new UnknownBasicJavaType<>( Object.class ), ObjectJdbcType.INSTANCE )
 				)
@@ -76,7 +76,7 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 				),
 				null
 		);
-		this.transactionId = transactionId;
+		this.changesetId = changesetId;
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 			QueryEngine queryEngine) {
 		return new AuditColumnSqmFunction<>(
 				this,
-				transactionId,
+				changesetId,
 				arguments,
 				impliedResultType,
 				queryEngine
@@ -95,11 +95,11 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 
 	private static class AuditColumnSqmFunction<T> extends SelfRenderingSqmFunction<T> {
 
-		private final boolean transactionId;
+		private final boolean changesetId;
 
 		AuditColumnSqmFunction(
 				AuditColumnFunction descriptor,
-				boolean transactionId,
+				boolean changesetId,
 				List<? extends SqmTypedNode<?>> arguments,
 				ReturnableType<T> impliedResultType,
 				QueryEngine queryEngine) {
@@ -113,13 +113,13 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 					queryEngine.getCriteriaBuilder(),
 					descriptor.getName()
 			);
-			this.transactionId = transactionId;
+			this.changesetId = changesetId;
 		}
 
 		private AuditColumnSqmFunction(
 				SqmFunctionDescriptor descriptor,
 				FunctionRenderer renderer,
-				boolean transactionId,
+				boolean changesetId,
 				List<? extends SqmTypedNode<?>> arguments,
 				ReturnableType<T> impliedResultType,
 				ArgumentsValidator argumentsValidator,
@@ -130,7 +130,7 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 					descriptor, renderer, arguments, impliedResultType,
 					argumentsValidator, returnTypeResolver, nodeBuilder, name
 			);
-			this.transactionId = transactionId;
+			this.changesetId = changesetId;
 		}
 
 		@Override
@@ -148,7 +148,7 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 					new AuditColumnSqmFunction<>(
 							getFunctionDescriptor(),
 							getFunctionRenderer(),
-							transactionId,
+							changesetId,
 							arguments,
 							getImpliedResultType(),
 							getArgumentsValidator(),
@@ -176,10 +176,10 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 			}
 
 			// modificationType lives on the root (identifier) table, not subclass tables
-			final String originalTable = transactionId
+			final String originalTable = changesetId
 					? entityMapping.getMappedTableDetails().getTableName()
 					: entityMapping.getIdentifierTableDetails().getTableName();
-			final SelectableMapping selectableMapping = transactionId
+			final SelectableMapping selectableMapping = changesetId
 					? auditMapping.getChangesetIdMapping( originalTable )
 					: auditMapping.getModificationTypeMapping( originalTable );
 

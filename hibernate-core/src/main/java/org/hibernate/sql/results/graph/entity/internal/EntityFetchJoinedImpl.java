@@ -154,7 +154,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 				entityResult.getDiscriminatorFetch(),
 				keyResult,
 				entityResult.getRowIdResult(),
-				entityResult.getAuditTransactionIdResult(),
+				entityResult.getAuditChangesetIdResult(),
 				notFoundAction,
 				isAffectedByFilter,
 				parent,

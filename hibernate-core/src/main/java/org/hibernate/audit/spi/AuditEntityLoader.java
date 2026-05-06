@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public interface AuditEntityLoader {
 
 	/**
-	 * Load an entity snapshot at the given transaction.
+	 * Load an entity snapshot at the given changeset.
 	 *
 	 * @param id the entity identifier
 	 * @param changesetId the identifier of the changeset

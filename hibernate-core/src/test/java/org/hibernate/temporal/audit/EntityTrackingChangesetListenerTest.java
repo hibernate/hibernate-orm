@@ -32,10 +32,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		EntityTrackingRevisionListenerTest.TrackedEntity.class,
-		EntityTrackingRevisionListenerTest.TrackingRevisionInfo.class
+		EntityTrackingChangesetListenerTest.TrackedEntity.class,
+		EntityTrackingChangesetListenerTest.TrackingRevisionInfo.class
 })
-class EntityTrackingRevisionListenerTest {
+class EntityTrackingChangesetListenerTest {
 
 	@BeforeEach
 	void clearTracker() {
@@ -57,7 +57,7 @@ class EntityTrackingRevisionListenerTest {
 		assertEquals( TrackedEntity.class, change.entityClass );
 		assertEquals( 1L, change.entityId );
 		assertEquals( ModificationType.ADD, change.modificationType );
-		assertNotNull( change.revisionEntity );
+		assertNotNull( change.changesetEntity );
 
 		TrackingListener.changes.clear();
 
@@ -98,13 +98,13 @@ class EntityTrackingRevisionListenerTest {
 		} );
 
 		assertEquals( 2, TrackingListener.changes.size() );
-		// Both should have the same revision entity
-		assertEquals( TrackingListener.changes.get( 0 ).revisionEntity,
-				TrackingListener.changes.get( 1 ).revisionEntity );
+		// Both should have the same changeset entity
+		assertEquals( TrackingListener.changes.get( 0 ).changesetEntity,
+				TrackingListener.changes.get( 1 ).changesetEntity );
 	}
 
 	@Test
-	void testRevisionEntityAccessible(SessionFactoryScope scope) {
+	void testChangesetEntityAccessible(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction( session -> {
 			var entity = new TrackedEntity();
 			entity.id = 20L;
@@ -113,7 +113,7 @@ class EntityTrackingRevisionListenerTest {
 		} );
 
 		assertEquals( 1, TrackingListener.changes.size() );
-		var revEntity = (TrackingRevisionInfo) TrackingListener.changes.get( 0 ).revisionEntity;
+		var revEntity = (TrackingRevisionInfo) TrackingListener.changes.get( 0 ).changesetEntity;
 		assertNotNull( revEntity );
 		assertEquals( "tracking-user", revEntity.username );
 	}
@@ -124,7 +124,7 @@ class EntityTrackingRevisionListenerTest {
 			Class<?> entityClass,
 			Object entityId,
 			ModificationType modificationType,
-			Object revisionEntity) {
+			Object changesetEntity) {
 	}
 
 	public static class TrackingListener implements EntityTrackingChangesetListener {
@@ -140,10 +140,10 @@ class EntityTrackingRevisionListenerTest {
 				Class<?> entityClass,
 				Object entityId,
 				ModificationType modificationType,
-				Object revisionEntity) {
+				Object changesetEntity) {
 			changes.add( new EntityChange(
 					entityClass, entityId,
-					modificationType, revisionEntity ) );
+					modificationType, changesetEntity ) );
 		}
 	}
 

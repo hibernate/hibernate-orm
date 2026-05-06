@@ -28,7 +28,7 @@ public final class AuditCollectionHelper {
 	private final CollectionMutationTarget mutationTarget;
 	private final SessionFactoryImplementor sessionFactory;
 	private final CollectionTableMapping auditTableMapping;
-	private final SelectableMapping transactionIdMapping;
+	private final SelectableMapping changesetIdMapping;
 	private final SelectableMapping modificationTypeMapping;
 	private final SelectableMapping transactionEndMapping;
 	private final boolean useServerTransactionTimestamps;
@@ -58,7 +58,7 @@ public final class AuditCollectionHelper {
 				mutationTarget.getCollectionTableMapping(),
 				auditMapping.resolveTableName( collectionTableName )
 		);
-		this.transactionIdMapping = auditMapping.getChangesetIdMapping( collectionTableName );
+		this.changesetIdMapping = auditMapping.getChangesetIdMapping( collectionTableName );
 		this.modificationTypeMapping = auditMapping.getModificationTypeMapping( collectionTableName );
 		this.transactionEndMapping = auditMapping.getInvalidatingChangesetIdMapping( collectionTableName );
 
@@ -87,7 +87,7 @@ public final class AuditCollectionHelper {
 			rowMutationHelper = new AuditCollectionRowMutationHelper(
 					mutationTarget,
 					auditTableMapping.getTableName(),
-					transactionIdMapping,
+					changesetIdMapping,
 					modificationTypeMapping,
 					indexColumnIsSettable,
 					elementColumnIsSettable,
@@ -140,10 +140,10 @@ public final class AuditCollectionHelper {
 		}
 
 		if ( useServerTransactionTimestamps ) {
-			insertBuilder.addValueColumn( currentTimestampFunctionName, transactionIdMapping );
+			insertBuilder.addValueColumn( currentTimestampFunctionName, changesetIdMapping );
 		}
 		else {
-			insertBuilder.addValueColumn( "?", transactionIdMapping );
+			insertBuilder.addValueColumn( "?", changesetIdMapping );
 		}
 		insertBuilder.addValueColumn( "?", modificationTypeMapping );
 	}

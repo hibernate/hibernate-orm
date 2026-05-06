@@ -226,7 +226,7 @@ class AuditManyToManyTest {
 	@Order(5)
 	void testCollectionRevisionIsolation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
-		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			var students = s.createSelectionQuery( "from Student where id = :id", Student.class )
 					.setParameter( "id", 1L )
 					.getResultList();

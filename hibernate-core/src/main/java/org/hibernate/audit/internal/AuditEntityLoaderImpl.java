@@ -62,7 +62,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 		// Uses ALL_REVISIONS so LoaderSelectBuilder doesn't add its own temporal restriction,
 		// then applies the audit mapping's restriction with our own JDBC parameter.
 		final var influencers = new LoadQueryInfluencers( sessionFactory );
-		influencers.setTemporalIdentifier( AuditLog.ALL_REVISIONS );
+		influencers.setTemporalIdentifier( AuditLog.ALL_CHANGESETS );
 		final var paramsBuilder = JdbcParametersList.newBuilder();
 		final var sqlAliasBaseManager = new SqlAliasBaseManager();
 		final var sqlAst = LoaderSelectBuilder.createSelect(
@@ -137,7 +137,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 	private <T> T execute(
 			JdbcSelect select,
 			Object id,
-			Object transactionId,
+			Object changesetId,
 			SharedSessionContractImplementor session) {
 		final var bindings = new JdbcParameterBindingsImpl( jdbcParams.size() );
 		int offset = bindings.registerParametersForEachJdbcValue(
@@ -147,7 +147,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 		);
 		bindings.addBinding(
 				jdbcParams.get( offset ),
-				new JdbcParameterBindingImpl( revMapping.getJdbcMapping(), transactionId )
+				new JdbcParameterBindingImpl( revMapping.getJdbcMapping(), changesetId )
 		);
 
 		final var callback = new CallbackImpl();

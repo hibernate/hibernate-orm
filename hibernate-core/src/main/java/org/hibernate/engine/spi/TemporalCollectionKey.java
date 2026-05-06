@@ -53,7 +53,7 @@ public final class TemporalCollectionKey extends CollectionKey {
 	}
 
 	@Override
-	public Object getTransactionId() {
+	public Object getChangesetId() {
 		return txId;
 	}
 

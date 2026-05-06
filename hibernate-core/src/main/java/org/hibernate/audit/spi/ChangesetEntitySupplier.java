@@ -20,41 +20,41 @@ import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
 /**
  * A built-in {@link ChangesetIdentifierSupplier} that persists
- * a user-defined revision entity and returns the
- * {@link ChangesetEntity.ChangesetId @RevisionEntity.TransactionId}
- * property value as the transaction id for audit rows.
+ * a user-defined changeset entity and returns the
+ * {@link ChangesetEntity.ChangesetId @ChangesetEntity.ChangesetId}
+ * property value as the changeset id for audit rows.
  * <p>
  * An optional {@link ChangesetListener} callback can be
  * configured for populating custom fields.
  *
- * @param <T> the type of the transaction identifier
- * (the {@link ChangesetEntity.ChangesetId @TransactionId}
+ * @param <T> the type of the changeset identifier
+ * (the {@link ChangesetEntity.ChangesetId @ChangesetId}
  * property type)
  *
  * @author Marco Belladelli
  * @since 7.4
  */
 public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T> {
-	private final Class<?> revisionEntityClass;
+	private final Class<?> changesetEntityClass;
 	private final String changesetIdProperty;
 	private final String timestampProperty;
 	private final @Nullable String modifiedEntitiesProperty;
 	private final @Nullable ChangesetListener listener;
 
 	/**
-	 * @param revisionEntityClass the revision entity class
-	 * @param changesetIdProperty the name of the {@link ChangesetEntity.ChangesetId @TransactionId} property
+	 * @param changesetEntityClass the changeset entity class
+	 * @param changesetIdProperty the name of the {@link ChangesetEntity.ChangesetId @ChangesetId} property
 	 * @param timestampProperty the name of the {@link ChangesetEntity.Timestamp @Timestamp} property
 	 * @param modifiedEntitiesProperty the name of the {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}
 	 * property, or {@code null} if entity change tracking is not configured
 	 * @param listener optional callback for populating custom fields
 	 */
 	public ChangesetEntitySupplier(
-			Class<?> revisionEntityClass,
+			Class<?> changesetEntityClass,
 			String changesetIdProperty,
 			String timestampProperty,
 			@Nullable String modifiedEntitiesProperty, @Nullable ChangesetListener listener) {
-		this.revisionEntityClass = revisionEntityClass;
+		this.changesetEntityClass = changesetEntityClass;
 		this.changesetIdProperty = changesetIdProperty;
 		this.timestampProperty = timestampProperty;
 		this.modifiedEntitiesProperty = modifiedEntitiesProperty;
@@ -62,14 +62,14 @@ public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T
 	}
 
 	/**
-	 * The revision entity class.
+	 * The changeset entity class.
 	 */
-	public Class<?> getRevisionEntityClass() {
-		return revisionEntityClass;
+	public Class<?> getChangesetEntityClass() {
+		return changesetEntityClass;
 	}
 
 	/**
-	 * The name of the {@link ChangesetEntity.ChangesetId @TransactionId} property.
+	 * The name of the {@link ChangesetEntity.ChangesetId @Changeset} property.
 	 */
 	public String getChangesetIdProperty() {
 		return changesetIdProperty;
@@ -83,7 +83,7 @@ public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T
 	}
 
 	/**
-	 * The configured revision listener, or {@code null}.
+	 * The configured changeset listener, or {@code null}.
 	 */
 	public @Nullable ChangesetListener getListener() {
 		return listener;
@@ -101,58 +101,58 @@ public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T
 	@SuppressWarnings("unchecked")
 	public T generateIdentifier(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
-		final EntityPersister persister = sessionImpl.getEntityPersister( revisionEntityClass.getName(), null );
-		final Object revisionEntity = persister.instantiate( null, sessionImpl );
+		final EntityPersister persister = sessionImpl.getEntityPersister( changesetEntityClass.getName(), null );
+		final Object changesetEntity = persister.instantiate( null, sessionImpl );
 		if ( listener != null ) {
-			listener.newChangeset( revisionEntity );
+			listener.newChangeset( changesetEntity );
 		}
-		final var childSession = persistRevisionEntity( session, revisionEntity );
-		sessionImpl.getAuditWorkQueue().setRevisionContext( revisionEntity, childSession );
-		return (T) readTransactionId( revisionEntity, persister, sessionImpl );
+		final var childSession = persistChangesetEntity( session, changesetEntity );
+		sessionImpl.getAuditWorkQueue().setRevisionContext( changesetEntity, childSession );
+		return (T) readChangesetId( changesetEntity, persister, sessionImpl );
 	}
 
 	/**
-	 * Read the {@link ChangesetEntity.ChangesetId @TransactionId} property value
-	 * from the revision entity after persistence.
+	 * Read the {@link ChangesetEntity.ChangesetId @Changeset} property value
+	 * from the changeset entity after persistence.
 	 * <p>
 	 * Handles both regular properties and {@code @Id} properties.
 	 */
-	private Object readTransactionId(
-			Object revisionEntity,
+	private Object readChangesetId(
+			Object changesetEntity,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
 		final Object txId;
 		final var txIdAttr = persister.findAttributeMapping( changesetIdProperty );
 		if ( txIdAttr != null ) {
-			txId = persister.getValue( revisionEntity, txIdAttr.getStateArrayPosition() );
+			txId = persister.getValue( changesetEntity, txIdAttr.getStateArrayPosition() );
 		}
 		else {
-			// @TransactionId is the @Id
-			txId = persister.getIdentifier( revisionEntity, session );
+			// @ChangesetId is the @Id
+			txId = persister.getIdentifier( changesetEntity, session );
 		}
 		if ( txId == null ) {
 			throw new AuditException(
-					"@RevisionEntity.TransactionId property '" + changesetIdProperty
-					+ "' is null after persisting revision entity '"
-					+ revisionEntityClass.getName() + "'"
+					"@ChangesetEntity.ChangesetId property '" + changesetIdProperty
+					+ "' is null after persisting changeset entity '"
+					+ changesetEntityClass.getName() + "'"
 			);
 		}
 		return txId;
 	}
 
 	/**
-	 * Persist the revision entity using a child {@link Session}
+	 * Persist the changeset entity using a child {@link Session}
 	 * that shares the parent session's JDBC connection.
 	 * The child session is returned so it can be kept open
 	 * for deferred flush of {@code @ElementCollection} changes.
 	 */
-	private static Session persistRevisionEntity(
+	private static Session persistChangesetEntity(
 			SharedSessionContract session,
-			Object revisionEntity) {
+			Object changesetEntity) {
 		final var childSession = session.sessionWithOptions()
 				.connection()
 				.openSession();
-		childSession.persist( revisionEntity );
+		childSession.persist( changesetEntity );
 		childSession.flush();
 		return childSession;
 	}
@@ -160,7 +160,7 @@ public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T
 	/**
 	 * Resolve the {@link ChangesetEntitySupplier} from the given
 	 * service registry, or return {@code null} if no
-	 * {@code @RevisionEntity} is configured.
+	 * {@code @ChangesetEntity} is configured.
 	 */
 	public static @Nullable ChangesetEntitySupplier<?> resolve(ServiceRegistry registry) {
 		final var service = registry.getService( ChangesetCoordinator.class );

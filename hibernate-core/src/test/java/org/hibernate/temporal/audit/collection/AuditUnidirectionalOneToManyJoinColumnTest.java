@@ -283,7 +283,7 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 	@Order(6)
 	void testCollectionRevisionIsolation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
-		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			var departments = s.createSelectionQuery( "from Department where id = :id", Department.class )
 					.setParameter( "id", 1L )
 					.getResultList();

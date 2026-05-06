@@ -266,13 +266,13 @@ class AuditToOneAssociationTest {
 	@Order(5)
 	void testJoinFetchAllRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions()
-				.atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
+				.atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			// Single-level join fetch: inner join filters out revNull (null author)
 			final var rows = session.createSelectionQuery(
-					"select e, transactionId(e), modificationType(e)"
+					"select e, changesetId(e), modificationType(e)"
 					+ " from Book e join fetch e.author"
 					+ " where e.id = :id"
-					+ " order by transactionId(e)",
+					+ " order by changesetId(e)",
 					Object[].class
 			).setParameter( "id", 1L ).getResultList();
 
@@ -283,12 +283,12 @@ class AuditToOneAssociationTest {
 
 			// Nested join fetch: only revisions where full chain exists (create + update)
 			final var nestedRows = session.createSelectionQuery(
-					"select e, transactionId(e)"
+					"select e, changesetId(e)"
 					+ " from Book e"
 					+ " join fetch e.author a"
 					+ " join fetch a.publisher"
 					+ " where e.id = :id"
-					+ " order by transactionId(e)",
+					+ " order by changesetId(e)",
 					Object[].class
 			).setParameter( "id", 1L ).getResultList();
 
@@ -397,12 +397,12 @@ class AuditToOneAssociationTest {
 	@Order(10)
 	void testLeftJoinFetchNullAssociationAllRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions()
-				.atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
+				.atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			final var rows = session.createSelectionQuery(
-					"select e, transactionId(e), modificationType(e)"
+					"select e, changesetId(e), modificationType(e)"
 					+ " from Book e left join fetch e.author"
 					+ " where e.id = :id"
-					+ " order by transactionId(e)",
+					+ " order by changesetId(e)",
 					Object[].class
 			).setParameter( "id", 10L ).getResultList();
 

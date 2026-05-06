@@ -23,17 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * Tests that {@link ChangesetEntity @RevisionEntity} auto-detection
+ * Tests that {@link ChangesetEntity @ChangesetEntity} auto-detection
  * works without an explicit {@code hibernate.temporal.changeset_id_supplier}
  * setting.
  */
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		RevisionEntityAnnotationTest.Book.class,
-		RevisionEntityAnnotationTest.MyRevisionInfo.class
+		ChangesetEntityAnnotationTest.Book.class,
+		ChangesetEntityAnnotationTest.MyRevisionInfo.class
 })
-class RevisionEntityAnnotationTest {
+class ChangesetEntityAnnotationTest {
 
 	@ChangesetEntity
 	@Entity(name = "MyRevisionInfo")
@@ -59,7 +59,7 @@ class RevisionEntityAnnotationTest {
 	}
 
 	@Test
-	void testAutoDetectedRevisionEntity(SessionFactoryScope scope) {
+	void testAutoDetectedChangesetEntity(SessionFactoryScope scope) {
 		// Create
 		scope.getSessionFactory().inTransaction( session -> {
 			final var book = new Book();
@@ -80,7 +80,7 @@ class RevisionEntityAnnotationTest {
 			session.remove( book );
 		} );
 
-		// Verify revision entity was auto-configured
+		// Verify changeset entity was auto-configured
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			final var revisions = auditLog.getRevisions( Book.class, 1L );
 			assertEquals( 3, revisions.size() );
@@ -113,7 +113,7 @@ class RevisionEntityAnnotationTest {
 	}
 
 	@Test
-	void testGetHistoryWithAutoDetectedRevisionEntity(SessionFactoryScope scope) {
+	void testGetHistoryWithAutoDetectedChangesetEntity(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction( session -> {
 			final var book = new Book();
 			book.id = 2L;
@@ -129,7 +129,7 @@ class RevisionEntityAnnotationTest {
 			final var entry = history.get( 0 );
 			assertNotNull( entry.entity() );
 			assertEquals( "History Book", entry.entity().title );
-			assertNotNull( entry.revision() );
+			assertNotNull( entry.changeset() );
 		}
 	}
 }

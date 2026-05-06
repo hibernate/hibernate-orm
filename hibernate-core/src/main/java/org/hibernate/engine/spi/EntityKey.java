@@ -97,11 +97,11 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 	}
 
 	/**
-	 * The audit transaction identifier for this key, or {@code null} for
+	 * The audit changeset identifier for this key, or {@code null} for
 	 * non-temporal entities.
 	 * When non-null, this entity is a read-only historical snapshot.
 	 */
-	public @Nullable Object getTransactionId() {
+	public @Nullable Object getChangesetId() {
 		return null;
 	}
 
@@ -117,13 +117,13 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 		if ( this == other ) {
 			return true;
 		}
-		if ( other == null || !( other instanceof EntityKey otherKey ) ) {
+		if ( !(other instanceof EntityKey otherKey) ) {
 			return false;
 		}
 
 		return samePersistentType( otherKey )
 			&& sameIdentifier( otherKey )
-			&& sameTransactionId( otherKey );
+			&& sameChangesetId( otherKey );
 
 	}
 
@@ -138,10 +138,10 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 	 * Compare transaction identifiers without virtual dispatch, using
 	 * instanceof on the sealed hierarchy for optimal JIT performance.
 	 */
-	private boolean sameTransactionId(final EntityKey otherKey) {
+	private boolean sameChangesetId(final EntityKey otherKey) {
 		if ( this instanceof TemporalEntityKey t1 ) {
 			return otherKey instanceof TemporalEntityKey t2
-					&& t1.getTransactionId().equals( t2.getTransactionId() );
+					&& t1.getChangesetId().equals( t2.getChangesetId() );
 		}
 		return !( otherKey instanceof TemporalEntityKey );
 	}
@@ -172,7 +172,7 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( identifier );
 		oos.writeObject( persister.getEntityName() );
-		oos.writeObject( getTransactionId() );
+		oos.writeObject( getChangesetId() );
 	}
 
 	/**

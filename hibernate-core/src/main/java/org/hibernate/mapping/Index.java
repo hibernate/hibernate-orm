@@ -16,7 +16,6 @@ import org.hibernate.dialect.Dialect;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toUnmodifiableMap;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -78,15 +77,6 @@ public class Index implements Exportable, Serializable {
 	@Deprecated(since = "6.3")
 	public java.util.List<Column> getColumns() {
 		return selectables.stream().map( selectable -> (Column) selectable ).toList();
-	}
-
-	/**
-	 * @deprecated use {@link #getSelectableOrderMap()}
-	 */
-	@Deprecated(since = "6.3")
-	public java.util.Map<Column, String> getColumnOrderMap() {
-		return selectableOrderMap.entrySet().stream()
-				.collect( toUnmodifiableMap( e -> (Column) e.getKey(), Map.Entry::getValue ) );
 	}
 
 	public void addColumn(Selectable selectable) {

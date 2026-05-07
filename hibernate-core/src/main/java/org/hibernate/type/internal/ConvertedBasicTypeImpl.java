@@ -295,10 +295,6 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	}
 
 	@Override
-	public final void beforeAssemble(Serializable cached, SharedSessionContractImplementor session) {
-	}
-
-	@Override
 	public final Object assemble(Serializable cached, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return getMutabilityPlan().assemble( cached, session );
 	}

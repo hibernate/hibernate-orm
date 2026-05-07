@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.sql.results.graph.Fetchable;
 
 /**
@@ -58,16 +57,6 @@ public final class MutableAttributeMappingList implements AttributeMappingsList 
 
 	public void add(final AttributeMapping attributeMapping) {
 		this.list.add( attributeMapping );
-	}
-
-	/**
-	 * @deprecated should be removed
-	 */
-	@Deprecated
-	public SingularAttributeMapping getSingularAttributeMapping(int idx) {
-		//TBD get rid of this cast - but it's low priority: apparently
-		//not used much at all after bootstrap.
-		return (SingularAttributeMapping) this.list.get( idx );
 	}
 
 	public void setAttributeMapping(int i, AttributeMapping attributeMapping) {

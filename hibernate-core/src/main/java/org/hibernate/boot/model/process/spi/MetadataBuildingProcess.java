@@ -59,6 +59,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
@@ -84,20 +85,6 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
-
-import java.io.InputStream;
-import java.sql.Types;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
@@ -813,7 +800,7 @@ public class MetadataBuildingProcess {
 			ddlTypeRegistry.addDescriptorIfAbsent(
 					new DdlTypeImpl(
 							SqlTypes.GEOGRAPHY,
-							geometryType.getTypeName( (Long) null, (Integer) null, (Integer) null ),
+							geometryType.getTypeName( Size.nil(), null, ddlTypeRegistry ),
 							dialect
 					)
 			);

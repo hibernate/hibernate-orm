@@ -19,6 +19,9 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static org.hibernate.type.descriptor.JdbcTypeNameMapper.isStandardTypeCode;
+
 
 /**
  * A registry mapping {@link org.hibernate.type.SqlTypes JDBC type codes}
@@ -32,7 +35,7 @@ public class DdlTypeRegistry implements Serializable {
 //	private static final Logger LOG = Logger.getLogger( DdlTypeRegistry.class );
 
 	private final Map<Integer, DdlType> ddlTypes = new HashMap<>();
-	private final Map<String, Integer> sqlTypes = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
+	private final Map<String, Integer> sqlTypes = new TreeMap<>( CASE_INSENSITIVE_ORDER );
 
 	public DdlTypeRegistry(TypeConfiguration typeConfiguration) {
 //		this.typeConfiguration = typeConfiguration;
@@ -91,8 +94,8 @@ public class DdlTypeRegistry implements Serializable {
 			final Integer previousSqlTypeCode = sqlTypes.put( rawTypeName, sqlTypeCode );
 			// Prefer the standard code over a custom code for a certain type name
 			if ( previousSqlTypeCode != null
-				&& JdbcTypeNameMapper.isStandardTypeCode( previousSqlTypeCode )
-				&& (!JdbcTypeNameMapper.isStandardTypeCode( sqlTypeCode ) || isBigger( previousSqlTypeCode, sqlTypeCode )) ) {
+					&& isStandardTypeCode( previousSqlTypeCode )
+					&& ( !isStandardTypeCode( sqlTypeCode ) || isBigger( previousSqlTypeCode, sqlTypeCode ) ) ) {
 				sqlTypes.put( rawTypeName, previousSqlTypeCode );
 			}
 		}
@@ -234,7 +237,7 @@ public class DdlTypeRegistry implements Serializable {
 					)
 			);
 		}
-		return descriptor.getTypeName( size.getLength(), size.getPrecision(), size.getScale() );
+		return descriptor.getTypeName( size, null, this );
 	}
 
 	/**
@@ -268,20 +271,32 @@ public class DdlTypeRegistry implements Serializable {
 	}
 
 	/**
-	 * Determines if there is a registered {@link DdlType} whose {@linkplain
-	 * DdlType#getRawTypeName() raw type name} matches the given type name,
-	 * taking into account DDL types registered by Hibernate.
+	 * Returns the first raw SQL type name registered for the given JDBC type code.
+	 */
+	public String getRawTypeName(int typeCode) {
+		final var rawTypeNames = getDescriptor( typeCode ).getRawTypeNames();
+		if ( rawTypeNames.length == 0 ) {
+			throw new HibernateException(
+					String.format(
+							"No raw type name mapping for org.hibernate.type.SqlTypes code: %s (%s)",
+							typeCode,
+							JdbcTypeNameMapper.getTypeName( typeCode )
+					)
+			);
+		}
+		return rawTypeNames[0];
+	}
+
+	/**
+	 * Determines if there is a registered {@link DdlType} whose raw type name
+	 * matches the given type name, taking into account DDL types registered by
+	 * Hibernate.
 	 *
 	 * @param typeName the type name.
 	 *
 	 * @return {@code true} if there is a DDL type with the given raw type name
 	 */
 	public boolean isTypeNameRegistered(final String typeName) {
-		for ( var value : ddlTypes.values() ) {
-			if ( value.getRawTypeName().equals( typeName ) ) {
-				return true;
-			}
-		}
-		return false;
+		return sqlTypes.containsKey( typeName );
 	}
 }

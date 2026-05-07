@@ -5899,19 +5899,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	/**
-	 * @deprecated Use {@link #createRowMatchingPredicate(MutationTarget, TableGroup, String, String)} instead
-	 */
-	@Deprecated(forRemoval = true, since = "7.4")
-	protected Predicate createRowMatchingPredicate(TableGroup dmlTargetTableGroup, String lhsAlias, String rhsAlias) {
-		return createRowMatchingPredicate(
-				(MutationTarget<?>) dmlTargetTableGroup.getModelPart().asEntityMappingType(),
-				dmlTargetTableGroup,
-				lhsAlias,
-				rhsAlias
-		);
-	}
-
 	protected Predicate createRowMatchingPredicate(
 			MutationTarget<?> mutationTarget,
 			TableGroup dmlTargetTableGroup,

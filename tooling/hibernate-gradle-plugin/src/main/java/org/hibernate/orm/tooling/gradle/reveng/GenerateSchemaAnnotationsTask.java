@@ -4,16 +4,30 @@
  */
 package org.hibernate.orm.tooling.gradle.reveng;
 
+import org.apache.tools.ant.BuildException;
+import org.gradle.api.DefaultTask;
+import org.gradle.api.GradleException;
+import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
+import org.hibernate.mapping.ForeignKey;
+import org.hibernate.tool.reveng.api.core.RevengSettings;
+import org.hibernate.tool.reveng.api.core.RevengStrategy;
+import org.hibernate.tool.reveng.api.core.RevengStrategyFactory;
+import org.hibernate.tool.reveng.api.core.TableIdentifier;
+
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -34,27 +48,13 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.tools.ant.BuildException;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.GradleException;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedConfiguration;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
-import org.gradle.work.DisableCachingByDefault;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.tool.reveng.api.core.RevengSettings;
-import org.hibernate.tool.reveng.api.core.RevengStrategy;
-import org.hibernate.tool.reveng.api.core.RevengStrategy.SchemaSelection;
-import org.hibernate.tool.reveng.api.core.RevengStrategyFactory;
-import org.hibernate.tool.reveng.api.core.TableIdentifier;
+import static java.lang.Character.isJavaIdentifierPart;
+import static java.lang.Character.isJavaIdentifierStart;
+import static java.lang.System.lineSeparator;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Comparator.comparingInt;
+import static org.hibernate.orm.tooling.gradle.reveng.RevengFileHelper.findRequiredResourceFile;
+import static org.hibernate.orm.tooling.gradle.reveng.RevengFileHelper.loadPropertiesFile;
 
 /**
  * Generates static schema annotation types from JDBC metadata.
@@ -326,7 +326,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	}
 
 	private TaskConfiguration resolveTaskConfiguration() {
-		final Properties hibernateProperties = loadHibernateProperties();
+		final var hibernateProperties = loadHibernateProperties();
 		return new TaskConfiguration(
 				requiredConfiguration(
 						getJdbcDriver(),
@@ -348,13 +348,13 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	private Properties loadHibernateProperties() {
 		final boolean explicitPropertiesFile = getHibernateProperties().isPresent();
 		final String filename = hibernatePropertiesFilename();
-		if ( filename == null || filename.isBlank() ) {
+		if ( filename.isBlank() ) {
 			return new Properties();
 		}
 
-		final File propertiesFile = RevengFileHelper.findResourceFile( getProject(), filename );
+		final var propertiesFile = RevengFileHelper.findResourceFile( getProject(), filename );
 		if ( propertiesFile != null ) {
-			return RevengFileHelper.loadPropertiesFile( getLogger(), propertiesFile );
+			return loadPropertiesFile( getLogger(), propertiesFile );
 		}
 		if ( explicitPropertiesFile ) {
 			throw new GradleException( "Hibernate properties file `" + filename + "` could not be found" );
@@ -398,26 +398,25 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		if ( taskProperty.isPresent() ) {
 			return taskProperty.get();
 		}
-		for ( String propertyName : hibernatePropertyNames ) {
-			if ( hibernateProperties.containsKey( propertyName ) ) {
-				return hibernateProperties.getProperty( propertyName );
+		else {
+			for ( String propertyName : hibernatePropertyNames ) {
+				if ( hibernateProperties.containsKey( propertyName ) ) {
+					return hibernateProperties.getProperty( propertyName );
+				}
 			}
+			return null;
 		}
-		return null;
 	}
 
 	private String optionalTaskConfiguration(Property<String> taskProperty) {
-		if ( !taskProperty.isPresent() || taskProperty.get().isBlank() ) {
-			return null;
-		}
-		return taskProperty.get();
+		return !taskProperty.isPresent() || taskProperty.get().isBlank() ? null : taskProperty.get();
 	}
 
 	private void generateSchemaAnnotations(TaskConfiguration configuration) throws SQLException, IOException {
 		getLogger().lifecycle( "Connecting to database: " + configuration.jdbcUrl );
-		final RevengStrategy revengStrategy = createReverseEngineeringStrategy( configuration );
-		try ( Connection connection = createConnection( configuration ) ) {
-			final List<Table> tables = readTables( connection, configuration, revengStrategy );
+		final var revengStrategy = createReverseEngineeringStrategy( configuration );
+		try ( var connection = createConnection( configuration ) ) {
+			final var tables = readTables( connection, configuration, revengStrategy );
 			writeTables( configuration.packageName, tables );
 		}
 		finally {
@@ -431,49 +430,51 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		if ( configuration.revengFile == null ) {
 			return null;
 		}
-
-		final File revengFile = RevengFileHelper.findRequiredResourceFile( getProject(), configuration.revengFile );
-		final RevengStrategy strategy = RevengStrategyFactory.createReverseEngineeringStrategy(
-				null,
-				new File[] { revengFile }
-		);
-		final RevengSettings settings = new RevengSettings( strategy );
-		settings.setDefaultPackageName( configuration.packageName );
-		strategy.setSettings( settings );
-		return strategy;
+		else {
+			final var revengFile = findRequiredResourceFile( getProject(), configuration.revengFile );
+			final var strategy = RevengStrategyFactory.createReverseEngineeringStrategy(
+					null,
+					new File[] {revengFile}
+			);
+			final var settings = new RevengSettings( strategy );
+			settings.setDefaultPackageName( configuration.packageName );
+			strategy.setSettings( settings );
+			return strategy;
+		}
 	}
 
 	private Connection createConnection(TaskConfiguration configuration) throws SQLException {
 		if ( configuration.username == null && configuration.password == null ) {
 			return DriverManager.getConnection( configuration.jdbcUrl );
 		}
-
-		final Properties properties = new Properties();
-		if ( configuration.username != null ) {
-			properties.put( "user", configuration.username );
+		else {
+			final var properties = new Properties();
+			if ( configuration.username != null ) {
+				properties.put( "user", configuration.username );
+			}
+			if ( configuration.password != null ) {
+				properties.put( "password", configuration.password );
+			}
+			return DriverManager.getConnection( configuration.jdbcUrl, properties );
 		}
-		if ( configuration.password != null ) {
-			properties.put( "password", configuration.password );
-		}
-		return DriverManager.getConnection( configuration.jdbcUrl, properties );
 	}
 
 	private List<Table> readTables(
 			Connection connection,
 			TaskConfiguration configuration,
 			RevengStrategy revengStrategy) throws SQLException {
-		final DatabaseMetaData metadata = connection.getMetaData();
+		final var metadata = connection.getMetaData();
 		final String catalog = configuration.catalogName == null ? determineCatalog( connection ) : configuration.catalogName;
 		final String schema = configuration.schemaName == null ? determineSchema( connection ) : configuration.schemaName;
 		final String tableNamePattern = configuration.tableNamePattern;
 
 		final List<Table> tables = new ArrayList<>();
-		final List<SchemaSelection> schemaSelections = revengStrategy == null ? null : revengStrategy.getSchemaSelections();
+		final var schemaSelections = revengStrategy == null ? null : revengStrategy.getSchemaSelections();
 		if ( schemaSelections == null ) {
 			readTables( metadata, catalog, schema, tableNamePattern, revengStrategy, tables );
 		}
 		else {
-			for ( SchemaSelection schemaSelection : schemaSelections ) {
+			for ( var schemaSelection : schemaSelections ) {
 				readTables(
 						metadata,
 						toJdbcPattern( schemaSelection.getMatchCatalog() ),
@@ -487,9 +488,8 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 
 		tables.sort( Comparator.comparing( table -> table.name.toLowerCase( Locale.ROOT ) ) );
 		validateNoDuplicateTableNames( tables );
-		final Map<TableIdentifier, Map<String, ForeignKeyColumn>> userForeignKeyColumns =
-				readUserForeignKeyColumns( tables, revengStrategy );
-		for ( Table table : tables ) {
+		final var userForeignKeyColumns = readUserForeignKeyColumns( tables, revengStrategy );
+		for ( var table : tables ) {
 			readColumns( metadata, table, revengStrategy, userForeignKeyColumns.get( table.identifier() ) );
 		}
 		return tables;
@@ -502,20 +502,19 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 			String tableNamePattern,
 			RevengStrategy revengStrategy,
 			List<Table> tables) throws SQLException {
-		try ( ResultSet resultSet = metadata.getTables( catalog, schema, tableNamePattern, TABLE_TYPES ) ) {
+		try ( var resultSet = metadata.getTables( catalog, schema, tableNamePattern, TABLE_TYPES ) ) {
 			while ( resultSet.next() ) {
 				final String tableName = resultSet.getString( "TABLE_NAME" );
-				final Table table = new Table(
+				final var table = new Table(
 						resultSet.getString( "TABLE_CAT" ),
 						resultSet.getString( "TABLE_SCHEM" ),
 						tableName
 				);
-				if ( isExcludedTable( revengStrategy, table ) ) {
-					continue;
-				}
-				validateJavaIdentifier( tableName, "table" );
-				if ( !tables.contains( table ) ) {
-					tables.add( table );
+				if ( !isExcludedTable( revengStrategy, table ) ) {
+					validateJavaIdentifier( tableName, "table" );
+					if ( !tables.contains( table ) ) {
+						tables.add( table );
+					}
 				}
 			}
 		}
@@ -529,30 +528,29 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		if ( revengStrategy == null ) {
 			return false;
 		}
-		for ( TableIdentifier identifier : table.identifiers() ) {
-			if ( revengStrategy.excludeTable( identifier ) ) {
-				return true;
+		else {
+			for ( var identifier : table.identifiers() ) {
+				if ( revengStrategy.excludeTable( identifier ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
 	}
 
 	private Map<TableIdentifier, Map<String, ForeignKeyColumn>> readUserForeignKeyColumns(
 			List<Table> tables,
 			RevengStrategy revengStrategy) {
 		final Map<TableIdentifier, Map<String, ForeignKeyColumn>> result = new HashMap<>();
-		if ( revengStrategy == null ) {
-			return result;
-		}
-
-		for ( Table referencedTable : tables ) {
-			for ( TableIdentifier identifier : referencedTable.identifiers() ) {
-				final List<ForeignKey> foreignKeys = revengStrategy.getForeignKeys( identifier );
-				if ( foreignKeys == null ) {
-					continue;
-				}
-				for ( ForeignKey foreignKey : foreignKeys ) {
-					addUserForeignKey( tables, result, foreignKey );
+		if ( revengStrategy != null ) {
+			for ( var referencedTable : tables ) {
+				for ( var identifier : referencedTable.identifiers() ) {
+					final var foreignKeys = revengStrategy.getForeignKeys( identifier );
+					if ( foreignKeys != null ) {
+						for ( var foreignKey : foreignKeys ) {
+							addUserForeignKey( tables, result, foreignKey );
+						}
+					}
 				}
 			}
 		}
@@ -563,38 +561,36 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 			List<Table> tables,
 			Map<TableIdentifier, Map<String, ForeignKeyColumn>> userForeignKeyColumns,
 			ForeignKey foreignKey) {
-		final Table dependentTable = findTable( tables, TableIdentifier.create( foreignKey.getTable() ) );
-		if ( dependentTable == null ) {
-			return;
-		}
-		final String referencedTableName = foreignKey.getReferencedTable().getName();
-		final List<?> columns = foreignKey.getColumns();
-		final List<?> referencedColumns = foreignKey.getReferencedColumns();
-		if ( columns.size() != referencedColumns.size() ) {
-			throw new GradleException(
-					"Foreign key `" + foreignKey.getName() + "` in reverse-engineering file has "
-							+ columns.size() + " local column(s) and " + referencedColumns.size()
-							+ " referenced column(s)"
-			);
-		}
+		final var dependentTable = findTable( tables, TableIdentifier.create( foreignKey.getTable() ) );
+		if ( dependentTable != null ) {
+			final String referencedTableName = foreignKey.getReferencedTable().getName();
+			final var columns = foreignKey.getColumns();
+			final var referencedColumns = foreignKey.getReferencedColumns();
+			if ( columns.size() != referencedColumns.size() ) {
+				throw new GradleException(
+						"Foreign key `" + foreignKey.getName() + "` in reverse-engineering file has "
+						+ columns.size() + " local column(s) and " + referencedColumns.size()
+						+ " referenced column(s)"
+				);
+			}
 
-		final Map<String, ForeignKeyColumn> tableForeignKeyColumns =
-				userForeignKeyColumns.computeIfAbsent( dependentTable.identifier(), key -> new HashMap<>() );
-		for ( int i = 0; i < columns.size(); i++ ) {
-			final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) columns.get( i );
-			final org.hibernate.mapping.Column referencedColumn =
-					(org.hibernate.mapping.Column) referencedColumns.get( i );
-			putForeignKeyColumn(
-					dependentTable.name,
-					tableForeignKeyColumns,
-					column.getName(),
-					new ForeignKeyColumn( referencedTableName, referencedColumn.getName() )
-			);
+			final var tableForeignKeyColumns =
+					userForeignKeyColumns.computeIfAbsent( dependentTable.identifier(), key -> new HashMap<>() );
+			for ( int i = 0; i < columns.size(); i++ ) {
+				final var column = columns.get( i );
+				final var referencedColumn = referencedColumns.get( i );
+				putForeignKeyColumn(
+						dependentTable.name,
+						tableForeignKeyColumns,
+						column.getName(),
+						new ForeignKeyColumn( referencedTableName, referencedColumn.getName() )
+				);
+			}
 		}
 	}
 
 	private Table findTable(List<Table> tables, TableIdentifier identifier) {
-		for ( Table table : tables ) {
+		for ( var table : tables ) {
 			if ( table.matches( identifier ) ) {
 				return table;
 			}
@@ -626,9 +622,9 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 			RevengStrategy revengStrategy,
 			Map<String, ForeignKeyColumn> userForeignKeyColumns) throws SQLException {
 		final Set<String> columnNames = new HashSet<>();
-		final Map<String, ForeignKeyColumn> foreignKeyColumns = readForeignKeyColumns( metadata, table );
+		final var foreignKeyColumns = readForeignKeyColumns( metadata, table );
 		if ( userForeignKeyColumns != null ) {
-			for ( Map.Entry<String, ForeignKeyColumn> entry : userForeignKeyColumns.entrySet() ) {
+			for ( var entry : userForeignKeyColumns.entrySet() ) {
 				putForeignKeyColumn( table.name, foreignKeyColumns, entry.getKey(), entry.getValue() );
 			}
 		}
@@ -644,7 +640,9 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 							"Table `" + table.name + "` has multiple columns named `" + columnName + "`"
 					);
 				}
-				final JDBCType jdbcType = resolveJdbcType( table.name, columnName, resultSet.getInt( "DATA_TYPE" ) );
+				final var jdbcType =
+						resolveJdbcType( table.name, columnName,
+								resultSet.getInt( "DATA_TYPE" ) );
 				table.columns.add(
 						new Column(
 								columnName,
@@ -659,13 +657,13 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 				);
 			}
 		}
-		table.columns.sort( Comparator.comparingInt( column -> column.position ) );
+		table.columns.sort( comparingInt( column -> column.position ) );
 	}
 
 	private Map<String, ForeignKeyColumn> readForeignKeyColumns(DatabaseMetaData metadata, Table table)
 			throws SQLException {
 		final Map<String, ForeignKeyColumn> foreignKeyColumns = new HashMap<>();
-		try ( ResultSet resultSet = metadata.getImportedKeys( table.catalog, table.schema, table.name ) ) {
+		try ( var resultSet = metadata.getImportedKeys( table.catalog, table.schema, table.name ) ) {
 			while ( resultSet.next() ) {
 				final String columnName = resultSet.getString( "FKCOLUMN_NAME" );
 				final var foreignKeyColumn = new ForeignKeyColumn(
@@ -696,12 +694,14 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		if ( revengStrategy == null ) {
 			return false;
 		}
-		for ( TableIdentifier identifier : table.identifiers() ) {
-			if ( revengStrategy.excludeColumn( identifier, columnName ) ) {
-				return true;
+		else {
+			for ( var identifier : table.identifiers() ) {
+				if ( revengStrategy.excludeColumn( identifier, columnName ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
 	}
 
 	private boolean isNullable(ResultSet resultSet) throws SQLException {
@@ -754,12 +754,12 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	}
 
 	private void writeTables(String packageName, List<Table> tables) throws IOException {
-		final File outputDirectory = getOutputDirectory().get().getAsFile();
-		final Path packageDirectory = packageDirectory( outputDirectory.toPath(), packageName );
+		final var outputDirectory = getOutputDirectory().get().getAsFile();
+		final var packageDirectory = packageDirectory( outputDirectory.toPath(), packageName );
 		Files.createDirectories( packageDirectory );
-		for ( Table table : tables ) {
-			final Path outputFile = packageDirectory.resolve( table.name + ".java" );
-			Files.writeString( outputFile, renderTable( packageName, table ), StandardCharsets.UTF_8 );
+		for ( var table : tables ) {
+			final var outputFile = packageDirectory.resolve( table.name + ".java" );
+			Files.writeString( outputFile, renderTable( packageName, table ), UTF_8 );
 		}
 		getLogger().lifecycle( "Generated " + tables.size() + " schema annotation type(s) into " + packageDirectory );
 	}
@@ -773,34 +773,34 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	}
 
 	private String renderTable(String packageName, Table table) {
-		final StringBuilder result = new StringBuilder();
-		result.append( "package " ).append( packageName ).append( ";" ).append( System.lineSeparator() )
-				.append( System.lineSeparator() )
-				.append( "import java.lang.annotation.Retention;" ).append( System.lineSeparator() )
-				.append( "import java.sql.JDBCType;" ).append( System.lineSeparator() )
-				.append( System.lineSeparator() )
-				.append( "import org.hibernate.annotations.schema.StaticColumn;" ).append( System.lineSeparator() )
-				.append( "import org.hibernate.annotations.schema.StaticJoinColumn;" ).append( System.lineSeparator() )
-				.append( "import org.hibernate.annotations.schema.StaticTable;" ).append( System.lineSeparator() )
-				.append( System.lineSeparator() )
-				.append( "import static java.lang.annotation.RetentionPolicy.RUNTIME;" ).append( System.lineSeparator() )
-				.append( System.lineSeparator() )
-				.append( "@Retention(RUNTIME)" ).append( System.lineSeparator() )
+		final var result = new StringBuilder();
+		result.append( "package " ).append( packageName ).append( ";" ).append( lineSeparator() )
+				.append( lineSeparator() )
+				.append( "import java.lang.annotation.Retention;" ).append( lineSeparator() )
+				.append( "import java.sql.JDBCType;" ).append( lineSeparator() )
+				.append( lineSeparator() )
+				.append( "import org.hibernate.annotations.schema.StaticColumn;" ).append( lineSeparator() )
+				.append( "import org.hibernate.annotations.schema.StaticJoinColumn;" ).append( lineSeparator() )
+				.append( "import org.hibernate.annotations.schema.StaticTable;" ).append( lineSeparator() )
+				.append( lineSeparator() )
+				.append( "import static java.lang.annotation.RetentionPolicy.RUNTIME;" ).append( lineSeparator() )
+				.append( lineSeparator() )
+				.append( "@Retention(RUNTIME)" ).append( lineSeparator() )
 				.append( "@StaticTable(name = " ).append( javaStringLiteral( table.name ) ).append( ")" )
-				.append( System.lineSeparator() )
-				.append( "public @interface " ).append( table.name ).append( " {" ).append( System.lineSeparator() );
+				.append( lineSeparator() )
+				.append( "public @interface " ).append( table.name ).append( " {" ).append( lineSeparator() );
 
-		for ( Column column : table.columns ) {
-			result.append( System.lineSeparator() )
-					.append( "\t@Retention(RUNTIME)" ).append( System.lineSeparator() )
+		for ( var column : table.columns ) {
+			result.append( lineSeparator() )
+					.append( "\t@Retention(RUNTIME)" ).append( lineSeparator() )
 					.append( renderColumnAnnotation( column ) )
-					.append( System.lineSeparator() )
-					.append( "\tpublic @interface " ).append( column.name ).append( " {" )
-					.append( System.lineSeparator() )
-					.append( "\t}" ).append( System.lineSeparator() );
+					.append( lineSeparator() )
+					.append( "\t@interface " ).append( column.name ).append( " {" )
+					.append( lineSeparator() )
+					.append( "\t}" ).append( lineSeparator() );
 		}
 
-		result.append( "}" ).append( System.lineSeparator() );
+		result.append( "}" ).append( lineSeparator() );
 		return result.toString();
 	}
 
@@ -831,7 +831,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	}
 
 	private String javaStringLiteral(String value) {
-		final StringBuilder result = new StringBuilder( "\"" );
+		final var result = new StringBuilder( "\"" );
 		for ( int i = 0; i < value.length(); i++ ) {
 			final char character = value.charAt( i );
 			switch ( character ) {
@@ -888,7 +888,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 
 	private void validateNoDuplicateTableNames(List<Table> tables) {
 		final Set<String> tableNames = new HashSet<>();
-		for ( Table table : tables ) {
+		for ( var table : tables ) {
 			if ( !tableNames.add( table.name ) ) {
 				throw new GradleException(
 						"Multiple tables named `" + table.name + "` match the configured catalog and schema"
@@ -904,11 +904,11 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		if ( JAVA_KEYWORDS.contains( identifier ) ) {
 			throw new GradleException( "`" + identifier + "` is not a legal Java identifier for a " + role );
 		}
-		if ( !Character.isJavaIdentifierStart( identifier.charAt( 0 ) ) ) {
+		if ( !isJavaIdentifierStart( identifier.charAt( 0 ) ) ) {
 			throw new GradleException( "`" + identifier + "` is not a legal Java identifier for a " + role );
 		}
 		for ( int i = 1; i < identifier.length(); i++ ) {
-			if ( !Character.isJavaIdentifierPart( identifier.charAt( i ) ) ) {
+			if ( !isJavaIdentifierPart( identifier.charAt( i ) ) ) {
 				throw new GradleException( "`" + identifier + "` is not a legal Java identifier for a " + role );
 			}
 		}
@@ -916,11 +916,11 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 
 	URL[] resolveProjectClassPath() {
 		try {
-			final ConfigurationContainer configurations = getProject().getConfigurations();
-			final Configuration runtimeClasspath = configurations.getByName( "runtimeClasspath" );
-			final ResolvedConfiguration resolvedConfiguration = runtimeClasspath.getResolvedConfiguration();
-			final Set<ResolvedArtifact> artifacts = resolvedConfiguration.getResolvedArtifacts();
-			final URL[] urls = new URL[artifacts.size()];
+			final var configurations = getProject().getConfigurations();
+			final var runtimeClasspath = configurations.getByName( "runtimeClasspath" );
+			final var resolvedConfiguration = runtimeClasspath.getResolvedConfiguration();
+			final var artifacts = resolvedConfiguration.getResolvedArtifacts();
+			final var urls = new URL[artifacts.size()];
 			int index = 0;
 			for ( ResolvedArtifact artifact : artifacts ) {
 				urls[index++] = artifact.getFile().toURI().toURL();
@@ -936,9 +936,9 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	private Driver registerDriver(ClassLoader classLoader, String driverClassName) {
 		getLogger().lifecycle( "Registering the database driver: " + driverClassName );
 		try {
-			final Class<?> driverClass = classLoader.loadClass( driverClassName );
-			final Constructor<?> constructor = driverClass.getDeclaredConstructor();
-			final Driver driver = createDelegatingDriver( (Driver) constructor.newInstance() );
+			final var driverClass = classLoader.loadClass( driverClassName );
+			final var constructor = driverClass.getDeclaredConstructor();
+			final var driver = createDelegatingDriver( (Driver) constructor.newInstance() );
 			DriverManager.registerDriver( driver );
 			return driver;
 		}
@@ -952,12 +952,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		return (Driver) Proxy.newProxyInstance(
 				DriverManager.class.getClassLoader(),
 				new Class[] { Driver.class },
-				new InvocationHandler() {
-					@Override
-					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-						return method.invoke( driver, args );
-					}
-				}
+				(proxy, method, args) -> method.invoke( driver, args )
 		);
 	}
 
@@ -1014,8 +1009,8 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		}
 
 		private List<TableIdentifier> identifiers() {
-			final TableIdentifier identifier = identifier();
-			final TableIdentifier unqualifiedIdentifier = TableIdentifier.create( null, null, name );
+			final var identifier = identifier();
+			final var unqualifiedIdentifier = TableIdentifier.create( null, null, name );
 			return identifier.equals( unqualifiedIdentifier )
 					? List.of( identifier )
 					: List.of( identifier, unqualifiedIdentifier );
@@ -1038,34 +1033,8 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		}
 	}
 
-	private static final class Column {
-		private final String name;
-		private final JDBCType type;
-		private final boolean nullable;
-		private final int length;
-		private final int precision;
-		private final int scale;
-		private final ForeignKeyColumn foreignKeyColumn;
-		private final int position;
-
-		private Column(
-				String name,
-				JDBCType type,
-				boolean nullable,
-				int length,
-				int precision,
-				int scale,
-				ForeignKeyColumn foreignKeyColumn,
-				int position) {
-			this.name = name;
-			this.type = type;
-			this.nullable = nullable;
-			this.length = length;
-			this.precision = precision;
-			this.scale = scale;
-			this.foreignKeyColumn = foreignKeyColumn;
-			this.position = position;
-		}
+	private record Column(String name, JDBCType type, boolean nullable, int length, int precision, int scale,
+						ForeignKeyColumn foreignKeyColumn, int position) {
 	}
 
 	private record ForeignKeyColumn(String referencedTableName, String referencedColumnName) {

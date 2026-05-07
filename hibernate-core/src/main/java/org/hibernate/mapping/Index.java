@@ -71,14 +71,6 @@ public class Index implements Exportable, Serializable {
 		return unmodifiableMap( selectableOrderMap );
 	}
 
-	/**
-	 * @deprecated use {@link #getSelectables()}
-	 */
-	@Deprecated(since = "6.3")
-	public java.util.List<Column> getColumns() {
-		return selectables.stream().map( selectable -> (Column) selectable ).toList();
-	}
-
 	public void addColumn(Selectable selectable) {
 		if ( !selectables.contains( selectable ) ) {
 			selectables.add( selectable );

@@ -32,21 +32,6 @@ public final class StandardStack<T> implements Stack<T> {
 		push( initialValue );
 	}
 
-	/**
-	 * @deprecated use the default constructor instead
-	 */
-	@Deprecated(forRemoval = true)
-	public StandardStack(Class<T> type) {
-	}
-
-	/**
-	 * @deprecated use {@link #StandardStack(Object)} instead.
-	 */
-	@Deprecated(forRemoval = true)
-	public StandardStack(Class<T> type, T initial) {
-		push( initial );
-	}
-
 	private void init() {
 		elements = new Object[8];
 	}

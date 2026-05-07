@@ -792,12 +792,6 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<Source, SourceAnnotation> SOURCE = new OrmAnnotationDescriptor<>(
-			Source.class,
-			SourceAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
-	);
 	OrmAnnotationDescriptor<SQLDeletes, SQLDeletesAnnotation> SQL_DELETES = new OrmAnnotationDescriptor<>(
 			SQLDeletes.class,
 			SQLDeletesAnnotation.class,

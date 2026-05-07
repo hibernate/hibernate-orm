@@ -9,6 +9,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -82,8 +83,8 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.generator.internal.CurrentTimestampGeneration;
 import org.hibernate.generator.internal.GeneratedGeneration;
-import org.hibernate.generator.internal.SourceGeneration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
@@ -133,6 +134,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
+import java.lang.annotation.Annotation;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -861,7 +863,16 @@ public class ModelBinder {
 		}
 		if ( versionAttributeSource.getSource().equals( "db" ) ) {
 			property.setValueGeneratorCreator( context ->
-					new SourceGeneration( SourceType.DB, property.getType().getReturnedClass(), context ) );
+					new CurrentTimestampGeneration( new UpdateTimestamp() {
+						@Override
+						public SourceType source() {
+							return SourceType.DB;
+						}
+						@Override
+						public Class<? extends Annotation> annotationType() {
+							return UpdateTimestamp.class;
+						}
+					}, context ) );
 		}
 
 		rootEntityDescriptor.setVersion( property );

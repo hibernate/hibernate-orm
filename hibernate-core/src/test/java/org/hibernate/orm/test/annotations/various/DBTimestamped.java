@@ -10,8 +10,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
-import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * @author Hardy Ferentschik
@@ -23,7 +23,7 @@ public class DBTimestamped {
 	private int id;
 
 	@Version
-	@Source(SourceType.DB)
+	@UpdateTimestamp(source = SourceType.DB)
 	private Date lastUpdate;
 
 	public int getId() {

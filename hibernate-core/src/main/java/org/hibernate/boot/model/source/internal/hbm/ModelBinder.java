@@ -92,6 +92,7 @@ import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -2627,7 +2628,7 @@ public class ModelBinder {
 			table.setRowId( tableSource.getRowId() );
 			final String checkConstraint = tableSource.getCheckConstraint();
 			if ( isNotEmpty( checkConstraint ) ) {
-				table.addCheckConstraint( checkConstraint );
+				table.addCheck( new CheckConstraint( checkConstraint ) );
 			}
 		}
 
@@ -2992,7 +2993,7 @@ public class ModelBinder {
 			}
 			final String tableCheck = pluralAttributeSource.getCollectionTableCheck();
 			if ( tableCheck != null ) {
-				collectionTable.addCheckConstraint( tableCheck );
+				collectionTable.addCheck( new CheckConstraint( tableCheck ) );
 			}
 		}
 

@@ -95,14 +95,6 @@ public class CascadingActions {
 	};
 
 	/**
-	 * Used in legacy {@code Session#delete} method, which has been removed
-	 *
-	 * @deprecated Use {@link #REMOVE}
-	 */
-	@Deprecated(since = "6.6", forRemoval = true)
-	public static final CascadingAction<DeleteContext> DELETE = REMOVE;
-
-	/**
 	 * @see org.hibernate.Session#lock(Object, LockMode)
 	 *
 	 * @deprecated because {@link org.hibernate.annotations.CascadeType#LOCK}

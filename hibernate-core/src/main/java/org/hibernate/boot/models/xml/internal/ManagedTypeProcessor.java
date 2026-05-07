@@ -41,6 +41,7 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 
 import jakarta.persistence.Access;
@@ -176,7 +177,7 @@ public class ManagedTypeProcessor {
 				memberDetails.applyAnnotationUsage( HibernateAnnotations.ATTRIBUTE_ACCESSOR,
 						xmlDocumentContext.getModelBuildingContext() );
 		// todo (7.0) : this is the old String-based, deprecated form
-		annotationUsage.value( BuiltInPropertyAccessStrategies.MAP.getExternalName() );
+		annotationUsage.strategy( PropertyAccessStrategyMapImpl.class );
 	}
 
 	private static void processEntityMetadata(

@@ -44,13 +44,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @AttributeBinderType(binder = AttributeAccessorBinder.class)
 public @interface AttributeAccessor {
 	/**
-	 * Names the {@link PropertyAccessStrategy} strategy.
-	 *
-	 * @deprecated use {@link #strategy()}
-	 */
-	@Deprecated(since = "6.0", forRemoval = true)
-	String value() default "";
-	/**
 	 * A class implementing {@link PropertyAccessStrategy}.
 	 */
 	Class<? extends PropertyAccessStrategy> strategy() default PropertyAccessStrategy.class;

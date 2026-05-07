@@ -216,11 +216,6 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public void beforeAssemble(Serializable oid, SharedSessionContractImplementor session) {
-		scheduleBatchLoadIfNeeded( assembleId( oid, session ), session );
-	}
-
-	@Override
 	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		final boolean[] result = new boolean[ getColumnSpan( mapping ) ];
 		if ( value != null ) {

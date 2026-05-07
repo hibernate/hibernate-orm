@@ -52,7 +52,7 @@ public class DB2DialectTestCase {
 	@JiraKey(value = "HHH-6866")
 	public void testGetExplicitBinaryTypeName() {
 		// lower bound
-		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length(1) );
+		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 1 ), null );
 		assertEquals(
 				"binary(1)",
 				actual,
@@ -60,7 +60,7 @@ public class DB2DialectTestCase {
 		);
 
 		// upper bound
-		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length(254) );
+		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 254 ), null );
 		assertEquals(
 				"binary(254)",
 				actual,
@@ -68,7 +68,7 @@ public class DB2DialectTestCase {
 		);
 
 		// exceeding upper bound
-		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length(255) );
+		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 255 ), null );
 		assertEquals(
 				"varbinary(255)",
 				actual,

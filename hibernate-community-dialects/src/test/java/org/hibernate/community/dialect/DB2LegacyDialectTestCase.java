@@ -47,19 +47,19 @@ public class DB2LegacyDialectTestCase {
 	@JiraKey(value = "HHH-6866")
 	public void testGetExplicitBinaryTypeName() {
 		// lower bound
-		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 1 ) );
+		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 1 ), null );
 		assertThat( actual )
 				.describedAs( "Wrong binary type" )
 				.isEqualTo( "char(1) for bit data" );
 
 		// upper bound
-		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 254 ) );
+		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 254 ), null );
 		assertThat( actual )
 				.describedAs( "Wrong binary type. 254 is the max length in DB2" )
 				.isEqualTo( "char(254) for bit data" );
 
 		// exceeding upper bound
-		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 255 ) );
+		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 255 ), null );
 		assertThat( actual )
 				.describedAs( "Wrong binary type. Should be varchar for length > 254" )
 				.isEqualTo( "varchar(255) for bit data" );

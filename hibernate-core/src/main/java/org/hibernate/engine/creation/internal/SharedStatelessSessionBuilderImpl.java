@@ -135,12 +135,6 @@ public abstract class SharedStatelessSessionBuilderImpl
 		return jdbcTimeZone;
 	}
 
-	@Override @Deprecated(forRemoval = true)
-	public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier) {
-		this.tenantIdentifier = tenantIdentifier;
-		return null;
-	}
-
 	@Override @Deprecated
 	public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
 		this.statementInspector = statementInspector;

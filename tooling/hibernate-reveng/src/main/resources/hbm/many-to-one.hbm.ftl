@@ -20,7 +20,7 @@
 <#if property.value.referencedPropertyName?exists> 
         property-ref="${property.value.referencedPropertyName}"
 </#if>	    
-<#if !property.updateable> 
+<#if !property.updatable>
         update="false"
 </#if>
 <#if !property.insertable>

@@ -1,6 +1,191 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.0.CR1 (May 07, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37741
+
+
+** Bug
+    * HHH-20358 PRIVILEGED_CLI is not set to "sudo" when Podman is aliased as Docker
+    * HHH-20356 NPE when mapping embedded property as @MappedSuperclass
+    * HHH-20355 use of static calendar in TimestampUtcAsJdbcTimestampJdbcType and friends
+    * HHH-20353 unhelpful error with @ManyToAny
+    * HHH-20350 Unexpected physical naming of columns for embeddables in Hibernate 7 
+    * HHH-20336 JdbcResourceLocalTransactionCoordinatorImpl does not trigger afterCompletionCallback if it encounters a TransactionException
+    * HHH-20326 ClassCastException when joining array within embeddable
+    * HHH-20323 with `hibernate.temporal.use_server_transaction_timestamps`, session obtains a database timestamp even when not needed
+    * HHH-20321 import.sql not executed when there are no @Entity classes
+    * HHH-20313 Criteria query comparing double path to integer expression containing integer parameter fails
+    * HHH-20308 JSON embeddable array access not working because Column reports wrong SQL type code
+    * HHH-20307 Informix count distinct tuple emulation is broken
+    * HHH-20305 Lock timout on Informix broken
+    * HHH-20303 Power function usage for PostgreSQLTruncRoundFunction breaks CockroachDB
+    * HHH-20300 OptionalTableUpdateWithUpsertOperation can fail on PostgreSQL 14
+    * HHH-20297 SQM parameter use in multiple type-incompatible contexts binds with wrong JdbcMapping
+    * HHH-20287 DataException ( Parameter is not set) when updating only the version of an Entity with a PartitionKey
+    * HHH-20283 key-based pagination appears to be broken
+    * HHH-20281 Missing temporal precision for parameter coercion leading to ClassCastException
+    * HHH-20274 Avoid mutating SqmSelectClause during type validation
+    * HHH-20273 Failed to set List type field in Embeddable record
+    * HHH-20272 JDBC locking pre-actions are not executed before the statement
+    * HHH-20271 SybaseASE reports wrong lock metadata
+    * HHH-20267 Hibernate processor: infinite generation of repositories when extending PanacheRepository
+    * HHH-20266 Some unnesting array functions miss ordering on index on aggregation
+    * HHH-20265 StackOverflowError with multi-level generic inheritance hierarchy and attribute converters
+    * HHH-20260 Session#find only logs LockTimeoutException instead of throwing it on PostgreSQL
+    * HHH-20259 DdlTypeRegistry#addSqlType doesn't handle different type codes registered to same DDL type properly
+    * HHH-20253 ClassCastException when using hibernate-enhance-maven-plugin plugin
+    * HHH-20251 NPE: query with fetch graph and read-only hint on bytecode enhanced entities
+    * HHH-20244 Sybase and MySQL connection locking problems
+    * HHH-20243 float/double literals with no fractional part
+    * HHH-20242 `IndexOutOfBoundsException` while trying to pretty-print `AntlrError`
+    * HHH-20241 `@Query` with invalid HQL in Jakarta Data repository was able to compile
+    * HHH-20238 Data types are not forwarded from HQL to SQL properly
+    * HHH-20234 DatasourceConnectionProviderImpl extends DriverManagerConnectionProvider instead of DatasourceConnectionProvider
+    * HHH-20233 parse issues with query validation
+    * HHH-20230 [Metamodel Generator] AnnotationMetaEntity fails to compile repository methods with unbounded wildcard Sort<?>
+    * HHH-20224  Exception when calling treat() twice
+    * HHH-20221 Jakarta Data `@Find` method with `@OrderBy` that returns `TypedQuery` does not compile
+    * HHH-20216 The documentation task 'documentation:renderUserGuideHtml' is failing
+    * HHH-20209 Race Condition in JavaTypeRegistry causing SemanticException during parallel UNION queries with projection.
+    * HHH-20206 @Nullable @HQL method does fail to compile
+    * HHH-20199 Regression Hibernate 7: Using an AdditionalMappingContributor leads to a rescan of Entities that breaks when @Converters are present 
+    * HHH-20194 attribute validation broken in HQL validation for some queries
+    * HHH-20191 Docs for annotation processor are wrong and missing documented default values
+    * HHH-20183 Incorrect type for fields in generated metamodel classes, when field type is the same as Jakarta class
+    * HHH-20181 two minor issues with DDL constraints
+    * HHH-20168 Hibernate JsonWithArrayEmbeddableTest.testUpdateMultipleAggregateMembers test fail with Oracle 19c
+    * HHH-20161 Hibernate ArrayToStringWithArrayAggregateTest test fail with Oracle 19c
+    * HHH-20155 StatelessSession.upsert() and discriminator column
+    * HHH-20154 @NaturalId(modifiable=false) => updatable=false
+    * HHH-20133 @Formula and @JoinFormula with {p.*} expansion in native queries
+    * HHH-20126 NPE when querying with a lockMode/lockScope
+    * HHH-20092 SqlTypes.JSON on SQL Server expects varchar(max) even with use_nationalized_character_data=true
+    * HHH-20053 HQL grammar ambiguity for NOT keyword
+    * HHH-20004 stop @Column(columnDefinition) leaking out of DDL generation
+    * HHH-19885 Wrong mapping of legacy XML "access" attribute in HbmXmlTransformer
+    * HHH-19818 NPE with stateless insert when Envers is enabled
+    * HHH-19609 @PartitionKey and StatelessSession.update()
+    * HHH-19607 TableReference not found comparing embedded of associated entity in where clause of a query
+    * HHH-19567 EntityGraph.removeAttributeNode() should suppress EAGER fetching
+    * HHH-19429 ConcurrentModificationException observed while executing JPQL update query with VERSIONED clause
+    * HHH-19380 unhelpful exception when mixing nodes from different SQM trees
+    * HHH-19355 bug in HQL trunc() function on Oracle
+    * HHH-19056 MapsId with null embeddable fails
+    * HHH-19020 NullPointerException in ClassPropertyHolder.addPropertyToMappedSuperclass()
+    * HHH-18774 two bad bugs in cascade refresh
+    * HHH-18742 StatelessSession.upsert() and @NaturalId fields
+    * HHH-18529 two issues with AccessType defaulting
+    * HHH-17786 StatelessSession#upsert fails to insert updatable=false columns
+    * HHH-16523 hibernate.cache.use_minimal_puts appears to be missing from H6
+    * HHH-16442 trunc() function with offset datetimes on Oracle
+    * HHH-16167 generators and embeddable classes
+    * HHH-12986 ConfigLoader does not close file when loading hibernate.cfg.xml
+    * HHH-12590 Postgres subselect: ERROR: subquery in FROM must have an alias
+    * HHH-9414 MarkerObject reference checking is wrong after deserialization
+
+** Deprecation
+    * HHH-20377 Deprecate org.hibernate.query.QueryFlushMode
+
+** Improvement
+    * HHH-20404 Processor should ignore package private entities in other packages
+    * HHH-20398 a couple of minor improvements to audited stuff
+    * HHH-20296 Speed up some HQL tests when only SELECT are performed
+    * HHH-20290 Improve OTP job durations in CI
+    * HHH-20282 @Parent annotation should not depend on existence of getter/setter
+    * HHH-20261 Actionable, detailed error message when projecting a native query to an incorrectly-structured custom class/record
+    * HHH-20256 Make ByteBuddy class generation build-reproducible
+    * HHH-20246 Upgrade Oracle JDBC driver to version 23.26.1.0.0
+    * HHH-20240 Annotation processor provides too less information to find HQL problems
+    * HHH-20228 Make the sortedTypeContributors comparator static
+    * HHH-20227 Avoid using reflection and parsing annotations when initializing the Hibernate and JPA annotation descriptors
+    * HHH-20215 Improve token lookahead performance in SQL Template rendering
+    * HHH-20214 Integrate Envers readers on top of @Temporal
+    * HHH-20213 Update to GeoLatte 1.11
+    * HHH-20196 Refactor to improve performance, remove redundancy and improve readability
+    * HHH-20177 Update log4j to 2.25.3
+    * HHH-20157 Add pre-relocation capabilities to relocated artifacts
+    * HHH-20153 Treat CreationTimestamp/UpdateTimestamp generator fields as not-null
+    * HHH-20148 Avoid depending on module java.desktop
+    * HHH-20145 Automatically align Hibernate artifact versions for Gradle consumers
+    * HHH-20130 unique key constraint for @ElementCollection Set
+    * HHH-20123 Address the split package issue in hibernate-micrometer and hibernate-core
+
+** Improvement
+    * HHH-20122 Update Agroal to 3.0.1
+    * HHH-20120 Remove default max_fetch_depth from MySQLDialect
+    * HHH-20115 Pass a ROOT locale to loggers to avoid unnecessary class lookups
+    * HHH-20090 Use ROWID for MERGE statement if possible
+    * HHH-20020 A proxy associated with an @Any mapping is always considered dirty.
+    * HHH-19951 introduce DetachedObjectException
+    * HHH-19933 pagination and join fetch
+    * HHH-19849 Add an SPI that allows attaching session-scoped "extensions" to the session/statelesssession implementors
+    * HHH-19371 use a StatelessSession for temporary sessions
+    * HHH-19247 Make it possible to order type contributions analogous to function contributions
+    * HHH-18938 BatchBuilder, StatisticsFactory, MutationExecutorService, SchemaManagementTool as Java services
+    * HHH-18908 missing logging for READ_ONLY and NONSTRICT_READ_WRITE
+    * HHH-18812 MySQLSqlAstTranslator.visitCastTarget circumvents the machinery in DdlType
+    * HHH-18210 Up-front validation of generator types
+    * HHH-16730 joining @Any and @ManyToAny mappings
+    * HHH-15492 mappedBy referencing @JoinFormula
+    * HHH-15048 Allow @Nationalized at the class or package level
+    * HHH-9897 @OneToMany association with @JoinFormula throws NPE
+    * HHH-9662 IllegalArgumentException when composite ID has IDENTITY generated value
+    * HHH-6044 Support post-insert generators with partially generated composite ids
+    * HHH-5247 Support indexes and unique-keys in schema validator
+
+** New Feature
+    * HHH-20201 allow @MapsId to target an @EmbeddedId within an @IdClass
+    * HHH-20104 temporal data based on global revision number
+    * HHH-20077 temporal entities
+    * HHH-20044 Support Spanner PostgreSQL dialect in Hibernate
+    * HHH-19971 @Any and @ManyToAny needs a cascade member as replacement for deprecated Cascade annotation
+    * HHH-19956 Add support for InterSystems IRIS
+    * HHH-19879 Move Hibernate Tools' reveng module to Hibernate ORM and merge the relevant ant/gradle/maven plugins
+    * HHH-15383 emulate FULL JOIN using UNION on some dialects
+    * HHH-13284 Allow refreshing multiple entities based on query
+    * HHH-12997 @OneToMany does not work with @JoinFormula
+
+** Remove Feature
+    * HHH-20284 Remove support for database versions that are unsupported by vendors 7.4 edition
+
+** Sub-task
+    * HHH-20352 enable parallel testing and test fixes for hibernate-envrers and hibernate-jache
+    * HHH-20351 Re-enable UNNEST WITH ORDINALITY tests in Spanner PG
+    * HHH-20338 Fix upsert and use standard on conflict clause 
+    * HHH-20337 Fix newly failing tests in Spanner PG dialect
+    * HHH-20325 Fix Spanner PG Locking support
+    * HHH-20316 Fix hibernate-envers tests for Spanner PG dialects
+    * HHH-20310 Fixes for SpannerDialect 
+    * HHH-20298 Move SpannerPostgreSQLDialect to hibernate-core
+    * HHH-20292 Fix container memory issue
+    * HHH-20286 Fixes for SpannerDialect
+    * HHH-20285 Remove support for PostgreSQL Advanced Server versions older than 14
+    * HHH-20279 Remove support for PostgreSQL versions older than 14
+    * HHH-20268 Fix table without primary key issue
+    * HHH-20262 Fix Spanner Tests Part 3
+    * HHH-20252 Spanner feature updates
+    * HHH-20250 Fix Spanner Tests Part 2
+    * HHH-20208 Fix SpannerDialect functions
+    * HHH-20198 Refactor ToOneIdMapper.java
+    * HHH-20197 Refactor CustomRunner.java
+    * HHH-20175 Fix Spanner PG Tests
+    * HHH-20171 Configure Exception handling in Spanner PG dialect
+    * HHH-20160 Fix Literal Rendering for Spanner Dialect
+    * HHH-20140 Support generating Integer PK 
+
+** Task
+    * HHH-20347 Replace google-java-format with Eclipse JDT formatter to avoid compatibility issues
+    * HHH-20341 Embedded MavenCli in integration tests cannot resolve plugins on Jenkins CI
+    * HHH-20335 Test against JDK 27
+    * HHH-20334 Upgrade to Log4j 2.25.4
+    * HHH-20311 Upgrade to hibernate-modules 1.1.1
+    * HHH-20301 Upgrade ByteBuddy to 1.18.8
+    * HHH-20270 Force use of org.checkerframework:checker-qual-android
+    * HHH-20232 Update c3p0 to 0.12.0
+
 Changes in 7.3.0.CR2 (February 03, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

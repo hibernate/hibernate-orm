@@ -17,6 +17,7 @@ import org.hibernate.dialect.sql.ast.DB2zSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.ForeignKey;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -26,6 +27,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import jakarta.persistence.TemporalType;
+import org.hibernate.tool.schema.spi.Exporter;
 
 import java.util.List;
 
@@ -46,6 +48,8 @@ public class DB2zDialect extends DB2Dialect {
 
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12, 1 );
 	public final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
+
+	private final Exporter<ForeignKey> foreignKeyExporter = new DB2zForeignKeyExporter( this );
 
 	public DB2zDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
@@ -94,6 +98,11 @@ public class DB2zDialect extends DB2Dialect {
 		// we only create unique indexes, as opposed to unique constraints,
 		// when the column is nullable, so safe to infer unique => nullable
 		return unique ? "create unique where not null index" : "create index";
+	}
+
+	@Override
+	public Exporter<ForeignKey> getForeignKeyExporter() {
+		return foreignKeyExporter;
 	}
 
 	@Override

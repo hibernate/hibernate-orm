@@ -300,6 +300,17 @@ ext {
 //                        'jdbc.datasource' : 'com.ibm.db2.jcc.DB2SimpleDataSource',
                     'connection.init_sql' : ''
             ],
+            db2z_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.DB2zDialect',
+                    'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
+                    'jdbc.user'  : 'orm_test',
+                    'jdbc.pass'  : 'orm_test',
+                    // Note that the testsuite requires, that the TABLE_COL_NAME_EXPANSION setting is enabled
+                    'jdbc.url'   : 'jdbc:db2://' + dbHost + '/orm_test_$worker',
+                    'jdbc.datasource' : 'com.ibm.db2.jcc.DB2Driver',
+//                        'jdbc.datasource' : 'com.ibm.db2.jcc.DB2SimpleDataSource',
+                    'connection.init_sql' : ''
+            ],
             hana_cloud : [
                     'db.dialect' : 'org.hibernate.dialect.HANADialect',
                     'jdbc.driver': 'com.sap.db.jdbc.Driver',

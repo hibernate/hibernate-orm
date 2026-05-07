@@ -117,9 +117,6 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 	@Override
 	SharedSessionBuilder flushMode(FlushMode flushMode);
 
-	@Override @Deprecated(forRemoval = true)
-	SharedSessionBuilder tenantIdentifier(String tenantIdentifier);
-
 	@Override
 	SharedSessionBuilder tenantIdentifier(Object tenantIdentifier);
 

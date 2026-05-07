@@ -54,13 +54,6 @@ public abstract class StatelessSessionBuilderImpl
 	protected abstract StatelessSessionImplementor createStatelessSession();
 
 	@Override
-	@Deprecated(forRemoval = true)
-	public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier) {
-		this.tenantIdentifier = tenantIdentifier;
-		return this;
-	}
-
-	@Override
 	@Deprecated
 	public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
 		this.statementInspector = statementInspector;

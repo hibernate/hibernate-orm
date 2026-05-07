@@ -152,17 +152,6 @@ public interface SessionBuilder extends CommonBuilder {
 	 * @param tenantIdentifier The tenant identifier.
 	 *
 	 * @return {@code this}, for method chaining
-	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
-	 */
-	@Deprecated(since = "6.4", forRemoval = true)
-	SessionBuilder tenantIdentifier(String tenantIdentifier);
-
-	/**
-	 * Define the tenant identifier to be associated with the opened session.
-	 *
-	 * @param tenantIdentifier The tenant identifier.
-	 *
-	 * @return {@code this}, for method chaining
 	 * @since 6.4
 	 */
 	@Override

@@ -104,14 +104,6 @@ public abstract class SharedSessionBuilderImpl
 	}
 
 	@Override
-	@Deprecated(forRemoval = true)
-	@SuppressWarnings("removal")
-	public SharedSessionBuilderImplementor tenantIdentifier(String tenantIdentifier) {
-		tenantIdentifier( (Object) tenantIdentifier );
-		return this;
-	}
-
-	@Override
 	public SharedSessionBuilderImplementor tenantIdentifier(Object tenantIdentifier) {
 		super.tenantIdentifier( tenantIdentifier );
 		tenantIdChanged = true;

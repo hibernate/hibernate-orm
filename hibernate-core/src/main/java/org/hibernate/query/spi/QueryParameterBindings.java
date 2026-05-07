@@ -89,56 +89,6 @@ public interface QueryParameterBindings {
 	QueryKey.ParameterBindingsMemento NO_PARAMETER_BINDING_MEMENTO = new QueryKey.ParameterBindingsMemento(){
 	};
 
-	/**
-	 * @deprecated Use {@link #empty()} instead.
-	 *             Currently unused and can be safely removed.
-	 */
-	@Deprecated(forRemoval = true, since = "6.6")
-	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
-		@Override
-		public boolean isBound(QueryParameterImplementor<?> parameter) {
-			return false;
-		}
-
-		@Override
-		public <P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
-			return null;
-		}
-
-		@Override
-		public QueryParameterBinding<?> getBinding(String name) {
-			return null;
-		}
-
-		@Override
-		public QueryParameterBinding<?> getBinding(int position) {
-			return null;
-		}
-
-		@Override
-		public void visitBindings(BiConsumer<? super QueryParameter<?>, ? super QueryParameterBinding<?>> action) {
-		}
-
-		@Override
-		public void validate() {
-		}
-
-		@Override
-		public boolean hasAnyMultiValuedBindings() {
-			return false;
-		}
-
-		@Override
-		public boolean hasAnyTransientEntityBindings(SharedSessionContractImplementor session) {
-			return false;
-		}
-
-		@Override
-		public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
-			return NO_PARAMETER_BINDING_MEMENTO;
-		}
-	};
-
 	static QueryParameterBindings empty() {
 		return QueryParameterBindingsImpl.EMPTY;
 	}

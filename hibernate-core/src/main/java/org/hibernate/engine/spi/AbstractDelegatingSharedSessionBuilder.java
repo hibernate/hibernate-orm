@@ -64,12 +64,6 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		return this;
 	}
 
-	@Override @Deprecated(since = "6.0")
-	public SharedSessionBuilder connectionReleaseMode() {
-		delegate.connectionReleaseMode();
-		return this;
-	}
-
 	@Override
 	public SharedSessionBuilder connectionHandlingMode() {
 		delegate.connectionHandlingMode();

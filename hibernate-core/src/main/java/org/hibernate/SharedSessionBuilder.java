@@ -63,16 +63,6 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 	 * Signifies that the connection release mode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #connectionHandling} instead.
-	 */
-	@Deprecated(since = "6.0")
-	SharedSessionBuilder connectionReleaseMode();
-
-	/**
-	 * Signifies that the connection release mode from the original session should be used to create the new session.
-	 *
-	 * @return {@code this}, for method chaining
 	 */
 	SharedSessionBuilder connectionHandlingMode();
 

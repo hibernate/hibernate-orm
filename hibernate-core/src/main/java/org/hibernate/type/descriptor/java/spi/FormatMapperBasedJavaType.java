@@ -47,7 +47,7 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 	}
 
 	private WrapperOptions getWrapperOptions() {
-		return typeConfiguration.getSessionFactory().getWrapperOptions();
+		return typeConfiguration.getWrapperOptions();
 	}
 
 	@Override

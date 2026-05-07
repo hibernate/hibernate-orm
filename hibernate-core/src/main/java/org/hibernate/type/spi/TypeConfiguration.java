@@ -68,6 +68,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.QueryParameterJavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -970,5 +971,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	@Internal @Incubating // find a new home for this operation
 	public final FormatMapper getXmlFormatMapper() {
 		return getSessionFactory().getSessionFactoryOptions().getXmlFormatMapper();
+	}
+
+	@Internal
+	public final WrapperOptions getWrapperOptions() {
+		return getSessionFactory().getWrapperOptions();
 	}
 }

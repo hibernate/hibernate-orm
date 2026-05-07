@@ -1067,7 +1067,7 @@ public class FirebirdDialect extends Dialect {
 			final Dialect dialect = getDialect();
 			final String indexNameForCreation = index.getQuotedName( dialect );
 			// In firebird the index is only sortable on top-level, not per column, use the first column to decide
-			final String sortOrder = index.getColumnOrderMap().getOrDefault( index.getColumns().get( 0 ), "asc" );
+			final String sortOrder = index.getSelectableOrderMap().getOrDefault( index.getColumns().get( 0 ), "asc" );
 			final StringBuilder buf = new StringBuilder()
 					// Although `create asc index` is valid, generate without (some tests check for a specific syntax prefix)
 					.append( "desc".equalsIgnoreCase( sortOrder ) || "descending".equalsIgnoreCase( sortOrder ) ? "create desc index " : "create index " )

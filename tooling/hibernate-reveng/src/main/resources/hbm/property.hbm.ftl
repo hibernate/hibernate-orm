@@ -18,7 +18,7 @@
 <#if !property.value.typeParameters?exists>
 	    type="${property.value.typeName}"
 </#if>        
-<#if !property.updateable>
+<#if !property.updatable>
         update="false"
 </#if>
 <#if !property.insertable>
@@ -55,4 +55,3 @@
   </type>
   </#if>
   </property>
-

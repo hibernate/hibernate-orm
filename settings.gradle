@@ -96,7 +96,10 @@ dependencyResolutionManagement {
                 ///////////////////////////////////////////////////////////////////
                 // `jakartaJpaVersion` comes from the local-build-plugins
                 // to allow for command-line overriding of the JPA version to use
-                version("jpa", "${jakartaJpaVersion}")
+                // TODO : The org.hibernate.build.JpaVersion plugin is always overriding
+                //  the dependency (effectively igoring the version in the TOML catalog).
+                //  We should really read the version from the gradle project in the plugin instead.
+                // version("jpa", "${jakartaJpaVersion}")
                 overrideableVersion("gradle.libs.versions.jpa", "jpa")
                 ///////////////////////////////////////////////////////////////////
                 overrideableVersion("gradle.libs.versions.h2", "h2")

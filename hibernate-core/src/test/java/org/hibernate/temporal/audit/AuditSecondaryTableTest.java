@@ -92,7 +92,7 @@ class AuditSecondaryTableTest {
 
 		try (var s = scope.getSessionFactory().withStatelessOptions()
 				.atChangeset( 3 ).openStatelessSession()) {
-			assertNull( s.get( Employee.class, 1L ) );
+			assertNull( s.find( Employee.class, 1L ) );
 		}
 	}
 

@@ -66,6 +66,7 @@ import org.hibernate.query.sqm.spi.InterpretationsKeySource;
 import org.hibernate.query.sqm.spi.SqmStatementAccess;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -1144,12 +1145,6 @@ public class SelectionQueryImpl<R>
 		final boolean applyLimitInScrollableResults =
 				shouldApplyLimitInMemory( statement, queryOptions )
 						|| hasLimit && containsCollectionFetches && !pushedDown;
-		if ( hasLimit
-				&& containsCollectionFetches
-				&& !pushedDown
-				&& queryOptions.isLimitInMemoryEnabled() != TRUE ) {
-			errorOrLogForPaginationWithCollectionFetch();
-		}
 		final var normalizedQueryOptions =
 				applyLimitInScrollableResults || pushedDown
 						? omitSqlQueryOptions( queryOptions, true, false )
@@ -1208,6 +1203,9 @@ public class SelectionQueryImpl<R>
 					&& !dialect.supportsWindowFunctions() ) {
 				return false;
 			}
+		}
+		if ( BaseSqmToSqlAstConverter.ordersByPluralFetchBeforeOwner( spec ) ) {
+			return false;
 		}
 		// The transformer only rewrites when at least one root contributes a
 		// fetched plural join (directly, or through a chain of fetched

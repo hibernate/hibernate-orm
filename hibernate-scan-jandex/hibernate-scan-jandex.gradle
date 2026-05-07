@@ -12,5 +12,5 @@ dependencies {
 	implementation libs.hibernateModels
 
 	testImplementation project( ':hibernate-testing' )
-	testImplementation testLibs.shrinkwrap
+	testImplementation libs.test.shrinkwrap
 }

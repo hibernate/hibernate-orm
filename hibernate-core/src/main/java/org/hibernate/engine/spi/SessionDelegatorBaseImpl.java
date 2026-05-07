@@ -614,16 +614,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.getExtension( extension );
 	}
 
-	@Override
-	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
-		return delegate.createQuery( selectQuery );
-	}
-
-	@Override
-	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
-		return delegate.getEntityGraphs( entityClass );
-	}
-
 	private SessionImplementor queryDelegate() {
 		return delegate;
 	}

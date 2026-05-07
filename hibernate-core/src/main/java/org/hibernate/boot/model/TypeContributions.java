@@ -83,7 +83,7 @@ public interface TypeContributions {
 	}
 
 	/**
-	 * @deprecated See discussion of {@code TypeContributor} in User Guide.
+	 * @deprecated See discussion of {@link TypeContributor} in User Guide.
 	 */
 	@Deprecated(since = "6.0")
 	default void contributeType(BasicType<?> type) {

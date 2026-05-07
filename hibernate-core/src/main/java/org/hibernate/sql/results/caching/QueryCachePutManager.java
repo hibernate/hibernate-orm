@@ -13,15 +13,7 @@ public interface QueryCachePutManager {
 	void registerJdbcRow(Object values);
 
 	/**
-	 * @deprecated Use {@link #finishUp(int, SharedSessionContractImplementor)} instead
-	 */
-	@Deprecated(forRemoval = true, since = "6.6")
-	void finishUp(SharedSessionContractImplementor session);
-
-	/**
 	 * @since 6.6
 	 */
-	default void finishUp(int resultCount, SharedSessionContractImplementor session) {
-		finishUp( session );
-	}
+	void finishUp(int resultCount, SharedSessionContractImplementor session);
 }

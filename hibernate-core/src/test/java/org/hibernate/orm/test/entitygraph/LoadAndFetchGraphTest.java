@@ -204,7 +204,7 @@ public class LoadAndFetchGraphTest {
 							"select c from CEntity as c where c.id = :cid ",
 							CEntity.class
 					);
-					query.setHint( GraphSemantic.LOAD.getJpaHintName(), entityGraph );
+					query.setHint( GraphSemantic.LOAD.getJakartaHintName(), entityGraph );
 					query.setParameter( "cid", 1 );
 
 					CEntity cEntity = query.getSingleResult();
@@ -235,7 +235,7 @@ public class LoadAndFetchGraphTest {
 							"select c from CEntity as c where c.id = :cid ",
 							CEntity.class
 					);
-					query.setHint( GraphSemantic.FETCH.getJpaHintName(), entityGraph );
+					query.setHint( GraphSemantic.FETCH.getJakartaHintName(), entityGraph );
 					query.setParameter( "cid", 1 );
 
 					CEntity cEntity = query.getSingleResult();
@@ -264,7 +264,7 @@ public class LoadAndFetchGraphTest {
 							"select c from CEntity as c where c.id = :cid ",
 							CEntity.class
 					);
-					query.setHint( GraphSemantic.FETCH.getJpaHintName(), entityGraph );
+					query.setHint( GraphSemantic.FETCH.getJakartaHintName(), entityGraph );
 					query.setParameter( "cid", 1 );
 
 					CEntity cEntity = query.getSingleResult();

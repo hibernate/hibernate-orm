@@ -17,6 +17,11 @@ import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
+
 /**
  * Think of this as the composite modeling of a graph and the semantic.
  * <p>
@@ -95,7 +100,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 
 	/**
 	 * Apply a graph and semantic based on configuration properties or hints
-	 * based on {@link GraphSemantic#getJpaHintName()} for {@link GraphSemantic#LOAD} or
+	 * based on {@link GraphSemantic#getJakartaHintName()} for {@link GraphSemantic#LOAD} or
 	 * {@link GraphSemantic#FETCH}.
 	 * <p>
 	 * The semantic is required.  The graph
@@ -106,13 +111,13 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 */
 	public void applyConfiguredGraph(@Nullable Map<String,?> properties) {
 		if ( properties != null && !properties.isEmpty() ) {
-			var fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
-			var loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
+			var fetchHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_FETCH_GRAPH );
+			var loadHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_LOAD_GRAPH );
 			if ( fetchHint == null ) {
-				fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
+				fetchHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_FETCH_GRAPH );
 			}
 			if ( loadHint == null ) {
-				loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
+				loadHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_LOAD_GRAPH );
 			}
 
 			if ( fetchHint != null ) {

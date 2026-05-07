@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.schemaupdate.inheritance.tableperclass;
 
 import org.hamcrest.MatcherAssert;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -62,7 +63,7 @@ public class SchemaCreationTest {
 					"Should not try to create the unique constraint for the non existing table element",
 					statement.matches( dialect.getAlterTableString( "element" ) ), is( false ) );
 			String varchar255 = metadata.getTypeConfiguration().getDdlTypeRegistry()
-					.getTypeName(Types.VARCHAR,255L,0,0);
+					.getTypeName( Types.VARCHAR, Size.length( 255 ), null );
 			isUniqueConstraintCreated = isUniqueConstraintCreated
 					|| statement.startsWith("create unique index")
 						&& statement.contains("category (code)")

@@ -247,10 +247,14 @@
 								${index.name?default("Name not specificed")}
 							</td>
 							<td>
-								<#list index.columns as column>
-									<a href="#column_detail_${column.name}">
-										${column.name}
-									</a>
+								<#list index.selectables as selectable>
+									<#if selectable.formula>
+										${selectable.text}
+									<#else>
+										<a href="#column_detail_${selectable.name}">
+											${selectable.name}
+										</a>
+									</#if>
 								</#list>
 							</td>
 						</tr>

@@ -98,4 +98,25 @@ tasks.register("transformHbmXml", TransformHbmXmlTask) {
     outputDirectory = project.layout.buildDirectory.dir("generated/orm")
 }
 ```
+
+== Schema Annotation Generation
+
+The plugin contributes a `generateSchemaAnnotations` task which connects to a JDBC database, reads table
+and column metadata, and generates annotation types for the configured Java package.
+
+[source,groovy]
+----
+tasks.named("generateSchemaAnnotations") {
+    jdbcDriver = "org.h2.Driver"
+    jdbcUrl = "jdbc:h2:./database/test"
+    username = "sa"
+    password = ""
+    schemaName = "PUBLIC" // optional
+    packageName = "org.example.schema"
+}
+----
+
+The generated sources are written to `build/generated/sources/schemaAnnotations` by default. The JDBC
+driver must be available from the project's runtime classpath.
+
 More coming soon...

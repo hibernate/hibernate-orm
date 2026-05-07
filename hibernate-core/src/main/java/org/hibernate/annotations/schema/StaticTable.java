@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.annotations.schema;
 
 import java.lang.annotation.Retention;
@@ -12,6 +16,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Retention(RUNTIME)
 @Target(ANNOTATION_TYPE)
-@interface StaticTable {
+public @interface StaticTable {
 	String name();
 }

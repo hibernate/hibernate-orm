@@ -149,16 +149,6 @@ public abstract class SharedSessionBuilderImpl
 	}
 
 	@Override
-	@Deprecated(since = "6.0")
-	public SharedSessionBuilderImplementor connectionReleaseMode() {
-		final var handlingMode =
-				PhysicalConnectionHandlingMode.interpret( ConnectionAcquisitionMode.AS_NEEDED,
-						getConnectionHandlingMode().getReleaseMode() );
-		connectionHandlingMode( handlingMode );
-		return this;
-	}
-
-	@Override
 	public SharedSessionBuilderImplementor connectionHandlingMode() {
 		connectionHandlingMode( getConnectionHandlingMode() );
 		return this;

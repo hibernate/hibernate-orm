@@ -9,8 +9,6 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.internal.EnumHelper;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
@@ -27,6 +25,7 @@ import static org.hibernate.type.SqlTypes.ENUM;
  */
 
 public class NativeEnumDdlTypeImpl implements DdlType {
+	private static final String[] ENUM_KEYWORD = {"enum"};
 	private final Dialect dialect;
 
 	public NativeEnumDdlTypeImpl(Dialect dialect) {
@@ -40,39 +39,25 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
-		return dialect.getEnumTypeDeclaration(
-				type.getReturnedClass().getSimpleName(),
-				EnumHelper.getEnumeratedValues( type )
-		);
+		return type == null
+				? "varchar(" + columnSize.getLength() + ")"
+				: dialect.getEnumTypeDeclaration(
+						type.getReturnedClass().getSimpleName(),
+						EnumHelper.getEnumeratedValues( type )
+				);
 	}
 
 	@Override
-	public String getRawTypeName() {
-		// this
-		return "enum";
-	}
-
-	@Override
-	public String getTypeName(Long size, Integer precision, Integer scale) {
-		return "varchar(" + size +  ")";
-	}
-
-	@Override
-	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		return getCastTypeName( null );
+	public String[] getRawTypeNames() {
+		return ENUM_KEYWORD;
 	}
 
 	@Override
 	public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
-		return getCastTypeName( columnSize.getLength() );
+		return castTypeName( columnSize.getLength() );
 	}
 
-	@Override
-	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale) {
-		return getCastTypeName( length );
-	}
-
-	public String getCastTypeName(Long length) {
+	private String castTypeName(Long length) {
 		return length == null ? "varchar" : "varchar(" + length + ")";
 	}
 }

@@ -12,6 +12,7 @@ import java.util.function.Function;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
@@ -38,44 +39,36 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		this.typeEntries = builder.typeEntries.toArray(new TypeEntry[0]);
 	}
 
-	@Override @Deprecated
+	@Override
 	public String[] getRawTypeNames() {
-		final String[] rawTypeNames = new String[typeEntries.length + 1];
+		final var rawTypeNames = new String[typeEntries.length + 1];
 		for ( int i = 0; i < typeEntries.length; i++ ) {
-			//trim off the length/precision/scale
-			final String typeNamePattern = typeEntries[i].typeNamePattern;
-			final int paren = typeNamePattern.indexOf( '(' );
-			if ( paren > 0 ) {
-				final int parenEnd = typeNamePattern.lastIndexOf( ')' );
-				rawTypeNames[i] = parenEnd + 1 == typeNamePattern.length()
-						? typeNamePattern.substring( 0, paren )
-						: ( typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 ) );
-			}
-			else {
-				rawTypeNames[i] = typeNamePattern;
-			}
+			rawTypeNames[i] = getRawTypeName( typeEntries[i].typeNamePattern );
 		}
-		rawTypeNames[typeEntries.length] = getRawTypeName();
+		rawTypeNames[typeEntries.length] = super.getRawTypeNames()[0];
 		return rawTypeNames;
 	}
 
 	@Override
-	public String getTypeName(Long size, Integer precision, Integer scale) {
+	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
+		final Long size = columnSize.getLength();
+		final Integer precision = columnSize.getPrecision();
+		final Integer scale = columnSize.getScale();
 		if ( size != null && size > 0 ) {
-			for ( TypeEntry typeEntry : typeEntries ) {
+			for ( var typeEntry : typeEntries ) {
 				if ( size <= typeEntry.capacity ) {
 					return replace( typeEntry.typeNamePattern, size, precision, scale );
 				}
 			}
 		}
 		else if ( precision != null && precision > 0 ) {
-			for ( TypeEntry typeEntry : typeEntries ) {
+			for ( var typeEntry : typeEntries ) {
 				if ( precision <= typeEntry.capacity ) {
 					return replace( typeEntry.typeNamePattern, size, precision, scale );
 				}
 			}
 		}
-		return super.getTypeName( size, precision, scale );
+		return formatTypeName( size, precision, scale );
 	}
 
 	@Override
@@ -85,7 +78,7 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		}
 		final Long length = size.getLength();
 		if ( length != null && length > 0 ) {
-			for ( TypeEntry typeEntry : typeEntries ) {
+			for ( var typeEntry : typeEntries ) {
 				if ( length <= typeEntry.capacity ) {
 					return false;
 				}
@@ -230,15 +223,8 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		}
 	}
 
-	private static class TypeEntry implements Comparable<TypeEntry> {
-		private final long capacity;
-		private final String typeNamePattern;
-
-		public TypeEntry(long capacity, String typeNamePattern) {
-			this.capacity = capacity;
-			this.typeNamePattern = typeNamePattern;
-		}
-
+	private record TypeEntry(long capacity, String typeNamePattern)
+			implements Comparable<TypeEntry> {
 		@Override
 		public int compareTo(TypeEntry o) {
 			return Long.compare( capacity, o.capacity );

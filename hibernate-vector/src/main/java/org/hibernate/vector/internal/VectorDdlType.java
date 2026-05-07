@@ -6,7 +6,9 @@ package org.hibernate.vector.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 /**
  * DDL type for vector types.
@@ -36,9 +38,10 @@ public class VectorDdlType extends DdlTypeImpl {
 	}
 
 	@Override
-	public String getTypeName(Size size) {
-		return getTypeName(
-				size.getArrayLength() == null ? null : size.getArrayLength().longValue(),
+	public String getTypeName(Size size, Type type, DdlTypeRegistry ddlTypeRegistry) {
+		final Integer arrayLength = size.getArrayLength();
+		return formatTypeName(
+				arrayLength == null ? null : arrayLength.longValue(),
 				null,
 				null
 		);

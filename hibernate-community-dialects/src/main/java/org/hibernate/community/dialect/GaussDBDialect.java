@@ -701,7 +701,7 @@ public class GaussDBDialect extends Dialect {
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// TODO: adapt this to handle named enum types!
-		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName() + ")";
+		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getRawTypeName( sqlType ) + ")";
 	}
 
 	@Override

@@ -224,12 +224,12 @@ class ColumnsBuilder {
 	}
 
 	private JoinColumn[] getJoinColumnAnnotations(MemberDetails property) {
-		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		final var joinColumns = property.getRepeatedAnnotationUsages( JpaAnnotations.JOIN_COLUMN, modelsContext );
+		final var joinColumns = StaticSchemaAnnotationHelper.getJoinColumnAnnotations( property, buildingContext );
 		if ( isNotEmpty( joinColumns ) ) {
 			return joinColumns;
 		}
 		else if ( property.hasDirectAnnotationUsage( MapsId.class ) ) {
+			final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 			// inelegant solution to HHH-16463, let the PrimaryKeyJoinColumn
 			// masquerade as a regular JoinColumn (when a @OneToOne maps to
 			// the primary key of the child table, it's more elegant and more

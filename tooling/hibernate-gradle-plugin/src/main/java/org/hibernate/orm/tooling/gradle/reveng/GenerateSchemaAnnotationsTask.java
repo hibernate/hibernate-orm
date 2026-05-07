@@ -25,9 +25,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -251,6 +253,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 
 	private void readColumns(DatabaseMetaData metadata, Table table) throws SQLException {
 		final Set<String> columnNames = new HashSet<>();
+		final Map<String, ForeignKeyColumn> foreignKeyColumns = readForeignKeyColumns( metadata, table );
 		try ( ResultSet resultSet = metadata.getColumns( table.catalog, table.schema, table.name, "%" ) ) {
 			while ( resultSet.next() ) {
 				final String columnName = resultSet.getString( "COLUMN_NAME" );
@@ -269,12 +272,35 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 								length( resultSet, jdbcType ),
 								precision( resultSet, jdbcType ),
 								scale( resultSet, jdbcType ),
+								foreignKeyColumns.get( columnName ),
 								resultSet.getInt( "ORDINAL_POSITION" )
 						)
 				);
 			}
 		}
 		table.columns.sort( Comparator.comparingInt( column -> column.position ) );
+	}
+
+	private Map<String, ForeignKeyColumn> readForeignKeyColumns(DatabaseMetaData metadata, Table table)
+			throws SQLException {
+		final Map<String, ForeignKeyColumn> foreignKeyColumns = new HashMap<>();
+		try ( ResultSet resultSet = metadata.getImportedKeys( table.catalog, table.schema, table.name ) ) {
+			while ( resultSet.next() ) {
+				final String columnName = resultSet.getString( "FKCOLUMN_NAME" );
+				final var foreignKeyColumn = new ForeignKeyColumn(
+						resultSet.getString( "PKTABLE_NAME" ),
+						resultSet.getString( "PKCOLUMN_NAME" )
+				);
+				final var previous = foreignKeyColumns.putIfAbsent( columnName, foreignKeyColumn );
+				if ( previous != null && !previous.equals( foreignKeyColumn ) ) {
+					throw new GradleException(
+							"Column `" + table.name + "." + columnName
+									+ "` is part of multiple foreign keys with different referenced columns"
+					);
+				}
+			}
+		}
+		return foreignKeyColumns;
 	}
 
 	private boolean isNullable(ResultSet resultSet) throws SQLException {
@@ -353,6 +379,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 				.append( "import java.sql.JDBCType;" ).append( System.lineSeparator() )
 				.append( System.lineSeparator() )
 				.append( "import org.hibernate.annotations.schema.StaticColumn;" ).append( System.lineSeparator() )
+				.append( "import org.hibernate.annotations.schema.StaticJoinColumn;" ).append( System.lineSeparator() )
 				.append( "import org.hibernate.annotations.schema.StaticTable;" ).append( System.lineSeparator() )
 				.append( System.lineSeparator() )
 				.append( "import static java.lang.annotation.RetentionPolicy.RUNTIME;" ).append( System.lineSeparator() )
@@ -365,13 +392,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		for ( Column column : table.columns ) {
 			result.append( System.lineSeparator() )
 					.append( "\t@Retention(RUNTIME)" ).append( System.lineSeparator() )
-					.append( "\t@StaticColumn(name = " ).append( javaStringLiteral( column.name ) )
-					.append( ", type = JDBCType." ).append( column.type.name() )
-					.append( ", nullable = " ).append( column.nullable )
-					.append( ", length = " ).append( column.length )
-					.append( ", precision = " ).append( column.precision )
-					.append( ", scale = " ).append( column.scale )
-					.append( ")" )
+					.append( renderColumnAnnotation( column ) )
 					.append( System.lineSeparator() )
 					.append( "\tpublic @interface " ).append( column.name ).append( " {" )
 					.append( System.lineSeparator() )
@@ -380,6 +401,32 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 
 		result.append( "}" ).append( System.lineSeparator() );
 		return result.toString();
+	}
+
+	private String renderColumnAnnotation(Column column) {
+		if ( column.foreignKeyColumn != null ) {
+			return new StringBuilder()
+					.append( "\t@StaticJoinColumn(name = " ).append( javaStringLiteral( column.name ) )
+					.append( ", referencedTableName = " )
+					.append( javaStringLiteral( column.foreignKeyColumn.referencedTableName ) )
+					.append( ", referencedColumnName = " )
+					.append( javaStringLiteral( column.foreignKeyColumn.referencedColumnName ) )
+					.append( ", type = JDBCType." ).append( column.type.name() )
+					.append( ", nullable = " ).append( column.nullable )
+					.append( ")" )
+					.toString();
+		}
+		else {
+			return new StringBuilder()
+					.append( "\t@StaticColumn(name = " ).append( javaStringLiteral( column.name ) )
+					.append( ", type = JDBCType." ).append( column.type.name() )
+					.append( ", nullable = " ).append( column.nullable )
+					.append( ", length = " ).append( column.length )
+					.append( ", precision = " ).append( column.precision )
+					.append( ", scale = " ).append( column.scale )
+					.append( ")" )
+					.toString();
+		}
 	}
 
 	private String javaStringLiteral(String value) {
@@ -558,16 +605,29 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		private final int length;
 		private final int precision;
 		private final int scale;
+		private final ForeignKeyColumn foreignKeyColumn;
 		private final int position;
 
-		private Column(String name, JDBCType type, boolean nullable, int length, int precision, int scale, int position) {
+		private Column(
+				String name,
+				JDBCType type,
+				boolean nullable,
+				int length,
+				int precision,
+				int scale,
+				ForeignKeyColumn foreignKeyColumn,
+				int position) {
 			this.name = name;
 			this.type = type;
 			this.nullable = nullable;
 			this.length = length;
 			this.precision = precision;
 			this.scale = scale;
+			this.foreignKeyColumn = foreignKeyColumn;
 			this.position = position;
 		}
+	}
+
+	private record ForeignKeyColumn(String referencedTableName, String referencedColumnName) {
 	}
 }

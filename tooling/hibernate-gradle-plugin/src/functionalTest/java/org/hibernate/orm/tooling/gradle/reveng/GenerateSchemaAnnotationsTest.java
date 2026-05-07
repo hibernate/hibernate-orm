@@ -5,6 +5,7 @@
 package org.hibernate.orm.tooling.gradle.reveng;
 
 import static java.lang.System.lineSeparator;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -19,7 +20,9 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 	public void beforeEach() {
 		setGradleTaskToPerform( "generateSchemaAnnotations" );
 		setDatabaseCreationScript( new String[] {
-				"create table BOOK (ISBN varchar(20) not null, PAGES int, primary key (ISBN))"
+				"create table AUTHOR (ID int not null, primary key (ID))",
+				"create table BOOK (ISBN varchar(20) not null, PAGES int, AUTHOR_ID int, primary key (ISBN), "
+						+ "constraint FK_BOOK_AUTHOR foreign key (AUTHOR_ID) references AUTHOR(ID))"
 		} );
 	}
 
@@ -36,6 +39,7 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 
 		String generatedContents = Files.readString( generatedFile.toPath() );
 		assertTrue( generatedContents.contains( "package foo.schema;" ) );
+		assertTrue( generatedContents.contains( "import org.hibernate.annotations.schema.StaticJoinColumn;" ) );
 		assertTrue( generatedContents.contains( "@StaticTable(name = \"BOOK\")" ) );
 		assertTrue( generatedContents.contains( "public @interface BOOK" ) );
 		assertTrue( generatedContents.contains(
@@ -46,6 +50,11 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 				"(?s).*@StaticColumn\\(name = \"PAGES\", type = JDBCType\\.INTEGER, nullable = true, length = 255, precision = \\d+, scale = 0\\).*"
 		) );
 		assertTrue( generatedContents.contains( "public @interface PAGES" ) );
+		assertTrue( generatedContents.contains(
+				"@StaticJoinColumn(name = \"AUTHOR_ID\", referencedTableName = \"AUTHOR\", referencedColumnName = \"ID\", type = JDBCType.INTEGER, nullable = true)"
+		) );
+		assertFalse( generatedContents.contains( "@StaticColumn(name = \"AUTHOR_ID\"" ) );
+		assertTrue( generatedContents.contains( "public @interface AUTHOR_ID" ) );
 	}
 
 	@Override

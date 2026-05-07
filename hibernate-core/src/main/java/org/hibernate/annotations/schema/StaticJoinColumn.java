@@ -15,6 +15,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Annotates a generated nested annotation
  * type with the same name as a foreign key
  * column.
+ *
+ * @author Gavin King
+ *
+ * @since 8.0
  */
 @Retention(RUNTIME)
 @Target(ANNOTATION_TYPE)

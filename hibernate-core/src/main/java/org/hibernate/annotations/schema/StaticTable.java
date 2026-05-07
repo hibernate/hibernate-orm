@@ -13,6 +13,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Annotates a generated annotation type
  * with the same name as a table.
+ *
+ * @author Gavin King
+ *
+ * @since 8.0
  */
 @Retention(RUNTIME)
 @Target(ANNOTATION_TYPE)

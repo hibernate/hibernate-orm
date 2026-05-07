@@ -164,6 +164,7 @@ import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPrope
 import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.getColumnAnnotation;
+import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.hasJoinColumnAnnotation;
 import static org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation.toJoinColumn;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.coalesce;
@@ -273,7 +274,15 @@ public abstract class CollectionBinder {
 		final var oneToManyAnn = memberDetails.getAnnotationUsage( OneToMany.class, modelsContext );
 		final var manyToManyAnn = memberDetails.getAnnotationUsage( ManyToMany.class, modelsContext );
 		final var elementCollectionAnn = memberDetails.getAnnotationUsage( ElementCollection.class, modelsContext );
-		checkAnnotations( propertyHolder, inferredData, memberDetails, oneToManyAnn, manyToManyAnn, elementCollectionAnn );
+		checkAnnotations(
+				propertyHolder,
+				inferredData,
+				memberDetails,
+				oneToManyAnn,
+				manyToManyAnn,
+				elementCollectionAnn,
+				context
+		);
 
 		final var collectionBinder = getCollectionBinder( memberDetails, hasMapKeyAnnotation( memberDetails ), context );
 		collectionBinder.setIndexColumn( getIndexColumn( propertyHolder, inferredData, entityBinder, context ) );
@@ -429,7 +438,8 @@ public abstract class CollectionBinder {
 			MemberDetails property,
 			OneToMany oneToMany,
 			ManyToMany manyToMany,
-			ElementCollection elementCollection) {
+			ElementCollection elementCollection,
+			MetadataBuildingContext context) {
 		if ( ( oneToMany != null || manyToMany != null || elementCollection != null )
 				&& isToManyAssociationWithinEmbeddableCollection( propertyHolder ) ) {
 			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData ) +
@@ -452,7 +462,7 @@ public abstract class CollectionBinder {
 		}
 
 		if ( manyToMany != null || elementCollection != null ) {
-			if ( property.hasDirectAnnotationUsage( JoinColumn.class )
+			if ( hasJoinColumnAnnotation( property, context )
 					|| property.hasDirectAnnotationUsage( JoinColumns.class ) ) {
 				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
 						+ "' is a " + annotationName( oneToMany, manyToMany, elementCollection )
@@ -1179,7 +1189,7 @@ public abstract class CollectionBinder {
 
 	private void detectMappedByProblem(boolean isMappedBy) {
 		if ( isMappedBy ) {
-			if ( property.hasDirectAnnotationUsage( JoinColumn.class )
+			if ( hasJoinColumnAnnotation( property, buildingContext )
 					|| property.hasDirectAnnotationUsage( JoinColumns.class ) ) {
 				throw new AnnotationException( "Association '"
 						+ qualify( propertyHolder.getPath(), propertyName )
@@ -1227,7 +1237,7 @@ public abstract class CollectionBinder {
 	}
 
 	private boolean hasExplicitJoinColumn() {
-		return property.hasDirectAnnotationUsage( JoinColumn.class )
+		return hasJoinColumnAnnotation( property, buildingContext )
 			|| property.hasDirectAnnotationUsage( JoinColumns.class )
 			|| property.hasDirectAnnotationUsage( JoinTable.class )
 			&& property.getDirectAnnotationUsage( JoinTable.class )

@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ast.tree;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.cte.CteContainer;
@@ -17,33 +16,6 @@ import org.hibernate.sql.model.MutationTarget;
 public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationStatement {
 	private final FromClause fromClause;
 	private final Predicate restriction;
-
-	public AbstractUpdateOrDeleteStatement(
-			NamedTableReference targetTable,
-			FromClause fromClause,
-			Predicate restriction) {
-		this( null, targetTable, fromClause, restriction, Collections.emptyList() );
-	}
-
-	public AbstractUpdateOrDeleteStatement(
-			NamedTableReference targetTable,
-			FromClause fromClause,
-			Predicate restriction,
-			List<ColumnReference> returningColumns) {
-		this( null, targetTable, fromClause, restriction, returningColumns );
-	}
-
-	@Deprecated(forRemoval = true, since = "7.3")
-	public AbstractUpdateOrDeleteStatement(
-			CteContainer cteContainer,
-			NamedTableReference targetTable,
-			FromClause fromClause,
-			Predicate restriction,
-			List<ColumnReference> returningColumns) {
-		super( cteContainer, targetTable, returningColumns );
-		this.fromClause = fromClause;
-		this.restriction = restriction;
-	}
 
 	public AbstractUpdateOrDeleteStatement(
 			CteContainer cteContainer,

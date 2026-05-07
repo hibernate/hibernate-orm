@@ -17,12 +17,14 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.EnhancedUserType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -217,8 +219,7 @@ public class BatchAndUserTypeIdCollectionTest {
 			}
 
 			@Override
-			public ParentId nullSafeGet(ResultSet rs, int position,
-										SharedSessionContractImplementor session, Object owner)
+			public ParentId nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 					throws SQLException {
 				String string = rs.getString( position );
 				return rs.wasNull() ? null : new ParentId(string);
@@ -226,7 +227,7 @@ public class BatchAndUserTypeIdCollectionTest {
 
 			@Override
 			public void nullSafeSet(PreparedStatement st, ParentId value, int index,
-									SharedSessionContractImplementor session)
+									WrapperOptions options)
 					throws SQLException {
 				if ( value == null ) {
 					st.setNull(index, VARCHAR);

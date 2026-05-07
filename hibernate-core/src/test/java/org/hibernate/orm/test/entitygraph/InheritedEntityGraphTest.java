@@ -70,7 +70,7 @@ public class InheritedEntityGraphTest {
 					entityGraph.addSubgraph( "bar" );
 
 					Map<String, Object> properties = Collections.singletonMap(
-							GraphSemantic.LOAD.getJpaHintName(), entityGraph
+							GraphSemantic.LOAD.getJakartaHintName(), entityGraph
 					);
 
 					Foo result = em.find( Foo.class, fooId.get(), properties );
@@ -107,7 +107,7 @@ public class InheritedEntityGraphTest {
 					entityGraph.addSubgraph( "bars" );
 
 					Map<String, Object> properties = Collections.singletonMap(
-							GraphSemantic.LOAD.getJpaHintName(), entityGraph
+							GraphSemantic.LOAD.getJakartaHintName(), entityGraph
 					);
 
 					Foo result = em.find( Foo.class, fooId.get(), properties );
@@ -150,7 +150,7 @@ public class InheritedEntityGraphTest {
 					subgraphFoo.addSubgraph( "bar" );
 
 					Map<String, Object> properties = Collections.singletonMap(
-							GraphSemantic.LOAD.getJpaHintName(), entityGraph
+							GraphSemantic.LOAD.getJakartaHintName(), entityGraph
 					);
 
 					Foo2 result = em.find( Foo2.class, foo2Id.get(), properties );
@@ -193,7 +193,7 @@ public class InheritedEntityGraphTest {
 					subgraphFoo.addSubgraph( "bars" );
 
 					Map<String, Object> properties = Collections.singletonMap(
-							GraphSemantic.LOAD.getJpaHintName(), entityGraph
+							GraphSemantic.LOAD.getJakartaHintName(), entityGraph
 					);
 
 					Foo2 result = em.find( Foo2.class, foo2Id.get(), properties );

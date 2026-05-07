@@ -59,7 +59,7 @@ public class EntityGraphFunctionalTests {
 					final Issue issue = session.find(
 							Issue.class,
 							1,
-							Collections.singletonMap( GraphSemantic.LOAD.getJpaHintName(), graph )
+							Collections.singletonMap( GraphSemantic.LOAD.getJakartaHintName(), graph )
 					);
 
 					assertThat( issue, isInitialized() );

@@ -5,7 +5,6 @@
 package org.hibernate.engine.creation.internal;
 
 import org.hibernate.CacheMode;
-import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;

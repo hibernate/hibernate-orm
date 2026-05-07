@@ -92,7 +92,6 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
-import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
@@ -341,7 +340,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			final var semantic = appliedGraph.getSemantic();
 			if ( semantic != null ) {
 				hints.put( semantic.getJakartaHintName(), appliedGraph.getGraph() );
-				hints.put( semantic.getJpaHintName(), appliedGraph.getGraph() );
+				hints.put( semantic.getJakartaHintName(), appliedGraph.getGraph() );
 			}
 		}
 

@@ -84,8 +84,8 @@ public class NaturalIdUniqueConstraintNameTest {
 
 			// The unique key should use the name specified in UniqueConstraint.
 			var uniqueIndex = uniqueIndexes.get( 0 );
-			assertEquals( "zipCode", uniqueIndex.getColumns().get( 0 ).getName() );
-			assertEquals( "city", uniqueIndex.getColumns().get( 1 ).getName() );
+			assertEquals( "zipCode", uniqueIndex.getSelectables().get( 0 ).getText() );
+			assertEquals( "city", uniqueIndex.getSelectables().get( 1 ).getText() );
 		}
 
 	}

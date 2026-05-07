@@ -358,7 +358,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 
 	private static WrapperOptions getWrapperOptions(TypeConfiguration typeConfiguration) {
 		try {
-			return typeConfiguration.getSessionFactory().getWrapperOptions();
+			return typeConfiguration.getWrapperOptions();
 		}
 		catch (HibernateException e) {
 			// before we have a SessionFactory, no useful WrapperOptions to pass

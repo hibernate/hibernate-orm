@@ -7,7 +7,6 @@ package org.hibernate.orm.test.jdbc.env;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -76,9 +75,8 @@ public class NoDatabaseMetaDataTest {
 	}
 
 	public static class TestDialect extends Dialect implements SettingConfiguration.Configurer {
-		@Override
-		public DatabaseVersion getVersion() {
-			return ZERO_VERSION;
+		public TestDialect() {
+			super( ZERO_VERSION );
 		}
 
 		@Override

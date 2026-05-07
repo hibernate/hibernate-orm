@@ -348,14 +348,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * @deprecated provide a {@link DatabaseVersion}
-	 */
-	@Deprecated(since = "6.0")
-	protected Dialect() {
-		this( (DatabaseVersion) null );
-	}
-
 	protected Dialect(DatabaseVersion version) {
 		this.version = version;
 		checkVersion();

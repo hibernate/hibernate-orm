@@ -11,10 +11,8 @@ import jakarta.persistence.spi.PersistenceProvider;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -38,6 +36,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
  * @author Steve Ebersole
@@ -465,16 +464,14 @@ public class PersistenceUnitOverridesTests {
 	}
 
 	public static class PersistenceUnitDialect extends Dialect {
-		@Override
-		public DatabaseVersion getVersion() {
-			return SimpleDatabaseVersion.ZERO_VERSION;
+		public PersistenceUnitDialect() {
+			super( ZERO_VERSION );
 		}
 	}
 
 	public static class IntegrationDialect extends Dialect {
-		@Override
-		public DatabaseVersion getVersion() {
-			return SimpleDatabaseVersion.ZERO_VERSION;
+		public IntegrationDialect() {
+			super( ZERO_VERSION );
 		}
 	}
 

@@ -252,16 +252,6 @@ public class Property implements Serializable, MetaAttributable {
 		return updatable && value.hasAnyUpdatableColumns();
 	}
 
-	/**
-	 * @deprecated Use {@link #isUpdatable()}.
-	 */
-	@Deprecated(since = "7.1", forRemoval = true)
-	public boolean isUpdateable() {
-		// if the property mapping consists of all formulas,
-		// make it non-updatable
-		return isUpdatable();
-	}
-
 	public boolean isInsertable() {
 		// if the property mapping consists of all formulas,
 		// make it non-insertable
@@ -280,14 +270,6 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
-	}
-
-	/**
-	 * @deprecated Use {@link #setUpdatable(boolean)}.
-	 */
-	@Deprecated(since = "7.1", forRemoval = true)
-	public void setUpdateable(boolean mutable) {
-		this.updatable = mutable;
 	}
 
 	public void setInsertable(boolean insertable) {

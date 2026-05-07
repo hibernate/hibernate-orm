@@ -153,40 +153,6 @@ public final class ExecuteWithTemporaryTableHelper {
 		);
 	}
 
-	@Deprecated(forRemoval = true, since = "7.3") // no longer used
-	public static int saveIntoTemporaryTable(
-			InsertSelectStatement temporaryTableInsert,
-			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext) {
-		final var factory = executionContext.getSession().getFactory();
-		final var jdbcEnvironment = factory.getJdbcServices().getJdbcEnvironment();
-		final var lockOptions = executionContext.getQueryOptions().getLockOptions();
-		final var lockMode = lockOptions.getLockMode();
-		// Acquire a WRITE lock for the rows that are about to be modified
-		lockOptions.setLockMode( LockMode.WRITE );
-		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
-		final var sourceSelectStatement = temporaryTableInsert.getSourceSelectStatement();
-		if ( sourceSelectStatement != null
-			&& !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
-			sourceSelectStatement.visitQuerySpecs( querySpec -> {
-				querySpec.getFromClause().visitTableJoins( tableJoin -> {
-					if ( tableJoin.isInitialized()
-						&& tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
-						lockOptions.setLockMode( lockMode );
-					}
-				} );
-			} );
-		}
-		lockOptions.setLockMode( lockMode );
-		return saveIntoTemporaryTable(
-				jdbcEnvironment.getSqlAstTranslatorFactory()
-						.buildMutationTranslator( factory, temporaryTableInsert )
-						.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
-				jdbcParameterBindings,
-				executionContext
-		);
-	}
-
 	public static int saveIntoTemporaryTable(
 			JdbcOperationQueryMutation jdbcInsert,
 			JdbcParameterBindings jdbcParameterBindings,

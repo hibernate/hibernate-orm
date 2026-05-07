@@ -103,7 +103,7 @@ public class UserTypeJdbcTypeAdapter<J> implements JdbcType {
 
 		@Override
 		public J extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-			final J extracted = userType.nullSafeGet( rs, paramIndex, options.getSession(), null );
+			final J extracted = userType.nullSafeGet( rs, paramIndex, options );
 			logExtracted( paramIndex, extracted );
 			return extracted;
 		}
@@ -174,7 +174,7 @@ public class UserTypeJdbcTypeAdapter<J> implements JdbcType {
 					JdbcBindingLogging.logBinding( index, userType.getSqlType(), value );
 				}
 			}
-			userType.nullSafeSet( st, value, index, options.getSession() );
+			userType.nullSafeSet( st, value, index, options );
 		}
 
 		@Override

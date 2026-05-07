@@ -91,7 +91,7 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int i, WrapperOptions sharedSessionContractImplementor)
+		public Object nullSafeGet(ResultSet rs, int i, WrapperOptions options)
 				throws SQLException {
 			String xmldoc = rs.getString(i);
 			return rs.wasNull() ? null : xmldoc;

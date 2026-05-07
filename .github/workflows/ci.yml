@@ -3,7 +3,7 @@ name: GH Actions CI
 on:
   pull_request:
     branches:
-      - 'wip/jpa4'
+      - 'main'
 
 permissions: { } # none
 

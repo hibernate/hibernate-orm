@@ -1145,12 +1145,6 @@ public class SelectionQueryImpl<R>
 		final boolean applyLimitInScrollableResults =
 				shouldApplyLimitInMemory( statement, queryOptions )
 						|| hasLimit && containsCollectionFetches && !pushedDown;
-		if ( hasLimit
-				&& containsCollectionFetches
-				&& !pushedDown
-				&& queryOptions.isLimitInMemoryEnabled() != TRUE ) {
-			errorOrLogForPaginationWithCollectionFetch();
-		}
 		final var normalizedQueryOptions =
 				applyLimitInScrollableResults || pushedDown
 						? omitSqlQueryOptions( queryOptions, true, false )

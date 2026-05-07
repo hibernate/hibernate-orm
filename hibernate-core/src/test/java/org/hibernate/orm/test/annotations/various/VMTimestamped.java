@@ -9,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
-import org.hibernate.annotations.Source;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * @author Hardy Ferentschik
@@ -21,7 +21,7 @@ public class VMTimestamped {
 	private int id;
 
 	@Version
-	@Source
+	@UpdateTimestamp
 	private Date lastUpdate;
 
 	public int getId() {

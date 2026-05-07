@@ -80,9 +80,6 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 	@Override
 	SharedSessionBuilderImplementor flushMode(FlushMode flushMode);
 
-	@Override @Deprecated(forRemoval = true)
-	SharedSessionBuilderImplementor tenantIdentifier(String tenantIdentifier);
-
 	@Override
 	SharedSessionBuilderImplementor eventListeners(SessionEventListener... listeners);
 

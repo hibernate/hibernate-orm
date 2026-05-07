@@ -54,17 +54,6 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 	StatelessSessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**
-	 * Define the tenant identifier to be associated with the opened session.
-	 *
-	 * @param tenantIdentifier The tenant identifier.
-	 *
-	 * @return {@code this}, for method chaining
-	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
-	 */
-	@Deprecated(since = "6.4", forRemoval = true)
-	StatelessSessionBuilder tenantIdentifier(String tenantIdentifier);
-
-	/**
 	 * Applies the given {@link StatementInspector} to the session.
 	 *
 	 * @param statementInspector The {@code StatementInspector} to use.

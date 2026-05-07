@@ -53,7 +53,7 @@ public class DdlTypeRegistry implements Serializable {
 	 * Add a mapping from the given type code to the given {@link DdlType}.
 	 */
 	public void addDescriptor(int sqlTypeCode, DdlType ddlType) {
-		final DdlType previous = ddlTypes.put( sqlTypeCode, ddlType );
+		final var previous = ddlTypes.put( sqlTypeCode, ddlType );
 		if ( previous != null && previous != ddlType ) {
 			for ( String rawTypeName : previous.getRawTypeNames() ) {
 				sqlTypes.remove( rawTypeName );
@@ -165,20 +165,18 @@ public class DdlTypeRegistry implements Serializable {
 	 *
 	 */
 	public DdlType getDescriptor(int sqlTypeCode) {
-		final DdlType ddlType = ddlTypes.get( sqlTypeCode );
+		final var ddlType = ddlTypes.get( sqlTypeCode );
 		if ( ddlType == null ) {
-			switch ( sqlTypeCode ) {
-				// these are no longer considered separate column types as such
+			return switch ( sqlTypeCode ) {
+				// these are no longer considered separate column types as such;
 				// they're just used to indicate that JavaType.getLongSqlLength()
 				// should be used by default (and that's already handled by the
 				// time we get to here)
-				case SqlTypes.LONGVARCHAR:
-					return ddlTypes.get( SqlTypes.VARCHAR );
-				case SqlTypes.LONGNVARCHAR:
-					return ddlTypes.get( SqlTypes.NVARCHAR );
-				case SqlTypes.LONGVARBINARY:
-					return ddlTypes.get( SqlTypes.VARBINARY );
-			}
+				case SqlTypes.LONGVARCHAR -> ddlTypes.get( SqlTypes.VARCHAR );
+				case SqlTypes.LONGNVARCHAR -> ddlTypes.get( SqlTypes.NVARCHAR );
+				case SqlTypes.LONGVARBINARY -> ddlTypes.get( SqlTypes.VARBINARY );
+				default -> null;
+			};
 		}
 		return ddlType;
 	}
@@ -194,28 +192,19 @@ public class DdlTypeRegistry implements Serializable {
 	 */
 	public String getTypeName(int typeCode, Dialect dialect) {
 		// explicitly enforce dialect's default precisions
-		switch ( typeCode ) {
-			case SqlTypes.CHAR:
-			case SqlTypes.NCHAR:
-			case SqlTypes.VARCHAR:
-			case SqlTypes.NVARCHAR:
-			case SqlTypes.VARBINARY:
-				return getTypeName( typeCode, Size.length( Size.DEFAULT_LENGTH ) );
-			case SqlTypes.DECIMAL:
-			case SqlTypes.NUMERIC:
-				return getTypeName( typeCode, Size.precision( dialect.getDefaultDecimalPrecision() ) );
-			case SqlTypes.FLOAT:
-			case SqlTypes.REAL:
-				return getTypeName( typeCode, Size.precision( dialect.getFloatPrecision() ) );
-			case SqlTypes.DOUBLE:
-				return getTypeName( typeCode, Size.precision( dialect.getDoublePrecision() ) );
-			case SqlTypes.TIMESTAMP:
-			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-			case SqlTypes.TIMESTAMP_UTC:
-				return getTypeName( typeCode, Size.precision( dialect.getDefaultTimestampPrecision() ) );
-			default:
-				return getTypeName( typeCode, Size.nil() );
-		}
+		return switch ( typeCode ) {
+			case SqlTypes.CHAR, SqlTypes.NCHAR, SqlTypes.VARCHAR, SqlTypes.NVARCHAR, SqlTypes.VARBINARY
+					-> getTypeName( typeCode, Size.length( Size.DEFAULT_LENGTH ) );
+			case SqlTypes.DECIMAL, SqlTypes.NUMERIC
+					-> getTypeName( typeCode, Size.precision( dialect.getDefaultDecimalPrecision() ) );
+			case SqlTypes.FLOAT, SqlTypes.REAL
+					-> getTypeName( typeCode, Size.precision( dialect.getFloatPrecision() ) );
+			case SqlTypes.DOUBLE
+					-> getTypeName( typeCode, Size.precision( dialect.getDoublePrecision() ) );
+			case SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE, SqlTypes.TIMESTAMP_UTC
+					-> getTypeName( typeCode, Size.precision( dialect.getDefaultTimestampPrecision() ) );
+			default -> getTypeName( typeCode, Size.nil() );
+		};
 	}
 
 	/**
@@ -225,18 +214,27 @@ public class DdlTypeRegistry implements Serializable {
 	 * size object}. The returned type name should be of a SQL type large enough to
 	 * accommodate values of the specified size.
 	 *
+	 * @apiNote Not appropriate for named enum or array types,
+	 *          use {@link #getTypeName(int, Size, Type)} instead
+	 *
 	 * @param typeCode the JDBC type code
 	 * @param size an object which determines the length, precision, and scale
 	 *
 	 * @return the associated type name with the smallest capacity that accommodates
 	 *         the given size, if available, and the default type name otherwise
-	 *
-	 * @deprecated not appropriate for named enum or array types,
-	 *             use {@link #getTypeName(int, Size, Type)} instead
 	 */
-	@Deprecated(since = "6.3")
-	public String getTypeName(int typeCode, Size size) {
-		return getTypeName( typeCode, size.getLength(), size.getPrecision(), size.getScale() );
+	private String getTypeName(int typeCode, Size size) {
+		final var descriptor = getDescriptor( typeCode );
+		if ( descriptor == null ) {
+			throw new HibernateException(
+					String.format(
+							"No type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
+							typeCode,
+							JdbcTypeNameMapper.getTypeName( typeCode )
+					)
+			);
+		}
+		return descriptor.getTypeName( size.getLength(), size.getPrecision(), size.getScale() );
 	}
 
 	/**
@@ -256,7 +254,7 @@ public class DdlTypeRegistry implements Serializable {
 	 * @since 6.3
 	 */
 	public String getTypeName(int typeCode, Size columnSize, Type type) {
-		final DdlType descriptor = getDescriptor( typeCode );
+		final var descriptor = getDescriptor( typeCode );
 		if ( descriptor == null ) {
 			throw new HibernateException(
 					String.format(
@@ -270,38 +268,6 @@ public class DdlTypeRegistry implements Serializable {
 	}
 
 	/**
-	 * Get the SQL type name for the specified {@link java.sql.Types JDBC type code}
-	 * and size, filling in the placemarkers {@code $l}, {@code $p}, and {@code $s}
-	 * with the given length, precision, and scale. The returned type name should be
-	 * of a SQL type large enough to accommodate values of the specified size.
-	 *
-	 * @param typeCode the JDBC type code
-	 * @param size the SQL length, if any
-	 * @param precision the SQL precision, if any
-	 * @param scale the SQL scale, if any
-	 *
-	 * @return the associated type name with the smallest capacity that accommodates
-	 *         the given size, if available, and the default type name otherwise
-	 *
-	 * @deprecated not appropriate for named enum or array types,
-	 *             use {@link #getTypeName(int, Size, Type)} instead
-	 */
-	@Deprecated(since = "6.3")
-	public String getTypeName(int typeCode, Long size, Integer precision, Integer scale) {
-		final DdlType descriptor = getDescriptor( typeCode );
-		if ( descriptor == null ) {
-			throw new HibernateException(
-					String.format(
-							"No type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
-							typeCode,
-							JdbcTypeNameMapper.getTypeName( typeCode )
-					)
-			);
-		}
-		return descriptor.getTypeName( size, precision, scale );
-	}
-
-	/**
 	 * Determines if there is a registered {@link DdlType} whose {@linkplain
 	 * DdlType#getRawTypeName() raw type name} matches the given type name,
 	 * taking into account DDL types registered by Hibernate.
@@ -311,7 +277,7 @@ public class DdlTypeRegistry implements Serializable {
 	 * @return {@code true} if there is a DDL type with the given raw type name
 	 */
 	public boolean isTypeNameRegistered(final String typeName) {
-		for ( DdlType value : ddlTypes.values() ) {
+		for ( var value : ddlTypes.values() ) {
 			if ( value.getRawTypeName().equals( typeName ) ) {
 				return true;
 			}

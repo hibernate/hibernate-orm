@@ -9,8 +9,10 @@ package org.hibernate.orm.tooling.gradle.reveng;
  */
 public class RevengSpec {
 
+	public static final String DEFAULT_HIBERNATE_PROPERTIES = "hibernate.properties";
+
 	public String sqlToRun = "";
-	public String hibernateProperties = "hibernate.properties";
+	public String hibernateProperties = DEFAULT_HIBERNATE_PROPERTIES;
 	public String outputFolder = "generated-sources";
 	public String packageName = "";
 	public String revengStrategy = null;

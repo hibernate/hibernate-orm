@@ -1556,19 +1556,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	DiscriminatorType<?> getDiscriminatorDomainType();
 
 	/**
-	 * Retrieve the information needed to properly deal with this entity's discriminator
-	 * in a query.
-	 *
-	 * @return The entity discriminator metadata
-	 *
-	 * @deprecated Since {@link DiscriminatorMetadata} is deprecated
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	default DiscriminatorMetadata getTypeDiscriminatorMetadata() {
-		return this::getDiscriminatorDomainType;
-	}
-
-	/**
 	 * Given a property path, return the corresponding column name(s).
 	 *
 	 * @deprecated No longer used in ORM core

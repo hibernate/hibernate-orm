@@ -20,14 +20,6 @@ public abstract class AbstractMutationStatement extends AbstractStatement implem
 	private final List<ColumnReference> returningColumns;
 	private final MutationTarget<?,?> mutationTarget;
 
-	@Deprecated(forRemoval = true, since = "7.3")
-	public AbstractMutationStatement(
-			CteContainer cteContainer,
-			NamedTableReference targetTable,
-			List<ColumnReference> returningColumns) {
-		this( cteContainer, targetTable, null, returningColumns );
-	}
-
 	public AbstractMutationStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,

@@ -45,7 +45,7 @@ class PropertyBinder extends AbstractBinder {
 		result.setName(propertyName);
 		result.setValue(value);
 		result.setInsertable(associationInfo.getInsert());
-		result.setUpdateable(associationInfo.getUpdate());
+		result.setUpdatable(associationInfo.getUpdate());
 		String cascade = associationInfo.getCascade();
 		cascade = cascade == null ? "none" : cascade;
 		result.setCascade(cascade);

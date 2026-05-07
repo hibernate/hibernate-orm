@@ -92,8 +92,8 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
-import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
-import static org.hibernate.jpa.QueryHints.HINT_READONLY;
+import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
@@ -322,7 +322,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		putIfNotNull( hints, HINT_COMMENT, queryOptions.getComment() );
 		putIfNotNull( hints, HINT_FLUSH_MODE,  queryOptions.getFlushMode() );
 
-		putIfNotNull( hints, HINT_READONLY, queryOptions.isReadOnly() );
+		putIfNotNull( hints, HINT_READ_ONLY, queryOptions.isReadOnly() );
 		putIfNotNull( hints, HINT_FETCH_SIZE, queryOptions.getFetchSize() );
 		putIfNotNull( hints, HINT_CACHEABLE, queryOptions.isResultCachingEnabled() );
 		putIfNotNull( hints, HINT_CACHE_REGION, queryOptions.getResultCacheRegionName() );
@@ -349,7 +349,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( lockOptions.getLockMode() != LockMode.READ ) {
 			final var lockMode = lockOptions.getLockMode();
 			if ( lockMode != null && lockMode != LockMode.NONE ) {
-				hints.put( HINT_NATIVE_LOCKMODE, lockMode );
+				hints.put( HINT_NATIVE_LOCK_MODE, lockMode );
 			}
 
 			if ( lockOptions.getFollowOnStrategy() != null ) {
@@ -471,7 +471,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				// sometimes relevant
 				case HINT_QUERY_PLAN_CACHEABLE:
 					applyQueryPlanCachingHint( hintName, value );
-				case HINT_READONLY:
+				case HINT_READ_ONLY:
 					applyReadOnlyHint( hintName, value );
 					return true;
 				case HINT_FETCH_SIZE:
@@ -522,7 +522,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				case HINT_NATIVE_SPACES:
 					applySynchronizeSpacesHint( value );
 					return true;
-				case HINT_NATIVE_LOCKMODE:
+				case HINT_NATIVE_LOCK_MODE:
 					applyLockModeHint( HINT_NATIVE_LOCK_MODE, value );
 					return true;
 				case HINT_JAVAEE_LOCK_TIMEOUT:
@@ -672,7 +672,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			throw new IllegalArgumentException(
 					String.format(
 							"Native lock-mode hint [%s] must specify %s or %s. Encountered type: %s",
-							HINT_NATIVE_LOCKMODE,
+							HINT_NATIVE_LOCK_MODE,
 							LockMode.class.getName(),
 							LockModeType.class.getName(),
 							value.getClass().getName()

@@ -5,6 +5,10 @@
 package org.hibernate.dialect;
 
 
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.DB2AggregateSupport;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.internal.DB2LockingSupport;
@@ -20,17 +24,23 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import jakarta.persistence.TemporalType;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
+import java.sql.Types;
 import java.util.List;
 
+import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
@@ -77,10 +87,49 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
+			// DB2 z/OS does not have a boolean type
+			case BOOLEAN -> "smallint";
 			// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
 			case TIME_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE -> "timestamp with time zone";
 			default -> super.columnType( sqlTypeCode );
 		};
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
+	}
+
+	@Override
+	protected boolean supportsPredicateAsExpression() {
+		// Not sure, but let's be conservative
+		return false;
+	}
+
+	@Override
+	public boolean supportsIsTrue() {
+		// No mention in the docs
+		return false;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		// UPDATE statement syntax doesn't seem to allow this
+		return false;
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		// No JSON support
+		return DB2AggregateSupport.INSTANCE;
+	}
+
+	@Override
+	protected void registerJsonFunctions(CommonFunctionFactory functionFactory) {
+		// No JSON support
 	}
 
 	@Override
@@ -118,6 +167,16 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	public String getEnableConstraintStatement(String tableName, String name) {
 		return null;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForBoolean() {
+		return Types.SMALLINT;
+	}
+
+	@Override
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		appender.appendSql( bool ? '1' : '0' );
 	}
 
 	@Override

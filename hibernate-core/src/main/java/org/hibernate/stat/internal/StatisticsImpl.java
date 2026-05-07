@@ -220,11 +220,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
-	public long getStartTime() {
-		return startTime.toEpochMilli();
-	}
-
-	@Override
 	public boolean isStatisticsEnabled() {
 		return isStatisticsEnabled;
 	}

@@ -327,16 +327,6 @@ public interface Statistics {
 	Instant getStart();
 
 	/**
-	 * The {@linkplain Instant#toEpochMilli()}  milliseconds since the
-	 * initial creation of this instance, or since the last time
-	 * {@link #clear()} was called.
-	 *
-	 * @deprecated use {@link #getStart()}
-	 */
-	@Deprecated(since = "6.0")
-	long getStartTime();
-
-	/**
 	 * All executed query strings.
 	 * <p>
 	 * The maximum number of queries tracked by the Hibernate statistics

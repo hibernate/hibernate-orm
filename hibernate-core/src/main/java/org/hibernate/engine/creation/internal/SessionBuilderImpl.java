@@ -198,13 +198,6 @@ public abstract class SessionBuilderImpl
 	}
 
 	@Override
-	@Deprecated(forRemoval = true)
-	public SessionBuilderImplementor tenantIdentifier(String tenantIdentifier) {
-		this.tenantIdentifier = tenantIdentifier;
-		return this;
-	}
-
-	@Override
 	public SessionBuilderImplementor identifierRollback(boolean identifierRollback) {
 		this.identifierRollback = identifierRollback;
 		return this;

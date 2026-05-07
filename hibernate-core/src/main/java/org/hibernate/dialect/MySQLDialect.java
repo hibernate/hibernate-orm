@@ -46,6 +46,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.common.TemporalUnit;
@@ -83,6 +84,7 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -459,7 +461,8 @@ public class MySQLDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) {
 			@Override
-			public String getCastTypeName(Long length) {
+			public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
+				final Long length = columnSize.getLength();
 				return length == null ? "char" : charCastType( length.intValue() );
 			}
 		} );

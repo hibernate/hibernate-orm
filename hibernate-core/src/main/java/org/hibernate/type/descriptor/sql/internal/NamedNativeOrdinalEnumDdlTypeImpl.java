@@ -6,9 +6,8 @@ package org.hibernate.type.descriptor.sql.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
@@ -25,6 +24,8 @@ import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
  */
 public class NamedNativeOrdinalEnumDdlTypeImpl implements DdlType {
 
+	private static final String[] ENUM_KEYWORD = {"enum"};
+
 	public NamedNativeOrdinalEnumDdlTypeImpl(Dialect dialect) {
 	}
 
@@ -39,22 +40,12 @@ public class NamedNativeOrdinalEnumDdlTypeImpl implements DdlType {
 	}
 
 	@Override
-	public String getRawTypeName() {
-		return "enum";
+	public String[] getRawTypeNames() {
+		return ENUM_KEYWORD;
 	}
 
 	@Override
-	public String getTypeName(Long size, Integer precision, Integer scale) {
-		throw new UnsupportedOperationException( "native enum type" );
-	}
-
-	@Override
-	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		return javaType.getJavaTypeClass().getSimpleName();
-	}
-
-	@Override
-	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale) {
-		return javaType.getJavaTypeClass().getSimpleName();
+	public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
+		return type.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass().getSimpleName();
 	}
 }

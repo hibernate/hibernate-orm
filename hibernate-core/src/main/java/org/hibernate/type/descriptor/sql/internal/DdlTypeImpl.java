@@ -6,14 +6,16 @@ package org.hibernate.type.descriptor.sql.internal;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+
+import static org.hibernate.internal.util.StringHelper.replaceOnce;
 
 /**
  * Descriptor for a SQL type.
@@ -108,16 +110,8 @@ public class DdlTypeImpl implements DdlType {
 	}
 
 	@Override
-	public String getRawTypeName() {
-		//trim off the length/precision/scale
-		final int paren = typeNamePattern.indexOf( '(' );
-		if ( paren > 0 ) {
-			final int parenEnd = typeNamePattern.lastIndexOf( ')' );
-			return parenEnd + 1 == typeNamePattern.length()
-					? typeNamePattern.substring( 0, paren )
-					: typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 );
-		}
-		return typeNamePattern;
+	public String[] getRawTypeNames() {
+		return new String[] { getRawTypeName( typeNamePattern ) };
 	}
 
 	@Override
@@ -126,19 +120,37 @@ public class DdlTypeImpl implements DdlType {
 	}
 
 	@Override
-	public String getTypeName(Long size, Integer precision, Integer scale) {
-		return replace( typeNamePattern, size, precision, scale );
+	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
+		return formatTypeName( columnSize.getLength(), columnSize.getPrecision(), columnSize.getScale() );
 	}
 
 	@Override
-	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale) {
+	public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
+		final var jdbcMapping = type.getJdbcMapping();
+		return castTypeName(
+				jdbcMapping.getJdbcType(),
+				jdbcMapping.getJavaTypeDescriptor(),
+				columnSize.getLength(),
+				columnSize.getPrecision(),
+				columnSize.getScale(),
+				ddlTypeRegistry
+		);
+	}
+
+	private String castTypeName(
+			JdbcType jdbcType,
+			JavaType<?> javaType,
+			Long length,
+			Integer precision,
+			Integer scale,
+			DdlTypeRegistry ddlTypeRegistry) {
 		if ( length == null && precision == null
 				|| jdbcType.isInteger() ) {  // workaround for ordinal enums represented as TINYINT(255)
-			return getCastTypeName( jdbcType, javaType );
+			return castTypeName( jdbcType, javaType, ddlTypeRegistry );
 		}
 		else {
 			//use the given length/precision/scale
-			final Size size = dialect.getSizeStrategy().resolveSize( jdbcType, javaType, precision, scale, length );
+			final var size = dialect.getSizeStrategy().resolveSize( jdbcType, javaType, precision, scale, length );
 			if ( size.getPrecision() != null && size.getScale() == null ) {
 				//needed for cast(x as BigInteger(p))
 				size.setScale( javaType.getDefaultSqlScale( dialect, jdbcType ) );
@@ -152,7 +164,7 @@ public class DdlTypeImpl implements DdlType {
 				// sized casts like 'cast(x as varchar(N))' still produce a sized
 				// target (important on dialects where castType is deliberately
 				// unsized, e.g. H2)
-				return getTypeName( size.getLength(), size.getPrecision(), size.getScale() );
+				return getTypeName( size, null, ddlTypeRegistry );
 			}
 			else {
 				// castTypeName itself is a pattern like "decimal($p,$s)" (used e.g.
@@ -162,20 +174,24 @@ public class DdlTypeImpl implements DdlType {
 		}
 	}
 
-	@Override
-	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
+	private String castTypeName(JdbcType jdbcType, JavaType<?> javaType, DdlTypeRegistry ddlTypeRegistry) {
 		if ( javaType instanceof CharacterJavaType && jdbcType.isString() ) {
 			// nasty special case for casting to Character
-			return getCastTypeName( jdbcType, javaType, 1L, null, null );
+			return castTypeName( jdbcType, javaType, 1L, null, null, ddlTypeRegistry );
 		}
 		else if ( castTypeNameIsStatic ) {
 			return castTypeName;
 		}
 		else {
-			final Size size = dialect.getSizeStrategy()
-					.resolveSize( jdbcType, javaType, null, null, defaultLength( jdbcType ) );
+			final var size =
+					dialect.getSizeStrategy()
+							.resolveSize( jdbcType, javaType, null, null, defaultLength( jdbcType ) );
 			return replace( castTypeName, size.getLength(), size.getPrecision(), size.getScale() );
 		}
+	}
+
+	protected String formatTypeName(Long size, Integer precision, Integer scale) {
+		return replace( typeNamePattern, size, precision, scale );
 	}
 
 	@Override
@@ -186,9 +202,11 @@ public class DdlTypeImpl implements DdlType {
 			// castTypeNameIsStatic/size-fallback logic, etc.
 			return getCastTypeName( columnSize, type, ddlTypeRegistry );
 		}
-		final JdbcType jdbcType = type.getJdbcMapping().getJdbcType();
-		final JavaType<?> javaType = type.getJdbcMapping().getJavaTypeDescriptor();
-		final Size size = dialect.getSizeStrategy().resolveSize(
+
+		final var jdbcMapping = type.getJdbcMapping();
+		final var jdbcType = jdbcMapping.getJdbcType();
+		final var javaType = jdbcMapping.getJavaTypeDescriptor();
+		final var size = dialect.getSizeStrategy().resolveSize(
 				jdbcType,
 				javaType,
 				columnSize.getPrecision(),
@@ -241,14 +259,26 @@ public class DdlTypeImpl implements DdlType {
 	 */
 	public static String replace(String type, Long size, Integer precision, Integer scale) {
 		if ( scale != null ) {
-			type = StringHelper.replaceOnce( type, "$s", scale.toString() );
+			type = replaceOnce( type, "$s", scale.toString() );
 		}
 		if ( size != null ) {
-			type = StringHelper.replaceOnce( type, "$l", size.toString() );
+			type = replaceOnce( type, "$l", size.toString() );
 		}
 		if ( precision != null ) {
-			type = StringHelper.replaceOnce( type, "$p", precision.toString() );
+			type = replaceOnce( type, "$p", precision.toString() );
 		}
 		return type;
+	}
+
+	static String getRawTypeName(String typeNamePattern) {
+		//trim off the length/precision/scale
+		final int paren = typeNamePattern.indexOf( '(' );
+		if ( paren > 0 ) {
+			final int parenEnd = typeNamePattern.lastIndexOf( ')' );
+			return parenEnd + 1 == typeNamePattern.length()
+					? typeNamePattern.substring( 0, paren )
+					: typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 );
+		}
+		return typeNamePattern;
 	}
 }

@@ -108,6 +108,7 @@ and column metadata, and generates annotation types for the configured Java pack
 ----
 tasks.named("generateSchemaAnnotations") {
     hibernateProperties = "hibernate.properties" // optional, defaults to hibernate.properties
+    revengFile = "hibernate.reveng.xml" // optional
     packageName = "org.example.schema"
 }
 ----
@@ -127,5 +128,9 @@ hibernate.default_schema=PUBLIC
 ----
 
 The JDBC driver must be available from the project's runtime classpath.
+
+When specified, `revengFile` is resolved from the main resources source set. The schema annotation
+generator supports schema selection, table filters, table exclusions, column exclusions, and
+user-defined foreign keys from the reverse-engineering file.
 
 More coming soon...

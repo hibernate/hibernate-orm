@@ -46,15 +46,30 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 				"@StaticColumn(name = \"ISBN\", type = JDBCType.VARCHAR, nullable = false, length = 20, precision = 0, scale = 0)"
 		) );
 		assertTrue( generatedContents.contains( "public @interface ISBN" ) );
-		assertTrue( generatedContents.matches(
-				"(?s).*@StaticColumn\\(name = \"PAGES\", type = JDBCType\\.INTEGER, nullable = true, length = 255, precision = \\d+, scale = 0\\).*"
-		) );
-		assertTrue( generatedContents.contains( "public @interface PAGES" ) );
+		assertFalse( generatedContents.contains( "@StaticColumn(name = \"PAGES\"" ) );
+		assertFalse( generatedContents.contains( "public @interface PAGES" ) );
 		assertTrue( generatedContents.contains(
 				"@StaticJoinColumn(name = \"AUTHOR_ID\", referencedTableName = \"AUTHOR\", referencedColumnName = \"ID\", type = JDBCType.INTEGER, nullable = true)"
 		) );
 		assertFalse( generatedContents.contains( "@StaticColumn(name = \"AUTHOR_ID\"" ) );
 		assertTrue( generatedContents.contains( "public @interface AUTHOR_ID" ) );
+	}
+
+	@Override
+	protected void createProject() throws Exception {
+		super.createProject();
+		createRevengFile();
+	}
+
+	private void createRevengFile() throws Exception {
+		String revengXml = "<hibernate-reverse-engineering>\n" +
+				"  <table name=\"BOOK\">\n" +
+				"    <column name=\"PAGES\" exclude=\"true\"/>\n" +
+				"  </table>\n" +
+				"</hibernate-reverse-engineering>";
+		File resourcesFolder = new File( getProjectDir(), "app/src/main/resources" );
+		resourcesFolder.mkdirs();
+		Files.writeString( new File( resourcesFolder, "schema-annotations.reveng.xml" ).toPath(), revengXml );
 	}
 
 	@Override
@@ -66,6 +81,7 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 		configuration.append( lineSeparator() );
 		configuration.append( "tasks.named('generateSchemaAnnotations') {" ).append( lineSeparator() );
 		configuration.append( "  packageName = 'foo.schema'" ).append( lineSeparator() );
+		configuration.append( "  revengFile = 'schema-annotations.reveng.xml'" ).append( lineSeparator() );
 		configuration.append( "}" );
 
 		int pos = gradleBuildFileContents.indexOf( "dependencies {" );

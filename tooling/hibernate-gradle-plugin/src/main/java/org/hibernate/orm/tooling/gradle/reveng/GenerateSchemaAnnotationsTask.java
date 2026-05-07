@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
@@ -48,6 +49,12 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
+import org.hibernate.mapping.ForeignKey;
+import org.hibernate.tool.reveng.api.core.RevengSettings;
+import org.hibernate.tool.reveng.api.core.RevengStrategy;
+import org.hibernate.tool.reveng.api.core.RevengStrategy.SchemaSelection;
+import org.hibernate.tool.reveng.api.core.RevengStrategyFactory;
+import org.hibernate.tool.reveng.api.core.TableIdentifier;
 
 /**
  * Generates static schema annotation types from JDBC metadata.
@@ -65,6 +72,7 @@ import org.gradle.work.DisableCachingByDefault;
  *
  * tasks.named("generateSchemaAnnotations") {
  *     hibernateProperties = "hibernate.properties"
+ *     revengFile = "hibernate.reveng.xml"
  *     schemaName = "PUBLIC"
  *     tableNamePattern = "%"
  *     packageName = "org.example.schema"
@@ -78,6 +86,8 @@ import org.gradle.work.DisableCachingByDefault;
  * <p>
  * The task can read JDBC configuration from a {@code hibernate.properties} file in the main resource
  * set. Direct task properties override values read from {@code hibernate.properties}.
+ * A Hibernate Tools reverse-engineering file can be used for schema selection, table filters,
+ * table exclusions, column exclusions, and user-defined foreign keys.
  * <p>
  * For each table, the generated top-level annotation type is meta-annotated with
  * {@code @StaticTable}. For each non-foreign-key column, the generated nested annotation type is
@@ -232,6 +242,17 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	abstract public Property<String> getHibernateProperties();
 
 	/**
+	 * The optional Hibernate Tools reverse-engineering XML file to read from the main resource set.
+	 * <p>
+	 * The task supports schema selection, table filters, table exclusions, column exclusions, and
+	 * user-defined foreign keys from this file. Annotation type names are still derived from physical
+	 * table and column names.
+	 */
+	@Input
+	@Optional
+	abstract public Property<String> getRevengFile();
+
+	/**
 	 * The Java package for generated annotation types, for example {@code org.example.schema}.
 	 */
 	@Input
@@ -317,7 +338,8 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 				getPackageName().get(),
 				optionalNonBlankConfiguration( getCatalogName(), hibernateProperties, DEFAULT_CATALOG_PROPERTIES ),
 				optionalNonBlankConfiguration( getSchemaName(), hibernateProperties, DEFAULT_SCHEMA_PROPERTIES ),
-				getTableNamePattern().get()
+				getTableNamePattern().get(),
+				optionalTaskConfiguration( getRevengFile() )
 		);
 	}
 
@@ -382,12 +404,41 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		return null;
 	}
 
+	private String optionalTaskConfiguration(Property<String> taskProperty) {
+		if ( !taskProperty.isPresent() || taskProperty.get().isBlank() ) {
+			return null;
+		}
+		return taskProperty.get();
+	}
+
 	private void generateSchemaAnnotations(TaskConfiguration configuration) throws SQLException, IOException {
 		getLogger().lifecycle( "Connecting to database: " + configuration.jdbcUrl );
+		final RevengStrategy revengStrategy = createReverseEngineeringStrategy( configuration );
 		try ( Connection connection = createConnection( configuration ) ) {
-			final List<Table> tables = readTables( connection, configuration );
+			final List<Table> tables = readTables( connection, configuration, revengStrategy );
 			writeTables( configuration.packageName, tables );
 		}
+		finally {
+			if ( revengStrategy != null ) {
+				revengStrategy.close();
+			}
+		}
+	}
+
+	private RevengStrategy createReverseEngineeringStrategy(TaskConfiguration configuration) {
+		if ( configuration.revengFile == null ) {
+			return null;
+		}
+
+		final File revengFile = RevengFileHelper.findRequiredResourceFile( getProject(), configuration.revengFile );
+		final RevengStrategy strategy = RevengStrategyFactory.createReverseEngineeringStrategy(
+				null,
+				new File[] { revengFile }
+		);
+		final RevengSettings settings = new RevengSettings( strategy );
+		settings.setDefaultPackageName( configuration.packageName );
+		strategy.setSettings( settings );
+		return strategy;
 	}
 
 	private Connection createConnection(TaskConfiguration configuration) throws SQLException {
@@ -405,33 +456,148 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		return DriverManager.getConnection( configuration.jdbcUrl, properties );
 	}
 
-	private List<Table> readTables(Connection connection, TaskConfiguration configuration) throws SQLException {
+	private List<Table> readTables(
+			Connection connection,
+			TaskConfiguration configuration,
+			RevengStrategy revengStrategy) throws SQLException {
 		final DatabaseMetaData metadata = connection.getMetaData();
 		final String catalog = configuration.catalogName == null ? determineCatalog( connection ) : configuration.catalogName;
 		final String schema = configuration.schemaName == null ? determineSchema( connection ) : configuration.schemaName;
 		final String tableNamePattern = configuration.tableNamePattern;
 
 		final List<Table> tables = new ArrayList<>();
-		try ( ResultSet resultSet = metadata.getTables( catalog, schema, tableNamePattern, TABLE_TYPES ) ) {
-			while ( resultSet.next() ) {
-				final String tableName = resultSet.getString( "TABLE_NAME" );
-				validateJavaIdentifier( tableName, "table" );
-				tables.add(
-						new Table(
-								resultSet.getString( "TABLE_CAT" ),
-								resultSet.getString( "TABLE_SCHEM" ),
-								tableName
-						)
+		final List<SchemaSelection> schemaSelections = revengStrategy == null ? null : revengStrategy.getSchemaSelections();
+		if ( schemaSelections == null ) {
+			readTables( metadata, catalog, schema, tableNamePattern, revengStrategy, tables );
+		}
+		else {
+			for ( SchemaSelection schemaSelection : schemaSelections ) {
+				readTables(
+						metadata,
+						toJdbcPattern( schemaSelection.getMatchCatalog() ),
+						toJdbcPattern( schemaSelection.getMatchSchema() ),
+						toJdbcPattern( schemaSelection.getMatchTable() ),
+						revengStrategy,
+						tables
 				);
 			}
 		}
 
 		tables.sort( Comparator.comparing( table -> table.name.toLowerCase( Locale.ROOT ) ) );
 		validateNoDuplicateTableNames( tables );
+		final Map<TableIdentifier, Map<String, ForeignKeyColumn>> userForeignKeyColumns =
+				readUserForeignKeyColumns( tables, revengStrategy );
 		for ( Table table : tables ) {
-			readColumns( metadata, table );
+			readColumns( metadata, table, revengStrategy, userForeignKeyColumns.get( table.identifier() ) );
 		}
 		return tables;
+	}
+
+	private void readTables(
+			DatabaseMetaData metadata,
+			String catalog,
+			String schema,
+			String tableNamePattern,
+			RevengStrategy revengStrategy,
+			List<Table> tables) throws SQLException {
+		try ( ResultSet resultSet = metadata.getTables( catalog, schema, tableNamePattern, TABLE_TYPES ) ) {
+			while ( resultSet.next() ) {
+				final String tableName = resultSet.getString( "TABLE_NAME" );
+				final Table table = new Table(
+						resultSet.getString( "TABLE_CAT" ),
+						resultSet.getString( "TABLE_SCHEM" ),
+						tableName
+				);
+				if ( isExcludedTable( revengStrategy, table ) ) {
+					continue;
+				}
+				validateJavaIdentifier( tableName, "table" );
+				if ( !tables.contains( table ) ) {
+					tables.add( table );
+				}
+			}
+		}
+	}
+
+	private String toJdbcPattern(String value) {
+		return value == null ? null : value.replace( ".*", "%" );
+	}
+
+	private boolean isExcludedTable(RevengStrategy revengStrategy, Table table) {
+		if ( revengStrategy == null ) {
+			return false;
+		}
+		for ( TableIdentifier identifier : table.identifiers() ) {
+			if ( revengStrategy.excludeTable( identifier ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Map<TableIdentifier, Map<String, ForeignKeyColumn>> readUserForeignKeyColumns(
+			List<Table> tables,
+			RevengStrategy revengStrategy) {
+		final Map<TableIdentifier, Map<String, ForeignKeyColumn>> result = new HashMap<>();
+		if ( revengStrategy == null ) {
+			return result;
+		}
+
+		for ( Table referencedTable : tables ) {
+			for ( TableIdentifier identifier : referencedTable.identifiers() ) {
+				final List<ForeignKey> foreignKeys = revengStrategy.getForeignKeys( identifier );
+				if ( foreignKeys == null ) {
+					continue;
+				}
+				for ( ForeignKey foreignKey : foreignKeys ) {
+					addUserForeignKey( tables, result, foreignKey );
+				}
+			}
+		}
+		return result;
+	}
+
+	private void addUserForeignKey(
+			List<Table> tables,
+			Map<TableIdentifier, Map<String, ForeignKeyColumn>> userForeignKeyColumns,
+			ForeignKey foreignKey) {
+		final Table dependentTable = findTable( tables, TableIdentifier.create( foreignKey.getTable() ) );
+		if ( dependentTable == null ) {
+			return;
+		}
+		final String referencedTableName = foreignKey.getReferencedTable().getName();
+		final List<?> columns = foreignKey.getColumns();
+		final List<?> referencedColumns = foreignKey.getReferencedColumns();
+		if ( columns.size() != referencedColumns.size() ) {
+			throw new GradleException(
+					"Foreign key `" + foreignKey.getName() + "` in reverse-engineering file has "
+							+ columns.size() + " local column(s) and " + referencedColumns.size()
+							+ " referenced column(s)"
+			);
+		}
+
+		final Map<String, ForeignKeyColumn> tableForeignKeyColumns =
+				userForeignKeyColumns.computeIfAbsent( dependentTable.identifier(), key -> new HashMap<>() );
+		for ( int i = 0; i < columns.size(); i++ ) {
+			final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) columns.get( i );
+			final org.hibernate.mapping.Column referencedColumn =
+					(org.hibernate.mapping.Column) referencedColumns.get( i );
+			putForeignKeyColumn(
+					dependentTable.name,
+					tableForeignKeyColumns,
+					column.getName(),
+					new ForeignKeyColumn( referencedTableName, referencedColumn.getName() )
+			);
+		}
+	}
+
+	private Table findTable(List<Table> tables, TableIdentifier identifier) {
+		for ( Table table : tables ) {
+			if ( table.matches( identifier ) ) {
+				return table;
+			}
+		}
+		return null;
 	}
 
 	private String determineCatalog(Connection connection) {
@@ -452,12 +618,24 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		}
 	}
 
-	private void readColumns(DatabaseMetaData metadata, Table table) throws SQLException {
+	private void readColumns(
+			DatabaseMetaData metadata,
+			Table table,
+			RevengStrategy revengStrategy,
+			Map<String, ForeignKeyColumn> userForeignKeyColumns) throws SQLException {
 		final Set<String> columnNames = new HashSet<>();
 		final Map<String, ForeignKeyColumn> foreignKeyColumns = readForeignKeyColumns( metadata, table );
+		if ( userForeignKeyColumns != null ) {
+			for ( Map.Entry<String, ForeignKeyColumn> entry : userForeignKeyColumns.entrySet() ) {
+				putForeignKeyColumn( table.name, foreignKeyColumns, entry.getKey(), entry.getValue() );
+			}
+		}
 		try ( ResultSet resultSet = metadata.getColumns( table.catalog, table.schema, table.name, "%" ) ) {
 			while ( resultSet.next() ) {
 				final String columnName = resultSet.getString( "COLUMN_NAME" );
+				if ( isExcludedColumn( revengStrategy, table, columnName ) ) {
+					continue;
+				}
 				validateJavaIdentifier( columnName, "column" );
 				if ( !columnNames.add( columnName ) ) {
 					throw new GradleException(
@@ -492,16 +670,36 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 						resultSet.getString( "PKTABLE_NAME" ),
 						resultSet.getString( "PKCOLUMN_NAME" )
 				);
-				final var previous = foreignKeyColumns.putIfAbsent( columnName, foreignKeyColumn );
-				if ( previous != null && !previous.equals( foreignKeyColumn ) ) {
-					throw new GradleException(
-							"Column `" + table.name + "." + columnName
-									+ "` is part of multiple foreign keys with different referenced columns"
-					);
-				}
+				putForeignKeyColumn( table.name, foreignKeyColumns, columnName, foreignKeyColumn );
 			}
 		}
 		return foreignKeyColumns;
+	}
+
+	private void putForeignKeyColumn(
+			String tableName,
+			Map<String, ForeignKeyColumn> foreignKeyColumns,
+			String columnName,
+			ForeignKeyColumn foreignKeyColumn) {
+		final var previous = foreignKeyColumns.putIfAbsent( columnName, foreignKeyColumn );
+		if ( previous != null && !previous.equals( foreignKeyColumn ) ) {
+			throw new GradleException(
+					"Column `" + tableName + "." + columnName
+							+ "` is part of multiple foreign keys with different referenced columns"
+			);
+		}
+	}
+
+	private boolean isExcludedColumn(RevengStrategy revengStrategy, Table table, String columnName) {
+		if ( revengStrategy == null ) {
+			return false;
+		}
+		for ( TableIdentifier identifier : table.identifiers() ) {
+			if ( revengStrategy.excludeColumn( identifier, columnName ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean isNullable(ResultSet resultSet) throws SQLException {
@@ -793,7 +991,8 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 			String packageName,
 			String catalogName,
 			String schemaName,
-			String tableNamePattern) {
+			String tableNamePattern,
+			String revengFile) {
 	}
 
 	private static final class Table {
@@ -806,6 +1005,34 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 			this.catalog = catalog;
 			this.schema = schema;
 			this.name = name;
+		}
+
+		private TableIdentifier identifier() {
+			return TableIdentifier.create( catalog, schema, name );
+		}
+
+		private List<TableIdentifier> identifiers() {
+			final TableIdentifier identifier = identifier();
+			final TableIdentifier unqualifiedIdentifier = TableIdentifier.create( null, null, name );
+			return identifier.equals( unqualifiedIdentifier )
+					? List.of( identifier )
+					: List.of( identifier, unqualifiedIdentifier );
+		}
+
+		private boolean matches(TableIdentifier identifier) {
+			return Objects.equals( name, identifier.getName() )
+				&& ( identifier.getCatalog() == null || Objects.equals( catalog, identifier.getCatalog() ) )
+				&& ( identifier.getSchema() == null || Objects.equals( schema, identifier.getSchema() ) );
+		}
+
+		@Override
+		public boolean equals(Object object) {
+			return object instanceof Table table && identifier().equals( table.identifier() );
+		}
+
+		@Override
+		public int hashCode() {
+			return identifier().hashCode();
 		}
 	}
 

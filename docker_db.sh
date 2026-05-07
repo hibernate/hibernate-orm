@@ -36,6 +36,13 @@ elif [[ "$IS_PODMAN" == "true" ]]; then
   fi
 fi
 
+# Detect --wait support for compose up (podman-compose doesn't support it)
+if $CONTAINER_CLI compose up --help 2>&1 | grep -q -- '--wait'; then
+    COMPOSE_WAIT="--wait"
+else
+    COMPOSE_WAIT=""
+fi
+
 DB_COUNT=1
 if [[ "$(uname -s)" == "Darwin" ]]; then
   IS_OSX=true
@@ -50,20 +57,68 @@ fi
 ###############################################################################
 # Helper functions to start/stop a database using compose files
 ###############################################################################
+COMPOSE_PROJECT="hibernate_orm"
+
 compose_up() {
     local compose_file="docker-compose/$1"
+    local max_retries="${2:-120}"
+    local extra_files=""
+
+    if [[ "$IS_OSX" == "true" ]]; then
+        local osx_override="$(dirname "$compose_file")/osx-override.yml"
+        if [[ -f "$osx_override" ]]; then
+            extra_files="-f $osx_override"
+        fi
+    fi
 
     echo "Starting database using $compose_file"
 
-    $CONTAINER_CLI compose -f "$compose_file" up -d --wait $REMOVE_ORPHANS || {
+    $CONTAINER_CLI compose -p "$COMPOSE_PROJECT" -f "$compose_file" $extra_files up -d $COMPOSE_WAIT $REMOVE_ORPHANS || {
         echo "Error: Docker compose failed to start."
         exit 1
     }
+
+    # Docker would already wait for a healthy container but with podman there may be issues
+    #  in that case we just run an extra check to be caution:
+    compose_wait "$max_retries" -p "$COMPOSE_PROJECT" -f "$compose_file"
 }
 
 compose_down() {
-    $CONTAINER_CLI compose -f "docker-compose/$1" down -v 2>/dev/null || true
-    $CONTAINER_CLI rm -f "$2" 2>/dev/null || true
+    for project in $($CONTAINER_CLI compose ls -q 2>/dev/null | grep "^${COMPOSE_PROJECT}"); do
+        $CONTAINER_CLI compose -p "$project" down -v 2>/dev/null || true
+    done
+    if [[ -n "$1" ]]; then
+        $CONTAINER_CLI rm -f "$1" 2>/dev/null || true
+    fi
+}
+
+compose_wait() {
+    local max_retries=${1:-120}
+    shift
+    echo "Waiting for service(s) to become healthy (retries: $max_retries, interval: 5s)..."
+    local containers
+    containers=$($CONTAINER_CLI compose "$@" ps -q)
+    for container in $containers; do
+        local retries=0
+        local health=""
+        while [[ $retries -lt $max_retries ]]; do
+            health=$($CONTAINER_CLI inspect --format "$HEALTHCHECK_PATH" "$container" 2>/dev/null || true)
+            if [[ "$health" == "healthy" ]]; then
+                break
+            fi
+            if [[ -z "$health" ]]; then
+                break
+            fi
+            sleep 5
+            retries=$((retries + 1))
+        done
+        if [[ -n "$health" && "$health" != "healthy" ]]; then
+            echo "Error: Container $container did not become healthy after $((max_retries * 5))s"
+            exit 1
+        else
+          echo "Info: Container $container became healthy and should be ready to use"
+        fi
+    done
 }
 
 ###############################################################################
@@ -73,49 +128,49 @@ mysql() {
 }
 
 mysql_8_0() {
-    compose_down "versioned/mysql-8.0/docker-compose.yaml" "mysql"
+    compose_down "mysql"
     compose_up "versioned/mysql-8.0/docker-compose.yaml"
     mysql_post_setup
 }
 
 mysql_8_1() {
-    compose_down "versioned/mysql-8.1/docker-compose.yaml" "mysql"
+    compose_down "mysql"
     compose_up "versioned/mysql-8.1/docker-compose.yaml"
     mysql_post_setup
 }
 
 mysql_8_2() {
-    compose_down "versioned/mysql-8.2/docker-compose.yaml" "mysql"
+    compose_down "mysql"
     compose_up "versioned/mysql-8.2/docker-compose.yaml"
     mysql_post_setup
 }
 
 mysql_9_2() {
-    compose_down "versioned/mysql-9.2/docker-compose.yaml" "mysql"
+    compose_down "mysql"
     compose_up "versioned/mysql-9.2/docker-compose.yaml"
     mysql_post_setup
 }
 
 mysql_9_4() {
-    compose_down "versioned/mysql-9.4/docker-compose.yaml" "mysql"
+    compose_down "mysql"
     compose_up "versioned/mysql-9.4/docker-compose.yaml"
     mysql_post_setup
 }
 
 mysql_9_5() {
-    compose_down "versioned/mysql-9.5/docker-compose.yaml" "mysql"
+    compose_down "mysql"
     compose_up "versioned/mysql-9.5/docker-compose.yaml"
     mysql_post_setup
 }
 
 mysql_9_6() {
-    compose_down "versioned/mysql-9.6/docker-compose.yaml" "mysql"
+    compose_down "mysql"
     compose_up "versioned/mysql-9.6/docker-compose.yaml"
     mysql_post_setup
 }
 
 mysql_9_7() {
-    compose_down "latest/mysql/docker-compose.yaml" "mysql"
+    compose_down "mysql"
     compose_up "latest/mysql/docker-compose.yaml"
     mysql_post_setup
 }
@@ -146,49 +201,49 @@ mariadb() {
 }
 
 mariadb_10_6() {
-    compose_down "versioned/mariadb-10-6/docker-compose.yaml" "mariadb"
+    compose_down "mariadb"
     compose_up "versioned/mariadb-10-6/docker-compose.yaml"
     mariadb_post_setup
 }
 
 mariadb_10_11() {
-    compose_down "versioned/mariadb-10-11/docker-compose.yaml" "mariadb"
+    compose_down "mariadb"
     compose_up "versioned/mariadb-10-11/docker-compose.yaml"
     mariadb_post_setup
 }
 
 mariadb_11_4() {
-    compose_down "versioned/mariadb-11-4/docker-compose.yaml" "mariadb"
+    compose_down "mariadb"
     compose_up "versioned/mariadb-11-4/docker-compose.yaml"
     mariadb_post_setup
 }
 
 mariadb_11_8() {
-    compose_down "versioned/mariadb-11-8/docker-compose.yaml" "mariadb"
+    compose_down "mariadb"
     compose_up "versioned/mariadb-11-8/docker-compose.yaml"
     mariadb_post_setup
 }
 
 mariadb_12_0() {
-    compose_down "versioned/mariadb-12-0/docker-compose.yaml" "mariadb"
+    compose_down "mariadb"
     compose_up "versioned/mariadb-12-0/docker-compose.yaml"
     mariadb_post_setup
 }
 
 mariadb_12_1() {
-    compose_down "versioned/mariadb-12-1/docker-compose.yaml" "mariadb"
+    compose_down "mariadb"
     compose_up "versioned/mariadb-12-1/docker-compose.yaml"
     mariadb_post_setup
 }
 
 mariadb_12_2() {
-    compose_down "latest/mariadb/docker-compose.yaml" "mariadb"
+    compose_down "mariadb"
     compose_up "latest/mariadb/docker-compose.yaml"
     mariadb_post_setup
 }
 
 mariadb_verylatest() {
-    compose_down "versioned/mariadb-verylatest/docker-compose.yaml" "mariadb"
+    compose_down "mariadb"
     compose_up "versioned/mariadb-verylatest/docker-compose.yaml"
     mariadb_post_setup
 }
@@ -214,31 +269,31 @@ postgresql() {
 }
 
 postgresql_14() {
-    compose_down "versioned/postgresql-14/docker-compose.yaml" "postgres"
+    compose_down "postgres"
     compose_up "versioned/postgresql-14/docker-compose.yaml"
     postgresql_setup 14
 }
 
 postgresql_15() {
-    compose_down "versioned/postgresql-15/docker-compose.yaml" "postgres"
+    compose_down "postgres"
     compose_up "versioned/postgresql-15/docker-compose.yaml"
     postgresql_setup 15
 }
 
 postgresql_16() {
-    compose_down "versioned/postgresql-16/docker-compose.yaml" "postgres"
+    compose_down "postgres"
     compose_up "versioned/postgresql-16/docker-compose.yaml"
     postgresql_setup 16
 }
 
 postgresql_17() {
-    compose_down "versioned/postgresql-17/docker-compose.yaml" "postgres"
+    compose_down "postgres"
     compose_up "versioned/postgresql-17/docker-compose.yaml"
     postgresql_setup 17
 }
 
 postgresql_18() {
-    compose_down "latest/postgresql/docker-compose.yaml" "postgres"
+    compose_down "postgres"
     compose_up "latest/postgresql/docker-compose.yaml"
     postgresql_setup 18
 }
@@ -267,7 +322,7 @@ postgresql_setup() {
 ###############################################################################
 
 gaussdb() {
-    compose_down "latest/gaussdb/docker-compose.yaml" "opengauss"
+    compose_down "opengauss"
     compose_up "latest/gaussdb/docker-compose.yaml"
 }
 
@@ -278,25 +333,25 @@ edb() {
 }
 
 edb_14() {
-    compose_down "versioned/edb-14/docker-compose.yaml" "edb"
+    compose_down "edb"
     compose_up "versioned/edb-14/docker-compose.yaml"
     edb_setup 14
 }
 
 edb_15() {
-    compose_down "versioned/edb-15/docker-compose.yaml" "edb"
+    compose_down "edb"
     compose_up "versioned/edb-15/docker-compose.yaml"
     edb_setup 15
 }
 
 edb_16() {
-    compose_down "versioned/edb-16/docker-compose.yaml" "edb"
+    compose_down "edb"
     compose_up "versioned/edb-16/docker-compose.yaml"
     edb_setup 16
 }
 
 edb_17() {
-    compose_down "latest/edb/docker-compose.yaml" "edb"
+    compose_down "edb"
     compose_up "latest/edb/docker-compose.yaml"
     edb_setup 17
 }
@@ -329,14 +384,16 @@ db2() {
 }
 
 db2_11_5() {
-    compose_down "versioned/db2-11.5/docker-compose.yaml" "db2"
-    db2_compose_up "versioned/db2-11.5/docker-compose.yaml"
+    compose_down "db2"
+    db2_osx_setup
+    compose_up "versioned/db2-11.5/docker-compose.yaml"
     db2_post_setup
 }
 
 db2_12_1() {
-    compose_down "latest/db2/docker-compose.yaml" "db2"
-    db2_compose_up "latest/db2/docker-compose.yaml"
+    compose_down "db2"
+    db2_osx_setup
+    compose_up "latest/db2/docker-compose.yaml"
     db2_post_setup
     db2_setup
 }
@@ -369,18 +426,6 @@ EOF
     fi
 }
 
-db2_compose_up() {
-    local compose_file="docker-compose/$1"
-    local osx_override="${2:-docker-compose/build-config/db2/osx-override.yml}"
-    db2_osx_setup
-    if [[ "$IS_OSX" == "true" ]]; then
-        echo "Starting database using $compose_file (with OSX override)"
-        $CONTAINER_CLI compose -f "$compose_file" -f "$osx_override" up -d --wait $REMOVE_ORPHANS
-    else
-        compose_up "$1"
-    fi
-}
-
 db2_post_setup() {
     $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
 }
@@ -398,8 +443,9 @@ db2_setup() {
 }
 
 db2_spatial() {
-    compose_down "latest/db2_spatial/docker-compose.yaml" "db2spatial"
-    db2_compose_up "latest/db2_spatial/docker-compose.yaml" "docker-compose/build-config/db2_spatial/osx-override.yml"
+    compose_down "db2spatial"
+    db2_osx_setup
+    compose_up "latest/db2_spatial/docker-compose.yaml" "docker-compose/build-config/db2_spatial/osx-override.yml"
     db2_spatial_post_setup
 }
 
@@ -417,19 +463,19 @@ mssql() {
 }
 
 mssql_2017() {
-    compose_down "versioned/mssql-2017/docker-compose.yaml" "mssql"
+    compose_down "mssql"
     compose_up "versioned/mssql-2017/docker-compose.yaml"
     mssql_post_setup
 }
 
 mssql_2022() {
-    compose_down "versioned/mssql-2022/docker-compose.yaml" "mssql"
+    compose_down "mssql"
     compose_up "versioned/mssql-2022/docker-compose.yaml"
     mssql_post_setup
 }
 
 mssql_2025() {
-    compose_down "latest/mssql/docker-compose.yaml" "mssql"
+    compose_down "mssql"
     compose_up "latest/mssql/docker-compose.yaml"
     mssql_post_setup
 }
@@ -452,7 +498,7 @@ mssql_post_setup() {
 ###############################################################################
 
 sybase() {
-    compose_down "latest/sybase/docker-compose.yaml" "sybase"
+    compose_down "sybase"
     compose_up "latest/sybase/docker-compose.yaml"
 
     export SYBASE_DB=hibernate_orm_test
@@ -799,21 +845,21 @@ oracle() {
 
 oracle_18() {
     disable_userland_proxy
-    compose_down "versioned/oracle-18/docker-compose.yaml" "oracle"
+    compose_down "oracle"
     compose_up "versioned/oracle-18/docker-compose.yaml"
     oracle_setup
 }
 
 oracle_21() {
     disable_userland_proxy
-    compose_down "versioned/oracle-21/docker-compose.yaml" "oracle"
+    compose_down "oracle"
     compose_up "versioned/oracle-21/docker-compose.yaml"
     oracle_setup
 }
 
 oracle_23() {
     disable_userland_proxy
-    compose_down "latest/oracle/docker-compose.yaml" "oracle"
+    compose_down "oracle"
     compose_up "latest/oracle/docker-compose.yaml"
     oracle_free_setup
 }
@@ -821,7 +867,7 @@ oracle_23() {
 ###############################################################################
 
 hana() {
-    compose_down "latest/hana/docker-compose.yaml" "hana"
+    compose_down "hana"
     compose_up "latest/hana/docker-compose.yaml"
     hana_setup
     echo "HANA successfully started"
@@ -855,31 +901,31 @@ cockroachdb() {
 }
 
 cockroachdb_26_1() {
-  compose_down "latest/cockroachdb/docker-compose.yaml" "cockroach"
+  compose_down "cockroach"
   compose_up "latest/cockroachdb/docker-compose.yaml"
   cockroachdb_post_setup
 }
 
 cockroachdb_25_4() {
-  compose_down "versioned/cockroachdb-25.4/docker-compose.yaml" "cockroach"
+  compose_down "cockroach"
   compose_up "versioned/cockroachdb-25.4/docker-compose.yaml"
   cockroachdb_post_setup
 }
 
 cockroachdb_24_3() {
-  compose_down "versioned/cockroachdb-24.3/docker-compose.yaml" "cockroach"
+  compose_down "cockroach"
   compose_up "versioned/cockroachdb-24.3/docker-compose.yaml"
   cockroachdb_post_setup
 }
 
 cockroachdb_24_1() {
-  compose_down "versioned/cockroachdb-24.1/docker-compose.yaml" "cockroach"
+  compose_down "cockroach"
   compose_up "versioned/cockroachdb-24.1/docker-compose.yaml"
   cockroachdb_post_setup
 }
 
 cockroachdb_23_2() {
-  compose_down "versioned/cockroachdb-23.2/docker-compose.yaml" "cockroach"
+  compose_down "cockroach"
   compose_up "versioned/cockroachdb-23.2/docker-compose.yaml"
   cockroachdb_post_setup_23_2
 }
@@ -949,13 +995,13 @@ tidb() {
 
 tidb_8_5() {
     tidb_prepare_setup
-    compose_down "latest/tidb/docker-compose.yaml" "tidb"
+    compose_down "tidb"
     compose_up "latest/tidb/docker-compose.yaml"
 }
 
 tidb_5_4() {
     tidb_prepare_setup_5_4
-    compose_down "versioned/tidb-5.4/docker-compose.yaml" "tidb"
+    compose_down "tidb"
     compose_up "versioned/tidb-5.4/docker-compose.yaml"
 }
 
@@ -988,19 +1034,19 @@ informix() {
 }
 
 informix_15() {
-    compose_down "latest/informix/docker-compose.yaml" "informix"
+    compose_down "informix"
     compose_up "latest/informix/docker-compose.yaml"
     informix_post_setup
 }
 
 informix_14_10() {
-    compose_down "versioned/informix-14.10/docker-compose.yaml" "informix"
+    compose_down "informix"
     compose_up "versioned/informix-14.10/docker-compose.yaml"
     informix_post_setup
 }
 
 informix_12_10() {
-    compose_down "versioned/informix-12.10/docker-compose.yaml" "informix"
+    compose_down "informix"
     compose_up "versioned/informix-12.10/docker-compose.yaml"
     informix_post_setup
 }
@@ -1027,6 +1073,8 @@ spanner_emulator() {
     DB_COUNT=$(( DB_COUNT / 2 ))
   fi
 
+  compose_down "spanner"
+
   # Start all emulator containers using compose
   for n in $(seq 1 ${DB_COUNT}); do
     local container_name="spanner_${n}"
@@ -1035,9 +1083,11 @@ spanner_emulator() {
 
     echo "Starting Spanner emulator instance ${n} on port ${port}..."
     SPANNER_CONTAINER_NAME=${container_name} SPANNER_GRPC_PORT=${port} SPANNER_REST_PORT=${rest_port} \
-      compose_down "latest/spanner/docker-compose.yaml" "${container_name}"
-    SPANNER_CONTAINER_NAME=${container_name} SPANNER_GRPC_PORT=${port} SPANNER_REST_PORT=${rest_port} \
-      $CONTAINER_CLI compose -p "spanner-${n}" -f "docker-compose/latest/spanner/docker-compose.yaml" up -d --wait
+      $CONTAINER_CLI compose -p "${COMPOSE_PROJECT}_spanner_${n}" -f "docker-compose/latest/spanner/docker-compose.yaml" up -d $COMPOSE_WAIT
+    if [[ -z "$COMPOSE_WAIT" ]]; then
+        SPANNER_CONTAINER_NAME=${container_name} SPANNER_GRPC_PORT=${port} SPANNER_REST_PORT=${rest_port} \
+          compose_wait 120 -p "${COMPOSE_PROJECT}_spanner_${n}" -f "docker-compose/latest/spanner/docker-compose.yaml"
+    fi
   done
 
   # Configure instances

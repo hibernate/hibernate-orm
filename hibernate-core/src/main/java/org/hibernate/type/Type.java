@@ -444,17 +444,6 @@ public interface Type extends Serializable {
 			throws HibernateException;
 
 	/**
-	 * Called before assembling a query result set from the query cache, to allow batch
-	 * fetching of entities missing from the second-level cache.
-	 *
-	 * @param cached The key
-	 * @param session The originating session
-	 * @deprecated Is not called anymore
-	 */
-	@Deprecated(forRemoval = true, since = "6.6")
-	void beforeAssemble(Serializable cached, SharedSessionContractImplementor session);
-
-	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
 	 * with a new (original) value from the detached entity we are merging. For immutable
 	 * objects, or null values, it is safe to simply return the first parameter. For

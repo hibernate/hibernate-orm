@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                https://www.hibernate.org/xsd/orm/mapping/mapping-7.0.xsd"
+                 version="7.0">
+    <package>org.hibernate.orm.test.mapping.joincolumn</package>
+    <entity class="JoinColumnOverrideTest$Material" metadata-complete="true">
+        <table name="MAIN_TABLE"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+            </id>
+            <element-collection name="containedSizes"
+                                target-class="JoinColumnOverrideTest$ContainedSize"
+                                fetch="LAZY" classification="SET">
+                <association-override name="size">
+                    <join-column name="ASSOCIATION_ID"/>
+                </association-override>
+                <collection-table name="COLLECTION_TABLE">
+                    <join-column name="MAIN_ID"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+    <entity class="JoinColumnOverrideTest$Size" metadata-complete="true">
+        <table name="MAIN_TABLE"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+            </id>
+        </attributes>
+    </entity>
+    <embeddable class="JoinColumnOverrideTest$ContainedSize"
+                name="JoinColumnOverrideTest$ContainedSize" metadata-complete="true">
+        <attributes>
+            <many-to-one name="size" fetch="LAZY" fetch-mode="SELECT" optional="true" not-found="EXCEPTION">
+                <join-column name="ASSOCIATION_ID"/>
+            </many-to-one>
+        </attributes>
+    </embeddable>
+</entity-mappings>

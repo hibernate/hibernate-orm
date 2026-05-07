@@ -765,12 +765,14 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	private Column segmentColumn(Database database, Table table, TypeConfiguration typeConfiguration) {
+		final var stringBasicType =
+				typeConfiguration.getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.STRING );
 		final var segmentColumn =
 				ExportableColumnHelper.column( database, table, segmentColumnName,
-						typeConfiguration.getBasicTypeRegistry()
-								.resolve( StandardBasicTypes.STRING ),
+						stringBasicType,
 						typeConfiguration.getDdlTypeRegistry()
-								.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) ) );
+								.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ), stringBasicType) );
 		segmentColumn.setNullable( false );
 		return segmentColumn;
 	}

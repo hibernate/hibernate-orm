@@ -648,11 +648,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return uniqueInteger;
 	}
 
-	@Deprecated(since = "6.2")
-	public void addCheckConstraint(String constraint) {
-		addCheck( new CheckConstraint( constraint ) );
-	}
-
 	public void addCheck(CheckConstraint check) {
 		checkConstraints.add( check );
 	}

@@ -106,6 +106,21 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	public boolean canDisableConstraints() {
+		return false;
+	}
+
+	@Override
+	public String getDisableConstraintStatement(String tableName, String name) {
+		return null;
+	}
+
+	@Override
+	public String getEnableConstraintStatement(String tableName, String name) {
+		return null;
+	}
+
+	@Override
 	public String getCreateIndexTail(boolean unique, List<Column> columns) {
 		return "";
 	}

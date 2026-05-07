@@ -107,26 +107,6 @@ public class Expectations {
 		return " (expected row count " + expectedRowCount + " but was " + rowCount + ")";
 	}
 
-	// Various Expectation instances ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * @deprecated Use {@link Expectation.None}
-	 */
-	@Deprecated(since = "6.5")
-	public static final Expectation NONE = new Expectation.None();
-
-	/**
-	 * @deprecated Use {@link Expectation.RowCount}
-	 */
-	@Deprecated(since = "6.5")
-	public static final Expectation BASIC = new Expectation.RowCount();
-
-	/**
-	 * @deprecated Use {@link Expectation.OutParameter}
-	 */
-	@Deprecated(since = "6.5")
-	public static final Expectation PARAM = new Expectation.OutParameter();
-
 	private Expectations() {
 	}
 }

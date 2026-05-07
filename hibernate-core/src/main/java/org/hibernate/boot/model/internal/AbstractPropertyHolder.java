@@ -37,6 +37,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.getColumnAnnotation;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.isOffsetTimeClass;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.useColumnForTimeZoneStorage;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -562,7 +563,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			MetadataBuildingContext context) {
 		int precision;
 		int secondPrecision;
-		final var annotatedColumn = element.getDirectAnnotationUsage( Column.class );
+		final var annotatedColumn = getColumnAnnotation( element, context );
 		if ( annotatedColumn != null ) {
 			if ( isNotBlank( annotatedColumn.name() ) ) {
 				return annotatedColumn;

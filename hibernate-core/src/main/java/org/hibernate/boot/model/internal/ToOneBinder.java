@@ -24,7 +24,6 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
@@ -47,6 +46,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
+import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.hasColumnAnnotation;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -77,7 +77,7 @@ public class ToOneBinder {
 		final var manyToOne = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
 
 		//check validity
-		if ( memberDetails.hasDirectAnnotationUsage( Column.class ) ) {
+		if ( hasColumnAnnotation( memberDetails, context ) ) {
 			throw new AnnotationException(
 					"Property '" + getPath( propertyHolder, inferredData )
 							+ "' is a '@ManyToOne' association and may not use '@Column' to specify column mappings (use '@JoinColumn' instead)"
@@ -434,7 +434,7 @@ public class ToOneBinder {
 		final var oneToOne = memberDetails.getDirectAnnotationUsage( OneToOne.class );
 
 		//check validity
-		if ( memberDetails.hasDirectAnnotationUsage( Column.class ) ) {
+		if ( hasColumnAnnotation( memberDetails, context ) ) {
 			throw new AnnotationException(
 					"Property '" + getPath( propertyHolder, inferredData )
 							+ "' is a '@OneToOne' association and may not use '@Column' to specify column mappings"

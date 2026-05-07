@@ -38,9 +38,13 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 		assertTrue( generatedContents.contains( "package foo.schema;" ) );
 		assertTrue( generatedContents.contains( "@StaticTable(name = \"BOOK\")" ) );
 		assertTrue( generatedContents.contains( "public @interface BOOK" ) );
-		assertTrue( generatedContents.contains( "@StaticColumn(name = \"ISBN\", type = JDBCType.VARCHAR)" ) );
+		assertTrue( generatedContents.contains(
+				"@StaticColumn(name = \"ISBN\", type = JDBCType.VARCHAR, nullable = false, length = 20, precision = 0, scale = 0)"
+		) );
 		assertTrue( generatedContents.contains( "public @interface ISBN" ) );
-		assertTrue( generatedContents.contains( "@StaticColumn(name = \"PAGES\", type = JDBCType.INTEGER)" ) );
+		assertTrue( generatedContents.matches(
+				"(?s).*@StaticColumn\\(name = \"PAGES\", type = JDBCType\\.INTEGER, nullable = true, length = 255, precision = \\d+, scale = 0\\).*"
+		) );
 		assertTrue( generatedContents.contains( "public @interface PAGES" ) );
 	}
 

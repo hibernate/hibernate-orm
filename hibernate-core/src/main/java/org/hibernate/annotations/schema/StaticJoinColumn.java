@@ -13,15 +13,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Annotates a generated nested annotation
- * type with the same name as a column.
+ * type with the same name as a foreign key
+ * column.
  */
 @Retention(RUNTIME)
 @Target(ANNOTATION_TYPE)
-public @interface StaticColumn {
+public @interface StaticJoinColumn {
 	String name();
+	String referencedTableName() default "";
+	String referencedColumnName() default "";
 	JDBCType type();
 	boolean nullable() default true;
-	int length() default 255;
-	int precision() default 0;
-	int scale() default 0;
 }

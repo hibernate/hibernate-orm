@@ -31,6 +31,7 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.getColumnAnnotation;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -79,9 +80,10 @@ class ColumnsBuilder {
 		columns = null;
 		joinColumns = buildExplicitJoinColumns( property, inferredData );
 
-		if ( property.hasDirectAnnotationUsage( Column.class ) ) {
+		final Column columnAnnotation = getColumnAnnotation( property, buildingContext );
+		if ( columnAnnotation != null ) {
 			columns = buildColumnFromAnnotation(
-					property.getDirectAnnotationUsage( Column.class ),
+					columnAnnotation,
 					property.getDirectAnnotationUsage( FractionalSeconds.class ),
 					nullability,
 					propertyHolder,

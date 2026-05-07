@@ -148,6 +148,7 @@ import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnn
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
+import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.getTableAnnotation;
 import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.spi.AccessType.getAccessStrategy;
@@ -452,7 +453,7 @@ public class EntityBinder {
 
 	private void processComplementaryTableDefinitions() {
 		final var models = modelsContext();
-		final var jpaTableUsage = annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, models );
+		final var jpaTableUsage = getTableAnnotation( annotatedClass, context );
 		if ( jpaTableUsage != null ) {
 			final var table = persistentClass.getTable();
 			TableBinder.addJpaIndexes( table, jpaTableUsage.indexes(), context );
@@ -824,8 +825,7 @@ public class EntityBinder {
 		final String table;
 		final String catalog;
 		final UniqueConstraint[] uniqueConstraints;
-		final var tableAnnotation =
-				annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, modelsContext() );
+		final var tableAnnotation = getTableAnnotation( annotatedClass, context );
 		if ( tableAnnotation != null ) {
 			table = tableAnnotation.name();
 			schema = tableAnnotation.schema();

@@ -18,12 +18,12 @@ import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
+import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.getColumnAnnotation;
 
 public class AnyBinder {
 
@@ -78,7 +78,7 @@ public class AnyBinder {
 		final boolean lazy = any.fetch() == FetchType.LAZY;
 		final boolean optional = any.optional();
 		final var anyValue = BinderHelper.buildAnyValue(
-				memberDetails.getDirectAnnotationUsage( Column.class ),
+				getColumnAnnotation( memberDetails, context ),
 				getOverridableAnnotation( memberDetails, Formula.class, context ),
 				columns,
 				inferredData,

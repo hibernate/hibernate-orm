@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.Internal;
@@ -97,30 +96,4 @@ public class MySQLServerConfiguration {
 				ConfigurationHelper.getString( AvailableSettings.STORAGE_ENGINE, info.getConfigurationValues() ) );
 	}
 
-	/**
-	 * @deprecated Use {@link #fromDialectResolutionInfo} instead.
-	 */
-	@Deprecated( since = "6.4", forRemoval = true )
-	public static MySQLServerConfiguration fromDatabaseMetadata(DatabaseMetaData databaseMetaData) {
-		int bytesPerCharacter = 4;
-		boolean noBackslashEscapes = false;
-		if ( databaseMetaData != null ) {
-			try ( var statement = databaseMetaData.getConnection().createStatement();
-					var resultSet = statement.executeQuery( "SELECT @@character_set_database, @@sql_mode" ) ) {
-				if ( resultSet.next() ) {
-					final String characterSet = resultSet.getString( 1 );
-					bytesPerCharacter = getBytesPerCharacter( characterSet );
-					// NO_BACKSLASH_ESCAPES
-					final String sqlMode = resultSet.getString( 2 );
-					if ( sqlMode.toLowerCase().contains( "no_backslash_escapes" ) ) {
-						noBackslashEscapes = true;
-					}
-				}
-			}
-			catch (SQLException ex) {
-				// Ignore
-			}
-		}
-		return new MySQLServerConfiguration( bytesPerCharacter, noBackslashEscapes );
-	}
 }

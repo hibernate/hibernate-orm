@@ -56,9 +56,6 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 	@Override
 	SharedSessionBuilderImplementor interceptor();
 
-	@Override @Deprecated
-	SharedSessionBuilderImplementor connectionReleaseMode();
-
 	@Override
 	SharedSessionBuilderImplementor connectionHandlingMode();
 

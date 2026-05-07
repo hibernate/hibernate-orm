@@ -6,7 +6,7 @@ package org.hibernate.orm.test.mapping.type.java;
 
 import jakarta.persistence.AttributeConverter;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.annotations.processing.GenericDialect;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.NumericBooleanConverter;
@@ -34,7 +34,7 @@ public class BooleanJavaTypeDescriptorTest {
 	public void testCheckConditionShouldReturnCorrectStatementWhenNullXStringGiven() {
 		// given
 		// when
-		String checkCondition = underTest.getCheckCondition("is_active", VarcharJdbcType.INSTANCE, new BooleanXConverter(), new AnyDialect());
+		String checkCondition = underTest.getCheckCondition("is_active", VarcharJdbcType.INSTANCE, new BooleanXConverter(), new GenericDialect());
 		// then
 		assertEquals( "is_active in ('X') or is_active is null", checkCondition );
 	}
@@ -43,7 +43,7 @@ public class BooleanJavaTypeDescriptorTest {
 	public void testCheckConditionShouldReturnCorrectStatementWhenTFStringGiven() {
 		// given
 		// when
-		String checkCondition = underTest.getCheckCondition("is_active", VarcharJdbcType.INSTANCE, new TrueFalseConverter(), new AnyDialect());
+		String checkCondition = underTest.getCheckCondition("is_active", VarcharJdbcType.INSTANCE, new TrueFalseConverter(), new GenericDialect());
 		// then
 		assertEquals( "is_active in ('F','T')", checkCondition );
 	}
@@ -52,7 +52,7 @@ public class BooleanJavaTypeDescriptorTest {
 	public void testCheckConditionShouldReturnCorrectStatementWhen1AndNullIntegerGiven() {
 		// given
 		// when
-		String checkCondition = underTest.getCheckCondition("is_active", IntegerJdbcType.INSTANCE, new OneNullBooleanConverter(), new AnyDialect());
+		String checkCondition = underTest.getCheckCondition("is_active", IntegerJdbcType.INSTANCE, new OneNullBooleanConverter(), new GenericDialect());
 		// then
 		assertEquals( "is_active in (1) or is_active is null", checkCondition );
 	}
@@ -61,7 +61,7 @@ public class BooleanJavaTypeDescriptorTest {
 	public void testCheckConditionShouldReturnCorrectStatementWhen1And0IntegerGiven() {
 		// given
 		// when
-		String checkCondition = underTest.getCheckCondition("is_active", IntegerJdbcType.INSTANCE, new NumericBooleanConverter(), new AnyDialect());
+		String checkCondition = underTest.getCheckCondition("is_active", IntegerJdbcType.INSTANCE, new NumericBooleanConverter(), new GenericDialect());
 		// then
 		assertEquals("is_active in (0,1)", checkCondition);
 	}
@@ -70,7 +70,7 @@ public class BooleanJavaTypeDescriptorTest {
 	public void testCheckConditionShouldReturnCorrectStatementWhen1And0AndNullIntegerGiven() {
 		// given
 		// when
-		String checkCondition = underTest.getCheckCondition("is_active", IntegerJdbcType.INSTANCE, new TriStateBooleanConverter(), new AnyDialect());
+		String checkCondition = underTest.getCheckCondition("is_active", IntegerJdbcType.INSTANCE, new TriStateBooleanConverter(), new GenericDialect());
 		// then
 		assertEquals("is_active in (0,1,-1)", checkCondition);
 	}
@@ -118,10 +118,6 @@ public class BooleanJavaTypeDescriptorTest {
 		Boolean result = underTest.wrap("", null);
 		// then
 		assertFalse(result);
-	}
-
-	private static class AnyDialect extends Dialect {
-
 	}
 
 	private static class BooleanXConverter implements AttributeConverter<Boolean, String>, BasicValueConverter<Boolean, String> {

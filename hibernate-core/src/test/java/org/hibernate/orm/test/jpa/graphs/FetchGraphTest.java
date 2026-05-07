@@ -103,7 +103,7 @@ public class FetchGraphTest {
 				entityManager -> {
 					final EntityGraph<LedgerRecord> entityGraph = GraphParser.parse( LedgerRecord.class, "budgetRecord, ledgerRecordItems.value(financeEntity)", entityManager );
 					final List<LedgerRecord> records = entityManager.createQuery( "from LedgerRecord", LedgerRecord.class )
-							.setHint( GraphSemantic.FETCH.getJpaHintName(), entityGraph )
+							.setHint( GraphSemantic.FETCH.getJakartaHintName(), entityGraph )
 							.getResultList();
 					assertThat( records.size(), is( 1 ) );
 					records.forEach( record -> {

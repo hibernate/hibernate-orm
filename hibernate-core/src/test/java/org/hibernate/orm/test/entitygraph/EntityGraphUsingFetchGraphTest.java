@@ -86,7 +86,7 @@ public class EntityGraphUsingFetchGraphTest {
 					TypedQuery<CustomerOrder> query = em.createQuery(
 							"SELECT o FROM CustomerOrder o", CustomerOrder.class
 					);
-					query.setHint( GraphSemantic.LOAD.getJpaHintName(), entityGraph );
+					query.setHint( GraphSemantic.LOAD.getJakartaHintName(), entityGraph );
 					final List<CustomerOrder> results = query.getResultList();
 
 					assertThat( results, isInitialized() );
@@ -135,7 +135,7 @@ public class EntityGraphUsingFetchGraphTest {
 					TypedQuery<CustomerOrder> query = em.createQuery(
 							"SELECT o FROM CustomerOrder o", CustomerOrder.class
 					);
-					query.setHint( GraphSemantic.LOAD.getJpaHintName(), entityGraph );
+					query.setHint( GraphSemantic.LOAD.getJakartaHintName(), entityGraph );
 					final List<CustomerOrder> results = query.getResultList();
 
 					assertThat( results, isInitialized() );

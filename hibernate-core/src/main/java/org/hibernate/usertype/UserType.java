@@ -14,7 +14,6 @@ import jakarta.persistence.AttributeConverter;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -311,21 +310,6 @@ public interface UserType<J> {
 	 * from the given JDBC {@link ResultSet}. Implementors must handle
 	 * null column values.
 	 *
-	 * @param owner since Hibernate 6, this is always null
-	 *
-	 * @deprecated Implement {@link #nullSafeGet(ResultSet, int, WrapperOptions)}
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	default J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, @Deprecated Object owner)
-			throws SQLException {
-		return nullSafeGet( rs, position, session );
-	}
-
-	/**
-	 * Read an instance of the Java class mapped by this custom type
-	 * from the given JDBC {@link ResultSet}. Implementors must handle
-	 * null column values.
-	 *
 	 * @implNote The default implementation calls
 	 *           {@link ResultSet#getObject(int, Class)} with the
 	 *           given {@code position} and with the
@@ -337,25 +321,6 @@ public interface UserType<J> {
 			throws SQLException {
 		J result = rs.getObject( position, returnedClass() );
 		return rs.wasNull() ? null : result;
-	}
-
-	/**
-	 * Write an instance of the Java class mapped by this custom type
-	 * to the given JDBC {@link PreparedStatement}. Implementors must
-	 * handle null values of the Java class. A multi-column type should
-	 * be written to parameters starting from {@code index}.
-	 *
-	 * @implNote The default implementation calls
-	 *           {@link PreparedStatement#setObject(int, Object, int)}
-	 *           with the given {@code position} and {@code value} and
-	 *           with the {@linkplain #getSqlType SQL type}.
-	 *
-	 * @deprecated Implement {@link #nullSafeSet(PreparedStatement, Object, int, WrapperOptions)}
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	default void nullSafeSet(PreparedStatement st, J value, int position, SharedSessionContractImplementor session)
-			throws SQLException {
-		nullSafeSet( st, value, position, (WrapperOptions) session );
 	}
 
 	/**

@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.annotations.usertype;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.EnhancedUserType;
 
 import java.io.Serializable;
@@ -51,13 +51,13 @@ class MyType implements EnhancedUserType<MyId> {
 	}
 
 	@Override
-	public MyId nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
+	public MyId nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		return new MyId(rs.getString(position));
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, MyId value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, MyId value, int index, WrapperOptions options)
 			throws SQLException {
 		st.setString(index, value.text);
 	}

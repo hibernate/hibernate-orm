@@ -17,7 +17,7 @@ public class SQLServerIdentityColumnSupport extends AbstractTransactSQLIdentityC
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String appendIdentitySelectToInsert(String insertSQL) {
-		return insertSQL + " select scope_identity()";
+	public String appendIdentitySelectToInsert(String identityColumnName, String insertString) {
+		return insertString + " select scope_identity()";
 	}
 }

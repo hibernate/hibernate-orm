@@ -34,7 +34,7 @@ public class AbstractTransactSQLIdentityColumnSupport extends IdentityColumnSupp
 	}
 
 	@Override
-	public String appendIdentitySelectToInsert(String insertSQL) {
-		return insertSQL + "\nselect @@identity";
+	public String appendIdentitySelectToInsert(String identityColumnName, String insertString) {
+		return insertString + "\nselect @@identity";
 	}
 }

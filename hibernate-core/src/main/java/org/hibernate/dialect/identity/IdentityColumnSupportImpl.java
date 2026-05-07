@@ -32,7 +32,7 @@ public class IdentityColumnSupportImpl implements IdentityColumnSupport {
 	}
 
 	@Override
-	public String appendIdentitySelectToInsert(String insertString) {
+	public String appendIdentitySelectToInsert(String identityColumnName, String insertString) {
 		return insertString;
 	}
 

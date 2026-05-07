@@ -56,7 +56,6 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.UniqueDelegate;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -1128,21 +1127,15 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
+		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 		final DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
 		final String castType =
 				descriptor != null
-						? castType( descriptor )
+						? ddlTypeRegistry.getRawTypeName( sqlType )
 						// just cast it to an arbitrary SQL type,
 						// which we expect to be ignored by higher layers
 						: "integer";
 		return "cast(null as " + castType + ")";
-	}
-
-	private static String castType(DdlType descriptor) {
-		final String typeName = descriptor.getTypeName( Size.length( Size.DEFAULT_LENGTH ) );
-		//trim off the length/precision/scale
-		final int loc = typeName.indexOf( '(' );
-		return loc < 0 ? typeName : typeName.substring( 0, loc );
 	}
 
 	@Override

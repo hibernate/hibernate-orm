@@ -71,7 +71,7 @@ public class EntityGraphNativeQueryTest {
 					fooGraph.addAttributeNodes( "bar", "baz" );
 
 					Foo foo = em.createQuery( "select f from Foo f", Foo.class )
-							.setHint( GraphSemantic.LOAD.getJpaHintName(), fooGraph )
+							.setHint( GraphSemantic.LOAD.getJakartaHintName(), fooGraph )
 							.getSingleResult();
 					assertThat( foo.bar, notNullValue() );
 					assertThat( foo.baz, notNullValue() );
@@ -95,7 +95,7 @@ public class EntityGraphNativeQueryTest {
 							"	f.baz_id as baz_id " +
 							"from Foo f", Foo.class );
 					try {
-						query.setHint( GraphSemantic.LOAD.getJpaHintName(), fooGraph );
+						query.setHint( GraphSemantic.LOAD.getJakartaHintName(), fooGraph );
 						fail("Should throw exception");
 					}
 					catch (IllegalArgumentException expected) {
@@ -121,7 +121,7 @@ public class EntityGraphNativeQueryTest {
 							"	f.baz_id as baz_id " +
 							"from Foo f", Foo.class );
 					try {
-						query.setHint( GraphSemantic.FETCH.getJpaHintName(), fooGraph );
+						query.setHint( GraphSemantic.FETCH.getJakartaHintName(), fooGraph );
 						fail( "Should throw exception" );
 					}
 					catch (IllegalArgumentException expected) {

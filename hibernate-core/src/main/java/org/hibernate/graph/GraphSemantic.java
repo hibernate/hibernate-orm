@@ -55,22 +55,6 @@ public enum GraphSemantic implements FindOption {
 		};
 	}
 
-	/**
-	 * The hint name that should be used with Java Persistence.
-	 *
-	 * @see org.hibernate.jpa.LegacySpecHints#HINT_JAVAEE_FETCH_GRAPH
-	 * @see org.hibernate.jpa.LegacySpecHints#HINT_JAVAEE_LOAD_GRAPH
-	 *
-	 * @deprecated Use {@link #getJakartaHintName} instead
-	 */
-	@Deprecated(since = "6.0")
-	public String getJpaHintName() {
-		return switch ( this ) {
-			case FETCH -> HINT_JAVAEE_FETCH_GRAPH;
-			case LOAD -> HINT_JAVAEE_LOAD_GRAPH;
-		};
-	}
-
 	public static GraphSemantic fromHintName(String hintName) {
 		return switch ( hintName ) {
 			case HINT_SPEC_FETCH_GRAPH, HINT_JAVAEE_FETCH_GRAPH -> FETCH;

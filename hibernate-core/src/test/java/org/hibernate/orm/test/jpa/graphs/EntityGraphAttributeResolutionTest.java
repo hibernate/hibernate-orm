@@ -69,7 +69,7 @@ public class EntityGraphAttributeResolutionTest {
 		scope.inTransaction( entityManager -> {
 			List result = entityManager.createQuery( "SELECT u.groups FROM User u WHERE u.id = ?1" )
 					.setParameter(1, u.getId() )
-					.setHint( GraphSemantic.FETCH.getJpaHintName(), entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
+					.setHint( GraphSemantic.FETCH.getJakartaHintName(), entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
 					.getResultList();
 
 			assertThat( result ).containsExactlyInAnyOrder( g1, g2 );
@@ -81,7 +81,7 @@ public class EntityGraphAttributeResolutionTest {
 		scope.inTransaction( entityManager -> {
 			List result = entityManager.createQuery( "SELECT g FROM User u JOIN u.groups g WHERE u.id = ?1" )
 					.setParameter( 1, u.getId() )
-					.setHint( GraphSemantic.FETCH.getJpaHintName(), entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
+					.setHint( GraphSemantic.FETCH.getJakartaHintName(), entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
 					.getResultList();
 
 			assertThat( result ).containsExactlyInAnyOrder( g1, g2 );
@@ -96,7 +96,7 @@ public class EntityGraphAttributeResolutionTest {
 
 			List result = entityManager.createQuery( "SELECT u.groups FROM User u WHERE u.id = ?1" )
 					.setParameter(1, u.getId() )
-					.setHint( GraphSemantic.FETCH.getJpaHintName(), eg )
+					.setHint( GraphSemantic.FETCH.getJakartaHintName(), eg )
 					.getResultList();
 
 			assertThat( result ).containsExactlyInAnyOrder( g1, g2 );

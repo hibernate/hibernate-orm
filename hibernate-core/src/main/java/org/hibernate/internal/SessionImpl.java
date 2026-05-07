@@ -114,6 +114,10 @@ import static org.hibernate.jpa.HibernateHints.HINT_FETCH_PROFILE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_JDBC_BATCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
@@ -2110,13 +2114,13 @@ public class SessionImpl
 	}
 
 	private <T> FindByKeyOperation<T> byKeyWithGraph(EntityPersister entityDescriptor, Map<String, Object> properties, FindOption[] options) {
-		var fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
-		var loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
+		var fetchHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_FETCH_GRAPH );
+		var loadHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_LOAD_GRAPH );
 		if ( fetchHint == null ) {
-			fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
+			fetchHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_FETCH_GRAPH );
 		}
 		if ( loadHint == null ) {
-			loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
+			loadHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_LOAD_GRAPH );
 		}
 
 		GraphSemantic graphSemantic = null;

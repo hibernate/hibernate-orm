@@ -107,16 +107,25 @@ and column metadata, and generates annotation types for the configured Java pack
 [source,groovy]
 ----
 tasks.named("generateSchemaAnnotations") {
-    jdbcDriver = "org.h2.Driver"
-    jdbcUrl = "jdbc:h2:./database/test"
-    username = "sa"
-    password = ""
-    schemaName = "PUBLIC" // optional
+    hibernateProperties = "hibernate.properties" // optional, defaults to hibernate.properties
     packageName = "org.example.schema"
 }
 ----
 
-The generated sources are written to `build/generated/sources/schemaAnnotations` by default. The JDBC
-driver must be available from the project's runtime classpath.
+The generated sources are written to `build/generated/sources/schemaAnnotations` by default. The task
+reads JDBC connection settings from `hibernate.properties` in the main resources source set. Direct
+task properties (`jdbcDriver`, `jdbcUrl`, `username`, `password`, `catalogName`, and `schemaName`)
+override values read from `hibernate.properties`.
+
+[source,properties]
+----
+hibernate.connection.driver_class=org.h2.Driver
+hibernate.connection.url=jdbc:h2:./database/test
+hibernate.connection.username=sa
+hibernate.connection.password=
+hibernate.default_schema=PUBLIC
+----
+
+The JDBC driver must be available from the project's runtime classpath.
 
 More coming soon...

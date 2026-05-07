@@ -50,12 +50,70 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
 
 /**
- * Generates table and column annotation types from JDBC metadata.
+ * Generates static schema annotation types from JDBC metadata.
+ * <p>
+ * The Hibernate Gradle plugin registers this task as {@code generateSchemaAnnotations}. The task
+ * connects to the configured JDBC database, reads table, column, and imported foreign-key metadata,
+ * and writes one Java annotation type per table to the configured package.
+ * <p>
+ * Basic Groovy DSL usage:
+ *
+ * <pre>{@code
+ * dependencies {
+ *     runtimeOnly "com.h2database:h2:<version>"
+ * }
+ *
+ * tasks.named("generateSchemaAnnotations") {
+ *     hibernateProperties = "hibernate.properties"
+ *     schemaName = "PUBLIC"
+ *     tableNamePattern = "%"
+ *     packageName = "org.example.schema"
+ * }
+ * }</pre>
+ * <p>
+ * The JDBC driver is loaded from the project {@code runtimeClasspath}. Generated sources are written
+ * below {@code build/generated/sources/schemaAnnotations} by default, with package directories appended.
+ * For example, package {@code org.example.schema} and table {@code BOOK} produce
+ * {@code build/generated/sources/schemaAnnotations/org/example/schema/BOOK.java}.
+ * <p>
+ * The task can read JDBC configuration from a {@code hibernate.properties} file in the main resource
+ * set. Direct task properties override values read from {@code hibernate.properties}.
+ * <p>
+ * For each table, the generated top-level annotation type is meta-annotated with
+ * {@code @StaticTable}. For each non-foreign-key column, the generated nested annotation type is
+ * meta-annotated with {@code @StaticColumn}. For each foreign-key column, the generated nested
+ * annotation type is meta-annotated with {@code @StaticJoinColumn}, including the referenced table
+ * and column from the JDBC foreign-key metadata.
+ * <p>
+ * Table and column names are used as Java annotation type names, so matched table and column names
+ * must be legal Java identifiers.
  */
 @DisableCachingByDefault(because = "Schema annotation generation performs JDBC operations and is not cacheable")
 public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 
 	private static final String[] TABLE_TYPES = { "TABLE" };
+	private static final String[] JDBC_DRIVER_PROPERTIES = {
+			"hibernate.connection.driver_class",
+			"jakarta.persistence.jdbc.driver",
+			"javax.persistence.jdbc.driver"
+	};
+	private static final String[] JDBC_URL_PROPERTIES = {
+			"hibernate.connection.url",
+			"jakarta.persistence.jdbc.url",
+			"javax.persistence.jdbc.url"
+	};
+	private static final String[] JDBC_USERNAME_PROPERTIES = {
+			"hibernate.connection.username",
+			"jakarta.persistence.jdbc.user",
+			"javax.persistence.jdbc.user"
+	};
+	private static final String[] JDBC_PASSWORD_PROPERTIES = {
+			"hibernate.connection.password",
+			"jakarta.persistence.jdbc.password",
+			"javax.persistence.jdbc.password"
+	};
+	private static final String[] DEFAULT_CATALOG_PROPERTIES = { "hibernate.default_catalog" };
+	private static final String[] DEFAULT_SCHEMA_PROPERTIES = { "hibernate.default_schema" };
 	private static final Set<String> JAVA_KEYWORDS = Set.of(
 			"abstract",
 			"assert",
@@ -123,41 +181,105 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		getOutputs().upToDateWhen( task -> false );
 	}
 
+	/**
+	 * The fully-qualified JDBC driver class name, for example {@code org.h2.Driver}.
+	 * <p>
+	 * The driver must be available from the project's {@code runtimeClasspath}. If not set,
+	 * the task reads {@code hibernate.connection.driver_class}, {@code jakarta.persistence.jdbc.driver},
+	 * or {@code javax.persistence.jdbc.driver} from the configured Hibernate properties file.
+	 */
 	@Input
+	@Optional
 	abstract public Property<String> getJdbcDriver();
 
+	/**
+	 * The JDBC connection URL used to read database metadata.
+	 * <p>
+	 * If not set, the task reads {@code hibernate.connection.url}, {@code jakarta.persistence.jdbc.url},
+	 * or {@code javax.persistence.jdbc.url} from the configured Hibernate properties file.
+	 */
 	@Input
+	@Optional
 	abstract public Property<String> getJdbcUrl();
 
+	/**
+	 * The optional JDBC user name.
+	 * <p>
+	 * If not set, the task reads {@code hibernate.connection.username}, {@code jakarta.persistence.jdbc.user},
+	 * or {@code javax.persistence.jdbc.user} from the configured Hibernate properties file.
+	 */
 	@Input
 	@Optional
 	abstract public Property<String> getUsername();
 
+	/**
+	 * The optional JDBC password.
+	 * <p>
+	 * If not set, the task reads {@code hibernate.connection.password}, {@code jakarta.persistence.jdbc.password},
+	 * or {@code javax.persistence.jdbc.password} from the configured Hibernate properties file.
+	 */
 	@Internal
 	abstract public Property<String> getPassword();
 
+	/**
+	 * The Hibernate properties file to read from the main resource set.
+	 * <p>
+	 * Defaults to {@code hibernate.properties}. The task uses the file as defaults for JDBC driver,
+	 * URL, user name, password, catalog, and schema. Direct task properties take precedence.
+	 */
+	@Input
+	@Optional
+	abstract public Property<String> getHibernateProperties();
+
+	/**
+	 * The Java package for generated annotation types, for example {@code org.example.schema}.
+	 */
 	@Input
 	abstract public Property<String> getPackageName();
 
+	/**
+	 * The optional catalog name passed to JDBC metadata lookup.
+	 * <p>
+	 * If not specified, the task reads {@code hibernate.default_catalog} from the configured
+	 * Hibernate properties file. If that value is also not specified, the task uses
+	 * {@link Connection#getCatalog()} when available.
+	 */
 	@Input
 	@Optional
 	abstract public Property<String> getCatalogName();
 
+	/**
+	 * The optional schema name passed to JDBC metadata lookup.
+	 * <p>
+	 * If not specified, the task reads {@code hibernate.default_schema} from the configured
+	 * Hibernate properties file. If that value is also not specified, the task uses
+	 * {@link Connection#getSchema()} when available.
+	 */
 	@Input
 	@Optional
 	abstract public Property<String> getSchemaName();
 
+	/**
+	 * The table-name pattern passed to {@link DatabaseMetaData#getTables(String, String, String, String[])}.
+	 * <p>
+	 * Defaults to {@code %}.
+	 */
 	@Input
 	@Optional
 	abstract public Property<String> getTableNamePattern();
 
+	/**
+	 * The root output directory for generated sources.
+	 * <p>
+	 * Defaults to {@code build/generated/sources/schemaAnnotations}.
+	 */
 	@OutputDirectory
 	abstract public DirectoryProperty getOutputDirectory();
 
 	@TaskAction
 	public void generateSchemaAnnotations() {
-		final String packageName = getPackageName().get();
-		validatePackageName( packageName );
+		final var configuration = resolveTaskConfiguration();
+		validatePackageName( configuration.packageName );
 
 		getLogger().lifecycle( "Starting schema annotation generation" );
 		final ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
@@ -166,8 +288,8 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		try {
 			classLoader = new URLClassLoader( resolveProjectClassPath(), oldLoader );
 			Thread.currentThread().setContextClassLoader( classLoader );
-			registeredDriver = registerDriver( classLoader );
-			generateSchemaAnnotations( packageName );
+			registeredDriver = registerDriver( classLoader, configuration.jdbcDriver );
+			generateSchemaAnnotations( configuration );
 		}
 		catch (Exception e) {
 			throw new GradleException( "Unable to generate schema annotations", e );
@@ -180,35 +302,114 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		}
 	}
 
-	private void generateSchemaAnnotations(String packageName) throws SQLException, IOException {
-		final String jdbcUrl = getJdbcUrl().get();
-		getLogger().lifecycle( "Connecting to database: " + jdbcUrl );
-		try ( Connection connection = createConnection( jdbcUrl ) ) {
-			final List<Table> tables = readTables( connection );
-			writeTables( packageName, tables );
+	private TaskConfiguration resolveTaskConfiguration() {
+		final Properties hibernateProperties = loadHibernateProperties();
+		return new TaskConfiguration(
+				requiredConfiguration(
+						getJdbcDriver(),
+						hibernateProperties,
+						"jdbcDriver",
+						JDBC_DRIVER_PROPERTIES
+				),
+				requiredConfiguration( getJdbcUrl(), hibernateProperties, "jdbcUrl", JDBC_URL_PROPERTIES ),
+				optionalConfiguration( getUsername(), hibernateProperties, JDBC_USERNAME_PROPERTIES ),
+				optionalConfiguration( getPassword(), hibernateProperties, JDBC_PASSWORD_PROPERTIES ),
+				getPackageName().get(),
+				optionalNonBlankConfiguration( getCatalogName(), hibernateProperties, DEFAULT_CATALOG_PROPERTIES ),
+				optionalNonBlankConfiguration( getSchemaName(), hibernateProperties, DEFAULT_SCHEMA_PROPERTIES ),
+				getTableNamePattern().get()
+		);
+	}
+
+	private Properties loadHibernateProperties() {
+		final boolean explicitPropertiesFile = getHibernateProperties().isPresent();
+		final String filename = hibernatePropertiesFilename();
+		if ( filename == null || filename.isBlank() ) {
+			return new Properties();
+		}
+
+		final File propertiesFile = RevengFileHelper.findResourceFile( getProject(), filename );
+		if ( propertiesFile != null ) {
+			return RevengFileHelper.loadPropertiesFile( getLogger(), propertiesFile );
+		}
+		if ( explicitPropertiesFile ) {
+			throw new GradleException( "Hibernate properties file `" + filename + "` could not be found" );
+		}
+		return new Properties();
+	}
+
+	private String hibernatePropertiesFilename() {
+		return getHibernateProperties().getOrElse( RevengSpec.DEFAULT_HIBERNATE_PROPERTIES );
+	}
+
+	private String requiredConfiguration(
+			Property<String> taskProperty,
+			Properties hibernateProperties,
+			String propertyName,
+			String... hibernatePropertyNames) {
+		final String result = optionalNonBlankConfiguration( taskProperty, hibernateProperties, hibernatePropertyNames );
+		if ( result != null ) {
+			return result;
+		}
+
+		throw new GradleException(
+				"Schema annotation generation requires `" + propertyName
+						+ "` or one of the following properties in `" + hibernatePropertiesFilename()
+						+ "`: " + String.join( ", ", hibernatePropertyNames )
+		);
+	}
+
+	private String optionalNonBlankConfiguration(
+			Property<String> taskProperty,
+			Properties hibernateProperties,
+			String... hibernatePropertyNames) {
+		final String result = optionalConfiguration( taskProperty, hibernateProperties, hibernatePropertyNames );
+		return result == null || result.isBlank() ? null : result;
+	}
+
+	private String optionalConfiguration(
+			Property<String> taskProperty,
+			Properties hibernateProperties,
+			String... hibernatePropertyNames) {
+		if ( taskProperty.isPresent() ) {
+			return taskProperty.get();
+		}
+		for ( String propertyName : hibernatePropertyNames ) {
+			if ( hibernateProperties.containsKey( propertyName ) ) {
+				return hibernateProperties.getProperty( propertyName );
+			}
+		}
+		return null;
+	}
+
+	private void generateSchemaAnnotations(TaskConfiguration configuration) throws SQLException, IOException {
+		getLogger().lifecycle( "Connecting to database: " + configuration.jdbcUrl );
+		try ( Connection connection = createConnection( configuration ) ) {
+			final List<Table> tables = readTables( connection, configuration );
+			writeTables( configuration.packageName, tables );
 		}
 	}
 
-	private Connection createConnection(String jdbcUrl) throws SQLException {
-		if ( !getUsername().isPresent() && !getPassword().isPresent() ) {
-			return DriverManager.getConnection( jdbcUrl );
+	private Connection createConnection(TaskConfiguration configuration) throws SQLException {
+		if ( configuration.username == null && configuration.password == null ) {
+			return DriverManager.getConnection( configuration.jdbcUrl );
 		}
 
 		final Properties properties = new Properties();
-		if ( getUsername().isPresent() ) {
-			properties.put( "user", getUsername().get() );
+		if ( configuration.username != null ) {
+			properties.put( "user", configuration.username );
 		}
-		if ( getPassword().isPresent() ) {
-			properties.put( "password", getPassword().get() );
+		if ( configuration.password != null ) {
+			properties.put( "password", configuration.password );
 		}
-		return DriverManager.getConnection( jdbcUrl, properties );
+		return DriverManager.getConnection( configuration.jdbcUrl, properties );
 	}
 
-	private List<Table> readTables(Connection connection) throws SQLException {
+	private List<Table> readTables(Connection connection, TaskConfiguration configuration) throws SQLException {
 		final DatabaseMetaData metadata = connection.getMetaData();
-		final String catalog = getCatalogName().isPresent() ? getCatalogName().get() : determineCatalog( connection );
-		final String schema = getSchemaName().isPresent() ? getSchemaName().get() : determineSchema( connection );
-		final String tableNamePattern = getTableNamePattern().get();
+		final String catalog = configuration.catalogName == null ? determineCatalog( connection ) : configuration.catalogName;
+		final String schema = configuration.schemaName == null ? determineSchema( connection ) : configuration.schemaName;
+		final String tableNamePattern = configuration.tableNamePattern;
 
 		final List<Table> tables = new ArrayList<>();
 		try ( ResultSet resultSet = metadata.getTables( catalog, schema, tableNamePattern, TABLE_TYPES ) ) {
@@ -532,8 +733,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		}
 	}
 
-	private Driver registerDriver(ClassLoader classLoader) {
-		final String driverClassName = getJdbcDriver().get();
+	private Driver registerDriver(ClassLoader classLoader, String driverClassName) {
 		getLogger().lifecycle( "Registering the database driver: " + driverClassName );
 		try {
 			final Class<?> driverClass = classLoader.loadClass( driverClassName );
@@ -583,6 +783,17 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		catch (IOException e) {
 			getLogger().warn( "Unable to close JDBC classloader", e );
 		}
+	}
+
+	private record TaskConfiguration(
+			String jdbcDriver,
+			String jdbcUrl,
+			String username,
+			String password,
+			String packageName,
+			String catalogName,
+			String schemaName,
+			String tableNamePattern) {
 	}
 
 	private static final class Table {

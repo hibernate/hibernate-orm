@@ -65,10 +65,6 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 		configuration.append( "}" ).append( lineSeparator() );
 		configuration.append( lineSeparator() );
 		configuration.append( "tasks.named('generateSchemaAnnotations') {" ).append( lineSeparator() );
-		configuration.append( "  jdbcDriver = 'org.h2.Driver'" ).append( lineSeparator() );
-		configuration.append( "  jdbcUrl = '" ).append( constructJdbcConnectionString() ).append( "'" )
-				.append( lineSeparator() );
-		configuration.append( "  schemaName = 'PUBLIC'" ).append( lineSeparator() );
 		configuration.append( "  packageName = 'foo.schema'" ).append( lineSeparator() );
 		configuration.append( "}" );
 

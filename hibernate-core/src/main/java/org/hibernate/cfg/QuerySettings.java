@@ -305,16 +305,7 @@ public interface QuerySettings {
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 
 	/**
-	 * The maximum number of {@link org.hibernate.query.ParameterMetadata} instances
-	 * maintained by the {@link org.hibernate.query.spi.QueryInterpretationCache}.
-	 *
-	 * @deprecated this setting is not currently used
-	 */
-	@Deprecated(since="6.0")
-	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
-
-	/**
-	 * For database supporting name parameters this setting allows to use named parameter is the procedure call.
+	 * For databases supporting name parameters this setting allows the use of named parameters in the procedure call.
 	 * <p>
 	 * By default, this is set to false
 	 */

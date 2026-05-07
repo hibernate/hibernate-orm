@@ -957,7 +957,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// Workaround for postgres bug #1453
-		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName() + ")";
+		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getRawTypeName( sqlType ) + ")";
 	}
 
 	@Override

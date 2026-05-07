@@ -42,7 +42,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -1067,7 +1066,7 @@ public class FirebirdDialect extends Dialect {
 			final Dialect dialect = getDialect();
 			final String indexNameForCreation = index.getQuotedName( dialect );
 			// In firebird the index is only sortable on top-level, not per column, use the first column to decide
-			final String sortOrder = index.getSelectableOrderMap().getOrDefault( index.getColumns().get( 0 ), "asc" );
+			final String sortOrder = index.getSelectableOrderMap().getOrDefault( index.getSelectables().get( 0 ), "asc" );
 			final StringBuilder buf = new StringBuilder()
 					// Although `create asc index` is valid, generate without (some tests check for a specific syntax prefix)
 					.append( "desc".equalsIgnoreCase( sortOrder ) || "descending".equalsIgnoreCase( sortOrder ) ? "create desc index " : "create index " )
@@ -1076,14 +1075,14 @@ public class FirebirdDialect extends Dialect {
 					.append( tableName )
 					.append( " (" );
 			boolean first = true;
-			for ( Column column : index.getColumns() ) {
+			for ( var selectable : index.getSelectables() ) {
 				if ( first ) {
 					first = false;
 				}
 				else {
 					buf.append( ", " );
 				}
-				buf.append( ( column.getQuotedName( dialect ) ) );
+				buf.append( selectable.getText( dialect ) );
 			}
 			buf.append( ')' );
 

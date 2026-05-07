@@ -97,16 +97,16 @@ public abstract class AbstractJPAIndexTest {
 			}
 			assertThat( StringHelper.isNotEmpty( uniqueIndex.getName() ) ).isTrue();
 			assertThat( uniqueIndex.getColumnSpan() ).isEqualTo( 2 );
-			var column = uniqueIndex.getColumns().get( 0 );
-			assertThat( column.getName() ).isEqualTo( "brand" );
-			column = uniqueIndex.getColumns().get( 1 );
-			assertThat( column.getName() ).isEqualTo( "producer" );
+			var selectable = uniqueIndex.getSelectables().get( 0 );
+			assertThat( selectable.getText() ).isEqualTo( "brand" );
+			selectable = uniqueIndex.getSelectables().get( 1 );
+			assertThat( selectable.getText() ).isEqualTo( "producer" );
 			assertThat( uniqueIndex.getTable() ).isSameAs( entity.getTable() );
 		}
 		assertThat( index.getName() ).isEqualTo( "Car_idx" );
 		assertThat( index.getColumnSpan() ).isEqualTo( 1 );
-		var column = index.getColumns().iterator().next();
-		assertThat( column.getName() ).isEqualTo( "since" );
+		var selectable = index.getSelectables().iterator().next();
+		assertThat( selectable.getText() ).isEqualTo( "since" );
 		assertThat( index.getTable() ).isSameAs( entity.getTable() );
 	}
 
@@ -123,11 +123,11 @@ public abstract class AbstractJPAIndexTest {
 				.describedAs( "index name is not generated" )
 				.isTrue();
 		assertThat( index.getColumnSpan() ).isEqualTo( 2 );
-		Iterator<Column> columnIterator = index.getColumns().iterator();
-		Column column = columnIterator.next();
-		assertThat( column.getName() ).isEqualTo( "dealer_name" );
-		column = columnIterator.next();
-		assertThat( column.getName() ).isEqualTo( "rate" );
+		var selectableIterator = index.getSelectables().iterator();
+		var selectable = selectableIterator.next();
+		assertThat( selectable.getText() ).isEqualTo( "dealer_name" );
+		selectable = selectableIterator.next();
+		assertThat( selectable.getText() ).isEqualTo( "rate" );
 		assertThat( index.getTable() ).isSameAs( join.getTable() );
 
 	}
@@ -147,9 +147,9 @@ public abstract class AbstractJPAIndexTest {
 				.describedAs( "index name is not generated" )
 				.isTrue();
 		assertThat( index.getColumnSpan() ).isEqualTo( 1 );
-		Iterator<Column> columnIterator = index.getColumns().iterator();
-		Column column = columnIterator.next();
-		assertThat( column.getName() ).isEqualTo( "name" );
+		var selectableIterator = index.getSelectables().iterator();
+		var selectable = selectableIterator.next();
+		assertThat( selectable.getText() ).isEqualTo( "name" );
 		assertThat( index.getTable() ).isSameAs( collectionTable );
 
 	}
@@ -169,9 +169,9 @@ public abstract class AbstractJPAIndexTest {
 				.describedAs( "index name is not generated" )
 				.isTrue();
 		assertThat( index.getColumnSpan() ).isEqualTo( 1 );
-		Iterator<Column> columnIterator = index.getColumns().iterator();
-		Column column = columnIterator.next();
-		assertThat( column.getName() ).isEqualTo( "importers_id" );
+		var selectableIterator = index.getSelectables().iterator();
+		var selectable = selectableIterator.next();
+		assertThat( selectable.getText() ).isEqualTo( "importers_id" );
 		assertThat( index.getTable() ).isSameAs( collectionTable );
 	}
 

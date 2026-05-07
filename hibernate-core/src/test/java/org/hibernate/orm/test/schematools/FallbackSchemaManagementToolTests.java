@@ -44,6 +44,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
  * Tests for {@link org.hibernate.dialect.Dialect#getFallbackSchemaManagementTool}
@@ -141,6 +142,10 @@ public class FallbackSchemaManagementToolTests {
 	}
 
 	public static class CustomDialect extends Dialect {
+		public CustomDialect() {
+			super( ZERO_VERSION );
+		}
+
 		@Override
 		public SchemaManagementTool getFallbackSchemaManagementTool(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 			return new SchemaManagementToolImpl();

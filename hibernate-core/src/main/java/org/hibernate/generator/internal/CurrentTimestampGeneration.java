@@ -59,6 +59,10 @@ import static org.hibernate.generator.EventTypeSets.fromArray;
  * <p>
  * Underlies the {@link CurrentTimestamp}, {@link CreationTimestamp}, and
  * {@link UpdateTimestamp} annotations.
+ * <p>
+ * These annotations may be applied to a {@link jakarta.persistence.Version}
+ * property or field, and in this case we must generate in "before execution"
+ * mode, even with {@link SourceType#DB}.
  *
  * @see CurrentTimestamp
  * @see CreationTimestamp
@@ -83,6 +87,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	private final EnumSet<EventType> eventTypes;
 	private final JavaType<?> propertyType;
 	private final GeneratorDelegate delegate;
+	private final boolean version;
 
 	private static final ConcurrentHashMap<Key, GeneratorDelegate> GENERATOR_DELEGATES = new ConcurrentHashMap<>();
 
@@ -90,6 +95,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
 		eventTypes = fromArray( annotation.event() );
 		propertyType = getPropertyType( context );
+		version = isVersion( context );
 		if ( eventTypes.contains( EventType.INSERT ) ) {
 			notNull( context );
 		}
@@ -99,6 +105,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
 		eventTypes = INSERT_ONLY;
 		propertyType = getPropertyType( context );
+		version = isVersion( context );
 		notNull( context );
 	}
 
@@ -106,7 +113,14 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
 		eventTypes = INSERT_AND_UPDATE;
 		propertyType = getPropertyType( context );
+		version = isVersion( context );
 		notNull( context );
+	}
+
+	private static boolean isVersion(GeneratorCreationContext context) {
+		final var persistentClass = context.getPersistentClass();
+		return persistentClass != null
+			&& context.getProperty() == persistentClass.getVersion();
 	}
 
 	private static void notNull(GeneratorCreationContext context) {
@@ -179,7 +193,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 
 	@Override
 	public boolean generatedOnExecution() {
-		return delegate == null;
+		return delegate == null && !version;
 	}
 
 	@Override
@@ -195,7 +209,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		if ( delegate == null ) {
-			if ( eventType != EventType.FORCE_INCREMENT ) {
+			if ( !version && eventType != EventType.FORCE_INCREMENT ) {
 				throw new UnsupportedOperationException( "CurrentTimestampGeneration.generate() should not have been called" );
 			}
 			return propertyType.wrap( getCurrentTimestamp( session ), session );

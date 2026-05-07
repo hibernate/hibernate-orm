@@ -127,6 +127,4 @@ public abstract class AbstractType implements Type {
 		}
 	}
 
-	@Override
-	public void beforeAssemble(Serializable cached, SharedSessionContractImplementor session) {}
 }

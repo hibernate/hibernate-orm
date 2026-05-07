@@ -282,10 +282,6 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final void beforeAssemble(Serializable cached, SharedSessionContractImplementor session) {
-	}
-
-	@Override
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		return original == null && target == null
 				? null

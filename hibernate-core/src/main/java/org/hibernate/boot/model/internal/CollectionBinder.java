@@ -163,6 +163,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.visitIdGenerator
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.boot.model.internal.QueryBinder.bindNativeQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
+import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.getColumnAnnotation;
 import static org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation.toJoinColumn;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.coalesce;
@@ -567,9 +568,10 @@ public abstract class CollectionBinder {
 			MemberDetails property,
 			PropertyData virtualProperty) {
 //			Comment comment) {
-		if ( property.hasDirectAnnotationUsage( jakarta.persistence.Column.class ) ) {
+		final var column = getColumnAnnotation( property, context );
+		if ( column != null ) {
 			return buildColumnFromAnnotation(
-					property.getDirectAnnotationUsage( jakarta.persistence.Column.class ),
+					column,
 					null,
 //					comment,
 					nullability,
@@ -2379,7 +2381,7 @@ public abstract class CollectionBinder {
 		);
 
 		final var memberDetails = inferredData.getAttributeMember();
-		final var discriminatorColumnAnn = memberDetails.getDirectAnnotationUsage( jakarta.persistence.Column.class );
+		final var discriminatorColumnAnn = getColumnAnnotation( memberDetails, buildingContext );
 		final var discriminatorFormulaAnn = getOverridableAnnotation( memberDetails, Formula.class, buildingContext );
 
 		//override the table

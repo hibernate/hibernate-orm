@@ -60,7 +60,7 @@ import org.hibernate.tool.reveng.api.core.TableIdentifier;
  * Generates static schema annotation types from JDBC metadata.
  * <p>
  * The Hibernate Gradle plugin registers this task as {@code generateSchemaAnnotations}. The task
- * connects to the configured JDBC database, reads table, column, and imported foreign-key metadata,
+ * connects to the configured JDBC database, reads table, column, and imported foreign key metadata,
  * and writes one Java annotation type per table to the configured package.
  * <p>
  * Basic Groovy DSL usage:
@@ -88,12 +88,14 @@ import org.hibernate.tool.reveng.api.core.TableIdentifier;
  * set. Direct task properties override values read from {@code hibernate.properties}.
  * A Hibernate Tools reverse-engineering file can be used for schema selection, table filters,
  * table exclusions, column exclusions, and user-defined foreign keys.
- * <p>
- * For each table, the generated top-level annotation type is meta-annotated with
- * {@code @StaticTable}. For each non-foreign-key column, the generated nested annotation type is
- * meta-annotated with {@code @StaticColumn}. For each foreign-key column, the generated nested
- * annotation type is meta-annotated with {@code @StaticJoinColumn}, including the referenced table
- * and column from the JDBC foreign-key metadata.
+ * <ul>
+ * <li>For each table, the generated top-level annotation type is meta-annotated with {@code @StaticTable}.
+ * <li>For each non-foreign key column, the generated nested annotation type is meta-annotated with
+ *     {@code @StaticColumn}.
+ * <li>For each foreign key column, the generated nested annotation type is meta-annotated with
+ *     {@code @StaticJoinColumn}, including the referenced table and column from the JDBC foreign key
+ *     constraint metadata.
+ * <ul>
  * <p>
  * Table and column names are used as Java annotation type names, so matched table and column names
  * must be legal Java identifiers.

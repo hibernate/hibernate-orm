@@ -105,7 +105,8 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 			}
 		}
 		else {
-			final String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
+			final String type = targetEntity != null ? targetEntity
+					: extractClosestRealTypeAsString( declaredType, context );
 			return new AnnotationMetaSingleAttribute( entity, element, type );
 		}
 	}

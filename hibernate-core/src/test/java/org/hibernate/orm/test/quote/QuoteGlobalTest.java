@@ -9,6 +9,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
@@ -64,10 +65,11 @@ public class QuoteGlobalTest {
 			Index uniqueIndex = scope.getMetadataImplementor().getEntityBinding( Person.class.getName() )
 					.getTable().getIndexes().values().stream().filter( Index::isUnique ).findAny().orElse(  null );
 			assertNotNull(  uniqueIndex );
-			List<Column> columns = uniqueIndex.getColumns();
-			assertEquals( 1, columns.size() );
-			assertTrue( columns.get( 0 ).isQuoted() );
-			assertEquals( "name", columns.get( 0 ).getName() );
+			List<Selectable> selectables = uniqueIndex.getSelectables();
+			assertEquals( 1, selectables.size() );
+			Column column = (Column) selectables.get( 0 );
+			assertTrue( column.isQuoted() );
+			assertEquals( "name", column.getName() );
 			return;
 		}
 		fail( "GLOBALLY_QUOTED_IDENTIFIERS caused the unique key creation to fail." );

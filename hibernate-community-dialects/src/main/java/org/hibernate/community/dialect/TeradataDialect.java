@@ -29,7 +29,6 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -602,14 +601,14 @@ public class TeradataDialect extends Dialect {
 
 			final StringBuilder columnList = new StringBuilder();
 			boolean first = true;
-			for ( Column column : index.getColumns() ) {
+			for ( var selectable : index.getSelectables() ) {
 				if ( first ) {
 					first = false;
 				}
 				else {
 					columnList.append( ", " );
 				}
-				columnList.append( column.getName() );
+				columnList.append( selectable.getText( getDialect() ) );
 			}
 
 			return new String[] {

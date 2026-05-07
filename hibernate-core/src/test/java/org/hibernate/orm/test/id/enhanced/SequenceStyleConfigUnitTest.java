@@ -13,7 +13,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.sequence.ANSISequenceSupport;
@@ -397,9 +396,8 @@ public class SequenceStyleConfigUnitTest {
 	}
 
 	public static class TableDialect extends Dialect implements SettingProvider.Provider {
-		@Override
-		public DatabaseVersion getVersion() {
-			return ZERO_VERSION;
+		public TableDialect() {
+			super( ZERO_VERSION );
 		}
 
 		@Override
@@ -409,9 +407,8 @@ public class SequenceStyleConfigUnitTest {
 	}
 
 	public static class SequenceDialect extends Dialect {
-		@Override
-		public DatabaseVersion getVersion() {
-			return ZERO_VERSION;
+		public SequenceDialect() {
+			super( ZERO_VERSION );
 		}
 
 		@Override

@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.dialect;
 
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.BasicDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -18,14 +17,12 @@ import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 public class TestingDialects {
 
 	public static class MyDialect extends Dialect {
-		@Override
-		public DatabaseVersion getVersion() {
-			return ZERO_VERSION;
+		protected MyDialect() {
+			super( ZERO_VERSION );
 		}
 	}
 
 	public static class MyDialect1 extends MyDialect {
-
 	}
 
 	public static class MyDialect21 extends MyDialect {

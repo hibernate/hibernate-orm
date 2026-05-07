@@ -10,7 +10,6 @@ import jakarta.persistence.Table;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
@@ -86,14 +85,13 @@ public class QualifiedTableNamingTest {
 	}
 
 	public static class TestDialect extends Dialect {
-		@Override
-		public NameQualifierSupport getNameQualifierSupport() {
-			return NameQualifierSupport.BOTH;
+		public TestDialect() {
+			super( ZERO_VERSION );
 		}
 
 		@Override
-		public DatabaseVersion getVersion() {
-			return ZERO_VERSION;
+		public NameQualifierSupport getNameQualifierSupport() {
+			return NameQualifierSupport.BOTH;
 		}
 	}
 

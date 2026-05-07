@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
  * Tests for {@link Dialect#getFallbackSchemaManagementTool}
@@ -149,6 +150,10 @@ public class EnumCheckTests {
 	}
 
 	public static class CustomDialect extends Dialect {
+		public CustomDialect() {
+			super( ZERO_VERSION );
+		}
+
 		@Override
 		public SchemaManagementTool getFallbackSchemaManagementTool(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 			return new SchemaManagementToolImpl();

@@ -6,7 +6,8 @@ package org.hibernate.annotations.schema;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.sql.JDBCType;
+
+import jakarta.persistence.Column;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -21,11 +22,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Retention(RUNTIME)
 @Target(ANNOTATION_TYPE)
-public @interface StaticColumn {
-	String name();
-	JDBCType type();
-	boolean nullable() default true;
-	int length() default 255;
-	int precision() default 0;
-	int scale() default 0;
+public @interface ColumnMapping {
+	Column value();
 }

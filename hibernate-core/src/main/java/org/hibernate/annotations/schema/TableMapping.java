@@ -7,6 +7,8 @@ package org.hibernate.annotations.schema;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.Table;
+
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -20,6 +22,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Retention(RUNTIME)
 @Target(ANNOTATION_TYPE)
-public @interface StaticTable {
-	String name();
+public @interface TableMapping {
+	Table value();
 }

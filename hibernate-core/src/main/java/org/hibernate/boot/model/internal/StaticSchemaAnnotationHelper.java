@@ -8,9 +8,9 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-import org.hibernate.annotations.schema.StaticColumn;
-import org.hibernate.annotations.schema.StaticJoinColumn;
-import org.hibernate.annotations.schema.StaticTable;
+import org.hibernate.annotations.schema.ColumnMapping;
+import org.hibernate.annotations.schema.JoinColumnMapping;
+import org.hibernate.annotations.schema.TableMapping;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
@@ -40,14 +40,12 @@ final class StaticSchemaAnnotationHelper {
 			return jpaTable;
 		}
 
-		final var staticTable = locateMetaAnnotation( annotatedClass, StaticTable.class, modelsContext );
-		if ( staticTable == null ) {
+		final var tableMapping = locateMetaAnnotation( annotatedClass, TableMapping.class, modelsContext );
+		if ( tableMapping == null ) {
 			return null;
 		}
 
-		final TableJpaAnnotation table = new TableJpaAnnotation( modelsContext );
-		table.name( staticTable.name() );
-		return table;
+		return new TableJpaAnnotation( tableMapping.value(), modelsContext );
 	}
 
 	static boolean hasTableAnnotation(ClassDetails annotatedClass, MetadataBuildingContext context) {
@@ -65,18 +63,12 @@ final class StaticSchemaAnnotationHelper {
 			return jpaColumn;
 		}
 
-		final var staticColumn = locateMetaAnnotation( annotationTarget, StaticColumn.class, modelsContext );
-		if ( staticColumn == null ) {
+		final var columnMapping = locateMetaAnnotation( annotationTarget, ColumnMapping.class, modelsContext );
+		if ( columnMapping == null ) {
 			return null;
 		}
 
-		final var column = new ColumnJpaAnnotation( modelsContext );
-		column.name( staticColumn.name() );
-		column.nullable( staticColumn.nullable() );
-		column.length( staticColumn.length() );
-		column.precision( staticColumn.precision() );
-		column.scale( staticColumn.scale() );
-		return column;
+		return new ColumnJpaAnnotation( columnMapping.value(), modelsContext );
 	}
 
 	static boolean hasColumnAnnotation(MemberDetails memberDetails, MetadataBuildingContext context) {
@@ -90,15 +82,15 @@ final class StaticSchemaAnnotationHelper {
 			return jpaJoinColumns;
 		}
 
-		final var staticJoinColumns = getMetaAnnotated( memberDetails, StaticJoinColumn.class, modelsContext );
-		if ( staticJoinColumns.isEmpty() ) {
+		final var joinColumnMappings = getMetaAnnotated( memberDetails, JoinColumnMapping.class, modelsContext );
+		if ( joinColumnMappings.isEmpty() ) {
 			return null;
 		}
 
-		staticJoinColumns.sort( Comparator.comparing( StaticJoinColumn::name ) );
-		final var joinColumns = new JoinColumn[staticJoinColumns.size()];
-		for ( int i = 0; i < staticJoinColumns.size(); i++ ) {
-			joinColumns[i] = toJoinColumn( staticJoinColumns.get( i ), modelsContext );
+		joinColumnMappings.sort( Comparator.comparing( joinColumnMapping -> joinColumnMapping.value().name() ) );
+		final var joinColumns = new JoinColumn[joinColumnMappings.size()];
+		for ( int i = 0; i < joinColumnMappings.size(); i++ ) {
+			joinColumns[i] = new JoinColumnJpaAnnotation( joinColumnMappings.get( i ).value(), modelsContext );
 		}
 		return joinColumns;
 	}
@@ -119,14 +111,6 @@ final class StaticSchemaAnnotationHelper {
 			}
 		}
 		return false;
-	}
-
-	private static JoinColumn toJoinColumn(StaticJoinColumn staticJoinColumn, ModelsContext modelsContext) {
-		final var joinColumn = new JoinColumnJpaAnnotation( modelsContext );
-		joinColumn.name( staticJoinColumn.name() );
-		joinColumn.referencedColumnName( staticJoinColumn.referencedColumnName() );
-		joinColumn.nullable( staticJoinColumn.nullable() );
-		return joinColumn;
 	}
 
 	private static <A extends Annotation> A locateMetaAnnotation(

@@ -89,13 +89,13 @@ import static org.hibernate.orm.tooling.gradle.reveng.RevengFileHelper.loadPrope
  * A Hibernate Tools reverse-engineering file can be used for schema selection, table filters,
  * table exclusions, column exclusions, and user-defined foreign keys.
  * <ul>
- * <li>For each table, the generated top-level annotation type is meta-annotated with {@code @StaticTable}.
+ * <li>For each table, the generated top-level annotation type is meta-annotated with {@code @TableMapping}
+ *     holding a {@code @Table}.
  * <li>For each non-foreign key column, the generated nested annotation type is meta-annotated with
- *     {@code @StaticColumn}.
+ *     {@code @ColumnMapping} holding a {@code @Column}.
  * <li>For each foreign key column, the generated nested annotation type is meta-annotated with
- *     {@code @StaticJoinColumn}, including the referenced table and column from the JDBC foreign key
- *     constraint metadata.
- * <ul>
+ *     {@code @JoinColumnMapping} holding a {@code @JoinColumn}.
+ * </ul>
  * <p>
  * Table and column names are used as Java annotation type names, so matched table and column names
  * must be legal Java identifiers.
@@ -628,36 +628,76 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 				putForeignKeyColumn( table.name, foreignKeyColumns, entry.getKey(), entry.getValue() );
 			}
 		}
-		try ( ResultSet resultSet = metadata.getColumns( table.catalog, table.schema, table.name, "%" ) ) {
+		final var uniqueColumnNames = readUniqueColumnNames( metadata, table );
+		try ( var resultSet = metadata.getColumns( table.catalog, table.schema, table.name, "%" ) ) {
 			while ( resultSet.next() ) {
 				final String columnName = resultSet.getString( "COLUMN_NAME" );
-				if ( isExcludedColumn( revengStrategy, table, columnName ) ) {
-					continue;
-				}
-				validateJavaIdentifier( columnName, "column" );
-				if ( !columnNames.add( columnName ) ) {
-					throw new GradleException(
-							"Table `" + table.name + "` has multiple columns named `" + columnName + "`"
+				if ( !isExcludedColumn( revengStrategy, table, columnName ) ) {
+					validateJavaIdentifier( columnName, "column" );
+					if ( !columnNames.add( columnName ) ) {
+						throw new GradleException(
+								"Table `" + table.name + "` has multiple columns named `" + columnName + "`"
+						);
+					}
+					final var jdbcType =
+							resolveJdbcType( table.name, columnName,
+									resultSet.getInt( "DATA_TYPE" ) );
+					table.columns.add(
+							new Column(
+									columnName,
+									isNullable( resultSet ),
+									uniqueColumnNames.contains( columnName ),
+									length( resultSet, jdbcType ),
+									precision( resultSet, jdbcType ),
+									scale( resultSet, jdbcType ),
+									foreignKeyColumns.get( columnName ),
+									resultSet.getInt( "ORDINAL_POSITION" )
+							)
 					);
 				}
-				final var jdbcType =
-						resolveJdbcType( table.name, columnName,
-								resultSet.getInt( "DATA_TYPE" ) );
-				table.columns.add(
-						new Column(
-								columnName,
-								jdbcType,
-								isNullable( resultSet ),
-								length( resultSet, jdbcType ),
-								precision( resultSet, jdbcType ),
-								scale( resultSet, jdbcType ),
-								foreignKeyColumns.get( columnName ),
-								resultSet.getInt( "ORDINAL_POSITION" )
-						)
-				);
 			}
 		}
 		table.columns.sort( comparingInt( column -> column.position ) );
+	}
+
+	private Set<String> readUniqueColumnNames(DatabaseMetaData metadata, Table table) throws SQLException {
+		final var primaryKeyColumnNames = readPrimaryKeyColumnNames( metadata, table );
+		final Map<String, Set<String>> uniqueIndexColumns = new HashMap<>();
+		try ( var resultSet = metadata.getIndexInfo( table.catalog, table.schema, table.name, true, false ) ) {
+			while ( resultSet.next() ) {
+				if ( resultSet.getShort( "TYPE" ) == DatabaseMetaData.tableIndexStatistic
+						|| resultSet.getBoolean( "NON_UNIQUE" ) ) {
+					continue;
+				}
+				final String indexName = resultSet.getString( "INDEX_NAME" );
+				final String columnName = resultSet.getString( "COLUMN_NAME" );
+				if ( indexName != null && columnName != null ) {
+					uniqueIndexColumns.computeIfAbsent( indexName, key -> new HashSet<>() )
+							.add( columnName );
+				}
+			}
+		}
+
+		final Set<String> result = new HashSet<>();
+		for ( var columnNames : uniqueIndexColumns.values() ) {
+			if ( columnNames.size() == 1 ) {
+				final var columnName = columnNames.iterator().next();
+				if ( !primaryKeyColumnNames.contains( columnName ) ) {
+					result.add( columnName );
+				}
+			}
+		}
+		return result;
+	}
+
+	private Set<String> readPrimaryKeyColumnNames(DatabaseMetaData metadata, Table table) throws SQLException {
+		final Set<String> primaryKeyColumnNames = new HashSet<>();
+		try ( var resultSet = metadata.getPrimaryKeys( table.catalog, table.schema, table.name ) ) {
+			while ( resultSet.next() ) {
+				primaryKeyColumnNames.add( resultSet.getString( "COLUMN_NAME" ) );
+			}
+		}
+		return primaryKeyColumnNames;
 	}
 
 	private Map<String, ForeignKeyColumn> readForeignKeyColumns(DatabaseMetaData metadata, Table table)
@@ -777,16 +817,19 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		result.append( "package " ).append( packageName ).append( ";" ).append( lineSeparator() )
 				.append( lineSeparator() )
 				.append( "import java.lang.annotation.Retention;" ).append( lineSeparator() )
-				.append( "import java.sql.JDBCType;" ).append( lineSeparator() )
 				.append( lineSeparator() )
-				.append( "import org.hibernate.annotations.schema.StaticColumn;" ).append( lineSeparator() )
-				.append( "import org.hibernate.annotations.schema.StaticJoinColumn;" ).append( lineSeparator() )
-				.append( "import org.hibernate.annotations.schema.StaticTable;" ).append( lineSeparator() )
+				.append( "import org.hibernate.annotations.schema.ColumnMapping;" ).append( lineSeparator() )
+				.append( "import org.hibernate.annotations.schema.JoinColumnMapping;" ).append( lineSeparator() )
+				.append( "import org.hibernate.annotations.schema.TableMapping;" ).append( lineSeparator() )
+				.append( lineSeparator() )
+				.append( "import jakarta.persistence.Column;" ).append( lineSeparator() )
+				.append( "import jakarta.persistence.JoinColumn;" ).append( lineSeparator() )
+				.append( "import jakarta.persistence.Table;" ).append( lineSeparator() )
 				.append( lineSeparator() )
 				.append( "import static java.lang.annotation.RetentionPolicy.RUNTIME;" ).append( lineSeparator() )
 				.append( lineSeparator() )
 				.append( "@Retention(RUNTIME)" ).append( lineSeparator() )
-				.append( "@StaticTable(name = " ).append( javaStringLiteral( table.name ) ).append( ")" )
+				.append( "@TableMapping(@Table(name = " ).append( javaStringLiteral( table.name ) ).append( "))" )
 				.append( lineSeparator() )
 				.append( "public @interface " ).append( table.name ).append( " {" ).append( lineSeparator() );
 
@@ -807,25 +850,22 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	private String renderColumnAnnotation(Column column) {
 		if ( column.foreignKeyColumn != null ) {
 			return new StringBuilder()
-					.append( "\t@StaticJoinColumn(name = " ).append( javaStringLiteral( column.name ) )
-					.append( ", referencedTableName = " )
-					.append( javaStringLiteral( column.foreignKeyColumn.referencedTableName ) )
+					.append( "\t@JoinColumnMapping(@JoinColumn(name = " ).append( javaStringLiteral( column.name ) )
 					.append( ", referencedColumnName = " )
 					.append( javaStringLiteral( column.foreignKeyColumn.referencedColumnName ) )
-					.append( ", type = JDBCType." ).append( column.type.name() )
 					.append( ", nullable = " ).append( column.nullable )
-					.append( ")" )
+					.append( "))" )
 					.toString();
 		}
 		else {
 			return new StringBuilder()
-					.append( "\t@StaticColumn(name = " ).append( javaStringLiteral( column.name ) )
-					.append( ", type = JDBCType." ).append( column.type.name() )
+					.append( "\t@ColumnMapping(@Column(name = " ).append( javaStringLiteral( column.name ) )
 					.append( ", nullable = " ).append( column.nullable )
+					.append( ", unique = " ).append( column.unique )
 					.append( ", length = " ).append( column.length )
 					.append( ", precision = " ).append( column.precision )
 					.append( ", scale = " ).append( column.scale )
-					.append( ")" )
+					.append( "))" )
 					.toString();
 		}
 	}
@@ -969,14 +1009,13 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	}
 
 	private void closeClassLoader(URLClassLoader classLoader) {
-		if ( classLoader == null ) {
-			return;
-		}
-		try {
-			classLoader.close();
-		}
-		catch (IOException e) {
-			getLogger().warn( "Unable to close JDBC classloader", e );
+		if ( classLoader != null ) {
+			try {
+				classLoader.close();
+			}
+			catch (IOException e) {
+				getLogger().warn( "Unable to close JDBC classloader", e );
+			}
 		}
 	}
 
@@ -1024,7 +1063,8 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 
 		@Override
 		public boolean equals(Object object) {
-			return object instanceof Table table && identifier().equals( table.identifier() );
+			return object instanceof Table table
+				&& identifier().equals( table.identifier() );
 		}
 
 		@Override
@@ -1033,8 +1073,8 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		}
 	}
 
-	private record Column(String name, JDBCType type, boolean nullable, int length, int precision, int scale,
-						ForeignKeyColumn foreignKeyColumn, int position) {
+	private record Column(String name, boolean nullable, boolean unique, int length, int precision, int scale,
+			ForeignKeyColumn foreignKeyColumn, int position) {
 	}
 
 	private record ForeignKeyColumn(String referencedTableName, String referencedColumnName) {

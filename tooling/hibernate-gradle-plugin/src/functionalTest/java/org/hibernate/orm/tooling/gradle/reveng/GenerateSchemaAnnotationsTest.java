@@ -21,7 +21,7 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 		setGradleTaskToPerform( "generateSchemaAnnotations" );
 		setDatabaseCreationScript( new String[] {
 				"create table AUTHOR (ID int not null, primary key (ID))",
-				"create table BOOK (ISBN varchar(20) not null, PAGES int, AUTHOR_ID int, primary key (ISBN), "
+				"create table BOOK (ISBN varchar(20) not null, CODE varchar(20) unique, PAGES int, AUTHOR_ID int, primary key (ISBN), "
 						+ "constraint FK_BOOK_AUTHOR foreign key (AUTHOR_ID) references AUTHOR(ID))"
 		} );
 	}
@@ -39,20 +39,25 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 
 		String generatedContents = Files.readString( generatedFile.toPath() );
 		assertTrue( generatedContents.contains( "package foo.schema;" ) );
-		assertTrue( generatedContents.contains( "import org.hibernate.annotations.schema.StaticJoinColumn;" ) );
-		assertTrue( generatedContents.contains( "@StaticTable(name = \"BOOK\")" ) );
+		assertTrue( generatedContents.contains( "import org.hibernate.annotations.schema.JoinColumnMapping;" ) );
+		assertTrue( generatedContents.contains( "import jakarta.persistence.JoinColumn;" ) );
+		assertTrue( generatedContents.contains( "@TableMapping(@Table(name = \"BOOK\"))" ) );
 		assertTrue( generatedContents.contains( "public @interface BOOK" ) );
 		assertTrue( generatedContents.contains(
-				"@StaticColumn(name = \"ISBN\", type = JDBCType.VARCHAR, nullable = false, length = 20, precision = 0, scale = 0)"
+				"@ColumnMapping(@Column(name = \"ISBN\", nullable = false, unique = false, length = 20, precision = 0, scale = 0))"
 		) );
-		assertTrue( generatedContents.contains( "public @interface ISBN" ) );
-		assertFalse( generatedContents.contains( "@StaticColumn(name = \"PAGES\"" ) );
-		assertFalse( generatedContents.contains( "public @interface PAGES" ) );
+		assertTrue( generatedContents.contains( "@interface ISBN" ) );
 		assertTrue( generatedContents.contains(
-				"@StaticJoinColumn(name = \"AUTHOR_ID\", referencedTableName = \"AUTHOR\", referencedColumnName = \"ID\", type = JDBCType.INTEGER, nullable = true)"
+				"@ColumnMapping(@Column(name = \"CODE\", nullable = true, unique = true, length = 20, precision = 0, scale = 0))"
 		) );
-		assertFalse( generatedContents.contains( "@StaticColumn(name = \"AUTHOR_ID\"" ) );
-		assertTrue( generatedContents.contains( "public @interface AUTHOR_ID" ) );
+		assertTrue( generatedContents.contains( "@interface CODE" ) );
+		assertFalse( generatedContents.contains( "@ColumnMapping(@Column(name = \"PAGES\"" ) );
+		assertFalse( generatedContents.contains( "@interface PAGES" ) );
+		assertTrue( generatedContents.contains(
+				"@JoinColumnMapping(@JoinColumn(name = \"AUTHOR_ID\", referencedColumnName = \"ID\", nullable = true))"
+		) );
+		assertFalse( generatedContents.contains( "@ColumnMapping(@Column(name = \"AUTHOR_ID\"" ) );
+		assertTrue( generatedContents.contains( "@interface AUTHOR_ID" ) );
 	}
 
 	@Override

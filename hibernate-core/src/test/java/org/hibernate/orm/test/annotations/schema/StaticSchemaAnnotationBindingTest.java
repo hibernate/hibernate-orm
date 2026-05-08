@@ -5,18 +5,20 @@
 package org.hibernate.orm.test.annotations.schema;
 
 import java.lang.annotation.Retention;
-import java.sql.JDBCType;
 
-import org.hibernate.annotations.schema.StaticColumn;
-import org.hibernate.annotations.schema.StaticJoinColumn;
-import org.hibernate.annotations.schema.StaticTable;
+import org.hibernate.annotations.schema.ColumnMapping;
+import org.hibernate.annotations.schema.JoinColumnMapping;
+import org.hibernate.annotations.schema.TableMapping;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,34 +42,30 @@ public class StaticSchemaAnnotationBindingTest {
 	}
 
 	@Retention(RUNTIME)
-	@StaticTable(name = "AUTHOR")
+	@TableMapping(@Table(name = "AUTHOR"))
 	public @interface AUTHOR {
 		@Retention(RUNTIME)
-		@StaticColumn(name = "ID", type = JDBCType.INTEGER)
+		@ColumnMapping(@Column(name = "ID"))
 		public @interface ID {
 		}
 	}
 
 	@Retention(RUNTIME)
-	@StaticTable(name = "BOOK")
+	@TableMapping(@Table(name = "BOOK"))
 	public @interface BOOK {
 		@Retention(RUNTIME)
-		@StaticColumn(name = "ISBN", type = JDBCType.VARCHAR)
-		public @interface ISBN {
+		@ColumnMapping(@Column(name = "ISBN"))
+		@interface ISBN {
 		}
 
 		@Retention(RUNTIME)
-		@StaticColumn(name = "TITLE", type = JDBCType.VARCHAR,
-					nullable = false, length = 100)
-		public @interface TITLE {
+		@ColumnMapping(@Column(name = "TITLE", nullable = false, length = 100))
+		@interface TITLE {
 		}
 
 		@Retention(RUNTIME)
-		@StaticJoinColumn(name = "AUTHOR_ID",
-				referencedTableName = "AUTHOR",
-				referencedColumnName = "ID",
-				type = JDBCType.INTEGER)
-		public @interface AUTHOR_ID {
+		@JoinColumnMapping(@JoinColumn(name = "AUTHOR_ID", referencedColumnName = "ID"))
+		@interface AUTHOR_ID {
 		}
 	}
 

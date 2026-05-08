@@ -69,7 +69,7 @@ compose_down() {
 ###############################################################################
 
 mysql() {
-    mysql_9_6
+    mysql_9_7
 }
 
 mysql_8_0() {
@@ -87,6 +87,12 @@ mysql_8_1() {
 mysql_8_2() {
     compose_down "versioned/mysql-8.2.yml" "mysql"
     compose_up "versioned/mysql-8.2.yml"
+    mysql_post_setup
+}
+
+mysql_8_4() {
+    compose_down "versioned/mysql-8.4.yml" "mysql"
+    compose_up "versioned/mysql-8.4.yml"
     mysql_post_setup
 }
 
@@ -109,6 +115,12 @@ mysql_9_5() {
 }
 
 mysql_9_6() {
+    compose_down "versioned/mysql-9.6.yml" "mysql"
+    compose_up "versioned/mysql-9.6.yml"
+    mysql_post_setup
+}
+
+mysql_9_7() {
     compose_down "latest/mysql.yml" "mysql"
     compose_up "latest/mysql.yml"
     mysql_post_setup
@@ -117,7 +129,7 @@ mysql_9_6() {
 # MySQL post-setup: wait for ready state, install components, create test databases
 mysql_post_setup() {
     # Install components
-    # file://component_classic_hashing - This is for legacy hashing algorithms on MySQL 9.6: SHA1 and MD5.
+    # file://component_classic_hashing - This is for legacy hashing algorithms on MySQL 9.7: SHA1 and MD5.
     $CONTAINER_CLI exec mysql bash -c "mysql -u root -phibernate_orm_test -e \"INSTALL COMPONENT 'file://component_classic_hashing'\"" 2>/dev/null
 
     databases=()
@@ -1125,10 +1137,12 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_9_7"
     echo -e "\tmysql_9_6"
     echo -e "\tmysql_9_5"
     echo -e "\tmysql_9_4"
     echo -e "\tmysql_9_2"
+    echo -e "\tmysql_8_4"
     echo -e "\tmysql_8_2"
     echo -e "\tmysql_8_1"
     echo -e "\tmysql_8_0"

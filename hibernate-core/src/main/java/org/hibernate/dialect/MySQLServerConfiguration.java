@@ -95,16 +95,19 @@ public class MySQLServerConfiguration {
 		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
-				try ( var resultSet = statement.executeQuery(
-						"SELECT @@character_set_database, @@sql_mode, @@innodb_native_foreign_keys" ) ) {
-					if ( resultSet.next() ) {
-						bytesPerCharacter = getBytesPerCharacter( resultSet.getString( 1 ) );
-						noBackslashEscapes = resultSet.getString( 2 ).toLowerCase().contains( "no_backslash_escapes" );
-						// 0 = foreign keys handled by the server, 1 = handled by InnoDB natively
-						foreignKeysInServer = resultSet.getInt( 3 ) == 0;
+				if ( databaseMetaData.getDatabaseMajorVersion() > 9 
+					|| databaseMetaData.getDatabaseMajorVersion() == 9 && databaseMetaData.getDatabaseMinorVersion() > 6 ) {
+					try ( var resultSet = statement.executeQuery(
+							"SELECT @@character_set_database, @@sql_mode, @@innodb_native_foreign_keys" ) ) {
+						if ( resultSet.next() ) {
+							bytesPerCharacter = getBytesPerCharacter( resultSet.getString( 1 ) );
+							noBackslashEscapes = resultSet.getString( 2 ).toLowerCase().contains( "no_backslash_escapes" );
+							// 0 = foreign keys handled by the server, 1 = handled by InnoDB natively
+							foreignKeysInServer = resultSet.getInt( 3 ) == 0;
+						}
 					}
 				}
-				catch (SQLException ignored) {
+				else {
 					// @@innodb_native_foreign_keys unavailable on older MySQL: retry without it
 					try ( var resultSet = statement.executeQuery( "SELECT @@character_set_database, @@sql_mode" ) ) {
 						if ( resultSet.next() ) {

@@ -859,21 +859,6 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = null;
 		}
-		if ( isKey ) {
-			final var primaryKey = getOwner().getTable().getPrimaryKey();
-			if ( primaryKey != null ) {
-				// We have to re-order the primary key accordingly
-				final var columns = primaryKey.getColumns();
-				columns.clear();
-				for ( var property : properties ) {
-					for ( var selectable : property.getSelectables() ) {
-						if ( selectable instanceof Column column ) {
-							columns.add( column );
-						}
-					}
-				}
-			}
-		}
 		return this.originalPropertyOrder = originalPropertyOrder;
 	}
 

@@ -117,7 +117,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.regex.Pattern;
 
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -166,11 +165,6 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	);
 
 	protected final static DatabaseVersion MINIMUM_POSTGRES_VERSION = DatabaseVersion.make( 15 );
-
-	private static final Pattern NOT_NULL_CONSTRAINT_PATTERN = Pattern.compile( ".*(must not be NULL in table|does not specify a non-null value for NOT NULL column|Cannot specify a null value for column).*" );
-	private static final Pattern FOREIGN_KEY_CONSTRAINT_PATTERN = Pattern.compile( ".*Foreign key.*(constraint violation on table|constraint violation when deleting or updating referenced key|violated on table).*" );
-	private static final Pattern CHECK_CONSTRAINT_PATTERN = Pattern.compile( ".*Check constraint.*" );
-	private static final Pattern TABLE_DOES_NOT_EXIST_PATTERN = Pattern.compile( ".*relation.*does not exist.*" );
 
 	public SpannerPostgreSQLDialect() {
 		super();
@@ -1048,19 +1042,19 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	private @Nullable JDBCException handleConstraintViolatedException(SQLException sqlException, String message, String sql) {
-		if (sqlException.getErrorCode() == 6) {
+		if ( sqlException.getErrorCode() == 6 || ( message != null && isAlreadyExists( message ) ) ) {
 			return new ConstraintViolationException( message, sqlException, ConstraintViolationException.ConstraintKind.UNIQUE, null );
 		}
-		else if (sqlException.getErrorCode() == 5 || matches( TABLE_DOES_NOT_EXIST_PATTERN, message )) {
+		else if ( sqlException.getErrorCode() == 5 || ( message != null && isTableDoesNotExist( message ) ) ) {
 			return new SQLGrammarException( message, sqlException );
 		}
-		else if (matches( NOT_NULL_CONSTRAINT_PATTERN, message )) {
+		else if ( message != null && isNotNullConstraint( message ) ) {
 			return new ConstraintViolationException( message, sqlException, ConstraintViolationException.ConstraintKind.NOT_NULL, null );
 		}
-		else if (matches( CHECK_CONSTRAINT_PATTERN, message )) {
+		else if ( message != null && message.contains( "Check constraint" ) ) {
 			return new ConstraintViolationException( message, sqlException, ConstraintViolationException.ConstraintKind.CHECK, null );
 		}
-		else if(matches( FOREIGN_KEY_CONSTRAINT_PATTERN, message )) {
+		else if ( message != null && isForeignKeyConstraint( message ) ) {
 			return new ConstraintViolationException( message, sqlException, ConstraintViolationException.ConstraintKind.FOREIGN_KEY, null );
 		}
 		else {
@@ -1068,8 +1062,26 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 		}
 	}
 
-	private boolean matches(Pattern pattern, String message) {
-		return pattern.matcher( message ).matches();
+	private boolean isAlreadyExists(String message) {
+		return ( message.contains( "Failed to insert row with primary key" ) && message.contains( "due to previously existing row" ) )
+				|| ( message.contains( "UNIQUE violation on index" ) && message.contains( "duplicate key" ) && message.contains( "in this transaction" ) );
+	}
+
+	private boolean isTableDoesNotExist(String message) {
+		return message.contains( "relation" ) && message.contains( "does not exist" );
+	}
+
+	private boolean isNotNullConstraint(String message) {
+		return message.contains( "must not be NULL in table" )
+				|| message.contains( "does not specify a non-null value for NOT NULL column" )
+				|| message.contains( "Cannot specify a null value for column" );
+	}
+
+	private boolean isForeignKeyConstraint(String message) {
+		return message.contains( "Foreign key" )
+				&& ( message.contains( "constraint violation on table" )
+						|| message.contains( "constraint violation when deleting or updating referenced key" )
+						|| message.contains( "violated on table" ) );
 	}
 
 	@Override

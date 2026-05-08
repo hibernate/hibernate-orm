@@ -441,6 +441,10 @@ public class ForeignKeyModelBuilderTest {
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		var constraintModel = sessionFactory.getMappingMetamodel().getConstraintModel();
 
+		if (!sessionFactory.getJdbcServices().getDialect().supportsUniqueConstraints()) {
+			return;
+		}
+
 		UniqueConstraint uniqueConstraint = constraintModel.uniqueConstraints().stream()
 				.filter( constraint -> constraint.tableName().contains( "same_column_secondary" ) )
 				.filter( UniqueConstraint::isUniqueKey )

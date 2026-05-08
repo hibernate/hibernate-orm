@@ -13,14 +13,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
 @Jpa( annotatedClasses = {UnidirectionalOrderColumnListTest.Person.class, UnidirectionalOrderColumnListTest.Phone.class} )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 public class UnidirectionalOrderColumnListTest {
 
 	@Test

@@ -6,8 +6,10 @@ package org.hibernate.orm.test.action.queue.integration;
 
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
@@ -95,6 +97,7 @@ public class OptimisticLockingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )
 	public void testVersionConflictDetection(EntityManagerFactoryScope scope) {
 		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
@@ -224,6 +227,7 @@ public class OptimisticLockingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )
 	public void testDeleteConflictWithVersion(EntityManagerFactoryScope scope) {
 		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {

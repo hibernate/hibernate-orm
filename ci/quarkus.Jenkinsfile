@@ -117,7 +117,7 @@ pipeline {
                 script {
                     dir('hibernate') {
                         checkout scm
-                        sh "./gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com -Dmaven.repo.local=${env.WORKSPACE_TMP}/.m2repository"
+                        sh "./gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -Dmaven.repo.local=${env.WORKSPACE_TMP}/.m2repository"
                         script {
                             env.HIBERNATE_VERSION = sh (
                                     script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",
@@ -156,7 +156,7 @@ pipeline {
                                     sh "ln -s ${env.WORKSPACE_TMP}/.m2repository .m2"
                                 }
                                 dir('quarkus') {
-                                    sh "git clone -b ${QUARKUS_BRANCH_TO_TEST} --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
+                                    sh "git clone -b ${QUARKUS_BRANCH_TO_TEST} --single-branch --depth 10 https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
                                     script {
                                         def sedStatus = sh (script: "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' pom.xml", returnStatus: true)
                                         if ( sedStatus != 0 ) {

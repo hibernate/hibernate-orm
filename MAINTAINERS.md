@@ -15,6 +15,13 @@ Continuous integration is split across two platforms:
 * GitHub Actions at https://github.com/hibernate/hibernate-orm/actions
 * a self-hosted Jenkins instance at https://ci.hibernate.org.
 
+### Tips
+
+The Hibernate ORM build can use a mirror instead of Maven central.
+To do so, set the `MAVEN_MIRROR` environment variable to the URL of your mirror,
+e.g. `http://something-on-aws.com/path/to/repo`.
+The mirror can use unsecure HTTP, but obviously that exposes you to MITM attacks unless the build runs in a completely isolated network.
+
 ### GitHub Actions workflows
 
 TODO: describe the workflows available.
@@ -32,7 +39,7 @@ It is generally triggered on push,
 but can also be triggered manually,
 which is particularly useful to test more environments on a pull request.
 
-See [Jenkinsfile](Jenkinsfile) for the job definition.
+See [Jenkinsfile](Jenkinsfile) for the job definition. 
 
 ### Release pipeline
 

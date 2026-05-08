@@ -50,12 +50,22 @@ public final class GenericsHelper {
 	private static Map<TypeVariable<?>, Type> collectTypeArguments(
 			Class<?> subclass, Member superMember) {
 		final var superclass = superMember.getDeclaringClass();
-		final var typeArguments = typeArguments( superclass, subclass );
 		final var typeParameters = superclass.getTypeParameters();
 		final Map<TypeVariable<?>, Type> typeMap =
 				new HashMap<>( typeParameters.length );
-		for ( int i = 0; i < typeParameters.length; i++ ) {
-			typeMap.put( typeParameters[i], typeArguments[i] );
+
+		// There is no context to resolve the type variables if the subclass is the same as the superclass,
+		// so just take the type parameter bounds instead
+		if ( subclass == superclass ) {
+			for ( var typeParameter : typeParameters ) {
+				typeMap.put( typeParameter, typeParameter.getBounds()[0] );
+			}
+		}
+		else {
+			final var typeArguments = typeArguments( superclass, subclass );
+			for ( int i = 0; i < typeParameters.length; i++ ) {
+				typeMap.put( typeParameters[i], typeArguments[i] );
+			}
 		}
 		return typeMap;
 	}
@@ -182,9 +192,20 @@ public final class GenericsHelper {
 			return null;
 		}
 
-		if ( clazz == genericType
-				&& base instanceof ParameterizedType result ) {
-			return result;
+		if ( clazz == genericType ) {
+			if ( base instanceof ParameterizedType result ) {
+				return result;
+			}
+			// raw type used as-is (e.g. member declared directly on a generic class)
+			// resolve type parameters to their upper bounds (erasure)
+			final var typeParameters = clazz.getTypeParameters();
+			if ( typeParameters.length > 0 ) {
+				final var bounds = new Type[typeParameters.length];
+				for ( int i = 0; i < typeParameters.length; i++ ) {
+					bounds[i] = typeParameters[i].getBounds()[0];
+				}
+				return new SimpleParameterizedType( clazz, bounds, null );
+			}
 		}
 
 		final var superclass = clazz.getGenericSuperclass();

@@ -17,8 +17,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;

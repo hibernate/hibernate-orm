@@ -29,11 +29,10 @@ import org.hibernate.type.Type;
  * There might be a single instance of {@code Interceptor} for a {@link SessionFactory},
  * or a new instance might be created for each {@link Session}. Use:
  * <ul>
- *     <li>{@link org.hibernate.cfg.AvailableSettings#INTERCEPTOR} to specify an
- *         interceptor shared between sessions, or
- *     <li>{@link org.hibernate.cfg.AvailableSettings#SESSION_SCOPED_INTERCEPTOR} to
- *         specify that there is a dedicated instance of the interceptor for each
- *         session.
+ * <li>{@value org.hibernate.cfg.SessionEventSettings#INTERCEPTOR} to specify an
+ *     interceptor shared between sessions, or
+ * <li>{@value org.hibernate.cfg.SessionEventSettings#SESSION_SCOPED_INTERCEPTOR} to
+ *     specify that there is a dedicated instance of the interceptor for each session.
  * </ul>
  * <p>
  * Whichever approach is used, the interceptor must be serializable for the

@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: ${MYSQL_IMAGE:-docker.io/library/mysql:9.7@sha256:f0ef1d92fa650fcfa5b85f1d82bb1a56a6dd579bf256b8f8f2a5a0b1b61c8b0b}
+    image: ${DB_IMAGE_MYSQL_8_4:-docker.io/library/mysql:8.4@sha256:6e54d72c66fb55fa2bba384cba8c7c0ea9d629fb4d2af613b0eef98d19c6df15}
     container_name: mysql
     environment:
       MYSQL_USER: hibernate_orm_test
@@ -16,7 +16,6 @@ services:
       - --collation-server=utf8mb4_0900_as_cs
       - --log-bin-trust-function-creators=1
       - --lower_case_table_names=2
-      - --innodb_native_foreign_keys
       - --init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-u", "root", "-phibernate_orm_test"]

@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.idgen.enhanced.forcedtable;
 
-import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableStructure;
@@ -42,9 +41,9 @@ public class HiLoForcedTableSequenceTest {
 
 				long expectedId = i + 1;
 				assertThat( entity.getId().longValue() ).isEqualTo( expectedId );
-				assertThat( ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ).isEqualTo( 1L );
-				assertThat( ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() ).isEqualTo( i + 1L );
-				assertThat( ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() ).isEqualTo( increment + 1L );
+				assertThat( optimizer.getLastSourceValue().longValue() ).isEqualTo( 1L );
+				assertThat( optimizer.getLastValue() ).isEqualTo( i + 1L );
+				assertThat( optimizer.getHiValue() ).isEqualTo( increment + 1L );
 			}
 
 			// now force a "clock over"
@@ -54,9 +53,9 @@ public class HiLoForcedTableSequenceTest {
 			long expectedId = optimizer.getIncrementSize() + 1;
 			assertThat( entity.getId() ).isEqualTo( expectedId );
 			// initialization + clock-over
-			assertThat( ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ).isEqualTo( 2L );
-			assertThat( ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() ).isEqualTo( increment + 1L );
-			assertThat( ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() ).isEqualTo( ( increment * 2L ) + 1L );
+			assertThat( optimizer.getLastSourceValue().longValue() ).isEqualTo( 2L );
+			assertThat( optimizer.getLastValue() ).isEqualTo( increment + 1L );
+			assertThat( optimizer.getHiValue() ).isEqualTo( ( increment * 2L ) + 1L );
 		} );
 	}
 

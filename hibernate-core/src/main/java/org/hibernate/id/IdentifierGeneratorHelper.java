@@ -7,11 +7,9 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.Internal;
@@ -60,23 +58,40 @@ public final class IdentifierGeneratorHelper {
 		}
 	};
 
-	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {
+	public static Number makeIntegralValue(long value, Class<?> integralType) {
 		if ( integralType == Long.class
-				|| integralType == Integer.class
-				|| integralType == Short.class ) {
-			return new BasicHolder( integralType );
+				|| integralType == Long.TYPE ) {
+			return value;
+		}
+		else if ( integralType == Integer.class
+				|| integralType == Integer.TYPE ) {
+			return (int) value;
+		}
+		else if ( integralType == Short.class
+				|| integralType == Short.TYPE ) {
+			return (short) value;
 		}
 		else if ( integralType == BigInteger.class ) {
-			return new BigIntegerHolder();
+			return BigInteger.valueOf( value );
 		}
 		else if ( integralType == BigDecimal.class ) {
-			return new BigDecimalHolder();
+			return BigDecimal.valueOf( value );
 		}
 		else {
 			throw new IdentifierGenerationException(
 					"Unknown integral data type for ids : " + integralType.getName()
 			);
 		}
+	}
+
+	public static long extractLong(ResultSet resultSet, long defaultValue) throws SQLException {
+		final long value = resultSet.getLong( 1 );
+		return resultSet.wasNull() ? defaultValue : value;
+	}
+
+	public static void bindLong(PreparedStatement preparedStatement, int position, long value) throws SQLException {
+		CORE_LOGGER.tracef( "binding parameter [%s] - [%s]", position, value );
+		preparedStatement.setLong( position, value );
 	}
 
 	public static Object getForeignId(
@@ -136,498 +151,6 @@ public final class IdentifierGeneratorHelper {
 			// try identifier mapper
 			final String mapperPropertyName = IDENTIFIER_MAPPER_PROPERTY + "." + propertyName;
 			return (EntityType) entityDescriptor.getPropertyType( mapperPropertyName );
-		}
-	}
-
-	@Internal
-	public static class BasicHolder implements IntegralDataTypeHolder {
-		private final Class<?> exactType;
-		private long value = Long.MIN_VALUE;
-
-		public BasicHolder(Class<?> exactType) {
-			this.exactType = exactType;
-			if ( exactType != Long.class && exactType != Integer.class && exactType != Short.class ) {
-				throw new IdentifierGenerationException( "Invalid type for basic integral holder : " + exactType );
-			}
-		}
-
-		public long getActualLongValue() {
-			return value;
-		}
-
-		public IntegralDataTypeHolder initialize(long value) {
-			this.value = value;
-			return this;
-		}
-
-		public IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException {
-			long value = resultSet.getLong( 1 );
-			if ( resultSet.wasNull() ) {
-				value = defaultValue;
-			}
-			return initialize( value );
-		}
-
-		public void bind(PreparedStatement preparedStatement, int position) throws SQLException {
-			// TODO : bind it as 'exact type'?  Not sure if that gains us anything...
-			CORE_LOGGER.tracef( "binding parameter [%s] - [%s]", position, value );
-			preparedStatement.setLong( position, value );
-		}
-
-		public IntegralDataTypeHolder increment() {
-			checkInitialized();
-			value++;
-			return this;
-		}
-
-		private void checkInitialized() {
-			if ( value == Long.MIN_VALUE ) {
-				throw new IdentifierGenerationException( "integral holder was not initialized" );
-			}
-		}
-
-		public IntegralDataTypeHolder add(long addend) {
-			checkInitialized();
-			value += addend;
-			return this;
-		}
-
-		public IntegralDataTypeHolder decrement() {
-			checkInitialized();
-			value--;
-			return this;
-		}
-
-		public IntegralDataTypeHolder subtract(long subtrahend) {
-			checkInitialized();
-			value -= subtrahend;
-			return this;
-		}
-
-		public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor) {
-			return multiplyBy( factor.toLong() );
-		}
-
-		public IntegralDataTypeHolder multiplyBy(long factor) {
-			checkInitialized();
-			value *= factor;
-			return this;
-		}
-
-		public boolean eq(IntegralDataTypeHolder other) {
-			return eq( other.toLong() );
-		}
-
-		public boolean eq(long value) {
-			checkInitialized();
-			return this.value == value;
-		}
-
-		public boolean lt(IntegralDataTypeHolder other) {
-			return lt( other.toLong() );
-		}
-
-		public boolean lt(long value) {
-			checkInitialized();
-			return this.value < value;
-		}
-
-		public boolean gt(IntegralDataTypeHolder other) {
-			return gt( other.toLong() );
-		}
-
-		public boolean gt(long value) {
-			checkInitialized();
-			return this.value > value;
-		}
-
-		public IntegralDataTypeHolder copy() {
-			final var copy = new BasicHolder( exactType );
-			copy.value = value;
-			return copy;
-		}
-
-		public Number makeValue() {
-			// TODO : should we check for truncation?
-			checkInitialized();
-			if ( exactType == Long.class ) {
-				return value;
-			}
-			else if ( exactType == Integer.class ) {
-				return (int) value;
-			}
-			else {
-				return (short) value;
-			}
-		}
-
-		public Number makeValueThenIncrement() {
-			final Number result = makeValue();
-			value++;
-			return result;
-		}
-
-		public Number makeValueThenAdd(long addend) {
-			final Number result = makeValue();
-			value += addend;
-			return result;
-		}
-
-		@Override
-		public long toLong() {
-			checkInitialized();
-			return value;
-		}
-
-		@Override
-		public BigDecimal toBigDecimal() {
-			checkInitialized();
-			return BigDecimal.valueOf( value );
-		}
-
-		@Override
-		public BigInteger toBigInteger() {
-			checkInitialized();
-			return BigInteger.valueOf( value );
-		}
-
-		@Override
-		public String toString() {
-			return "BasicHolder[" + exactType.getName() + "[" + value + "]]";
-		}
-
-		@Override
-		public boolean equals(Object object) {
-			if ( this == object ) {
-				return true;
-			}
-			else if ( !(object instanceof BasicHolder that) ) {
-				return false;
-			}
-			else {
-				return this.value == that.value;
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return Long.hashCode(value);
-		}
-	}
-
-	public static class BigIntegerHolder implements IntegralDataTypeHolder {
-		private BigInteger value;
-
-		public IntegralDataTypeHolder initialize(long value) {
-			this.value = BigInteger.valueOf( value );
-			return this;
-		}
-
-		public IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException {
-			final var rsValue = resultSet.getBigDecimal( 1 );
-			if ( resultSet.wasNull() ) {
-				return initialize( defaultValue );
-			}
-			this.value = rsValue.setScale( 0, RoundingMode.UNNECESSARY ).toBigInteger();
-			return this;
-		}
-
-		public void bind(PreparedStatement preparedStatement, int position) throws SQLException {
-			preparedStatement.setBigDecimal( position, new BigDecimal( value ) );
-		}
-
-		public IntegralDataTypeHolder increment() {
-			checkInitialized();
-			value = value.add( BigInteger.ONE );
-			return this;
-		}
-
-		private void checkInitialized() {
-			if ( value == null ) {
-				throw new IdentifierGenerationException( "integral holder was not initialized" );
-			}
-		}
-
-		public IntegralDataTypeHolder add(long increment) {
-			checkInitialized();
-			value = value.add( BigInteger.valueOf( increment ) );
-			return this;
-		}
-
-		public IntegralDataTypeHolder decrement() {
-			checkInitialized();
-			value = value.subtract( BigInteger.ONE );
-			return this;
-		}
-
-		public IntegralDataTypeHolder subtract(long subtrahend) {
-			checkInitialized();
-			value = value.subtract( BigInteger.valueOf( subtrahend ) );
-			return this;
-		}
-
-		public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor) {
-			checkInitialized();
-			value = value.multiply( factor.toBigInteger() );
-			return this;
-		}
-
-		public IntegralDataTypeHolder multiplyBy(long factor) {
-			checkInitialized();
-			value = value.multiply( BigInteger.valueOf( factor ) );
-			return this;
-		}
-
-		public boolean eq(IntegralDataTypeHolder other) {
-			checkInitialized();
-			return value.compareTo( other.toBigInteger() ) == 0;
-		}
-
-		public boolean eq(long value) {
-			checkInitialized();
-			return this.value.compareTo( BigInteger.valueOf( value ) ) == 0;
-		}
-
-		public boolean lt(IntegralDataTypeHolder other) {
-			checkInitialized();
-			return value.compareTo( other.toBigInteger() ) < 0;
-		}
-
-		public boolean lt(long value) {
-			checkInitialized();
-			return this.value.compareTo( BigInteger.valueOf( value ) ) < 0;
-		}
-
-		public boolean gt(IntegralDataTypeHolder other) {
-			checkInitialized();
-			return value.compareTo( other.toBigInteger() ) > 0;
-		}
-
-		public boolean gt(long value) {
-			checkInitialized();
-			return this.value.compareTo( BigInteger.valueOf( value ) ) > 0;
-		}
-
-		public IntegralDataTypeHolder copy() {
-			final var copy = new BigIntegerHolder();
-			copy.value = value;
-			return copy;
-		}
-
-		public Number makeValue() {
-			checkInitialized();
-			return value;
-		}
-
-		public Number makeValueThenIncrement() {
-			final Number result = makeValue();
-			value = value.add( BigInteger.ONE );
-			return result;
-		}
-
-		public Number makeValueThenAdd(long addend) {
-			final Number result = makeValue();
-			value = value.add( BigInteger.valueOf( addend ) );
-			return result;
-		}
-
-		@Override
-		public long toLong() {
-			checkInitialized();
-			return value.longValue();
-		}
-
-		@Override
-		public BigInteger toBigInteger() {
-			checkInitialized();
-			return value;
-		}
-
-		@Override
-		public BigDecimal toBigDecimal() {
-			checkInitialized();
-			return new BigDecimal( value );
-		}
-
-		@Override
-		public String toString() {
-			return "BigIntegerHolder[" + value + "]";
-		}
-
-		@Override
-		public boolean equals(Object object) {
-			if ( this == object ) {
-				return true;
-			}
-			else if ( !(object instanceof BigIntegerHolder that) ) {
-				return false;
-			}
-			else {
-				return Objects.equals( this.value, that.value );
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hashCode( value );
-		}
-	}
-
-	public static class BigDecimalHolder implements IntegralDataTypeHolder {
-		private BigDecimal value;
-
-		public IntegralDataTypeHolder initialize(long value) {
-			this.value = BigDecimal.valueOf( value );
-			return this;
-		}
-
-		public IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException {
-			final var rsValue = resultSet.getBigDecimal( 1 );
-			if ( resultSet.wasNull() ) {
-				return initialize( defaultValue );
-			}
-			this.value = rsValue.setScale( 0, RoundingMode.UNNECESSARY );
-			return this;
-		}
-
-		public void bind(PreparedStatement preparedStatement, int position) throws SQLException {
-			preparedStatement.setBigDecimal( position, value );
-		}
-
-		public IntegralDataTypeHolder increment() {
-			checkInitialized();
-			value = value.add( BigDecimal.ONE );
-			return this;
-		}
-
-		private void checkInitialized() {
-			if ( value == null ) {
-				throw new IdentifierGenerationException( "integral holder was not initialized" );
-			}
-		}
-
-		public IntegralDataTypeHolder add(long increment) {
-			checkInitialized();
-			value = value.add( BigDecimal.valueOf( increment ) );
-			return this;
-		}
-
-		public IntegralDataTypeHolder decrement() {
-			checkInitialized();
-			value = value.subtract( BigDecimal.ONE );
-			return this;
-		}
-
-		public IntegralDataTypeHolder subtract(long subtrahend) {
-			checkInitialized();
-			value = value.subtract( BigDecimal.valueOf( subtrahend ) );
-			return this;
-		}
-
-		public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor) {
-			checkInitialized();
-			value = value.multiply( factor.toBigDecimal() );
-			return this;
-		}
-
-		public IntegralDataTypeHolder multiplyBy(long factor) {
-			checkInitialized();
-			value = value.multiply( BigDecimal.valueOf( factor ) );
-			return this;
-		}
-
-		public boolean eq(IntegralDataTypeHolder other) {
-			checkInitialized();
-			return value.compareTo( other.toBigDecimal() ) == 0;
-		}
-
-		public boolean eq(long value) {
-			checkInitialized();
-			return this.value.compareTo( BigDecimal.valueOf( value ) ) == 0;
-		}
-
-		public boolean lt(IntegralDataTypeHolder other) {
-			checkInitialized();
-			return value.compareTo( other.toBigDecimal() ) < 0;
-		}
-
-		public boolean lt(long value) {
-			checkInitialized();
-			return this.value.compareTo( BigDecimal.valueOf( value ) ) < 0;
-		}
-
-		public boolean gt(IntegralDataTypeHolder other) {
-			checkInitialized();
-			return value.compareTo( other.toBigDecimal() ) > 0;
-		}
-
-		public boolean gt(long value) {
-			checkInitialized();
-			return this.value.compareTo( BigDecimal.valueOf( value ) ) > 0;
-		}
-
-		public IntegralDataTypeHolder copy() {
-			final var copy = new BigDecimalHolder();
-			copy.value = value;
-			return copy;
-		}
-
-		public Number makeValue() {
-			checkInitialized();
-			return value;
-		}
-
-		public Number makeValueThenIncrement() {
-			final Number result = makeValue();
-			value = value.add( BigDecimal.ONE );
-			return result;
-		}
-
-		public Number makeValueThenAdd(long addend) {
-			final Number result = makeValue();
-			value = value.add( BigDecimal.valueOf( addend ) );
-			return result;
-		}
-
-		@Override
-		public long toLong() {
-			checkInitialized();
-			return value.longValue();
-		}
-
-		@Override
-		public BigInteger toBigInteger() {
-			checkInitialized();
-			return value.toBigInteger();
-		}
-
-		@Override
-		public BigDecimal toBigDecimal() {
-			checkInitialized();
-			return value;
-		}
-
-		@Override
-		public String toString() {
-			return "BigDecimalHolder[" + value + "]";
-		}
-
-		@Override
-		public boolean equals(Object object) {
-			if ( this == object ) {
-				return true;
-			}
-			else if ( !(object instanceof BigDecimalHolder that) ) {
-				return false;
-			}
-			else {
-				return Objects.equals( this.value, that.value );
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hashCode( value );
 		}
 	}
 

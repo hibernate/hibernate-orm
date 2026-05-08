@@ -13,7 +13,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
@@ -37,7 +36,7 @@ public class BasicTableTest {
 				long expectedId = i + 1;
 				assertEquals( expectedId, entity.getId().longValue() );
 				assertEquals( expectedId, generator.getTableAccessCount() );
-				assertEquals( expectedId, ( (BasicHolder) generator.getOptimizer().getLastSourceValue() ).getActualLongValue() );
+				assertEquals( expectedId, generator.getOptimizer().getLastSourceValue().longValue() );
 			}
 		} );
 	}

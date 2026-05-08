@@ -6,13 +6,13 @@ package org.hibernate.id.enhanced;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 
+import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 
 import java.io.Serializable;
@@ -62,9 +62,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public class HiLoOptimizer extends AbstractOptimizer {
 
 	private static class GenerationState {
-		private IntegralDataTypeHolder lastSourceValue;
-		private IntegralDataTypeHolder upperLimit;
-		private IntegralDataTypeHolder value;
+		private Long lastSourceValue;
+		private long upperLimit;
+		private long value;
 	}
 
 
@@ -92,20 +92,20 @@ public class HiLoOptimizer extends AbstractOptimizer {
 				// first call, so initialize ourselves.  we need to read the database
 				// value and set up the 'bucket' boundaries
 				generationState.lastSourceValue = callback.getNextValue();
-				while ( generationState.lastSourceValue.lt( 1 ) ) {
+				while ( generationState.lastSourceValue < 1 ) {
 					generationState.lastSourceValue = callback.getNextValue();
 				}
 				// upperLimit defines the upper end of the bucket values
-				generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
+				generationState.upperLimit = generationState.lastSourceValue * incrementSize + 1;
 				// initialize value to the lower end of the bucket
-				generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
+				generationState.value = generationState.upperLimit - incrementSize;
 			}
-			else if ( ! generationState.upperLimit.gt( generationState.value ) ) {
+			else if ( generationState.value >= generationState.upperLimit ) {
 				generationState.lastSourceValue = callback.getNextValue();
-				generationState.upperLimit = generationState.lastSourceValue.copy().multiplyBy( incrementSize ).increment();
-				generationState.value = generationState.upperLimit.copy().subtract( incrementSize );
+				generationState.upperLimit = generationState.lastSourceValue * incrementSize + 1;
+				generationState.value = generationState.upperLimit - incrementSize;
 			}
-			return generationState.value.makeValueThenIncrement();
+			return makeIntegralValue( generationState.value++, returnClass );
 		}
 		finally {
 			lock.unlock();
@@ -158,7 +158,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public IntegralDataTypeHolder getLastSourceValue() {
+	public Long getLastSourceValue() {
 		lock.lock();
 		try {
 			return noTenantGenerationState().lastSourceValue;
@@ -180,10 +180,10 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	 *
 	 * @return Value for property 'lastValue'.
 	 */
-	public IntegralDataTypeHolder getLastValue() {
+	public long getLastValue() {
 		lock.lock();
 		try {
-			return noTenantGenerationState().value.copy().decrement();
+			return noTenantGenerationState().value - 1;
 		}
 		finally {
 			lock.unlock();
@@ -197,7 +197,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	 *
 	 * @return Value for property 'upperLimit'.
 	 */
-	public IntegralDataTypeHolder getHiValue() {
+	public long getHiValue() {
 		lock.lock();
 		try {
 			return noTenantGenerationState().upperLimit;

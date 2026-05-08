@@ -32,8 +32,6 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
@@ -49,6 +47,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static org.hibernate.boot.model.internal.GeneratorBinder.applyIfNotEmpty;
 import static org.hibernate.cfg.MappingSettings.TABLE_GENERATOR_STORE_LAST_USED;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.id.IdentifierGeneratorHelper.bindLong;
+import static org.hibernate.id.IdentifierGeneratorHelper.extractLong;
 import static org.hibernate.id.enhanced.ResyncHelper.getCurrentTableValue;
 import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
 import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOGGER;
@@ -519,29 +519,25 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				+ " values ('" + segmentValue + "'," + ( value ) + ")" );
 	}
 
-	private IntegralDataTypeHolder makeValue() {
-		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
-	}
-
 	@Override
 	public Object generate(final SharedSessionContractImplementor session, final Object object) {
 		return optimizer.generate( new NextValueCallback( session ) );
 	}
 
 	private class NextValueCallback
-			extends AbstractReturningWork<IntegralDataTypeHolder>
+			extends AbstractReturningWork<Long>
 			implements AccessCallback {
 		private final SharedSessionContractImplementor session;
 		private NextValueCallback(SharedSessionContractImplementor session) {
 			this.session = session;
 		}
 		@Override
-		public IntegralDataTypeHolder getNextValue() {
+		public long getNextValue() {
 			return session.getTransactionCoordinator().createIsolationDelegate()
 					.delegateWork( this, true );
 		}
 		@Override
-		public IntegralDataTypeHolder execute(Connection connection)
+		public Long execute(Connection connection)
 				throws SQLException {
 			return nextValue( connection, session );
 		}
@@ -551,7 +547,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		}
 	}
 
-	private IntegralDataTypeHolder nextValue(
+	private long nextValue(
 			Connection connection,
 			SharedSessionContractImplementor session)
 					throws SQLException {
@@ -559,22 +555,18 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				session.getFactory().getJdbcServices()
 						.getSqlStatementLogger();
 		final var listener = session.getEventListenerManager();
-		final var value = makeValue();
+		long value;
 		int rows;
 		do {
-			retrieveCurrentValue( connection, logger, listener, session, value );
-			final var updateValue = value.copy();
-			if ( optimizer.applyIncrementSizeToSourceValues() ) {
-				updateValue.add( incrementSize );
-			}
-			else {
-				updateValue.increment();
-			}
+			value = retrieveCurrentValue( connection, logger, listener, session );
+			final long updateValue = optimizer.applyIncrementSizeToSourceValues()
+					? value + incrementSize
+					: value + 1;
 			rows = updateValue( connection, logger, listener, session, updateValue, value );
 		}
 		while ( rows == 0 );
 		accessCount++;
-		return storeLastUsedValue ? value.increment() : value;
+		return storeLastUsedValue ? value + 1 : value;
 	}
 
 	private int updateValue(
@@ -582,13 +574,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SqlStatementLogger logger,
 			SessionEventListenerManager listener,
 			SharedSessionContractImplementor session,
-			IntegralDataTypeHolder updateValue,
-			IntegralDataTypeHolder value)
+			long updateValue,
+			long value)
 					throws SQLException {
 		TABLE_GENERATOR_LOGGER.updatingCurrentValueForSegment( updateValue, segmentValue );
 		try ( var statement = prepareStatement( connection, updateQuery, logger, listener, session ) ) {
-			updateValue.bind( statement, 1 );
-			value.bind( statement, 2 );
+			bindLong( statement, 1, updateValue );
+			bindLong( statement, 2, value );
 			statement.setString( 3, segmentValue );
 			return executeUpdate( statement, listener, updateQuery, session );
 		}
@@ -598,38 +590,38 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		}
 	}
 
-	private void retrieveCurrentValue(
+	private long retrieveCurrentValue(
 			Connection connection,
 			SqlStatementLogger logger,
 			SessionEventListenerManager listener,
-			SharedSessionContractImplementor session,
-			IntegralDataTypeHolder value)
+			SharedSessionContractImplementor session)
 					throws SQLException {
 		TABLE_GENERATOR_LOGGER.retrievingCurrentValueForSegment( segmentValue );
 		try ( var prepareStatement = prepareStatement( connection, selectQuery, logger, listener, session ) ) {
 			prepareStatement.setString( 1, segmentValue );
-			final var resultSet = executeQuery( prepareStatement, listener, selectQuery, session );
-			if ( !resultSet.next() ) {
-				final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
-				value.initialize( initializationValue );
-				TABLE_GENERATOR_LOGGER.insertingInitialValueForSegment( value, segmentValue );
-				try ( var statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
-					statement.setString( 1, segmentValue );
-					value.bind( statement, 2 );
-					executeUpdate( statement, listener, insertQuery, session );
+			try ( var resultSet = executeQuery( prepareStatement, listener, selectQuery, session ) ) {
+				if ( !resultSet.next() ) {
+					final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
+					TABLE_GENERATOR_LOGGER.insertingInitialValueForSegment( initializationValue, segmentValue );
+					try ( var statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
+						statement.setString( 1, segmentValue );
+						bindLong( statement, 2, initializationValue );
+						executeUpdate( statement, listener, insertQuery, session );
+					}
+					return initializationValue;
+				}
+				else {
+					final int defaultValue = storeLastUsedValue ? 0 : 1;
+					final long value = extractLong( resultSet, defaultValue );
+					if ( resultSet.wasNull() ) {
+						throw new HibernateException(
+								String.format( "%s for %s '%s' is null",
+										valueColumnName, segmentColumnName,
+										segmentValue ) );
+					}
+					return value;
 				}
 			}
-			else {
-				final int defaultValue = storeLastUsedValue ? 0 : 1;
-				value.initialize( resultSet, defaultValue );
-				if ( resultSet.wasNull() ) {
-					throw new HibernateException(
-							String.format( "%s for %s '%s' is null",
-									valueColumnName, segmentColumnName,
-									segmentValue ) );
-				}
-			}
-			resultSet.close();
 		}
 		catch (SQLException e) {
 			TABLE_GENERATOR_LOGGER.unableToReadOrInitializeHiValue( physicalTableName.render(), e );

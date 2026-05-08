@@ -5,7 +5,6 @@
 package org.hibernate.id.enhanced;
 
 import org.hibernate.Internal;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -61,7 +60,7 @@ public interface OptimizerLogger extends BasicLogger {
 
 	@LogMessage(level = INFO)
 	@Message(value = "Pooled optimizer source reported [%s] as the initial value; use of 1 or greater highly recommended", id = 90405)
-	void pooledOptimizerReportedInitialValue(IntegralDataTypeHolder value);
+	void pooledOptimizerReportedInitialValue(long value);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to interpret specified optimizer [%s], falling back to noop optimizer", id = 90406)

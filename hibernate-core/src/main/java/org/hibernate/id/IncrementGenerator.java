@@ -17,7 +17,8 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
 
-import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.IdentifierGeneratorHelper.extractLong;
+import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.PersistentIdentifierGenerator.CATALOG;
 import static org.hibernate.id.PersistentIdentifierGenerator.PK;
 import static org.hibernate.id.PersistentIdentifierGenerator.SCHEMA;
@@ -56,7 +57,7 @@ public class IncrementGenerator implements IdentifierGenerator {
 	private List<QualifiedTableName> physicalTableNames;
 	private String sql;
 
-	private IntegralDataTypeHolder previousValueHolder;
+	private long previousValue;
 
 	/**
 	 * @deprecated Exposed for tests only.
@@ -69,9 +70,9 @@ public class IncrementGenerator implements IdentifierGenerator {
 	@Override
 	public synchronized Object generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		if ( sql != null ) {
-			initializePreviousValueHolder( session );
+			initializePreviousValue( session );
 		}
-		return previousValueHolder.makeValueThenIncrement();
+		return makeIntegralValue( previousValue++, returnClass );
 	}
 
 	@Override
@@ -127,9 +128,7 @@ public class IncrementGenerator implements IdentifierGenerator {
 		sql = "select max(" + maxColumn + ") from " + union;
 	}
 
-	private void initializePreviousValueHolder(SharedSessionContractImplementor session) {
-		previousValueHolder = getIntegralDataTypeHolder( returnClass );
-
+	private void initializePreviousValue(SharedSessionContractImplementor session) {
 		if ( CORE_LOGGER.isTraceEnabled() ) {
 			CORE_LOGGER.tracef( "Fetching initial value: %s", sql );
 		}
@@ -139,18 +138,18 @@ public class IncrementGenerator implements IdentifierGenerator {
 			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 			try {
 				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
-				try {
-					if ( resultSet.next() ) {
-						previousValueHolder.initialize( resultSet, 0L ).increment();
+					try {
+						if ( resultSet.next() ) {
+							previousValue = extractLong( resultSet, 0L ) + 1;
+						}
+						else {
+							previousValue = 1L;
+						}
+						sql = null;
+						if ( CORE_LOGGER.isTraceEnabled() ) {
+							CORE_LOGGER.tracef( "First free id: %s", makeIntegralValue( previousValue, returnClass ) );
+						}
 					}
-					else {
-						previousValueHolder.initialize( 1L );
-					}
-					sql = null;
-					if ( CORE_LOGGER.isTraceEnabled() ) {
-						CORE_LOGGER.tracef( "First free id: %s", previousValueHolder.makeValue() );
-					}
-				}
 				finally {
 					resourceRegistry.release( resultSet, statement );
 				}

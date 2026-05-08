@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.idgen.enhanced.sequence;
 
-import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -49,8 +48,7 @@ public class BasicSequenceTest {
 
 				assertEquals( expectedId, entity.getId().longValue() );
 				assertEquals( expectedId, generator.getDatabaseStructure().getTimesAccessed() );
-				assertEquals( expectedId, ( (BasicHolder) generator.getOptimizer()
-						.getLastSourceValue() ).getActualLongValue() );
+				assertEquals( expectedId, generator.getOptimizer().getLastSourceValue().longValue() );
 			}
 		} );
 	}

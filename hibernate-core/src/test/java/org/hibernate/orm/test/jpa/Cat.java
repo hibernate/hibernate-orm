@@ -30,13 +30,12 @@ import org.jboss.logging.Logger;
 /**
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"unchecked", "serial"})
 @Entity
 @EntityListeners( LastUpdateListener.class )
 public class Cat implements Serializable {
 	private static final Logger log = Logger.getLogger( Cat.class );
 
-	private static final List ids = new ArrayList(); 	// used for assertions
+	private static final List<Integer> ids = new ArrayList<>(); 	// used for assertions
 	public static int postVersion = 0;	// used for assertions
 
 	private Integer id;
@@ -103,7 +102,7 @@ public class Cat implements Serializable {
 
 	@PostUpdate
 	private void someLateUpdateWorking() {
-		log.debug("PostUpdate for: " + this.toString());
+		log.debug( "PostUpdate for Cat id=" + id + ", name=" + name );
 		postVersion++;
 	}
 
@@ -125,7 +124,7 @@ public class Cat implements Serializable {
 		ids.add( getId() );
 	}
 
-	public static synchronized List getIdList() {
+	public static synchronized List<Integer> getIdList() {
 		return Collections.unmodifiableList( ids );
 	}
 

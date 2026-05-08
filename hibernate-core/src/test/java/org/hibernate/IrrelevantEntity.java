@@ -6,9 +6,8 @@ package org.hibernate;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * A testing entity for cases where the entity definition itself is irrelevant (testing JDBC connection semantics, etc).
@@ -21,8 +20,7 @@ public class IrrelevantEntity {
 	private String name;
 
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue(strategy = GenerationType.TABLE)
 	public Integer getId() {
 		return id;
 	}

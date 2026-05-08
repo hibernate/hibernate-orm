@@ -9,8 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 
-import org.hibernate.annotations.GenericGenerator;
-
 /**
  * The {@link Simple} entity redone with a generated value {@link #id1} as part of its
  * composite pk
@@ -22,8 +20,7 @@ import org.hibernate.annotations.GenericGenerator;
 @SuppressWarnings("serial")
 public class Simple2 implements Serializable {
 	@Id
-	@GenericGenerator(name = "increment", strategy = "increment")
-	@GeneratedValue(generator = "increment")
+	@GeneratedValue
 	private Long id1;
 
 	@Id

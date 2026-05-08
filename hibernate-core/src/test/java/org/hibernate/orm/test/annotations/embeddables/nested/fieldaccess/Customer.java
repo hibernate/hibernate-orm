@@ -14,8 +14,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.GenericGenerator;
-
 /**
  * @author Thomas Vanstals
  * @author Steve Ebersole
@@ -24,8 +22,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Access( value = AccessType.FIELD )
 public class Customer {
 	@Id
-	@GeneratedValue( generator="increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	private Long id;
 
 	@ElementCollection(fetch = FetchType.EAGER)

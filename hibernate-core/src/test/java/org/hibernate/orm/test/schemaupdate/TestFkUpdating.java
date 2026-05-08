@@ -12,7 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -61,8 +60,7 @@ public class TestFkUpdating {
 		private Set<Role> roles;
 
 		@Id
-		@GeneratedValue(generator = "increment")
-		@GenericGenerator(name = "increment",strategy = "increment")
+		@GeneratedValue
 		public Integer getId() {
 			return id;
 		}
@@ -87,8 +85,7 @@ public class TestFkUpdating {
 		private Integer id;
 
 		@Id
-		@GeneratedValue(generator = "increment")
-		@GenericGenerator(name = "increment",strategy = "increment")
+		@GeneratedValue
 		public Integer getId() {
 			return id;
 		}

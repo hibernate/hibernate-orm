@@ -12,8 +12,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.GenericGenerator;
-
 /**
  * @author Thomas Vanstals
  * @author Steve Ebersole
@@ -24,8 +22,7 @@ public class Customer {
 	private List<Investment> investments = new ArrayList<Investment>();
 
 	@Id
-	@GeneratedValue( generator="increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

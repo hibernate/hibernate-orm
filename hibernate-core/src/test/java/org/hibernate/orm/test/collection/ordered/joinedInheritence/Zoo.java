@@ -13,7 +13,6 @@ import jakarta.persistence.OneToMany;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.SQLOrder;
 
 /**
@@ -29,8 +28,7 @@ public class Zoo {
 	private Set<Animal> animals = new HashSet<>();
 
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( strategy = "increment", name = "increment" )
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

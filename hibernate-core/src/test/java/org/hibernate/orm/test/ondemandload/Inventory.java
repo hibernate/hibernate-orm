@@ -12,8 +12,6 @@ import jakarta.persistence.ManyToOne;
 
 import java.math.BigDecimal;
 
-import org.hibernate.annotations.GenericGenerator;
-
 @Entity
 public class Inventory {
 	private int id = -1;
@@ -32,7 +30,6 @@ public class Inventory {
 
 	@Id
 	@GeneratedValue
-	@GenericGenerator( name = "increment", strategy = "increment" )
 	public int getId() {
 		return id;
 	}

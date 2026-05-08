@@ -8,7 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 
@@ -30,8 +29,7 @@ public class Another {
 	}
 
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	public Integer getId() {
 		return id;
 	}

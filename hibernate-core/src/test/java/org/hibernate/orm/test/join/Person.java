@@ -17,7 +17,6 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Transient;
 
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * @author Gavin King
@@ -38,8 +37,7 @@ public class Person {
 	private char sex;
 
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	public long getId() {
 		return id;
 	}

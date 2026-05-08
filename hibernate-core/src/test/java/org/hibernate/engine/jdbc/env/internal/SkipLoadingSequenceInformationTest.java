@@ -8,8 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
@@ -41,14 +41,8 @@ public class SkipLoadingSequenceInformationTest {
 	@Entity(name="seqentity")
 	static class SequencingEntity {
 		@Id
-		@GenericGenerator(name = "pooledoptimizer", strategy = "enhanced-sequence",
-				parameters = {
-						@org.hibernate.annotations.Parameter(name = "optimizer", value = "pooled"),
-						@org.hibernate.annotations.Parameter(name = "initial_value", value = "1"),
-						@org.hibernate.annotations.Parameter(name = "increment_size", value = "2")
-				}
-		)
 		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pooledoptimizer")
+		@SequenceGenerator(name = "pooledoptimizer", initialValue = 1, allocationSize = 2)
 		Integer id;
 		String name;
 	}

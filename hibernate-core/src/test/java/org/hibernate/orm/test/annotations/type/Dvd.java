@@ -8,9 +8,6 @@ import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * @author Emmanuel Bernard
@@ -21,8 +18,7 @@ public class Dvd {
 	private String title;
 
 	@EmbeddedId
-	@GeneratedValue(generator = "custom-id")
-	@GenericGenerator(name = "custom-id", type = MyOidGenerator.class)
+	@MyOidGenerated
 	@AttributeOverride(name = "aHigh", column = @Column(name = "high"))
 	@AttributeOverride(name = "aMiddle", column = @Column(name = "middle"))
 	@AttributeOverride(name = "aLow", column = @Column(name = "low"))

@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.transaction.batch;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.SettingProvider;
@@ -19,6 +16,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
@@ -77,14 +75,12 @@ public abstract class AbstractJtaBatchTest extends AbstractBatchingTest {
 		private String message;
 
 		@Id
-		@GeneratedValue(generator = "eventLogIdGenerator")
-		@GenericGenerator(name = "eventLogIdGenerator", strategy = "org.hibernate.id.enhanced.TableGenerator", parameters = {
-				@Parameter(name = "table_name", value = "primaryKeyPools"),
-				@Parameter(name = "segment_value", value = "eventLog"),
-				@Parameter(name = "optimizer", value = "pooled"),
-				@Parameter(name = "increment_size", value = "500"),
-				@Parameter(name = "initial_value", value = "1")
-		})
+		@GeneratedValue(strategy = GenerationType.TABLE, generator = "eventLogIdGenerator")
+		@TableGenerator(name = "eventLogIdGenerator",
+				table = "primaryKeyPools",
+				pkColumnValue = "eventLog",
+				allocationSize = 500,
+				initialValue = 1)
 		public Long getId() {
 			return id;
 		}

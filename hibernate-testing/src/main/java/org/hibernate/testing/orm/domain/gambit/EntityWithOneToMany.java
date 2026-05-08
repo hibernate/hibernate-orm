@@ -12,7 +12,6 @@ import java.util.Set;
 
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
-import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -25,7 +24,6 @@ import jakarta.persistence.OneToMany;
  * @author Andrea Boriero
  */
 @Entity
-@GenericGenerator(name="increment", strategy = "increment")
 public class EntityWithOneToMany {
 	private Integer id;
 

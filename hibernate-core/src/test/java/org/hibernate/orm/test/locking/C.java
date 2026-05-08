@@ -10,7 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * @author Steve Ebersole
@@ -30,8 +29,7 @@ public class C {
 	}
 
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

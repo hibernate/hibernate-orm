@@ -8,10 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.id.enhanced.TableGenerator;
+import jakarta.persistence.TableGenerator;
 
 /**
  * @author Steve Ebersole
@@ -20,15 +17,7 @@ import org.hibernate.id.enhanced.TableGenerator;
 public class Invoice {
 	@Id
 	@GeneratedValue(strategy = GenerationType.TABLE, generator = "number_sequence")
-	@GenericGenerator(
-			name = "number_sequence",
-			strategy = "org.hibernate.id.enhanced.TableGenerator",
-			parameters = {
-					@Parameter(name = TableGenerator.SEGMENT_VALUE_PARAM, value = "customer"),
-					@Parameter(name = TableGenerator.INCREMENT_PARAM, value = "5"),
-					@Parameter(name = TableGenerator.OPT_PARAM, value = "pooled")
-			}
-	)
+	@TableGenerator(name = "number_sequence", pkColumnValue = "customer", allocationSize = 5)
 	private Long id;
 
 	public Long getId() {

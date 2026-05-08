@@ -14,8 +14,6 @@ import jakarta.persistence.OrderBy;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.annotations.GenericGenerator;
-
 /**
  * @author Steve Ebersole
  */
@@ -34,8 +32,7 @@ public class Person {
 
 
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

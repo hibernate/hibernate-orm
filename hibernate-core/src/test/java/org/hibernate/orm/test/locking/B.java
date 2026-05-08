@@ -11,7 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @Table(name = "T_LOCK_B")
@@ -29,8 +28,7 @@ public class B {
 	}
 
 	@Id
-	@GeneratedValue(generator = "increment")
-	@GenericGenerator(name = "increment", strategy = "increment")
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

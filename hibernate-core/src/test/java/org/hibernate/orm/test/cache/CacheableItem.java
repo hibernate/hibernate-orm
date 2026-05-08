@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * TODO : javadoc
@@ -30,8 +29,7 @@ public class CacheableItem {
 	}
 
 	@Id
-	@GeneratedValue(generator = "increment")
-	@GenericGenerator(name = "increment", strategy = "increment")
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

@@ -11,7 +11,6 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ParamDef;
 
 /**
@@ -26,8 +25,7 @@ public class Account {
 	private String regionCode;
 
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

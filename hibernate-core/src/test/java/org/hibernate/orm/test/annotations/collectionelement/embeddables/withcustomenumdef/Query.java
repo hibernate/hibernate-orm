@@ -14,8 +14,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.GenericGenerator;
-
 /**
  * @author Steve Ebersole
  */
@@ -23,8 +21,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Table(name="`Query`")
 public class Query {
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	private Long id;
 
 	@ElementCollection(fetch = FetchType.EAGER)

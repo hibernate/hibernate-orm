@@ -9,8 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.List;
 
 /**
@@ -23,8 +21,7 @@ import java.util.List;
 @Table(name="ENT_W_MANY_COLS")
 public class MultiTypedBasicAttributesEntity {
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	private Long id;
 	private int[] someInts;
 	private Integer[] someWrappedIntegers;

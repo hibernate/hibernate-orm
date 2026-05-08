@@ -16,11 +16,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.SequenceGenerator;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -130,12 +129,8 @@ public class UpdateOrderingIdentityIdentifierTest {
 		private Zoo zoo;
 
 		@Id
-		@GeneratedValue(generator = "AnimalSeq")
-		@GenericGenerator(name = "AniamlSeq", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
-				@Parameter(name = "sequence_name", value = "ANIMAL_SEQ"),
-				@Parameter(name = "optimizer", value = "pooled"),
-				@Parameter(name = "increment_size", value = "50")
-		})
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "AnimalSeq")
+		@SequenceGenerator(name = "AnimalSeq", sequenceName = "ANIMAL_SEQ", allocationSize = 50)
 		public Long getId() {
 			return id;
 		}

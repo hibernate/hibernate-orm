@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.valuehandlingmode.inline;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -16,8 +14,9 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -57,12 +56,12 @@ public class OptionalOneToOneTest {
 
 	@Entity(name = "Person")
 	public static class Person {
-		@Id @GeneratedValue(generator = "fk")
-		@GenericGenerator(strategy = "foreign", name = "fk", parameters = @Parameter(name="property", value="personAddress"))
+		@Id
 		private Integer id;
 
-		@PrimaryKeyJoinColumn
-		@OneToOne(optional=true)
+		@MapsId
+		@OneToOne
+		@JoinColumn(name = "id")
 		private PersonAddress personAddress;
 
 		public Integer getId() {

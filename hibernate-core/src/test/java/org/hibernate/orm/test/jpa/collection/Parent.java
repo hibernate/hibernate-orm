@@ -19,8 +19,8 @@ import jakarta.persistence.Transient;
 public class Parent {
 
 	private Integer id;
-	private Set<Child> children = new HashSet<Child>();
-	private int nrOfChildren;
+	private Set<Child> children = new HashSet<>();
+	private boolean postLoadCalled;
 
 	public Parent() {
 
@@ -44,11 +44,16 @@ public class Parent {
 
 	@PostLoad
 	public void postLoad() {
-	nrOfChildren = children.size();
+		postLoadCalled = true;
 	}
 
 	@Transient
 	public int getNrOfChildren() {
-		return nrOfChildren;
+		return children.size();
+	}
+
+	@Transient
+	public boolean isPostLoadCalled() {
+		return postLoadCalled;
 	}
 }

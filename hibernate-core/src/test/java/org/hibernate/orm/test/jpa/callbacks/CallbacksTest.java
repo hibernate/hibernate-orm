@@ -6,7 +6,6 @@ package org.hibernate.orm.test.jpa.callbacks;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import org.hibernate.orm.test.jpa.Cat;
 import org.hibernate.orm.test.jpa.Kitten;
@@ -18,7 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -26,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("unchecked")
 @Jpa(annotatedClasses = {
 		Cat.class,
 		Kitten.class,
@@ -46,23 +44,23 @@ public class CallbacksTest {
 	public void testCallbackMethod(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					Cat c = new Cat();
-					c.setName( "Kitty" );
-					c.setDateOfBirth( new Date( 90, 11, 15 ) );
-					entityManager.persist( c );
+					var cat = new Cat();
+					cat.setName( "Kitty" );
+					cat.setDateOfBirth( new Date( 90, 11, 15 ) );
+					entityManager.persist( cat );
 					entityManager.getTransaction().commit();
 
 					entityManager.clear();
 
 					entityManager.getTransaction().begin();
-					c = entityManager.find( Cat.class, c.getId() );
-					assertFalse( c.getAge() == 0 );
-					c.setName( "Tomcat" ); //update this entity
+					cat = entityManager.find( Cat.class, cat.getId() );
+					assertNotEquals( 0, cat.getAge() );
+					cat.setName( "Tomcat" ); //update this entity
 					entityManager.getTransaction().commit();
 					entityManager.clear();
 					entityManager.getTransaction().begin();
-					c = entityManager.find( Cat.class, c.getId() );
-					assertEquals( "Tomcat", c.getName() );
+					cat = entityManager.find( Cat.class, cat.getId() );
+					assertEquals( "Tomcat", cat.getName() );
 				}
 		);
 	}
@@ -86,45 +84,41 @@ public class CallbacksTest {
 		}
 		scope.inTransaction(
 				entityManager -> {
-					Cat c = new Cat();
-					c.setName( "Kitty" );
-					c.setLength( 12 );
-					c.setDateOfBirth( new Date( 90, 11, 15 ) );
-					PV previousVersion = new PV( c.getManualVersion() );
-					entityManager.persist( c );
+					var cat = new Cat();
+					cat.setName( "Kitty" );
+					cat.setLength( 12 );
+					cat.setDateOfBirth( new Date( 90, 11, 15 ) );
+					var previousVersion = new PV( cat.getManualVersion() );
+					entityManager.persist( cat );
 					entityManager.getTransaction().commit();
 
 					entityManager.getTransaction().begin();
-					c = entityManager.find( Cat.class, c.getId() );
-					assertNotNull( c.getLastUpdate() );
-					assertTrue( previousVersion.get() < c.getManualVersion() );
-					assertEquals( 12, c.getLength() );
-					previousVersion.set( c.getManualVersion() );
-					c.setName( "new name" );
+					cat = entityManager.find( Cat.class, cat.getId() );
+					assertNotNull( cat.getLastUpdate() );
+					assertTrue( previousVersion.get() < cat.getManualVersion() );
+					assertEquals( 12, cat.getLength() );
+					previousVersion.set( cat.getManualVersion() );
+					cat.setName( "new name" );
 					entityManager.getTransaction().commit();
 					entityManager.getTransaction().begin();
-					c = entityManager.find( Cat.class, c.getId() );
-					assertTrue( previousVersion.get() < c.getManualVersion() );
+					cat = entityManager.find( Cat.class, cat.getId() );
+					assertTrue( previousVersion.get() < cat.getManualVersion() );
 				}
 		);
 	}
 
 	@Test
 	public void testPostPersist(EntityManagerFactoryScope scope) {
-		Cat c = new Cat();
-		c.setLength( 23 );
-		c.setAge( 2 );
-		c.setName( "Beetle" );
-		c.setDateOfBirth( new Date() );
+		var cat = new Cat();
+		cat.setLength( 23 );
+		cat.setAge( 2 );
+		cat.setName( "Beetle" );
+		cat.setDateOfBirth( new Date() );
 
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.persist( c );
-				}
-		);
+		scope.inTransaction( entityManager -> entityManager.persist( cat ) );
 
-		List ids = Cat.getIdList();
-		Object id = Cat.getIdList().get( ids.size() - 1 );
+		var ids = Cat.getIdList();
+		Object id = ids.get( ids.size() - 1 );
 		assertNotNull( id );
 	}
 
@@ -132,7 +126,7 @@ public class CallbacksTest {
 	public void listenerAnnotation(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
-					Translation tl = new Translation();
+					var tl = new Translation();
 					entityManager.getTransaction().begin();
 					tl.setInto( "France" );
 					entityManager.persist( tl );
@@ -158,8 +152,8 @@ public class CallbacksTest {
 	public void testPrePersistOnCascade(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					Television tv = new Television();
-					RemoteControl rc = new RemoteControl();
+					var tv = new Television();
+					var rc = new RemoteControl();
 					entityManager.persist( tv );
 					entityManager.flush();
 					tv.setControl( rc );
@@ -174,7 +168,7 @@ public class CallbacksTest {
 	public void testCallBackListenersHierarchy(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					Television tv = new Television();
+					var tv = new Television();
 					entityManager.persist( tv );
 					tv.setName( "Myaio" );
 					tv.init();
@@ -191,9 +185,9 @@ public class CallbacksTest {
 		scope.inEntityManager(
 				entityManager -> {
 					entityManager.getTransaction().begin();
-					Rythm r = new Rythm();
+					var rythm = new Rythm();
 					try {
-						entityManager.persist( r );
+						entityManager.persist( rythm );
 						entityManager.flush();
 						fail( "should have raised an ArythmeticException:" );
 					}
@@ -215,7 +209,7 @@ public class CallbacksTest {
 	public void testIdNullSetByPrePersist(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					Plant plant = new Plant();
+					var plant = new Plant();
 					plant.setName( "Origuna plantula gigantic" );
 					entityManager.persist( plant );
 					entityManager.flush();
@@ -230,7 +224,7 @@ public class CallbacksTest {
 				entityManager -> {
 					try {
 						// create a cat
-						Cat cat = new Cat();
+						var cat = new Cat();
 						cat.setLength( 23 );
 						cat.setAge( 2 );
 						cat.setName( "Beetle" );
@@ -239,22 +233,22 @@ public class CallbacksTest {
 						entityManager.persist( cat );
 						entityManager.getTransaction().commit();
 						// assert it is persisted
-						List ids = Cat.getIdList();
+						var ids = Cat.getIdList();
 						Object id = Cat.getIdList().get( ids.size() - 1 );
 						assertNotNull( id );
 
 						// add a kitten to the cat - triggers PostCollectionRecreateEvent
 						int postVersion = Cat.postVersion;
 						entityManager.getTransaction().begin();
-						Kitten kitty = new Kitten();
+						var kitty = new Kitten();
 						kitty.setName( "kitty" );
-						List kittens = new ArrayList<Kitten>();
+						var kittens = new ArrayList<Kitten>();
 						kittens.add( kitty );
 						cat.setKittens( kittens );
 						entityManager.getTransaction().commit();
 						assertEquals( postVersion + 1, Cat.postVersion, "Post version should have been incremented." );
 
-						Kitten tom = new Kitten();
+						var tom = new Kitten();
 						tom.setName( "Tom" );
 
 						// add another kitten - triggers PostCollectionUpdateEvent.

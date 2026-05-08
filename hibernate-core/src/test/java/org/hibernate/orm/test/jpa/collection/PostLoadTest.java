@@ -17,6 +17,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa( annotatedClasses = { Child.class, Parent.class } )
 public class PostLoadTest {
@@ -49,15 +50,16 @@ public class PostLoadTest {
 	}
 
 	/**
-	 * Load an entity with a collection of associated entities, that uses a @PostLoad method to
-	 * access the association.
+	 * Load an entity with a collection of associated entities and verify that @PostLoad
+	 * was invoked without accessing the association from the callback.
 	 */
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-6043" )
-	public void testAccessAssociatedSetInPostLoad(EntityManagerFactoryScope scope) {
+	public void testAssociatedSetAfterPostLoad(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
 					Parent daddy = entityManager.find( Parent.class, 1 );
+					assertTrue( daddy.isPostLoadCalled() );
 					assertEquals( 1, daddy.getNrOfChildren() );
 				}
 		);
@@ -65,13 +67,15 @@ public class PostLoadTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17489" )
-	public void testAccessAssociatedSetInPostLoadQuery(EntityManagerFactoryScope scope) {
+	public void testAssociatedSetAfterPostLoadQuery(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( entityManager -> {
 			final CriteriaQuery<Parent> cq = entityManager.getCriteriaBuilder().createQuery( Parent.class );
 			final Root<Parent> from = cq.from( Parent.class );
 			final List<Parent> parents = entityManager.createQuery( cq.select( from ) ).getResultList();
 			assertEquals( 2, parents.size() );
+			assertTrue( parents.get( 0 ).isPostLoadCalled() );
 			assertEquals( 1, parents.get( 0 ).getNrOfChildren() );
+			assertTrue( parents.get( 1 ).isPostLoadCalled() );
 			assertEquals( 1, parents.get( 1 ).getNrOfChildren() );
 		} );
 	}

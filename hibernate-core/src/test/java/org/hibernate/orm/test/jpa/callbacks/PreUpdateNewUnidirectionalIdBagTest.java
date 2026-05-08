@@ -13,7 +13,6 @@ import java.util.Set;
 
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
-import org.hibernate.annotations.GenericGenerator;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -29,6 +28,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.SequenceGenerator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -80,7 +80,7 @@ public class PreUpdateNewUnidirectionalIdBagTest {
 
 	@Entity(name = "Person")
 	@EntityListeners( PersonListener.class )
-	@GenericGenerator(name="increment", strategy = "increment")
+	@SequenceGenerator(name = "tag_id_seq", sequenceName = "tag_id_seq")
 	public static class Person {
 		@Id
 		private int id;
@@ -105,7 +105,7 @@ public class PreUpdateNewUnidirectionalIdBagTest {
 			this.lastUpdatedAt = lastUpdatedAt;
 		}
 
-		@CollectionId( column = @Column(name = "n_key_tag"), generator = "increment" )
+		@CollectionId( column = @Column(name = "n_key_tag"), generator = "tag_id_seq" )
 		@CollectionIdJdbcTypeCode( Types.BIGINT )
 		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 		private Collection<Tag> tags = new ArrayList<Tag>();

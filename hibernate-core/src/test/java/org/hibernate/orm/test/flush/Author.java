@@ -14,8 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.GenericGenerator;
-
 /**
  * @author Steve Ebersole
  */
@@ -34,8 +32,7 @@ public class Author {
 	}
 
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( name = "increment", strategy = "increment" )
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

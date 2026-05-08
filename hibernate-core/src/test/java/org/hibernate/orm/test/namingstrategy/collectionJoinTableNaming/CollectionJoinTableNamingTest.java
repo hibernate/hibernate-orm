@@ -11,13 +11,11 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -167,8 +165,7 @@ public class CollectionJoinTableNamingTest {
 	@Table(name = "ptx")
 	public static class Ptx {
 		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO, generator = "increment")
-		@GenericGenerator(name = "increment", strategy = "increment")
+		@GeneratedValue
 		private Integer id;
 
 		@OrderColumn
@@ -185,8 +182,7 @@ public class CollectionJoinTableNamingTest {
 	@Table(name = "input")
 	public class Input implements Serializable {
 		@Id
-		@GeneratedValue(strategy = GenerationType.AUTO, generator = "increment")
-		@GenericGenerator(name = "increment", strategy = "increment")
+		@GeneratedValue
 		private Integer id;
 	}
 }

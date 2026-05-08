@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
-import org.hibernate.annotations.GenericGenerator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,6 +23,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -166,7 +166,7 @@ public class IdBagElementNullBasicTest {
 
 	@Entity(name = "AnEntity")
 	@Table(name = "AnEntity")
-	@GenericGenerator(name = "increment", strategy = "increment")
+	@SequenceGenerator(name = "element_id_seq", sequenceName = "element_id_seq")
 	public static class AnEntity {
 		@Id
 		@GeneratedValue
@@ -174,7 +174,7 @@ public class IdBagElementNullBasicTest {
 
 		@ElementCollection
 		@CollectionTable(name = "collection_table", joinColumns = { @JoinColumn(name = "entity_fk") })
-		@CollectionId( column = @Column(name = "element_id"), generator = "increment" )
+		@CollectionId( column = @Column(name = "element_id"), generator = "element_id_seq" )
 		@CollectionIdJdbcTypeCode( Types.BIGINT )
 		@Column( name = "element_value" )
 		private List<String> aCollection = new ArrayList<>();

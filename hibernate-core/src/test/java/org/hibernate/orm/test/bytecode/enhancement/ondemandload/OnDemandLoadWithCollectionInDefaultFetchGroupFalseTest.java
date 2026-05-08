@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -216,7 +215,6 @@ public class OnDemandLoadWithCollectionInDefaultFetchGroupFalseTest {
 
 		@Id
 		@GeneratedValue
-		@GenericGenerator( name = "increment", strategy = "increment" )
 		Long id = -1L;
 
 		@ManyToOne

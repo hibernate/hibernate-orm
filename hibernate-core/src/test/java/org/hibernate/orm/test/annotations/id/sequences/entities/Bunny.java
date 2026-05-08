@@ -9,11 +9,8 @@ import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Blown precision on related entity when &#064;JoinColumn is used.
@@ -24,8 +21,6 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 public class Bunny implements Serializable {
 	@Id
-	@GeneratedValue(generator = "java5_uuid")
-	@GenericGenerator(name = "java5_uuid", type = org.hibernate.orm.test.annotations.id.UUIDGenerator.class)
 	@Column(name = "id", precision = 128)
 	private BigInteger id;
 

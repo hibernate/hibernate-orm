@@ -11,8 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.SequenceGenerator;
 
-import org.hibernate.annotations.GenericGenerator;
-
 /**
  * An Entity containing a composite key with two generated values.
  *
@@ -24,8 +22,7 @@ import org.hibernate.annotations.GenericGenerator;
 public class Multiple implements Serializable
 {
 @Id
-@GenericGenerator(name = "increment", strategy = "increment")
-@GeneratedValue(generator = "increment")
+@GeneratedValue
 private Long id1;
 
 @Id

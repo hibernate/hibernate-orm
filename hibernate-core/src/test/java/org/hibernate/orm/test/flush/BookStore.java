@@ -12,8 +12,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 
-import org.hibernate.annotations.GenericGenerator;
-
 /**
  * @author Guillaume Smet
  */
@@ -32,8 +30,7 @@ public class BookStore {
 	}
 
 	@Id
-	@GeneratedValue(generator = "increment")
-	@GenericGenerator(name = "increment", strategy = "increment")
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

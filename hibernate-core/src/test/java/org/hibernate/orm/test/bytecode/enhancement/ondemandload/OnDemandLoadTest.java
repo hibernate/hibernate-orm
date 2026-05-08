@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.ondemandload;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -204,7 +203,6 @@ public class OnDemandLoadTest {
 
 		@Id
 		@GeneratedValue
-		@GenericGenerator( name = "increment", strategy = "increment" )
 		Long id = -1L;
 
 		@ManyToOne

@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.mappedsuperclass.intermediate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,8 +18,7 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class AccountBase {
 	@Id
-	@org.hibernate.annotations.GenericGenerator(name = "generator_Account", strategy = "increment")
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "generator_Account")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	@Column(name = "ACC_ID")
 	private Long id;
 

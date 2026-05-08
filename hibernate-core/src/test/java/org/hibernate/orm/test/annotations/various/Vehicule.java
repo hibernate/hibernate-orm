@@ -6,7 +6,6 @@ package org.hibernate.orm.test.annotations.various;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
@@ -15,7 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 import jakarta.persistence.Table;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 /**
  * @author Emmanuel Bernard
@@ -30,8 +29,7 @@ import org.hibernate.annotations.GenericGenerator;
 					@Index(name = "forthone", columnList = "previousConductor")})
 public class Vehicule {
 	@Id
-	@GeneratedValue(generator = "gen")
-	@GenericGenerator(name = "gen", strategy = "uuid")
+	@UuidGenerator
 	private String id;
 	@Column(name = "registration")
 	private String registrationNumber;

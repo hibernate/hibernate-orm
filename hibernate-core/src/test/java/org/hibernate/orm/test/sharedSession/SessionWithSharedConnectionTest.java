@@ -206,10 +206,9 @@ public class SessionWithSharedConnectionTest {
 
 		parentSession.getTransaction().commit();
 
-		assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).startsWith( "select max(id) " );
-		assertThat( sqlCollector.getSqlQueries().get( 1 ) ).startsWith( "insert" );
-		assertThat( sqlCollector.getSqlQueries().get( 2 ) ).startsWith( "insert" );
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).startsWith( "insert " );
+		assertThat( sqlCollector.getSqlQueries().get( 1 ) ).startsWith( "insert " );
 
 		// both entities should have their names updated to the postCommitMessage value
 		assertThat( mainEntity.getName() ).isEqualTo( postCommitMessage );

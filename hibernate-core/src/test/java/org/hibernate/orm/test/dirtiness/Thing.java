@@ -10,16 +10,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
 
-import org.hibernate.annotations.GenericGenerator;
-
 /**
  * @author Steve Ebersole
  */
 @Entity
 public class Thing {
 	@Id
-	@GeneratedValue( generator = "increment" )
-	@GenericGenerator( strategy = "increment", name = "increment" )
+	@GeneratedValue
 	private Long id;
 
 	private String name;

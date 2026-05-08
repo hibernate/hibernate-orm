@@ -10,8 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -54,8 +52,7 @@ public class IdentifierGenerationExceptionHandlingTest extends BaseExceptionHand
 	@Entity(name = "OwnerAddress")
 	public static class OwnerAddress {
 		@Id
-		@GeneratedValue(generator = "fk_1")
-		@GenericGenerator(strategy = "foreign", name = "fk_1", parameters = @Parameter(name = "property", value = "owner"))
+		@FkId(property = "owner")
 		private Integer id;
 
 		@OneToOne(mappedBy = "address")

@@ -9,8 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
@@ -63,8 +61,7 @@ public class MergeWithTransientNonCascadedAssociationTest {
 	@Entity(name = "Person")
 	public static class Person {
 		@Id
-		@GeneratedValue(generator = "increment")
-		@GenericGenerator(name = "increment", strategy = "increment")
+		@GeneratedValue
 		private Integer id;
 		@ManyToOne
 		private Address address;
@@ -76,8 +73,7 @@ public class MergeWithTransientNonCascadedAssociationTest {
 	@Entity(name = "Address")
 	public static class Address {
 		@Id
-		@GeneratedValue(generator = "increment_1")
-		@GenericGenerator(name = "increment_1", strategy = "increment")
+		@GeneratedValue
 		private Integer id;
 	}
 }

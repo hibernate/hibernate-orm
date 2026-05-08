@@ -6,11 +6,10 @@ package org.hibernate.orm.test.annotations.enumerated.mappedSuperclass;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -76,8 +75,7 @@ public class EnumeratedWithMappedSuperclassTest {
 	public static abstract class Entity implements Serializable {
 		public static final String PROPERTY_NAME_ID = "id";
 		@Id
-		@GeneratedValue(generator = "uuid2")
-		@GenericGenerator(name = "uuid2", strategy = "uuid2")
+		@UuidGenerator
 		@Column(columnDefinition = "varchar", unique = true, nullable = false)
 		private String id;
 

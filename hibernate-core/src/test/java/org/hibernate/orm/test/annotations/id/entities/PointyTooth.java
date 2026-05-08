@@ -7,12 +7,9 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Blown precision on related entity when &#064;JoinColumn is used.
@@ -24,8 +21,6 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 public class PointyTooth implements Serializable {
 	@Id
-	@GeneratedValue(generator = "java5_uuid")
-	@GenericGenerator(name = "java5_uuid", type = org.hibernate.orm.test.annotations.id.UUIDGenerator.class)
 	@Column(name = "id", precision = 128, scale = 0)
 	private BigDecimal id;
 

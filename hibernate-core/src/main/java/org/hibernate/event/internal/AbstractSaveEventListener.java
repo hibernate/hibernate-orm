@@ -194,7 +194,7 @@ public abstract class AbstractSaveEventListener<C> {
 
 		// call this after generation of an id,
 		// but before we retrieve an assigned id
-		persister.getEntityCallbacks().preCreate( entity );
+		source.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preCreate( entity ) );
 
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 		processIfManagedEntity( entity, managedEntity -> managedEntity.$$_hibernate_setUseTracker( true ) );
@@ -436,13 +436,14 @@ public abstract class AbstractSaveEventListener<C> {
 			Object[] values,
 			EntityPersister persister,
 			SessionImplementor source) {
-		boolean substitute = source.getInterceptor().onPersist(
-				entity,
-				id,
-				values,
-				persister.getPropertyNames(),
-				persister.getPropertyTypes()
-		);
+		boolean substitute = source.callInterceptorCallback(
+				() -> source.getInterceptor().onPersist(
+						entity,
+						id,
+						values,
+						persister.getPropertyNames(),
+						persister.getPropertyTypes()
+				) );
 
 		//keep the existing version number in the case of replicate!
 		if ( persister.isVersioned() ) {

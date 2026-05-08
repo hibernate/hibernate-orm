@@ -69,6 +69,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * A wrapper class that delegates all method invocations to a delegate instance of
@@ -924,5 +925,21 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public boolean isManaged(Object entity) {
 		return delegate.isManaged( entity );
+	}
+
+	public void runEntityLifecycleCallback(Runnable callback) {
+		delegate.runEntityLifecycleCallback( callback );
+	}
+
+	public <T> T callEntityLifecycleCallback(Supplier<T> callback) {
+		return delegate.callEntityLifecycleCallback( callback );
+	}
+
+	public void runInterceptorCallback(Runnable callback) {
+		delegate.runInterceptorCallback( callback );
+	}
+
+	public <T> T callInterceptorCallback(Supplier<T> callback) {
+		return delegate.callInterceptorCallback( callback );
 	}
 }

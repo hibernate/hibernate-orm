@@ -24,7 +24,8 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener {
 	@Override
 	public void onPostLoad(PostLoadEvent event) {
 		final Object entity = event.getEntity();
-		event.getPersister().getEntityCallbacks().postLoad( entity );
+		event.getSession().runEntityLifecycleCallback(
+				() -> event.getPersister().getEntityCallbacks().postLoad( entity ) );
 
 		final var session = event.getSession();
 		final var entry = session.getPersistenceContextInternal().getEntry( entity );

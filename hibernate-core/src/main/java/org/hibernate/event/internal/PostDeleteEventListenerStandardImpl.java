@@ -19,7 +19,8 @@ public class PostDeleteEventListenerStandardImpl implements PostDeleteEventListe
 	@Override
 	public void onPostDelete(PostDeleteEvent event) {
 		Object entity = event.getEntity();
-		event.getPersister().getEntityCallbacks().postRemove( entity );
+		event.getSession().runEntityLifecycleCallback(
+				() -> event.getPersister().getEntityCallbacks().postRemove( entity ) );
 	}
 
 	@Override

@@ -330,12 +330,21 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final var persister = entry.getPersister();
 
 		final boolean isDirty = entry.getStatus() != Status.DELETED
-				&& persister.getEntityCallbacks().preUpdate( entity )
+				&& event.getSession().callEntityLifecycleCallback(
+						() -> persister.getEntityCallbacks().preUpdate( entity ) )
 				&& copyState( entity, persister.getPropertyTypes(), values, event.getFactory() );
 
-		final boolean stateModified = event.getSession()
-				.getInterceptor()
-				.onFlushDirty( entity, id, values, entry.getLoadedState(), persister.getPropertyNames(), persister.getPropertyTypes() );
+		final boolean stateModified = event.getSession().callInterceptorCallback(
+				() -> event.getSession()
+						.getInterceptor()
+						.onFlushDirty(
+								entity,
+								id,
+								values,
+								entry.getLoadedState(),
+								persister.getPropertyNames(),
+								persister.getPropertyTypes()
+						) );
 
 		return stateModified || isDirty;
 	}
@@ -553,14 +562,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	private static int[] getDirtyPropertiesFromInterceptor(FlushEntityEvent event) {
 		final var entry = event.getEntityEntry();
 		final var persister = entry.getPersister();
-		return event.getSession().getInterceptor().findDirty(
-				event.getEntity(),
-				entry.getId(),
-				event.getPropertyValues(),
-				entry.getLoadedState(),
-				persister.getPropertyNames(),
-				persister.getPropertyTypes()
-		);
+		return event.getSession().callInterceptorCallback(
+				() -> event.getSession().getInterceptor().findDirty(
+						event.getEntity(),
+						entry.getId(),
+						event.getPropertyValues(),
+						entry.getLoadedState(),
+						persister.getPropertyNames(),
+						persister.getPropertyTypes()
+				) );
 	}
 
 	private static int[] getDirtyPropertiesFromCustomEntityDirtinessStrategy(FlushEntityEvent event) {

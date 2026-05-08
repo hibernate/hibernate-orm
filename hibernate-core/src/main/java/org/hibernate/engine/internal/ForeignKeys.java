@@ -304,7 +304,8 @@ public final class ForeignKeys {
 		}
 
 		// let the interceptor inspect the instance to decide
-		final Boolean isUnsavedAccordingToInterceptor = session.getInterceptor().isTransient( entity );
+		final Boolean isUnsavedAccordingToInterceptor =
+				session.callInterceptorCallback( () -> session.getInterceptor().isTransient( entity ) );
 		if ( isUnsavedAccordingToInterceptor != null ) {
 			return isUnsavedAccordingToInterceptor;
 		}

@@ -24,7 +24,7 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 		// mimic the preUpdate filter
 		if ( source.isStateless()
 				|| source.getPersistenceContextInternal().getEntry( entity ).getStatus() != Status.DELETED ) {
-			persister.getEntityCallbacks().postUpdate(entity);
+			source.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().postUpdate( entity ) );
 		}
 	}
 

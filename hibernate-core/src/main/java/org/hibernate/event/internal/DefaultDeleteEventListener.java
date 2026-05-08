@@ -264,7 +264,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			Object id,
 			Object version,
 			EntityEntry entityEntry) {
-		persister.getEntityCallbacks().preRemove( entity );
+		source.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preRemove( entity ) );
 		deleteEntity(
 				source,
 				entity,
@@ -374,13 +374,14 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		final Object[] deletedState = createDeletedState( persister, entity, currentState, session );
 		entityEntry.setDeletedState( deletedState );
 
-		session.getInterceptor().onRemove(
-				entity,
-				entityEntry.getId(),
-				deletedState,
-				persister.getPropertyNames(),
-				persister.getPropertyTypes()
-		);
+		session.runInterceptorCallback(
+				() -> session.getInterceptor().onRemove(
+						entity,
+						entityEntry.getId(),
+						deletedState,
+						persister.getPropertyNames(),
+						persister.getPropertyTypes()
+				) );
 
 		final var persistenceContext = session.getPersistenceContextInternal();
 

@@ -7,6 +7,7 @@ package org.hibernate.internal;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * @author Steve Ebersole
@@ -14,15 +15,26 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 class CoordinatingEntityNameResolver implements EntityNameResolver {
 	private final SessionFactoryImplementor sessionFactory;
 	private final Interceptor interceptor;
+	private final SharedSessionContractImplementor session;
 
 	CoordinatingEntityNameResolver(SessionFactoryImplementor sessionFactory, Interceptor interceptor) {
+		this( sessionFactory, interceptor, null );
+	}
+
+	CoordinatingEntityNameResolver(
+			SessionFactoryImplementor sessionFactory,
+			Interceptor interceptor,
+			SharedSessionContractImplementor session) {
 		this.sessionFactory = sessionFactory;
 		this.interceptor = interceptor;
+		this.session = session;
 	}
 
 	@Override
 	public String resolveEntityName(Object entity) {
-		final String interceptorEntityName = interceptor.getEntityName( entity );
+		final String interceptorEntityName = session == null
+				? interceptor.getEntityName( entity )
+				: session.callInterceptorCallback( () -> interceptor.getEntityName( entity ) );
 		if ( interceptorEntityName != null ) {
 			return interceptorEntityName;
 		}

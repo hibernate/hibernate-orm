@@ -79,7 +79,8 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	protected void preFlush(EventSource session, PersistenceContext persistenceContext) {
-		session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() );
+		session.runInterceptorCallback(
+				() -> session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() ) );
 		prepareEntityFlushes( session, persistenceContext );
 		// we could move this inside if we wanted to
 		// tolerate collection initializations during
@@ -275,7 +276,8 @@ public abstract class AbstractFlushingEventListener {
 				(collection, collectionEntry) -> {
 					if ( collectionEntry.isDorecreate() ) {
 						final var currentKey = collectionEntry.getCurrentKey();
-						interceptor.onCollectionRecreate( collection, currentKey );
+						session.runInterceptorCallback(
+								() -> interceptor.onCollectionRecreate( collection, currentKey ) );
 						actionQueue.addAction(
 								new CollectionRecreateAction(
 										collection,
@@ -287,7 +289,8 @@ public abstract class AbstractFlushingEventListener {
 					}
 					if ( collectionEntry.isDoremove() ) {
 						final var loadedKey = collectionEntry.getLoadedKey();
-						interceptor.onCollectionRemove( collection, loadedKey );
+						session.runInterceptorCallback(
+								() -> interceptor.onCollectionRemove( collection, loadedKey ) );
 						if ( !skipRemoval( session, collectionEntry.getLoadedPersister(), loadedKey ) ) {
 							actionQueue.addAction(
 									new CollectionRemoveAction(
@@ -302,7 +305,8 @@ public abstract class AbstractFlushingEventListener {
 					}
 					if ( collectionEntry.isDoupdate() ) {
 						final var loadedKey = collectionEntry.getLoadedKey();
-						interceptor.onCollectionUpdate( collection, loadedKey );
+						session.runInterceptorCallback(
+								() -> interceptor.onCollectionUpdate( collection, loadedKey ) );
 						actionQueue.addAction(
 								new CollectionUpdateAction(
 										collection,
@@ -430,8 +434,9 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	protected void postPostFlush(SessionImplementor session) {
-		session.getInterceptor()
-				.postFlush( session.getPersistenceContextInternal().managedEntitiesIterator() );
+		session.runInterceptorCallback(
+				() -> session.getInterceptor()
+						.postFlush( session.getPersistenceContextInternal().managedEntitiesIterator() ) );
 	}
 
 }

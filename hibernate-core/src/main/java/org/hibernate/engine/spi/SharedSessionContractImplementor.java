@@ -50,6 +50,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Defines the internal contract shared between {@link org.hibernate.Session} and
@@ -211,6 +212,26 @@ public interface SharedSessionContractImplementor
 	 * </ul>
 	 */
 	void checkOpen(boolean markForRollbackIfClosed);
+
+	/**
+	 * Run a Jakarta Persistence entity lifecycle callback.
+	 */
+	void runEntityLifecycleCallback(Runnable callback);
+
+	/**
+	 * Call a Jakarta Persistence entity lifecycle callback.
+	 */
+	<T> T callEntityLifecycleCallback(Supplier<T> callback);
+
+	/**
+	 * Run a Hibernate {@link Interceptor} callback.
+	 */
+	void runInterceptorCallback(Runnable callback);
+
+	/**
+	 * Call a Hibernate {@link Interceptor} callback.
+	 */
+	<T> T callInterceptorCallback(Supplier<T> callback);
 
 	/**
 	 * Prepare for the execution of a {@link Query} or

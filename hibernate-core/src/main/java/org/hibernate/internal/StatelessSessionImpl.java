@@ -184,6 +184,7 @@ public class StatelessSessionImpl
 
 	@Override
 	public void close() {
+		checkSessionReentrancy();
 		if ( !isClosed() ) {
 			final var statistics = getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
@@ -346,7 +347,8 @@ public class StatelessSessionImpl
 				return id;
 			}
 			else {
-				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+				runInterceptorCallback(
+						() -> getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() ) );
 				final var eventMonitor = getEventMonitor();
 				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
@@ -367,7 +369,8 @@ public class StatelessSessionImpl
 				return null;
 			}
 			else {
-				getInterceptor().onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+				runInterceptorCallback(
+						() -> getInterceptor().onInsert( entity, null, state, persister.getPropertyNames(), persister.getPropertyTypes() ) );
 				final var eventMonitor = getEventMonitor();
 				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
@@ -393,7 +396,8 @@ public class StatelessSessionImpl
 				return id;
 			}
 			else {
-				getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+				runInterceptorCallback(
+						() -> getInterceptor().onInsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() ) );
 				final var eventMonitor = getEventMonitor();
 				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
@@ -471,7 +475,8 @@ public class StatelessSessionImpl
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
-			getInterceptor().onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
+			runInterceptorCallback(
+					() -> getInterceptor().onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() ) );
 			removeCollections( entity, id, persister );
 			final Object cacheKey = lockCacheItem( id, version, persister );
 			final var eventMonitor = getEventMonitor();
@@ -560,7 +565,8 @@ public class StatelessSessionImpl
 			oldVersion = null;
 		}
 		if ( !firePreUpdate(entity, id, state, persister) ) {
-			getInterceptor().onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+			runInterceptorCallback(
+					() -> getInterceptor().onUpdate( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() ) );
 			final Object cacheKey = lockCacheItem( id, oldVersion, persister );
 			final var eventMonitor = getEventMonitor();
 			final var event = eventMonitor.beginEntityUpdateEvent();
@@ -638,7 +644,8 @@ public class StatelessSessionImpl
 		final Object id = idToUpsert( entity, persister );
 		final Object[] state = persister.getValues( entity );
 		if ( !firePreUpsert(entity, id, state, persister) ) {
-			getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
+			runInterceptorCallback(
+					() -> getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() ) );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
 			final Object cacheKey = lockCacheItem( id, oldVersion, persister );
 			final var eventMonitor = getEventMonitor();
@@ -707,7 +714,7 @@ public class StatelessSessionImpl
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		persister.getEntityCallbacks().preCreate( entity );
+		runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preCreate( entity ) );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_INSERT.isEmpty() ) {
 			return false;
@@ -724,7 +731,7 @@ public class StatelessSessionImpl
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
-		persister.getEntityCallbacks().preUpdate( entity );
+		runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preUpdate( entity ) );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
 			return false;
@@ -756,7 +763,7 @@ public class StatelessSessionImpl
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
-		persister.getEntityCallbacks().preRemove( entity );
+		runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preRemove( entity ) );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_DELETE.isEmpty() ) {
 			return false;
@@ -1486,7 +1493,8 @@ public class StatelessSessionImpl
 			return result;
 		}
 
-		final Object newObject = getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() );
+		final Object newObject = callInterceptorCallback(
+				() -> getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() ) );
 		if ( newObject != null ) {
 			persistenceContext.addEntity( key, newObject );
 			return newObject;

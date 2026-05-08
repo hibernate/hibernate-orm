@@ -18,13 +18,14 @@ public class DefaultPreLoadEventListener implements PreLoadEventListener {
 	@Override
 	public void onPreLoad(PreLoadEvent event) {
 		final var persister = event.getPersister();
-		event.getSession().getInterceptor().onLoad(
-				event.getEntity(),
-				event.getId(),
-				event.getState(),
-				persister.getPropertyNames(),
-				persister.getPropertyTypes()
-		);
+		event.getSession().runInterceptorCallback(
+				() -> event.getSession().getInterceptor().onLoad(
+						event.getEntity(),
+						event.getId(),
+						event.getState(),
+						persister.getPropertyNames(),
+						persister.getPropertyTypes()
+				) );
 	}
 
 }

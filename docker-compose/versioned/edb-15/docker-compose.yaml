@@ -1,11 +1,11 @@
 services:
   edb:
-    image: ${EDB_IMAGE:-edb-test:17}
+    image: ${DB_IMAGE_EDB_15:-edb-test:15}
     container_name: edb
     platform: ${POSTGRESQL_PLATFORM:-linux/amd64}
     build:
-      context: ../build-config/edb
-      dockerfile: edb17.Dockerfile
+      context: ../../build-config/edb
+      dockerfile: edb15.Dockerfile
       platforms:
         - ${POSTGRESQL_PLATFORM:-linux/amd64}
     environment:

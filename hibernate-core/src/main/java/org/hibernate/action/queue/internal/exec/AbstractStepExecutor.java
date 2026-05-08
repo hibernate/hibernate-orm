@@ -4,8 +4,7 @@
  */
 package org.hibernate.action.queue.internal.exec;
 
-import org.hibernate.action.queue.spi.plan.FlushOperation;
-
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.internal.cyclebreak.FixupSynthesizer;
@@ -19,6 +18,7 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -84,17 +84,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 					executeWithGeneratedValues( flushOperation );
 				}
 				else {
-					final MutationOperation jdbcOperation = flushOperation.getJdbcOperation();
-					if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
-						executePreparable( preparable, flushOperation );
-					}
-					else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
-						executeSelfExecuting( selfExecuting, flushOperation );
-					}
-					else {
-						throw new IllegalStateException(
-								"Unsupported JdbcOperation type: " + jdbcOperation.getClass().getName() );
-					}
+					executeWithoutGeneratedValues( flushOperation, true );
 				}
 			}
 
@@ -162,28 +152,84 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 
 	protected abstract void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation);
 
+	protected void executePreparableNonBatched(PreparableMutationOperation preparable, FlushOperation flushOperation) {
+		try (var stmnt =
+					 session.getJdbcCoordinator().getStatementPreparer()
+							 .prepareStatement( preparable.getSqlString() ) ) {
+			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
+			flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
+			valueBindings.beforeStatement( stmnt, session );
+
+			final int affectedRowCount =
+					session.getJdbcCoordinator().getResultSetReturn()
+							.executeUpdate( stmnt, preparable.getSqlString() );
+
+			final var resultChecker = flushOperation.getBindPlan().getOperationResultChecker();
+			if ( resultChecker != null ) {
+				resultChecker.checkResult( affectedRowCount, -1, preparable.getSqlString(), session.getFactory() );
+			}
+
+			// Explicitly release the statement from the resource registry to prevent accumulation
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( stmnt );
+		}
+		catch (SQLException sqle) {
+			throw session.getJdbcServices().getSqlExceptionHelper()
+					.convert( sqle, "Unable to close PreparedStatement - " + preparable.getSqlString() );
+		}
+	}
+
+	protected void executeWithoutGeneratedValues(FlushOperation flushOperation, boolean allowBatching) {
+		final var jdbcOperation = flushOperation.getJdbcOperation();
+		if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
+			if ( allowBatching ) {
+				executePreparable( preparable, flushOperation );
+			}
+			else {
+				executePreparableNonBatched( preparable, flushOperation );
+			}
+		}
+		else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
+			executeSelfExecuting( selfExecuting, flushOperation );
+		}
+		else {
+			throw new IllegalStateException(
+					"Unsupported JdbcOperation type: " + jdbcOperation.getClass().getName() );
+		}
+	}
+
 	protected void executeWithGeneratedValues(FlushOperation flushOperation) {
 		var bindPlan = flushOperation.getBindPlan();
 		var generatedValuesCollector = bindPlan.getGeneratedValuesCollector();
+		if ( generatedValuesCollector == null ) {
+			throw new IllegalStateException( "Generated-values execution requested without a generated-values collector" );
+		}
 
-		final GeneratedValuesMutationDelegate generatedValuesDelegate;
-		var mutationTarget = flushOperation.getJdbcOperation().getMutationTarget();
-		if ( mutationTarget instanceof EntityPersister entityPersister ) {
-			generatedValuesDelegate = flushOperation.getKind() == MutationKind.INSERT
-					? entityPersister.getInsertDelegate()
-					: entityPersister.getUpdateDelegate();
+		final var generatedValuesDelegate = resolveGeneratedValuesDelegate( flushOperation );
+		if ( generatedValuesDelegate == null ) {
+			// The post-execution callback will retrieve generated values with a subsequent select.
+			executeWithoutGeneratedValues( flushOperation, false );
 		}
 		else {
-			generatedValuesDelegate = null;
+			var generatedValues = generatedValuesDelegate.performGraphMutation(
+					flushOperation,
+					bindPlan.getEntityInstance(),
+					session
+			);
+			generatedValuesCollector.apply( generatedValues );
 		}
+	}
 
-		var generatedValues = generatedValuesDelegate.performGraphMutation(
-				flushOperation,
-				bindPlan.getEntityInstance(),
-				session
-		);
-
-		generatedValuesCollector.apply( generatedValues );
+	private @Nullable GeneratedValuesMutationDelegate resolveGeneratedValuesDelegate(FlushOperation flushOperation) {
+		if ( flushOperation.getJdbcOperation().getMutationTarget() instanceof EntityPersister entityPersister ) {
+			return switch ( flushOperation.getKind() ) {
+				case INSERT -> entityPersister.getInsertDelegate();
+				case UPDATE -> entityPersister.getUpdateDelegate();
+				default -> null;
+			};
+		}
+		else {
+			return null;
+		}
 	}
 
 	protected void executeSelfExecuting(SelfExecutingUpdateOperation selfExecuting, FlushOperation flushOperation) {

@@ -25,6 +25,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentityGenerator;
+import org.hibernate.mapping.Table;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.JoinedList;
@@ -170,11 +171,12 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final int idColumnSpan = getIdentifierColumnSpan();
 			final ArrayList<String> tableNames = new ArrayList<>();
 			final ArrayList<String[]> keyColumns = new ArrayList<>();
-			for ( var table : persistentClass.getSubclassTableClosure() ) {
+			for ( var persistentSubclass : persistentClass.getPersistentClassClosure() ) {
+				final Table table = persistentSubclass.getTable();
 				if ( !table.isAbstractUnionTable() ) {
 					tableNames.add( determineTableName( table ) );
 					final String[] key = new String[idColumnSpan];
-					final List<Column> columns = table.getPrimaryKey().getColumnsInOriginalOrder();
+					final List<Column> columns = persistentSubclass.getKey().getColumns();
 					for ( int k = 0; k < idColumnSpan; k++ ) {
 						key[k] = columns.get(k).getQuotedName( dialect );
 					}

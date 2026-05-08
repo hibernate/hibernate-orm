@@ -173,6 +173,11 @@ public sealed class Subclass extends PersistentClass
 	}
 
 	@Override
+	public List<PersistentClass> getSuperclassClosure() {
+		return new JoinedList<>( superclass.getSuperclassClosure(), List.of( this ) );
+	}
+
+	@Override
 	public boolean isVersioned() {
 		return getSuperclass().isVersioned();
 	}

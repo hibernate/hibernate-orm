@@ -265,6 +265,15 @@ public abstract sealed class PersistentClass
 		return new JoinedList<>( lists );
 	}
 
+	public List<PersistentClass> getPersistentClassClosure() {
+		final ArrayList<List<PersistentClass>> lists = new ArrayList<>();
+		lists.add( getSuperclassClosure() );
+		for (int j = 0; j < subclasses.size(); j++) {
+			lists.add( subclasses.get(j).getSubclassClosure() );
+		}
+		return new JoinedList<>( lists );
+	}
+
 	public Table getIdentityTable() {
 		return getRootTable();
 	}
@@ -396,6 +405,8 @@ public abstract sealed class PersistentClass
 		return new JoinedList<>( getTableClosure(), subclassTables );
 	}
 
+	public abstract List<PersistentClass> getSuperclassClosure();
+
 	public boolean isClassOrSuperclassJoin(Join join) {
 		return joins.contains( join );
 	}
@@ -433,6 +444,16 @@ public abstract sealed class PersistentClass
 	public void createPrimaryKey() {
 		//Primary key constraint
 		final var table = getTable();
+		// Never overwrite the primary key if there already is an existing one,
+		// because previously created ForeignKey might depend on the order of columns,
+		// which the new PrimaryKey might not have
+		if ( table.getPrimaryKey() == null ) {
+			final var primaryKey = makePrimaryKey( table );
+			table.setPrimaryKey( primaryKey );
+		}
+	}
+
+	PrimaryKey makePrimaryKey(Table table) {
 		final var primaryKey = new PrimaryKey( table );
 		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		primaryKey.addColumns( getKey() );
@@ -443,7 +464,7 @@ public abstract sealed class PersistentClass
 				}
 			}
 		}
-		table.setPrimaryKey( primaryKey );
+		return primaryKey;
 	}
 
 	private boolean addPartitionKeyToPrimaryKey() {

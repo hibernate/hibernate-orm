@@ -151,6 +151,11 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
+	public List<PersistentClass> getSuperclassClosure() {
+		return List.of( this );
+	}
+
+	@Override
 	public Property getVersion() {
 		return version;
 	}

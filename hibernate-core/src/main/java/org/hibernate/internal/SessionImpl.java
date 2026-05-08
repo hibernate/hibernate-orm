@@ -322,6 +322,7 @@ public class SessionImpl
 
 	@Override
 	public void close() {
+		checkSessionReentrancy();
 		if ( isClosed() ) {
 			if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 				throw new IllegalStateException( "EntityManager was already closed" );
@@ -416,6 +417,7 @@ public class SessionImpl
 
 	@Override
 	public boolean isOpen() {
+		checkSessionReentrancy();
 		checkSessionFactoryOpen();
 		checkTransactionSynchStatus();
 		try {
@@ -472,6 +474,7 @@ public class SessionImpl
 
 	@Override
 	public void addEventListeners(SessionEventListener... listeners) {
+		checkSessionReentrancy();
 		getEventListenerManager().addListener( listeners );
 	}
 
@@ -519,9 +522,8 @@ public class SessionImpl
 		// logically, is PersistentContext the "thing" to which an interceptor gets attached?
 		final Object result = persistenceContext.getEntity( key );
 		if ( result == null ) {
-			final Object newObject =
-					getInterceptor()
-							.getEntity( key.getEntityName(), key.getIdentifier() );
+			final Object newObject = callInterceptorCallback(
+					() -> getInterceptor().getEntity( key.getEntityName(), key.getIdentifier() ) );
 			if ( newObject != null ) {
 				lock( newObject, LockMode.NONE );
 			}
@@ -557,6 +559,7 @@ public class SessionImpl
 
 	@Override
 	public void checkOpenOrWaitingForAutoClose() {
+		checkSessionReentrancy();
 		if ( !waitingForAutoClose ) {
 			checkOpen();
 		}
@@ -1438,6 +1441,7 @@ public class SessionImpl
 
 	@Override
 	public void setHibernateFlushMode(FlushMode flushMode) {
+		checkSessionReentrancy();
 		this.flushMode = flushMode;
 	}
 
@@ -1493,9 +1497,8 @@ public class SessionImpl
 	public Object instantiate(EntityPersister persister, Object id) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
-		Object result =
-				getInterceptor()
-						.instantiate( persister.getEntityName(), persister.getRepresentationStrategy(), id );
+		Object result = callInterceptorCallback(
+				() -> getInterceptor().instantiate( persister.getEntityName(), persister.getRepresentationStrategy(), id ) );
 		if ( result == null ) {
 			result = persister.instantiate( id, this );
 		}
@@ -1808,6 +1811,7 @@ public class SessionImpl
 
 	@Override
 	public SessionStatistics getStatistics() {
+		checkSessionReentrancy();
 		pulseTransactionCoordinator();
 		return new SessionStatisticsImpl( this );
 	}
@@ -1830,6 +1834,7 @@ public class SessionImpl
 
 	@Override
 	public void setDefaultReadOnly(boolean defaultReadOnly) {
+		checkSessionReentrancy();
 		if ( !defaultReadOnly && isReadOnly() ) {
 			throw new SessionException( "Session was created in read-only mode" );
 		}
@@ -1889,16 +1894,19 @@ public class SessionImpl
 
 	@Override
 	public void enableFetchProfile(String name) throws UnknownProfileException {
+		checkSessionReentrancy();
 		loadQueryInfluencers.enableFetchProfile( name );
 	}
 
 	@Override
 	public void disableFetchProfile(String name) throws UnknownProfileException {
+		checkSessionReentrancy();
 		loadQueryInfluencers.disableFetchProfile( name );
 	}
 
 	@Override
 	public void setSubselectFetchingEnabled(boolean enabled) {
+		checkSessionReentrancy();
 		loadQueryInfluencers.setSubselectFetchEnabled( enabled );
 	}
 
@@ -1909,6 +1917,7 @@ public class SessionImpl
 
 	@Override
 	public void setFetchBatchSize(int batchSize) {
+		checkSessionReentrancy();
 		loadQueryInfluencers.setBatchSize( batchSize );
 	}
 
@@ -2611,6 +2620,7 @@ public class SessionImpl
 
 	@Override
 	public Collection<?> getManagedEntities() {
+		checkSessionReentrancy();
 		return persistenceContext.getEntityHoldersByKey()
 				.values().stream().map( EntityHolder::getManagedObject )
 				.toList();
@@ -2618,6 +2628,7 @@ public class SessionImpl
 
 	@Override
 	public Collection<?> getManagedEntities(String entityName) {
+		checkSessionReentrancy();
 		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
 				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
 				.map( entry -> entry.getValue().getManagedObject() )
@@ -2626,6 +2637,7 @@ public class SessionImpl
 
 	@Override
 	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+		checkSessionReentrancy();
 		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
 				.filter( entry -> entry.getKey().getPersister().getMappedClass().equals( entityType ) )
 				.map( entry -> entityType.cast( entry.getValue().getManagedObject() ) )
@@ -2634,6 +2646,7 @@ public class SessionImpl
 
 	@Override
 	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+		checkSessionReentrancy();
 		final var entityDomainType = (EntityDomainType<E>) entityType;
 		final String entityName = entityDomainType.getHibernateEntityName();
 		return persistenceContext.getEntityHoldersByKey().entrySet().stream()

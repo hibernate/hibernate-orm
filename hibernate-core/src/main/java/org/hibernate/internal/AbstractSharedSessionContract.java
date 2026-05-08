@@ -146,6 +146,7 @@ import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.CacheMode.fromJpaModes;
@@ -224,6 +225,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	protected boolean closed;
 	protected boolean waitingForAutoClose;
+	private transient int sessionUseProhibitedDepth;
 
 	// transient & non-final for serialization purposes
 	private transient SessionEventListenerManager sessionEventsManager;
@@ -251,7 +253,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		jdbcTimeZone = options.getJdbcTimeZone();
 
 		sessionEventsManager = createSessionEventsManager( factoryOptions, options );
-		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
+		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor, this );
 
 		criteriaCopyTreeEnabled = factoryOptions.isCriteriaCopyTreeEnabled();
 		criteriaPlanCacheEnabled = factoryOptions.isCriteriaPlanCacheEnabled();
@@ -599,6 +601,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public <T> NativeQueryImplementor<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping) {
+		checksBeforeQueryCreation();
 		final var query = new NativeQueryImpl<>( sql, resultSetMapping, this );
 		if ( isEmpty( query.getComment() ) ) {
 			query.setComment( "dynamic native SQL query" );
@@ -623,6 +626,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public SharedStatelessSessionBuilder statelessWithOptions() {
+		checkSessionReentrancy();
 		return new SharedStatelessSessionBuilderImpl( this ) {
 			@Override
 			protected StatelessSessionImplementor createStatelessSession() {
@@ -635,6 +639,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
+		checkSessionReentrancy();
 		return new SharedSessionBuilderImpl( this ) {
 			@Override
 			protected SessionImplementor createSession() {
@@ -731,13 +736,15 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	void afterTransactionBeginEvents() {
-		getInterceptor().afterTransactionBegin( getTransactionIfAccessible() );
+		final var transaction = getTransactionIfAccessible();
+		runInterceptorCallback( () -> getInterceptor().afterTransactionBegin( transaction ) );
 	}
 
 	void beforeTransactionCompletionEvents() {
 		SESSION_LOGGER.beforeTransactionCompletion();
 		try {
-			getInterceptor().beforeTransactionCompletion( getTransactionIfAccessible() );
+			final var transaction = getTransactionIfAccessible();
+			runInterceptorCallback( () -> getInterceptor().beforeTransactionCompletion( transaction ) );
 		}
 		catch (Throwable t) {
 			SESSION_LOGGER.exceptionInBeforeTransactionCompletionInterceptor( t );
@@ -754,7 +761,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 
 		try {
-			getInterceptor().afterTransactionCompletion( getTransactionIfAccessible() );
+			final var transaction = getTransactionIfAccessible();
+			runInterceptorCallback( () -> getInterceptor().afterTransactionCompletion( transaction ) );
 		}
 		catch (Throwable t) {
 			SESSION_LOGGER.exceptionInAfterTransactionCompletionInterceptor( t );
@@ -877,6 +885,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void close() {
+		checkSessionReentrancy();
 		if ( !closed || waitingForAutoClose ) {
 			try {
 				delayedAfterCompletion();
@@ -940,11 +949,26 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void checkOpen(boolean markForRollbackIfClosed) {
+		checkSessionReentrancy();
 		if ( isClosed() ) {
 			if ( markForRollbackIfClosed && transactionCoordinator.isTransactionActive() ) {
 				markForRollbackOnly();
 			}
 			throw new IllegalStateException( "Session/EntityManager is closed" );
+		}
+	}
+
+	private void startSessionUseProhibited() {
+		sessionUseProhibitedDepth++;
+	}
+
+	private void finishSessionUseProhibited() {
+		sessionUseProhibitedDepth--;
+	}
+
+	protected void checkSessionReentrancy() {
+		if ( sessionUseProhibitedDepth > 0 ) {
+			throw new IllegalStateException( "Session method called from entity lifecycle callback or Interceptor method" );
 		}
 	}
 
@@ -1072,7 +1096,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public Transaction getTransaction() throws HibernateException {
-		if ( !isTransactionAccessible(  ) ) {
+		if ( !isTransactionAccessible() ) {
 			throw new IllegalStateException(
 					"Transaction is not accessible when using JTA with JPA-compliant transaction access enabled"
 			);
@@ -1082,6 +1106,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public Transaction accessTransaction() {
+		checkSessionReentrancy();
 		if ( currentHibernateTransaction == null ) {
 			currentHibernateTransaction = new TransactionImpl( getTransactionCoordinator(), this );
 		}
@@ -1177,6 +1202,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public boolean isConnected() {
+		checkSessionReentrancy();
 		pulseTransactionCoordinator();
 		return jdbcCoordinator.getLogicalConnection().isOpen();
 	}
@@ -1349,6 +1375,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void setCacheMode(CacheMode cacheMode) {
+		checkSessionReentrancy();
 		this.cacheMode = cacheMode;
 	}
 
@@ -1396,6 +1423,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	private <T> T doWork(WorkExecutorVisitable<T> work) throws HibernateException {
+		checkSessionReentrancy();
 		return getJdbcCoordinator().coordinateWork( work );
 	}
 
@@ -2190,6 +2218,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void setJdbcBatchSize(Integer jdbcBatchSize) {
+		checkSessionReentrancy();
 		this.jdbcBatchSize = jdbcBatchSize;
 	}
 
@@ -2214,6 +2243,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public Filter getEnabledFilter(String filterName) {
+		checkSessionReentrancy();
 		pulseTransactionCoordinator();
 		return getLoadQueryInfluencers().getEnabledFilter( filterName );
 	}
@@ -2316,7 +2346,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		transactionCoordinator =
 				factory.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 
-		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
+		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor, this );
 
 		changesetIdSupplier = initializeChangesetIdSupplier( factory );
 	}
@@ -2335,5 +2365,57 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		return cacheStoreMode == null
 				? (CacheStoreMode) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE )
 				: cacheStoreMode;
+	}
+
+	/**
+	 * Run a Jakarta Persistence entity lifecycle callback.
+	 */
+	public void runEntityLifecycleCallback(Runnable callback) {
+		startSessionUseProhibited();
+		try {
+			callback.run();
+		}
+		finally {
+			finishSessionUseProhibited();
+		}
+	}
+
+	/**
+	 * Call a Jakarta Persistence entity lifecycle callback.
+	 */
+	public <T> T callEntityLifecycleCallback(Supplier<T> callback) {
+		startSessionUseProhibited();
+		try {
+			return callback.get();
+		}
+		finally {
+			finishSessionUseProhibited();
+		}
+	}
+
+	/**
+	 * Run a Hibernate {@link Interceptor} callback.
+	 */
+	public void runInterceptorCallback(Runnable callback) {
+		startSessionUseProhibited();
+		try {
+			callback.run();
+		}
+		finally {
+			finishSessionUseProhibited();
+		}
+	}
+
+	/**
+	 * Call a Hibernate {@link Interceptor} callback.
+	 */
+	public <T> T callInterceptorCallback(Supplier<T> callback) {
+		startSessionUseProhibited();
+		try {
+			return callback.get();
+		}
+		finally {
+			finishSessionUseProhibited();
+		}
 	}
 }

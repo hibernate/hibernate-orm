@@ -17,7 +17,8 @@ public class PostInsertEventListenerStandardImpl implements PostInsertEventListe
 	@Override
 	public void onPostInsert(PostInsertEvent event) {
 		Object entity = event.getEntity();
-		event.getPersister().getEntityCallbacks().postCreate( entity );
+		event.getSession().runEntityLifecycleCallback(
+				() -> event.getPersister().getEntityCallbacks().postCreate( entity ) );
 	}
 
 	@Override

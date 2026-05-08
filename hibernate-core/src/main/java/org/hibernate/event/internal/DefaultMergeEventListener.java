@@ -290,7 +290,7 @@ public class DefaultMergeEventListener
 		super.cascadeBeforeSave( session, persister, entity, copyCache );
 
 		final Object[] sourceValues = persister.getValues( entity );
-		interceptor.preMerge( entity, sourceValues, propertyNames, propertyTypes );
+		session.runInterceptorCallback( () -> interceptor.preMerge( entity, sourceValues, propertyNames, propertyTypes ) );
 		final Object[] copiedValues = TypeHelper.replace(
 				sourceValues,
 				persister.getValues( copy ),
@@ -322,7 +322,8 @@ public class DefaultMergeEventListener
 				ForeignKeyDirection.TO_PARENT
 		);
 		persister.setValues( copy, targetValues );
-		interceptor.postMerge( entity, copy, id, targetValues, null, propertyNames, propertyTypes );
+		session.runInterceptorCallback(
+				() -> interceptor.postMerge( entity, copy, id, targetValues, null, propertyNames, propertyTypes ) );
 
 		// saveTransientEntity has been called using a copy that contains empty collections
 		// (copyValues uses ForeignKeyDirection.FROM_PARENT) then the PC may contain a wrong
@@ -453,7 +454,8 @@ public class DefaultMergeEventListener
 
 			final Object[] sourceValues = persister.getValues( entity );
 			final Object[] originalValues = persister.getValues( target );
-			interceptor.preMerge( entity, sourceValues, propertyNames, propertyTypes );
+			session.runInterceptorCallback(
+					() -> interceptor.preMerge( entity, sourceValues, propertyNames, propertyTypes ) );
 			verifyImmutableAttributes( persister, sourceValues, originalValues, session );
 			final Object[] targetValues = TypeHelper.replace(
 					sourceValues,
@@ -464,7 +466,8 @@ public class DefaultMergeEventListener
 					copyCache
 			);
 			persister.setValues( target, targetValues );
-			interceptor.postMerge( entity, target, id, targetValues, originalValues, propertyNames, propertyTypes );
+			session.runInterceptorCallback(
+					() -> interceptor.postMerge( entity, target, id, targetValues, originalValues, propertyNames, propertyTypes ) );
 			//copyValues works by reflection, so explicitly mark the entity instance dirty
 			markInterceptorDirty( entity, target );
 			event.setResult( result );

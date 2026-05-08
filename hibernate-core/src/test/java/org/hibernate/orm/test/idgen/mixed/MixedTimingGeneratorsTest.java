@@ -10,7 +10,7 @@ import java.util.EnumSet;
 import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.dialect.Dialect;
@@ -39,7 +39,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -171,11 +170,22 @@ public class MixedTimingGeneratorsTest {
 		} );
 	}
 
+	@IdGeneratorType( IdentityOrAssignedGenerator.class )
+	@Retention( RUNTIME )
+	@Target( { FIELD, METHOD } )
+	public @interface IdentityOrAssigned {
+	}
+
+	@IdGeneratorType( IdentityOrRandomGenerator.class )
+	@Retention( RUNTIME )
+	@Target( { FIELD, METHOD } )
+	public @interface IdentityOrRandom {
+	}
+
 	@Entity( name = "AssignedEntity" )
 	public static class AssignedEntity {
 		@Id
-		@GeneratedValue( generator = "identity_or_assigned" )
-		@GenericGenerator( name = "identity_or_assigned", type = IdentityOrAssignedGenerator.class )
+		@IdentityOrAssigned
 		private Long id;
 
 		private String name;
@@ -200,8 +210,7 @@ public class MixedTimingGeneratorsTest {
 	@Entity( name = "RandomEntity" )
 	public static class RandomEntity {
 		@Id
-		@GeneratedValue( generator = "identity_or_random" )
-		@GenericGenerator( name = "identity_or_random", type = IdentityOrRandomGenerator.class )
+		@IdentityOrRandom
 		private Long id;
 
 		private String name;

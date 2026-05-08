@@ -91,4 +91,9 @@ public class IdentityGenerator
 			return new BasicSelectingDelegate( persister );
 		}
 	}
+
+	@Override
+	public boolean requiresIdentityColumn() {
+		return true;
+	}
 }

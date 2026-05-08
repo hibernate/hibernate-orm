@@ -4,7 +4,6 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.Internal;
@@ -44,18 +43,6 @@ public class PrimaryKey extends Constraint {
 	@Override
 	public String getExportIdentifier() {
 		return qualify( getTable().getExportIdentifier(), "PK-" + getName() );
-	}
-
-	public List<Column> getColumnsInOriginalOrder() {
-		final List<Column> columns = getColumns();
-		if ( originalOrder == null ) {
-			return columns;
-		}
-		final Column[] columnsInOriginalOrder = new Column[columns.size()];
-		for ( int i = 0; i < columnsInOriginalOrder.length; i++ ) {
-			columnsInOriginalOrder[originalOrder[i]] = columns.get( i );
-		}
-		return Arrays.asList( columnsInOriginalOrder );
 	}
 
 	public void setOrderingUniqueKey(UniqueKey uniqueKey) {

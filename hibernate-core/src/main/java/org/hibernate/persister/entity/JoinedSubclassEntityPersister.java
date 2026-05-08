@@ -289,13 +289,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final ArrayList<Boolean> isNullables = new ArrayList<>();
 
 		final ArrayList<String[]> allKeyColumns = new ArrayList<>();
-		for ( Table table : persistentClass.getSubclassTableClosure() ) {
+		for ( var persistentSubclass : persistentClass.getPersistentClassClosure() ) {
+			final Table table = persistentSubclass.getTable();
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( table ) );
 			isNullables.add( false );
 			final String tableName = determineTableName( table );
 			subclassTableNames.add( tableName );
 			final String[] key = new String[idColumnSpan];
-			final List<Column> columns = table.getPrimaryKey().getColumnsInOriginalOrder();
+			final List<Column> columns = persistentSubclass.getKey().getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = columns.get(k).getQuotedName( dialect );
 			}
@@ -310,7 +311,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final String joinTableName = determineTableName( joinTable );
 			subclassTableNames.add( joinTableName );
 			final String[] key = new String[idColumnSpan];
-			final List<Column> columns = joinTable.getPrimaryKey().getColumnsInOriginalOrder();
+			final List<Column> columns = join.getKey().getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = columns.get(k).getQuotedName( dialect );
 			}

@@ -878,21 +878,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = null;
 		}
-		if ( isKey ) {
-			final PrimaryKey primaryKey = getOwner().getTable().getPrimaryKey();
-			if ( primaryKey != null ) {
-				// We have to re-order the primary key accordingly
-				final List<Column> columns = primaryKey.getColumns();
-				columns.clear();
-				for ( Property property : properties ) {
-					for ( Selectable selectable : property.getSelectables() ) {
-						if ( selectable instanceof Column column ) {
-							columns.add( column );
-						}
-					}
-				}
-			}
-		}
 		return this.originalPropertyOrder = originalPropertyOrder;
 	}
 

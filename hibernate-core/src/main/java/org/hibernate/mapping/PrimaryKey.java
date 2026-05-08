@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.hibernate.Internal;
 
-import static java.util.Arrays.asList;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -44,18 +43,6 @@ public class PrimaryKey extends Constraint {
 	@Override
 	public String getExportIdentifier() {
 		return qualify( getTable().getExportIdentifier(), "PK-" + getName() );
-	}
-
-	public List<Column> getColumnsInOriginalOrder() {
-		final var columns = getColumns();
-		if ( originalOrder == null ) {
-			return columns;
-		}
-		final var columnsInOriginalOrder = new Column[columns.size()];
-		for ( int i = 0; i < columnsInOriginalOrder.length; i++ ) {
-			columnsInOriginalOrder[originalOrder[i]] = columns.get( i );
-		}
-		return asList( columnsInOriginalOrder );
 	}
 
 	public void setOrderingUniqueKey(UniqueKey uniqueKey) {

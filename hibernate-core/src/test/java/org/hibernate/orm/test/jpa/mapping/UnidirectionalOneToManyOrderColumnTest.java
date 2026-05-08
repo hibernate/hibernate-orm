@@ -17,11 +17,13 @@ import jakarta.persistence.Table;
 
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +35,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 		UnidirectionalOneToManyOrderColumnTest.ParentData.class,
 		UnidirectionalOneToManyOrderColumnTest.ChildData.class
 })
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 public class UnidirectionalOneToManyOrderColumnTest {
 
 	@AfterEach

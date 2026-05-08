@@ -218,7 +218,7 @@ public class AssociationChangeTests {
 		assertThat( UpdateWatcher.vendorPostUpdates ).hasSize( 0 );
 	}
 
-	@Entity
+	@Entity(name = "Vendor")
 	public static class Vendor {
 		@Id
 		private Integer id;
@@ -237,7 +237,7 @@ public class AssociationChangeTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Part")
 	public static class Part {
 		@Id
 		private Integer id;
@@ -256,7 +256,7 @@ public class AssociationChangeTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Product")
 	public static class Product {
 		@Id
 		private Integer id;

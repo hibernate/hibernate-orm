@@ -31,7 +31,7 @@ class MergeWithFinalTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "Thing")
 	static class Thing {
 		final @Id Long id;
 		final String immutable;

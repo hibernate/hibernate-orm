@@ -6,12 +6,12 @@ package org.hibernate.id.enhanced;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 
+import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 
 import java.io.Serializable;
@@ -33,10 +33,10 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	private static class GenerationState {
 		private long maxLo;
 		private long lo;
-		private IntegralDataTypeHolder hi;
+		private long hi;
 
-		private IntegralDataTypeHolder lastSourceValue;
-		private IntegralDataTypeHolder value;
+		private Long lastSourceValue;
+		private long value;
 	}
 
 	/**
@@ -61,16 +61,15 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
 			if ( generationState.lo > generationState.maxLo ) {
 				generationState.lastSourceValue = callback.getNextValue();
-				generationState.lo = generationState.lastSourceValue.eq( 0 ) ? 1 : 0;
-				generationState.hi = generationState.lastSourceValue.copy().multiplyBy( generationState.maxLo + 1 );
+				generationState.lo = generationState.lastSourceValue == 0 ? 1 : 0;
+				generationState.hi = generationState.lastSourceValue * ( generationState.maxLo + 1 );
 			}
-			generationState.value = generationState.hi.copy().add( generationState.lo++ );
-			return generationState.value.makeValue();
+			generationState.value = generationState.hi + generationState.lo++;
+			return makeIntegralValue( generationState.value, returnClass );
 		}
 		finally {
 			lock.unlock();
 		}
-
 	}
 
 	/**
@@ -126,10 +125,10 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public IntegralDataTypeHolder getLastSourceValue() {
+	public Long getLastSourceValue() {
 		lock.lock();
 		try {
-			return noTenantGenerationState().lastSourceValue.copy();
+			return noTenantGenerationState().lastSourceValue;
 		}
 		finally {
 			lock.unlock();
@@ -148,7 +147,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	 *
 	 * @return Value for property 'lastValue'.
 	 */
-	public IntegralDataTypeHolder getLastValue() {
+	public long getLastValue() {
 		lock.lock();
 		try {
 			return noTenantGenerationState().value;

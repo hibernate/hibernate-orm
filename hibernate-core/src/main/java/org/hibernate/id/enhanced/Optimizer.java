@@ -4,8 +4,9 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 import java.io.Serializable;
@@ -59,7 +60,7 @@ public interface Optimizer {
 	 * @return The last value we obtained from the underlying source;
 	 * null indicates we have not yet consulted with the source.
 	 */
-	IntegralDataTypeHolder getLastSourceValue();
+	@Nullable Long getLastSourceValue();
 
 	/**
 	 * Retrieves the defined increment size.

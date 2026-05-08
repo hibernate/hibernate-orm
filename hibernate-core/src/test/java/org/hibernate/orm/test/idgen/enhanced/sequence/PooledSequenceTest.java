@@ -15,7 +15,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -47,9 +46,9 @@ public class PooledSequenceTest {
 			long expectedId = INITIAL_VALUE;
 			assertEquals( expectedId, entity.getId().longValue() );
 			assertEquals( 1, generator.getDatabaseStructure().getTimesAccessed() );
-			assertEquals( INITIAL_VALUE, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
-			assertEquals( INITIAL_VALUE, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
-			assertEquals( INITIAL_VALUE, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+			assertEquals( INITIAL_VALUE, optimizer.getLastSourceValue().longValue() );
+			assertEquals( INITIAL_VALUE, optimizer.getLastValue() );
+			assertEquals( INITIAL_VALUE, optimizer.getLastSourceValue().longValue() );
 
 			// now start a full range of values, callback give us hiValue 11
 			// id : 2,3,4...,11
@@ -60,9 +59,9 @@ public class PooledSequenceTest {
 				expectedId = i + INITIAL_VALUE;
 				assertEquals( expectedId, entity.getId().longValue() );
 				assertEquals( 2, generator.getDatabaseStructure().getTimesAccessed() ); // initialization calls seq twice
-				assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization calls seq twice
-				assertEquals( expectedId, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
-				assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+				assertEquals( increment + 1, optimizer.getLastSourceValue().longValue() ); // initialization calls seq twice
+				assertEquals( expectedId, optimizer.getLastValue() );
+				assertEquals( increment + 1, optimizer.getLastSourceValue().longValue() );
 			}
 
 			// now force a "clock over"
@@ -72,8 +71,8 @@ public class PooledSequenceTest {
 
 			assertEquals( expectedId, entity.getId().longValue() );
 			assertEquals( 3, generator.getDatabaseStructure().getTimesAccessed() );
-			assertEquals( increment * 2L + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
-			assertEquals( expectedId, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+			assertEquals( increment * 2L + 1, optimizer.getLastSourceValue().longValue() );
+			assertEquals( expectedId, optimizer.getLastValue() );
 		} );
 	}
 

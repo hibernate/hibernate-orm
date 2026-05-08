@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.id.enhanced;
 
-import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.OptimizerFactory;
@@ -330,7 +328,7 @@ public class OptimizerUnitTest {
 	}
 
 	private static class SourceMock implements AccessCallback {
-		private IdentifierGeneratorHelper.BasicHolder value = new IdentifierGeneratorHelper.BasicHolder( Long.class );
+		private long value;
 		private long initialValue;
 		private int increment;
 		private int timesCalled = 0;
@@ -347,23 +345,24 @@ public class OptimizerUnitTest {
 			this.increment = increment;
 			this.timesCalled = timesCalled;
 			if ( timesCalled != 0 ) {
-				this.value.initialize( initialValue );
+				this.value = initialValue;
 				this.initialValue = 1;
 			}
 			else {
-				this.value.initialize( -1 );
+				this.value = -1;
 				this.initialValue = initialValue;
 			}
 		}
 
-		public IntegralDataTypeHolder getNextValue() {
+		public long getNextValue() {
 			try {
 				if ( timesCalled == 0 ) {
 					initValue();
-					return value.copy();
+					return value;
 				}
 				else {
-					return value.add( increment ).copy();
+					value += increment;
+					return value;
 				}
 			}
 			finally {
@@ -377,7 +376,7 @@ public class OptimizerUnitTest {
 		}
 
 		private void initValue() {
-			this.value.initialize( initialValue );
+			this.value = initialValue;
 		}
 
 		public int getTimesCalled() {
@@ -385,7 +384,7 @@ public class OptimizerUnitTest {
 		}
 
 		public long getCurrentValue() {
-			return value == null ? -1 : value.getActualLongValue();
+			return value;
 		}
 	}
 

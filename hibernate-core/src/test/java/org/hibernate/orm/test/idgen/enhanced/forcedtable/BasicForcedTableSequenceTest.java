@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.idgen.enhanced.forcedtable;
 
 
-import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableStructure;
@@ -43,7 +42,7 @@ public class BasicForcedTableSequenceTest {
 				long expectedId = i + 1;
 				assertEquals( expectedId, entity.getId().longValue() );
 				assertEquals( expectedId, generator.getDatabaseStructure().getTimesAccessed() );
-				assertEquals( expectedId, ( (BasicHolder) generator.getOptimizer().getLastSourceValue() ).getActualLongValue() );
+				assertEquals( expectedId, generator.getOptimizer().getLastSourceValue().longValue() );
 			}
 		} );
 	}

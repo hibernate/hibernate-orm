@@ -5,10 +5,11 @@
 package org.hibernate.id.enhanced;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 import java.io.Serializable;
+
+import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 
 /**
  * An optimizer that performs no optimization. A round trip to
@@ -17,7 +18,7 @@ import java.io.Serializable;
  * This implementation is not the most efficient one.
  */
 public final class NoopOptimizer extends AbstractOptimizer {
-	private IntegralDataTypeHolder lastSourceValue;
+	private Long lastSourceValue;
 
 	/**
 	 * Constructs a NoopOptimizer
@@ -37,13 +38,13 @@ public final class NoopOptimizer extends AbstractOptimizer {
 		// reliable as it might be mutated by multiple threads.
 		// The lastSourceValue field is only accessed by tests,
 		// so this is not a concern.
-		final var value = callback.getNextValue();
+		final long value = callback.getNextValue();
 		lastSourceValue = value;
-		return value.makeValue();
+		return makeIntegralValue( value, returnClass );
 	}
 
 	@Override
-	public IntegralDataTypeHolder getLastSourceValue() {
+	public Long getLastSourceValue() {
 		return lastSourceValue;
 	}
 

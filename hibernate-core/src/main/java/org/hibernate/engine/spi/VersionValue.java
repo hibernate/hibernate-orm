@@ -86,9 +86,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 		@Override
 		public Object getDefaultValue(Object currentValue) {
-			return IdentifierGeneratorHelper.getIntegralDataTypeHolder( currentValue.getClass() )
-					.initialize( -1L )
-					.makeValue();
+			return IdentifierGeneratorHelper.makeIntegralValue( -1L, currentValue.getClass() );
 		}
 
 		@Override

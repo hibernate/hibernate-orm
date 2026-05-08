@@ -21,13 +21,13 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.StandardBasicTypes;
 
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
-import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.IdentifierGeneratorHelper.bindLong;
+import static org.hibernate.id.IdentifierGeneratorHelper.extractLong;
 import static org.hibernate.id.enhanced.ResyncHelper.getCurrentTableValue;
 import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
 import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOGGER;
@@ -43,7 +43,6 @@ public class TableStructure implements DatabaseStructure {
 	private final Identifier logicalValueColumnNameIdentifier;
 	private final int initialValue;
 	private final int incrementSize;
-	private final Class<?> numberType;
 	private final String options;
 
 	private final String contributor;
@@ -91,7 +90,6 @@ public class TableStructure implements DatabaseStructure {
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.options = options;
-		this.numberType = numberType;
 	}
 
 	@Override
@@ -131,10 +129,6 @@ public class TableStructure implements DatabaseStructure {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
-	private IntegralDataTypeHolder makeValue() {
-		return getIntegralDataTypeHolder( numberType );
-	}
-
 	@Override
 	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
 		if ( selectQuery == null || updateQuery == null ) {
@@ -148,12 +142,12 @@ public class TableStructure implements DatabaseStructure {
 
 		return new AccessCallback() {
 			@Override
-			public IntegralDataTypeHolder getNextValue() {
+			public long getNextValue() {
 				return session.getTransactionCoordinator().createIsolationDelegate().delegateWork(
 						new AbstractReturningWork<>() {
 							@Override
-							public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
-								final var value = makeValue();
+							public Long execute(Connection connection) throws SQLException {
+								long value;
 								int rows;
 								do {
 									try ( var selectStatement = prepareStatement(
@@ -163,25 +157,24 @@ public class TableStructure implements DatabaseStructure {
 											statsCollector,
 											session
 									) ) {
-										final var resultSet = executeQuery(
+										try ( var resultSet = executeQuery(
 												selectStatement,
 												statsCollector,
 												selectQuery,
 												session
-										);
-										if ( !resultSet.next() ) {
-											throw new IdentifierGenerationException(
-													"Could not read a hi value, populate the table: "
-															+ physicalTableName );
+										) ) {
+											if ( !resultSet.next() ) {
+												throw new IdentifierGenerationException(
+														"Could not read a hi value, populate the table: "
+																+ physicalTableName );
+											}
+											value = extractLong( resultSet, 1 );
 										}
-										value.initialize( resultSet, 1 );
-										resultSet.close();
 									}
 									catch (SQLException sqle) {
 										TABLE_GENERATOR_LOGGER.unableToReadHiValue( physicalTableName.render(), sqle );
 										throw sqle;
 									}
-
 
 									try ( var updateStatement = prepareStatement(
 											connection,
@@ -191,9 +184,8 @@ public class TableStructure implements DatabaseStructure {
 											session
 									) ) {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
-										final var updateValue = value.copy().add( increment );
-										updateValue.bind( updateStatement, 1 );
-										value.bind( updateStatement, 2 );
+										bindLong( updateStatement, 1, value + increment );
+										bindLong( updateStatement, 2, value );
 										rows = executeUpdate( updateStatement, statsCollector, updateQuery, session );
 									}
 									catch (SQLException e) {

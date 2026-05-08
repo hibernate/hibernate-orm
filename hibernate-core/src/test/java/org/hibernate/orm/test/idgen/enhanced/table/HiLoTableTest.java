@@ -15,7 +15,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
@@ -38,18 +37,18 @@ public class HiLoTableTest {
 				final Entity entity = new Entity( "" + ( i + 1 ) );
 				s.persist( entity );
 				assertEquals( 1, generator.getTableAccessCount() ); // initialization
-				assertEquals( 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization
-				assertEquals( i + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
-				assertEquals( increment + 1, ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() );
+				assertEquals( 1, optimizer.getLastSourceValue().longValue() ); // initialization
+				assertEquals( i + 1, optimizer.getLastValue() );
+				assertEquals( increment + 1, optimizer.getHiValue() );
 			}
 
 			// now force a "clock over"
 			final Entity entity = new Entity( "" + increment );
 			s.persist( entity );
 			assertEquals( 2, generator.getTableAccessCount() ); // initialization
-			assertEquals( 2, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization
-			assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
-			assertEquals( ( increment * 2L ) + 1, ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() );
+			assertEquals( 2, optimizer.getLastSourceValue().longValue() ); // initialization
+			assertEquals( increment + 1, optimizer.getLastValue() );
+			assertEquals( ( increment * 2L ) + 1, optimizer.getHiValue() );
 		} );
 	}
 

@@ -6,7 +6,7 @@ package org.hibernate.id.enhanced;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IntegralDataTypeHolder;
+import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
@@ -46,7 +46,7 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 	@Override
 	public Serializable generate(AccessCallback callback) {
 		return locateGenerationState( callback.getTenantIdentifier() )
-				.generate( callback, incrementSize );
+				.generate( callback, incrementSize, returnClass );
 	}
 
 	private GenerationState locateGenerationState(String tenantIdentifier) {
@@ -81,7 +81,7 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
 	// for Hibernate testsuite use only
 	@Override
-	public IntegralDataTypeHolder getLastSourceValue() {
+	public Long getLastSourceValue() {
 		return noTenantGenerationState().lastSourceValue;
 	}
 
@@ -92,23 +92,23 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
 	private static class GenerationState {
 		// last value read from db source
-		private IntegralDataTypeHolder lastSourceValue;
+		private Long lastSourceValue;
 		// the current generator value
-		private IntegralDataTypeHolder value;
+		private long value;
 		// the value at which we'll hit the db again
-		private IntegralDataTypeHolder upperLimitValue;
+		private long upperLimitValue;
 
-		private Serializable generate(AccessCallback callback, int incrementSize) {
-			if ( value == null || !value.lt( upperLimitValue ) ) {
+		private Serializable generate(AccessCallback callback, int incrementSize, Class<?> returnClass) {
+			if ( lastSourceValue == null || value >= upperLimitValue ) {
 				lastSourceValue = callback.getNextValue();
-				upperLimitValue = lastSourceValue.copy().add( incrementSize );
-				value = lastSourceValue.copy();
+				upperLimitValue = lastSourceValue + incrementSize;
+				value = lastSourceValue;
 				// handle cases where initial-value is less that one (hsqldb for instance).
-				while ( value.lt( 1 ) ) {
-					value.increment();
+				while ( value < 1 ) {
+					value++;
 				}
 			}
-			return value.makeValueThenIncrement();
+			return makeIntegralValue( value++, returnClass );
 		}
 	}
 

@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.id.enhanced;
 
-import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.enhanced.AccessCallback;
 
 class SourceMock implements AccessCallback {
@@ -46,7 +44,7 @@ class SourceMock implements AccessCallback {
 	}
 
 	@Override
-	public synchronized IntegralDataTypeHolder getNextValue() {
+	public synchronized long getNextValue() {
 		try {
 			if ( timesCalled == 0 ) {
 				currentValue = initialValue;
@@ -54,9 +52,7 @@ class SourceMock implements AccessCallback {
 			else {
 				currentValue += increment;
 			}
-			IdentifierGeneratorHelper.BasicHolder result = new IdentifierGeneratorHelper.BasicHolder( Long.class );
-			result.initialize( currentValue );
-			return result;
+			return currentValue;
 		}
 		finally {
 			++timesCalled;

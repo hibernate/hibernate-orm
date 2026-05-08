@@ -6,7 +6,7 @@ package org.hibernate.id.enhanced;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IntegralDataTypeHolder;
+import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
@@ -43,11 +43,11 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 
 	private static class GenerationState {
 		// last value read from db source
-		private IntegralDataTypeHolder lastSourceValue;
+		private Long lastSourceValue;
 		// the current generator value
-		private IntegralDataTypeHolder value;
+		private long value;
 		// the value at which we'll hit the db again
-		private IntegralDataTypeHolder upperLimitValue;
+		private long upperLimitValue;
 	}
 
 	/**
@@ -70,16 +70,16 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 		try {
 			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
 			if ( generationState.lastSourceValue == null
-					|| ! generationState.value.lt( generationState.upperLimitValue ) ) {
+					|| generationState.value >= generationState.upperLimitValue ) {
 				generationState.lastSourceValue = callback.getNextValue();
-				generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
-				generationState.value = generationState.lastSourceValue.copy();
+				generationState.upperLimitValue = generationState.lastSourceValue + incrementSize;
+				generationState.value = generationState.lastSourceValue;
 				// handle cases where the initial value is less than one (hsqldb, for instance)
-				while ( generationState.value.lt( 1 ) ) {
-					generationState.value.increment();
+				while ( generationState.value < 1 ) {
+					generationState.value++;
 				}
 			}
-			return generationState.value.makeValueThenIncrement();
+			return makeIntegralValue( generationState.value++, returnClass );
 		}
 		finally {
 			lock.unlock();
@@ -138,7 +138,7 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public IntegralDataTypeHolder getLastSourceValue() {
+	public Long getLastSourceValue() {
 		return noTenantGenerationState().lastSourceValue;
 	}
 

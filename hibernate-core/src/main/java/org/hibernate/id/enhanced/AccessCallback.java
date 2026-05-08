@@ -4,8 +4,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import org.hibernate.id.IntegralDataTypeHolder;
-
 /**
  * Contract for providing callback access to a {@link DatabaseStructure},
  * typically from the {@link Optimizer}.
@@ -18,7 +16,7 @@ public interface AccessCallback {
 	 *
 	 * @return The next value.
 	 */
-	IntegralDataTypeHolder getNextValue();
+	long getNextValue();
 
 	/**
 	 * Obtain the tenant identifier (multi-tenancy), if one, associated with this callback.

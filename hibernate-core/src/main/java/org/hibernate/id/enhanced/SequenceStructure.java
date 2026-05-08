@@ -14,11 +14,10 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.mapping.Table;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
-import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.IdentifierGeneratorHelper.extractLong;
 import static org.hibernate.id.enhanced.ResyncHelper.getNextSequenceValue;
 import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
 
@@ -33,7 +32,6 @@ public class SequenceStructure implements DatabaseStructure {
 	private final QualifiedName logicalQualifiedSequenceName;
 	private final int initialValue;
 	private final int incrementSize;
-	private final Class<?> numberType;
 	private final String options;
 
 	private String sql;
@@ -52,8 +50,7 @@ public class SequenceStructure implements DatabaseStructure {
 
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
-		this.numberType = numberType;
-		this.options = null;
+			this.options = null;
 	}
 
 	public SequenceStructure(
@@ -69,8 +66,7 @@ public class SequenceStructure implements DatabaseStructure {
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.options = options;
-		this.numberType = numberType;
-	}
+		}
 
 	@Override
 	public QualifiedName getPhysicalName() {
@@ -103,24 +99,23 @@ public class SequenceStructure implements DatabaseStructure {
 			throw new AssertionFailure( "SequenceStyleGenerator's SequenceStructure was not properly initialized" );
 		}
 
-		return new AccessCallback() {
-			@Override
-			public IntegralDataTypeHolder getNextValue() {
-				accessCounter++;
-				try {
+			return new AccessCallback() {
+				@Override
+				public long getNextValue() {
+					accessCounter++;
+					try {
 					final var jdbcCoordinator = session.getJdbcCoordinator();
 					final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 					final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 					try {
 						final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
-						try {
-							resultSet.next();
-							final var value = getIntegralDataTypeHolder( numberType );
-							value.initialize( resultSet, 1 );
-							if ( JDBC_LOGGER.isTraceEnabled() ) {
-								JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value.makeValue() );
-							}
-							return value;
+							try {
+								resultSet.next();
+								final long value = extractLong( resultSet, 1 );
+								if ( JDBC_LOGGER.isTraceEnabled() ) {
+									JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value );
+								}
+								return value;
 						}
 						finally {
 							try {

@@ -6,7 +6,7 @@ package org.hibernate.id.enhanced;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.IntegralDataTypeHolder;
+import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -51,8 +51,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class PooledOptimizer extends AbstractOptimizer implements InitialValueAwareOptimizer {
 
 	private static class GenerationState {
-		private IntegralDataTypeHolder hiValue;
-		private IntegralDataTypeHolder value;
+		private Long hiValue;
+		private long value;
 	}
 
 	private long initialValue = -1;
@@ -82,24 +82,24 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 				// to 1 as an initial value like we do for the others
 				// because we would not be able to control this if
 				// we are using a sequence...
-				if ( generationState.hiValue.lt( 1 ) ) {
+				if ( generationState.hiValue < 1 ) {
 					OPTIMIZER_MESSAGE_LOGGER.pooledOptimizerReportedInitialValue( generationState.hiValue );
 				}
 				// the call to obtain next-value just gave us the initialValue
 				if ( ( initialValue == -1
-						&& generationState.hiValue.lt( incrementSize ) )
-						|| generationState.hiValue.eq( initialValue ) ) {
-					generationState.value = generationState.hiValue.copy();
+						&& generationState.hiValue < incrementSize )
+						|| generationState.hiValue == initialValue ) {
+					generationState.value = generationState.hiValue;
 				}
 				else {
-					generationState.value = generationState.hiValue.copy().subtract( incrementSize - 1 );
+					generationState.value = generationState.hiValue - incrementSize + 1;
 				}
 			}
-			else if ( generationState.value.gt( generationState.hiValue ) ) {
+			else if ( generationState.value > generationState.hiValue ) {
 				generationState.hiValue = callback.getNextValue();
-				generationState.value = generationState.hiValue.copy().subtract( incrementSize - 1 );
+				generationState.value = generationState.hiValue - incrementSize + 1;
 			}
-			return generationState.value.makeValueThenIncrement();
+			return makeIntegralValue( generationState.value++, returnClass );
 		}
 		finally {
 			lock.unlock();
@@ -158,7 +158,7 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 	}
 
 	@Override
-	public IntegralDataTypeHolder getLastSourceValue() {
+	public Long getLastSourceValue() {
 		return noTenantGenerationState().hiValue;
 	}
 
@@ -174,8 +174,8 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 	 *
 	 * @return Value for property 'lastValue'.
 	 */
-	public IntegralDataTypeHolder getLastValue() {
-		return noTenantGenerationState().value.copy().decrement();
+	public long getLastValue() {
+		return noTenantGenerationState().value - 1;
 	}
 
 	@Override

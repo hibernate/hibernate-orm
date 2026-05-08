@@ -217,4 +217,14 @@ public interface Generator extends Serializable {
 	default boolean generatesOnForceIncrement() {
 		return getEventTypes().contains(FORCE_INCREMENT);
 	}
+
+	/**
+	 * Does this generator require an identity (autoincrement) column.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	default boolean requiresIdentityColumn() {
+		return false;
+	}
 }

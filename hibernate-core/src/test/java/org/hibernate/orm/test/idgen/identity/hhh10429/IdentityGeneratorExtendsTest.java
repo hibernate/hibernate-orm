@@ -4,13 +4,14 @@
  */
 package org.hibernate.orm.test.idgen.identity.hhh10429;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -19,6 +20,9 @@ import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.Test;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -38,14 +42,19 @@ public class IdentityGeneratorExtendsTest {
 		assertTrue( identifier.getColumns().get(0).isIdentity() );
 	}
 
+	@IdGeneratorType( CustomIdentityGenerator.class )
+	@Retention( RUNTIME )
+	@Target( { FIELD, METHOD } )
+	public @interface CustomIdentity {
+	}
+
 	@Entity(name = "EntityBean")
 	@Table( name = "entity_bean" )
 	public static class EntityBean {
 
 		@Id
 		@Column
-		@GeneratedValue(strategy = GenerationType.IDENTITY, generator = "customGenerator")
-		@GenericGenerator(name = "customGenerator", strategy = "org.hibernate.orm.test.idgen.identity.hhh10429.CustomIdentityGenerator")
+		@CustomIdentity
 		private int entityId;
 
 		public int getEntityId() {

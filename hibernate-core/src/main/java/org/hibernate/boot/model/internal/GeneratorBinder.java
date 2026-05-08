@@ -34,7 +34,6 @@ import org.hibernate.id.CompositeNestedGeneratedValueGenerator.GenerationPlan;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.uuid.UuidValueGenerator;
@@ -470,6 +469,9 @@ public class GeneratorBinder {
 							annotationType
 					);
 			checkIdGeneratorTiming( annotationType, generator );
+			if ( generator.requiresIdentityColumn() ) {
+				identifierValue.setColumnToIdentity();
+			}
 			return generator;
 		};
 	}
@@ -834,9 +836,10 @@ public class GeneratorBinder {
 			// in this code path, there's no generator annotation,
 			// and therefore no need to call initialize()
 			callConfigure( creationContext, identifierGenerator, configuration, identifierValue );
-			if ( identifierGenerator instanceof IdentityGenerator) {
+			if ( identifierGenerator.requiresIdentityColumn() ) {
 				identifierValue.setColumnToIdentity();
 			}
+
 			return identifierGenerator;
 		} );
 	}

@@ -511,7 +511,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 						tableName
 				);
 				if ( !isExcludedTable( revengStrategy, table ) ) {
-					validateJavaIdentifier( tableName, "table" );
+					validateJavaIdentifier( javaAnnotationName( tableName ), "table" );
 					if ( !tables.contains( table ) ) {
 						tables.add( table );
 					}
@@ -622,6 +622,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 			RevengStrategy revengStrategy,
 			Map<String, ForeignKeyColumn> userForeignKeyColumns) throws SQLException {
 		final Set<String> columnNames = new HashSet<>();
+		final Set<String> columnAnnotationNames = new HashSet<>();
 		final var foreignKeyColumns = readForeignKeyColumns( metadata, table );
 		if ( userForeignKeyColumns != null ) {
 			for ( var entry : userForeignKeyColumns.entrySet() ) {
@@ -633,10 +634,17 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 			while ( resultSet.next() ) {
 				final String columnName = resultSet.getString( "COLUMN_NAME" );
 				if ( !isExcludedColumn( revengStrategy, table, columnName ) ) {
-					validateJavaIdentifier( columnName, "column" );
+					final String columnAnnotationName = javaAnnotationName( columnName );
+					validateJavaIdentifier( columnAnnotationName, "column" );
 					if ( !columnNames.add( columnName ) ) {
 						throw new GradleException(
 								"Table `" + table.name + "` has multiple columns named `" + columnName + "`"
+						);
+					}
+					if ( !columnAnnotationNames.add( columnAnnotationName ) ) {
+						throw new GradleException(
+								"Table `" + table.name + "` has multiple columns with names that map to generated "
+										+ "annotation `" + columnAnnotationName + "`"
 						);
 					}
 					final var jdbcType =
@@ -798,7 +806,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 		final var packageDirectory = packageDirectory( outputDirectory.toPath(), packageName );
 		Files.createDirectories( packageDirectory );
 		for ( var table : tables ) {
-			final var outputFile = packageDirectory.resolve( table.name + ".java" );
+			final var outputFile = packageDirectory.resolve( javaAnnotationName( table.name ) + ".java" );
 			Files.writeString( outputFile, renderTable( packageName, table ), UTF_8 );
 		}
 		getLogger().lifecycle( "Generated " + tables.size() + " schema annotation type(s) into " + packageDirectory );
@@ -814,6 +822,7 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 
 	private String renderTable(String packageName, Table table) {
 		final var result = new StringBuilder();
+		final String tableAnnotationName = javaAnnotationName( table.name );
 		result.append( "package " ).append( packageName ).append( ";" ).append( lineSeparator() )
 				.append( lineSeparator() )
 				.append( "import java.lang.annotation.Retention;" ).append( lineSeparator() )
@@ -831,14 +840,14 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 				.append( "@Retention(RUNTIME)" ).append( lineSeparator() )
 				.append( "@TableMapping(@Table(name = " ).append( javaStringLiteral( table.name ) ).append( "))" )
 				.append( lineSeparator() )
-				.append( "public @interface " ).append( table.name ).append( " {" ).append( lineSeparator() );
+				.append( "public @interface " ).append( tableAnnotationName ).append( " {" ).append( lineSeparator() );
 
 		for ( var column : table.columns ) {
 			result.append( lineSeparator() )
 					.append( "\t@Retention(RUNTIME)" ).append( lineSeparator() )
 					.append( renderColumnAnnotation( column ) )
 					.append( lineSeparator() )
-					.append( "\t@interface " ).append( column.name ).append( " {" )
+					.append( "\t@interface " ).append( javaAnnotationName( column.name ) ).append( " {" )
 					.append( lineSeparator() )
 					.append( "\t}" ).append( lineSeparator() );
 		}
@@ -927,14 +936,19 @@ public abstract class GenerateSchemaAnnotationsTask extends DefaultTask {
 	}
 
 	private void validateNoDuplicateTableNames(List<Table> tables) {
-		final Set<String> tableNames = new HashSet<>();
+		final Set<String> tableAnnotationNames = new HashSet<>();
 		for ( var table : tables ) {
-			if ( !tableNames.add( table.name ) ) {
+			final String tableAnnotationName = javaAnnotationName( table.name );
+			if ( !tableAnnotationNames.add( tableAnnotationName ) ) {
 				throw new GradleException(
-						"Multiple tables named `" + table.name + "` match the configured catalog and schema"
+						"Multiple tables match generated annotation `" + tableAnnotationName + "`"
 				);
 			}
 		}
+	}
+
+	private String javaAnnotationName(String name) {
+		return name.toUpperCase( Locale.ROOT );
 	}
 
 	private void validateJavaIdentifier(String identifier, String role) {

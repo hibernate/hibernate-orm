@@ -20,9 +20,10 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 	public void beforeEach() {
 		setGradleTaskToPerform( "generateSchemaAnnotations" );
 		setDatabaseCreationScript( new String[] {
-				"create table AUTHOR (ID int not null, primary key (ID))",
-				"create table BOOK (ISBN varchar(20) not null, CODE varchar(20) unique, PAGES int, AUTHOR_ID int, primary key (ISBN), "
-						+ "constraint FK_BOOK_AUTHOR foreign key (AUTHOR_ID) references AUTHOR(ID))"
+				"create table \"author\" (\"id\" int not null, primary key (\"id\"))",
+				"create table \"book\" (\"isbn\" varchar(20) not null, \"code\" varchar(20) unique, "
+						+ "\"pages\" int, \"author_id\" int, primary key (\"isbn\"), "
+						+ "constraint \"fk_book_author\" foreign key (\"author_id\") references \"author\"(\"id\"))"
 		} );
 	}
 
@@ -41,22 +42,22 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 		assertTrue( generatedContents.contains( "package foo.schema;" ) );
 		assertTrue( generatedContents.contains( "import org.hibernate.annotations.schema.JoinColumnMapping;" ) );
 		assertTrue( generatedContents.contains( "import jakarta.persistence.JoinColumn;" ) );
-		assertTrue( generatedContents.contains( "@TableMapping(@Table(name = \"BOOK\"))" ) );
+		assertTrue( generatedContents.contains( "@TableMapping(@Table(name = \"book\"))" ) );
 		assertTrue( generatedContents.contains( "public @interface BOOK" ) );
 		assertTrue( generatedContents.contains(
-				"@ColumnMapping(@Column(name = \"ISBN\", nullable = false, unique = false, length = 20, precision = 0, scale = 0))"
+				"@ColumnMapping(@Column(name = \"isbn\", nullable = false, unique = false, length = 20, precision = 0, scale = 0))"
 		) );
 		assertTrue( generatedContents.contains( "@interface ISBN" ) );
 		assertTrue( generatedContents.contains(
-				"@ColumnMapping(@Column(name = \"CODE\", nullable = true, unique = true, length = 20, precision = 0, scale = 0))"
+				"@ColumnMapping(@Column(name = \"code\", nullable = true, unique = true, length = 20, precision = 0, scale = 0))"
 		) );
 		assertTrue( generatedContents.contains( "@interface CODE" ) );
-		assertFalse( generatedContents.contains( "@ColumnMapping(@Column(name = \"PAGES\"" ) );
+		assertFalse( generatedContents.contains( "@ColumnMapping(@Column(name = \"pages\"" ) );
 		assertFalse( generatedContents.contains( "@interface PAGES" ) );
 		assertTrue( generatedContents.contains(
-				"@JoinColumnMapping(@JoinColumn(name = \"AUTHOR_ID\", referencedColumnName = \"ID\", nullable = true))"
+				"@JoinColumnMapping(@JoinColumn(name = \"author_id\", referencedColumnName = \"id\", nullable = true))"
 		) );
-		assertFalse( generatedContents.contains( "@ColumnMapping(@Column(name = \"AUTHOR_ID\"" ) );
+		assertFalse( generatedContents.contains( "@ColumnMapping(@Column(name = \"author_id\"" ) );
 		assertTrue( generatedContents.contains( "@interface AUTHOR_ID" ) );
 	}
 
@@ -68,8 +69,8 @@ class GenerateSchemaAnnotationsTest extends TestTemplate {
 
 	private void createRevengFile() throws Exception {
 		String revengXml = "<hibernate-reverse-engineering>\n" +
-				"  <table name=\"BOOK\">\n" +
-				"    <column name=\"PAGES\" exclude=\"true\"/>\n" +
+				"  <table name=\"book\">\n" +
+				"    <column name=\"pages\" exclude=\"true\"/>\n" +
 				"  </table>\n" +
 				"</hibernate-reverse-engineering>";
 		File resourcesFolder = new File( getProjectDir(), "app/src/main/resources" );

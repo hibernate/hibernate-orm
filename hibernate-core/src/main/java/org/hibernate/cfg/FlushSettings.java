@@ -67,7 +67,7 @@ public interface FlushSettings {
 	/// 	- More conservative (works even if DB doesn't actually defer)
 	///
 	/// Note this simply creates edges.  Whether we decide to break these edges
-	/// when a cycle is detected is still controlled by [#DEFERRABLE_EDGE_BREAK].
+	/// when a cycle is detected is still controlled by [#DEFERRABLE_AVOID_BREAK].
 	/// The information is sometimes useful even though we may not break these edges.
 	///
 	/// @settingDefault true

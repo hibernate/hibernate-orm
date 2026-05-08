@@ -92,8 +92,8 @@ public class JdbcValueBindings {
 		binding.setValue( newValue );
 	}
 
-	/// Form of [#bindAssignment(Object, String, ParameterUsage)] which is intended for use
-	/// as a [org.hibernate.metamodel.mapping.ModelPart.JdbcValueConsumer] with [ParameterUsage#SET] semantics.
+	/// Intended for use as a [org.hibernate.metamodel.mapping.ModelPart.JdbcValueConsumer]
+	/// with [ParameterUsage#SET] semantics.
 	///
 	/// @see org.hibernate.metamodel.mapping.ModelPart.JdbcValueConsumer#consume(int, Object, SelectableMapping)
 	public void bindAssignment(@SuppressWarnings("unused") int valueIndex, Object value, SelectableMapping jdbcValueMapping) {

@@ -42,7 +42,12 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 		Product.class,
 		Room.class,
 		Shop.class,
-		User.class
+		User.class,
+		Client.class,
+		SpecialClient.class,
+		Article.class,
+		Vehicle.class,
+		Car.class
 })
 @WithMappingFiles("orm.xml")
 class AccessTypeTest {
@@ -114,5 +119,48 @@ class AccessTypeTest {
 	void testMemberAccessType() {
 		assertPresenceOfFieldInMetamodelFor( Customer.class, "goodPayer", "access type overriding" );
 		assertAttributeTypeInMetaModelFor( Customer.class, "goodPayer", Boolean.class, "access type overriding" );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13010")
+	void testAccessTypeOverrideOnIdProperty() {
+		assertPresenceOfFieldInMetamodelFor( Client.class, "id", "access type overriding" );
+		assertAttributeTypeInMetaModelFor( Client.class, "id", Integer.class, "access type overriding" );
+		assertPresenceOfFieldInMetamodelFor( SpecialClient.class, "specialName", "access type overriding" );
+		assertAttributeTypeInMetaModelFor( SpecialClient.class, "specialName", String.class, "access type overriding" );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13010")
+	void testMemberWithOwnAccessSkippedFromIdInference() {
+		assertPresenceOfFieldInMetamodelFor(
+				Article.class, "name",
+				"name attribute must be present in the metamodel"
+		);
+		assertAttributeTypeInMetaModelFor(
+				Article.class, "name", String.class,
+				"name attribute must be typed as String"
+		);
+		assertAbsenceOfFieldInMetamodelFor(
+				Article.class, "draft",
+				"PROPERTY access must exclude unannotated fields"
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13010")
+	void testInheritedAccessFromHierarchyIdWalk() {
+		assertPresenceOfFieldInMetamodelFor(
+				Car.class, "model",
+				"Inherited FIELD access must include all non-transient fields"
+		);
+		assertPresenceOfFieldInMetamodelFor(
+				Car.class, "name",
+				"name attribute must be present in the metamodel"
+		);
+		assertAttributeTypeInMetaModelFor(
+				Car.class, "name", String.class,
+				"name attribute must be typed as String"
+		);
 	}
 }

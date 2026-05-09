@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.hibernate.processor.util.Constants.MANY_TO_ANY;
+import static org.hibernate.processor.util.Constants.TRANSIENT;
 import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.util.stream.Stream.concat;
 import static org.hibernate.internal.util.StringHelper.split;
@@ -347,6 +348,10 @@ public final class TypeUtils {
 				else {
 					// if we end up here we need to recursively look for superclasses
 					var newDefaultAccessType = getDefaultAccessForHierarchy( searchedElement, context );
+					// next consider the current class
+					if ( newDefaultAccessType == null ) {
+						newDefaultAccessType = determineAccessTypeFromMembers( searchedElement );
+					}
 					if ( newDefaultAccessType == null ) {
 						newDefaultAccessType = DEFAULT_ACCESS_TYPE;
 					}
@@ -426,15 +431,15 @@ public final class TypeUtils {
 		do {
 			superClass = getSuperclassTypeElement( superClass );
 			if ( superClass != null ) {
-				final var qualifiedName = superClass.getQualifiedName().toString();
-				final var accessTypeInfo = context.getAccessTypeInfo( qualifiedName );
-				if ( accessTypeInfo != null && accessTypeInfo.getDefaultAccessType() != null ) {
-					return accessTypeInfo.getDefaultAccessType();
-				}
 				if ( containsAnnotation( superClass, ENTITY, MAPPED_SUPERCLASS ) ) {
+					final var qualifiedName = superClass.getQualifiedName().toString();
+					final var accessTypeInfo = context.getAccessTypeInfo( qualifiedName );
+					if ( accessTypeInfo != null && accessTypeInfo.getDefaultAccessType() != null ) {
+						return accessTypeInfo.getDefaultAccessType();
+					}
 					defaultAccessType = getAccessTypeInCaseElementIsRoot( superClass, context );
 					if ( defaultAccessType != null ) {
-						final AccessTypeInformation newAccessTypeInfo
+						final var newAccessTypeInfo
 								= new AccessTypeInformation( qualifiedName, null, defaultAccessType );
 						context.addAccessTypeInformation( qualifiedName, newAccessTypeInfo );
 
@@ -479,21 +484,25 @@ public final class TypeUtils {
 	}
 
 	/**
-	 * Iterates all elements of a type to check whether they contain the id annotation. If so the placement of this
-	 * annotation determines the access type
+	 * Infers the access type from the placement of {@code @Id} or {@code @EmbeddedId}.
+	 * Returns {@code null} if the class itself has an explicit {@code @Access}, or if
+	 * no member qualifies (members with their own {@code @Access} or {@code @Transient}
+	 * are skipped).
 	 *
-	 * @param searchedElement the type to be searched
-	 * @param context The global execution context
+	 * @param searchedElement the type to inspect
+	 * @param context the global execution context
 	 *
-	 * @return returns the access type of the element annotated with the id annotation. If no element is annotated
-	 *         {@code null} is returned.
+	 * @return the inferred {@link jakarta.persistence.AccessType}, or {@code null}
 	 */
 	private static @Nullable AccessType getAccessTypeInCaseElementIsRoot(TypeElement searchedElement, Context context) {
-		for ( var subElement : searchedElement.getEnclosedElements() ) {
-			for ( var entityAnnotation :
-					context.getElementUtils().getAllAnnotationMirrors( subElement ) ) {
-				if ( isIdAnnotation( entityAnnotation ) ) {
-					return getAccessTypeOfIdAnnotation( subElement );
+		if ( !hasAnnotation( searchedElement, ACCESS ) ) {
+			for ( var subElement : searchedElement.getEnclosedElements() ) {
+				if ( !canBeUsedToInferAccessType( subElement ) ) continue;
+				for ( var entityAnnotation :
+						context.getElementUtils().getAllAnnotationMirrors( subElement ) ) {
+					if ( isIdAnnotation( entityAnnotation ) ) {
+						return getAccessTypeOfIdAnnotation( subElement );
+					}
 				}
 			}
 		}
@@ -512,6 +521,51 @@ public final class TypeUtils {
 		return isAnnotationMirrorOfType( annotationMirror, ID )
 			|| isAnnotationMirrorOfType( annotationMirror, EMBEDDED_ID );
 	}
+
+	private static @Nullable AccessType determineAccessTypeFromMembers(TypeElement element) {
+		for ( var field : ElementFilter.fieldsIn( element.getEnclosedElements() ) ) {
+			if ( canBeUsedToInferAccessType( field )
+				&& hasMappingAnnotation( field ) ) {
+				return AccessType.FIELD;
+			}
+		}
+		for ( var method : ElementFilter.methodsIn( element.getEnclosedElements() ) ) {
+			if ( isPropertyGetter( (ExecutableType) method.asType(), method )
+				&& canBeUsedToInferAccessType( method )
+				&& hasMappingAnnotation( method ) ) {
+				return AccessType.PROPERTY;
+			}
+		}
+		return null;
+	}
+
+	private static boolean canBeUsedToInferAccessType(Element element) {
+		return !hasAnnotation( element, ACCESS, TRANSIENT );
+	}
+
+	private static boolean hasMappingAnnotation(Element element) {
+		for ( var mirror : element.getAnnotationMirrors() ) {
+			final var qualifiedName = ((TypeElement) mirror.getAnnotationType().asElement())
+					.getQualifiedName().toString();
+			if ( qualifiedName.startsWith( "jakarta.persistence." )
+				&& !IGNORED_PERSISTENCE_ANNOTATIONS.contains( qualifiedName ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static final Set<String> IGNORED_PERSISTENCE_ANNOTATIONS = Set.of(
+			"jakarta.persistence.PostLoad",
+			"jakarta.persistence.PostPersist",
+			"jakarta.persistence.PostRemove",
+			"jakarta.persistence.PostUpdate",
+			"jakarta.persistence.PrePersist",
+			"jakarta.persistence.PreRemove",
+			"jakarta.persistence.PreUpdate",
+			"jakarta.persistence.Transient",
+			"jakarta.persistence.Access"
+	);
 
 	public static @Nullable AccessType determineAnnotationSpecifiedAccessType(Element element) {
 		final var mirror = getAnnotationMirror( element, ACCESS );

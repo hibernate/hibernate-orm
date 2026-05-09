@@ -42,7 +42,11 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 		Product.class,
 		Room.class,
 		Shop.class,
-		User.class
+		User.class,
+		Client.class,
+		SpecialClient.class,
+		Guest.class,
+		SpecialGuest.class
 })
 @WithMappingFiles("orm.xml")
 class AccessTypeTest {
@@ -114,5 +118,38 @@ class AccessTypeTest {
 	void testMemberAccessType() {
 		assertPresenceOfFieldInMetamodelFor( Customer.class, "goodPayer", "access type overriding" );
 		assertAttributeTypeInMetaModelFor( Customer.class, "goodPayer", Boolean.class, "access type overriding" );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13010")
+	void testAccessTypeOverrideOnIdProperty() {
+		assertPresenceOfFieldInMetamodelFor( Client.class, "id", "access type overriding" );
+		assertAttributeTypeInMetaModelFor( Client.class, "id", Integer.class, "access type overriding" );
+		assertPresenceOfFieldInMetamodelFor( SpecialClient.class, "specialName", "access type overriding" );
+		assertAttributeTypeInMetaModelFor( SpecialClient.class, "specialName", String.class, "access type overriding" );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-13010")
+	void testSubclassAccessWhenParentHasExplicitClassAccess() {
+		assertPresenceOfFieldInMetamodelFor( Guest.class, "id", "explicit class-level @Access" );
+		assertAttributeTypeInMetaModelFor(
+				Guest.class,
+				"id",
+				Integer.class,
+				"explicit class-level @Access"
+		);
+		assertAbsenceOfFieldInMetamodelFor( Guest.class, "name", "explicit class-level @Access" );
+		assertPresenceOfFieldInMetamodelFor(
+				SpecialGuest.class,
+				"specialName",
+				"subclass with explicit parent @Access"
+		);
+		assertAttributeTypeInMetaModelFor(
+				SpecialGuest.class,
+				"specialName",
+				String.class,
+				"subclass with explicit parent @Access"
+		);
 	}
 }

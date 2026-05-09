@@ -417,12 +417,15 @@ public final class TypeUtils {
 		do {
 			superClass = getSuperclassTypeElement( superClass );
 			if ( superClass != null ) {
-				final String qualifiedName = superClass.getQualifiedName().toString();
-				final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( qualifiedName );
-				if ( accessTypeInfo != null && accessTypeInfo.getDefaultAccessType() != null ) {
-					return accessTypeInfo.getDefaultAccessType();
-				}
 				if ( containsAnnotation( superClass, ENTITY, MAPPED_SUPERCLASS ) ) {
+					if ( hasAnnotation( superClass, ACCESS ) ) {
+						continue;
+					}
+					final String qualifiedName = superClass.getQualifiedName().toString();
+					final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( qualifiedName );
+					if ( accessTypeInfo != null && accessTypeInfo.getDefaultAccessType() != null ) {
+						return accessTypeInfo.getDefaultAccessType();
+					}
 					defaultAccessType = getAccessTypeInCaseElementIsRoot( superClass, context );
 					if ( defaultAccessType != null ) {
 						final AccessTypeInformation newAccessTypeInfo

@@ -26,7 +26,7 @@ public class AccessTypeInformation {
 	 */
 	private @Nullable AccessType defaultAccessType;
 
-	static final AccessType DEFAULT_ACCESS_TYPE = AccessType.FIELD;
+	static final AccessType DEFAULT_ACCESS_TYPE = AccessType.PROPERTY;
 
 	public AccessTypeInformation(
 			String fullyQualifiedName,

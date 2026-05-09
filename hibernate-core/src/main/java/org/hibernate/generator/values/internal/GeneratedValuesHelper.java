@@ -32,7 +32,9 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.results.internal.ResultsHelper;
@@ -196,6 +198,21 @@ public class GeneratedValuesHelper {
 			boolean supportsRowId) {
 		return generatedValuesMappingProducer( persister, supportsArbitraryValues,
 				getActualGeneratedModelParts( persister, timing, supportsArbitraryValues, supportsRowId ) );
+	}
+
+	public static List<ColumnReference> getGeneratedColumnReferences(
+			GeneratedValuesMutationDelegate delegate,
+			MutatingTableReference tableReference) {
+		final var mappingProducer = (GeneratedValuesMappingProducer) delegate.getGeneratedValuesMappingProducer();
+		final var resultBuilders = mappingProducer.getResultBuilders();
+		final List<ColumnReference> generatedColumns = new ArrayList<>( resultBuilders.size() );
+		for ( var resultBuilder : resultBuilders ) {
+			generatedColumns.add( new ColumnReference(
+					tableReference,
+					getActualGeneratedModelPart( resultBuilder.getModelPart() )
+			) );
+		}
+		return generatedColumns;
 	}
 
 	private static GeneratedValuesMappingProducer generatedValuesMappingProducer(

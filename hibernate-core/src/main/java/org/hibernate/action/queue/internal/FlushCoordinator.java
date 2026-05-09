@@ -7,9 +7,6 @@ package org.hibernate.action.queue.internal;
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
-import org.hibernate.action.queue.spi.PlanningOptions;
-import org.hibernate.action.queue.spi.MutationKind;
-import org.hibernate.action.queue.spi.StatementShapeKey;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.ActionLogging;
@@ -314,13 +311,6 @@ public class FlushCoordinator {
 
 		// For each foreign key, check if it creates a dependency between groups
 		for (var fk : constraintModel.foreignKeys()) {
-			// For DELETE operations, we must consider ALL FKs including inheritance FKs
-			// (e.g., joined inheritance where dog.id -> animal.id requires deleting dog before animal)
-			// For INSERT operations, we only need association FKs (inheritance inserts are ordered by table structure)
-			if (!fk.isAssociation() && kind != MutationKind.DELETE) {
-				continue; // Skip non-association FKs for INSERTs (secondary tables, inheritance handled separately)
-			}
-
 			final String keyTable = fk.keyTable();
 			final String targetTable = fk.targetTable();
 
@@ -330,6 +320,10 @@ public class FlushCoordinator {
 				// Even nullable FKs create dependencies because we don't know at this point
 				// whether the FK value will be null or not. The graph builder will handle
 				// breaking nullable FK edges if there's a cycle.
+				// Intra-entity FKs (secondary and joined-inheritance tables) must also be
+				// considered here. Shape batching can merge secondary-table rows from a
+				// later entity into an earlier group, so table-structure encounter order
+				// alone does not preserve root-before-secondary inserts.
 				if (involvedTables.contains(keyTable) && involvedTables.contains(targetTable)) {
 					return true;
 				}

@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.insert.TableInsertReturningBuilder;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
@@ -33,6 +34,7 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasValueGenerationOnExecution;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedColumnReferences;
 
 /// Shared planner for graph entity insert mutation operations.
 ///
@@ -154,7 +156,7 @@ class EntityInsertMutationPlanner {
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			staticOperationBuilders.put(
 					tableDescriptor.name(),
-					createTableInsertBuilder( tableDescriptor )
+					createTableInsertBuilder( tableDescriptor, false )
 			);
 		} );
 
@@ -173,7 +175,7 @@ class EntityInsertMutationPlanner {
 		return Collections.unmodifiableMap( staticOperations );
 	}
 
-	private TableInsertBuilder createTableInsertBuilder(TableDescriptor tableDescriptor) {
+	private TableInsertBuilder createTableInsertBuilder(TableDescriptor tableDescriptor, boolean forceIdentifierBinding) {
 		final boolean isIdentifierTable = tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
 				&& entityTableDescriptor.isIdentifierTable();
 		final boolean isInverse = tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
@@ -184,10 +186,27 @@ class EntityInsertMutationPlanner {
 				isIdentifierTable,
 				isInverse
 		);
+		final var tableReference = new MutatingTableReference( tableMapping );
+
+		final var insertDelegate = isIdentifierTable && !forceIdentifierBinding
+				? entityPersister.getInsertDelegate()
+				: null;
+		if ( insertDelegate != null
+				&& insertDelegate.createTableMutationBuilder(
+						tableDescriptor.insertDetails().getExpectation(),
+						sessionFactory
+				) instanceof TableInsertReturningBuilder ) {
+			return new TableInsertReturningBuilder(
+					entityPersister,
+					tableReference,
+					getGeneratedColumnReferences( insertDelegate, tableReference ),
+					sessionFactory
+			);
+		}
 
 		return new TableInsertBuilderStandard(
 				entityPersister,
-				new MutatingTableReference( tableMapping ),
+				tableReference,
 				sessionFactory
 		);
 	}
@@ -253,33 +272,30 @@ class EntityInsertMutationPlanner {
 					&& !forceIdentifierBinding ) {
 				assert entityPersister.getInsertDelegate() != null;
 				final var generator = (OnExecutionGenerator) entityPersister.getGenerator();
-				if ( generator.referenceColumnsInSql( dialect ) ) {
-					final String[] columnValues = generator.getReferencedColumnValues( dialect );
-					if ( columnValues != null ) {
-						final var keyColumns = tableDescriptor.keyDescriptor().columns();
-						assert columnValues.length == keyColumns.size()
-								: "Mismatch between referenced column values and key columns: "
-								+ columnValues.length + " vs " + keyColumns.size();
-
-						for ( int i = 0; i < columnValues.length; i++ ) {
-							if ( columnValues[i] != null ) {
-								builder.addColumnAssignment( keyColumns.get( i ), columnValues[i] );
-							}
-							else {
-								builder.addColumnAssignment( keyColumns.get( i ) );
-							}
-						}
+				final boolean[] columnInclusions = generator.getColumnInclusions( dialect, INSERT );
+				final String[] columnValues = generator.getReferencedColumnValues( dialect, INSERT );
+				final var keyColumns = tableDescriptor.keyDescriptor().columns();
+				if ( columnInclusions != null ) {
+					if ( columnValues != null && columnValues.length != keyColumns.size() ) {
+						throw new IllegalStateException(
+								"Mismatch between generated column values and identifier columns for "
+										+ entityPersister.getEntityName()
+						);
 					}
-					else {
-						for ( var keyColumn : tableDescriptor.keyDescriptor().columns() ) {
-							builder.addColumnAssignment( keyColumn );
+					for ( int i = 0; i < keyColumns.size(); i++ ) {
+						if ( columnInclusions[i] ) {
+							final String valueExpression =
+									columnValues == null
+											? keyColumns.get( i ).getCustomWriteExpression()
+											: columnValues[i];
+							builder.addColumnAssignment( keyColumns.get( i ), valueExpression );
 						}
 					}
 				}
-				else {
-					for ( var keyColumn : tableDescriptor.keyDescriptor().columns() ) {
-						builder.addColumnAssignment( keyColumn );
-					}
+				else if ( generator.referenceColumnsInSql( dialect, INSERT ) && columnValues != null ) {
+					assert columnValues.length == 1;
+					assert keyColumns.size() == 1;
+					builder.addColumnAssignment( keyColumns.get( 0 ), columnValues[0] );
 				}
 			}
 			else {
@@ -328,7 +344,7 @@ class EntityInsertMutationPlanner {
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			operationBuilders.put(
 					tableDescriptor.name(),
-					createTableInsertBuilder( tableDescriptor )
+					createTableInsertBuilder( tableDescriptor, forceIdentifierBinding )
 			);
 		} );
 

@@ -29,6 +29,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.values.internal.TableUpdateReturningBuilder;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -52,6 +53,7 @@ import java.util.function.Consumer;
 
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasValueGenerationOnExecution;
 import static org.hibernate.generator.EventType.UPDATE;
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedColumnReferences;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
@@ -608,9 +610,26 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	}
 
 	private TableUpdateBuilder<?> createTableUpdateBuilder(TableDescriptor tableDescriptor) {
+		final var tableMapping = getTableMappingAdapter( tableDescriptor );
+		final var tableReference = new MutatingTableReference( tableMapping );
+		final var updateDelegate = tableMapping.isIdentifierTable()
+				? entityPersister.getUpdateDelegate()
+				: null;
+		if ( updateDelegate != null
+				&& updateDelegate.createTableMutationBuilder(
+						tableDescriptor.updateDetails().getExpectation(),
+						sessionFactory
+				) instanceof TableUpdateReturningBuilder ) {
+			return new TableUpdateReturningBuilder(
+					entityPersister,
+					tableReference,
+					getGeneratedColumnReferences( updateDelegate, tableReference ),
+					sessionFactory
+			);
+		}
 		return new TableUpdateBuilderStandard<>(
 				entityPersister,
-				new MutatingTableReference( getTableMappingAdapter( tableDescriptor ) ),
+				tableReference,
 				sessionFactory
 		);
 	}

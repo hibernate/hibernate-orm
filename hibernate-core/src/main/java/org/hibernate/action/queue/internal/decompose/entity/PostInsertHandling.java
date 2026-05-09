@@ -82,6 +82,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 		if ( persister.hasInsertGeneratedProperties() || persister.isVersionPropertyGenerated() ) {
 			handleGeneratedProperties( id, entry, generatedValues, persistenceContext, persister, state );
 		}
+		handleRowId( generatedValues, persistenceContext, persister );
 
 		// 4. Register inserted key in persistence context
 		persistenceContext.registerInsertedKey( persister, id );
@@ -192,7 +193,12 @@ public class PostInsertHandling implements PostExecutionCallback {
 			entry.postInsert( version );
 		}
 
-		// Handle row-id mapping if present
+	}
+
+	private void handleRowId(
+			GeneratedValues generatedValues,
+			PersistenceContext persistenceContext,
+			EntityPersister persister) {
 		if ( generatedValues != null && persister.getRowIdMapping() != null ) {
 			final Object rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
 			if ( rowId != null ) {

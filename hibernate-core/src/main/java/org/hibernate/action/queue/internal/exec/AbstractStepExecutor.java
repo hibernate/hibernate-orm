@@ -13,7 +13,6 @@ import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
@@ -154,8 +153,8 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 
 	protected void executePreparableNonBatched(PreparableMutationOperation preparable, FlushOperation flushOperation) {
 		try (var stmnt =
-					 session.getJdbcCoordinator().getStatementPreparer()
-							 .prepareStatement( preparable.getSqlString() ) ) {
+					session.getJdbcCoordinator().getStatementPreparer()
+							.prepareStatement( preparable.getSqlString() ) ) {
 			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
 			flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
 			valueBindings.beforeStatement( stmnt, session );

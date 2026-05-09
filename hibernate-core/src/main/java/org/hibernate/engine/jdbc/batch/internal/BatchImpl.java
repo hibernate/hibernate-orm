@@ -134,7 +134,7 @@ public class BatchImpl implements Batch {
 					final var statement = statementDetails.resolveStatement();
 					final String sqlString = statementDetails.getSqlString();
 					sqlStatementLogger.logStatement( sqlString );
-					statementObserver.performingSql( statementDetails.getSqlString(), -1 );
+					statementObserver.performingSql( statementDetails.getSqlString(), batchPosition+1 );
 					jdbcValueBindings.beforeStatement( statementDetails );
 					try {
 						statement.addBatch();

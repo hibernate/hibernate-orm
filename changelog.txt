@@ -1,6 +1,20 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.4.Final (May 10, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38971
+
+
+** Bug
+    * HHH-20358 PRIVILEGED_CLI is not set to "sudo" when Podman is aliased as Docker
+    * HHH-20276 IllegalArgumentException "X is not a subtype of X" when using @ConverterRegistration with a generic entity
+    * HHH-20265 StackOverflowError with multi-level generic inheritance hierarchy and attribute converters
+
+** Task
+    * HHH-20341 Embedded MavenCli in integration tests cannot resolve plugins on Jenkins CI
+
 Changes in 7.3.3.Final (May 03, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -489,7 +489,6 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	@Test
 	@JiraKey("HHH-16130")
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDateTimeTruncation.class )
-	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Emulator bug in date_trunc")
 	public void testDateTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

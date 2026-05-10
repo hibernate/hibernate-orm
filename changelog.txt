@@ -1,6 +1,18 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.14.Final (May 10, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38968
+
+
+** Bug
+    * HHH-20358 PRIVILEGED_CLI is not set to "sudo" when Podman is aliased as Docker
+
+** Task
+    * HHH-20341 Embedded MavenCli in integration tests cannot resolve plugins on Jenkins CI
+
 Changes in 7.2.13.Final (May 03, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

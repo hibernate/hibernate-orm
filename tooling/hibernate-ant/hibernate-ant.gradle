@@ -7,6 +7,19 @@ plugins {
 
 description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 
+jar {
+    manifest {
+        attributes(
+                'Import-Package': [
+                        // Apache Ant: used directly but Ant is an optional runtime dep
+                        'org.apache.tools.ant.*;resolution:=optional',
+                        // All other referenced packages are required
+                        '*'
+                ].join(',')
+        )
+    }
+}
+
 sourceSets {
     legacyTest {
         compileClasspath += sourceSets.main.output

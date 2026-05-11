@@ -377,3 +377,166 @@ configurations.configureEach {
         }
     }
 }
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// OSGi optional import helpers
+
+// Lists packages from compileOnly deps that are statically imported in main
+// sources — these need resolution:=optional in the Import-Package header.
+// Run whenever a compileOnly dependency is added or changed.
+//   ./gradlew :<module>:findOptionalImports
+tasks.register('findOptionalImports') {
+    description = 'Lists packages from compileOnly deps that are statically imported in main sources (need resolution:=optional in Import-Package)'
+    group = 'help'
+
+    doLast {
+        // 'compileOnly' is declarable-only in Gradle 9+, so we derive the compileOnly
+        // artifacts by subtracting runtimeClasspath files from compileClasspath files —
+        // both configurations are resolvable.
+        def runtimeFiles = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
+                .collect { it.file } as Set
+        def compileOnlyPackages = [] as Set
+        configurations.compileClasspath.resolvedConfiguration.resolvedArtifacts
+                .findAll { !(it.file in runtimeFiles) }
+                .each { artifact ->
+                    if (artifact.file.name.endsWith('.jar')) {
+                        new java.util.jar.JarFile(artifact.file).entries().each { entry ->
+                            if (entry.name.endsWith('.class') && entry.name.contains('/')) {
+                                compileOnlyPackages << entry.name.replaceAll('/[^/]+\\.class$', '').replace('/', '.')
+                            }
+                        }
+                    }
+                }
+
+        def usedOptional = [] as SortedSet
+        sourceSets.main.java.srcDirs.each { srcDir ->
+            if (!srcDir.exists()) return
+            srcDir.eachFileRecurse { file ->
+                if (!file.name.endsWith('.java')) return
+                file.eachLine { line ->
+                    def m = line =~ /^import\s+(?:static\s+)?([a-z][a-zA-Z0-9.]+)\.[A-Z]/
+                    if (m) {
+                        def importedPkg = m[0][1]
+                        if (compileOnlyPackages.any { cp -> importedPkg == cp || importedPkg.startsWith(cp + '.') }) {
+                            usedOptional << importedPkg.replaceAll('\\.[a-z][^.]*$', '')
+                        }
+                    }
+                }
+            }
+        }
+
+        println "\nPackages from compileOnly deps referenced in main source (need resolution:=optional):"
+        usedOptional.each { println "  '${it}.*;resolution:=optional'," }
+    }
+}
+
+// Verifies that every Import-Package entry in the built jar is satisfiable from
+// the runtimeClasspath, and reports any that are missing and not already marked
+// resolution:=optional.  Wire this into CI alongside the jar task.
+//   ./gradlew :<module>:checkOptionalImports
+tasks.register('checkOptionalImports') {
+    description = 'Checks that all Import-Package entries in the built jar are either satisfiable at runtime or already marked resolution:=optional'
+    group = 'verification'
+    dependsOn jar
+
+    doLast {
+        def runtimePkgs = [] as Set
+
+        // Packages from runtime dependency jars
+        configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            if (artifact.file.name.endsWith('.jar')) {
+                new java.util.jar.JarFile(artifact.file).entries().each { entry ->
+                    if (entry.name.endsWith('.class') && entry.name.contains('/'))
+                        runtimePkgs << entry.name.replaceAll('/[^/]+\\.class$', '').replace('/', '.')
+                }
+            }
+        }
+
+        // Packages from JDK built-in modules (not present as jars on the classpath in Java 9+)
+        ModuleLayer.boot().modules().each { module ->
+            runtimePkgs.addAll(module.packages)
+        }
+
+        // The project's own packages: BND exports these via -exportcontents so it won't
+        // emit them as imports, but the bytecode scan still sees them as references.
+        sourceSets.main.output.classesDirs.each { classesDir ->
+            if (!classesDir.exists()) return
+            classesDir.eachFileRecurse { file ->
+                if (file.name.endsWith('.class') && file.parentFile != classesDir) {
+                    def pkg = classesDir.toPath().relativize(file.parentFile.toPath()).toString().replace(File.separator, '.')
+                    if (pkg) runtimePkgs << pkg
+                }
+            }
+        }
+
+        // Packages from compileOnly *project* dependencies: these are provided by other OSGi
+        // bundles at runtime (e.g. hibernate-core for hibernate-graalvm), so they are required
+        // imports — not missing ones.  Only compileOnly *external* artifacts are truly absent.
+        // Note: project artifacts resolve to a classes *directory*, not a jar file.
+        def runtimeFileSet = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
+                .collect { it.file } as Set
+        configurations.compileClasspath.resolvedConfiguration.resolvedArtifacts
+                .findAll { !(it.file in runtimeFileSet) }
+                .findAll { it.id.componentIdentifier instanceof org.gradle.api.artifacts.component.ProjectComponentIdentifier }
+                .each { artifact ->
+                    if (artifact.file.name.endsWith('.jar')) {
+                        new java.util.jar.JarFile(artifact.file).entries().each { entry ->
+                            if (entry.name.endsWith('.class') && entry.name.contains('/'))
+                                runtimePkgs << entry.name.replaceAll('/[^/]+\\.class$', '').replace('/', '.')
+                        }
+                    } else if (artifact.file.isDirectory()) {
+                        artifact.file.eachFileRecurse { file ->
+                            if (file.name.endsWith('.class') && file.parentFile != artifact.file) {
+                                def pkg = artifact.file.toPath().relativize(file.parentFile.toPath()).toString().replace(File.separator, '.')
+                                if (pkg) runtimePkgs << pkg
+                            }
+                        }
+                    }
+                }
+
+        // Packages explicitly listed in the Import-Package *instruction* (before BND
+        // expands '*') are intentional required imports — e.g. javax.transaction for
+        // JTA 1.1 compatibility in Karaf — even if they're absent from runtimeClasspath.
+        // Only BND-auto-discovered packages (from '*') should be verified here.
+        def splitOnUnquotedCommas = { String s ->
+            def result = []
+            def cur = new StringBuilder()
+            def inQuote = false
+            s.each { ch ->
+                if (ch == '"') { inQuote = !inQuote; cur.append(ch) }
+                else if (ch == ',' && !inQuote) { result << cur.toString().trim(); cur = new StringBuilder() }
+                else { cur.append(ch) }
+            }
+            if (cur.length() > 0) result << cur.toString().trim()
+            result
+        }
+
+        def instruction = tasks.jar.manifest.attributes['Import-Package'] ?: ''
+        def explicitImports = splitOnUnquotedCommas(instruction)
+                .collect { it.replaceAll(';.*', '').trim() }
+                .findAll { it != '*' }
+                .toSet()
+
+        def builtJar = tasks.jar.archiveFile.get().asFile
+        def importPkg = new java.util.jar.JarFile(builtJar).manifest.mainAttributes.getValue('Import-Package') ?: ''
+
+        def missing = []
+        splitOnUnquotedCommas(importPkg).each { entry ->
+            def pkg = entry.replaceAll(';.*', '')
+            if (pkg == '*' || entry.contains('resolution:=optional')) return
+            if (explicitImports.contains(pkg)) return   // intentional explicit import
+            if (!runtimePkgs.contains(pkg)) missing << pkg
+        }
+
+        if (missing) {
+            throw new GradleException(
+                "The following Import-Package entries are absent from runtimeClasspath and not marked resolution:=optional.\n" +
+                "Add them to the Import-Package list in ${project.name}.gradle with ';resolution:=optional':\n" +
+                missing.collect { "  $it" }.join('\n')
+            )
+        }
+        else {
+            println "checkOptionalImports: all Import-Package entries are satisfiable at runtime."
+        }
+    }
+}

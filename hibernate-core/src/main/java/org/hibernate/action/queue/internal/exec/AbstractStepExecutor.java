@@ -9,7 +9,6 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.internal.cyclebreak.FixupSynthesizer;
-import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
@@ -19,6 +18,7 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -177,14 +177,54 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			generatedValuesDelegate = null;
 		}
 
-		var generatedValues = generatedValuesDelegate.performGraphMutation(
-				flushOperation,
-				bindPlan.getEntityInstance(),
-				session
-		);
-
-		generatedValuesCollector.apply( generatedValues );
+		if ( generatedValuesDelegate != null ) {
+			final var generatedValues = generatedValuesDelegate.performGraphMutation(
+					flushOperation,
+					bindPlan.getEntityInstance(),
+					session
+			);
+			generatedValuesCollector.apply( generatedValues );
+		}
+		else {
+			// fallback to direct statement execution (no batching)
+			final var jdbcOperation = flushOperation.getJdbcOperation();
+			if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
+				executePreparableDirectly( preparable, flushOperation );
+			}
+			else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
+				executeSelfExecuting( selfExecuting, flushOperation );
+			}
+		}
 	}
+
+	protected void executePreparableDirectly(
+			PreparableMutationOperation preparable,
+			FlushOperation flushOperation) {
+		try (var stmnt = session.getJdbcCoordinator()
+				.getStatementPreparer()
+				.prepareStatement( preparable.getSqlString() )) {
+			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
+			flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
+			valueBindings.beforeStatement( stmnt, session );
+
+			final int affectedRowCount = session.getJdbcCoordinator()
+					.getResultSetReturn()
+					.executeUpdate( stmnt, preparable.getSqlString() );
+
+			final var resultChecker = flushOperation.getBindPlan().getOperationResultChecker();
+			if ( resultChecker != null ) {
+				resultChecker.checkResult( affectedRowCount, -1, preparable.getSqlString(), session.getFactory() );
+			}
+
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( stmnt );
+		}
+		catch (SQLException sqle) {
+			throw session.getJdbcServices()
+					.getSqlExceptionHelper()
+					.convert( sqle, "Unable to execute non-batched mutation - " + preparable.getSqlString() );
+		}
+	}
+
 
 	protected void executeSelfExecuting(SelfExecutingUpdateOperation selfExecuting, FlushOperation flushOperation) {
 		final var graphBindings = new JdbcValueBindings(

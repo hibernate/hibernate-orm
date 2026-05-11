@@ -7,10 +7,12 @@ package org.hibernate.orm.test.refresh;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -112,6 +114,32 @@ public class CascadeRefreshToManyTest {
 			session.refresh( owner );
 
 			assertThat( target.getName() ).isEqualTo( "updated target" );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-13284")
+	public void refreshCollectionViaQuery(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			final Parent parent = session.find( Parent.class, 1L );
+			Hibernate.initialize( parent.getChildren() );
+			assertThat( parent.getChildren() ).hasSize( 2 );
+
+			session.createMutationQuery( "update RefreshChild c set c.name = 'updated 1' where c.id = 1" )
+					.executeUpdate();
+			session.createMutationQuery( "update RefreshChild c set c.name = 'updated 2' where c.id = 2" )
+					.executeUpdate();
+
+			statementInspector.clear();
+			session.createSelectionQuery( "from RefreshParent p left join fetch p.children", Parent.class )
+							.setCacheMode( CacheMode.REFRESH_SESSION )
+							.getResultList();
+
+			assertThat( parent.getChildren() )
+					.extracting( Child::getName )
+					.containsExactlyInAnyOrder( "updated 1", "updated 2" );
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 		} );
 	}

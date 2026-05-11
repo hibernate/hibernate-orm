@@ -121,7 +121,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @implNote The {@code StatelessSessionImpl} is not an {@link org.hibernate.event.spi.EventSource} and does not
  * make use of the usual {@linkplain org.hibernate.event.spi eventing infrastructure} to implement persistence
  * operations. It does raise pre- and post- events for the benefit of integration, however. Since it performs all
- * operations synchronously, it does not maintain an {@link org.hibernate.engine.spi.ActionQueue}. Therefore, it
+ * operations synchronously, it does not maintain an {@link org.hibernate.action.queue.spi.ActionQueue}. Therefore, it
  * cannot, unfortunately, reuse the various {@link org.hibernate.action.internal.EntityAction} subtypes. This is
  * a pity, since it results in some code duplication. On the other hand, a {@code StatelessSession} is easier to
  * debug and understand. A {@code StatelessSession} does hold state in a long-lived {@link PersistenceContext},

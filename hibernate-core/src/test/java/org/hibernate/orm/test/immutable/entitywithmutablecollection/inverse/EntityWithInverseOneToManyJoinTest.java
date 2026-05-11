@@ -9,6 +9,8 @@ import org.hibernate.orm.test.immutable.entitywithmutablecollection.AbstractEnti
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 
 /**
  * @author Gail Badner
@@ -18,4 +20,8 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/inverse/ContractVariationOneToManyJoin.hbm.xml"
 )
 public class EntityWithInverseOneToManyJoinTest extends AbstractEntityWithOneToManyTest {
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 }

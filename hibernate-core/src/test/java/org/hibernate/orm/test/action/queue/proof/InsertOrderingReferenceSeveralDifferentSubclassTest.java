@@ -16,10 +16,13 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @JiraKey("HHH-14344")
+// MySQLDialect and a few others do not enable batching by default
+@ServiceRegistry(settings = @Setting(name= BatchSettings.STATEMENT_BATCH_SIZE, value="15"))
 @DomainModel(annotatedClasses = {
 		InsertOrderingReferenceSeveralDifferentSubclassTest.BaseEntity.class,
 		InsertOrderingReferenceSeveralDifferentSubclassTest.SubclassZero.class,

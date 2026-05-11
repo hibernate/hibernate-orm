@@ -4,7 +4,9 @@
  */
 package org.hibernate.cfg;
 
-/// Settings related to flush behavior
+/// Settings related to flush behavior.
+///
+/// @see BatchSettings#STATEMENT_BATCH_SIZE
 ///
 /// @author Steve Ebersole
 public interface FlushSettings {

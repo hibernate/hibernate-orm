@@ -37,8 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 	@AfterEach
-	public void tearDown(SessionFactoryScope scope){
-		scope.getSessionFactory().getSchemaManager().truncate();
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test

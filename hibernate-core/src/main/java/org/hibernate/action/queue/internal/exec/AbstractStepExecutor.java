@@ -203,6 +203,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString() )) {
+			preparable.getExpectation().prepare( stmnt );
 			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
 			flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
 			valueBindings.beforeStatement( stmnt, session );

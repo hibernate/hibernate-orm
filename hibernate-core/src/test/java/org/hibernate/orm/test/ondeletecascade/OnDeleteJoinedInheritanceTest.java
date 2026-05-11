@@ -11,19 +11,24 @@ import jakarta.persistence.InheritanceType;
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Jpa(annotatedClasses =
-		{OnDeleteJoinedInheritanceTest.A.class,
-		OnDeleteJoinedInheritanceTest.B.class,
-		OnDeleteJoinedInheritanceTest.C.class},
-		useCollectingStatementInspector = true)
-//@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
+@Jpa(
+		annotatedClasses = {
+				OnDeleteJoinedInheritanceTest.A.class,
+				OnDeleteJoinedInheritanceTest.B.class,
+				OnDeleteJoinedInheritanceTest.C.class },
+		useCollectingStatementInspector = true,
+		// MySQLDialect and a few others do not enable batching by default
+		integrationSettings = @Setting(name= BatchSettings.STATEMENT_BATCH_SIZE, value="15")
+)
 class OnDeleteJoinedInheritanceTest {
 	@Test
 	void test(EntityManagerFactoryScope scope) {

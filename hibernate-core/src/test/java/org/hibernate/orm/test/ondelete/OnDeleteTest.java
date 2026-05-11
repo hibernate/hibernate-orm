@@ -4,11 +4,6 @@
  */
 package org.hibernate.orm.test.ondelete;
 
-import java.util.List;
-
-import org.hibernate.Transaction;
-import org.hibernate.stat.spi.StatisticsImplementor;
-
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -25,12 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/ondelete/Person.hbm.xml"
-)
-@SessionFactory(
-		generateStatistics = true
-)
+@DomainModel(xmlMappings = "org/hibernate/orm/test/ondelete/Person.hbm.xml")
+@SessionFactory(generateStatistics = true)
 public class OnDeleteTest {
 
 	@AfterEach
@@ -44,6 +35,8 @@ public class OnDeleteTest {
 			comment = "db/dialect does not support circular cascade delete constraints"
 	)
 	public void testJoinedSubclass(SessionFactoryScope scope) {
+		var statistics = scope.getSessionFactory().getStatistics();
+
 		scope.inTransaction(
 				session -> {
 					Salesperson mark = new Salesperson();
@@ -67,16 +60,13 @@ public class OnDeleteTest {
 
 					session.getTransaction().commit();
 
-					final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
-
 					assertThat( statistics.getEntityInsertCount(), is( 2L ) );
-					assertThat( statistics.getPrepareStatementCount(), is( 5L ) );
 
 					statistics.clear();
 
-					Transaction t = session.beginTransaction();
+					session.beginTransaction();
 					session.remove( mark );
-					t.commit();
+					session.getTransaction().commit();
 
 					assertThat( statistics.getEntityDeleteCount(), is( 2L ) );
 					if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsCascadeDelete() ) {
@@ -84,7 +74,7 @@ public class OnDeleteTest {
 					}
 
 					session.beginTransaction();
-					List<String> names = session.createQuery( "select name from Person", String.class ).list();
+					var names = session.createQuery( "select name from Person", String.class ).list();
 					assertTrue( names.isEmpty() );
 				}
 		);

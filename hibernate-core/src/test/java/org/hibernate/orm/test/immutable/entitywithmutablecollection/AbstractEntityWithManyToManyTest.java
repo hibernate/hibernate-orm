@@ -13,6 +13,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,11 @@ public abstract class AbstractEntityWithManyToManyTest {
 		isPlanVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Plan.class.getName()).isVersioned();
 		isContractVersioned = sessionFactory.getMappingMetamodel().getEntityDescriptor(Contract.class.getName()).isVersioned();
 		sessionFactory.getStatistics().clear();
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test

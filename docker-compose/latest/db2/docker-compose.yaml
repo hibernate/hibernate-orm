@@ -1,6 +1,6 @@
 services:
   db2:
-    image: ${DB2_IMAGE:-icr.io/db2_community/db2:12.1.2.0@sha256:9cc0d21df5d86cd9a5ce1c65c390dc10d56b1d38ab6e992c8a08eda677368781}
+    image: ${DB2_IMAGE:-icr.io/db2_community/db2:12.1.4.0@sha256:19289ab623b452137de90506d5e91b77a393b442a0404b4d915b14d769c729f5}
     container_name: db2
     privileged: true
     ports:

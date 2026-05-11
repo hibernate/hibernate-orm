@@ -28,12 +28,15 @@ import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +51,20 @@ public class ArchiveHandlingTests {
 
 	public static final String EXTERNAL_JAR_NAME = "external.jar";
 	public static final String EXTERNAL_JAR_REF = "META-INF/" + EXTERNAL_JAR_NAME;
+
+	// Ensure no JAR files are being cached to avoid file deletion issues on Windows
+	private static boolean jarDefaultUseCaches;
+
+	@BeforeAll
+	public static void setup() {
+		jarDefaultUseCaches = URLConnection.getDefaultUseCaches( "jar" );
+		URLConnection.setDefaultUseCaches( "jar", false );
+	}
+
+	@AfterAll
+	public static void cleanup() {
+		URLConnection.setDefaultUseCaches( "jar", jarDefaultUseCaches );
+	}
 
 	@Test
 	void testExplodedArchiveHandling(@TempDir File stagingDirectory, ServiceRegistryScope registryScope) throws MalformedURLException {

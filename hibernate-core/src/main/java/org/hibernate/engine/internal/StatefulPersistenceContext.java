@@ -1470,8 +1470,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public ManagedEntity[] reentrantSafeEntityEntries() {
-		return entityEntryContext.reentrantSafeEntityEntries();
+	public ManagedEntity[] reentrateSafeManagedEntities() {
+		return entityEntryContext.reentrateSafeManagedEntities();
 	}
 
 	@Override
@@ -1499,7 +1499,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
-		for ( var me : reentrantSafeEntityEntries() ) {
+		for ( var me : reentrateSafeManagedEntities() ) {
 			final var entityEntry = me.$$_hibernate_getEntityEntry();
 			// does this entity entry pertain to the entity persister in which we are interested (owner)?
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
@@ -1632,7 +1632,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		//Not found in cache, proceed
-		for ( var entry : reentrantSafeEntityEntries() ) {
+		for ( var entry : reentrateSafeManagedEntities() ) {
 			final var entityEntry = entry.$$_hibernate_getEntityEntry();
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
 				final Object instance = entry.$$_hibernate_getEntityInstance();

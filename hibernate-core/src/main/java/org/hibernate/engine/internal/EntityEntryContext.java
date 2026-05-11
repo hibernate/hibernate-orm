@@ -323,16 +323,13 @@ class EntityEntryContext {
 	}
 
 	/**
-	 * The main bugaboo with {@code IdentityMap} that warranted this class in the
-	 * first place.
-	 * <p>
 	 * Return an array of all the {@link ManagedEntity} in this context.
 	 * The array is to make sure that the iterators built off of it are safe from
 	 * concurrency/reentrancy.
 	 *
 	 * @return The safe array
 	 */
-	ManagedEntity[] reentrantSafeEntityEntries() {
+	ManagedEntity[] reentrateSafeManagedEntities() {
 		if ( dirty ) {
 			reentrantSafeEntries = new ManagedEntity[count];
 			int i = 0;

@@ -122,7 +122,7 @@ public abstract class AbstractFlushingEventListener {
 		EVENT_LISTENER_LOGGER.processingFlushTimeCascades();
 		final var context = PersistContext.create();
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
-		for ( var entry : persistenceContext.reentrantSafeEntityEntries() ) {
+		for ( var entry : persistenceContext.reentrateSafeManagedEntities() ) {
 //		for ( Map.Entry entry : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			final var entityEntry = entry.$$_hibernate_getEntityEntry();
 			if ( flushable( entityEntry ) ) {
@@ -137,7 +137,7 @@ public abstract class AbstractFlushingEventListener {
 		// processed, so that all entities which will be persisted are
 		// persistent when we do the check (I wonder if we could move this
 		// into Nullability, instead of abusing the Cascade infrastructure)
-		for ( var entryEntry : persistenceContext.reentrantSafeEntityEntries() ) {
+		for ( var entryEntry : persistenceContext.reentrateSafeManagedEntities() ) {
 			final var entry = entryEntry.$$_hibernate_getEntityEntry();
 			if ( checkable( entry ) ) {
 				Cascade.cascade(
@@ -214,7 +214,7 @@ public abstract class AbstractFlushingEventListener {
 		// collections that are changing roles. This might cause entities
 		// to be loaded.
 		// So this needs to be safe from concurrent modification problems.
-		final var entityEntries = persistenceContext.reentrantSafeEntityEntries();
+		final var entityEntries = persistenceContext.reentrateSafeManagedEntities();
 		final int count = entityEntries.length;
 
 		FlushEntityEvent entityEvent = null; //allow reuse of the event as it's heavily allocated in certain use cases

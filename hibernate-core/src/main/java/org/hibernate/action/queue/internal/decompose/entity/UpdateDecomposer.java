@@ -274,10 +274,15 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		final boolean isBeingDeleted = decompositionContext != null
 				&& decompositionContext.isBeingDeletedInCurrentFlush( entity );
 
-		for ( Map.Entry<String, LogicalTableUpdate<?>> entry : effectiveGroup.entrySet() ) {
-			var operation = entry.getValue().createMutationOperation(null, sessionFactory);
-			var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
-			var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
+		for ( var tableDescriptor : entityPersister.getTableDescriptors() ) {
+			if ( tableDescriptor.isInverse() ) {
+				continue;
+			}
+			final var tableUpdate = effectiveGroup.get( tableDescriptor.name() );
+			if ( tableUpdate == null ) {
+				continue;
+			}
+			var operation = tableUpdate.createMutationOperation( null, sessionFactory );
 
 			// For static updates, only execute secondary tables when one of their
 			// attributes actually drove the update.  Static mutation groups may
@@ -292,9 +297,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 			// If this entity is being deleted in the same flush, skip UPDATEs to optional tables.
 			// These UPDATEs can re-insert rows that were just deleted, causing constraint violations.
-			// DELETE → DELETE edges ensure proper FK ordering, so UPDATEs are unnecessary.
+			// DELETE -> DELETE edges ensure proper FK ordering, so UPDATEs are unnecessary.
 			//
-			// Technically we could alo skip updates to the primary table if no foreign keys are being nullified.
+			// Technically we could also skip updates to the primary table if no foreign keys are being nullified.
 			// This should be a rare enough occurrence that it is probably not worth even checking for.
 			if ( isBeingDeleted && tableDescriptor.isOptional() ) {
 				continue;
@@ -608,6 +613,14 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	}
 
 	private TableUpdateBuilder<?> createTableUpdateBuilder(TableDescriptor tableDescriptor) {
+		if ( tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
+				&& entityTableDescriptor.isIdentifierTable() ) {
+			final var delegate = entityPersister.getUpdateDelegate();
+			if ( delegate != null ) {
+				return (TableUpdateBuilder<?>) delegate.createTableMutationBuilder( null, sessionFactory );
+			}
+		}
+
 		return new TableUpdateBuilderStandard<>(
 				entityPersister,
 				new MutatingTableReference( getTableMappingAdapter( tableDescriptor ) ),
@@ -683,14 +696,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	private void applyStaticUpdateDetails(Map<String, TableUpdateBuilder<?>> builders) {
 		final boolean[] propertyUpdateability = entityPersister.getPropertyUpdateability();
 
-		builders.forEach( (name, builder) -> {
-			// Get the TableDescriptor from the adapter
-			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
-			final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
-			// Skip inverse tables
-			if (tableDescriptor.isInverse()) {
-				return;
-			}
+		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
+			final var builder = builders.get( tableDescriptor.name() );
 
 			// Apply SET clause columns for attributes
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
@@ -710,10 +717,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			}
 
 			// Apply WHERE clause - key restrictions
-			applyKeyRestriction( builder );
+			applyKeyRestriction( tableDescriptor, builder );
 
 			// Apply optimistic locking
-			applyOptimisticLocking( builder, null, null, null );
+			applyOptimisticLocking( tableDescriptor, builder, null, null, null );
 		} );
 
 		// Apply partitioned selection restrictions if needed
@@ -781,12 +788,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			UpdateValuesAnalysis valuesAnalysis,
 			boolean[] updateable,
 			SharedSessionContractImplementor session) {
-		builders.forEach( (name, builder) -> {
-			// Get the TableDescriptor from the adapter
-			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
-			final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
-			// Skip inverse tables
-			if (tableDescriptor.isInverse()) {
+		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
+			final var builder = builders.get( tableDescriptor.name() );
+			if ( builder == null ) {
 				return;
 			}
 
@@ -803,10 +807,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			}
 
 			// Apply WHERE clause - key restrictions
-			applyKeyRestriction( builder, rowId );
+			applyKeyRestriction( tableDescriptor, builder, rowId );
 
 			// Apply optimistic locking
-			applyOptimisticLocking( builder, previousState, valuesAnalysis, session );
+			applyOptimisticLocking( tableDescriptor, builder, previousState, valuesAnalysis, session );
 		} );
 
 		// Apply partitioned selection restrictions if needed
@@ -841,17 +845,13 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		return true;
 	}
 
-	private void applyKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder) {
-		applyKeyRestriction( tableUpdateBuilder, null );
+	private void applyKeyRestriction(EntityTableDescriptor tableDescriptor, TableUpdateBuilder<?> tableUpdateBuilder) {
+		applyKeyRestriction( tableDescriptor, tableUpdateBuilder, null );
 	}
 
-	private void applyKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder, Object rowId) {
-		// Get the TableDescriptor from the adapter
-		final var tableMapping = (TableDescriptorAsTableMapping) tableUpdateBuilder.getMutatingTable().getTableMapping();
-		final var tableDescriptor = tableMapping.descriptor();
+	private void applyKeyRestriction(EntityTableDescriptor tableDescriptor, TableUpdateBuilder<?> tableUpdateBuilder, Object rowId) {
 		if ( rowId != null
-				&& tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
-				&& entityTableDescriptor.isIdentifierTable()
+				&& tableDescriptor.isIdentifierTable()
 				&& entityPersister.getRowIdMapping() != null ) {
 			tableUpdateBuilder.addKeyRestrictionLeniently( entityPersister.getRowIdMapping() );
 		}
@@ -861,6 +861,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	}
 
 	private void applyOptimisticLocking(
+			EntityTableDescriptor tableDescriptor,
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			Object[] previousState,
 			UpdateValuesAnalysis valuesAnalysis,
@@ -868,18 +869,15 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
 
 		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() != null ) {
-			applyVersionBasedOptLocking( tableUpdateBuilder );
+			applyVersionBasedOptLocking( tableDescriptor, tableUpdateBuilder );
 		}
 		else if ( optimisticLockStyle.isAllOrDirty() ) {
-			applyNonVersionOptLocking( tableUpdateBuilder, previousState, optimisticLockStyle, valuesAnalysis, session );
+			applyNonVersionOptLocking( tableDescriptor, tableUpdateBuilder, previousState, optimisticLockStyle, valuesAnalysis, session );
 		}
 	}
 
-	private void applyVersionBasedOptLocking(TableUpdateBuilder<?> tableUpdateBuilder) {
+	private void applyVersionBasedOptLocking(EntityTableDescriptor tableDescriptor, TableUpdateBuilder<?> tableUpdateBuilder) {
 		final var versionMapping = entityPersister.getVersionMapping();
-		// Get the TableDescriptor from the adapter
-		final var tableMapping = (TableDescriptorAsTableMapping) tableUpdateBuilder.getMutatingTable().getTableMapping();
-		final var tableDescriptor = tableMapping.descriptor();
 		if ( versionMapping != null
 				&& tableDescriptor.name().equals(
 					versionMapping.getContainingTableExpression() ) ) {
@@ -888,6 +886,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	}
 
 	private void applyNonVersionOptLocking(
+			EntityTableDescriptor tableDescriptor,
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			Object[] previousState,
 			OptimisticLockStyle optimisticLockStyle,
@@ -902,9 +901,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
-		// Get the TableDescriptor from the adapter
-		final var tableMapping = (TableDescriptorAsTableMapping) tableUpdateBuilder.getMutatingTable().getTableMapping();
-		final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
 
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 			var attribute = tableDescriptor.attributes().get( i );

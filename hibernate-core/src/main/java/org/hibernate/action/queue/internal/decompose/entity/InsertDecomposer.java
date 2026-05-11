@@ -13,8 +13,6 @@ import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
-import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.sql.model.ast.TableInsert;
@@ -144,10 +142,12 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 		int localOrd = 0;
 		FlushOperation previousOperation = null;
-		for ( Map.Entry<String, TableInsert> entry : effectiveGroup.entrySet() ) {
-			var operation = entry.getValue().createMutationOperation(valuesAnalysis, sessionFactory);
-			var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
-			var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
+		for ( var tableDescriptor : entityPersister.getTableDescriptors() ) {
+			if ( tableDescriptor.isInverse() ) {
+				continue;
+			}
+			final var tableInsert = effectiveGroup.get( tableDescriptor.name() );
+			var operation = tableInsert.createMutationOperation( valuesAnalysis, sessionFactory );
 
 			if ( !valuesAnalysis.include( tableDescriptor ) ) {
 				continue;

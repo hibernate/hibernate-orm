@@ -13,7 +13,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.AssertionsKt.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Chris Cranford

@@ -48,9 +48,7 @@ public abstract class AbstractReturningDelegate
 		final String sql = jdbcOperation.getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 
-		final PreparedStatement preparedStatement = session.getJdbcCoordinator()
-				.getStatementPreparer()
-				.prepareStatement( sql );
+		final PreparedStatement preparedStatement = prepareStatement( sql, session );
 		try {
 
 			var valueBindings = new org.hibernate.action.queue.spi.bind.JdbcValueBindings(

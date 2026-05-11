@@ -353,8 +353,8 @@ public class HistoryTableDecomposerTest {
 			persister.getUpdateDecomposer().decompose( action, 0, session, null, operations::add );
 
 			assertEquals( 4, operations.size() );
-			assertOperation( operations.get( 0 ), MutationKind.UPDATE, "graph_history_joined_child" );
-			assertOperation( operations.get( 1 ), MutationKind.UPDATE, "graph_history_joined_parent" );
+			assertOperation( operations.get( 0 ), MutationKind.UPDATE, "graph_history_joined_parent" );
+			assertOperation( operations.get( 1 ), MutationKind.UPDATE, "graph_history_joined_child" );
 			assertOperation( operations.get( 2 ), MutationKind.UPDATE, "graph_history_joined_parent_history" );
 			assertOperation( operations.get( 3 ), MutationKind.INSERT, "graph_history_joined_parent_history" );
 

@@ -15,7 +15,6 @@ import java.util.Set;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.TableDetails;
-import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
@@ -619,7 +618,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 		return new DeleteOrUpsertOperation(
 				optionalTableUpdate.getMutationTarget(),
-				(EntityTableMapping) optionalTableUpdate.getMutatingTable().getTableMapping(),
+				optionalTableUpdate.getMutatingTable().getTableMapping(),
 				upsertOperation,
 				optionalTableUpdate
 		);

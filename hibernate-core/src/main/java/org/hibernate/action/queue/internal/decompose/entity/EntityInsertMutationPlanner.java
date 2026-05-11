@@ -176,6 +176,14 @@ class EntityInsertMutationPlanner {
 	private TableInsertBuilder createTableInsertBuilder(TableDescriptor tableDescriptor) {
 		final boolean isIdentifierTable = tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
 				&& entityTableDescriptor.isIdentifierTable();
+
+		if ( isIdentifierTable ) {
+			final var delegate = entityPersister.getInsertDelegate();
+			if ( delegate != null ) {
+				return (TableInsertBuilder) delegate.createTableMutationBuilder( null, sessionFactory );
+			}
+		}
+
 		final boolean isInverse = tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
 				&& entityTableDescriptor.isInverse();
 		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
@@ -200,12 +208,8 @@ class EntityInsertMutationPlanner {
 			boolean forceIdentifierBinding) {
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
-		builders.forEach( (name, builder) -> {
-			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
-			final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
-			if ( tableDescriptor.isInverse() ) {
-				return;
-			}
+		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
+			final var builder = builders.get( tableDescriptor.name() );
 
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				var attribute = tableDescriptor.attributes().get( i );
@@ -245,24 +249,19 @@ class EntityInsertMutationPlanner {
 			Dialect dialect,
 			boolean forceIdentifierBinding) {
 		builders.forEach( (name, builder) -> {
-			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
-			final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
-
-			if ( tableDescriptor.isIdentifierTable()
+			final var tableMapping = builder.getMutatingTable().getTableMapping();
+			if ( tableMapping.isIdentifierTable()
 					&& entityPersister.isIdentifierAssignedByInsert()
 					&& !forceIdentifierBinding ) {
 				assert entityPersister.getInsertDelegate() != null;
 				final var generator = (OnExecutionGenerator) entityPersister.getGenerator();
-				if ( generator.referenceColumnsInSql( dialect ) ) {
-					final String[] columnValues = generator.getReferencedColumnValues( dialect );
-					if ( columnValues != null ) {
-						final var keyColumns = tableDescriptor.keyDescriptor().columns();
-						assert columnValues.length == keyColumns.size()
-								: "Mismatch between referenced column values and key columns: "
-								+ columnValues.length + " vs " + keyColumns.size();
-
-						for ( int i = 0; i < columnValues.length; i++ ) {
-							if ( columnValues[i] != null ) {
+				final boolean[] columnInclusions = generator.getColumnInclusions( dialect, INSERT );
+				final String[] columnValues = generator.getReferencedColumnValues( dialect, INSERT );
+				final var keyColumns = tableMapping.getKeyDetails().getKeyColumns();
+				if ( columnInclusions != null ) {
+					for ( int i = 0; i < keyColumns.size(); i++ ) {
+						if ( columnInclusions[i] ) {
+							if ( columnValues != null ) {
 								builder.addColumnAssignment( keyColumns.get( i ), columnValues[i] );
 							}
 							else {
@@ -270,20 +269,22 @@ class EntityInsertMutationPlanner {
 							}
 						}
 					}
+				}
+				else if ( generator.referenceColumnsInSql( dialect, INSERT ) ) {
+					if ( columnValues != null ) {
+						for ( int i = 0; i < keyColumns.size(); i++ ) {
+							builder.addColumnAssignment( keyColumns.get( i ), columnValues[i] );
+						}
+					}
 					else {
-						for ( var keyColumn : tableDescriptor.keyDescriptor().columns() ) {
+						for ( var keyColumn : keyColumns ) {
 							builder.addColumnAssignment( keyColumn );
 						}
 					}
 				}
-				else {
-					for ( var keyColumn : tableDescriptor.keyDescriptor().columns() ) {
-						builder.addColumnAssignment( keyColumn );
-					}
-				}
 			}
 			else {
-				for ( var keyColumn : tableDescriptor.keyDescriptor().columns() ) {
+				for ( var keyColumn : tableMapping.getKeyDetails().getKeyColumns() ) {
 					if ( !builder.hasColumnAssignment( keyColumn ) ) {
 						builder.addColumnAssignment( keyColumn );
 					}

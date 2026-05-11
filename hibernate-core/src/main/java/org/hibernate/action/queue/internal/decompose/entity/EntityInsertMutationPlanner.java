@@ -255,16 +255,13 @@ class EntityInsertMutationPlanner {
 					&& !forceIdentifierBinding ) {
 				assert entityPersister.getInsertDelegate() != null;
 				final var generator = (OnExecutionGenerator) entityPersister.getGenerator();
-				if ( generator.referenceColumnsInSql( dialect ) ) {
-					final String[] columnValues = generator.getReferencedColumnValues( dialect );
-					if ( columnValues != null ) {
-						final var keyColumns = tableMapping.getKeyDetails().getKeyColumns();
-						assert columnValues.length == keyColumns.size()
-								: "Mismatch between referenced column values and key columns: "
-								+ columnValues.length + " vs " + keyColumns.size();
-
-						for ( int i = 0; i < columnValues.length; i++ ) {
-							if ( columnValues[i] != null ) {
+				final boolean[] columnInclusions = generator.getColumnInclusions( dialect, INSERT );
+				final String[] columnValues = generator.getReferencedColumnValues( dialect, INSERT );
+				final var keyColumns = tableMapping.getKeyDetails().getKeyColumns();
+				if ( columnInclusions != null ) {
+					for ( int i = 0; i < keyColumns.size(); i++ ) {
+						if ( columnInclusions[i] ) {
+							if ( columnValues != null ) {
 								builder.addColumnAssignment( keyColumns.get( i ), columnValues[i] );
 							}
 							else {
@@ -272,15 +269,17 @@ class EntityInsertMutationPlanner {
 							}
 						}
 					}
-					else {
-						for ( var keyColumn : tableMapping.getKeyDetails().getKeyColumns() ) {
-							builder.addColumnAssignment( keyColumn );
+				}
+				else if ( generator.referenceColumnsInSql( dialect, INSERT ) ) {
+					if ( columnValues != null ) {
+						for ( int i = 0; i < keyColumns.size(); i++ ) {
+							builder.addColumnAssignment( keyColumns.get( i ), columnValues[i] );
 						}
 					}
-				}
-				else {
-					for ( var keyColumn : tableMapping.getKeyDetails().getKeyColumns() ) {
-						builder.addColumnAssignment( keyColumn );
+					else {
+						for ( var keyColumn : keyColumns ) {
+							builder.addColumnAssignment( keyColumn );
+						}
 					}
 				}
 			}

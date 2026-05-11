@@ -20,7 +20,7 @@ public interface AssigningTableMutationBuilder<M extends TableMutation<?>> exten
 	boolean hasAssignmentBindings();
 
 	/// Adds a column assignment defined by the given `columnValueBinding`, which represents a
-	/// [column][ColumnValueBinding#columnReference()] and its [assignment][ColumnValueBinding#getValueExpression()] .
+	/// [column][ColumnValueBinding#getColumnReference()] and its [assignment][ColumnValueBinding#getValueExpression()] .
 	@Incubating
 	void addColumnAssignment(ColumnValueBinding columnValueBinding);
 

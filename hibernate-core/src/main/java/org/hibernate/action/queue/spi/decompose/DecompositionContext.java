@@ -16,7 +16,7 @@ import org.hibernate.action.queue.spi.bind.DelayedValueAccess;
 /// - Entities being inserted in this flush (should not be treated as unresolved)
 /// - Entities being deleted in this flush (UPDATEs can be skipped)
 ///
-/// Implemented by [Decomposer] and passed to components that need this context.
+/// Implemented by [org.hibernate.action.queue.internal.decompose.Decomposer] and passed to components that need this context.
 ///
 /// @author Steve Ebersole
 /// @since 8.0

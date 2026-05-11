@@ -29,7 +29,7 @@ import static java.util.Collections.addAll;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
- * An {@link org.hibernate.engine.spi.ActionQueue} {@link Executable} for
+ * An {@link org.hibernate.action.queue.spi.ActionQueue} {@link Executable} for
  * ensuring shared cache cleanup in relation to performed bulk HQL queries.
  *
  * @implNote Currently this executes for {@code INSERT} queries as well as

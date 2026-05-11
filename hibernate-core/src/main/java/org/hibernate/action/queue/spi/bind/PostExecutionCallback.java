@@ -9,7 +9,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 /// Support for callbacks after the execution of a FlushOperation.
 ///
-/// @see FlushOperation#getPostExecutionCallback()
+/// @see org.hibernate.action.queue.spi.plan.FlushOperation#getPostExecutionCallback()
 ///
 /// @author Steve Ebersole
 /// @since 8.0

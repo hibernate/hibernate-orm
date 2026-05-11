@@ -1,6 +1,6 @@
 services:
   mssql:
-    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server@sha256:2fa59c23272a23dfd9600abf4ee52c0de6ae7ac640f14c617bc717ec139a5295}
+    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2025-latest@sha256:a93989eebfb50ae37ee0bfecfaf03648421859558eef6cbff9dec0db3976f192}
     container_name: mssql
     environment:
       SA_PASSWORD: Hibernate_orm_test

@@ -30,7 +30,7 @@ services:
       kernel.shmmni: 4096
       kernel.shmall: 8388608
     volumes:
-      - ../build-config/hana:/config:Z
+      - ../../build-config/hana:/config:Z
     healthcheck:
       test: ["CMD-SHELL", "/usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u SYSTEM -p H1bernate_test 'SELECT * FROM DUMMY'"]
       interval: 10s

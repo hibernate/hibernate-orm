@@ -15,7 +15,7 @@ services:
       TO_CREATE_SAMPLEDB: "false"
       REPODB: "false"
     volumes:
-      - ../build-config/db2_spatial/ewkt.sql:/conf/ewkt.sql
+      - ../../build-config/db2_spatial/ewkt.sql:/conf/ewkt.sql
     shm_size: 2g
     healthcheck:
       test: ["CMD-SHELL", "su - orm_test -c 'source ~/sqllib/db2profile && db2 connect to orm_test && db2 connect reset'"]

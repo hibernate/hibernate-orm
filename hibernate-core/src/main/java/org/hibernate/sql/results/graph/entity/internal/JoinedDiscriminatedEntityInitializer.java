@@ -4,14 +4,18 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import java.util.BitSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import org.hibernate.EntityFilterException;
+import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
@@ -46,11 +50,12 @@ public class JoinedDiscriminatedEntityInitializer
 	private final boolean isPartOfKey;
 	private final DiscriminatedAssociationModelPart fetchedPart;
 	private final boolean eager;
+	private final BitSet affectedByFilter;
 	private final boolean resultInitializer;
 	private final DomainResultAssembler<?> discriminatorAssembler;
 	private final DomainResultAssembler<?> keyValueAssembler;
-	private final Map<String, EntityInitializer<?>> concreteInitializersByEntityName;
-	private final EntityInitializer<?>[] concreteInitializers;
+	private final Map<String, EntityInitializer<EntityInitializerImpl.EntityInitializerData>> concreteInitializersByEntityName;
+	private final EntityInitializer<EntityInitializerImpl.EntityInitializerData>[] concreteInitializers;
 	private final boolean keyIsEager;
 	private final boolean hasLazySubInitializer;
 	// workaround for the fact that implicit discriminator mappings are not available
@@ -59,7 +64,7 @@ public class JoinedDiscriminatedEntityInitializer
 	public static class JoinedDiscriminatedEntityInitializerData extends InitializerData {
 		protected EntityPersister concreteDescriptor;
 		protected Object entityIdentifier;
-		protected EntityInitializer<?> concreteInitializer;
+		protected EntityInitializer<EntityInitializerImpl.EntityInitializerData> concreteInitializer;
 
 		public JoinedDiscriminatedEntityInitializerData(RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
@@ -73,6 +78,7 @@ public class JoinedDiscriminatedEntityInitializer
 			Fetch discriminatorFetch,
 			Fetch keyFetch,
 			boolean eager,
+			BitSet affectedByFilter,
 			boolean resultInitializer,
 			List<EntityResultImpl<?>> concreteEntityResults,
 			AssemblerCreationState creationState) {
@@ -81,6 +87,7 @@ public class JoinedDiscriminatedEntityInitializer
 		this.fetchedPart = fetchedPart;
 		this.navigablePath = fetchedNavigable;
 		this.eager = eager;
+		this.affectedByFilter = affectedByFilter;
 		this.resultInitializer = resultInitializer;
 
 		isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
@@ -88,13 +95,15 @@ public class JoinedDiscriminatedEntityInitializer
 		keyValueAssembler = keyFetch.createAssembler( this, creationState );
 		keyIsEager = keyValueAssembler.isEager();
 
-		final Map<String, EntityInitializer<?>> initializersByEntityName =
+		final Map<String, EntityInitializer<EntityInitializerImpl.EntityInitializerData>> initializersByEntityName =
 				new LinkedHashMap<>( concreteEntityResults.size() );
-		final var initializers = new EntityInitializer<?>[concreteEntityResults.size()];
+		@SuppressWarnings("unchecked")
+		final var initializers = (EntityInitializer<EntityInitializerImpl.EntityInitializerData>[])
+				new EntityInitializer[concreteEntityResults.size()];
 		boolean lazySubInitializer = keyValueAssembler.hasLazySubInitializers();
 		for ( int i = 0; i < concreteEntityResults.size(); i++ ) {
 			final var entityResult = concreteEntityResults.get( i );
-			final var initializer = resolveEntityInitializer( entityResult, creationState );
+			final var initializer = resolveEntityInitializer( i, entityResult, creationState );
 			initializers[i] = initializer;
 			initializersByEntityName.put(
 					entityResult.getEntityValuedModelPart().getEntityMappingType().getEntityName(),
@@ -109,10 +118,12 @@ public class JoinedDiscriminatedEntityInitializer
 				hasImplicitDiscriminatorStrategy( fetchedPart.getDiscriminatorMapping() );
 	}
 
-	private EntityInitializer<?> resolveEntityInitializer(
+	private EntityInitializer<EntityInitializerImpl.EntityInitializerData> resolveEntityInitializer(
+			int index,
 			EntityResultImpl<?> entityResult,
 			AssemblerCreationState creationState) {
-		return creationState.resolveInitializer(
+		//noinspection unchecked
+		return (EntityInitializer<EntityInitializerImpl.EntityInitializerData>) creationState.resolveInitializer(
 				entityResult.getNavigablePath(),
 				entityResult.getReferencedModePart(),
 				() -> new EntityInitializerImpl(
@@ -124,7 +135,7 @@ public class JoinedDiscriminatedEntityInitializer
 						entityResult.getRowIdResult(),
 						entityResult.getAuditChangesetIdResult(),
 						NotFoundAction.EXCEPTION,
-						false,
+						affectedByFilter.get( index ),
 						this,
 						false,
 						creationState
@@ -158,12 +169,7 @@ public class JoinedDiscriminatedEntityInitializer
 			final var rowProcessingState = data.getRowProcessingState();
 			final Object discriminatorValue = discriminatorAssembler.assemble( rowProcessingState );
 			if ( discriminatorValue == null ) {
-				data.setState( State.MISSING );
-				data.concreteDescriptor = null;
-				data.entityIdentifier = null;
-				data.concreteInitializer = null;
-				data.setInstance( null );
-				assert keyValueAssembler.assemble( rowProcessingState ) == null;
+				setMissing( data );
 			}
 			else {
 				data.concreteDescriptor =
@@ -174,8 +180,42 @@ public class JoinedDiscriminatedEntityInitializer
 				data.setState( State.KEY_RESOLVED );
 				if ( data.concreteInitializer != null ) {
 					data.concreteInitializer.resolveKey( rowProcessingState );
+					if ( data.concreteInitializer.getData( rowProcessingState ).getState() == State.MISSING ) {
+						setMissing( data );
+					}
 				}
 			}
+		}
+	}
+
+	private void setMissing(JoinedDiscriminatedEntityInitializerData data) {
+		final String entityName = data.concreteDescriptor == null
+				? "<unknown>"
+				: data.concreteDescriptor.getEntityName();
+		data.setState( State.MISSING );
+		data.concreteDescriptor = null;
+		data.entityIdentifier = null;
+		data.concreteInitializer = null;
+		data.setInstance( null );
+		final Object foreignKeyValue = keyValueAssembler.assemble( data.getRowProcessingState() );
+		if ( foreignKeyValue != null ) {
+			final var concreteInitializer = concreteInitializersByEntityName.get( entityName );
+			final boolean filteredOut;
+			if ( concreteInitializer == null ) {
+				// Discriminator is null, but foreign key is given. Let's just assume this was filtered out,
+				// if any initializer was affected by a filter
+				filteredOut = !affectedByFilter.isEmpty();
+			}
+			else {
+				final var index = ArrayHelper.indexOf( concreteInitializers, concreteInitializer );
+				assert index >= 0;
+				filteredOut = affectedByFilter.get( index );
+			}
+			if ( filteredOut ) {
+				throw new EntityFilterException( entityName, foreignKeyValue,
+						fetchedPart.getNavigableRole().getFullPath() );
+			}
+			throw new FetchNotFoundException( entityName, foreignKeyValue );
 		}
 	}
 
@@ -201,10 +241,17 @@ public class JoinedDiscriminatedEntityInitializer
 	@Override
 	public void resolveState(JoinedDiscriminatedEntityInitializerData data) {
 		final var rowProcessingState = data.getRowProcessingState();
-		discriminatorAssembler.resolveState( rowProcessingState );
+		final Object discriminatorValue = discriminatorAssembler.assemble( rowProcessingState );
 		keyValueAssembler.resolveState( rowProcessingState );
-		if ( data.concreteInitializer != null ) {
-			data.concreteInitializer.resolveState( rowProcessingState );
+		if ( discriminatorValue  != null ) {
+			final var concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue )
+					.getEntityPersister();
+			final var concreteInitializer =
+					concreteInitializersByEntityName.get( concreteDescriptor.getEntityName() );
+			if ( concreteInitializer == null ) {
+				throw new IllegalStateException( "Initializer for " + concreteDescriptor.getEntityName() + " is unexpectedly missing!" );
+			}
+			concreteInitializer.resolveState( rowProcessingState );
 		}
 	}
 
@@ -213,8 +260,9 @@ public class JoinedDiscriminatedEntityInitializer
 		if ( data.getState() == State.KEY_RESOLVED ) {
 			final var concreteInitializer = data.concreteInitializer;
 			if ( concreteInitializer != null ) {
-				concreteInitializer.resolveInstance( data.getRowProcessingState() );
-				transferConcreteResolution( concreteInitializer, data );
+				final var initializerData = concreteInitializer.getData( data.getRowProcessingState() );
+				concreteInitializer.resolveInstance( initializerData );
+				transferConcreteResolution( concreteInitializer, initializerData, data );
 				if ( data.getInstance() != null || data.getState() == State.MISSING ) {
 					return;
 				}
@@ -242,17 +290,47 @@ public class JoinedDiscriminatedEntityInitializer
 		}
 		else {
 			final var rowProcessingState = data.getRowProcessingState();
-			resolveConcreteAssociation( instance, data, rowProcessingState.getSession() );
-			final var concreteInitializer = data.concreteInitializer;
+			final var session = rowProcessingState.getSession();
+			final var concreteDescriptor = resolveConcreteDescriptor( instance, session );
+			final var concreteInitializer = resolveConcreteInitializer( concreteDescriptor );
 			if ( concreteInitializer != null ) {
-				concreteInitializer.resolveInstance( instance, rowProcessingState );
-				data.concreteDescriptor = concreteInitializer.getConcreteDescriptor( rowProcessingState );
-				data.entityIdentifier = concreteInitializer.getEntityIdentifier( rowProcessingState );
-				transferConcreteResolution( concreteInitializer, data );
+				final var initializerData = concreteInitializer.getData( rowProcessingState );
+				concreteInitializer.resolveInstance( instance, initializerData );
+				data.concreteDescriptor = concreteInitializer.getConcreteDescriptor( initializerData );
+				data.entityIdentifier = concreteInitializer.getEntityIdentifier( initializerData );
+				data.concreteInitializer = concreteInitializer;
+				transferConcreteResolution( concreteInitializer, initializerData, data );
 			}
 			else {
-				data.setInstance( instance );
-				if ( eager ) {
+				// Match the behavior of EntitySelectFetchInitializer
+				final var lazyInitializer = extractLazyInitializer( instance );
+				if ( lazyInitializer == null ) {
+					data.setState( State.INITIALIZED );
+					data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
+				}
+				else {
+					data.setState( lazyInitializer.isUninitialized() ? State.RESOLVED : State.INITIALIZED );
+					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
+				}
+
+				final var entityKey = data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor );
+				final var entityHolder = session.getPersistenceContextInternal().getEntityHolder(
+						entityKey
+				);
+
+				if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
+					// the existing entity instance is detached or transient
+					if ( entityHolder != null ) {
+						final var managed = entityHolder.getManagedObject();
+						data.setInstance( managed );
+						data.entityIdentifier = entityHolder.getEntityKey().getIdentifier();
+						data.setState( entityHolder.isInitialized() ? State.INITIALIZED : State.RESOLVED );
+					}
+				}
+				else {
+					data.setInstance( instance );
+				}
+				if ( eager && data.getState() == State.RESOLVED ) {
 					Hibernate.initialize( instance ); //TODO: don't love this
 				}
 				data.setState( State.INITIALIZED );
@@ -270,25 +348,6 @@ public class JoinedDiscriminatedEntityInitializer
 		}
 	}
 
-	private void resolveConcreteAssociation(
-			Object instance,
-			JoinedDiscriminatedEntityInitializerData data,
-			SharedSessionContractImplementor session) {
-		final var lazyInitializer = extractLazyInitializer( instance );
-		if ( lazyInitializer == null ) {
-			data.concreteDescriptor = session.getEntityPersister( null, instance );
-			data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
-		}
-		else {
-			data.concreteDescriptor =
-					lazyInitializer.isUninitialized()
-							? session.getFactory().getMappingMetamodel().getEntityDescriptor( lazyInitializer.getEntityName() )
-							: session.getEntityPersister( null, lazyInitializer.getImplementation() );
-			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
-		}
-		data.concreteInitializer = resolveConcreteInitializer( data.concreteDescriptor );
-	}
-
 	@Override
 	public void initializeInstance(JoinedDiscriminatedEntityInitializerData data) {
 		if ( data.getState() == State.RESOLVED ) {
@@ -304,7 +363,19 @@ public class JoinedDiscriminatedEntityInitializer
 			&& converter.hasImplicitValueStrategy();
 	}
 
-	private @Nullable EntityInitializer<?> resolveConcreteInitializer(EntityPersister concreteDescriptor) {
+	private EntityPersister resolveConcreteDescriptor(Object instance, SharedSessionContractImplementor session) {
+		final var lazyInitializer = extractLazyInitializer( instance );
+		if ( lazyInitializer == null ) {
+			return session.getEntityPersister( null, instance );
+		}
+		else {
+			return lazyInitializer.isUninitialized()
+					? session.getFactory().getMappingMetamodel().getEntityDescriptor( lazyInitializer.getEntityName() )
+					: session.getEntityPersister( null, lazyInitializer.getImplementation() );
+		}
+	}
+
+	private @Nullable EntityInitializer<EntityInitializerImpl.EntityInitializerData> resolveConcreteInitializer(EntityPersister concreteDescriptor) {
 		final var concreteInitializer = concreteInitializersByEntityName.get( concreteDescriptor.getEntityName() );
 		if ( concreteInitializer == null && !allowMissingConcreteInitializer ) {
 			throw new IllegalStateException(
@@ -314,14 +385,14 @@ public class JoinedDiscriminatedEntityInitializer
 		return concreteInitializer;
 	}
 
-	private void transferConcreteResolution(
-			EntityInitializer<?> concreteInitializer,
+	private <X extends InitializerData> void transferConcreteResolution(
+			EntityInitializer<X> concreteInitializer,
+			X concreteInitializerData,
 			JoinedDiscriminatedEntityInitializerData data) {
-		final var rowProcessingState = data.getRowProcessingState();
-		final var state = concreteInitializer.getData( rowProcessingState ).getState();
+		final var state = concreteInitializerData.getState();
 		data.setInstance( switch ( state ) {
 			case MISSING -> null;
-			case RESOLVED, INITIALIZED -> concreteInitializer.getResolvedInstance( rowProcessingState );
+			case RESOLVED, INITIALIZED -> concreteInitializer.getResolvedInstance( concreteInitializerData );
 			default -> throw new IllegalStateException( "Unexpected concrete initializer state: " + state );
 		} );
 		data.setState( state );
@@ -344,13 +415,16 @@ public class JoinedDiscriminatedEntityInitializer
 		else {
 			data.setInstance( instance );
 			final var rowProcessingState = data.getRowProcessingState();
-			resolveConcreteAssociation( instance, data, rowProcessingState.getSession() );
-			final var concreteInitializer = data.concreteInitializer;
+			final var session = rowProcessingState.getSession();
+			final var concreteDescriptor = resolveConcreteDescriptor( instance, session );
+			final var concreteInitializer = resolveConcreteInitializer( concreteDescriptor );
 			if ( concreteInitializer != null ) {
-				concreteInitializer.initializeInstanceFromParent( instance, rowProcessingState );
-				data.concreteDescriptor = concreteInitializer.getConcreteDescriptor( rowProcessingState );
-				data.entityIdentifier = concreteInitializer.getEntityIdentifier( rowProcessingState );
-				transferConcreteResolution( concreteInitializer, data );
+				final var initializerData = concreteInitializer.getData( rowProcessingState );
+				concreteInitializer.initializeInstanceFromParent( instance, initializerData );
+				data.concreteDescriptor = concreteInitializer.getConcreteDescriptor( initializerData );
+				data.entityIdentifier = concreteInitializer.getEntityIdentifier( initializerData );
+				data.concreteInitializer = concreteInitializer;
+				transferConcreteResolution( concreteInitializer, initializerData, data );
 			}
 			else {
 				data.setState( State.INITIALIZED );

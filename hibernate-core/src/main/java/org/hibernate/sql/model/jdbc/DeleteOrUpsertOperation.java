@@ -17,7 +17,6 @@ import org.hibernate.engine.jdbc.mutation.spi.Binding;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.UpdateValuesAnalysis;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
@@ -34,14 +33,14 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  */
 public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	private final EntityMutationTarget mutationTarget;
-	private final EntityTableMapping tableMapping;
+	private final TableMapping tableMapping;
 	private final UpsertOperation upsertOperation;
 
 	private final OptionalTableUpdate optionalTableUpdate;
 
 	public DeleteOrUpsertOperation(
 			EntityMutationTarget mutationTarget,
-			EntityTableMapping tableMapping,
+			TableMapping tableMapping,
 			UpsertOperation upsertOperation,
 			OptionalTableUpdate optionalTableUpdate) {
 		this.mutationTarget = mutationTarget;
@@ -168,7 +167,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			JdbcValueDescriptor valueDescriptor,
 			PreparedStatement statement,
 			String sql,
-			EntityTableMapping tableMapping,
+			TableMapping tableMapping,
 			SharedSessionContractImplementor session) {
 		try {
 			binding.getValueBinder().bind( statement, binding.getValue(), jdbcPosition, session );

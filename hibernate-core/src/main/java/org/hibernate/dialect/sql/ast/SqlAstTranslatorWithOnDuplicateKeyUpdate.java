@@ -8,7 +8,6 @@ package org.hibernate.dialect.sql.ast;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithUpsert;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -47,7 +46,7 @@ public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> e
 
 		return new DeleteOrUpsertOperation(
 				optionalTableUpdate.getMutationTarget(),
-				(EntityTableMapping) optionalTableUpdate.getMutatingTable().getTableMapping(),
+				optionalTableUpdate.getMutatingTable().getTableMapping(),
 				upsertOperation,
 				optionalTableUpdate
 		);

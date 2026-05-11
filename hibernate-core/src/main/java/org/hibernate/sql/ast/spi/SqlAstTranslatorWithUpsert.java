@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
@@ -44,7 +43,7 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 
 		return new DeleteOrUpsertOperation(
 				optionalTableUpdate.getMutationTarget(),
-				(EntityTableMapping) optionalTableUpdate.getMutatingTable().getTableMapping(),
+				optionalTableUpdate.getMutatingTable().getTableMapping(),
 				upsertOperation,
 				optionalTableUpdate
 		);

@@ -108,7 +108,7 @@ public class EmbeddableInheritanceAssciationsTest {
 		scope.inTransaction( session -> {
 			// queries
 			final List<AssociatedEntity> resultList = session.createQuery(
-					"select embeddable.manyToMany from TestEntity",
+					"select element(embeddable.manyToMany) from TestEntity",
 					AssociatedEntity.class
 			).getResultList();
 			final Integer size = session.createQuery(
@@ -155,7 +155,7 @@ public class EmbeddableInheritanceAssciationsTest {
 		scope.inTransaction( session -> {
 			// queries
 			final List<AssociatedEntity> resultList = session.createQuery(
-					"select embeddable.oneToMany from TestEntity",
+					"select element(embeddable.oneToMany) from TestEntity",
 					AssociatedEntity.class
 			).getResultList();
 			final Integer size = session.createQuery(

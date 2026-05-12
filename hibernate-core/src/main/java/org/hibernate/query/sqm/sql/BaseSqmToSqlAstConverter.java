@@ -4197,36 +4197,47 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				selectionPath instanceof AbstractSqmSpecificPluralPartPath<?>
 						? selectionPath.getLhs().getLhs()
 						: selectionPath;
-		final var fromClauseIndex = getFromClauseIndex();
-		final var tableGroup = fromClauseIndex.findTableGroupForGetOrCreate( path.getNavigablePath() );
-		if ( tableGroup == null ) {
-			prepareReusablePath( path, () -> null );
-			if ( path.getLhs() != null && !( path instanceof SqmEntityValuedSimplePath<?>
-					|| path instanceof SqmEmbeddedValuedSimplePath<?>
-					|| path instanceof SqmAnyValuedSimplePath<?>
-					|| path instanceof SqmTreatedPath<?, ?> ) ) {
-				// Since this is a selection, we must create a table group for the path as a DomainResult will be created
-				// But only create it for paths that are not handled by #prepareReusablePath anyway
-				final var createdTableGroup = createTableGroup(
-						getActualTableGroup( fromClauseIndex.getTableGroup( path.getLhs().getNavigablePath() ), path ),
-						path,
-						false
-				);
-				if ( createdTableGroup != null ) {
-					registerEntityNameProjectionUsage( path, createdTableGroup );
+		final var lhs = path.getLhs();
+		if ( path instanceof SqmPluralValuedSimplePath<?> ) {
+			prepareReusablePath( lhs, () -> null );
+			registerEntityNameProjectionUsage( lhs,
+					getFromClauseIndex().findTableGroup( lhs.getNavigablePath() ) );
+		}
+		else {
+			final var fromClauseIndex = getFromClauseIndex();
+			final var tableGroup = fromClauseIndex.findTableGroupForGetOrCreate( path.getNavigablePath() );
+			if ( tableGroup == null ) {
+				prepareReusablePath( path, () -> null );
+				if ( lhs != null
+					&& !(path instanceof SqmEntityValuedSimplePath<?>
+							|| path instanceof SqmEmbeddedValuedSimplePath<?>
+							|| path instanceof SqmAnyValuedSimplePath<?>
+							|| path instanceof SqmTreatedPath<?, ?>) ) {
+					// Since this is a selection, we must create a table group for the path as a DomainResult will be created
+					// But only create it for paths that are not handled by #prepareReusablePath anyway
+					final var createdTableGroup = createTableGroup(
+							getActualTableGroup( fromClauseIndex.getTableGroup( lhs.getNavigablePath() ), path ),
+							path,
+							false
+					);
+					if ( createdTableGroup != null ) {
+						registerEntityNameProjectionUsage( path, createdTableGroup );
+					}
+				}
+				else {
+					registerEntityNameProjectionUsage( path,
+							fromClauseIndex.findTableGroup( path.getNavigablePath() ) );
 				}
 			}
 			else {
-				registerEntityNameProjectionUsage( path, fromClauseIndex.findTableGroup( path.getNavigablePath() ) );
-			}
-		}
-		else {
-			registerEntityNameProjectionUsage( path, tableGroup );
-			if ( path instanceof SqmSimplePath<?> && CollectionPart.Nature.fromName( path.getNavigablePath().getLocalName() ) == null ) {
-				// If a table group for a selection already exists, we must make sure that the join type is INNER
-				fromClauseIndex.findTableGroup( path.getNavigablePath().getParent() )
-						.findTableGroupJoin( tableGroup )
-						.setJoinType( SqlAstJoinType.INNER );
+				registerEntityNameProjectionUsage( path, tableGroup );
+				if ( path instanceof SqmSimplePath<?>
+						&& CollectionPart.Nature.fromName( path.getNavigablePath().getLocalName() ) == null ) {
+					// If a table group for a selection already exists, we must make sure that the join type is INNER
+					fromClauseIndex.findTableGroup( path.getNavigablePath().getParent() )
+							.findTableGroupJoin( tableGroup )
+							.setJoinType( SqlAstJoinType.INNER );
+				}
 			}
 		}
 	}

@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SessionFactory
 @DomainModel(annotatedClasses = {InstantiationWithCollectionTest.Entity.class,
 		InstantiationWithCollectionTest.ChildEntity.class})
+@JiraKey("HHH-17558")
 public class InstantiationWithCollectionTest {
 
 	@Test

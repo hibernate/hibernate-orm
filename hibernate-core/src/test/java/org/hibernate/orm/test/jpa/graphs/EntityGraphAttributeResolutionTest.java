@@ -67,9 +67,10 @@ public class EntityGraphAttributeResolutionTest {
 	@Test
 	public void fetchAssocWithNamedFetchGraph(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-			List result = entityManager.createQuery( "SELECT u.groups FROM User u WHERE u.id = ?1" )
+			List result = entityManager.createQuery( "SELECT element(u.groups) FROM User u WHERE u.id = ?1" )
 					.setParameter(1, u.getId() )
-					.setHint( GraphSemantic.FETCH.getJakartaHintName(), entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
+					.setHint( GraphSemantic.FETCH.getJakartaHintName(),
+							entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
 					.getResultList();
 
 			assertThat( result ).containsExactlyInAnyOrder( g1, g2 );
@@ -81,7 +82,8 @@ public class EntityGraphAttributeResolutionTest {
 		scope.inTransaction( entityManager -> {
 			List result = entityManager.createQuery( "SELECT g FROM User u JOIN u.groups g WHERE u.id = ?1" )
 					.setParameter( 1, u.getId() )
-					.setHint( GraphSemantic.FETCH.getJakartaHintName(), entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
+					.setHint( GraphSemantic.FETCH.getJakartaHintName(),
+							entityManager.getEntityGraph( Group.ENTITY_GRAPH ) )
 					.getResultList();
 
 			assertThat( result ).containsExactlyInAnyOrder( g1, g2 );
@@ -94,7 +96,7 @@ public class EntityGraphAttributeResolutionTest {
 			EntityGraph<Group> eg = entityManager.createEntityGraph( Group.class );
 			eg.addAttributeNodes( "permissions" );
 
-			List result = entityManager.createQuery( "SELECT u.groups FROM User u WHERE u.id = ?1" )
+			List result = entityManager.createQuery( "SELECT element(u.groups) FROM User u WHERE u.id = ?1" )
 					.setParameter(1, u.getId() )
 					.setHint( GraphSemantic.FETCH.getJakartaHintName(), eg )
 					.getResultList();

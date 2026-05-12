@@ -18,6 +18,7 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +42,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 		}
 )
 public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testReadOnlyViaSessionDoesNotInit(SessionFactoryScope scope) {

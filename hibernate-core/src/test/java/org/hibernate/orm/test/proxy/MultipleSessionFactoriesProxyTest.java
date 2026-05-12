@@ -95,7 +95,9 @@ public class MultipleSessionFactoriesProxyTest {
 			// factories (different UUID's, but same name!) trying to deserialize objects from a
 			// centralized cache (e.g. Hazelcast).
 			sf.close();
-			produceSessionFactory();
+
+			try (var sf2 = produceSessionFactory()) {
+			}
 
 			// And this should be possible now: even though we lack of a matching session factory by
 			// UUID, it should seek a match by using the session factory name as valid alternative.

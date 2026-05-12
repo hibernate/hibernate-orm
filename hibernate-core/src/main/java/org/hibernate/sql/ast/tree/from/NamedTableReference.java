@@ -55,6 +55,14 @@ public class NamedTableReference extends AbstractTableReference {
 		if ( useAsOfOperator( influencers, mapping )
 				&& mapping.getTableName().equals( getTableExpression() ) ) {
 			final var dialect = influencers.getSessionFactory().getJdbcServices().getDialect();
+			final var temporalTableSupport = dialect.getTemporalTableSupport();
+			final var temporalTableStrategy =
+					influencers.getSessionFactory().getSessionFactoryOptions()
+							.getTemporalTableStrategy();
+			if ( influencers.getTemporalIdentifier() == null
+					&& !temporalTableSupport.useAsOfOperatorForCurrent( temporalTableStrategy ) ) {
+				return;
+			}
 			if ( influencers.getTemporalIdentifier() == null
 					&& influencers.getSessionFactory().getChangesetCoordinator()
 							.useServerTimestamp( dialect ) ) {

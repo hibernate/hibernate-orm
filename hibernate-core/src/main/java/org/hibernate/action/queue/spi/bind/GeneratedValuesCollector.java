@@ -6,11 +6,13 @@ package org.hibernate.action.queue.spi.bind;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
+import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.generator.values.internal.GeneratedValuesImpl;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
@@ -65,6 +67,7 @@ public final class GeneratedValuesCollector {
 
 	private final EventType timing;
 	private final EntityPersister entityPersister;
+	private final List<? extends ModelPart> generatedModelParts;
 	private final GeneratedValues generatedValues;
 	private DelayedValueAccess identifierHandle;
 
@@ -74,6 +77,7 @@ public final class GeneratedValuesCollector {
 			List<? extends ModelPart> generatedModelParts) {
 		this.timing = timing;
 		this.entityPersister = entityPersister;
+		this.generatedModelParts = generatedModelParts;
 		this.generatedValues = new GeneratedValuesImpl( generatedModelParts );
 	}
 
@@ -91,6 +95,17 @@ public final class GeneratedValuesCollector {
 
 	public GeneratedValues generatedValues() {
 		return generatedValues;
+	}
+
+	public boolean containsGeneratedValues(TableDescriptor tableDescriptor) {
+		for ( var generatedModelPart : generatedModelParts ) {
+			final BasicValuedModelPart basicValuedModelPart = generatedModelPart.asBasicValuedModelPart();
+			if ( basicValuedModelPart != null
+					&& tableDescriptor.name().equals( basicValuedModelPart.getContainingTableExpression() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void setIdentifierHandle(DelayedValueAccess identifierHandle) {

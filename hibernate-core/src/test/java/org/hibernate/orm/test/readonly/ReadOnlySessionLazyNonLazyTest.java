@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -50,6 +51,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		xmlMappings = { "org/hibernate/orm/test/readonly/DataPoint.hbm.xml" }
 )
 public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testExistingModifiableAfterSetSessionReadOnly(SessionFactoryScope scope) {

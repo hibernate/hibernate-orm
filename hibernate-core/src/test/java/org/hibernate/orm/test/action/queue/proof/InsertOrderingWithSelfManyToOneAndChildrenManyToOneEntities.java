@@ -7,10 +7,13 @@ package org.hibernate.orm.test.action.queue.proof;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17529" )
+// MySQLDialect and a few others do not enable batching by default
+@ServiceRegistry(settings = @Setting(name= BatchSettings.STATEMENT_BATCH_SIZE, value="15"))
 @DomainModel(annotatedClasses = {
 		InsertOrderingWithSelfManyToOneAndChildrenManyToOneEntities.Post.class,
 		InsertOrderingWithSelfManyToOneAndChildrenManyToOneEntities.PostComment.class

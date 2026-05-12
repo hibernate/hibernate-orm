@@ -16,6 +16,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -77,6 +78,11 @@ public abstract class AbstractEntityWithOneToManyTest {
 		}
 
 		isContractVersioned = domainModel.getEntityDescriptor( Contract.class.getName() ).isVersioned();
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test

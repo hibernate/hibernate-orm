@@ -177,7 +177,8 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			generatedValuesDelegate = null;
 		}
 
-		if ( generatedValuesDelegate != null ) {
+		if ( generatedValuesDelegate != null
+				&& generatedValuesCollector.containsGeneratedValues( flushOperation.getMutatingTableDescriptor() ) ) {
 			final var generatedValues = generatedValuesDelegate.performGraphMutation(
 					flushOperation,
 					bindPlan.getEntityInstance(),
@@ -203,6 +204,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString() )) {
+			preparable.getExpectation().prepare( stmnt );
 			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
 			flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
 			valueBindings.beforeStatement( stmnt, session );

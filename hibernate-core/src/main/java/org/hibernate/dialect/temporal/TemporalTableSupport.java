@@ -146,6 +146,16 @@ public interface TemporalTableSupport {
 	boolean useAsOfOperator(TemporalTableStrategy strategy);
 
 	/**
+	 * Should we use the {@link #getAsOfOperator as-of operator} when querying
+	 * current data without an explicit historical instant?
+	 *
+	 * @param strategy The strategy
+	 */
+	default boolean useAsOfOperatorForCurrent(TemporalTableStrategy strategy) {
+		return false;
+	}
+
+	/**
 	 * Should we use temporal restrictions on the {@code row start} and
 	 * {@code row end} columns when querying temporal tables? We usually
 	 * use them unless we are using native temporal tables, but on Oracle

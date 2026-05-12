@@ -13,6 +13,7 @@ import org.hibernate.Transaction;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +33,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 public class ReadOnlyTest extends AbstractReadOnlyTest {
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testReadOnlyOnProxies(SessionFactoryScope scope) {

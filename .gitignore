@@ -21,6 +21,7 @@ out
 *.iws
 *.iml
 atlassian-ide-plugin.xml
+/.profileconfig.json
 
 # Eclipse specific files/directories
 .classpath

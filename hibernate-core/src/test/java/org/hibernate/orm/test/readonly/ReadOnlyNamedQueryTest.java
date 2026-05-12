@@ -27,9 +27,10 @@ import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 @DomainModel( annotatedClasses = ReadOnlyNamedQueryTest.TestEntity.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17313" )
 public class ReadOnlyNamedQueryTest extends AbstractReadOnlyTest {
+
 	@AfterEach
-	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test

@@ -9,6 +9,7 @@ import jakarta.persistence.PersistenceException;
 
 import org.hibernate.exception.ConstraintViolationException;
 
+import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.orm.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
@@ -16,6 +17,7 @@ import org.hibernate.orm.test.manytomanyassociationclass.Membership;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -34,6 +36,8 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 
 	@Test
 	public void testRemoveAndAddEqualElement(SessionFactoryScope scope) {
+		skipForGraphQueue( scope );
+
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		addMembership( getUser(), getGroup(), createMembership( "membership" ) );
 
@@ -61,6 +65,8 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 
 	@Test
 	public void testRemoveAndAddEqualCollection(SessionFactoryScope scope) {
+		skipForGraphQueue( scope );
+
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		getUser().setMemberships( new HashSet() );
 		getGroup().setMemberships( new HashSet() );
@@ -90,6 +96,8 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 
 	@Test
 	public void testRemoveAndAddEqualElementNonKeyModified(SessionFactoryScope scope) {
+		skipForGraphQueue( scope );
+
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		Membership membershipNew = createMembership( "membership" );
 		addMembership( getUser(), getGroup(), membershipNew );
@@ -114,6 +122,13 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 						assertTyping( ConstraintViolationException.class, e );
 					}
 				}
+		);
+	}
+
+	private void skipForGraphQueue(SessionFactoryScope scope) {
+		assumeFalse(
+				scope.getSessionFactory().getActionQueueFactory().getConfiguredQueueType() == QueueType.GRAPH,
+				"Legacy insert-before-delete ordering is not expected with the graph action queue"
 		);
 	}
 }

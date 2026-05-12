@@ -79,7 +79,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 			generatedValues = generatedValuesCollector.generatedValues();
 			id = resolveGeneratedIdentifier( generatedValues, persister, entity, session );
 		}
-		if ( persister.hasInsertGeneratedProperties() || persister.isVersionPropertyGenerated() ) {
+		if ( generatedValues != null || persister.hasInsertGeneratedProperties() || persister.isVersionPropertyGenerated() ) {
 			handleGeneratedProperties( id, entry, generatedValues, persistenceContext, persister, state );
 		}
 

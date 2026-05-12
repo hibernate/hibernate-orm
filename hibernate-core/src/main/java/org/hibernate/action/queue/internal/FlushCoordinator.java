@@ -314,13 +314,6 @@ public class FlushCoordinator {
 
 		// For each foreign key, check if it creates a dependency between groups
 		for (var fk : constraintModel.foreignKeys()) {
-			// For DELETE operations, we must consider ALL FKs including inheritance FKs
-			// (e.g., joined inheritance where dog.id -> animal.id requires deleting dog before animal)
-			// For INSERT operations, we only need association FKs (inheritance inserts are ordered by table structure)
-			if (!fk.isAssociation() && kind != MutationKind.DELETE) {
-				continue; // Skip non-association FKs for INSERTs (secondary tables, inheritance handled separately)
-			}
-
 			final String keyTable = fk.keyTable();
 			final String targetTable = fk.targetTable();
 
@@ -439,7 +432,7 @@ public class FlushCoordinator {
 	///
 	/// Uses a hybrid grouping strategy:
 	/// - For tables with self-referential associations: groups are split by ordinalBase
-	/// See [ to avoid creating false cycles in the dependency graph].
+	/// 	to avoid creating false cycles in the dependency graph.
 	/// - For other tables: operations from different entities are merged for better JDBC batching
 	///
 	/// This optimizes batching while preventing unnecessary cycle breaking and fixup UPDATEs

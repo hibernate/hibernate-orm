@@ -177,7 +177,8 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			generatedValuesDelegate = null;
 		}
 
-		if ( generatedValuesDelegate != null ) {
+		if ( generatedValuesDelegate != null
+				&& generatedValuesCollector.containsGeneratedValues( flushOperation.getMutatingTableDescriptor() ) ) {
 			final var generatedValues = generatedValuesDelegate.performGraphMutation(
 					flushOperation,
 					bindPlan.getEntityInstance(),

@@ -107,7 +107,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 		session.setDefaultReadOnly( getReadOnlyMode() == ReadOnlyMode.READ_ONLY );
 
 		final var cacheMode = session.getCacheMode();
-		session.setCacheMode( CacheMode.fromJpaModes( getCacheRetrieveMode(), getCacheStoreMode() ) );
+		session.setCacheMode( getCacheMode() );
 
 		try {
 			return action.get();

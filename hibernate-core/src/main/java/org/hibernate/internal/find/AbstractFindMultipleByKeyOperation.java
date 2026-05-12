@@ -165,7 +165,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 		refreshSession = cacheMode == CacheMode.REFRESH_SESSION;
 	}
 
-	private CacheMode getCacheMode() {
+	protected CacheMode getCacheMode() {
 		final var cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
 		return refreshSession && cacheMode == CacheMode.REFRESH
 				? CacheMode.REFRESH_SESSION

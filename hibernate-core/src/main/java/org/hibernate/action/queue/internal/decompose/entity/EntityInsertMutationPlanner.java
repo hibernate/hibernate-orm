@@ -33,6 +33,7 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasValueGenerationOnExecution;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
 
 /// Shared planner for graph entity insert mutation operations.
 ///
@@ -295,7 +296,8 @@ class EntityInsertMutationPlanner {
 
 	private void addTemporalToInsertGroup(Map<String, TableInsertBuilder> builders) {
 		final TemporalMapping temporalMapping = entityPersister.getTemporalMapping();
-		if ( temporalMapping == null ) {
+		if ( temporalMapping == null
+				|| sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy() != SINGLE_TABLE ) {
 			return;
 		}
 

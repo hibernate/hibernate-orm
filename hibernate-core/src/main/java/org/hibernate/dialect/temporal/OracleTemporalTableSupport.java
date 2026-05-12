@@ -51,6 +51,11 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 	}
 
 	@Override
+	public boolean useAsOfOperatorForCurrent(TemporalTableStrategy strategy) {
+		return strategy != HISTORY_TABLE;
+	}
+
+	@Override
 	public boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
 		final var sessionFactory = influencers.getSessionFactory();
 		return sessionFactory.getChangesetCoordinator().isIdentifierTypeInstant()

@@ -120,6 +120,28 @@ public class CascadeRefreshToManyTest {
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-13284")
+	public void refreshToOneViaQuery(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			final ToOneTarget target = session.find( ToOneTarget.class, 1L );
+			final ToOneOwner owner = session.find( ToOneOwner.class, 1L );
+			assertThat( owner.getTarget().getName() ).isEqualTo( "target" );
+
+			session.createMutationQuery( "update RefreshToOneTarget t set t.name = 'updated target' where t.id = 1" )
+					.executeUpdate();
+
+			statementInspector.clear();
+			session.createSelectionQuery( "from RefreshToOneOwner o join fetch o.target", ToOneOwner.class )
+					.setCacheMode( CacheMode.REFRESH_SESSION )
+					.getResultList();
+
+			assertThat( target.getName() ).isEqualTo( "updated target" );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-13284")
 	public void refreshCollectionViaQuery(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {

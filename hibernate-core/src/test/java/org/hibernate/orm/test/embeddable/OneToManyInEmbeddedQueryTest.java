@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.query.SemanticException;
+import org.hibernate.collection.spi.PersistentCollection;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -33,7 +33,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 @DomainModel( annotatedClasses = {
 		OneToManyInEmbeddedQueryTest.EntityA.class,
@@ -88,23 +87,17 @@ public class OneToManyInEmbeddedQueryTest {
 	}
 
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17558" )
 	public void testSelectEmbedded(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			try {
-				session.createQuery(
+		final EmbeddedValue embedded = scope.fromTransaction(
+				session -> session.createQuery(
 						"select a.embedded from EntityA a where a.id = 2",
 						EmbeddedValue.class
-				).getSingleResult();
-				fail( "Should throw SemanticException" );
-			}
-			catch (Exception e) {
-				final Throwable cause = e.getCause();
-				assertThat( cause ).isInstanceOf( SemanticException.class );
-				assertThat( cause.getMessage() ).contains(
-						"selection of an embeddable containing associated collections is not supported"
-				);
-			}
-		} );
+				).getSingleResult()
+		);
+
+		assertThat( embedded.getEntityCList() ).isNotInstanceOf( PersistentCollection.class );
+		assertThat( embedded.getEntityCList().stream().map( EntityC::getName ) ).containsOnly( "entityc_3" );
 	}
 
 	@Test

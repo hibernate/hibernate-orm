@@ -850,7 +850,9 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s = openSession(scope);
 		t = s.beginTransaction();
 		assertFalse( s.isDefaultReadOnly() );
-		var dp = s.createQuery(DataPoint.class, "select c.lazyDataPoints from Container c join c.lazyDataPoints where c.id=" + cOrig.getId() )
+		var dp = s.createQuery(DataPoint.class,
+						"select element(c.lazyDataPoints) from Container c join c.lazyDataPoints where c.id="
+						+ cOrig.getId() )
 				.setReadOnly( true ).uniqueResult();
 		assertTrue( s.isReadOnly( dp ) );
 		t.commit();

@@ -128,6 +128,7 @@ import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartSelectionPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.expression.*;
@@ -211,10 +212,12 @@ import static org.hibernate.grammars.hql.HqlParser.ELEMENTS;
 import static org.hibernate.grammars.hql.HqlParser.EXCEPT;
 import static org.hibernate.grammars.hql.HqlParser.INDICES;
 import static org.hibernate.grammars.hql.HqlParser.INTERSECT;
+import static org.hibernate.grammars.hql.HqlParser.KEYS;
 import static org.hibernate.grammars.hql.HqlParser.ListaggFunctionContext;
 import static org.hibernate.grammars.hql.HqlParser.PLUS;
 import static org.hibernate.grammars.hql.HqlParser.QUOTED_IDENTIFIER;
 import static org.hibernate.grammars.hql.HqlParser.UNION;
+import static org.hibernate.grammars.hql.HqlParser.VALUES;
 import static org.hibernate.internal.util.QuotingHelper.unquoteIdentifier;
 import static org.hibernate.internal.util.QuotingHelper.unquoteJavaStringLiteral;
 import static org.hibernate.internal.util.QuotingHelper.unquoteStringLiteral;
@@ -1381,29 +1384,90 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmSelectableNode<?> visitSelectableNode(HqlParser.SelectionContext ctx) {
 		final var expressionOrPredicate = ctx.selectExpression().expressionOrPredicate();
 		if ( expressionOrPredicate != null ) {
-			final var sqmExpression = (SqmExpression<?>) expressionOrPredicate.accept( this );
-			if ( sqmExpression instanceof SqmPath<?> sqmPath
-					&& sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
-				// for plural-attribute selections, use the element path as the selection
-				//		- this is not strictly JPA compliant
-				if ( creationOptions.useStrictJpaCompliance() ) {
-					SqmTreeCreationLogger.LOGGER.debugf(
-							"Raw selection of plural attribute not supported by JPA."
-								+ " Use 'value(%s)' or 'key(%s)' to indicate what part of the collection to select",
-							sqmPath.getAlias(),
-							sqmPath.getAlias()
-					);
-				}
-				final var elementPath =
-						sqmPath.resolvePathPart( CollectionPart.Nature.ELEMENT.getName(), true, this );
-				processingStateStack.getCurrent().getPathRegistry().register( elementPath );
-				return elementPath;
-			}
-			return sqmExpression;
+			final var pluralCollectionFunctionSelection =
+					visitPluralCollectionFunctionSelection( expressionOrPredicate );
+			return pluralCollectionFunctionSelection == null
+					? pluralPathSelection( (SqmSelectableNode<?>) expressionOrPredicate.accept( this ) )
+					: pluralCollectionFunctionSelection;
 		}
 		else {
 			return (SqmSelectableNode<?>) ctx.selectExpression().accept( this );
 		}
+	}
+
+	private SqmSelectableNode<?> pluralPathSelection(SqmSelectableNode<?> selectableNode) {
+		if ( selectableNode instanceof SqmPluralValuedSimplePath<?> pluralPath ) {
+			// Raw plural-attribute selections are not strictly JPA compliant.
+			if ( creationOptions.useStrictJpaCompliance() ) {
+				SqmTreeCreationLogger.LOGGER.debugf(
+						"Raw selection of plural attribute not supported by JPA."
+							+ " Use 'value(%s)' or 'key(%s)' to indicate what part of the collection to select",
+						pluralPath.getAlias(),
+						pluralPath.getAlias()
+				);
+			}
+			return new SqmPluralPartSelectionPath<>( pluralPath, null );
+		}
+		else if ( selectableNode instanceof SqmPath<?> sqmPath
+				&& sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
+			// for plural-join selections, use the element path as the selection
+			//		- this is not strictly JPA compliant
+			if ( creationOptions.useStrictJpaCompliance() ) {
+				SqmTreeCreationLogger.LOGGER.debugf(
+						"Raw selection of plural attribute not supported by JPA."
+							+ " Use 'value(%s)' or 'key(%s)' to indicate what part of the collection to select",
+						sqmPath.getAlias(),
+						sqmPath.getAlias()
+				);
+			}
+			final var elementPath =
+					sqmPath.resolvePathPart( CollectionPart.Nature.ELEMENT.getName(), true, this );
+			processingStateStack.getCurrent().getPathRegistry().register( elementPath );
+			return elementPath;
+		}
+		return selectableNode;
+	}
+
+	private SqmSelectableNode<?> visitPluralCollectionFunctionSelection(
+			HqlParser.ExpressionOrPredicateContext expressionOrPredicate) {
+		if ( expressionOrPredicate.expression()
+					instanceof HqlParser.BarePrimaryExpressionContext barePrimaryExpression
+				&& barePrimaryExpression.primaryExpression()
+						instanceof HqlParser.FunctionExpressionContext functionExpression
+				&& functionExpression.pathContinuation() == null
+				&& functionExpression.slicedPathAccessFragment() == null
+				&& functionExpression.indexedPathAccessFragment() == null ) {
+			final var collectionFunctionMisuse = functionExpression.function().collectionFunctionMisuse();
+			if ( collectionFunctionMisuse != null ) {
+				return visitCollectionFunctionSelection( collectionFunctionMisuse );
+			}
+		}
+		return null;
+	}
+
+	private SqmPluralPartSelectionPath<?> visitCollectionFunctionSelection(
+			HqlParser.CollectionFunctionMisuseContext ctx) {
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+		}
+
+		final var pluralAttributePath = consumeDomainPath( ctx.path() );
+		final var firstNode = (TerminalNode) ctx.getChild( 0 ).getChild( 0 );
+
+		if ( !( pluralAttributePath.getReferencedPathSource() instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
+			throw new FunctionArgumentException(
+					String.format(
+							"Argument '%s' of '%s()' function is not a plural path ",
+							pluralAttributePath.getNavigablePath(),
+							firstNode.getSymbol().getText()
+					)
+			);
+		}
+
+		return new SqmPluralPartSelectionPath<>(
+				(SqmPluralValuedSimplePath<?>) pluralAttributePath,
+				collectionFunctionNature( firstNode )
+		);
 	}
 
 	@Override
@@ -1466,7 +1530,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmDynamicInstantiationArgument<?> visitInstantiationArgument(HqlParser.InstantiationArgumentContext ctx) {
 		final var variable = ctx.variable();
 		final String alias = variable == null ? null : extractAlias( variable );
-		final var argExpression = (SqmSelectableNode<?>) ctx.instantiationArgumentExpression().accept( this );
+		final var expressionOrPredicate = ctx.instantiationArgumentExpression().expressionOrPredicate();
+		final var collectionFunctionSelection =
+				expressionOrPredicate == null
+						? null
+						: visitPluralCollectionFunctionSelection( expressionOrPredicate );
+		final var argExpression = collectionFunctionSelection == null
+				? pluralPathSelection( (SqmSelectableNode<?>) ctx.instantiationArgumentExpression().accept( this ) )
+				: collectionFunctionSelection;
 		final var argument = new SqmDynamicInstantiationArgument<>( argExpression, alias, nodeBuilder() );
 		if ( !(argExpression instanceof SqmDynamicInstantiation) ) {
 			processingStateStack.getCurrent().getPathRegistry().register( argument );
@@ -5513,13 +5584,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 
-		final var nature = switch ( firstNode.getSymbol().getType() ) {
-			case ELEMENTS -> CollectionPart.Nature.ELEMENT;
-			case INDICES -> CollectionPart.Nature.INDEX;
+		return pluralAttributePath.resolvePathPart( collectionFunctionNature( firstNode ).getName(), true, this );
+	}
+
+	private CollectionPart.Nature collectionFunctionNature(TerminalNode firstNode) {
+		return switch ( firstNode.getSymbol().getType() ) {
+			case ELEMENTS, VALUES -> CollectionPart.Nature.ELEMENT;
+			case INDICES, KEYS -> CollectionPart.Nature.INDEX;
 			default -> throw new ParsingException( "Impossible symbol" );
 		};
-
-		return pluralAttributePath.resolvePathPart( nature.getName(), true, this );
 	}
 
 	@Override

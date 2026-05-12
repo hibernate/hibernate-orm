@@ -34,8 +34,6 @@ import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
-import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -52,7 +50,6 @@ import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -565,12 +562,6 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) castNonNull( path.getLhs() ) );
 			}
 		}
-		else if ( selectableNode instanceof SqmEmbeddedValuedSimplePath<?> path ) {
-			final SqmDomainType<?> sqmType = path.getSqmType();
-			if ( sqmType != null ) {
-				assertEmbeddableCollections( path.getNavigablePath(), (EmbeddableDomainType<?>) sqmType );
-			}
-		}
 	}
 
 	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> sqmFrom) {
@@ -616,22 +607,6 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 							"of the fetched association was not present in the select list " +
 							"[" + fetchJoin.asLoggableText() + "]"
 			);
-		}
-	}
-
-	private void assertEmbeddableCollections(NavigablePath navigablePath, EmbeddableDomainType<?> embeddableType) {
-		if ( !embeddableType.getPluralAttributes().isEmpty() ) {
-			throw new SemanticException( String.format(
-					"Explicit selection of an embeddable containing associated collections is not supported: %s",
-					navigablePath
-			) );
-		}
-		else {
-			for ( SingularAttribute<?, ?> attribute : embeddableType.getSingularAttributes() ) {
-				if ( attribute.getType() instanceof EmbeddableDomainType<?> ) {
-					assertEmbeddableCollections( navigablePath, (EmbeddableDomainType<?>) attribute.getType() );
-				}
-			}
 		}
 	}
 

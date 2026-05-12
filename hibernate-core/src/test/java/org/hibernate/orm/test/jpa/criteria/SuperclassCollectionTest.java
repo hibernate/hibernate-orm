@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -71,18 +72,25 @@ public class SuperclassCollectionTest {
 
 	private void assertAddress(EntityManagerFactoryScope scope, PersonBaseBase person, String address, String localAddress) {
 		List<Object> results = find( scope, person.getClass(), person.id, "addresses" );
-		assertEquals( 1, results.size() );
+		final Address selectedAddress = singleSelectedAddress( results );
 
-		assertEquals( person.addresses.get( 0 ).id, ( (Address) results.get( 0 ) ).id );
-		assertEquals( address, ( (Address) results.get( 0 ) ).name );
+		assertEquals( person.addresses.get( 0 ).id, selectedAddress.id );
+		assertEquals( address, selectedAddress.name );
 
 
 		results = find( scope, person.getClass(), person.id, "localAddresses" );
+		final Address selectedLocalAddress = singleSelectedAddress( results );
+
+		assertEquals( person.getLocalAddresses().get( 0 ).id, selectedLocalAddress.id );
+		assertEquals( localAddress, selectedLocalAddress.name );
+
+	}
+
+	private Address singleSelectedAddress(List<Object> results) {
 		assertEquals( 1, results.size() );
-
-		assertEquals( person.getLocalAddresses().get( 0 ).id, ( (Address) results.get( 0 ) ).id );
-		assertEquals( localAddress, ( (Address) results.get( 0 ) ).name );
-
+		final Collection<?> addresses = (Collection<?>) results.get( 0 );
+		assertEquals( 1, addresses.size() );
+		return (Address) addresses.iterator().next();
 	}
 
 	private PersonBaseBase createPerson(EntityManagerFactoryScope scope, PersonBaseBase person, String address, String localAddress) {

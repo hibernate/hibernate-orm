@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.sql.internal;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartSelectionPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -14,6 +15,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.collection.internal.DetachedCollectionDomainResult;
 
 /**
  * @author Andrea Boriero
@@ -33,19 +35,25 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 				null,
 				sqmPath.getNavigablePath(),
 				mapping,
-				tableGroup
+				tableGroup,
+				sqmPath instanceof SqmPluralPartSelectionPath<?> pluralPartSelectionPath
+						? pluralPartSelectionPath.getSelectedPartNature()
+						: null
 		);
 	}
 
 	private final Expression sqlExpression;
+	private final CollectionPart.Nature selectedPartNature;
 
 	private PluralValuedSimplePathInterpretation(
 			Expression sqlExpression,
 			NavigablePath navigablePath,
 			PluralAttributeMapping mapping,
-			TableGroup tableGroup) {
+			TableGroup tableGroup,
+			CollectionPart.Nature selectedPartNature) {
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
+		this.selectedPartNature = selectedPartNature;
 	}
 
 	@Override
@@ -55,12 +63,12 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 
 	@Override
 	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		// This is only invoked when a plural attribute is a top level select, order by or group by item
-		// in which case we have to produce results for the element
-		return ( (PluralAttributeMapping) getExpressionType() ).getElementDescriptor().createDomainResult(
-				getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() ),
-				getTableGroup(),
+		return new DetachedCollectionDomainResult<>(
+				getNavigablePath(),
+				(PluralAttributeMapping) getExpressionType(),
 				resultVariable,
+				getTableGroup(),
+				selectedPartNature,
 				creationState
 		);
 	}

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,10 +56,20 @@ public class IndicesTest {
 	}
 
 	@Test
+	public void testSelectIndes(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			List<?> result = session.createQuery("select index(p.roles) from Person p", Project.class ).list();
+			assertThat( result ).hasSize( 1 );
+		} );
+	}
+
+	@Test
 	public void testSelectIndices(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			List<?> result = session.createQuery("select indices(p.roles) from Person p", Project.class ).list();
+			Class<Collection<Project>> type = (Class) Collection.class;
+			List<Collection<Project>> result = session.createQuery( "select indices(p.roles) from Person p", type ).list();
 			assertThat( result ).hasSize( 1 );
+			assertThat( result.get( 0 ) ).hasSize( 1 );
 		} );
 	}
 

@@ -21,6 +21,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,13 +54,20 @@ public class EntitySuperclassCollectionTest {
 				person.id,
 				"addresses"
 		);
-		assertEquals( 1, results.size() );
+		final Address selectedAddress = singleSelectedAddress( results );
 
 		assertEquals(
 				person.addresses.get( 0 ).id,
-				((Address) results.get( 0 )).id
+				selectedAddress.id
 		);
-		assertEquals( address, ((Address) results.get( 0 )).name );
+		assertEquals( address, selectedAddress.name );
+	}
+
+	private Address singleSelectedAddress(List<Object> results) {
+		assertEquals( 1, results.size() );
+		final Collection<?> addresses = (Collection<?>) results.get( 0 );
+		assertEquals( 1, addresses.size() );
+		return (Address) addresses.iterator().next();
 	}
 
 	private PersonBase createPerson(EntityManagerFactoryScope scope, PersonBase person, String address) {

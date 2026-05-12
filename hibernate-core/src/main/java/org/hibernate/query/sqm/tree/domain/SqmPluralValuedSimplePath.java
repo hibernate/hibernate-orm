@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.NumericExpression;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.Type.PersistenceType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -19,6 +20,7 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -223,5 +225,33 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 	@Override
 	public Predicate contains(Expression elem) {
 		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	protected static class PluralAttributeCollectionType<C> implements SqmBindableType<C> {
+		private final JavaType<C> javaType;
+
+		public PluralAttributeCollectionType(JavaType<C> javaType) {
+			this.javaType = javaType;
+		}
+
+		@Override
+		public PersistenceType getPersistenceType() {
+			return PersistenceType.BASIC;
+		}
+
+		@Override
+		public JavaType<C> getExpressibleJavaType() {
+			return javaType;
+		}
+
+		@Override
+		public Class<C> getJavaType() {
+			return javaType.getJavaTypeClass();
+		}
+
+		@Override
+		public @Nullable SqmDomainType<C> getSqmType() {
+			return null;
+		}
 	}
 }

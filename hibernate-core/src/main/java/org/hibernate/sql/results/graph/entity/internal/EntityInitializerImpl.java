@@ -828,7 +828,10 @@ public class EntityInitializerImpl
 			// The eager sub-initializers can then potentially initialize already set proxies or
 			// continue resolving data for collections that ought to be loaded through this initializer
 			subInitializer = eagerSubInitializers[subclassId];
-			maybeLazySet = entityEntry == null ? null : entityEntry.getMaybeLazySet();
+			maybeLazySet =
+					entityEntry == null || isRefreshing( data )
+							? null
+							: entityEntry.getMaybeLazySet();
 		}
 		final var rowProcessingState = data.getRowProcessingState();
 		for ( int i = 0; i < subInitializer.length; i++ ) {

@@ -1224,13 +1224,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	protected SqmSelectClause buildInferredSelectClause(SqmFromClause fromClause) {
-		if ( creationOptions.useStrictJpaCompliance() ) {
-			throw new StrictJpaComplianceViolation(
-					"Encountered implicit 'select' clause, but strict JPQL compliance was requested",
-					StrictJpaComplianceViolation.Type.IMPLICIT_SELECT
-			);
-		}
-
 		if ( fromClause.getNumberOfRoots() == 0 ) {
 			throw new SemanticException( "query has no 'select' clause, and no root entities"
 					+ " (every selection query must have an explicit 'select', an explicit 'from', or an explicit entity result type)",

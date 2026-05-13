@@ -49,6 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		HqlDetachedCollectionSelectionTest.Author.class,
 		HqlDetachedCollectionSelectionTest.Book.class,
 		HqlDetachedCollectionSelectionTest.CatalogItem.class,
+		HqlDetachedCollectionSelectionTest.CatalogArchive.class,
 		HqlDetachedCollectionSelectionTest.Shelf.class,
 } )
 @SessionFactory
@@ -76,10 +77,20 @@ public class HqlDetachedCollectionSelectionTest {
 
 			final CatalogItem first = new CatalogItem( 1, "First pick" );
 			final CatalogItem second = new CatalogItem( 2, "Second pick" );
-			final Catalog catalog = new Catalog( "Recommended" );
+			final CatalogWithItems catalog = new CatalogWithItems( "Recommended" );
 			catalog.getItems().add( first );
 			catalog.getItems().add( second );
 			session.persist( new Shelf( 1, catalog ) );
+
+			final CatalogArchive catalogArchive = new CatalogArchive( 1 );
+			catalogArchive.getCatalogs().add( new Catalog( "Seasonal" ) );
+			catalogArchive.getCatalogs().add( new Catalog( "Clearance" ) );
+			session.persist( catalogArchive );
+
+			final CatalogArchive otherCatalogArchive = new CatalogArchive( 2 );
+			otherCatalogArchive.getCatalogs().add( new Catalog( "Reference" ) );
+			otherCatalogArchive.getCatalogs().add( new Catalog( "Backlist" ) );
+			session.persist( otherCatalogArchive );
 		} );
 	}
 
@@ -222,13 +233,78 @@ public class HqlDetachedCollectionSelectionTest {
 
 	@Test
 	public void testEmbeddableSelectionReturnsDetachedCollection(SessionFactoryScope scope) {
-		final Catalog catalog = scope.fromTransaction(
+		final CatalogWithItems catalog = scope.fromTransaction(
 				session -> session.createSelectionQuery(
 						"select shelf.catalog from Hhh17558Shelf shelf",
-						Catalog.class
+						CatalogWithItems.class
 				).getSingleResult()
 		);
 
+		assertCatalogWithItems( catalog );
+	}
+
+	@Test
+	public void testUntypedEmbeddableSelectionReturnsDetachedCollection(SessionFactoryScope scope) {
+		final Object result = scope.fromTransaction(
+				session -> session.createSelectionQuery(
+						"select shelf.catalog from Hhh17558Shelf shelf",
+						Object.class
+				).getSingleResult()
+		);
+
+		assertThat( result ).isInstanceOf( CatalogWithItems.class );
+		assertCatalogWithItems( (CatalogWithItems) result );
+	}
+
+	@Test
+	public void testTupleEmbeddableSelectionReturnsDetachedCollection(SessionFactoryScope scope) {
+		final Object[] result = scope.fromTransaction(
+				session -> session.createSelectionQuery(
+						"select shelf.id, shelf.catalog from Hhh17558Shelf shelf",
+						Object[].class
+				).getSingleResult()
+		);
+
+		assertThat( result[0] ).isEqualTo( 1 );
+		assertCatalogWithItems( (CatalogWithItems) result[1] );
+	}
+
+	@Test
+	public void testElementCollectionOfCatalogsSelectionReturnsDetachedCollection(SessionFactoryScope scope) {
+		final Collection<Catalog> catalogs = scope.fromTransaction(
+				session -> session.createSelectionQuery(
+						"select archive.catalogs from Hhh17558CatalogArchive archive where archive.id = 1",
+						collectionType( Catalog.class )
+				).getSingleResult()
+		);
+
+		assertDetachedList( catalogs );
+		assertThat( catalogs )
+				.extracting( Catalog::getName )
+				.containsExactly( "Seasonal", "Clearance" );
+	}
+
+	@Test
+	public void testElementCollectionOfCatalogsSelectionReturnsMultipleDetachedCollections(SessionFactoryScope scope) {
+		final List<Collection<Catalog>> catalogLists = scope.fromTransaction(
+				session -> session.createSelectionQuery(
+						"select archive.catalogs from Hhh17558CatalogArchive archive order by archive.id",
+						collectionType( Catalog.class )
+				).getResultList()
+		);
+
+		assertThat( catalogLists ).hasSize( 2 );
+		assertDetachedList( catalogLists.get( 0 ) );
+		assertThat( catalogLists.get( 0 ) )
+				.extracting( Catalog::getName )
+				.containsExactly( "Seasonal", "Clearance" );
+		assertDetachedList( catalogLists.get( 1 ) );
+		assertThat( catalogLists.get( 1 ) )
+				.extracting( Catalog::getName )
+				.containsExactly( "Reference", "Backlist" );
+	}
+
+	private static void assertCatalogWithItems(CatalogWithItems catalog) {
 		assertThat( catalog.getName() ).isEqualTo( "Recommended" );
 		assertDetachedSet( catalog.getItems() );
 		assertThat( catalog.getItems() )
@@ -248,6 +324,11 @@ public class HqlDetachedCollectionSelectionTest {
 
 	private static void assertDetachedSet(Collection<?> collection) {
 		assertThat( collection ).isInstanceOf( Set.class );
+		assertThat( collection ).isNotInstanceOf( PersistentCollection.class );
+	}
+
+	private static void assertDetachedList(Collection<?> collection) {
+		assertThat( collection ).isInstanceOf( List.class );
 		assertThat( collection ).isNotInstanceOf( PersistentCollection.class );
 	}
 
@@ -340,24 +421,44 @@ public class HqlDetachedCollectionSelectionTest {
 		private Integer id;
 
 		@Embedded
-		private Catalog catalog;
+		private CatalogWithItems catalog;
 
 		protected Shelf() {
 		}
 
-		private Shelf(Integer id, Catalog catalog) {
+		private Shelf(Integer id, CatalogWithItems catalog) {
 			this.id = id;
 			this.catalog = catalog;
 		}
 	}
 
 	@Embeddable
-	public static class Catalog {
+	public static class CatalogWithItems {
 		private String name;
 
 		@OneToMany( cascade = CascadeType.PERSIST, fetch = FetchType.LAZY )
 		@JoinColumn( name = "shelf_id" )
 		private Set<CatalogItem> items = new HashSet<>();
+
+		protected CatalogWithItems() {
+		}
+
+		private CatalogWithItems(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public Set<CatalogItem> getItems() {
+			return items;
+		}
+	}
+
+	@Embeddable
+	public static class Catalog {
+		private String name;
 
 		protected Catalog() {
 		}
@@ -369,9 +470,28 @@ public class HqlDetachedCollectionSelectionTest {
 		public String getName() {
 			return name;
 		}
+	}
 
-		public Set<CatalogItem> getItems() {
-			return items;
+	@Entity( name = "Hhh17558CatalogArchive" )
+	@Table( name = "hhh17558_catalog_archive" )
+	public static class CatalogArchive {
+		@Id
+		private Integer id;
+
+		@ElementCollection
+		@CollectionTable( name = "hhh17558_catalog_archive_catalog", joinColumns = @JoinColumn( name = "archive_id" ) )
+		@OrderColumn( name = "catalog_index" )
+		private List<Catalog> catalogs = new ArrayList<>();
+
+		protected CatalogArchive() {
+		}
+
+		private CatalogArchive(Integer id) {
+			this.id = id;
+		}
+
+		public List<Catalog> getCatalogs() {
+			return catalogs;
 		}
 	}
 

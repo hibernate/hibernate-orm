@@ -55,6 +55,7 @@ import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.expression.SqmXmlTableFunction;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -70,6 +71,7 @@ import org.hibernate.type.BasicType;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
@@ -1067,6 +1069,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	<X, T extends X> SqmRoot<T> treat(Root<X> root, Class<T> type);
 
 	@Override
+	<X, Y, T extends Y> SqmFrom<X, T> treat(From<X, Y> from, Class<T> type);
+
+	@Override
 	<X, T, V extends T> SqmSingularJoin<X, V> treat(Join<X, T> join, Class<V> type);
 
 	@Override
@@ -1330,7 +1335,13 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	<C, R> JpaSimpleCase<C, R> selectCase(Expression<? extends C> expression);
 
 	@Override
+	<C, R> JpaSimpleCase<C, R> selectCase(Expression<? extends C> expression, Class<R> resultType);
+
+	@Override
 	<R> JpaSearchedCase<R> selectCase();
+
+	@Override
+	<R> JpaSearchedCase<R> selectCase(Class<R> resultType);
 
 	@Override
 	SqmPredicate and(Expression<Boolean> x, Expression<Boolean> y);
@@ -1425,6 +1436,12 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Override
 	<Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Y lower, Y upper);
+
+	@Override
+	<Y extends Comparable<? super Y>> SqmPredicate between(
+			Y value,
+			Expression<? extends Y> lower,
+			Expression<? extends Y> upper);
 
 	@Override
 	SqmPredicate gt(Expression<? extends Number> x, Expression<? extends Number> y);

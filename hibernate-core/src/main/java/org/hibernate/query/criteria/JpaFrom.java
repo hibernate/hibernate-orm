@@ -323,6 +323,11 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	<S extends T> JpaTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType);
 
 	@Override
+	default <S extends T> JpaFrom<?, S> treat(Class<S> treatJavaType) {
+		return treatAs( treatJavaType );
+	}
+
+	@Override
 	<S extends T> JpaTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatJavaType);
 
 	@Incubating

@@ -119,6 +119,11 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
+	public <S extends E> SqmBagJoin<O, S> treat(Class<S> treatJavaType) {
+		return treatAs( treatJavaType );
+	}
+
+	@Override
 	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) {
 		return treatAs( treatTarget, null );
 	}

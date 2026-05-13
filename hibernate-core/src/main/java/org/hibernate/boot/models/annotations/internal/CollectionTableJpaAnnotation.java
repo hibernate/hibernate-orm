@@ -40,6 +40,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 	private jakarta.persistence.UniqueConstraint[] uniqueConstraints;
 	private jakarta.persistence.Index[] indexes;
 	private jakarta.persistence.CheckConstraint[] check;
+	private String type;
 	private String options;
 
 	/**
@@ -55,6 +56,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 		this.uniqueConstraints = new jakarta.persistence.UniqueConstraint[0];
 		this.indexes = new jakarta.persistence.Index[0];
 		this.check = new jakarta.persistence.CheckConstraint[0];
+		this.type = "";
 		this.options = "";
 	}
 
@@ -71,6 +73,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 		this.uniqueConstraints = extractJdkValue( annotation, COLLECTION_TABLE, "uniqueConstraints", modelContext );
 		this.indexes = extractJdkValue( annotation, COLLECTION_TABLE, "indexes", modelContext );
 		this.check = extractJdkValue( annotation, COLLECTION_TABLE, "check", modelContext );
+		this.type = extractJdkValue( annotation, COLLECTION_TABLE, "type", modelContext );
 		this.options = extractJdkValue( annotation, COLLECTION_TABLE, "options", modelContext );
 	}
 
@@ -87,6 +90,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 		this.uniqueConstraints = (jakarta.persistence.UniqueConstraint[]) attributeValues.get( "uniqueConstraints" );
 		this.indexes = (jakarta.persistence.Index[]) attributeValues.get( "indexes" );
 		this.check = (jakarta.persistence.CheckConstraint[]) attributeValues.get( "check" );
+		this.type = (String) attributeValues.get( "type" );
 		this.options = (String) attributeValues.get( "options" );
 	}
 
@@ -181,6 +185,16 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 
 	public void check(CheckConstraint[] check) {
 		this.check = check;
+	}
+
+
+	@Override
+	public String type() {
+		return type;
+	}
+
+	public void type(String value) {
+		this.type = value;
 	}
 
 

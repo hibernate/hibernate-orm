@@ -114,6 +114,7 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.expression.*;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -153,6 +154,7 @@ import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
@@ -750,6 +752,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public <X, T extends X> SqmRoot<T> treat(Root<X> root, Class<T> type) {
 		//noinspection unchecked
 		return (SqmTreatedRoot) ( (SqmRoot<X>) root ).treatAs( type );
+	}
+
+	@Override
+	public <X, Y, T extends Y> SqmFrom<X, T> treat(From<X, Y> from, Class<T> type) {
+		return ( (SqmFrom<X, Y>) from ).treatAs( type );
 	}
 
 	@Override
@@ -2432,8 +2439,23 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
+	public <C, R> SqmCaseSimple<C, R> selectCase(Expression<? extends C> expression, Class<R> resultType) {
+		//noinspection unchecked
+		return new SqmCaseSimple<>( (SqmExpression<C>) expression, getCaseResultType( resultType ), this );
+	}
+
+	@Override
 	public <R> SqmCaseSearched<R> selectCase() {
 		return new SqmCaseSearched<>( this );
+	}
+
+	@Override
+	public <R> SqmCaseSearched<R> selectCase(Class<R> resultType) {
+		return new SqmCaseSearched<>( getCaseResultType( resultType ), this );
+	}
+
+	private <R> SqmBindableType<R> getCaseResultType(Class<R> resultType) {
+		return resultType == null ? null : getTypeConfiguration().getBasicTypeForJavaType( resultType );
 	}
 
 	@Override
@@ -2620,6 +2642,21 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				valueExpression,
 				value( lower, valueExpression ),
 				value( upper, valueExpression ),
+				false,
+				this
+		);
+	}
+
+	@Override
+	public <Y extends Comparable<? super Y>> SqmPredicate between(
+			Y value,
+			Expression<? extends Y> lower,
+			Expression<? extends Y> upper) {
+		final var lowerExpression = (SqmExpression<? extends Y>) lower;
+		return new SqmBetweenPredicate(
+				value( value, lowerExpression ),
+				lowerExpression,
+				(SqmExpression<? extends Y>) upper,
 				false,
 				this
 		);

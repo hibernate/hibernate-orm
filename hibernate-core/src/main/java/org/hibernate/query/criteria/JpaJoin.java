@@ -37,5 +37,10 @@ public interface JpaJoin<L, R> extends JpaFrom<L,R>, Join<L,R> {
 	<S extends R> JpaTreatedJoin<L,R,S> treatAs(Class<S> treatAsType);
 
 	@Override
+	default <S extends R> JpaJoin<L, S> treat(Class<S> treatAsType) {
+		return treatAs( treatAsType );
+	}
+
+	@Override
 	<S extends R> JpaTreatedJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType);
 }

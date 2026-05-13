@@ -35,5 +35,11 @@ public interface JpaCollectionJoin<O, T> extends JpaPluralJoin<O, Collection<T>,
 	<S extends T> JpaTreatedJoin<O,T, S> treatAs(Class<S> treatAsType);
 
 	@Override
+	@SuppressWarnings("unchecked")
+	default <S extends T> JpaCollectionJoin<O, S> treat(Class<S> treatAsType) {
+		return (JpaCollectionJoin<O, S>) treatAs( treatAsType );
+	}
+
+	@Override
 	<S extends T> JpaTreatedJoin<O,T, S> treatAs(EntityDomainType<S> treatAsType);
 }

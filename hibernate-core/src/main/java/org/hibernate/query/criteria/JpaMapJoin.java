@@ -35,5 +35,11 @@ public interface JpaMapJoin<O,K,V> extends JpaPluralJoin<O, Map<K, V>, V>, MapJo
 	<S extends V> JpaTreatedJoin<O, V, S> treatAs(Class<S> treatAsType);
 
 	@Override
+	@SuppressWarnings("unchecked")
+	default <S extends V> JpaMapJoin<O, K, S> treat(Class<S> treatAsType) {
+		return (JpaMapJoin<O, K, S>) treatAs( treatAsType );
+	}
+
+	@Override
 	<S extends V> JpaTreatedJoin<O, V, S> treatAs(EntityDomainType<S> treatJavaType);
 }

@@ -34,6 +34,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
@@ -368,6 +369,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<X, T extends X> JpaRoot<T> treat(Root<X> root, Class<T> type);
+
+	@Override
+	<X, Y, T extends Y> JpaFrom<X, T> treat(From<X, Y> from, Class<T> type);
 
 	@Override
 	<X, T, V extends T> JpaJoin<X, V> treat(Join<X, T> join, Class<V> type);
@@ -800,7 +804,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<C, R> JpaSimpleCase<C, R> selectCase(Expression<? extends C> expression);
 
 	@Override
+	<C, R> JpaSimpleCase<C, R> selectCase(Expression<? extends C> expression, Class<R> resultType);
+
+	@Override
 	<R> JpaSearchedCase<R> selectCase();
+
+	@Override
+	<R> JpaSearchedCase<R> selectCase(Class<R> resultType);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -920,6 +930,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<Y extends Comparable<? super Y>> JpaPredicate between(Expression<? extends Y> value, Y lower, Y upper);
+
+	@Override
+	<Y extends Comparable<? super Y>> JpaPredicate between(
+			Y value,
+			Expression<? extends Y> lower,
+			Expression<? extends Y> upper);
 
 	@Override
 	JpaPredicate gt(Expression<? extends Number> x, Expression<? extends Number> y);

@@ -62,8 +62,10 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 	@Override
 	JpaExpression<T> coalesce(T y);
 
-	@Override
 	<R> JpaSimpleCase<T, R> selectCase();
+
+	@Override
+	<R> JpaSimpleCase<T, R> selectCase(Class<R> resultType);
 
 	@Override
 	JpaNumericExpression<Long> count();

@@ -141,6 +141,11 @@ public class SqmMapJoin<L, K, V>
 	}
 
 	@Override
+	public <S extends V> SqmMapJoin<L, K, S> treat(Class<S> treatJavaType) {
+		return treatAs( treatJavaType );
+	}
+
+	@Override
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( treatJavaType, alias, false );
 	}

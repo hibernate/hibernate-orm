@@ -703,6 +703,21 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return buildEntityManager( SYNCHRONIZED, null );
 	}
 
+	@Override
+	public Session createEntityManager(EntityManager.CreationOption... options) {
+		validateNotClosed();
+		SynchronizationType synchronizationType = SYNCHRONIZED;
+		if ( options != null ) {
+			for ( var option : options ) {
+				if ( option instanceof SynchronizationType explicitSynchronizationType ) {
+					errorIfResourceLocalDueToExplicitSynchronizationType();
+					synchronizationType = explicitSynchronizationType;
+				}
+			}
+		}
+		return buildEntityManager( synchronizationType, null );
+	}
+
 	private Session buildEntityManager(SynchronizationType synchronizationType, Map<?,?> map) {
 		assert status != Status.CLOSED;
 
@@ -760,10 +775,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return buildEntityManager( synchronizationType, map );
 	}
 
-	@Override
 	public EntityAgent createEntityAgent() {
 		validateNotClosed();
 		return openStatelessSession();
+	}
+
+	@Override
+	public EntityAgent createEntityAgent(EntityAgent.CreationOption... options) {
+		return createEntityAgent();
 	}
 
 	@Override

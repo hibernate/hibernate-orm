@@ -36,6 +36,11 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	 */
 	<S extends T> JpaTreatedPath<T,S> treatAs(Class<S> treatJavaType);
 
+	@Override
+	default <S extends T> JpaPath<S> treat(Class<S> treatJavaType) {
+		return treatAs( treatJavaType );
+	}
+
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
 	 */

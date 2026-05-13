@@ -127,6 +127,11 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
+	public <S extends E> SqmListJoin<O, S> treat(Class<S> treatJavaType) {
+		return treatAs( treatJavaType );
+	}
+
+	@Override
 	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) {
 		return treatAs( treatTarget, null );
 	}

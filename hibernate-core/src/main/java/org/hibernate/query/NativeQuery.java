@@ -31,6 +31,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -104,6 +105,12 @@ import java.util.Map;
  * @see org.hibernate.SharedSessionContract
  */
 public interface NativeQuery<T> extends SelectionQuery<T>, MutationQuery, SynchronizeableQuery {
+
+	@Override
+	@SuppressWarnings("rawtypes")
+	default Set getOptions() {
+		return Set.of();
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

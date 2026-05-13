@@ -9,6 +9,7 @@ import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
@@ -64,6 +65,7 @@ import org.hibernate.query.sqm.tree.expression.SqmNumericExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNumericExpressionWrapper;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -502,6 +504,26 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
+	public <X, Y> SqmFrom<X, Y> correlate(From<X, Y> parentFrom) {
+		if ( parentFrom instanceof Root<?> ) {
+			//noinspection unchecked
+			return (SqmFrom<X, Y>) correlate( (Root<Y>) parentFrom );
+		}
+		else if ( parentFrom instanceof Join<?, ?> ) {
+			return correlate( (Join<X, Y>) parentFrom );
+		}
+		else if ( parentFrom instanceof JpaCrossJoin<?> ) {
+			return (SqmFrom<X, Y>) correlate( (JpaCrossJoin<Y>) parentFrom );
+		}
+		else if ( parentFrom instanceof JpaEntityJoin<?, ?> ) {
+			return (SqmFrom<X, Y>) correlate( (JpaEntityJoin<T, Y>) parentFrom );
+		}
+		else {
+			throw new IllegalArgumentException( "Cannot correlate from node [" + parentFrom + "]" );
+		}
+	}
+
+	@Override
 	public <X, Y> SqmCorrelatedJoin<X, Y> correlate(Join<X, Y> join) {
 		if ( join instanceof PluralJoin<?, ?, ?> pluralJoin ) {
 			return switch ( pluralJoin.getModel().getCollectionType() ) {
@@ -692,6 +714,11 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public <R> SqmCaseSimple<T, R> selectCase() {
 		return nodeBuilder().selectCase( this );
+	}
+
+	@Override
+	public <R> SqmCaseSimple<T, R> selectCase(Class<R> resultType) {
+		return nodeBuilder().selectCase( this, resultType );
 	}
 
 	@Override

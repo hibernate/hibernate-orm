@@ -5,6 +5,7 @@
 package org.hibernate;
 
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FindOption;
@@ -360,8 +361,10 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Create a new {@link Session}.
 	 */
-	@Override
 	Session createEntityManager();
+
+	@Override
+	Session createEntityManager(EntityManager.CreationOption... options);
 
 	/**
 	 * Create a new {@link Session}, with the given
@@ -378,7 +381,6 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * {@linkplain jakarta.persistence.PersistenceUnitTransactionType#RESOURCE_LOCAL
 	 * resource-local} transaction management
 	 */
-	@Override
 	Session createEntityManager(SynchronizationType synchronizationType);
 
 	/**
@@ -392,6 +394,11 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 */
 	@Override
 	Session createEntityManager(SynchronizationType synchronizationType, Map<?, ?> map);
+
+	EntityAgent createEntityAgent();
+
+	@Override
+	EntityAgent createEntityAgent(EntityAgent.CreationOption... options);
 
 	/**
 	 * Retrieve the {@linkplain Statistics statistics} for this factory.

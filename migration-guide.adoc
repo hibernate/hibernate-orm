@@ -188,7 +188,33 @@ bootstrapping and supply the root and/or non-root URLs.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[detached-collection-queries]]
+=== Queries Returning Detached Collections
+
+A HQL query like:
+
+[source,sql]
+select items from Order /* each query result is a collection */
+
+[source,sql]
+select elements(items) from Order /* each query result is a collection */
+
+[source,sql]
+select indices(items) from Order /* each query result is a collection */
+
+now returns a detached collection without flattening.
+
+In previous versions of Hibernate, such queries were accepted, and due to an undocumented and unsupported behavior, resulted in an implicit join and flattening of the collection.
+To recover this previous undocumented behavior, the singular form of the functions may be used:
+
+[source,sql]
+select element(items) from Order /* flatten the items collection */
+
+[source,sql]
+select indice(items) from Order /* flatten the items collection */
+
 [[procedure-results]]
+=== Procedure Results
 
 The behavior of Hibernate's handling for creating a `ProcedureCall` / `StoredProcedureQuery` with multiple result set mappings has been changed to fix a https://hibernate.atlassian.net/browse/HHH-9912[long-standing bug] and comply with the Jakarta Persistence specification.
 Hibernate now interprets the multiple mappings as one per result available from the procedure.  E.g.

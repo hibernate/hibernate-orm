@@ -224,8 +224,8 @@ public class AccessMappingTest {
 					.getEntityDescriptor( Horse.class.getName() );
 
 			assertThat( entityPersister.getAttributeMapping( 0 ).getPropertyAccess().getGetter() )
-					.describedAs( "Field access should be used since the default access mode gets inherited" )
-					.isInstanceOf( GetterFieldImpl.class );
+					.describedAs( "Property access should be used, since the explicit access mode does not get inherited" )
+					.isInstanceOf( GetterMethodImpl.class );
 		}
 	}
 

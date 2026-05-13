@@ -12,7 +12,7 @@ services:
       - -c
       - |
         source /opt/sybase/SYBASE.sh
-        if [ "$$SYBASE_ALLOW_ASYNC_IO" = "0" ]; then
+        if [ "${SYBASE_ALLOW_ASYNC_IO:-1}" = "0" ]; then
           sed -i 's/allow sql server async i\/o = DEFAULT/allow sql server async i\/o = 0/' /opt/sybase/ASE-16_0/MYSYBASE.cfg
         fi
         /opt/sybase/ASE-16_0/bin/dataserver \

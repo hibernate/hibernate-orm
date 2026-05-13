@@ -6,28 +6,29 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
-import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.internal.cyclebreak.CycleBreakPatcher;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.Checkers;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.bind.OperationResultChecker;
+import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.EventType;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
+
 import java.sql.SQLException;
 
-import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 
 /// Bind plan for entity insert operations.
 /// Uses on-demand decomposition to minimize allocation overhead.
@@ -85,14 +86,18 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		decomposeForInsert( valueBindings, identifier, session );
+		decomposeForInsert( valueBindings, identifier, flushOperation, session );
 
 		if ( flushOperation.getBindingPatch() != null ) {
 			CycleBreakPatcher.applyFixupPatch( valueBindings, flushOperation, flushOperation.getBindingPatch() );
 		}
 	}
 
-	private void decomposeForInsert(JdbcValueBindings valueBindings, Object identifier, SharedSessionContractImplementor session) {
+	private void decomposeForInsert(
+			JdbcValueBindings valueBindings,
+			Object identifier,
+			FlushOperation flushOperation,
+			SharedSessionContractImplementor session) {
 		// Decompose attribute values on-demand during binding
 		tableDescriptor.attributes().forEach( attribute -> {
 			if ( !attribute.isPluralAttributeMapping() && insertable[attribute.getStateArrayPosition()] ) {
@@ -101,7 +106,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 						attributeValue,
 						(valueIndex, jdbcValue, jdbcValueMapping) -> {
 							if ( jdbcValueMapping.isInsertable()
-									&& shouldBindInsertValue( attribute, valueIndex, session ) ) {
+									&& shouldBindInsertValue( attribute, valueIndex, flushOperation, session ) ) {
 								final Object valueToBind = jdbcValue == null && decompositionContext != null
 										? generatedIdentifierHandleOrNull( attributeValue )
 										: jdbcValue;
@@ -165,31 +170,21 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	private boolean shouldBindInsertValue(
 			AttributeMapping attribute,
 			int selectableIndex,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		final var generator = attribute.getGenerator();
-		if ( !( generator instanceof OnExecutionGenerator onExecutionGenerator )
-				|| !generator.generatesOnInsert()
-				|| !generator.generatedOnExecution( entity, session ) ) {
-			return true;
-		}
-
-		final var dialect = entityPersister.getFactory().getJdbcServices().getDialect();
-		final boolean[] columnInclusions = onExecutionGenerator.getColumnInclusions( dialect, INSERT );
-		if ( columnInclusions != null
-				&& selectableIndex < columnInclusions.length
-				&& !columnInclusions[selectableIndex] ) {
-			return false;
-		}
-
-		final String[] columnValues = onExecutionGenerator.getReferencedColumnValues( dialect, INSERT );
-		return columnValues == null
-				|| selectableIndex >= columnValues.length
-				|| "?".equals( columnValues[selectableIndex] );
+		return shouldBindJdbcValue(
+				attribute,
+				selectableIndex,
+				flushOperation,
+				entityPersister,
+				EventType.INSERT,
+				entity,
+				session
+		);
 	}
 
 	private Object generatedIdentifierHandleOrNull(Object attributeValue) {
-		final var handle = decompositionContext.getGeneratedIdentifierHandle( attributeValue );
-		return handle == null ? null : handle;
+		return decompositionContext.getGeneratedIdentifierHandle( attributeValue );
 	}
 
 	private void bindTemporalStartingValue(

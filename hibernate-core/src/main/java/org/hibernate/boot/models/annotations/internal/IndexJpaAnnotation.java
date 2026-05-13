@@ -16,8 +16,8 @@ import jakarta.persistence.Index;
 public class IndexJpaAnnotation implements Index {
 	private String name;
 	private String columnList;
-	private String kind;
 	private String type;
+	private String using;
 	private boolean unique;
 	private String options;
 
@@ -26,8 +26,8 @@ public class IndexJpaAnnotation implements Index {
 	 */
 	public IndexJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
-		this.kind = "";
 		this.type = "";
+		this.using = "";
 		this.unique = false;
 		this.options = "";
 	}
@@ -38,8 +38,8 @@ public class IndexJpaAnnotation implements Index {
 	public IndexJpaAnnotation(Index annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.columnList = annotation.columnList();
-		this.kind = annotation.kind();
 		this.type = annotation.type();
+		this.using = annotation.using();
 		this.unique = annotation.unique();
 		this.options = annotation.options();
 	}
@@ -50,8 +50,8 @@ public class IndexJpaAnnotation implements Index {
 	public IndexJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.columnList = (String) attributeValues.get( "columnList" );
-		this.kind = (String) attributeValues.get( "kind" );
 		this.type = (String) attributeValues.get( "type" );
+		this.using = (String) attributeValues.get( "using" );
 		this.unique = (boolean) attributeValues.get( "unique" );
 		this.options = (String) attributeValues.get( "options" );
 	}
@@ -81,21 +81,22 @@ public class IndexJpaAnnotation implements Index {
 	}
 
 	@Override
-	public String kind() {
-		return kind;
-	}
-
-	public void kind(String value) {
-		this.kind = value;
-	}
-
-	@Override
 	public String type() {
 		return type;
 	}
 
 	public void type(String value) {
 		this.type = value;
+	}
+
+
+	@Override
+	public String using() {
+		return using;
+	}
+
+	public void using(String value) {
+		this.using = value;
 	}
 
 

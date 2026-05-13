@@ -385,7 +385,7 @@ public interface JpaAnnotations {
 	OrmAnnotationDescriptor<EntityListeners,EntityListenersJpaAnnotation> ENTITY_LISTENERS = new OrmAnnotationDescriptor<>(
 			EntityListeners.class,
 			EntityListenersJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
 

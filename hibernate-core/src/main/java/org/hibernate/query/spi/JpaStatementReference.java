@@ -5,8 +5,10 @@
 package org.hibernate.query.spi;
 
 import jakarta.persistence.StatementReference;
+import jakarta.persistence.Statement;
 
 import java.util.List;
+import java.util.Set;
 
 /// Extension to the JPA {@linkplain StatementReference} contract.
 /// Provides some simple default implementations for methods which
@@ -34,5 +36,11 @@ public interface JpaStatementReference<T> extends JpaReference, StatementReferen
 	@Override
 	default List<Object> getArguments() {
 		return null;
+	}
+
+	/// {@inheritDoc}
+	@Override
+	default Set<Statement.Option> getOptions() {
+		return Set.of();
 	}
 }

@@ -37,6 +37,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -128,6 +129,16 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 * The type of things returned from the query.
 	 */
 	Class<R> getResultType();
+
+	@Override
+	default SelectionQuery<R> addOption(TypedQuery.Option option) {
+		return this;
+	}
+
+	@Override
+	default Set<TypedQuery.Option> getOptions() {
+		return Set.of();
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -15,6 +15,12 @@ public interface JpaRoot<T> extends JpaFrom<T,T>, Root<T> {
 	@Override
 	EntityDomainType<T> getModel();
 
+	@Override
+	@SuppressWarnings("unchecked")
+	default <S extends T> JpaRoot<S> treat(Class<S> treatJavaType) {
+		return (JpaRoot<S>) treatAs( treatJavaType );
+	}
+
 	// todo: deprecate and remove?
 	EntityDomainType<T> getManagedType();
 }

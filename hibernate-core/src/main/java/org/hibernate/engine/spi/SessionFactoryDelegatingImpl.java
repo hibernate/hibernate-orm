@@ -394,6 +394,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public Session createEntityManager(EntityManager.CreationOption... options) {
+		return delegate.createEntityManager( options );
+	}
+
+	@Override
 	public Session createEntityManager(Map map) {
 		return delegate.createEntityManager( map );
 	}
@@ -403,9 +408,13 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.createEntityManager( synchronizationType );
 	}
 
-	@Override
 	public EntityAgent createEntityAgent() {
 		return delegate.createEntityAgent();
+	}
+
+	@Override
+	public EntityAgent createEntityAgent(EntityAgent.CreationOption... options) {
+		return delegate.createEntityAgent( options );
 	}
 
 	@Override

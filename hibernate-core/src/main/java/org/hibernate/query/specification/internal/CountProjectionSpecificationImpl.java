@@ -21,6 +21,7 @@ import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.QuerySpecification;
 import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.specification.SimpleProjectionSpecification;
+import org.hibernate.query.spi.JpaTypedQueryReference;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import java.util.Collections;
@@ -30,7 +31,7 @@ import java.util.Map;
 /**
  * @author Gavin King
  */
-public class CountProjectionSpecificationImpl<T> implements SimpleProjectionSpecification<T,Long>, TypedQueryReference<Long> {
+public class CountProjectionSpecificationImpl<T> implements SimpleProjectionSpecification<T,Long>, JpaTypedQueryReference<Long> {
 
 	private final SelectionSpecification<T> selectionSpecification;
 

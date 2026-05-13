@@ -35,6 +35,7 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 	private jakarta.persistence.Index[] indexes;
 	private jakarta.persistence.CheckConstraint[] check;
 	private String comment;
+	private String type;
 	private String options;
 
 	/**
@@ -49,6 +50,7 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 		this.indexes = new jakarta.persistence.Index[0];
 		this.check = new jakarta.persistence.CheckConstraint[0];
 		this.comment = "";
+		this.type = "";
 		this.options = "";
 	}
 
@@ -75,6 +77,7 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 		this.indexes = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLE, "indexes", modelContext );
 		this.check = extractJdkValue( annotation, JpaAnnotations.SECONDARY_TABLE, "check", modelContext );
 		this.comment = annotation.comment();
+		this.type = annotation.type();
 		this.options = annotation.options();
 	}
 
@@ -91,6 +94,7 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 		this.indexes = (jakarta.persistence.Index[]) attributeValues.get( "indexes" );
 		this.check = (jakarta.persistence.CheckConstraint[]) attributeValues.get( "check" );
 		this.comment = (String) attributeValues.get( "comment" );
+		this.type = (String) attributeValues.get( "type" );
 		this.options = (String) attributeValues.get( "options" );
 	}
 
@@ -186,6 +190,16 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 
 	public void comment(String value) {
 		this.comment = value;
+	}
+
+
+	@Override
+	public String type() {
+		return type;
+	}
+
+	public void type(String value) {
+		this.type = value;
 	}
 
 

@@ -269,8 +269,12 @@ public class SqmMapEntryReference<K,V>
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
-	@Override
 	public <R> CriteriaBuilder.SimpleCase<Map.Entry<K, V>, R> selectCase() {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public <R> CriteriaBuilder.SimpleCase<Map.Entry<K, V>, R> selectCase(Class<R> resultType) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 

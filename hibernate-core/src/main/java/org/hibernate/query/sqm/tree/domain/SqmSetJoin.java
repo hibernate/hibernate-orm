@@ -120,6 +120,11 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
+	public <S extends E> SqmSetJoin<O, S> treat(Class<S> treatJavaType) {
+		return treatAs( treatJavaType );
+	}
+
+	@Override
 	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) {
 		return treatAs( treatTarget, null );
 	}

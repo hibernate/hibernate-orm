@@ -101,6 +101,11 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
+	public <R> SqmCaseSimple<T, R> selectCase(Class<R> resultType) {
+		return nodeBuilder().selectCase( this, resultType );
+	}
+
+	@Override
 	public SqmPredicate in(Object... values) {
 		return nodeBuilder().in( this, values );
 	}

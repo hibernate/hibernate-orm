@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -65,6 +66,21 @@ public interface MutationQuery extends CommonQueryContract, Statement, Statement
 	 * The HQL or native-SQL string, or {@code null} in the case of a criteria query.
 	 */
 	String getMutationString();
+
+	@Override
+	default int execute() {
+		return executeUpdate();
+	}
+
+	@Override
+	default MutationQuery addOption(Statement.Option option) {
+		return this;
+	}
+
+	@Override
+	default Set<Statement.Option> getOptions() {
+		return Set.of();
+	}
 
 	/**
 	 * The Java type of the thing being mutated, if known.

@@ -13,6 +13,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.StoredProcedureQuery.Option;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
@@ -93,6 +94,16 @@ import static org.hibernate.query.results.spi.ResultSetMapping.resolveResultSetM
 public class ProcedureCallImpl<R>
 		extends AbstractQuery<R>
 		implements ProcedureCallImplementor<R> {
+
+	@Override
+	public ProcedureCallImpl<R> addOption(Option option) {
+		return this;
+	}
+
+	@Override
+	public Set<Option> getOptions() {
+		return Set.of();
+	}
 
 	private final String procedureName;
 

@@ -38,5 +38,11 @@ public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, 
 	<S extends E> JpaTreatedJoin<O, E, S> treatAs(Class<S> treatAsType);
 
 	@Override
+	@SuppressWarnings("unchecked")
+	default <S extends E> JpaPluralJoin<O, ?, S> treat(Class<S> treatAsType) {
+		return (JpaPluralJoin<O, ?, S>) treatAs( treatAsType );
+	}
+
+	@Override
 	<S extends E> JpaTreatedJoin<O, E, S> treatAs(EntityDomainType<S> treatAsType);
 }

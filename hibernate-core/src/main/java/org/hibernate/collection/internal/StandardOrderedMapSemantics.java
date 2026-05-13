@@ -6,6 +6,7 @@ package org.hibernate.collection.internal;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.hibernate.collection.spi.AbstractMapSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -37,6 +38,18 @@ public class StandardOrderedMapSemantics<K,V> extends AbstractMapSemantics<Linke
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? CollectionHelper.linkedMap() : CollectionHelper.linkedMapOfSize( anticipatedSize );
+	}
+
+	@Override
+	public <KK, VV> LinkedHashMap<KK, VV> instantiateWithElements(
+			int anticipatedSize,
+			CollectionPersister collectionDescriptor,
+			Map<? extends KK, ? extends VV> entries) {
+		final LinkedHashMap<KK, VV> map = anticipatedSize < 1
+				? CollectionHelper.linkedMap()
+				: CollectionHelper.linkedMapOfSize( anticipatedSize );
+		map.putAll( entries );
+		return map;
 	}
 
 	@Override

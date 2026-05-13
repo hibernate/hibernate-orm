@@ -12,8 +12,9 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
-import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * @author Steve Ebersole
@@ -37,6 +38,18 @@ public class StandardOrderedSetSemantics<E> extends AbstractSetSemantics<LinkedH
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? CollectionHelper.linkedSet() : CollectionHelper.linkedSetOfSize( anticipatedSize );
+	}
+
+	@Override
+	public <X> LinkedHashSet<X> instantiateWithElements(
+			int anticipatedSize,
+			CollectionPersister collectionDescriptor,
+			Collection<? extends X> elements) {
+		final LinkedHashSet<X> set = anticipatedSize < 1
+				? CollectionHelper.linkedSet()
+				: CollectionHelper.linkedSetOfSize( anticipatedSize );
+		set.addAll( elements );
+		return set;
 	}
 
 	@Override

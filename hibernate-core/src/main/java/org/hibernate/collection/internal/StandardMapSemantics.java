@@ -41,6 +41,16 @@ public class StandardMapSemantics<K,V> extends AbstractMapSemantics<Map<K,V>,K,V
 	}
 
 	@Override
+	public <KK, VV> Map<KK, VV> instantiateWithElements(
+			int anticipatedSize,
+			CollectionPersister collectionDescriptor,
+			Map<? extends KK, ? extends VV> entries) {
+		final Map<KK, VV> map = CollectionHelper.mapOfSize( anticipatedSize );
+		map.putAll( entries );
+		return map;
+	}
+
+	@Override
 	public PersistentCollection<V> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,

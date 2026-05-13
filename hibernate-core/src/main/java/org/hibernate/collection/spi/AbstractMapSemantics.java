@@ -4,34 +4,72 @@
  */
 package org.hibernate.collection.spi;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
+
+import static java.util.Collections.emptyIterator;
+import static org.hibernate.collection.spi.InitializerProducerBuilder.createMapInitializerProducer;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implements MapSemantics<MKV,K,V> {
 	@Override
+	public <X> Collection<X> instantiateWithElements(
+			int anticipatedSize,
+			CollectionPersister collectionDescriptor,
+			Collection<? extends X> elements) {
+		return new LinkedHashSet<>( elements );
+	}
+
+	@Override
+	public int collectionSize(Object rawCollection) {
+		return rawCollection instanceof Map<?, ?> map ? map.size() : 0;
+	}
+
+	@Override
+	public Object copy(
+			Object rawCollection,
+			CollectionPersister collectionDescriptor) {
+		return rawCollection instanceof Map<?, ?> map
+				? instantiateWithElements( collectionSize( rawCollection ), collectionDescriptor, map )
+				: rawCollection;
+	}
+
+	@Override
+	public Set<?> copyPart(
+			Object rawCollection,
+			CollectionPersister collectionDescriptor,
+			CollectionPart.Nature partNature) {
+		final LinkedHashSet<Object> copy = new LinkedHashSet<>();
+		if ( rawCollection instanceof Map<?, ?> map ) {
+			copy.addAll( partNature == CollectionPart.Nature.INDEX ? map.keySet() : map.values() );
+		}
+		return copy;
+	}
+
+	@Override @SuppressWarnings("rawtypes")
 	public Class<? extends Map> getCollectionJavaType() {
 		return Map.class;
 	}
 
 	@Override
 	public Iterator<K> getKeyIterator(MKV rawMap) {
-		if ( rawMap == null ) {
-			return null;
-		}
+		return rawMap == null ? null : rawMap.keySet().iterator();
 
-		return rawMap.keySet().iterator();
 	}
 
 	@Override
@@ -51,11 +89,8 @@ public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implement
 
 	@Override
 	public Iterator<V> getElementIterator(MKV rawMap) {
-		if ( rawMap == null ) {
-			return Collections.emptyIterator();
-		}
+		return rawMap == null ? emptyIterator() : rawMap.values().iterator();
 
-		return rawMap.values().iterator();
 	}
 
 	@Override
@@ -75,7 +110,7 @@ public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implement
 			Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
-		return InitializerProducerBuilder.createMapInitializerProducer(
+		return createMapInitializerProducer(
 				navigablePath,
 				attributeMapping,
 				fetchParent,

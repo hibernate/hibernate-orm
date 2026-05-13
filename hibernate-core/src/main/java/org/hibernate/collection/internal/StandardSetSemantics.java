@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.internal;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -36,6 +37,16 @@ public class StandardSetSemantics<E> extends AbstractSetSemantics<Set<E>,E> {
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 		return anticipatedSize < 1 ? new HashSet<>() : CollectionHelper.setOfSize( anticipatedSize );
+	}
+
+	@Override
+	public <X> Set<X> instantiateWithElements(
+			int anticipatedSize,
+			CollectionPersister collectionDescriptor,
+			Collection<? extends X> elements) {
+		final Set<X> set = anticipatedSize < 1 ? new HashSet<>() : CollectionHelper.setOfSize( anticipatedSize );
+		set.addAll( elements );
+		return set;
 	}
 
 	@Override

@@ -19,7 +19,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.ValuesAnalysis;
@@ -132,6 +131,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 						state[attribute.getStateArrayPosition()],
 						attribute,
 						valueBindings,
+						flushOperation,
 						session
 				);
 			}
@@ -164,6 +164,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			Object value,
 			AttributeMapping attribute,
 			JdbcValueBindings valueBindings,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		assert !attribute.isPluralAttributeMapping();
 
@@ -178,7 +179,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 				(valueIndex, jdbcValue, selectableMapping) -> {
 					if ( selectableMapping.isUpdateable()
 							&& !selectableMapping.isFormula()
-							&& shouldBindUpdateValue( attribute, valueIndex, session ) ) {
+							&& shouldBindUpdateValue( attribute, valueIndex, flushOperation, session ) ) {
 						valueBindings.bindValue(
 								jdbcValue,
 								selectableMapping.getSelectionExpression(),
@@ -193,26 +194,17 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	private boolean shouldBindUpdateValue(
 			AttributeMapping attribute,
 			int selectableIndex,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		final var generator = attribute.getGenerator();
-		if ( !( generator instanceof OnExecutionGenerator onExecutionGenerator )
-				|| !generator.generatesOnUpdate()
-				|| !generator.generatedOnExecution( entity, session ) ) {
-			return true;
-		}
-
-		final var dialect = entityPersister.getFactory().getJdbcServices().getDialect();
-		final boolean[] columnInclusions = onExecutionGenerator.getColumnInclusions( dialect, UPDATE );
-		if ( columnInclusions != null
-				&& selectableIndex < columnInclusions.length
-				&& !columnInclusions[selectableIndex] ) {
-			return false;
-		}
-
-		final String[] columnValues = onExecutionGenerator.getReferencedColumnValues( dialect, UPDATE );
-		return columnValues == null
-				|| selectableIndex >= columnValues.length
-				|| "?".equals( columnValues[selectableIndex] );
+		return BindPlanHelper.shouldBindJdbcValue(
+				attribute,
+				selectableIndex,
+				flushOperation,
+				entityPersister,
+				UPDATE,
+				entity,
+				session
+		);
 	}
 
 	protected boolean shouldIncludeInUpdate(

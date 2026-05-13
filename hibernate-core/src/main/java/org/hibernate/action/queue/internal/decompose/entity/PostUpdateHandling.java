@@ -40,6 +40,7 @@ public class PostUpdateHandling implements PostExecutionCallback {
 	private final Object previousVersion;
 	private final GeneratedValuesCollector generatedValuesCollector;
 	private final EntityEntry entityEntry;
+	private final boolean preservePreviousVersion;
 
 	public PostUpdateHandling(
 			EntityUpdateAction action,
@@ -47,11 +48,22 @@ public class PostUpdateHandling implements PostExecutionCallback {
 			Object previousVersion,
 			@Nullable GeneratedValuesCollector generatedValuesCollector,
 			EntityEntry entityEntry) {
+		this( action, cacheUpdate, previousVersion, generatedValuesCollector, entityEntry, false );
+	}
+
+	public PostUpdateHandling(
+			EntityUpdateAction action,
+			UpdateCacheHandling.CacheUpdate cacheUpdate,
+			Object previousVersion,
+			@Nullable GeneratedValuesCollector generatedValuesCollector,
+			EntityEntry entityEntry,
+			boolean preservePreviousVersion) {
 		this.action = action;
 		this.cacheUpdate = cacheUpdate;
 		this.previousVersion = previousVersion;
 		this.generatedValuesCollector = generatedValuesCollector;
 		this.entityEntry = entityEntry;
+		this.preservePreviousVersion = preservePreviousVersion;
 	}
 
 	@Override
@@ -96,7 +108,9 @@ public class PostUpdateHandling implements PostExecutionCallback {
 		final var persister = action.getPersister();
 		final Object entity = action.getInstance();
 		final Object[] state = action.getState();
-		Object nextVersion = action.getNextVersion();
+		Object nextVersion = preservePreviousVersion
+				? previousVersion
+				: action.getNextVersion();
 
 		// Apply generated values and update entity state
 		if ( entry.getStatus() == Status.MANAGED || persister.isVersionPropertyGenerated() ) {

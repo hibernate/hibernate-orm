@@ -155,7 +155,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
 					entityPersister.getIdentifierTableDescriptor(),
 					ordinalBase * 1_000,
-					new PostUpdateHandling( action, cacheUpdate, previousVersion, null, entityEntry )
+					new PostUpdateHandling( action, cacheUpdate, previousVersion, null, entityEntry, true )
 			) );
 			return;
 		}
@@ -393,7 +393,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 	private boolean hasOnlyInversePluralDirtiness(EntityUpdateAction action) {
 		final int[] dirtyFields = action.getDirtyFields();
-		if ( dirtyFields == null || action.getNextVersion() != null ) {
+		if ( dirtyFields == null
+				|| ( action.getNextVersion() != null && !entityPersister.isVersionPropertyGenerated() ) ) {
 			return false;
 		}
 

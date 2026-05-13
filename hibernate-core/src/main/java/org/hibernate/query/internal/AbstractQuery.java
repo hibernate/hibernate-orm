@@ -24,8 +24,6 @@ import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import jakarta.persistence.QueryFlushMode;
@@ -59,6 +57,7 @@ import java.util.stream.StreamSupport;
 
 import static java.util.Spliterator.NONNULL;
 import static java.util.Spliterators.spliteratorUnknownSize;
+import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushModeFromFlushMode;
 
 /// Base support for [QueryImplementor] implementors.
 ///
@@ -143,7 +142,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 			return asSelectionQuery( type );
 		}
 		catch (IllegalSelectQueryException e) {
-			final IllegalStateException wrapped = new IllegalStateException( e.getMessage() );
+			final var wrapped = new IllegalStateException( e.getMessage() );
 			wrapped.addSuppressed( wrapped );
 			throw wrapped;
 		}
@@ -154,7 +153,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 			return asSelectionQuery( entityGraph );
 		}
 		catch (IllegalSelectQueryException e) {
-			final IllegalStateException wrapped = new IllegalStateException( e.getMessage() );
+			final var wrapped = new IllegalStateException( e.getMessage() );
 			wrapped.addSuppressed( wrapped );
 			throw wrapped;
 		}
@@ -164,8 +163,6 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	public MutationQueryImplementor<T> asMutationQuery() {
 		throw new IllegalMutationQueryException( "Not a mutation query", getQueryString() );
 	}
-
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -203,7 +200,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override @SuppressWarnings("deprecation")
 	public Stream<T> stream() {
-		final ScrollableResults<T> results = scroll( ScrollMode.FORWARD_ONLY );
+		final var results = scroll( ScrollMode.FORWARD_ONLY );
 		final var spliterator = spliteratorUnknownSize( new ScrollableResultsIterator<>( results ), NONNULL );
 		return StreamSupport.stream( spliterator, false ).onClose( results::close );
 	}
@@ -285,7 +282,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	public QueryFlushMode getQueryFlushMode() {
-		return FlushModeTypeHelper.queryFlushModeFromFlushMode( getQueryOptions().getFlushMode() );
+		return queryFlushModeFromFlushMode( getQueryOptions().getFlushMode() );
 	}
 
 	@Override
@@ -298,16 +295,10 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 		return FlushModeTypeHelper.getFlushMode(queryFlushMode);
 	}
 
-	@Override @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setFlushMode(FlushModeType flushMode) {
-		session.checkOpen();
-		queryOptions.setFlushMode( FlushMode.fromJpaFlushMode( flushMode ) );
-		return this;
-	}
-
 	@Override
-	public Integer getTimeout() {
-		return Timeouts.getEffectiveTimeoutInSeconds( queryOptions.getTimeout() );
+	public QueryImplementor<T> setFlushMode(FlushModeType flushMode) {
+		super.setFlushMode( flushMode );
+		return this;
 	}
 
 	@Override
@@ -365,8 +356,8 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	@Override
 	public QueryImplementor<T> setMaxResults(int maxResult) {
 		verifySelectionOption( "Max results" );
-		//noinspection unchecked
-		return (QueryImplementor<T>) super.setMaxResults( maxResult );
+		super.setMaxResults( maxResult );
+		return this;
 	}
 
 	@Override @SuppressWarnings("removal")
@@ -378,8 +369,8 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	@Override
 	public QueryImplementor<T> setFirstResult(int startPosition) {
 		verifySelectionOption( "First result" );
-		//noinspection unchecked
-		return (QueryImplementor<T>) super.setFirstResult( startPosition );
+		super.setFirstResult( startPosition );
+		return this;
 	}
 
 	@Override
@@ -426,8 +417,8 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	@Override
 	public QueryImplementor<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
 		verifySelectionOption( "Result caching" );
-		//noinspection unchecked
-		return (QueryImplementor<T>) super.setCacheRetrieveMode( cacheRetrieveMode );
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
 	}
 
 	@Override @SuppressWarnings("removal")
@@ -438,8 +429,8 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	@Override
 	public QueryImplementor<T> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
 		verifySelectionOption( "Result caching" );
-		//noinspection unchecked
-		return (QueryImplementor<T>) super.setCacheStoreMode( cacheStoreMode );
+		super.setCacheStoreMode( cacheStoreMode );
+		return this;
 	}
 
 	@Override @SuppressWarnings("removal")
@@ -450,7 +441,8 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	@Override
 	public QueryImplementor<T> setLockMode(LockModeType lockMode) {
 		verifySelectionOption( "Locking" );
-		return (SelectionQueryImplementor<T>) super.setLockMode( lockMode );
+		super.setLockMode( lockMode );
+		return this;
 	}
 
 	@Override

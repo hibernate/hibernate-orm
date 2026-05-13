@@ -131,14 +131,10 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	Class<R> getResultType();
 
 	@Override
-	default SelectionQuery<R> addOption(TypedQuery.Option option) {
-		return this;
-	}
+	SelectionQuery<R> addOption(TypedQuery.Option option);
 
 	@Override
-	default Set<TypedQuery.Option> getOptions() {
-		return Set.of();
-	}
+	Set<TypedQuery.Option> getOptions();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

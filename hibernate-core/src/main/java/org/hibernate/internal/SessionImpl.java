@@ -8,6 +8,7 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
@@ -43,6 +44,7 @@ import org.hibernate.internal.find.StatefulFindByKeyOperation;
 import org.hibernate.internal.find.StatefulFindMultipleByKeyOperation;
 import org.hibernate.internal.find.StatefulGetReferenceOperation;
 import org.hibernate.internal.util.ExceptionHelper;
+import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.SpecHints;
@@ -1465,6 +1467,16 @@ public class SessionImpl
 	public void setFlushMode(FlushModeType flushModeType) {
 		checkOpen();
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
+	}
+
+	@Override
+	public void addOption(EntityManager.Option option) {
+		OptionsHelper.applyOption( this, option );
+	}
+
+	@Override
+	public Set<EntityManager.Option> getOptions() {
+		return OptionsHelper.getOptions( this );
 	}
 
 	@Override

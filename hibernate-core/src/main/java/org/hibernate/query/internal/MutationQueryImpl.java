@@ -11,6 +11,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.Statement;
 import jakarta.persistence.metamodel.Type;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.LockMode;
@@ -18,6 +19,7 @@ import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -64,6 +66,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
@@ -369,7 +372,7 @@ public class MutationQueryImpl<T>
 	}
 
 	@Override
-	protected List<T> doList() {
+	protected <X> List<X> doList() {
 		final var msg = "Attempting to get a result list from a mutation query";
 		throw new IllegalStateException( msg, new IllegalSelectQueryException( msg, hql ) );
 	}
@@ -439,42 +442,61 @@ public class MutationQueryImpl<T>
 
 	@Override
 	public MutationQueryImplementor<T> setComment(String comment) {
-		return (MutationQueryImplementor<T>) super.setComment( comment );
+		super.setComment( comment );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> addQueryHint(String hint) {
-		return (MutationQueryImplementor<T>) super.addQueryHint( hint );
+		super.addQueryHint( hint );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setQueryFlushMode(QueryFlushMode queryFlushMode) {
-		return (MutationQueryImplementor<T>) super.setQueryFlushMode( queryFlushMode );
+		super.setQueryFlushMode( queryFlushMode );
+		return this;
+	}
+
+	@Override
+	public MutationQueryImplementor<T> addOption(Statement.Option option) {
+		OptionsHelper.applyOption( this, option );
+		return this;
+	}
+
+	@Override
+	public Set<Statement.Option> getOptions() {
+		return OptionsHelper.getStatementOptions( getQueryOptions() );
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setTimeout(int timeout) {
-		return (MutationQueryImplementor<T>) super.setTimeout( timeout );
+		super.setTimeout( timeout );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setTimeout(Integer timeout) {
-		return (MutationQueryImplementor<T>) super.setTimeout( timeout );
+		super.setTimeout( timeout );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setTimeout(Timeout timeout) {
-		return (MutationQueryImplementor<T>) super.setTimeout( timeout );
+		super.setTimeout( timeout );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setFlushMode(FlushModeType flushMode) {
-		return (MutationQueryImplementor<T>) super.setFlushMode( flushMode );
+		super.setFlushMode( flushMode );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setHint(String hintName, Object value) {
-		return (MutationQueryImplementor<T>) super.setHint( hintName, value );
+		super.setHint( hintName, value );
+		return this;
 	}
 
 	private void irrelevantHint(String tag) {
@@ -572,202 +594,242 @@ public class MutationQueryImpl<T>
 
 	@Override
 	public MutationQueryImplementor<T> setParameter(String name, Object value) {
-		return (MutationQueryImplementor<T>) super.setParameter( name, value );
+		super.setParameter( name, value );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameter(String name, P value, Class<P> javaType) {
-		return (MutationQueryImplementor<T>) super.setParameter( name, value, javaType );
+		super.setParameter( name, value, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameter(String name, P value, Type<P> type) {
-		return (MutationQueryImplementor<T>) super.setParameter( name, value, type );
+		super.setParameter( name, value, type );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setParameter(int position, Object value) {
-		return (MutationQueryImplementor<T>) super.setParameter( position, value );
+		super.setParameter( position, value );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameter(int position, P value, Class<P> javaType) {
-		return (MutationQueryImplementor<T>) super.setParameter( position, value, javaType );
+		super.setParameter( position, value, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameter(int position, P value, Type<P> type) {
-		return (MutationQueryImplementor<T>) super.setParameter( position, value, type );
+		super.setParameter( position, value, type );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameter(QueryParameter<P> parameter, P value) {
-		return (MutationQueryImplementor<T>) super.setParameter( parameter, value );
+		super.setParameter( parameter, value );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
-		return (MutationQueryImplementor<T>) super.setParameter( parameter, value, javaType );
+		super.setParameter( parameter, value, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
-		return (MutationQueryImplementor<T>) super.setParameter( parameter, value, type );
+		super.setParameter( parameter, value, type );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameter(Parameter<P> parameter, P value) {
-		return (MutationQueryImplementor<T>) super.setParameter( parameter, value );
+		super.setParameter( parameter, value );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
-		return (MutationQueryImplementor<T>) super.setConvertedParameter( name, value, converter );
+		super.setConvertedParameter( name, value, converter );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
-		return (MutationQueryImplementor<T>) super.setConvertedParameter( position, value, converter );
+		super.setConvertedParameter( position, value, converter );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setProperties(@SuppressWarnings("rawtypes") Map map) {
-		return (MutationQueryImplementor<T>) super.setProperties( map );
+		super.setProperties( map );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setProperties(Object bean) {
-		return (MutationQueryImplementor<T>) super.setProperties( bean );
+		super.setProperties( bean );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
-		return (MutationQueryImplementor<T>) super.setParameterList( name, values );
+		super.setParameterList( name, values );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		return (MutationQueryImplementor<T>) super.setParameterList( name, values, javaType );
+		super.setParameterList( name, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(String name, Collection<? extends P> values, Type<P> type) {
-		return (MutationQueryImplementor<T>) super.setParameterList( name, values, type );
+		super.setParameterList( name, values, type );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setParameterList(String name, Object[] values) {
-		return (MutationQueryImplementor<T>) super.setParameterList( name, values );
+		super.setParameterList( name, values );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(String name, P[] values, Class<P> javaType) {
-		return (MutationQueryImplementor<T>) super.setParameterList( name, values, javaType );
+		super.setParameterList( name, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(String name, P[] values, Type<P> type) {
-		return (MutationQueryImplementor<T>) super.setParameterList( name, values, type );
+		super.setParameterList( name, values, type );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
-		return (MutationQueryImplementor<T>) super.setParameterList( position, values );
+		super.setParameterList( position, values );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
-		return (MutationQueryImplementor<T>) super.setParameterList( position, values, javaType );
+		super.setParameterList( position, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(int position, Collection<? extends P> values, Type<P> type) {
-		return (MutationQueryImplementor<T>) super.setParameterList( position, values, type );
+		super.setParameterList( position, values, type );
+		return this;
 	}
 
 	@Override
 	public MutationQueryImplementor<T> setParameterList(int position, Object[] values) {
-		return (MutationQueryImplementor<T>) super.setParameterList( position, values );
+		super.setParameterList( position, values );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(int position, P[] values, Class<P> javaType) {
-		return (MutationQueryImplementor<T>) super.setParameterList( position, values, javaType );
+		super.setParameterList( position, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(int position, P[] values, Type<P> type) {
-		return (MutationQueryImplementor<T>) super.setParameterList( position, values, type );
+		super.setParameterList( position, values, type );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
-		return (MutationQueryImplementor<T>) super.setParameterList( parameter, values );
+		super.setParameterList( parameter, values );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
-		return (MutationQueryImplementor<T>) super.setParameterList( parameter, values, javaType );
+		super.setParameterList( parameter, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
-		return (MutationQueryImplementor<T>) super.setParameterList( parameter, values, type );
+		super.setParameterList( parameter, values, type );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values) {
-		return (MutationQueryImplementor<T>) super.setParameterList( parameter, values );
+		super.setParameterList( parameter, values );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
-		return (MutationQueryImplementor<T>) super.setParameterList( parameter, values, javaType );
+		super.setParameterList( parameter, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
-		return (MutationQueryImplementor<T>) super.setParameterList( parameter, values, type );
+		super.setParameterList( parameter, values, type );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public MutationQueryImplementor<T> setParameter(String name, Instant value, TemporalType temporalType) {
-		return (MutationQueryImplementor<T>) super.setParameter( name, value, temporalType );
+		super.setParameter( name, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public MutationQueryImplementor<T> setParameter(int position, Instant value, TemporalType temporalType) {
-		return (MutationQueryImplementor<T>) super.setParameter( position, value, temporalType );
+		super.setParameter( position, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public MutationQueryImplementor<T> setParameter(Parameter param, Calendar value, TemporalType temporalType) {
-		return (MutationQueryImplementor<T>) super.setParameter( param, value, temporalType );
+		super.setParameter( param, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public MutationQueryImplementor<T> setParameter(Parameter param, Date value, TemporalType temporalType) {
-		return (MutationQueryImplementor<T>) super.setParameter( param, value, temporalType );
+		super.setParameter( param, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public MutationQueryImplementor<T> setParameter(String name, Calendar value, TemporalType temporalType) {
-		return (MutationQueryImplementor<T>) super.setParameter( name, value, temporalType );
+		super.setParameter( name, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public MutationQueryImplementor<T> setParameter(String name, Date value, TemporalType temporalType) {
-		return (MutationQueryImplementor<T>) super.setParameter( name, value, temporalType );
+		super.setParameter( name, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public MutationQueryImplementor<T> setParameter(int position, Calendar value, TemporalType temporalType) {
-		return (MutationQueryImplementor<T>) super.setParameter( position, value, temporalType );
+		super.setParameter( position, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public MutationQueryImplementor<T> setParameter(int position, Date value, TemporalType temporalType) {
-		return (MutationQueryImplementor<T>) super.setParameter( position, value, temporalType );
+		super.setParameter( position, value, temporalType );
+		return this;
 	}
 
 	@Override

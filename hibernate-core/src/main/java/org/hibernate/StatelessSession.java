@@ -9,7 +9,6 @@ import jakarta.persistence.EntityGraph;
 import org.hibernate.graph.GraphSemantic;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * A command-oriented API often used for performing bulk operations against
@@ -81,15 +80,6 @@ import java.util.Set;
  * @author Gavin King
  */
 public interface StatelessSession extends SharedSessionContract, EntityAgent {
-
-	@Override
-	default void addOption(EntityAgent.Option option) {
-	}
-
-	@Override
-	default Set<EntityAgent.Option> getOptions() {
-		return Set.of();
-	}
 
 	/**
 	 * Insert a record.

@@ -12,8 +12,10 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
+import jakarta.persistence.Statement;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
@@ -107,10 +109,14 @@ import java.util.Set;
 public interface NativeQuery<T> extends SelectionQuery<T>, MutationQuery, SynchronizeableQuery {
 
 	@Override
+	NativeQuery<T> addOption(TypedQuery.Option option);
+
+	@Override
+	NativeQuery<T> addOption(Statement.Option option);
+
+	@Override
 	@SuppressWarnings("rawtypes")
-	default Set getOptions() {
-		return Set.of();
-	}
+	Set getOptions();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

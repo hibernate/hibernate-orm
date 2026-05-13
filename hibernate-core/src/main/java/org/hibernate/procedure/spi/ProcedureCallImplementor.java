@@ -173,7 +173,7 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	ProcedureCallImplementor<R> setProperties(Object bean);
 
 	@Override
-	ProcedureCallImplementor<R> setProperties(Map bean);
+	ProcedureCallImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	@Override
 	<P> ProcedureCallImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);

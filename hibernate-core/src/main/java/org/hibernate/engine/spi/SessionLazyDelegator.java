@@ -9,6 +9,7 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.ConnectionConsumer;
 import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
@@ -61,6 +62,7 @@ import org.hibernate.stat.SessionStatistics;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -135,6 +137,16 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return this.lazySession.get().getCacheRetrieveMode();
+	}
+
+	@Override
+	public void addOption(EntityManager.Option option) {
+		this.lazySession.get().addOption( option );
+	}
+
+	@Override
+	public Set<EntityManager.Option> getOptions() {
+		return this.lazySession.get().getOptions();
 	}
 
 	@Override

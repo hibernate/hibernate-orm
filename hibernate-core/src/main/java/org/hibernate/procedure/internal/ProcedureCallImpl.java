@@ -13,7 +13,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PessimisticLockScope;
-import jakarta.persistence.StoredProcedureQuery.Option;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
@@ -22,6 +21,7 @@ import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.NoSuchParameterException;
@@ -40,9 +40,7 @@ import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
-import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.results.spi.ResultSetMapping;
-import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -81,7 +79,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
-import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
 import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
 import static org.hibernate.query.results.spi.ResultSetMapping.resolveResultSetMapping;
@@ -97,12 +94,13 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImpl<R> addOption(Option option) {
+		OptionsHelper.applyOption( this, option );
 		return this;
 	}
 
 	@Override
 	public Set<Option> getOptions() {
-		return Set.of();
+		return OptionsHelper.getStoredProcedureOptions( getQueryOptions() );
 	}
 
 	private final String procedureName;
@@ -115,8 +113,6 @@ public class ProcedureCallImpl<R>
 	private final List<ResultSetMapping> resultSetMappings;
 
 	private Set<String> synchronizedQuerySpaces;
-
-	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
 	private OutputsImpl outputs;
 
@@ -150,7 +146,7 @@ public class ProcedureCallImpl<R>
 			Class<?>... resultClasses) {
 		super( session );
 		this.procedureName = procedureName;
-		this.synchronizedQuerySpaces = new HashSet<>();
+		synchronizedQuerySpaces = new HashSet<>();
 		parameterMetadata = new ProcedureParameterMetadataImpl();
 		parameterBindings = new ProcedureParamBindings( parameterMetadata, session.getFactory() );
 		resultSetMappings = Util.resolveResultSetMappings(
@@ -174,7 +170,7 @@ public class ProcedureCallImpl<R>
 			String... resultSetMappingNames) {
 		super( session );
 		this.procedureName = procedureName;
-		this.synchronizedQuerySpaces = new HashSet<>();
+		synchronizedQuerySpaces = new HashSet<>();
 		parameterMetadata = new ProcedureParameterMetadataImpl();
 		parameterBindings = new ProcedureParamBindings( parameterMetadata, session.getFactory() );
 		resultSetMappings = Util.resolveResultSetMappings(
@@ -195,8 +191,8 @@ public class ProcedureCallImpl<R>
 			SharedSessionContractImplementor session,
 			NamedCallableQueryMemento memento) {
 		super(session);
-		this.procedureName = memento.getCallableName();
-		this.synchronizedQuerySpaces = makeCopy( memento.getQuerySpaces() );
+		procedureName = memento.getCallableName();
+		synchronizedQuerySpaces = makeCopy( memento.getQuerySpaces() );
 		parameterMetadata = new ProcedureParameterMetadataImpl();
 		parameterBindings = new ProcedureParamBindings( parameterMetadata, session.getFactory() );
 		resultSetMappings = Util.resolveResultSetMappings(
@@ -279,7 +275,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public MutationQueryImplementor asStatement() {
+	public MutationQueryImplementor<R> asStatement() {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as MutationQuery" );
 	}
 
@@ -289,22 +285,26 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setComment(String comment) {
-		return (ProcedureCallImplementor<R>) super.setComment( comment );
+		super.setComment( comment );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
-		return (ProcedureCallImplementor<R>) super.setQueryFlushMode( queryFlushMode );
+		super.setQueryFlushMode( queryFlushMode );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setMaxResults(int maxResult) {
-		return (ProcedureCallImplementor<R>) super.setMaxResults( maxResult );
+		super.setMaxResults( maxResult );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setFirstResult(int startPosition) {
-		return (ProcedureCallImplementor<R>) super.setFirstResult( startPosition );
+		super.setFirstResult( startPosition );
+		return this;
 	}
 
 	@Override
@@ -319,7 +319,8 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addQueryHint(String hint) {
-		return (ProcedureCallImplementor<R>) super.addQueryHint( hint );
+		super.addQueryHint( hint );
+		return this;
 	}
 
 	@Override
@@ -333,16 +334,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public MutableQueryOptions getQueryOptions() {
-		return queryOptions;
-	}
-
-	@Override
 	public ProcedureCallImplementor<R> setTimeout(Integer timeout) {
 		if ( timeout == null ) {
 			timeout = -1;
 		}
-		super.setTimeout( (int) timeout );
+		super.setTimeout( timeout );
 		return this;
 	}
 
@@ -377,12 +373,14 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
-		return (ProcedureCallImplementor) super.setCacheRetrieveMode( cacheRetrieveMode );
+		super.setCacheRetrieveMode( cacheRetrieveMode );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
-		return (ProcedureCallImplementor) super.setCacheStoreMode( cacheStoreMode );
+		super.setCacheStoreMode( cacheStoreMode );
+		return this;
 	}
 
 	@Override
@@ -1199,12 +1197,12 @@ public class ProcedureCallImpl<R>
 		throw new UnsupportedOperationException( "Cannot scroll a ProcedureCall" );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Stream<R> getResultStream() {
 		return stream();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Stream<R> stream() {
 		return getResultList().stream();
 	}
@@ -1301,13 +1299,15 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setProperties(Map map) {
-		return (ProcedureCallImplementor<R>) super.setProperties( map );
+	public ProcedureCallImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map map) {
+		super.setProperties( map );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setProperties(Object bean) {
-		return (ProcedureCallImplementor<R>) super.setProperties( bean );
+		super.setProperties( bean );
+		return this;
 	}
 
 	@Override
@@ -1322,7 +1322,7 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(
 			Parameter<Calendar> parameter,
 			Calendar value,
@@ -1331,47 +1331,33 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(Parameter<Date> parameter, Date value, TemporalType temporalPrecision) {
 		super.setParameter( parameter, value, temporalPrecision );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalPrecision) {
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalPrecision) {
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalPrecision) {
 		super.setParameter( position, value, temporalPrecision );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalPrecision) {
 		super.setParameter( position, value, temporalPrecision );
 		return this;
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Utilities
-
-	private static String mappingId(String procedureName, Class<?>[] resultClasses) {
-		assert resultClasses != null && resultClasses.length > 0;
-		return procedureName + ":" + join( ",", resultClasses );
-	}
-
-	private static String mappingId(String procedureName, String[] resultSetMappingNames) {
-		assert resultSetMappingNames != null && resultSetMappingNames.length > 0;
-		return procedureName + ":" + join( ",", resultSetMappingNames );
 	}
 }

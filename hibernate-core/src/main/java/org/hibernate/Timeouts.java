@@ -6,7 +6,6 @@ package org.hibernate;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.jpa.internal.util.ConfigurationHelper;
 
 import java.util.Map;
 
@@ -15,6 +14,7 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
 
 /**
  * Helpers for dealing with {@linkplain jakarta.persistence.Timeout timeout}
@@ -138,10 +138,6 @@ public interface Timeouts {
 		return getTimeoutInSeconds( timeout.milliseconds() );
 	}
 
-	static Integer getEffectiveTimeoutInSeconds(Timeout timeout) {
-		return timeout == null ? null : getTimeoutInSeconds( timeout );
-	}
-
 	/**
 	 * Get the number of (whole) seconds represented by the given {@code timeout}.
 	 */
@@ -149,14 +145,6 @@ public interface Timeouts {
 		// should never be negative here...
 		assert timeoutInMilliseconds >= 0;
 		return timeoutInMilliseconds == 0 ? 0 : Math.max( 1, Math.round( timeoutInMilliseconds / 1e3f ) );
-	}
-
-	static Timeout fromHints(Map<String, Object> properties) {
-		var result = lockTimeoutFromHints( properties );
-		if ( result == null ) {
-			result = statementTimeoutFromHints( properties );
-		}
-		return result;
 	}
 
 	static Timeout lockTimeoutFromHints(Map<String, Object> properties) {
@@ -188,13 +176,15 @@ public interface Timeouts {
 		if ( factoryHint == null ) {
 			return WAIT_FOREVER;
 		}
-		if ( factoryHint instanceof Timeout timeout ) {
+		else if ( factoryHint instanceof Timeout timeout ) {
 			return timeout;
 		}
-		if ( factoryHint instanceof Integer number ) {
+		else if ( factoryHint instanceof Integer number ) {
 			return Timeout.milliseconds( number );
 		}
-		return Timeout.milliseconds( Integer.parseInt( factoryHint.toString() ) );
+		else {
+			return Timeout.milliseconds( Integer.parseInt( factoryHint.toString() ) );
+		}
 	}
 
 	/**
@@ -213,7 +203,7 @@ public interface Timeouts {
 		}
 		else {
 			// try to convert it to an integer
-			return Timeout.seconds( ConfigurationHelper.getInteger( value ) );
+			return Timeout.seconds( getInteger( value ) );
 		}
 	}
 
@@ -234,11 +224,8 @@ public interface Timeouts {
 		}
 		else {
 			// try to convert it to an integer
-			return Timeout.milliseconds( ConfigurationHelper.getInteger( value ) );
+			return Timeout.milliseconds( getInteger( value ) );
 		}
 	}
 
-	static Timeout inSeconds(int timeout) {
-		return null;
-	}
 }

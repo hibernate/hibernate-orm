@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.internal;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.SortedSet;
@@ -45,6 +46,18 @@ public class StandardSortedSetSemantics<E> extends AbstractSetSemantics<SortedSe
 		return new TreeSet<E>(
 				collectionDescriptor == null ? null : (Comparator) collectionDescriptor.getSortingComparator()
 		);
+	}
+
+	@Override
+	public <X> SortedSet<X> instantiateWithElements(
+			int anticipatedSize,
+			CollectionPersister collectionDescriptor,
+			Collection<? extends X> elements) {
+		final SortedSet<X> set = new TreeSet<>(
+				collectionDescriptor == null ? null : (Comparator) collectionDescriptor.getSortingComparator()
+		);
+		set.addAll( elements );
+		return set;
 	}
 
 	@Override

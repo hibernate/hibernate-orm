@@ -4,12 +4,18 @@
  */
 package org.hibernate.collection.spi;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
@@ -51,6 +57,48 @@ public interface CollectionSemantics<CE, E> {
 	CE instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor);
+
+	/**
+	 * Create a raw (unwrapped) version of the collection and populate it
+	 * with the given elements.
+	 */
+	default <X> Object instantiateWithElements(
+			int anticipatedSize,
+			CollectionPersister collectionDescriptor,
+			Collection<? extends X> elements) {
+		return new LinkedHashSet<>( elements );
+	}
+
+	/**
+	 * Create a raw (unwrapped) version of the collection and populate it
+	 * with the given map entries.
+	 */
+	default <K, V> Map<K, V> instantiateWithElements(
+			int anticipatedSize,
+			CollectionPersister collectionDescriptor,
+			Map<? extends K, ? extends V> entries) {
+		return new LinkedHashMap<>( entries );
+	}
+
+	/**
+	 * Determine the size of the given raw collection.
+	 */
+	int collectionSize(Object rawCollection);
+
+	/**
+	 * Create a raw (unwrapped) copy of the given collection.
+	 */
+	Object copy(
+			Object rawCollection,
+			CollectionPersister collectionDescriptor);
+
+	/**
+	 * Create a detached copy of a collection part.
+	 */
+	Set<?> copyPart(
+			Object rawCollection,
+			CollectionPersister collectionDescriptor,
+			CollectionPart.Nature partNature);
 
 	/**
 	 * Create a wrapper for the collection

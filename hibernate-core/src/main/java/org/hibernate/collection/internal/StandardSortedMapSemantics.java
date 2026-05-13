@@ -5,6 +5,7 @@
 package org.hibernate.collection.internal;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -44,6 +45,18 @@ public class StandardSortedMapSemantics<K,V> extends AbstractMapSemantics<Sorted
 		return new TreeMap<K,V>(
 				collectionDescriptor == null ? null : (Comparator) collectionDescriptor.getSortingComparator()
 		);
+	}
+
+	@Override
+	public <KK, VV> SortedMap<KK, VV> instantiateWithElements(
+			int anticipatedSize,
+			CollectionPersister collectionDescriptor,
+			Map<? extends KK, ? extends VV> entries) {
+		final SortedMap<KK, VV> map = new TreeMap<>(
+				collectionDescriptor == null ? null : (Comparator) collectionDescriptor.getSortingComparator()
+		);
+		map.putAll( entries );
+		return map;
 	}
 
 	@Override

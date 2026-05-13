@@ -2,6 +2,8 @@ services:
   sybase:
     image: ${SYBASE_IMAGE:-docker.io/nguoianphu/docker-sybase@sha256:0fe38c4dafdb43dc5e5d0c1554006bc57efa7ed1a705aaef820ddbabf024c538}
     container_name: sybase
+    environment:
+      SYBASE_ALLOW_ASYNC_IO: ${SYBASE_ALLOW_ASYNC_IO:-1}
     ports:
       - "9000:5000"
       - "9001:5001"
@@ -10,6 +12,9 @@ services:
       - -c
       - |
         source /opt/sybase/SYBASE.sh
+        if [ "$$SYBASE_ALLOW_ASYNC_IO" = "0" ]; then
+          sed -i 's/allow sql server async i\/o = DEFAULT/allow sql server async i\/o = 0/' /opt/sybase/ASE-16_0/MYSYBASE.cfg
+        fi
         /opt/sybase/ASE-16_0/bin/dataserver \
         -d/opt/sybase/data/master.dat \
         -e/opt/sybase/ASE-16_0/install/MYSYBASE.log \
@@ -19,7 +24,6 @@ services:
         -i/opt/sybase \
         -sMYSYBASE \
         -T11889
-        exit 0
     healthcheck:
       test: ["CMD-SHELL", "source /opt/sybase/SYBASE.sh && /opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE -Q 'SELECT 1' || exit 1"]
       interval: 10s

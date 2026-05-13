@@ -505,6 +505,11 @@ mssql_post_setup() {
 
 sybase() {
     compose_down "sybase"
+    if [[ "$IS_PODMAN" == "true" && "$IS_OSX" == "true" && "$(uname -m)" == "arm64" ]]; then
+        # The x86_64 Sybase ASE image fails under Podman/QEMU on Apple Silicon
+        # unless ASE falls back from async disk I/O to standard unix I/O.
+        export SYBASE_ALLOW_ASYNC_IO=0
+    fi
     compose_up "latest/sybase/docker-compose.yaml"
 
     export SYBASE_DB=hibernate_orm_test

@@ -202,6 +202,9 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		}
 
 		final var dialect = entityPersister.getFactory().getJdbcServices().getDialect();
+		if ( !onExecutionGenerator.referenceColumnsInSql( dialect, UPDATE ) ) {
+			return false;
+		}
 		final boolean[] columnInclusions = onExecutionGenerator.getColumnInclusions( dialect, UPDATE );
 		if ( columnInclusions != null
 				&& selectableIndex < columnInclusions.length

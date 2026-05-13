@@ -174,6 +174,9 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 		}
 
 		final var dialect = entityPersister.getFactory().getJdbcServices().getDialect();
+		if ( !onExecutionGenerator.referenceColumnsInSql( dialect, INSERT ) ) {
+			return false;
+		}
 		final boolean[] columnInclusions = onExecutionGenerator.getColumnInclusions( dialect, INSERT );
 		if ( columnInclusions != null
 				&& selectableIndex < columnInclusions.length

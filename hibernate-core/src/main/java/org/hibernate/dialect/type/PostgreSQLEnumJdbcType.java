@@ -108,6 +108,11 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 					throws SQLException {
 				st.setObject( name, getJavaType().unwrap( value, String.class, options ), Types.OTHER );
 			}
+
+			@Override
+			public Object getBindValue(X value, WrapperOptions options) {
+				return getJavaType().unwrap( value, String.class, options );
+			}
 		};
 	}
 

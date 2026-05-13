@@ -25,7 +25,6 @@ import org.hibernate.stat.SessionStatistics;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /// The main runtime interface between a Java application and Hibernate. Represents the
 /// notion of a _persistence context_, a set of managed entity instances associated
@@ -187,15 +186,6 @@ import java.util.Set;
 /// @author Gavin King
 /// @author Steve Ebersole
 public interface Session extends SharedSessionContract, EntityManager {
-
-	@Override
-	default void addOption(EntityManager.Option option) {
-	}
-
-	@Override
-	default Set<EntityManager.Option> getOptions() {
-		return Set.of();
-	}
 
 	/// Force this session to flush. Must be called at the end of a unit of work,
 	/// before the transaction is committed. Depending on the current

@@ -13,9 +13,11 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
+import jakarta.persistence.Statement;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -29,6 +31,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryArrayTransformer;
@@ -711,7 +714,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> setLockTimeout(Timeout lockTimeout) {
-		return (NativeQueryImplementor<R>) super.setLockTimeout( lockTimeout );
+		super.setLockTimeout( lockTimeout );
+		return this;
 	}
 
 	@Override
@@ -722,7 +726,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> setFollowOnLockingStrategy(Locking.FollowOn strategy) {
-		return (NativeQueryImplementor<R>) super.setFollowOnLockingStrategy( strategy );
+		super.setFollowOnLockingStrategy( strategy );
+		return this;
 	}
 
 	@Override
@@ -1612,6 +1617,24 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public NativeQueryImplementor<R> addOption(TypedQuery.Option option) {
+		OptionsHelper.applyOption( this, option );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> addOption(Statement.Option option) {
+		OptionsHelper.applyOption( this, option );
+		return this;
+	}
+
+	@Override
+	@SuppressWarnings("rawtypes")
+	public Set getOptions() {
+		return OptionsHelper.getTypedQueryOptions( getQueryOptions() );
+	}
+
+	@Override
 	public NativeQueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
 		super.setFlushMode( flushModeType );
 		return this;
@@ -1851,12 +1874,14 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public <P> NativeQueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
-		return (NativeQueryImplementor<R>) super.setConvertedParameter( name, value, converterClass );
+		super.setConvertedParameter( name, value, converterClass );
+		return this;
 	}
 
 	@Override
 	public <P> NativeQueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
-		return (NativeQueryImplementor<R>) super.setConvertedParameter( position, value, converterClass );
+		super.setConvertedParameter( position, value, converterClass );
+		return this;
 	}
 
 	@Override

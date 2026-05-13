@@ -15,6 +15,7 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -28,6 +29,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -82,6 +84,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 
 import static java.lang.Boolean.TRUE;
@@ -531,7 +534,8 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	public SelectionQueryImplementor<R> setHint(String hintName, Object value) {
-		return (SelectionQueryImplementor<R>) super.setHint( hintName, value );
+		super.setHint( hintName, value );
+		return this;
 	}
 
 	@Override
@@ -579,37 +583,55 @@ public class SelectionQueryImpl<R>
 	}
 	@Override
 	public SelectionQueryImplementor<R> setComment(String comment) {
-		return (SelectionQueryImplementor<R>) super.setComment( comment );
+		super.setComment( comment );
+		return this;
+	}
+
+	@Override
+	public SelectionQueryImplementor<R> addOption(TypedQuery.Option option) {
+		OptionsHelper.applyOption( this, option );
+		return this;
+	}
+
+	@Override
+	public Set<TypedQuery.Option> getOptions() {
+		return OptionsHelper.getTypedQueryOptions( getQueryOptions() );
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
-		return (SelectionQueryImplementor<R>) super.setQueryFlushMode( queryFlushMode );
+		super.setQueryFlushMode( queryFlushMode );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setTimeout(int timeout) {
-		return (SelectionQueryImplementor<R>) super.setTimeout( timeout );
+		super.setTimeout( timeout );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setTimeout(Integer timeout) {
-		return (SelectionQueryImplementor<R>) super.setTimeout( timeout );
+		super.setTimeout( timeout );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setTimeout(Timeout timeout) {
-		return (SelectionQueryImplementor<R>) super.setTimeout( timeout );
+		super.setTimeout( timeout );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setFlushMode(FlushModeType flushMode) {
-		return (SelectionQueryImplementor<R>) super.setFlushMode( flushMode );
+		super.setFlushMode( flushMode );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> addQueryHint(String hint) {
-		return (SelectionQueryImplementor<R>)super.addQueryHint( hint );
+		super.addQueryHint( hint );
+		return this;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -632,162 +654,194 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	public SelectionQueryImplementor<R> setParameter(String name, Object value) {
-		return (SelectionQueryImplementor<R>) super.setParameter( name, value );
+		super.setParameter( name, value );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameter(String name, P value, Class<P> javaType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( name, value, javaType );
+		super.setParameter( name, value, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameter(String name, P value, Type<P> type) {
-		return (SelectionQueryImplementor<R>) super.setParameter( name, value, type );
+		super.setParameter( name, value, type );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setParameter(int position, Object value) {
-		return (SelectionQueryImplementor<R>) super.setParameter( position, value );
+		super.setParameter( position, value );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameter(int position, P value, Class<P> javaType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( position, value, javaType );
+		super.setParameter( position, value, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameter(int position, P value, Type<P> type) {
-		return (SelectionQueryImplementor<R>) super.setParameter( position, value, type );
+		super.setParameter( position, value, type );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
-		return (SelectionQueryImplementor<R>) super.setParameter( parameter, value );
+		super.setParameter( parameter, value );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( parameter, value, javaType );
+		super.setParameter( parameter, value, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
-		return (SelectionQueryImplementor<R>) super.setParameter( parameter, value, type );
+		super.setParameter( parameter, value, type );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
-		return (SelectionQueryImplementor<R>) super.setParameter( parameter, value );
+		super.setParameter( parameter, value );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map map) {
-		return (SelectionQueryImplementor<R>) super.setProperties( map );
+		super.setProperties( map );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setProperties(Object bean) {
-		return (SelectionQueryImplementor<R>) super.setProperties( bean );
+		super.setProperties( bean );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
-		return (SelectionQueryImplementor<R>) super.setConvertedParameter( name, value, converterClass );
+		super.setConvertedParameter( name, value, converterClass );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
-		return (SelectionQueryImplementor<R>) super.setConvertedParameter( position, value, converterClass );
+		super.setConvertedParameter( position, value, converterClass );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( name, values );
+		super.setParameterList( name, values );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( name, values, javaType );
+		super.setParameterList( name, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( name, values, type );
+		super.setParameterList( name, values, type );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setParameterList(String name, Object[] values) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( name, values );
+		super.setParameterList( name, values );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( name, values, javaType );
+		super.setParameterList( name, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( name, values, type );
+		super.setParameterList( name, values, type );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( position, values );
+		super.setParameterList( position, values );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( position, values, javaType );
+		super.setParameterList( position, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( position, values, type );
+		super.setParameterList( position, values, type );
+		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setParameterList(int position, Object[] values) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( position, values );
+		super.setParameterList( position, values );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( position, values, javaType );
+		super.setParameterList( position, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(int position, P[] values, Type<P> type) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( position, values, type );
+		super.setParameterList( position, values, type );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( parameter, values );
+		super.setParameterList( parameter, values );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( parameter, values, javaType );
+		super.setParameterList( parameter, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( parameter, values, type );
+		super.setParameterList( parameter, values, type );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( parameter, values );
+		super.setParameterList( parameter, values );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( parameter, values, javaType );
+		super.setParameterList( parameter, values, javaType );
+		return this;
 	}
 
 	@Override
 	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
-		return (SelectionQueryImplementor<R>) super.setParameterList( parameter, values, type );
+		super.setParameterList( parameter, values, type );
+		return this;
 	}
 
 
@@ -1330,41 +1384,49 @@ public class SelectionQueryImpl<R>
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public SelectionQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( name, value, temporalType );
+		super.setParameter( name, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public SelectionQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( position, value, temporalType );
+		super.setParameter( position, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public SelectionQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( param, value, temporalType );
+		super.setParameter( param, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public SelectionQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( param, value, temporalType );
+		super.setParameter( param, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public SelectionQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( name, value, temporalType );
+		super.setParameter( name, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public SelectionQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( name, value, temporalType );
+		super.setParameter( name, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public SelectionQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( position, value, temporalType );
+		super.setParameter( position, value, temporalType );
+		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	public SelectionQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
-		return (SelectionQueryImplementor<R>) super.setParameter( position, value, temporalType );
+		super.setParameter( position, value, temporalType );
+		return this;
 	}
 }

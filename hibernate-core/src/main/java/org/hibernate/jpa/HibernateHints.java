@@ -31,32 +31,33 @@ public interface HibernateHints {
 	 * {@linkplain jakarta.persistence.Query} or
 	 * {@linkplain jakarta.persistence.EntityManager}.
 	 * <p>
-	 * The allowed values depend on the context -
+	 * The allowed values depend on the context.
 	 * <ul>
 	 *     <li>
-	 *         For a query, the value will ultimately get resolved to a
-	 *         {@linkplain QueryFlushMode} via .  The hint value may be any of the following:<ul>
+	 *         For a query, the value will ultimately be treated as a {@linkplain QueryFlushMode}.
+	 *         The hint value may be any of the following:<ul>
 	 *             <li>
 	 *                 A {@linkplain QueryFlushMode}.
 	 *             </li>
 	 *             <li>
-	 *                 A Hibernate {@linkplain org.hibernate.FlushMode}, converted
-	 *                 via {@linkplain org.hibernate.jpa.internal.util.FlushModeTypeHelper#queryFlushModeFromFlushMode}.
+	 *                 A Hibernate {@linkplain org.hibernate.FlushMode}, converted via
+	 *                 {@linkplain org.hibernate.jpa.internal.util.FlushModeTypeHelper#queryFlushModeFromFlushMode}.
 	 *             </li>
 	 *             <li>
-	 *                 A string, converted via {@linkplain org.hibernate.jpa.internal.util.FlushModeTypeHelper#queryFlushModeFromHint}.
+	 *                 A string, converted via
+	 *                 {@linkplain org.hibernate.jpa.internal.util.FlushModeTypeHelper#queryFlushModeFromHint}.
 	 *             </li>
 	 *             <li>
-	 *                 A JPA {@linkplain FlushModeType} may be passed, but JPA already provides
-	 *                 a method for this - {@linkplain jakarta.persistence.Query#setFlushMode(FlushModeType)}
-	 *                 which should be used instead.  If a {@linkplain FlushModeType} is used,
-	 *                 it is converted using {@linkplain org.hibernate.jpa.internal.util.FlushModeTypeHelper#queryFlushModeFromFlushModeType(FlushModeType)}
+	 *                 A JPA {@linkplain FlushModeType} may be passed, but JPA already provides a method for this
+	 *                 - {@linkplain jakarta.persistence.Query#setFlushMode(FlushModeType)}, which should be used
+	 *                 instead. If a {@linkplain FlushModeType} is used, it is converted using
+	 *                 {@linkplain org.hibernate.jpa.internal.util.FlushModeTypeHelper#queryFlushModeFromFlushModeType(FlushModeType)}
 	 *             </li>
 	 *         </ul>
 	 *     </li>
 	 *     <li>
-	 *         For sessions, the value will ultimately get resolved to a Hibernate
-	 *         {@linkplain FlushMode}.  The hint value may be any of the following:<ul>
+	 *         For a session, the value is treated as a Hibernate {@linkplain FlushMode}.
+	 *         The hint value may be any of the following:<ul>
 	 *             <li>
 	 *                 A {@linkplain org.hibernate.FlushMode}.
 	 *             </li>
@@ -64,10 +65,10 @@ public interface HibernateHints {
 	 *                 A string, converted via {@linkplain FlushMode#interpretExternalSetting(String)}.
 	 *             </li>
 	 *             <li>
-	 *                 A JPA {@linkplain FlushModeType} may be passed, but JPA already provides
-	 *                 a method for this - {@linkplain jakarta.persistence.EntityManager#setFlushMode(FlushModeType)}
-	 *                 which should be used instead.  If a {@linkplain FlushModeType} is used,
-	 *                 it is converted using {@linkplain FlushMode#fromJpaFlushMode(FlushModeType)}
+	 *                 A JPA {@linkplain FlushModeType} may be passed, but JPA already provides a method for this
+	 *                 - {@linkplain jakarta.persistence.EntityManager#setFlushMode(FlushModeType)}, which should
+	 *                 be used instead. If a {@linkplain FlushModeType} is used, it is converted using
+	 *                 {@linkplain FlushMode#fromJpaFlushMode(FlushModeType)}
 	 *             </li>
 	 *         </ul>
 	 *     </li>
@@ -81,30 +82,27 @@ public interface HibernateHints {
 	String HINT_FLUSH_MODE = "org.hibernate.flushMode";
 
 	/**
-	 * Hint for specifying a timeout <em>in seconds</em>.
-	 * Ultimately this value gets resolved to {@linkplain jakarta.persistence.Timeout}.
-	 * The value may be any of these types -<ul>
+	 * Hint for specifying a timeout <em>in seconds</em>. The hint value may be any of these
+	 * types:<ul>
 	 *     <li>
 	 *         a {@linkplain jakarta.persistence.Timeout}
 	 *     </li>
 	 *     <li>
-	 *         an integer representing the number of seconds
+	 *         an integer representing the number of seconds, interpreted as an argument to
+	 *         {@linkplain jakarta.persistence.Timeout#seconds(int)}
 	 *     </li>
 	 *     <li>
 	 *         anything else resolvable to an integer representing the number of seconds
 	 *     </li>
 	 * </ul>
 	 *
-	 * @apiNote Note that JPA already defines a proper
-	 * {@linkplain jakarta.persistence.Query#setTimeout(Timeout) method} for this, which should
-	 * be preferred (hints == no bueno).
-	 * There is also a {@linkplain jakarta.persistence.Query#setTimeout(Timeout) form}, however,
-	 * be aware that JPA defines that timeouts should be in <em>milliseconds</em> rather than seconds;
-	 * be sure to perform necessary conversion if using this method.
+	 * @apiNote Calling {@link org.hibernate.query.Query#setTimeout(int)} is now preferred due
+	 * to type safety. Alternatively, JPA allows a timeout expressed in <em>milliseconds</em>
+	 * to be set via {@link jakarta.persistence.Query#setTimeout(Integer)}.
 	 *
+	 * @see org.hibernate.query.Query#setTimeout(int)
 	 * @see jakarta.persistence.Query#setTimeout(Timeout)
 	 * @see jakarta.persistence.Query#setTimeout(Integer)
-	 * @see org.hibernate.query.Query#setTimeout(int)
 	 * @see java.sql.Statement#setQueryTimeout
 	 * @see SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */

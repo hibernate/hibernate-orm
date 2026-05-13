@@ -160,7 +160,7 @@ public class AddNamedQueryTest {
 		scope.inTransaction(
 				em -> {
 					Query query = em.createNamedQuery( name );
-					org.hibernate.query.Query hibernateQuery = (org.hibernate.query.Query) query;
+					var hibernateQuery = (org.hibernate.query.Query<?>) query;
 					// assert the state of the query config settings based on the initial named query
 					//
 					//		NOTE: here we check "query options" via the Hibernate contract (allowing nullness checking); see below for access via the JPA contract
@@ -171,13 +171,13 @@ public class AddNamedQueryTest {
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
 					// jpa timeout is in milliseconds, whereas Hibernate's is in seconds
-					assertEquals( (Integer) 3, hibernateQuery.getTimeout() );
+					assertEquals( 3000, hibernateQuery.getTimeout() );
 
 					query.setHint( HINT_TIMEOUT, 10 );
 					em.getEntityManagerFactory().addNamedQuery( name, query );
 
 					query = em.createNamedQuery( name );
-					hibernateQuery = (org.hibernate.query.Query) query;
+					hibernateQuery = (org.hibernate.query.Query<?>) query;
 					// assert the state of the query config settings based on the initial named query
 					//
 					//		NOTE: here we check "query options" via the JPA contract
@@ -187,13 +187,13 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
-					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
+					assertEquals( 10000, hibernateQuery.getTimeout() );
 
-					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 10000 );
+					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 20000 );
 					em.getEntityManagerFactory().addNamedQuery( name, query );
 
 					query = em.createNamedQuery( name );
-					hibernateQuery = (org.hibernate.query.Query) query;
+					hibernateQuery = (org.hibernate.query.Query<?>) query;
 					// assert the state of the query config settings based on the initial named query
 					assertEquals( 0, hibernateQuery.getFirstResult() );
 					assertEquals( Integer.MAX_VALUE, hibernateQuery.getMaxResults() );
@@ -201,13 +201,13 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
-					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
+					assertEquals( (Integer) 20000, hibernateQuery.getTimeout() );
 
 					query.setFirstResult( 51 );
 					em.getEntityManagerFactory().addNamedQuery( name, query );
 
 					query = em.createNamedQuery( name );
-					hibernateQuery = (org.hibernate.query.Query) query;
+					hibernateQuery = (org.hibernate.query.Query<?>) query;
 					// assert the state of the query config settings based on the initial named query
 					assertEquals( 51, hibernateQuery.getFirstResult() );
 					assertEquals( Integer.MAX_VALUE, hibernateQuery.getMaxResults() );
@@ -215,7 +215,7 @@ public class AddNamedQueryTest {
 					assertEquals( FlushModeType.COMMIT, hibernateQuery.getFlushMode() );
 					assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getHibernateLockMode() );
-					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
+					assertEquals( (Integer) 20000, hibernateQuery.getTimeout() );
 				}
 		);
 	}

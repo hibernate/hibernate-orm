@@ -6,6 +6,7 @@ package org.hibernate.internal;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.LockModeType;
@@ -67,6 +68,7 @@ import org.hibernate.internal.find.FindByKeyOperation;
 import org.hibernate.internal.find.StatelessFindByKeyOperation;
 import org.hibernate.internal.find.StatelessFindMultipleByKeyOperation;
 import org.hibernate.internal.find.StatelessLoadAccessContext;
+import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.loader.internal.CacheLoadHelper;
@@ -299,6 +301,16 @@ public class StatelessSessionImpl
 	@Override
 	public CacheStoreMode getCacheStoreMode() {
 		return getCacheModeSafely().getJpaStoreMode();
+	}
+
+	@Override
+	public void addOption(EntityAgent.Option option) {
+		OptionsHelper.applyOption( this, option );
+	}
+
+	@Override
+	public Set<EntityAgent.Option> getOptions() {
+		return OptionsHelper.getOptions( this );
 	}
 
 	// inserts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

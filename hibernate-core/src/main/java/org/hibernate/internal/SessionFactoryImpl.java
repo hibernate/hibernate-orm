@@ -715,7 +715,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				}
 			}
 		}
-		return buildEntityManager( synchronizationType, null );
+		final var session = buildEntityManager( synchronizationType, null );
+		if ( options != null ) {
+			for ( var option : options ) {
+				if ( option instanceof EntityManager.Option entityManagerOption ) {
+					session.addOption( entityManagerOption );
+				}
+			}
+		}
+		return session;
 	}
 
 	private Session buildEntityManager(SynchronizationType synchronizationType, Map<?,?> map) {
@@ -775,14 +783,22 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return buildEntityManager( synchronizationType, map );
 	}
 
-	public EntityAgent createEntityAgent() {
+	public StatelessSession createEntityAgent() {
 		validateNotClosed();
 		return openStatelessSession();
 	}
 
 	@Override
-	public EntityAgent createEntityAgent(EntityAgent.CreationOption... options) {
-		return createEntityAgent();
+	public StatelessSession createEntityAgent(EntityAgent.CreationOption... options) {
+		final var agent = createEntityAgent();
+		if ( options != null ) {
+			for ( var option : options ) {
+				if ( option instanceof EntityAgent.Option entityAgentOption ) {
+					agent.addOption( entityAgentOption );
+				}
+			}
+		}
+		return agent;
 	}
 
 	@Override

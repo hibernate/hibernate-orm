@@ -11,6 +11,7 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.ConnectionConsumer;
 import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
@@ -264,6 +265,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
 		delegate.setCacheRetrieveMode( cacheRetrieveMode );
+	}
+
+	@Override
+	public void addOption(EntityManager.Option option) {
+		delegate.addOption( option );
+	}
+
+	@Override
+	public Set<EntityManager.Option> getOptions() {
+		return delegate.getOptions();
 	}
 
 	@Override

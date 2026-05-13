@@ -165,7 +165,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * <p>
 	 * See {@linkplain org.hibernate.Timeouts} for discussion of "magic values".
 	 *
-	 * @apiNote As this method is inherited from JPA, the value expected to be <em>in milliseconds</em>.
+	 * @apiNote As this method is inherited from JPA, the value expected to be
+	 *          <em>in milliseconds</em>.
 	 * @implNote This value is eventually passed along to the JDBC statement via
 	 * {@link java.sql.Statement#setQueryTimeout(int)}.
 	 *

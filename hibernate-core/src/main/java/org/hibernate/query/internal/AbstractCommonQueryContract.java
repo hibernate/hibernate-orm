@@ -187,7 +187,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public Integer getTimeout() {
-		return Timeouts.getEffectiveTimeoutInSeconds( queryOptions.getTimeout() );
+		final var timeout = queryOptions.getTimeout();
+		return timeout == null ? null : timeout.milliseconds();
 	}
 
 	@Override
@@ -311,7 +312,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return hints;
 	}
 
-	@SuppressWarnings("deprecation")
 	protected void collectHints(Map<String, Object> hints) {
 		if ( Timeouts.isRealTimeout( queryOptions.getTimeout() ) ) {
 			hints.put( HINT_TIMEOUT, Timeouts.getTimeoutInSeconds( queryOptions.getTimeout() ) );
@@ -739,14 +739,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public CommonQueryContractImplementor setQueryFlushMode(QueryFlushMode queryFlushMode) {
 		queryOptions.setFlushMode( FlushModeTypeHelper.getFlushMode(queryFlushMode) );
 		return this;
-	}
-
-	protected void applyTimeoutHint(int timeout) {
-		setTimeout( timeout );
-	}
-
-	protected void applyCommentHint(String comment) {
-		setComment( comment );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

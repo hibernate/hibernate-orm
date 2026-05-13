@@ -73,14 +73,10 @@ public interface MutationQuery extends CommonQueryContract, Statement, Statement
 	}
 
 	@Override
-	default MutationQuery addOption(Statement.Option option) {
-		return this;
-	}
+	MutationQuery addOption(Statement.Option option);
 
 	@Override
-	default Set<Statement.Option> getOptions() {
-		return Set.of();
-	}
+	Set<Statement.Option> getOptions();
 
 	/**
 	 * The Java type of the thing being mutated, if known.

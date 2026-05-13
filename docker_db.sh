@@ -545,7 +545,7 @@ create login $SYBASE_USER with password $SYBASE_PASSWORD
 go
 exec sp_configure 'enable xml', 1
 go
-exec sp_configure 'heap memory per user', 0, '16K'
+exec sp_configure 'heap memory per user', 0, '64K'
 go
 exec sp_dboption $SYBASE_DB, 'abort tran on log full', true
 go

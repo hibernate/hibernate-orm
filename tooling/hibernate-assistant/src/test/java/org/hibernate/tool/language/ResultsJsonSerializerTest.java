@@ -274,7 +274,7 @@ public class ResultsJsonSerializerTest {
 	public void testSelectCollection(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final SelectionQuery<Employee> q = query(
-					"select c.employees from Company c where c.id = 1",
+					"select element(c.employees) from Company c where c.id = 1",
 					Employee.class,
 					session
 			);

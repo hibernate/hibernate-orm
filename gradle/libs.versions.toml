@@ -69,7 +69,7 @@ jaxen = "1.1"
 dom4j = "2.1.3"
 javaxMoney = "1.1"
 moneta = "1.4.4"
-persistenceTck="4.0.0-M2"
+persistenceTck="4.0.0-M3"
 
 # JDBC Libs
 h2 = "2.4.240"

@@ -1049,6 +1049,7 @@ The following functions accept either:
 2. a <<path-expressions,compound path>> that refers to a collection or many-valued association of an entity.
 
 In case 2, application of the function produces an <<implicit-collection-join,implicit join>>.
+It autimatically _flattens_ the collection.
 
 [[collection-functions]]
 [cols="15,20,~,^15"]
@@ -1063,7 +1064,7 @@ In case 2, application of the function produces an <<implicit-collection-join,im
 | `entry()` 💀 | Maps | The whole entry in a map | ✔
 |===
 
-The next group of functions always accept a compound path referring to a collection or many-valued association of an entity.
+The functions in the next group always accept a compound path referring to a collection or many-valued association of an entity.
 They're interpreted as referring to the collection as a whole.
 
 [[collective-collection-functions]]
@@ -1076,14 +1077,26 @@ They're interpreted as referring to the collection as a whole.
 | `keys()` | Maps | The keys of a map, collectively | ✖
 | `values()` | Maps | The values of a map, collectively | ✖
 |===
-Application of one of these functions produces an implicit subquery or implicit join.
 
-This query has an implicit join:
+Application of one of these functions produces an implicit subquery or implicit join.
+It never flattens the collection.
+
+Let's illustrate the difference between the two groups of functions with a simple example.
+
+This query has an implicit join and returns pairs of form `(title, tag)`:
 
 [[elements-join-example]]
 [source, hql]
 ----
 select title, element(tags) from Book
+----
+
+On the other hand, this very similar-looking query returns pairs of form `(title, tags)`, where the tags for a given `Book` are packaged as a detached collection:
+
+[[elements-join-example]]
+[source, hql]
+----
+select title, elements(tags) from Book
 ----
 
 This query has an implicit subquery:
@@ -1156,6 +1169,8 @@ We may use them with:
 - an <<in-predicate,`in`>> or <<exists-predicate,`exists`>> predicate,
 - a <<relational-comparisons-subqueries,relational comparison>>, or
 - an <<aggregate-functions-collections,aggregate function>>.
+
+Alternatively, they may occur directly in the `select` list, in which case the query returns detached collection instances, as we already saw above.
 
 [cols="35,~"]
 |===

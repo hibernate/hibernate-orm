@@ -4,9 +4,11 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,6 +37,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,6 +68,8 @@ public class HqlDetachedCollectionSelectionTest {
 			book.getAuthors().add( steve );
 			book.getTags().add( "hql" );
 			book.getTags().add( "orm" );
+			book.getChapters().add( "Introduction" );
+			book.getChapters().add( "Query Language" );
 			book.getTranslations().put( "de", "Hibernate ORM auf Deutsch" );
 			book.getTranslations().put( "fr", "Hibernate ORM en francais" );
 			session.persist( book );
@@ -95,6 +100,23 @@ public class HqlDetachedCollectionSelectionTest {
 		assertThat( authors )
 				.extracting( Author::getName )
 				.containsExactlyInAnyOrder( "Gavin King", "Steve Ebersole" );
+	}
+
+	@Test
+	public void testMapPluralAttributeSelectionReturnsDetachedMap(SessionFactoryScope scope) {
+		final Map<String, String> translations =
+				scope.fromTransaction(
+						session -> session.createSelectionQuery(
+								"select book.translations from Hhh17558Book book",
+								mapType( String.class, String.class )
+						).getSingleResult()
+				);
+
+		assertDetachedMap( translations );
+		assertThat( translations )
+				.containsEntry( "de", "Hibernate ORM auf Deutsch" )
+				.containsEntry( "fr", "Hibernate ORM en francais" )
+				.hasSize( 2 );
 	}
 
 	@Test
@@ -163,6 +185,20 @@ public class HqlDetachedCollectionSelectionTest {
 	}
 
 	@Test
+	public void testIndicesFunctionReturnsListIndexes(SessionFactoryScope scope) {
+		final Collection<Integer> indexes =
+				scope.fromTransaction(
+						session -> session.createSelectionQuery(
+								"select indices(book.chapters) from Hhh17558Book book",
+								collectionType( Integer.class )
+						).getSingleResult()
+				);
+
+		assertDetachedSet( indexes );
+		assertThat( indexes ).containsExactly( 0, 1 );
+	}
+
+	@Test
 	public void testKeyAndValueFunctionsStillFlattenMap(SessionFactoryScope scope) {
 		final Collection<String> locales = scope.fromTransaction(
 				session -> session.createSelectionQuery(
@@ -205,9 +241,19 @@ public class HqlDetachedCollectionSelectionTest {
 		return (Class<Collection<T>>) (Class) Collection.class;
 	}
 
+	@SuppressWarnings("unchecked")
+	private static @NonNull <K, V> Class<Map<K, V>> mapType(Class<K> keyType, Class<V> valueType) {
+		return (Class<Map<K, V>>) (Class) Map.class;
+	}
+
 	private static void assertDetachedSet(Collection<?> collection) {
 		assertThat( collection ).isInstanceOf( Set.class );
 		assertThat( collection ).isNotInstanceOf( PersistentCollection.class );
+	}
+
+	private static void assertDetachedMap(Map<?, ?> map) {
+		assertThat( map ).isInstanceOf( Map.class );
+		assertThat( map ).isNotInstanceOf( PersistentCollection.class );
 	}
 
 	@Entity( name = "Hhh17558Author" )
@@ -251,6 +297,12 @@ public class HqlDetachedCollectionSelectionTest {
 		private Set<String> tags = new HashSet<>();
 
 		@ElementCollection
+		@CollectionTable( name = "hhh17558_book_chapter", joinColumns = @JoinColumn( name = "book_id" ) )
+		@OrderColumn( name = "chapter_index" )
+		@Column( name = "chapter" )
+		private List<String> chapters = new ArrayList<>();
+
+		@ElementCollection
 		@CollectionTable( name = "hhh17558_book_translation", joinColumns = @JoinColumn( name = "book_id" ) )
 		@MapKeyColumn( name = "locale" )
 		@Column( name = "translation" )
@@ -270,6 +322,10 @@ public class HqlDetachedCollectionSelectionTest {
 
 		public Set<String> getTags() {
 			return tags;
+		}
+
+		public List<String> getChapters() {
+			return chapters;
 		}
 
 		public Map<String, String> getTranslations() {

@@ -4,15 +4,24 @@
  */
 package org.hibernate.orm.test.jpa.options;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStatement;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.TypedQueryReference;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -160,7 +169,122 @@ class Jpa4OptionsTest {
 		} );
 	}
 
+	@Test
+	void typedQueryReferenceOptions(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			final var query = entityManager.createQuery(
+					new TypedReference<>(
+							"Book.referenceOptionsQuery",
+							Book.class,
+							Set.of( QueryFlushMode.FLUSH, Timeout.milliseconds( 4567 ) )
+					)
+			);
+
+			assertEquals( QueryFlushMode.FLUSH, query.getQueryFlushMode() );
+			assertEquals( 4567, query.getTimeout() );
+			assertTrue( query.getOptions().contains( QueryFlushMode.FLUSH ) );
+			assertTrue( query.getOptions().contains( Timeout.milliseconds( 4567 ) ) );
+		} );
+	}
+
+	@Test
+	void statementReferenceOptions(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( entityManager -> {
+			final var statement = entityManager.createStatement(
+					new StatementRef(
+							"Book.referenceOptionsStatement",
+							Set.of( QueryFlushMode.NO_FLUSH, Timeout.milliseconds( 5678 ) )
+					)
+			);
+
+			assertEquals( QueryFlushMode.NO_FLUSH, statement.getQueryFlushMode() );
+			assertEquals( 5678, statement.getTimeout() );
+			assertTrue( statement.getOptions().contains( QueryFlushMode.NO_FLUSH ) );
+			assertTrue( statement.getOptions().contains( Timeout.milliseconds( 5678 ) ) );
+		} );
+	}
+
+	private record TypedReference<R>(
+			String name,
+			Class<R> resultType,
+			Set<TypedQuery.Option> options) implements TypedQueryReference<R> {
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public Class<? extends R> getResultType() {
+			return resultType;
+		}
+
+		@Override
+		public List<Class<?>> getParameterTypes() {
+			return null;
+		}
+
+		@Override
+		public List<String> getParameterNames() {
+			return null;
+		}
+
+		@Override
+		public List<Object> getArguments() {
+			return null;
+		}
+
+		@Override
+		public Map<String, Object> getHints() {
+			return Map.of();
+		}
+
+		@Override
+		public Set<TypedQuery.Option> getOptions() {
+			return options;
+		}
+
+		@Override
+		public String getEntityGraphName() {
+			return null;
+		}
+	}
+
+	private record StatementRef(String name, Set<jakarta.persistence.Statement.Option> options)
+			implements StatementReference {
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public List<Class<?>> getParameterTypes() {
+			return null;
+		}
+
+		@Override
+		public List<String> getParameterNames() {
+			return null;
+		}
+
+		@Override
+		public List<Object> getArguments() {
+			return null;
+		}
+
+		@Override
+		public Map<String, Object> getHints() {
+			return Map.of();
+		}
+
+		@Override
+		public Set<jakarta.persistence.Statement.Option> getOptions() {
+			return options;
+		}
+	}
+
 	@Entity(name = "Book")
+	@NamedQuery(name = "Book.referenceOptionsQuery", query = "select b from Book b")
+	@NamedStatement(name = "Book.referenceOptionsStatement", statement = "delete from Book")
 	public static class Book {
 		@Id
 		private Long id;

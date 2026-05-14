@@ -5,11 +5,8 @@
 package org.hibernate.query.internal;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
-import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.named.NamedSelectionMemento;
 import org.hibernate.query.spi.DomainQueryExecutionContext;

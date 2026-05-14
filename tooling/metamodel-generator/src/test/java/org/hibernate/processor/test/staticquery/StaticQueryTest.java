@@ -5,6 +5,7 @@
 package org.hibernate.processor.test.staticquery;
 
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
@@ -46,6 +47,7 @@ class StaticQueryTest {
 		assertEquals( "Book.summary", findBooksReference.getEntityGraphName() );
 		assertEquals( "true", findBooksReference.getHints().get( "org.hibernate.readOnly" ) );
 		assertTrue( findBooksReference.getOptions().contains( CacheStoreMode.BYPASS ) );
+		assertTrue( findBooksReference.getOptions().contains( QueryFlushMode.FLUSH ) );
 		assertTrue( findBooksReference.getOptions().contains( Timeout.milliseconds( 500 ) ) );
 
 		final Method nativeBook = getMethodFromMetamodelFor( Library.class, "nativeBook", String.class );

@@ -6,6 +6,7 @@ package org.hibernate.processor.test.staticquery;
 
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.QueryHint;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.query.JakartaQuery;
 import jakarta.persistence.query.NativeQuery;
 import jakarta.persistence.query.QueryOptions;
@@ -16,6 +17,7 @@ public abstract class Library {
 	@JakartaQuery("from Book where title like :title")
 	@QueryOptions(
 			cacheStoreMode = CacheStoreMode.BYPASS,
+			flush = QueryFlushMode.FLUSH,
 			timeout = 500,
 			entityGraph = "Book.summary",
 			hints = @QueryHint(name = "org.hibernate.readOnly", value = "true")

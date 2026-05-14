@@ -44,7 +44,7 @@ public class NamedNativeQueryWithResultMappingTest {
 			classes = @ConstructorResult(targetClass = Unmapped.class,
 					columns = {@ColumnResult(name = "name"),
 							@ColumnResult(name = "id"),
-							@ColumnResult(name = "one")})
+							@ColumnResult(name = "one", type = Integer.class)})
 	)
 	@Entity(name = "Mapped")
 	@Table(name = "mapped")

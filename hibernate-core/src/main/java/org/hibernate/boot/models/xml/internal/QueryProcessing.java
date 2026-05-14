@@ -7,8 +7,6 @@ package org.hibernate.boot.models.xml.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.FlushMode;
-import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResultImpl;
@@ -116,15 +114,6 @@ public class QueryProcessing {
 			);
 			namedQueries.value( namedHqlQueryList.toArray( NamedQuery[]::new ) );
 		}
-	}
-
-	public static FlushModeType interpretFlushMode(FlushMode flushMode) {
-		return switch ( flushMode ) {
-			case AUTO -> FlushModeType.AUTO;
-			case ALWAYS -> FlushModeType.ALWAYS;
-			case COMMIT -> FlushModeType.COMMIT;
-			case MANUAL -> FlushModeType.MANUAL;
-		};
 	}
 
 	public static final QueryHint[] NO_HINTS = new QueryHint[0];

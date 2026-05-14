@@ -17,13 +17,13 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
 
 import jakarta.xml.bind.JAXBElement;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 
 import static org.hibernate.boot.model.internal.QueryBinder.createStoredProcedure;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfBlank;
+import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushModeFromFlushMode;
 
 /**
  * @author Steve Ebersole
@@ -52,7 +52,7 @@ public class NamedQueryBinder {
 						.setCacheRegion( namedQueryBinding.getCacheRegion() )
 						.setTimeout( namedQueryBinding.getTimeout() )
 						.setReadOnly( namedQueryBinding.isReadOnly() )
-						.setFlushMode( FlushModeTypeHelper.queryFlushModeFromFlushMode( namedQueryBinding.getFlushMode() ) )
+						.setFlushMode( queryFlushModeFromFlushMode( namedQueryBinding.getFlushMode() ) )
 						.setFetchSize( namedQueryBinding.getFetchSize() );
 
 		boolean foundQuery = false;
@@ -111,7 +111,7 @@ public class NamedQueryBinder {
 						.setCacheRegion( namedQueryBinding.getCacheRegion() )
 						.setTimeout( namedQueryBinding.getTimeout() )
 						.setReadOnly( namedQueryBinding.isReadOnly() )
-						.setFlushMode( FlushModeTypeHelper.queryFlushModeFromFlushMode( namedQueryBinding.getFlushMode() ) )
+						.setFlushMode( queryFlushModeFromFlushMode( namedQueryBinding.getFlushMode() ) )
 						.setFetchSize( namedQueryBinding.getFetchSize() )
 						.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
 

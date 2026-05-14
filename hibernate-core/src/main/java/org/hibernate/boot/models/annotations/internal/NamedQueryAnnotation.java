@@ -9,7 +9,6 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Timeouts;
-import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -20,15 +19,12 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.QueryFlushMode;
 
-import static org.hibernate.boot.models.xml.internal.QueryProcessing.interpretFlushMode;
-
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class NamedQueryAnnotation implements NamedQuery {
 	private String name;
 	private String query;
 	private Class<?> resultClass;
-	private FlushModeType flushMode;
 	private QueryFlushMode flush;
 	boolean cacheable;
 	String cacheRegion;
@@ -44,7 +40,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 	 */
 	public NamedQueryAnnotation(ModelsContext modelContext) {
 		resultClass = void.class;
-		flushMode = FlushModeType.PERSISTENCE_CONTEXT;
 		flush = QueryFlushMode.DEFAULT;
 		cacheable = false;
 		cacheRegion = "";
@@ -63,7 +58,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 		this.name = annotation.name();
 		this.query = annotation.query();
 		this.resultClass = annotation.resultClass();
-		this.flushMode = annotation.flushMode();
 		this.flush = annotation.flush();
 		this.cacheable = annotation.cacheable();
 		this.cacheRegion = annotation.cacheRegion();
@@ -86,7 +80,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 		this.name = (String) attributeValues.get( "name" );
 		this.query = (String) attributeValues.get( "query" );
 		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
-		this.flushMode = (FlushModeType) attributeValues.get( "flushMode" );
 		this.flush = (QueryFlushMode) attributeValues.get( "flush" );
 		this.cacheable = (boolean) attributeValues.get( "cacheable" );
 		this.cacheRegion = (String) attributeValues.get( "cacheRegion" );
@@ -139,15 +132,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 
 	public void flush(QueryFlushMode value) {
 		this.flush = value;
-	}
-
-	@Override
-	public FlushModeType flushMode() {
-		return flushMode;
-	}
-
-	public void flushMode(FlushModeType value) {
-		this.flushMode = value;
 	}
 
 	@Override
@@ -265,9 +249,6 @@ public class NamedQueryAnnotation implements NamedQuery {
 
 		if ( jaxbNamedQuery.isReadOnly() != null ) {
 			readOnly( jaxbNamedQuery.isReadOnly() );
-		}
-		if ( jaxbNamedQuery.getFlushMode() != null ) {
-			flushMode( interpretFlushMode( jaxbNamedQuery.getFlushMode() ) );
 		}
 	}
 }

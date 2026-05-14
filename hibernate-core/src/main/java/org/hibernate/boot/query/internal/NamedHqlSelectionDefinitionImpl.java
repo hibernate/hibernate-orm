@@ -12,7 +12,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
-import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
@@ -132,7 +131,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
 				null,
-				resolveFlushMode( annotation.flush(), annotation.flushMode() ),
+				resolveFlushMode( annotation.flush() ),
 				cleanTimeout( annotation.timeout() ),
 				annotation.comment(),
 				annotation.readOnly(),
@@ -151,16 +150,15 @@ public class NamedHqlSelectionDefinitionImpl<R>
 		);
 	}
 
-	private static FlushMode resolveFlushMode(QueryFlushMode queryFlushMode, FlushModeType flushModeType) {
+	private static FlushMode resolveFlushMode(QueryFlushMode queryFlushMode) {
 		if ( queryFlushMode == QueryFlushMode.DEFAULT ) {
-			if ( flushModeType != FlushModeType.PERSISTENCE_CONTEXT ) {
-				return flushModeType.toFlushMode();
-			}
 			return null;
 		}
-		return queryFlushMode == QueryFlushMode.FLUSH
-				? FlushMode.ALWAYS
-				: FlushMode.MANUAL;
+		else {
+			return queryFlushMode == QueryFlushMode.FLUSH
+					? FlushMode.ALWAYS
+					: FlushMode.MANUAL;
+		}
 	}
 
 	/// Build a definition from Hibernate's [HQLSelect] annotation.

@@ -75,17 +75,6 @@ public @interface NamedNativeQuery {
 	QueryFlushMode flush() default QueryFlushMode.DEFAULT;
 
 	/**
-	 * The flush mode for the query.
-	 *
-	 * @see org.hibernate.query.CommonQueryContract#setFlushMode(jakarta.persistence.FlushModeType)
-	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
-	 *
-	 * @deprecated use {@link #flush()}
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
-
-	/**
 	 * Whether the query results are cacheable.
 	 * Default is {@code false}, that is, not cacheable.
 	 *

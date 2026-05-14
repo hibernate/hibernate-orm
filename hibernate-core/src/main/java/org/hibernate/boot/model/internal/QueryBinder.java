@@ -4,8 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.NamedQuery;
@@ -15,11 +13,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.StoredProcedureParameter;
-import jakarta.persistence.Timeout;
 import org.hibernate.AnnotationException;
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
-import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.boot.model.source.internal.hbm.NativeQueryBuilder;
@@ -29,7 +23,6 @@ import org.hibernate.boot.query.internal.NamedNativeMutationDefinitionImpl;
 import org.hibernate.boot.query.internal.NamedNativeSelectionDefinitionImpl;
 import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -37,18 +30,15 @@ import org.hibernate.jpa.HibernateHints;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
-import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.function.Supplier;
 
 import static java.lang.Character.isWhitespace;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.models.internal.util.StringHelper.isEmpty;
 
 /**
@@ -199,28 +189,28 @@ public abstract class QueryBinder {
 			|| namedNativeQuery.classes().length > 0
 			|| namedNativeQuery.columns().length > 0;
 	}
-
-	private static <T> NamedNativeQueryDefinition<T> createNamedQueryDefinition(
-			String registrationName, String queryString,
-			Class<T> resultClass, String resultSetMappingName,
-			QueryHintDefinition hints,
-			AnnotationTarget location) {
-		return new NativeQueryBuilder<T>(registrationName, location)
-				.setSqlString(queryString)
-				.setResultClass(resultClass)
-				.setResultSetMappingName(resultSetMappingName)
-				.setQuerySpaces(null)
-				.setCacheable(hints.getCacheability())
-				.setCacheMode(hints.getCacheMode())
-				.setCacheRegion(hints.getString(HibernateHints.HINT_CACHE_REGION))
-				.setTimeout(hints.getTimeoutRef())
-				.setFetchSize(hints.getInteger(HibernateHints.HINT_FETCH_SIZE))
-				.setFlushMode(hints.getFlushMode())
-				.setReadOnly(hints.getBooleanWrapper(HibernateHints.HINT_READ_ONLY))
-				.setComment(hints.getString(HibernateHints.HINT_COMMENT))
-				.addHints(hints.getHintsMap())
-				.build();
-	}
+//
+//	private static <T> NamedNativeQueryDefinition<T> createNamedQueryDefinition(
+//			String registrationName, String queryString,
+//			Class<T> resultClass, String resultSetMappingName,
+//			QueryHintDefinition hints,
+//			AnnotationTarget location) {
+//		return new NativeQueryBuilder<T>(registrationName, location)
+//				.setSqlString(queryString)
+//				.setResultClass(resultClass)
+//				.setResultSetMappingName(resultSetMappingName)
+//				.setQuerySpaces(null)
+//				.setCacheable(hints.getCacheability())
+//				.setCacheMode(hints.getCacheMode())
+//				.setCacheRegion(hints.getString(HibernateHints.HINT_CACHE_REGION))
+//				.setTimeout(hints.getTimeoutRef())
+//				.setFetchSize(hints.getInteger(HibernateHints.HINT_FETCH_SIZE))
+//				.setFlushMode(hints.getFlushMode())
+//				.setReadOnly(hints.getBooleanWrapper(HibernateHints.HINT_READ_ONLY))
+//				.setComment(hints.getString(HibernateHints.HINT_COMMENT))
+//				.addHints(hints.getHintsMap())
+//				.build();
+//	}
 
 	public static void bindNativeQuery(
 			String name,
@@ -255,28 +245,33 @@ public abstract class QueryBinder {
 		context.getMetadataCollector().addNamedNativeQuery( definition );
 	}
 
-	private static <T> NativeQueryBuilder<T> createQueryDefinition(
-			org.hibernate.annotations.NamedNativeQuery namedNativeQuery,
-			String registrationName, String resultSetMappingName,
-			Class<T> resultClass,
-			int timeout,
-			int fetchSize,
-			HashSet<String> querySpaces,
-			AnnotationTarget location) {
-		return new NativeQueryBuilder<T>(registrationName, location)
-				.setSqlString(namedNativeQuery.query())
-				.setResultSetMappingName(resultSetMappingName)
-				.setResultClass(resultClass)
-				.setCacheable(namedNativeQuery.cacheable())
-				.setCacheRegion(nullIfEmpty(namedNativeQuery.cacheRegion()))
-				.setCacheMode(getCacheMode(namedNativeQuery.cacheRetrieveMode(), namedNativeQuery.cacheStoreMode()))
-				.setTimeout(timeout < 0 ? null : Timeout.seconds( timeout ) )
-				.setFetchSize(fetchSize < 0 ? null : fetchSize)
-				.setFlushMode( getFlushMode(namedNativeQuery.flush(), namedNativeQuery.flushMode()))
-				.setReadOnly(namedNativeQuery.readOnly())
-				.setQuerySpaces(querySpaces)
-				.setComment(nullIfEmpty(namedNativeQuery.comment()));
-	}
+//	private static CacheMode getCacheMode(CacheRetrieveMode cacheRetrieveMode, CacheStoreMode cacheStoreMode) {
+//		final CacheMode cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
+//		return cacheMode == null ? CacheMode.NORMAL : cacheMode;
+//	}
+//
+//	private static <T> NativeQueryBuilder<T> createQueryDefinition(
+//			org.hibernate.annotations.NamedNativeQuery namedNativeQuery,
+//			String registrationName, String resultSetMappingName,
+//			Class<T> resultClass,
+//			int timeout,
+//			int fetchSize,
+//			HashSet<String> querySpaces,
+//			AnnotationTarget location) {
+//		return new NativeQueryBuilder<T>(registrationName, location)
+//				.setSqlString(namedNativeQuery.query())
+//				.setResultSetMappingName(resultSetMappingName)
+//				.setResultClass(resultClass)
+//				.setCacheable(namedNativeQuery.cacheable())
+//				.setCacheRegion(nullIfEmpty(namedNativeQuery.cacheRegion()))
+//				.setCacheMode(getCacheMode(namedNativeQuery.cacheRetrieveMode(), namedNativeQuery.cacheStoreMode()))
+//				.setTimeout(timeout < 0 ? null : Timeout.seconds( timeout ) )
+//				.setFetchSize(fetchSize < 0 ? null : fetchSize)
+//				.setFlushMode(namedNativeQuery.flush())
+//				.setReadOnly(namedNativeQuery.readOnly())
+//				.setQuerySpaces(querySpaces)
+//				.setComment(nullIfEmpty(namedNativeQuery.comment()));
+//	}
 
 	/**
 	 * Handles legacy cases where a named native query was used to specify a procedure call
@@ -393,27 +388,6 @@ public abstract class QueryBinder {
 
 		final var definition = NamedHqlSelectionDefinitionImpl.from( namedQuery, location );
 		context.getMetadataCollector().addNamedQuery( definition );
-	}
-
-	private static CacheMode getCacheMode(CacheRetrieveMode cacheRetrieveMode, CacheStoreMode cacheStoreMode) {
-		final CacheMode cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
-		return cacheMode == null ? CacheMode.NORMAL : cacheMode;
-	}
-
-	private static QueryFlushMode getFlushMode(QueryFlushMode queryFlushMode, FlushModeType flushModeType) {
-		return queryFlushMode == QueryFlushMode.DEFAULT
-				? flushModeType.toQueryFlushMode()
-				: queryFlushMode;
-	}
-
-	private static FlushMode getFlushMode(FlushModeType flushModeType) {
-		return switch ( flushModeType ) {
-			case ALWAYS -> FlushMode.ALWAYS;
-			case AUTO -> FlushMode.AUTO;
-			case COMMIT -> FlushMode.COMMIT;
-			case MANUAL -> FlushMode.MANUAL;
-			case PERSISTENCE_CONTEXT -> null;
-		};
 	}
 
 	public static void bindNamedStoredProcedureQuery(

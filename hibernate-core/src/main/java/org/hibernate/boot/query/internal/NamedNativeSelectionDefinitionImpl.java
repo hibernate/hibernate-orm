@@ -8,7 +8,6 @@ import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
@@ -153,7 +152,7 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
 				nullIfEmpty( annotation.resultSetMapping() ),
-				interpret( annotation.flush(), annotation.flushMode() ),
+				interpret( annotation.flush() ),
 				cleanTimeout( annotation.timeout() ),
 				nullIfEmpty( annotation.comment() ),
 				annotation.readOnly(),
@@ -168,16 +167,15 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 		);
 	}
 
-	private static FlushMode interpret(QueryFlushMode queryFlushMode, FlushModeType flushModeType) {
+	private static FlushMode interpret(QueryFlushMode queryFlushMode) {
 		if ( queryFlushMode == QueryFlushMode.DEFAULT ) {
-			if ( flushModeType == FlushModeType.PERSISTENCE_CONTEXT ) {
-				return null;
-			}
-			return flushModeType.toFlushMode();
+			return null;
 		}
-		return queryFlushMode == QueryFlushMode.FLUSH
-				? FlushMode.ALWAYS
-				: FlushMode.MANUAL;
+		else {
+			return queryFlushMode == QueryFlushMode.FLUSH
+					? FlushMode.ALWAYS
+					: FlushMode.MANUAL;
+		}
 	}
 
 	/// Build a definition from JPA's [jakarta.persistence.NamedNativeQuery] annotation.

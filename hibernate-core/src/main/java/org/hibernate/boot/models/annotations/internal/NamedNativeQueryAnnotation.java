@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.CacheMode;
-import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSynchronizedTableImpl;
@@ -31,7 +30,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	private String query;
 	private Class<?> resultClass;
 	private String resultSetMapping;
-	private FlushModeType flushMode;
 	private QueryFlushMode flush;
 	boolean cacheable;
 	String cacheRegion;
@@ -49,7 +47,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	public NamedNativeQueryAnnotation(ModelsContext modelContext) {
 		resultClass = void.class;
 		resultSetMapping = "";
-		flushMode = FlushModeType.PERSISTENCE_CONTEXT;
 		flush = QueryFlushMode.DEFAULT;
 		cacheable = false;
 		cacheRegion = "";
@@ -70,7 +67,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		this.query = annotation.query();
 		this.resultClass = annotation.resultClass();
 		this.resultSetMapping = annotation.resultSetMapping();
-		this.flushMode = annotation.flushMode();
 		this.flush = annotation.flush();
 		this.cacheable = annotation.cacheable();
 		this.cacheRegion = annotation.cacheRegion();
@@ -95,7 +91,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		this.query = (String) attributeValues.get( "query" );
 		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
 		this.resultSetMapping = (String) attributeValues.get( "resultSetMapping" );
-		this.flushMode = (FlushModeType) attributeValues.get( "flushMode" );
 		this.flush = (QueryFlushMode) attributeValues.get( "flush" );
 		this.cacheable = (boolean) attributeValues.get( "cacheable" );
 		this.cacheRegion = (String) attributeValues.get( "cacheRegion" );
@@ -158,15 +153,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 
 	public void flush(QueryFlushMode value) {
 		this.flush = value;
-	}
-
-	@Override
-	public FlushModeType flushMode() {
-		return flushMode;
-	}
-
-	public void flushMode(FlushModeType value) {
-		this.flushMode = value;
 	}
 
 	@Override

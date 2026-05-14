@@ -1729,17 +1729,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public TextExpression stringLiteral(String value) {
-		return null;
+		return new SqmTextExpressionWrapper( literal( value ) );
 	}
 
 	@Override
 	public <T extends Temporal & Comparable<? super T>> TemporalExpression<T> temporalLiteral(T value) {
-		return null;
+		return new SqmTemporalExpressionWrapper<>( literal( value ) );
 	}
 
 	@Override
 	public BooleanExpression booleanLiteral(boolean value) {
-		return null;
+		return new SqmBooleanExpressionWrapper( literal( value ) );
 	}
 
 	@Override

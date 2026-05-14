@@ -134,6 +134,11 @@ public final class Constants {
 	public static final String BOXED_VOID = "java.lang.Void";
 
 	public static final String SINGULAR_ATTRIBUTE = "jakarta.persistence.metamodel.SingularAttribute";
+	public static final String BOOLEAN_ATTRIBUTE = "jakarta.persistence.metamodel.BooleanAttribute";
+	public static final String COMPARABLE_ATTRIBUTE = "jakarta.persistence.metamodel.ComparableAttribute";
+	public static final String NUMERIC_ATTRIBUTE = "jakarta.persistence.metamodel.NumericAttribute";
+	public static final String TEMPORAL_ATTRIBUTE = "jakarta.persistence.metamodel.TemporalAttribute";
+	public static final String TEXT_ATTRIBUTE = "jakarta.persistence.metamodel.TextAttribute";
 	public static final String COLLECTION_ATTRIBUTE = "jakarta.persistence.metamodel.CollectionAttribute";
 	public static final String SET_ATTRIBUTE = "jakarta.persistence.metamodel.SetAttribute";
 	public static final String LIST_ATTRIBUTE = "jakarta.persistence.metamodel.ListAttribute";

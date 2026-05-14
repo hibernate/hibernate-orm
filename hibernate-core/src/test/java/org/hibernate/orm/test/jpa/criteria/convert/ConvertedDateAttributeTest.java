@@ -71,7 +71,7 @@ public class ConvertedDateAttributeTest implements SessionFactoryScopeAware {
 
 	static Stream<Arguments> criteriaUpdateFieldSetters() {
 		Consumer<UpdateContext> updateUsingPath = context ->
-				context.query.set( context.root.get( Log_.lastUpdate ), context.lastUpdate );
+				context.query.set( context.root.<Date>get( Log_.LAST_UPDATE ), context.lastUpdate );
 		Consumer<UpdateContext> updateUsingSingularAttribute = context ->
 				context.query.set( Log_.lastUpdate, context.lastUpdate );
 		Consumer<UpdateContext> updateUsingName = context ->

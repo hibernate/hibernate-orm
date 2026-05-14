@@ -25,12 +25,21 @@ import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.util.List;
 
+import static org.hibernate.processor.util.Constants.BOOLEAN_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.COMPARABLE_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.EMBEDDABLE;
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
+import static org.hibernate.processor.util.Constants.ENTITY;
 import static org.hibernate.processor.util.Constants.LIST_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.MANY_TO_ANY;
 import static org.hibernate.processor.util.Constants.MANY_TO_MANY;
 import static org.hibernate.processor.util.Constants.MAP_KEY_CLASS;
+import static org.hibernate.processor.util.Constants.MAPPED_SUPERCLASS;
+import static org.hibernate.processor.util.Constants.NUMERIC_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.ONE_TO_MANY;
+import static org.hibernate.processor.util.Constants.SINGULAR_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.TEMPORAL_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.TEXT_ATTRIBUTE;
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.TypeUtils.DEFAULT_ANNOTATION_PARAMETER_NAME;
 import static org.hibernate.processor.util.TypeUtils.determineAnnotationSpecifiedAccessType;
@@ -65,7 +74,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 
 	@Override
 	public @Nullable AnnotationMetaAttribute visitPrimitive(PrimitiveType primitiveType, Element element) {
-		return new AnnotationMetaSingleAttribute( entity, element, toTypeString( primitiveType ) );
+		return singleAttribute( element, primitiveType, toTypeString( primitiveType ) );
 	}
 
 	@Override
@@ -82,8 +91,8 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 	@Override
 	public @Nullable AnnotationMetaAttribute visitTypeVariable(TypeVariable typeVariable, Element element) {
 		// METAGEN-29 - for a type variable we use the upper bound
-		return new AnnotationMetaSingleAttribute( entity, element,
-				typeUtils().erasure( typeVariable.getUpperBound() ).toString() );
+		final TypeMirror upperBound = typeUtils().erasure( typeVariable.getUpperBound() );
+		return new AnnotationMetaSingleAttribute( entity, element, upperBound.toString() );
 	}
 
 	@Override
@@ -106,7 +115,9 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 		}
 		else {
 			final String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
-			return new AnnotationMetaSingleAttribute( entity, element, type );
+			return targetEntity != null || isManagedType( returnedElement )
+					? new AnnotationMetaSingleAttribute( entity, element, type )
+					: singleAttribute( element, declaredType, type );
 		}
 	}
 
@@ -138,9 +149,68 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 			}
 		}
 		else {
-			return new AnnotationMetaSingleAttribute( entity, element,
-					extractClosestRealTypeAsString( declaredType, context ) );
+			return singleAttribute(
+					element,
+					declaredType,
+					extractClosestRealTypeAsString( declaredType, context )
+			);
 		}
+	}
+
+	private AnnotationMetaSingleAttribute singleAttribute(Element element, TypeMirror type, String typeDeclaration) {
+		return new AnnotationMetaSingleAttribute( entity, element, typeDeclaration, getMetaType( type ) );
+	}
+
+	private String getMetaType(TypeMirror type) {
+		final TypeMirror boxedType =
+				type.getKind().isPrimitive()
+						? typeUtils().boxedClass( (PrimitiveType) type ).asType()
+						: typeUtils().erasure( type );
+		if ( isSameType( boxedType, String.class.getName() ) ) {
+			return TEXT_ATTRIBUTE;
+		}
+		else if ( isSameType( boxedType, Boolean.class.getName() ) ) {
+			return BOOLEAN_ATTRIBUTE;
+		}
+		else if ( isAssignableTo( boxedType, Number.class.getName() )
+				&& isAssignableToComparable( boxedType, boxedType ) ) {
+			return NUMERIC_ATTRIBUTE;
+		}
+		else if ( isAssignableTo( boxedType, "java.time.temporal.Temporal" )
+				&& isAssignableToComparable( boxedType, typeUtils().getWildcardType( null, boxedType ) ) ) {
+			return TEMPORAL_ATTRIBUTE;
+		}
+		else if ( isAssignableToComparable( boxedType, typeUtils().getWildcardType( null, boxedType ) ) ) {
+			return COMPARABLE_ATTRIBUTE;
+		}
+		else {
+			return SINGULAR_ATTRIBUTE;
+		}
+	}
+
+	private boolean isManagedType(TypeElement typeElement) {
+		return hasAnnotation( typeElement, ENTITY, EMBEDDABLE, MAPPED_SUPERCLASS );
+	}
+
+	private boolean isSameType(TypeMirror type, String typeName) {
+		final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( typeName );
+		return typeElement != null
+				&& typeUtils().isSameType( typeUtils().erasure( type ), typeUtils().erasure( typeElement.asType() ) );
+	}
+
+	private boolean isAssignableTo(TypeMirror type, String typeName) {
+		final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( typeName );
+		return typeElement != null
+				&& typeUtils().isAssignable( typeUtils().erasure( type ), typeUtils().erasure( typeElement.asType() ) );
+	}
+
+	private boolean isAssignableToComparable(TypeMirror type, TypeMirror comparableArgument) {
+		final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( Comparable.class.getName() );
+		return typeElement != null
+				&& typeUtils().isAssignable(
+						type,
+						typeUtils().getDeclaredType( typeElement, comparableArgument )
+				);
 	}
 
 	private void setAccessType(TypeMirror collectionElementType, TypeElement collectionElement) {

@@ -61,7 +61,7 @@ public class SqmBasicValuedSimplePath<T>
 		final var lhsCopy = getLhs().copy( context );
 		final var path = context.registerCopy(
 				this,
-				new SqmBasicValuedSimplePath<>(
+				createCopy(
 						getNavigablePathCopy( lhsCopy ),
 						getModel(),
 						lhsCopy,
@@ -71,6 +71,21 @@ public class SqmBasicValuedSimplePath<T>
 		);
 		copyTo( path, context );
 		return path;
+	}
+
+	protected SqmBasicValuedSimplePath<T> createCopy(
+			NavigablePath navigablePath,
+			SqmPathSource<T> referencedPathSource,
+			SqmPath<?> lhs,
+			@Nullable String explicitAlias,
+			NodeBuilder nodeBuilder) {
+		return new SqmBasicValuedSimplePath<>(
+				navigablePath,
+				referencedPathSource,
+				lhs,
+				explicitAlias,
+				nodeBuilder
+		);
 	}
 
 	@Override

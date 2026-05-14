@@ -20,6 +20,7 @@ import java.util.Collection;
 import static org.hibernate.processor.test.util.TestUtil.getFieldFromMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -49,9 +50,9 @@ class ArrayTest {
 		final Type modelFieldGenericType = modelField.getGenericType();
 		if ( modelFieldGenericType instanceof ParameterizedType parametrized ) {
 			final Type[] typeArguments = parametrized.getActualTypeArguments();
-			assertEquals( 2, typeArguments.length );
-			assertEquals( entityClass, typeArguments[0] );
 			if ( Collection.class.isAssignableFrom( entityFieldType ) || entityFieldType.isArray() ) {
+				assertEquals( 2, typeArguments.length );
+				assertEquals( entityClass, typeArguments[0] );
 				assertEquals( ListAttribute.class, parametrized.getRawType() );
 				if ( Collection.class.isAssignableFrom( entityFieldType ) ) {
 					final ParameterizedType entityFieldGenericType = (ParameterizedType) entityField.getGenericType();
@@ -68,15 +69,23 @@ class ArrayTest {
 				}
 			}
 			else {
-				assertEquals( SingularAttribute.class, parametrized.getRawType() );
-				if ( entityFieldType.isPrimitive() ) {
-					assertEquals(
-							entityFieldType,
-							((Class) typeArguments[1]).getDeclaredField( "TYPE" ).get( null )
-					);
+				final Type rawType = parametrized.getRawType();
+				assertTrue( rawType instanceof Class<?> );
+				assertTrue( SingularAttribute.class.isAssignableFrom( (Class<?>) rawType ) );
+				assertEquals( entityClass, typeArguments[0] );
+				if ( typeArguments.length == 2 ) {
+					if ( entityFieldType.isPrimitive() ) {
+						assertEquals(
+								entityFieldType,
+								((Class) typeArguments[1]).getDeclaredField( "TYPE" ).get( null )
+						);
+					}
+					else {
+						assertEquals( entityFieldType, typeArguments[1] );
+					}
 				}
 				else {
-					assertEquals( entityFieldType, typeArguments[1] );
+					assertEquals( 1, typeArguments.length );
 				}
 			}
 		}

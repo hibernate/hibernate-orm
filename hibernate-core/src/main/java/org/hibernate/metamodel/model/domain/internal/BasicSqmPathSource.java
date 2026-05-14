@@ -10,10 +10,16 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmBooleanValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmComparableValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmNumericValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTemporalValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmTextValuedSimplePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
+import static org.hibernate.metamodel.model.domain.internal.AttributeTypes.classification;
 
 /**
  * @author Steve Ebersole
@@ -55,12 +61,52 @@ public class BasicSqmPathSource<J>
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
-		return new SqmBasicValuedSimplePath<>(
-				PathHelper.append( lhs, this, intermediatePathSource ),
-				pathModel,
-				lhs,
-				lhs.nodeBuilder()
-		);
+		final var path = PathHelper.append( lhs, this, intermediatePathSource );
+		final var nodeBuilder = lhs.nodeBuilder();
+		return switch ( classification( getJavaType() ) ) {
+			case TEXT -> //noinspection unchecked
+					(SqmPath<J>) new SqmTextValuedSimplePath(
+						path,
+						(SqmPathSource<String>) pathModel,
+						lhs,
+						nodeBuilder
+					);
+			case BOOLEAN -> //noinspection unchecked
+					(SqmPath<J>) new SqmBooleanValuedSimplePath(
+						path,
+						(SqmPathSource<Boolean>) pathModel,
+						lhs,
+						nodeBuilder
+					);
+			case NUMERIC -> //noinspection unchecked,rawtypes
+					new SqmNumericValuedSimplePath(
+						path,
+						pathModel,
+						lhs,
+						nodeBuilder
+					);
+			case TEMPORAL -> //noinspection unchecked,rawtypes
+					new SqmTemporalValuedSimplePath(
+						path,
+						pathModel,
+						lhs,
+						nodeBuilder
+					);
+			case COMPARABLE -> //noinspection unchecked,rawtypes
+					new SqmComparableValuedSimplePath(
+						path,
+						pathModel,
+						lhs,
+						nodeBuilder
+					);
+			case BASIC ->
+					new SqmBasicValuedSimplePath<>(
+							path,
+							pathModel,
+							lhs,
+							nodeBuilder
+					);
+		};
 	}
 
 	@Override

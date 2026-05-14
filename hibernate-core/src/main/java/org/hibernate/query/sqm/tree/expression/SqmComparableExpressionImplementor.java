@@ -17,6 +17,26 @@ public interface SqmComparableExpressionImplementor<C extends Comparable<? super
 	SqmCriteriaNodeBuilder nodeBuilder();
 
 	@Override
+	default SqmComparableExpression<C> coalesce(Expression<? extends C> y) {
+		return new SqmComparableExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
+	}
+
+	@Override
+	default SqmComparableExpression<C> coalesce(C y) {
+		return new SqmComparableExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
+	}
+
+	@Override
+	default SqmComparableExpression<C> nullif(Expression<? extends C> y) {
+		return new SqmComparableExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
+	}
+
+	@Override
+	default SqmComparableExpression<C> nullif(C y) {
+		return new SqmComparableExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
+	}
+
+	@Override
 	default SqmPredicate greaterThan(Expression<? extends C> y) {
 		return nodeBuilder().greaterThan( this, y );
 	}
@@ -64,6 +84,22 @@ public interface SqmComparableExpressionImplementor<C extends Comparable<? super
 	@Override
 	default SqmPredicate between(C x, C y) {
 		return nodeBuilder().between( this, x, y );
+	}
+
+	@Override
+	default SqmComparableExpression<C> max() {
+		final var expression = nodeBuilder().greatest( this );
+		return expression instanceof SqmComparableExpression<C> comparableExpression
+				? comparableExpression
+				: new SqmComparableExpressionWrapper<>( expression );
+	}
+
+	@Override
+	default SqmComparableExpression<C> min() {
+		final var expression = nodeBuilder().least( this );
+		return expression instanceof SqmComparableExpression<C> comparableExpression
+				? comparableExpression
+				: new SqmComparableExpressionWrapper<>( expression );
 	}
 
 	@Override

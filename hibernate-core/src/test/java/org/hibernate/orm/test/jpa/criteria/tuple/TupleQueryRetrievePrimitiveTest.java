@@ -7,7 +7,7 @@ package org.hibernate.orm.test.jpa.criteria.tuple;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
@@ -71,7 +71,7 @@ public class TupleQueryRetrievePrimitiveTest {
 		final CriteriaBuilder cb = scope.getEntityManagerFactory().getCriteriaBuilder();
 		final CriteriaQuery<Tuple> query = cb.createTupleQuery();
 		final Root<ThingWithQuantity> thingWithQuantity = query.from( ThingWithQuantity.class);
-		final Path<Integer> tupleElement = thingWithQuantity.get( ThingWithQuantity_.quantity);
+		final Expression<Integer> tupleElement = thingWithQuantity.get( ThingWithQuantity_.quantity);
 		query.multiselect(tupleElement.alias(ThingWithQuantity_.quantity.getName()));
 		Tuple result = scope.fromEntityManager( entityManager -> entityManager.createQuery(query).setMaxResults(1).getSingleResult() );
 		final int quantity = result.get(tupleElement);

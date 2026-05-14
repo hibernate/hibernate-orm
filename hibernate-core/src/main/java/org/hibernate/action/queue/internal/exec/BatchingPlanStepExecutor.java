@@ -13,8 +13,11 @@ import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
-import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
@@ -122,23 +125,8 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 
 		batchOperations[currentBatchIndex] = flushOperation;
 
-		final var jdbcValueBindings = new JdbcValueBindingsImpl(
-				preparable.getMutationType(),
-				preparable.getMutationTarget(),
-				preparable,
-				session
-		);
-		valueBindings.getBindingGroup().forEachBinding( binding ->
-				jdbcValueBindings.bindValue(
-						JdbcValueBindings.resolveValue( binding.getValue() ),
-						valueBindings.getBindingGroup().getTableName(),
-						binding.getColumnName(),
-						binding.getValueDescriptor().getUsage()
-				)
-		);
-
 		batch.addToBatch(
-				jdbcValueBindings,
+				new BatchJdbcValueBindings( valueBindings, session ),
 				null,
 				buildStaleStateMapper(
 						flushOperation.getBindPlan().getOperationResultChecker(),
@@ -227,6 +215,41 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 		if ( batchKey != null ) {
 			assert batch != null;
 			executeBatch();
+		}
+	}
+
+	private static class BatchJdbcValueBindings implements org.hibernate.engine.jdbc.mutation.JdbcValueBindings {
+		private final JdbcValueBindings valueBindings;
+		private final SharedSessionContractImplementor session;
+
+		private BatchJdbcValueBindings(
+				JdbcValueBindings valueBindings,
+				SharedSessionContractImplementor session) {
+			this.valueBindings = valueBindings;
+			this.session = session;
+		}
+
+		@Override
+		public BindingGroup getBindingGroup(String tableName) {
+			final BindingGroup bindingGroup = valueBindings.getBindingGroup();
+			return bindingGroup.getTableName().equals( tableName ) ? bindingGroup : null;
+		}
+
+		@Override
+		public void bindValue(Object value, String tableName, String columnName, ParameterUsage usage) {
+			if ( !valueBindings.getBindingGroup().getTableName().equals( tableName ) ) {
+				throw new IllegalArgumentException( "Unexpected table binding `" + tableName + "`" );
+			}
+			valueBindings.bindValue( value, columnName, usage );
+		}
+
+		@Override
+		public void beforeStatement(PreparedStatementDetails statementDetails) {
+			valueBindings.beforeStatement( statementDetails.resolveStatement(), session );
+		}
+
+		@Override
+		public void afterStatement(TableMapping mutatingTable) {
 		}
 	}
 }

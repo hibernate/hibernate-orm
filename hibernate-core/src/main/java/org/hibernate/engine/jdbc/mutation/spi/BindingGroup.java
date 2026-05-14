@@ -4,10 +4,12 @@
  */
 package org.hibernate.engine.jdbc.mutation.spi;
 
-import java.util.Comparator;
+import java.util.AbstractSet;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,13 +23,23 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
  */
 public class BindingGroup {
 	private final String tableName;
-	private final Set<Binding> bindings;
+	private final List<Binding> bindings;
+	private final Set<Binding> bindingsView;
 
 	public BindingGroup(String tableName) {
 		this.tableName = tableName;
-		// todo (6.2) : TreeSet to log the parameter binding sequentially
-		//		- if we don't care, this can be another type of Set for perf
-		this.bindings = new TreeSet<>( Comparator.comparing( Binding::getPosition ) );
+		this.bindings = new ArrayList<>();
+		this.bindingsView = new AbstractSet<>() {
+			@Override
+			public Iterator<Binding> iterator() {
+				return bindings.iterator();
+			}
+
+			@Override
+			public int size() {
+				return bindings.size();
+			}
+		};
 	}
 
 	/**
@@ -41,7 +53,7 @@ public class BindingGroup {
 	 * The parameter bindings
 	 */
 	public Set<Binding> getBindings() {
-		return bindings;
+		return bindingsView;
 	}
 
 	/**
@@ -55,7 +67,19 @@ public class BindingGroup {
 	 * Create a binding
 	 */
 	public void bindValue(String columnName, Object value, JdbcValueDescriptor valueDescriptor) {
-		bindings.add( new Binding( columnName, value, valueDescriptor ) );
+		final Binding binding = new Binding( columnName, value, valueDescriptor );
+		final int position = binding.getPosition();
+		for ( int i = 0; i < bindings.size(); i++ ) {
+			final int existingPosition = bindings.get( i ).getPosition();
+			if ( position == existingPosition ) {
+				return;
+			}
+			if ( position < existingPosition ) {
+				bindings.add( i, binding );
+				return;
+			}
+		}
+		bindings.add( binding );
 	}
 
 	/**

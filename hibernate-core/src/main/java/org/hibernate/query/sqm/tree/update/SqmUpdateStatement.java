@@ -116,7 +116,7 @@ public class SqmUpdateStatement<T>
 		super(
 				original.nodeBuilder(),
 				CRITERIA,
-				original.getSqmParameters(),
+				null,
 				original.copyCteStatements( new SimpleSqmCopyContext() ),
 				(SqmRoot<T>) original.getTarget()
 		);

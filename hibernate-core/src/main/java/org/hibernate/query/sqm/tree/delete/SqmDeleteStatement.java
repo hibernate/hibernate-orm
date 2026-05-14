@@ -71,7 +71,7 @@ public class SqmDeleteStatement<T>
 		super(
 				original.nodeBuilder(),
 				CRITERIA,
-				original.getSqmParameters(),
+				null,
 				original.copyCteStatements( new SimpleSqmCopyContext() ),
 				(SqmRoot<T>) original.getTarget()
 		);

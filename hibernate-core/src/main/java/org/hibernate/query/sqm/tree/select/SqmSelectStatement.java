@@ -102,9 +102,18 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	 *           in order to allow correct parameter handing.
 	 */
 	public SqmSelectStatement(SqmSelectStatement<T> original) {
+		this( original, original.getResultType() );
+	}
+
+	/**
+	 * @implNote This form is used when transforming HQL to criteria with
+	 * an explicit result type. All it does is change the SqmQuerySource
+	 * to CRITERIA in order to allow correct parameter handing.
+	 */
+	public SqmSelectStatement(SqmSelectStatement<T> original, Class<T> resultType) {
 		super( original.getQueryPart(),
 				original.getCteStatementMap(),
-				original.getResultType(),
+				resultType,
 				original.nodeBuilder() );
 		this.querySource = CRITERIA;
 	}

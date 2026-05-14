@@ -49,6 +49,12 @@ public final class Constants {
 	public static final String NAMED_ENTITY_GRAPHS = "jakarta.persistence.NamedEntityGraphs";
 
 	public static final String TYPED_QUERY_REFERENCE = "jakarta.persistence.TypedQueryReference";
+	public static final String STATEMENT_REFERENCE = "jakarta.persistence.StatementReference";
+	public static final String JAKARTA_QUERY = "jakarta.persistence.query.JakartaQuery";
+	public static final String NATIVE_QUERY = "jakarta.persistence.query.NativeQuery";
+	public static final String QUERY_OPTIONS = "jakarta.persistence.query.QueryOptions";
+	public static final String STATIC_TYPED_QUERY_REFERENCE = "jakarta.persistence.query.StaticTypedQueryReference";
+	public static final String STATIC_STATEMENT_REFERENCE = "jakarta.persistence.query.StaticStatementReference";
 	public static final String ENTITY_GRAPH = "jakarta.persistence.EntityGraph";
 
 	public static final String HIB_NAMED_QUERY = "org.hibernate.annotations.NamedQuery";
@@ -101,6 +107,7 @@ public final class Constants {
 	public static final String ENTITY_MANAGER_FACTORY = "jakarta.persistence.EntityManagerFactory";
 	public static final String QUERY = "jakarta.persistence.Query";
 	public static final String TYPED_QUERY = "jakarta.persistence.TypedQuery";
+	public static final String TIMEOUT = "jakarta.persistence.Timeout";
 	public static final String HIB_QUERY = "org.hibernate.query.Query";
 	public static final String HIB_SELECTION_QUERY = "org.hibernate.query.SelectionQuery";
 	public static final String HIB_SESSION = "org.hibernate.Session";

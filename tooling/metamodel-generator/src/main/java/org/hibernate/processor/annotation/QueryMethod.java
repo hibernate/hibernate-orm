@@ -6,6 +6,8 @@ package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.sql.internal.ParameterParser;
+import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
@@ -105,6 +107,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		inTry( declaration );
 		createQuery( declaration, true );
 		setParameters( declaration, paramTypes );
+		QueryOptionsSupport.setQueryOptions( this, declaration, isUpdate, isNative );
 		declaration.append( ";\n" );
 		results( declaration, paramTypes, containerType );
 		castResult( declaration );
@@ -257,8 +260,36 @@ public class QueryMethod extends AbstractQueryMethod {
 				else if ( queryString.contains("?" + ordinal) ) {
 					setOrdinalParameter( declaration, ordinal, paramName );
 				}
+				else if ( isNative && hasJdbcOrdinalParameter( ordinal ) ) {
+					setOrdinalParameter( declaration, ordinal, paramName );
+				}
 			}
 		}
+	}
+
+	private boolean hasJdbcOrdinalParameter(int ordinal) {
+		class OrdinalParameterRecognizer implements ParameterRecognizer {
+			boolean found = false;
+			int ordinalCount = 0;
+			@Override
+			public void ordinalParameter(int sourcePosition) {
+				if ( ++ordinalCount == ordinal ) {
+					found = true;
+				}
+			}
+			@Override
+			public void namedParameter(String name, int sourcePosition) {
+			}
+			@Override
+			public void jpaPositionalParameter(int label, int sourcePosition) {
+			}
+			@Override
+			public void other(char character) {
+			}
+		}
+		final OrdinalParameterRecognizer recognizer = new OrdinalParameterRecognizer();
+		ParameterParser.parse( queryString, recognizer );
+		return recognizer.found;
 	}
 
 	private static void setOrdinalParameter(StringBuilder declaration, int i, String paramName) {

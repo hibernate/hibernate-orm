@@ -72,6 +72,7 @@ import static org.hibernate.processor.util.Constants.HIB_NAMED_NATIVE_QUERY;
 import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERIES;
 import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.HQL;
+import static org.hibernate.processor.util.Constants.JAKARTA_QUERY;
 import static org.hibernate.processor.util.Constants.JD_DELETE;
 import static org.hibernate.processor.util.Constants.JD_FIND;
 import static org.hibernate.processor.util.Constants.JD_INSERT;
@@ -86,6 +87,8 @@ import static org.hibernate.processor.util.Constants.NAMED_NATIVE_QUERIES;
 import static org.hibernate.processor.util.Constants.NAMED_NATIVE_QUERY;
 import static org.hibernate.processor.util.Constants.NAMED_QUERIES;
 import static org.hibernate.processor.util.Constants.NAMED_QUERY;
+import static org.hibernate.processor.util.Constants.NATIVE_QUERY;
+import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
 import static org.hibernate.processor.util.Constants.SQL;
 import static org.hibernate.processor.util.Constants.SQL_RESULT_SET_MAPPING;
 import static org.hibernate.processor.util.Constants.SQL_RESULT_SET_MAPPINGS;
@@ -113,6 +116,8 @@ import static org.hibernate.processor.util.TypeUtils.isMemberType;
 		// extra for Hibernate
 		HIB_FETCH_PROFILE, HIB_FETCH_PROFILES, HIB_FILTER_DEF, HIB_FILTER_DEFS,
 		HIB_NAMED_QUERY, HIB_NAMED_QUERIES, HIB_NAMED_NATIVE_QUERY, HIB_NAMED_NATIVE_QUERIES,
+		// standard for JPA 4
+		JAKARTA_QUERY, NATIVE_QUERY, QUERY_OPTIONS,
 		// Hibernate query methods
 		HQL, SQL, FIND,
 		// Jakarta Data repositories
@@ -505,6 +510,14 @@ public class HibernateProcessor extends AbstractProcessor {
 									primaryEntity );
 					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				}
+				else if ( hasStaticQueryMethods( typeElement ) ) {
+					context.logMessage( Diagnostic.Kind.OTHER, "Processing static query class '" + element + "'" );
+					final AnnotationMetaEntity metaEntity =
+							AnnotationMetaEntity.create( typeElement, context,
+									parentMetadata( parent, context::getMetaEntity ),
+									primaryEntity );
+					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+				}
 				if ( enclosesEntityOrEmbeddable( element ) ) {
 					final NonManagedMetamodel metaEntity =
 							NonManagedMetamodel.create( typeElement, context, false,
@@ -536,6 +549,15 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 		for ( Element member : typeElement.getEnclosedElements() ) {
 			if ( hasAnnotation( member, HQL, SQL, FIND, JD_QUERY, JD_FIND, JD_DELETE, JD_INSERT, JD_SAVE, JD_UPDATE ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean hasStaticQueryMethods(TypeElement typeElement) {
+		for ( Element member : typeElement.getEnclosedElements() ) {
+			if ( hasAnnotation( member, JAKARTA_QUERY, NATIVE_QUERY ) ) {
 				return true;
 			}
 		}

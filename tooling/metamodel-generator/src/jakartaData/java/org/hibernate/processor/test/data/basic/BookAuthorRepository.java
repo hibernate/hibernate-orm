@@ -197,6 +197,11 @@ public interface BookAuthorRepository {
 	@ConstructorResult(targetClass = BookTitle.class, columns = @ColumnResult(name = "book_title", type = String.class))
 	List<BookTitle> bookTitlesWithNativeResultMapping(String title);
 
+	@NativeQuery("select isbn as book_isbn, title as book_title from books where title like :title")
+	@ColumnResult(name = "book_isbn", type = String.class)
+	@ColumnResult(name = "book_title", type = String.class)
+	List<Object[]> bookRowsWithNativeResultMapping(String title);
+
 	@JakartaQuery("delete from Book where title = :title")
 	default int defaultDeleteWithJakartaQuery(String title) {
 		return 0;

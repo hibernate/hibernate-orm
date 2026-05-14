@@ -15,7 +15,6 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import jakarta.persistence.QueryFlushMode;
@@ -26,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.hibernate.boot.query.internal.Helper.extractHints;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOf;
 
@@ -151,17 +151,17 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				location == null ? null : location.getName(),
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
-				StringHelper.nullIfEmpty( annotation.resultSetMapping() ),
+				nullIfEmpty( annotation.resultSetMapping() ),
 				interpret( annotation.flush(), annotation.flushMode() ),
 				cleanTimeout( annotation.timeout() ),
-				StringHelper.nullIfEmpty( annotation.comment() ),
+				nullIfEmpty( annotation.comment() ),
 				annotation.readOnly(),
 				annotation.fetchSize(),
 				null,
 				null,
 				annotation.cacheable(),
 				CacheMode.resolve( annotation.cacheMode(), annotation.cacheRetrieveMode(), annotation.cacheStoreMode() ),
-				StringHelper.nullIfEmpty( annotation.cacheRegion() ),
+				nullIfEmpty( annotation.cacheRegion() ),
 				Set.of( annotation.querySpaces() ),
 				Map.of()
 		);
@@ -184,12 +184,19 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 	/// @param annotation The annotation.
 	/// @param location Where the annotation was found.
 	public static NamedNativeSelectionDefinitionImpl<?> from(jakarta.persistence.NamedNativeQuery annotation, AnnotationTarget location) {
+		return from( annotation, location, annotation.resultSetMapping() );
+	}
+
+	public static NamedNativeSelectionDefinitionImpl<?> from(
+			jakarta.persistence.NamedNativeQuery annotation,
+			AnnotationTarget location,
+			String resultSetMappingName) {
 		return new NamedNativeSelectionDefinitionImpl<>(
 				annotation.name(),
 				location == null ? null : location.getName(),
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
-				StringHelper.nullIfEmpty( annotation.resultSetMapping() ),
+				nullIfEmpty( resultSetMappingName ),
 				null,
 				null,
 				null,

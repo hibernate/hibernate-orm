@@ -31,6 +31,7 @@ import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
+import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.models.spi.AnnotationTarget;
@@ -145,31 +146,58 @@ public abstract class QueryBinder {
 			MetadataBuildingContext context,
 			AnnotationTarget location,
 			boolean isDefault) {
-		if ( namedNativeQuery == null ) {
-			return;
-		}
+		if ( namedNativeQuery != null ) {
+			final String registrationName = namedNativeQuery.name();
+			final String queryString = namedNativeQuery.query();
 
-		final String registrationName = namedNativeQuery.name();
-		final String queryString = namedNativeQuery.query();
+			if ( registrationName.isBlank() ) {
+				throw new AnnotationException(
+						"Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
+			}
 
-		if ( registrationName.isBlank() ) {
-			throw new AnnotationException(
-					"Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
-		}
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.bindingNamedNativeQuery( registrationName,
+						queryString.replace( '\n', ' ' ) );
+			}
 
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.bindingNamedNativeQuery( registrationName,
-					queryString.replace( '\n', ' ' ) );
-		}
+			final var collector = context.getMetadataCollector();
+			final String resultSetMappingName;
+			if ( hasInlineResultSetMapping( namedNativeQuery ) ) {
+				resultSetMappingName = registrationName;
+				if ( !namedNativeQuery.resultSetMapping().isBlank() ) {
+					throw new AnnotationException(
+							"Named native query '%s' specified both 'resultSetMapping' and an inline result set mapping"
+									.formatted( registrationName )
+					);
+				}
 
-		final var definition = NamedNativeSelectionDefinitionImpl.from( namedNativeQuery, location );
-		final var collector = context.getMetadataCollector();
-		if ( isDefault ) {
-			collector.addDefaultNamedNativeQuery( definition );
+				final var mappingDefinition = SqlResultSetMappingDescriptor.from( namedNativeQuery );
+				if ( isDefault ) {
+					collector.addDefaultResultSetMapping( mappingDefinition );
+				}
+				else {
+					collector.addResultSetMapping( mappingDefinition );
+				}
+			}
+			else {
+				resultSetMappingName = namedNativeQuery.resultSetMapping();
+			}
+
+			final var definition =
+					NamedNativeSelectionDefinitionImpl.from( namedNativeQuery, location, resultSetMappingName );
+			if ( isDefault ) {
+				collector.addDefaultNamedNativeQuery( definition );
+			}
+			else {
+				collector.addNamedNativeQuery( definition );
+			}
 		}
-		else {
-			collector.addNamedNativeQuery( definition );
-		}
+	}
+
+	private static boolean hasInlineResultSetMapping(NamedNativeQuery namedNativeQuery) {
+		return namedNativeQuery.entities().length > 0
+			|| namedNativeQuery.classes().length > 0
+			|| namedNativeQuery.columns().length > 0;
 	}
 
 	private static <T> NamedNativeQueryDefinition<T> createNamedQueryDefinition(

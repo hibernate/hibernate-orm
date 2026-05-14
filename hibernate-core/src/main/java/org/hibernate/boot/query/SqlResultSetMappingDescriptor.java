@@ -42,6 +42,7 @@ import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
 
 import static org.hibernate.boot.query.BootQueryLogging.BOOT_QUERY_LOGGER;
@@ -69,12 +70,30 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	//			memento for its resolution
 
 	public static SqlResultSetMappingDescriptor from(SqlResultSetMapping mappingAnnotation, String name) {
-		final EntityResult[] entityResults = mappingAnnotation.entities();
-		final ConstructorResult[] constructorResults = mappingAnnotation.classes();
-		final ColumnResult[] columnResults = mappingAnnotation.columns();
+		return from(
+				name,
+				mappingAnnotation.entities(),
+				mappingAnnotation.classes(),
+				mappingAnnotation.columns()
+		);
+	}
 
+	public static SqlResultSetMappingDescriptor from(NamedNativeQuery namedNativeQuery) {
+		return from(
+				namedNativeQuery.name(),
+				namedNativeQuery.entities(),
+				namedNativeQuery.classes(),
+				namedNativeQuery.columns()
+		);
+	}
+
+	private static SqlResultSetMappingDescriptor from(
+			String name,
+			EntityResult[] entityResults,
+			ConstructorResult[] constructorResults,
+			ColumnResult[] columnResults) {
 		final List<ResultDescriptor> resultDescriptors = arrayList(
-				entityResults.length + columnResults.length + columnResults.length
+				entityResults.length + constructorResults.length + columnResults.length
 		);
 
 		for ( final EntityResult entityResult : entityResults ) {
@@ -82,12 +101,12 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		for ( final ConstructorResult constructorResult : constructorResults ) {
-			resultDescriptors.add( new ConstructorResultDescriptor( constructorResult, mappingAnnotation ) );
+			resultDescriptors.add( new ConstructorResultDescriptor( constructorResult, name ) );
 		}
 
 		for ( final ColumnResult columnResult : columnResults ) {
 			resultDescriptors.add(
-					new JpaColumnResultDescriptor( columnResult, mappingAnnotation )
+					new JpaColumnResultDescriptor( columnResult, name )
 			);
 		}
 
@@ -132,9 +151,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		public JpaColumnResultDescriptor(
 				ColumnResult columnResult,
-				SqlResultSetMapping mappingAnnotation) {
+				String mappingName) {
 			this.columnResult = columnResult;
-			this.mappingName = mappingAnnotation.name();
+			this.mappingName = mappingName;
 		}
 
 		@Override
@@ -172,16 +191,16 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		public ConstructorResultDescriptor(
 				ConstructorResult constructorResult,
-				SqlResultSetMapping mappingAnnotation) {
-			this.mappingName = mappingAnnotation.name();
+				String mappingName) {
+			this.mappingName = mappingName;
 			this.targetJavaType = constructorResult.targetClass();
 
-			argumentResultDescriptors = interpretArguments( constructorResult, mappingAnnotation );
+			argumentResultDescriptors = interpretArguments( constructorResult, mappingName );
 		}
 
 		private static List<ArgumentDescriptor> interpretArguments(
 				ConstructorResult constructorResult,
-				SqlResultSetMapping mappingAnnotation) {
+				String mappingName) {
 			final ColumnResult[] columnResults = constructorResult.columns();
 			if ( ArrayHelper.isEmpty( columnResults ) ) {
 				throw new IllegalArgumentException( "ConstructorResult did not define any ColumnResults" );
@@ -191,7 +210,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			for ( ColumnResult columnResult : columnResults ) {
 				final JpaColumnResultDescriptor argumentResultDescriptor = new JpaColumnResultDescriptor(
 						columnResult,
-						mappingAnnotation
+						mappingName
 				);
 				argumentResultDescriptors.add(new ArgumentDescriptor(argumentResultDescriptor));
 			}

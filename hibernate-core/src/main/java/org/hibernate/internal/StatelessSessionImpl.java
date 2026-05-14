@@ -146,10 +146,6 @@ public class StatelessSessionImpl
 	private final FlushMode flushMode;
 	private final EventListenerGroups eventListenerGroups;
 
-	// Defaults to null, meaning the properties
-	// are the default properties of the factory.
-	private Map<String, Object> properties;
-
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
@@ -209,7 +205,7 @@ public class StatelessSessionImpl
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// After the "un seal" PR is applied, this should all be consolidated
+	// After the "unseal" PR is applied, this should all be consolidated
 	// with the Session forms on SharedSessionContract
 
 	@Override
@@ -217,32 +213,28 @@ public class StatelessSessionImpl
 		return new HashMap<>();
 	}
 
-	/**
-	 * NOTE : this one should be abstract on AbstractSharedSessionContract
-	 * and implemented here and SessionImpl...
-	 */
 	@SuppressWarnings("deprecation")
 	protected void interpretProperty(String propertyName, Object value) {
 		switch ( propertyName ) {
 			case JPA_SHARED_CACHE_RETRIEVE_MODE:
 			case JAKARTA_SHARED_CACHE_RETRIEVE_MODE:
-				properties.put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
-				properties.put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties().put( JPA_SHARED_CACHE_RETRIEVE_MODE, value );
+				properties().put( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, value );
 				setCacheMode(
 						interpretCacheMode(
-								determineCacheStoreMode( properties ),
+								determineCacheStoreMode( properties() ),
 								(CacheRetrieveMode) value
 						)
 				);
 				break;
 			case JPA_SHARED_CACHE_STORE_MODE:
 			case JAKARTA_SHARED_CACHE_STORE_MODE:
-				properties.put( JPA_SHARED_CACHE_STORE_MODE, value );
-				properties.put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
+				properties().put( JPA_SHARED_CACHE_STORE_MODE, value );
+				properties().put( JAKARTA_SHARED_CACHE_STORE_MODE, value );
 				setCacheMode(
 						interpretCacheMode(
 								(CacheStoreMode) value,
-								determineCacheRetrieveMode( properties )
+								determineCacheRetrieveMode( properties() )
 						)
 				);
 				break;
@@ -283,14 +275,12 @@ public class StatelessSessionImpl
 
 	@Override
 	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
-		var currentMode = getCacheModeSafely();
-		setCacheMode( CacheMode.fromJpaModes( cacheRetrieveMode, currentMode.getJpaStoreMode() ) );
+		setCacheMode( CacheMode.fromJpaModes( cacheRetrieveMode, getCacheModeSafely().getJpaStoreMode() ) );
 	}
 
 	@Override
 	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
-		var currentMode = getCacheModeSafely();
-		setCacheMode( CacheMode.fromJpaModes( currentMode.getJpaRetrieveMode(), cacheStoreMode ) );
+		setCacheMode( CacheMode.fromJpaModes( getCacheModeSafely().getJpaRetrieveMode(), cacheStoreMode ) );
 	}
 
 	@Override

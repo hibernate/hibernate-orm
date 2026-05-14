@@ -34,6 +34,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
@@ -73,9 +74,14 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
 ///
 /// @author Steve Ebersole
 public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
-	private final Map<String, LogicalTableUpdate<?>> staticUpdateOperations;
 	private final Map<TableDescriptor, TableDescriptorAsTableMapping> tableMappingAdapters = new IdentityHashMap<>();
+
+	private final Map<String, LogicalTableUpdate<?>> staticUpdateOperations;
+	private final Map<String, MutationOperation> staticJdbcUpdateOperations;
+
 	private final TableUpdateStandard versionUpdate;
+	private final MutationOperation versionJdbcUpdate;
+
 	private final EntityMutationPlanContributor mutationPlanContributor;
 
 	public UpdateDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
@@ -92,10 +98,16 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				// entity specified dynamic-update - skip static operations
 				? null
 				: generateStaticOperations();
+		this.staticJdbcUpdateOperations = staticUpdateOperations == null
+				? null
+				: generateStaticJdbcOperations( staticUpdateOperations );
 
 		this.versionUpdate = entityPersister.getVersionMapping() != null
 				? new VersionUpdateBuilder( entityPersister ).buildMutation()
 				: null;
+		this.versionJdbcUpdate = versionUpdate == null
+				? null
+				: versionUpdate.createMutationOperation( null, sessionFactory );
 		this.mutationPlanContributor = mutationPlanContributor;
 	}
 
@@ -282,7 +294,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			if ( tableUpdate == null ) {
 				continue;
 			}
-			var operation = tableUpdate.createMutationOperation( null, sessionFactory );
+			var operation = resolveJdbcUpdateOperation( tableDescriptor.name(), tableUpdate );
 
 			// For static updates, only execute secondary tables when one of their
 			// attributes actually drove the update.  Static mutation groups may
@@ -479,7 +491,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		// we have just the version being updated - use the special handling
 		assert newVersion != null;
 
-		var jdbcUpdate = versionUpdate.createMutationOperation( null, sessionFactory );
 		final var identifierTableDescriptor = entityPersister.getIdentifierTableDescriptor();
 		var bindPlan = new ForceVersionBindPlan(
 				identifierTableDescriptor,
@@ -489,16 +500,15 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				previousVersion,
 				newVersion
 		);
-		final FlushOperation op = new FlushOperation(
+
+		return new FlushOperation(
 				identifierTableDescriptor,
 				MutationKind.UPDATE,
-				jdbcUpdate,
+				versionJdbcUpdate,
 				bindPlan,
 				ordinalBase * 1_000,
 				"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
 		);
-
-		return op;
 	}
 
 	protected boolean preUpdate(EntityUpdateAction action, SharedSessionContractImplementor session) {
@@ -611,6 +621,24 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			}
 		} );
 		return Collections.unmodifiableMap( staticOperations );
+	}
+
+	private Map<String, MutationOperation> generateStaticJdbcOperations(
+			Map<String, LogicalTableUpdate<?>> staticOperations) {
+		final Map<String, MutationOperation> jdbcOperations = new HashMap<>();
+		staticOperations.forEach( (name, operation) -> {
+			jdbcOperations.put( name, operation.createMutationOperation( null, sessionFactory ) );
+		} );
+		return Collections.unmodifiableMap( jdbcOperations );
+	}
+
+	private MutationOperation resolveJdbcUpdateOperation(
+			String tableName,
+			LogicalTableUpdate<?> tableUpdate) {
+		if ( staticJdbcUpdateOperations != null && tableUpdate == staticUpdateOperations.get( tableName ) ) {
+			return staticJdbcUpdateOperations.get( tableName );
+		}
+		return tableUpdate.createMutationOperation( null, sessionFactory );
 	}
 
 	private TableUpdateBuilder<?> createTableUpdateBuilder(TableDescriptor tableDescriptor) {

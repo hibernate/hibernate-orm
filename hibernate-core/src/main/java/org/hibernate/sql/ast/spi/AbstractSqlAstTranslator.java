@@ -7715,9 +7715,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
 		// Most databases do not support boolean expressions in a predicate context, so we render `expr=true`
+		appendSql( '(' );
 		booleanExpressionPredicate.getExpression().accept( this );
 		appendSql( '=' );
 		dialect.appendBooleanValueString( this, !booleanExpressionPredicate.isNegated() );
+		appendSql( ')' );
 	}
 
 	@Override

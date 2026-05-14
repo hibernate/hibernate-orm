@@ -15,6 +15,7 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import jakarta.persistence.QueryFlushMode;
@@ -197,7 +198,7 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
 				nullIfEmpty( resultSetMappingName ),
-				null,
+				FlushModeTypeHelper.getFlushMode( annotation.flush() ),
 				null,
 				null,
 				null,

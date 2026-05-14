@@ -91,11 +91,6 @@ public abstract class AbstractSqmQuery<R>
 	}
 
 	@Override
-	protected FlushMode interpretQueryFlushMode(QueryFlushMode queryFlushMode) {
-		return FlushModeTypeHelper.interpretFlushMode(queryFlushMode);
-	}
-
-	@Override
 	public boolean isQueryPlanCacheable() {
 		return queryOptions.getQueryPlanCachingEnabled() == TRUE;
 	}

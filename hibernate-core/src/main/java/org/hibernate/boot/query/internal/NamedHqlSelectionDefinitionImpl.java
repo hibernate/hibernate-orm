@@ -19,6 +19,7 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.spi.NamedSelectionQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.named.NamedSqmQueryMemento;
@@ -205,7 +206,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
 				null,
-				null,
+				FlushModeTypeHelper.getFlushMode( annotation.flush() ),
 				null,
 				null,
 				null,

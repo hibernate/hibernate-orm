@@ -12,7 +12,8 @@ import java.time.temporal.Temporal;
 /**
  * @author Steve Ebersole
  */
-public interface SqmTemporalExpression<T extends Temporal & Comparable<? super T>> extends SqmExpression<T>, JpaTemporalExpression<T> {
+public interface SqmTemporalExpression<T extends Temporal & Comparable<? super T>>
+		extends SqmComparableExpression<T>, JpaTemporalExpression<T> {
 	@Override
 	SqmTemporalExpression<T> coalesce(Expression<? extends T> y);
 

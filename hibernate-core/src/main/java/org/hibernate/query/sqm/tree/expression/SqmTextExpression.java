@@ -10,7 +10,7 @@ import org.hibernate.query.criteria.JpaTextExpression;
 /**
  * @author Steve Ebersole
  */
-public interface SqmTextExpression extends SqmExpression<String>, JpaTextExpression {
+public interface SqmTextExpression extends SqmComparableExpression<String>, JpaTextExpression {
 	@Override
 	SqmTextExpression coalesce(Expression<? extends String> y);
 

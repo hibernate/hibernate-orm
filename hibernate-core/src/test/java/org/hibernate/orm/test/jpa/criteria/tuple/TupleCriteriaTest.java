@@ -10,7 +10,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CompoundSelection;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.metamodel.Address;
@@ -86,8 +86,8 @@ public class TupleCriteriaTest {
 			final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
 			Root<Customer> customerRoot = criteria.from( Customer.class );
-			Path<String> namePath = customerRoot.get( Customer_.name );
-			Path<Integer> agePath = customerRoot.get( Customer_.age );
+			Expression<String> namePath = customerRoot.get( Customer_.name );
+			Expression<Integer> agePath = customerRoot.get( Customer_.age );
 			agePath.alias( "age" );
 			criteria.multiselect( namePath, agePath );
 			List<Tuple> results = entityManager.createQuery( criteria ).getResultList();
@@ -111,9 +111,9 @@ public class TupleCriteriaTest {
 			final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
 			Root<Customer> customerRoot = criteria.from( Customer.class );
-			Path<String> namePath = customerRoot.get( Customer_.name );
+			Expression<String> namePath = customerRoot.get( Customer_.name );
 			namePath.alias( "age" );
-			Path<Integer> agePath = customerRoot.get( Customer_.age );
+			Expression<Integer> agePath = customerRoot.get( Customer_.age );
 			agePath.alias( "age" );
 			assertThrows(
 					IllegalArgumentException.class,
@@ -137,9 +137,9 @@ public class TupleCriteriaTest {
 			final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
 			Root<Customer> customerRoot = criteria.from( Customer.class );
-			Path<String> namePath = customerRoot.get( Customer_.name );
+			Expression<String> namePath = customerRoot.get( Customer_.name );
 			namePath.alias( "NAME" );
-			Path<Integer> agePath = customerRoot.get( Customer_.age );
+			Expression<Integer> agePath = customerRoot.get( Customer_.age );
 			agePath.alias( "AGE" );
 			criteria.multiselect( namePath, agePath );
 
@@ -162,8 +162,8 @@ public class TupleCriteriaTest {
 			final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaQuery criteria = builder.createQuery();
 			Root<Customer> customerRoot = criteria.from( Customer.class );
-			Path<String> namePath = customerRoot.get( Customer_.name );
-			Path<Integer> agePath = customerRoot.get( Customer_.age );
+			Expression<String> namePath = customerRoot.get( Customer_.name );
+			Expression<Integer> agePath = customerRoot.get( Customer_.age );
 			assertThrows(
 					IllegalArgumentException.class,
 					() -> {

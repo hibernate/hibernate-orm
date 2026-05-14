@@ -10,10 +10,10 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ParameterExpression;
-import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.SessionFactory;
@@ -174,8 +174,8 @@ public class CriteriaTest {
 			CriteriaQuery<Object[]> criteria = builder.createQuery( Object[].class );
 			Root<Person> root = criteria.from( Person.class );
 
-			Path<Long> idPath = root.get( Person_.id );
-			Path<String> nickNamePath = root.get( Person_.nickName );
+			Expression<Long> idPath = root.get( Person_.id );
+			Expression<String> nickNamePath = root.get( Person_.nickName );
 
 			criteria.select( builder.array( idPath, nickNamePath ) );
 			criteria.where( builder.equal( root.get( Person_.name ), "John Doe" ) );
@@ -196,8 +196,8 @@ public class CriteriaTest {
 			CriteriaQuery<Object[]> criteria = builder.createQuery( Object[].class );
 			Root<Person> root = criteria.from( Person.class );
 
-			Path<Long> idPath = root.get( Person_.id );
-			Path<String> nickNamePath = root.get( Person_.nickName );
+			Expression<Long> idPath = root.get( Person_.id );
+			Expression<String> nickNamePath = root.get( Person_.nickName );
 
 			criteria.multiselect( idPath, nickNamePath );
 			criteria.where( builder.equal( root.get( Person_.name ), "John Doe" ) );
@@ -219,8 +219,8 @@ public class CriteriaTest {
 			CriteriaQuery<PersonWrapper> criteria = builder.createQuery( PersonWrapper.class );
 			Root<Person> root = criteria.from( Person.class );
 
-			Path<Long> idPath = root.get( Person_.id );
-			Path<String> nickNamePath = root.get( Person_.nickName );
+			Expression<Long> idPath = root.get( Person_.id );
+			Expression<String> nickNamePath = root.get( Person_.nickName );
 
 			criteria.select( builder.construct( PersonWrapper.class, idPath, nickNamePath ) );
 			criteria.where( builder.equal( root.get( Person_.name ), "John Doe" ) );
@@ -241,8 +241,8 @@ public class CriteriaTest {
 			CriteriaQuery<Tuple> criteria = builder.createQuery( Tuple.class );
 			Root<Person> root = criteria.from( Person.class );
 
-			Path<Long> idPath = root.get( Person_.id );
-			Path<String> nickNamePath = root.get( Person_.nickName );
+			Expression<Long> idPath = root.get( Person_.id );
+			Expression<String> nickNamePath = root.get( Person_.nickName );
 
 			criteria.multiselect( idPath, nickNamePath );
 			criteria.where( builder.equal( root.get( Person_.name ), "John Doe" ) );

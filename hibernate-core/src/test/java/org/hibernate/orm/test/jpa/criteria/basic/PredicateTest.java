@@ -7,7 +7,7 @@ package org.hibernate.orm.test.jpa.criteria.basic;
 import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
@@ -257,8 +257,8 @@ public class PredicateTest {
 			Root<Order> orderRoot = orderCriteria.from( Order.class );
 
 			Long longValue = 999999999L;
-			Path<Double> doublePath = orderRoot.get( Order_.totalPrice );
-			Path<Integer> integerPath = orderRoot.get( Order_.customer ).get( Customer_.age );
+			Expression<Double> doublePath = orderRoot.get( Order_.totalPrice );
+			Expression<Integer> integerPath = orderRoot.get( Order_.customer ).get( Customer_.age );
 
 			orderCriteria.select( orderRoot );
 			Predicate p = builder.ge(

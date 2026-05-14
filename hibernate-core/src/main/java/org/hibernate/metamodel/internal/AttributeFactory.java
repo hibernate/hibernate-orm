@@ -124,7 +124,7 @@ public class AttributeFactory {
 		final var valueContext = singularAttributeMetadata.getValueContext();
 		final var domainType = (SqmDomainType<?>) determineSimpleType( valueContext, metadataContext );
 		final var relationalJavaType = determineRelationalJavaType( valueContext, domainType, metadataContext );
-		return new SingularAttributeImpl<>(
+		return SingularAttributeImpl.create(
 				ownerType,
 				attributeMetadata.getName(),
 				attributeMetadata.getAttributeClassification(),
@@ -168,12 +168,12 @@ public class AttributeFactory {
 				determineAttributeMetadata( wrap( ownerType, property ), identifierMemberResolver );
 		final var singularAttributeMetadata = (SingularAttributeMetadata<X, ?>) attributeMetadata;
 		final var domainType = (SqmDomainType<?>) determineSimpleType( singularAttributeMetadata.getValueContext() );
-		return new SingularAttributeImpl.Identifier<>(
+		return SingularAttributeImpl.createIdentifier(
 				ownerType,
 				property.getName(),
+				attributeMetadata.getAttributeClassification(),
 				domainType,
 				attributeMetadata.getMember(),
-				attributeMetadata.getAttributeClassification(),
 				property.isGeneric()
 		);
 	}
@@ -196,12 +196,17 @@ public class AttributeFactory {
 				determineAttributeMetadata( wrap( ownerType, property ), versionMemberResolver );
 		final var singularAttributeMetadata = (SingularAttributeMetadata<X, ?>) attributeMetadata;
 		final var domainType = (SqmDomainType<?>) determineSimpleType( singularAttributeMetadata.getValueContext() );
-		return new SingularAttributeImpl.Version<>(
+		return SingularAttributeImpl.create(
 				ownerType,
 				property.getName(),
 				attributeMetadata.getAttributeClassification(),
 				domainType,
-				attributeMetadata.getMember()
+				domainType.getExpressibleJavaType(),
+				attributeMetadata.getMember(),
+				false,
+				true,
+				false,
+				false
 		);
 	}
 

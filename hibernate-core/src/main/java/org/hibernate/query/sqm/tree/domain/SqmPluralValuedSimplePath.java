@@ -5,9 +5,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.NumericExpression;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.Type.PersistenceType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -25,8 +22,14 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
+import org.hibernate.query.sqm.tree.expression.SqmNumericExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNumericExpressionWrapper;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -193,38 +196,38 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 	}
 
 	@Override
-	public Predicate isEmpty() {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public SqmPredicate isEmpty() {
+		return new SqmEmptinessPredicate( this, false, nodeBuilder() );
 	}
 
 	@Override
-	public Predicate isNotEmpty() {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public SqmPredicate isNotEmpty() {
+		return new SqmEmptinessPredicate( this, true, nodeBuilder() );
 	}
 
 	@Override
-	public NumericExpression<Integer> size() {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public SqmNumericExpression<Integer> size() {
+		return new SqmNumericExpressionWrapper<>( new SqmCollectionSize( this, nodeBuilder() ) );
 	}
 
 	@Override
-	public Predicate notContains(Object elem) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public SqmPredicate notContains(Object elem) {
+		return new SqmMemberOfPredicate( nodeBuilder().value( elem ), this, true, nodeBuilder() );
 	}
 
 	@Override
-	public Predicate notContains(Expression elem) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public SqmPredicate notContains(Expression elem) {
+		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, this, true, nodeBuilder() );
 	}
 
 	@Override
-	public Predicate contains(Object elem) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public SqmPredicate contains(Object elem) {
+		return new SqmMemberOfPredicate( nodeBuilder().value( elem ), this, false, nodeBuilder() );
 	}
 
 	@Override
-	public Predicate contains(Expression elem) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public SqmPredicate contains(Expression elem) {
+		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, this, false, nodeBuilder() );
 	}
 
 	protected static class PluralAttributeCollectionType<C> implements SqmBindableType<C> {

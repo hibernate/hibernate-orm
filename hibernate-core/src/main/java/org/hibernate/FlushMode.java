@@ -112,7 +112,7 @@ public enum FlushMode {
 
 	public static FlushMode fromQueryFlushMode(QueryFlushMode queryFlushMode) {
 		if ( queryFlushMode == QueryFlushMode.FLUSH ) {
-			return FlushMode.AUTO;
+			return FlushMode.ALWAYS;
 		}
 		else if ( queryFlushMode == QueryFlushMode.NO_FLUSH ) {
 			return MANUAL;

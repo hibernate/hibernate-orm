@@ -134,7 +134,7 @@ public class FlushModeTypeHelper {
 			return session.getHibernateFlushMode();
 		}
 		else if ( queryFlushMode == QueryFlushMode.FLUSH ) {
-			return FlushMode.AUTO;
+			return FlushMode.ALWAYS;
 		}
 		else {
 			return FlushMode.MANUAL;
@@ -142,24 +142,20 @@ public class FlushModeTypeHelper {
 	}
 
 	public static FlushModeType getFlushModeType(QueryFlushMode queryFlushMode) {
-		if ( queryFlushMode == QueryFlushMode.DEFAULT ) {
-			return FlushModeType.AUTO;
-		}
-		else {
-			return FlushModeType.COMMIT;
-		}
+		return switch ( queryFlushMode ) {
+			case FLUSH, DEFAULT -> FlushModeType.AUTO;
+			case NO_FLUSH -> FlushModeType.COMMIT;
+		};
 	}
 
 	public static QueryFlushMode queryFlushModeFromFlushModeType(FlushModeType jpaMode) {
 		if ( jpaMode == null ) {
 			return QueryFlushMode.DEFAULT;
 		}
-		else if ( jpaMode == FlushModeType.COMMIT ) {
-			return QueryFlushMode.NO_FLUSH;
-		}
-		else {
-			return QueryFlushMode.FLUSH;
-		}
+		return switch ( jpaMode ) {
+			case AUTO -> QueryFlushMode.FLUSH;
+			case COMMIT, EXPLICIT -> QueryFlushMode.NO_FLUSH;
+		};
 	}
 
 	public static QueryFlushMode queryFlushModeFromFlushMode(FlushMode hibernateMode) {

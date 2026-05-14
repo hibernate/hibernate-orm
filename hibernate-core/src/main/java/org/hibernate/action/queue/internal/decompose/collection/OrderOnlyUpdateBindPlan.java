@@ -7,15 +7,11 @@ package org.hibernate.action.queue.internal.decompose.collection;
 import org.hibernate.action.queue.internal.constraint.UniqueConstraint;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
-import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-
-import java.sql.SQLException;
 
 /// Bind plan for updating only the order/index column of a collection row.
 ///
@@ -25,7 +21,7 @@ import java.sql.SQLException;
 /// collection slot.
 ///
 /// @author Steve Ebersole
-public class OrderOnlyUpdateBindPlan implements BindPlan, OperationResultChecker {
+public class OrderOnlyUpdateBindPlan implements BindPlan {
 	private final CollectionPersister persister;
 	private final PersistentCollection<?> collection;
 	private final Object key;
@@ -96,15 +92,6 @@ public class OrderOnlyUpdateBindPlan implements BindPlan, OperationResultChecker
 			SharedSessionContractImplementor session) {
 		updateRowValues.applyValues( collection, key, entry, newPosition, session, valueBindings );
 		updateRowRestrictions.applyRestrictions( collection, key, entry, oldPosition, session, valueBindings );
-	}
-
-	@Override
-	public boolean checkResult(
-			int affectedRowCount,
-			int batchPosition,
-			String sqlString,
-			SessionFactoryImplementor sessionFactory) throws SQLException {
-		return true;
 	}
 
 	@Override

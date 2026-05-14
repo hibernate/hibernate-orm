@@ -9,11 +9,17 @@ import java.util.function.Supplier;
 
 import org.hibernate.cfg.BatchSettings;
 import org.hibernate.engine.jdbc.batch.internal.BatchImpl;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.batch.internal.SingleStatementBatchImpl;
+import org.hibernate.engine.jdbc.batch.spi.BatchedResultChecker;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
+import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
+import org.hibernate.engine.jdbc.batch.spi.StatementBinder;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.sql.model.PreparableMutationOperation;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -79,8 +85,24 @@ public class InsertOrderingTest {
 	public static class StatsBatchBuilder implements BatchBuilder {
 
 		@Override
-		public Batch buildBatch(BatchKey key, Integer batchSize, Supplier<PreparedStatementGroup> statementGroupSupplier, JdbcCoordinator jdbcCoordinator) {
+		public GroupedBatch buildGroupedBatch(
+				BatchKey key,
+				Integer batchSize,
+				Supplier<PreparedStatementGroup> statementGroupSupplier,
+				JdbcCoordinator jdbcCoordinator) {
 			return new StatsBatch( key, batchSize, statementGroupSupplier.get(), jdbcCoordinator );
+		}
+
+		@Override
+		public SingleStatementBatch buildSingleStatementBatch(
+				BatchKey key,
+				Integer batchSize,
+				PreparableMutationOperation mutationOperation,
+				JdbcCoordinator jdbcCoordinator) {
+			return new StatsSingleStatementBatch(
+					new SingleStatementBatchImpl( key, mutationOperation, batchSize, jdbcCoordinator ),
+					batchSize
+			);
 		}
 	}
 
@@ -106,6 +128,59 @@ public class InsertOrderingTest {
 				numberOfBatches = 0;
 			}
 			numberOfBatches++;
+		}
+	}
+
+	public static class StatsSingleStatementBatch implements SingleStatementBatch {
+		private final SingleStatementBatch wrapped;
+		private final int batchSize;
+		private int batchPosition;
+
+		public StatsSingleStatementBatch(SingleStatementBatch wrapped, int batchSize) {
+			this.wrapped = wrapped;
+			this.batchSize = batchSize;
+		}
+
+		@Override
+		public BatchKey getKey() {
+			return wrapped.getKey();
+		}
+
+		@Override
+		public void addObserver(BatchObserver observer) {
+			wrapped.addObserver( observer );
+		}
+
+		@Override
+		public void addToBatch(StatementBinder statementBinder, BatchedResultChecker resultChecker) {
+			wrapped.addToBatch( statementBinder, resultChecker );
+			batchPosition++;
+			if ( batchPosition == batchSize ) {
+				countBatch();
+				batchPosition = 0;
+			}
+		}
+
+		@Override
+		public void execute() {
+			wrapped.execute();
+			if ( batchPosition > 0 ) {
+				countBatch();
+				batchPosition = 0;
+			}
+		}
+
+		private void countBatch() {
+			if ( StatsBatch.numberOfBatches < 0 ) {
+				StatsBatch.numberOfBatches = 0;
+			}
+			StatsBatch.numberOfBatches++;
+		}
+
+		@Override
+		public void release() {
+			wrapped.release();
+			batchPosition = 0;
 		}
 	}
 }

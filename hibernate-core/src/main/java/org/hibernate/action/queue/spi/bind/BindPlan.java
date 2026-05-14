@@ -8,8 +8,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.internal.constraint.UniqueConstraint;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.ValuesAnalysis;
+
+import java.sql.SQLException;
 
 /// Represents JDBC parameter binding for graph-based operation execution
 ///
@@ -81,6 +84,21 @@ public interface BindPlan {
 
 	default OperationResultChecker getOperationResultChecker() {
 		return this instanceof OperationResultChecker checker ? checker : null;
+	}
+
+	default boolean hasOperationResultChecker() {
+		return getOperationResultChecker() != null;
+	}
+
+	default boolean checkResult(
+			FlushOperation flushOperation,
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		final OperationResultChecker resultChecker = getOperationResultChecker();
+		return resultChecker == null
+				|| resultChecker.checkResult( affectedRowCount, batchPosition, sqlString, sessionFactory );
 	}
 
 	default ValuesAnalysis getValuesAnalysis() {

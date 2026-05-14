@@ -16,6 +16,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.spi.MutationKind;
+import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
@@ -67,6 +68,13 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	private final CollectionJdbcOperations jdbcOperations;
 	private final boolean tableHasNonPrimaryUniqueConstraints;
 
+	private final String insertOrigin;
+	private final String updateRowOrigin;
+	private final String updateValueOrigin;
+	private final String shiftTempOrigin;
+	private final String shiftFinalOrigin;
+	private final String deleteOrigin;
+
 	public BasicCollectionDecomposer(
 			BasicCollectionPersister persister,
 			SessionFactoryImplementor factory) {
@@ -88,6 +96,13 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				.getUniqueConstraintsForTable( tableDescriptor.name() )
 				.stream()
 				.anyMatch( uniqueConstraint -> !uniqueConstraint.isPrimaryKey() );
+
+		insertOrigin = "InsertRow(" + persister.getRolePath() + ")";
+		updateRowOrigin = "UpdateRow(" + persister.getRolePath() + ")";
+		updateValueOrigin = "UpdateValue(" + persister.getRolePath() + ")";
+		shiftTempOrigin = "UpdateRowTemp(" + persister.getRolePath() + ")";
+		shiftFinalOrigin = "UpdateRowFinal(" + persister.getRolePath() + ")";
+		deleteOrigin = "DeleteRow(" + persister.getRolePath() + ")";
 	}
 
 	@Override
@@ -201,6 +216,14 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		collection.preInsert( persister );
 
 		var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
+		final var insertValues = insertRowPlan.values();
+		final var insertJdbcOperation = insertRowPlan.jdbcOperation();
+		final var insertShapeKey = StatementShapeKey.forMutation(
+				tableDescriptor.name(),
+				MutationKind.INSERT,
+				tableDescriptor,
+				insertJdbcOperation
+		);
 
 		final var entries = collection.entries( persister );
 		if ( !entries.hasNext() ) {
@@ -218,7 +241,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			if ( include ) {
 				final BindPlan bindPlan = new SingleRowInsertBindPlan(
 						persister,
-						jdbcOperations.insertRowPlan().values(),
+						insertValues,
 						collection,
 						key,
 						entry,
@@ -228,10 +251,11 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				final FlushOperation plannedOp = new FlushOperation(
 						tableDescriptor,
 						MutationKind.INSERT,
-						jdbcOperations.insertRowPlan().jdbcOperation(),
+						insertJdbcOperation,
 						bindPlan,
 						insertOrdinal,
-						"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
+						insertOrigin,
+						insertShapeKey
 				);
 
 				operations.add( plannedOp );
@@ -397,10 +421,11 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 
 		var deleteOrdinal = calculateOrdinal( ordinalBase, Slot.DELETE );
+		final var deleteJdbcOperation = deleteRowPlan.jdbcOperation();
+		final var deleteRestrictions = deleteRowPlan.restrictions();
+		final var deleteShapeKey = shapeKey( MutationKind.DELETE, deleteJdbcOperation );
 
 		// One operation per row
-		int deletionCount = 0;
-
 		while ( deletes.hasNext() ) {
 			final Object removal = deletes.next();
 
@@ -409,19 +434,18 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					collection,
 					key,
 					removal,
-					deleteRowPlan.restrictions()
+					deleteRestrictions
 			);
 
 			operationConsumer.accept( new FlushOperation(
 					tableDescriptor,
 					MutationKind.DELETE,
-					deleteRowPlan.jdbcOperation(),
+					deleteJdbcOperation,
 					bindPlan,
 					deleteOrdinal,
-					"DeleteRow[" + deletionCount + "](" + persister.getRolePath() + ")"
+					deleteOrigin,
+					deleteShapeKey
 			) );
-
-			deletionCount++;
 		}
 	}
 
@@ -475,20 +499,24 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		// Removed rows are planned in the DELETE slot.
 		if ( deleteRowPlan != null && !changeSet.removals().isEmpty() ) {
 			final int deleteOrdinal = calculateOrdinal( ordinalBase, Slot.DELETE );
+			final var deleteJdbcOperation = deleteRowPlan.jdbcOperation();
+			final var deleteRestrictions = deleteRowPlan.restrictions();
+			final var deleteShapeKey = shapeKey( MutationKind.DELETE, deleteJdbcOperation );
 			for ( CollectionChangeSet.Removal removal : changeSet.removals() ) {
 				operationConsumer.accept( new FlushOperation(
 						tableDescriptor,
 						MutationKind.DELETE,
-						deleteRowPlan.jdbcOperation(),
+						deleteJdbcOperation,
 						new SingleRowDeleteBindPlan(
 								persister,
 								collection,
 								key,
 								removal,
-								deleteRowPlan.restrictions()
+								deleteRestrictions
 						),
 						deleteOrdinal,
-						"DeleteRow[" + removal.snapshotIndex() + "](" + persister.getRolePath() + ")"
+						deleteOrigin,
+						deleteShapeKey
 				) );
 			}
 		}
@@ -511,23 +539,28 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 			if ( canUpdateValuesAtPositions && updateRowPlan != null ) {
 				final int updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
+				final var updateJdbcOperation = updateRowPlan.jdbcOperation();
+				final var updateValues = updateRowPlan.values();
+				final var updateRestrictions = updateRowPlan.restrictions();
+				final var updateShapeKey = shapeKey( MutationKind.UPDATE, updateJdbcOperation );
 
 				for ( CollectionChangeSet.Shift shift : changeSet.shifts() ) {
 					operationConsumer.accept( new FlushOperation(
 							tableDescriptor,
 							MutationKind.UPDATE,
-							updateRowPlan.jdbcOperation(),
+							updateJdbcOperation,
 							new SingleRowUpdateBindPlan(
 									persister,
 									collection,
 									key,
 									shift.element(),
 									(int) shift.currentIndex(),
-									updateRowPlan.values(),
-									updateRowPlan.restrictions()
+									updateValues,
+									updateRestrictions
 							),
 							updateOrdinal,
-							"UpdateRow[" + shift.snapshotIndex() + "→" + shift.currentIndex() + "](" + persister.getRolePath() + ")"
+							updateRowOrigin,
+							updateShapeKey
 					) );
 				}
 			}
@@ -542,13 +575,17 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				final int tempPhaseOrdinal = updateOrdinalBase;
 				final int finalPhaseOrdinal = updateOrdinalBase + 1;
 				final int tempOffset = Integer.MAX_VALUE / 2;
+				final var orderUpdateJdbcOperation = orderUpdatePlan.jdbcOperation();
+				final var orderUpdateValues = orderUpdatePlan.values();
+				final var orderUpdateRestrictions = orderUpdatePlan.restrictions();
+				final var orderUpdateShapeKey = shapeKey( MutationKind.UPDATE_ORDER, orderUpdateJdbcOperation );
 
 				for ( CollectionChangeSet.Shift shift : changeSet.shifts() ) {
 					final int tempPosition = tempOffset + (int) shift.currentIndex();
 					tempPhaseOps.add( new FlushOperation(
 							tableDescriptor,
 							MutationKind.UPDATE_ORDER,
-							orderUpdatePlan.jdbcOperation(),
+							orderUpdateJdbcOperation,
 							new OrderOnlyUpdateBindPlan(
 									persister,
 									collection,
@@ -556,17 +593,18 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 									shift.element(),
 									(int) shift.snapshotIndex(),
 									tempPosition,
-									orderUpdatePlan.values(),
-									orderUpdatePlan.restrictions()
+									orderUpdateValues,
+									orderUpdateRestrictions
 							),
 							tempPhaseOrdinal,
-							"UpdateRowTemp[" + shift.snapshotIndex() + "→" + tempPosition + "](" + persister.getRolePath() + ")"
+							shiftTempOrigin,
+							orderUpdateShapeKey
 					) );
 
 					finalPhaseOps.add( new FlushOperation(
 							tableDescriptor,
 							MutationKind.UPDATE_ORDER,
-							orderUpdatePlan.jdbcOperation(),
+							orderUpdateJdbcOperation,
 							new OrderOnlyUpdateBindPlan(
 									persister,
 									collection,
@@ -574,11 +612,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 									shift.element(),
 									tempPosition,
 									(int) shift.currentIndex(),
-									orderUpdatePlan.values(),
-									orderUpdatePlan.restrictions()
+									orderUpdateValues,
+									orderUpdateRestrictions
 							),
 							finalPhaseOrdinal,
-							"UpdateRowFinal[" + tempPosition + "→" + shift.currentIndex() + "](" + persister.getRolePath() + ")"
+							shiftFinalOrigin,
+							orderUpdateShapeKey
 					) );
 				}
 
@@ -590,6 +629,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		// Added rows are planned in the INSERT slot.
 		if ( insertRowPlan != null && !changeSet.additions().isEmpty() ) {
 			final int insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
+			final var insertJdbcOperation = insertRowPlan.jdbcOperation();
+			final var insertValues = insertRowPlan.values();
+			final var insertShapeKey = shapeKey( MutationKind.INSERT, insertJdbcOperation );
 			for ( CollectionChangeSet.Addition addition : changeSet.additions() ) {
 				final boolean isMap = persister.getCollectionSemantics().getCollectionClassification().isMap();
 				final Object rowValue;
@@ -607,17 +649,18 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				operationConsumer.accept( new FlushOperation(
 						tableDescriptor,
 						MutationKind.INSERT,
-						insertRowPlan.jdbcOperation(),
+						insertJdbcOperation,
 						new SingleRowInsertBindPlan(
 								persister,
-								insertRowPlan.values(),
+								insertValues,
 								collection,
 								key,
 								rowValue,
 								entryIndex
 						),
 						insertOrdinal,
-						"InsertRow[" + addition.index() + "](" + persister.getRolePath() + ")"
+						insertOrigin,
+						insertShapeKey
 				) );
 				contributeAdditionalInsert(
 						collection,
@@ -636,6 +679,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		final var updateRowPlan = jdbcOperations.updateRowPlan();
 		if ( updateRowPlan != null && !changeSet.valueChanges().isEmpty() ) {
 			final int updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
+			final var updateJdbcOperation = updateRowPlan.jdbcOperation();
+			final var updateValues = updateRowPlan.values();
+			final var updateRestrictions = updateRowPlan.restrictions();
+			final var updateShapeKey = shapeKey( MutationKind.UPDATE, updateJdbcOperation );
 			for ( CollectionChangeSet.ValueChange valueChange : changeSet.valueChanges() ) {
 				if ( mutationPlanContributor.contributeValueChange(
 						new CollectionMutationPlanContributor.ValueChangeContext(
@@ -668,18 +715,19 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				operationConsumer.accept( new FlushOperation(
 						tableDescriptor,
 						MutationKind.UPDATE,
-						updateRowPlan.jdbcOperation(),
+						updateJdbcOperation,
 						new SingleRowUpdateBindPlan(
 								persister,
 								collection,
 								key,
 								entry,
 								entryIndex,
-								updateRowPlan.values(),
-								updateRowPlan.restrictions()
+								updateValues,
+								updateRestrictions
 						),
 						updateOrdinal,
-						"UpdateValue[" + valueChange.index() + "](" + persister.getRolePath() + ")"
+						updateValueOrigin,
+						updateShapeKey
 				) );
 			}
 		}
@@ -745,6 +793,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		// Most check constraints only enforce lower bounds (e.g., >= 0)
 		// todo : add a strategy - see https://hibernate.atlassian.net/browse/HHH-20312
 		final int tempOffset = Integer.MAX_VALUE / 2;
+		final var orderUpdateJdbcOperation = orderUpdatePlan.jdbcOperation();
+		final var orderUpdateValues = orderUpdatePlan.values();
+		final var orderUpdateRestrictions = orderUpdatePlan.restrictions();
+		final var orderUpdateShapeKey = shapeKey( MutationKind.UPDATE_ORDER, orderUpdateJdbcOperation );
 
 		// For each entity in current collection, check if it exists in snapshot at a different position
 		for ( int currentPos = 0; currentPos < currentEntities.size(); currentPos++ ) {
@@ -765,41 +817,43 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			if ( snapshotPos >= 0 && snapshotPos != currentPos ) {
 				final int tempPosition = tempOffset + currentPos;
 
-				operationConsumer.accept( new FlushOperation(
-						tableDescriptor,
-						MutationKind.UPDATE_ORDER,
-						orderUpdatePlan.jdbcOperation(),
-						new OrderOnlyUpdateBindPlan(
-								persister,
-								collection,
+					operationConsumer.accept( new FlushOperation(
+							tableDescriptor,
+							MutationKind.UPDATE_ORDER,
+							orderUpdateJdbcOperation,
+							new OrderOnlyUpdateBindPlan(
+									persister,
+									collection,
 								key,
-								currentEntity,
-								snapshotPos,
-								tempPosition,
-								orderUpdatePlan.values(),
-								orderUpdatePlan.restrictions()
-						),
-						tempPhaseOrdinal,
-						"UpdateRowTemp[" + snapshotPos + "→" + tempPosition + "](" + persister.getRolePath() + ")"
-				) );
+									currentEntity,
+									snapshotPos,
+									tempPosition,
+									orderUpdateValues,
+									orderUpdateRestrictions
+							),
+							tempPhaseOrdinal,
+							shiftTempOrigin,
+							orderUpdateShapeKey
+					) );
 
-				finalPhaseOps.add( new FlushOperation(
-						tableDescriptor,
-						MutationKind.UPDATE_ORDER,
-						orderUpdatePlan.jdbcOperation(),
-						new OrderOnlyUpdateBindPlan(
-								persister,
-								collection,
+					finalPhaseOps.add( new FlushOperation(
+							tableDescriptor,
+							MutationKind.UPDATE_ORDER,
+							orderUpdateJdbcOperation,
+							new OrderOnlyUpdateBindPlan(
+									persister,
+									collection,
 								key,
-								currentEntity,
-								tempPosition,
-								currentPos,
-								orderUpdatePlan.values(),
-								orderUpdatePlan.restrictions()
-						),
-						finalPhaseOrdinal,
-						"UpdateRowFinal[" + tempPosition + "→" + currentPos + "](" + persister.getRolePath() + ")"
-				) );
+									currentEntity,
+									tempPosition,
+									currentPos,
+									orderUpdateValues,
+									orderUpdateRestrictions
+							),
+							finalPhaseOrdinal,
+							shiftFinalOrigin,
+							orderUpdateShapeKey
+					) );
 			}
 		}
 
@@ -824,6 +878,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		final var updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
 		final List<FlushOperation> updateOperations = new ArrayList<>();
+		final var updateJdbcOperation = updateRowPlan.jdbcOperation();
+		final var updateValues = updateRowPlan.values();
+		final var updateRestrictions = updateRowPlan.restrictions();
+		final var updateShapeKey = shapeKey( MutationKind.UPDATE, updateJdbcOperation );
 
 		int entryCount = 0;
 		while ( entries.hasNext() ) {
@@ -833,22 +891,23 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				final BindPlan bindPlan = new SingleRowUpdateBindPlan(
 						persister,
 						collection,
-						key,
-						entry,
-						entryCount,
-						updateRowPlan.values(),
-						updateRowPlan.restrictions()
-				);
+							key,
+							entry,
+							entryCount,
+							updateValues,
+							updateRestrictions
+					);
 
-				updateOperations.add( new FlushOperation(
-						tableDescriptor,
-						MutationKind.UPDATE,
-						updateRowPlan.jdbcOperation(),
-						bindPlan,
-						updateOrdinal,
-						"UpdateRow[" + entryCount + "](" + persister.getRolePath() + ")"
-				) );
-			}
+					updateOperations.add( new FlushOperation(
+							tableDescriptor,
+							MutationKind.UPDATE,
+							updateJdbcOperation,
+							bindPlan,
+							updateOrdinal,
+							updateRowOrigin,
+							updateShapeKey
+					) );
+				}
 
 			entryCount++;
 		}
@@ -881,6 +940,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		// For entity collections (join tables), use entity-based tracking if available
 		final boolean useEntityTracking = persister.getElementType().isEntityType();
 		final var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
+		final var insertJdbcOperation = insertRowPlan.jdbcOperation();
+		final var insertValues = insertRowPlan.values();
+		final var insertShapeKey = shapeKey( MutationKind.INSERT, insertJdbcOperation );
 
 		if ( useEntityTracking ) {
 			// Try entity-based tracking first (for indexed collections that override getAddedEntities)
@@ -893,7 +955,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					entryList.add( entries.next() );
 				}
 
-				int insertCount = 0;
 				while ( addedEntities.hasNext() ) {
 					final Object addedEntity = addedEntities.next();
 
@@ -910,17 +971,18 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						operationConsumer.accept( new FlushOperation(
 								tableDescriptor,
 								MutationKind.INSERT,
-								insertRowPlan.jdbcOperation(),
+								insertJdbcOperation,
 								new SingleRowInsertBindPlan(
 										persister,
-										insertRowPlan.values(),
+										insertValues,
 										collection,
 										key,
 										addedEntity,
 										position
 								),
 								insertOrdinal,
-								"InsertRow[" + insertCount + "](" + persister.getRolePath() + ")"
+								insertOrigin,
+								insertShapeKey
 						) );
 						contributeAdditionalInsert(
 								collection,
@@ -931,7 +993,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 								session,
 								operationConsumer
 						);
-						insertCount++;
 					}
 				}
 				return;
@@ -955,17 +1016,18 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					operationConsumer.accept( new FlushOperation(
 							tableDescriptor,
 							MutationKind.INSERT,
-							insertRowPlan.jdbcOperation(),
+							insertJdbcOperation,
 							new SingleRowInsertBindPlan(
 									persister,
-									insertRowPlan.values(),
+									insertValues,
 									collection,
 									key,
 									entry,
 									entryCount
 							),
 							insertOrdinal,
-							"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
+							insertOrigin,
+							insertShapeKey
 					) );
 					contributeAdditionalInsert(
 							collection,
@@ -1041,6 +1103,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				new RemoveBindPlan( key, persister, mutationPlanContributor ),
 				calculateOrdinal( ordinalBase, Slot.DELETE ),
 				"RemoveAllRows(" + persister.getRolePath() + ")"
+		);
+	}
+
+	private StatementShapeKey shapeKey(MutationKind kind, MutationOperation jdbcOperation) {
+		return StatementShapeKey.forMutation(
+				tableDescriptor.name(),
+				kind,
+				tableDescriptor,
+				jdbcOperation
 		);
 	}
 

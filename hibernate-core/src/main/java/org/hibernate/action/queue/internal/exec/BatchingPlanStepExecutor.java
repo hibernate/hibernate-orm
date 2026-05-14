@@ -7,21 +7,18 @@ package org.hibernate.action.queue.internal.exec;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.bind.OperationResultChecker;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
-import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
+import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
-import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.function.Consumer;
 
+/// PlanStepExecutor with support for JDBC batching.
+///
 /// @author Steve Ebersole
 public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	private final int batchSize;
@@ -29,8 +26,10 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	private StatementShapeKey batchKey;
 	private int currentBatchIndex;
 
-	private Batch batch;
-	private FlushOperation[] batchOperations;
+	private SingleStatementBatch batch;
+	private final FlushOperation[] batchOperations;
+	private PreparableMutationOperation reusableValueBindingsOperation;
+	private JdbcValueBindings reusableValueBindings;
 
 	private Consumer<Object> newlyManagedEntityConsumer;
 	private Consumer<FlushOperation> fixupOperationConsumer;
@@ -38,6 +37,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	public BatchingPlanStepExecutor(int batchSize, SharedSessionContractImplementor session) {
 		super(session);
 		this.batchSize = batchSize;
+		this.batchOperations = new FlushOperation[batchSize];
 	}
 
 	@Override
@@ -102,95 +102,63 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	private void newBatch(StatementShapeKey operationShapeKey, PreparableMutationOperation preparable) {
 		batchKey = operationShapeKey;
 		currentBatchIndex = 0;
-		batch = session.getJdbcCoordinator().getBatch(
-				operationShapeKey,
-				batchSize,
-				preparable
-		);
-		batchOperations = new FlushOperation[batchSize];
+		reusableValueBindingsOperation = null;
+		reusableValueBindings = null;
+		batch = session.getJdbcCoordinator().getSingleStatementBatch( operationShapeKey, batchSize, preparable );
 	}
 
 	private void applyToBatch(
 			PreparableMutationOperation preparable,
 			FlushOperation flushOperation) {
-		if ( currentBatchIndex > 0 ) {
-			session.getJdbcServices().getSqlStatementLogger().logStatement( preparable.getSqlString() );
-		}
-
-		var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
-		flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
+		var bindPlan = flushOperation.getBindPlan();
+		var valueBindings = getReusableValueBindings( preparable, flushOperation );
+		bindPlan.bindValues( valueBindings, flushOperation, session );
 
 		batchOperations[currentBatchIndex] = flushOperation;
 
-		final var jdbcValueBindings = new JdbcValueBindingsImpl(
-				preparable.getMutationType(),
-				preparable.getMutationTarget(),
-				preparable,
-				session
-		);
-		valueBindings.getBindingGroup().forEachBinding( binding ->
-				jdbcValueBindings.bindValue(
-						JdbcValueBindings.resolveValue( binding.getValue() ),
-						valueBindings.getBindingGroup().getTableName(),
-						binding.getColumnName(),
-						binding.getValueDescriptor().getUsage()
-				)
-		);
-
+		final OperationResultChecker resultChecker = flushOperation.getOperationResultChecker();
 		batch.addToBatch(
-				jdbcValueBindings,
-				null,
-				buildStaleStateMapper(
-						flushOperation.getBindPlan().getOperationResultChecker(),
-						currentBatchIndex,
-						preparable.getSqlString()
-				)
+				valueBindings::beforeStatement,
+				resultChecker == null ? null : resultChecker::checkResult
 		);
 		currentBatchIndex++;
 
 		if ( currentBatchIndex == batchSize ) {
-			runPostBatchCallbacks( currentBatchIndex );
-			Arrays.fill( batchOperations, null );
-			currentBatchIndex = 0;
+			try {
+				runPostBatchCallbacks( currentBatchIndex );
+			}
+			finally {
+				currentBatchIndex = 0;
+			}
 		}
 	}
 
-	private StaleStateMapper buildStaleStateMapper(
-			OperationResultChecker resultChecker,
-			int batchPosition,
-			String sqlString) {
-		if ( resultChecker == null ) {
-			return null;
+	private JdbcValueBindings getReusableValueBindings(
+			PreparableMutationOperation preparable,
+			FlushOperation flushOperation) {
+		if ( reusableValueBindingsOperation != preparable ) {
+			reusableValueBindingsOperation = preparable;
+			reusableValueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
 		}
-		return staleStateException -> {
-			try {
-				return resultChecker.checkResult( 0, batchPosition, sqlString, session.getFactory() )
-						? null
-						: staleStateException;
-			}
-			catch (HibernateException e) {
-				return e;
-			}
-			catch (SQLException e) {
-				return session.getJdbcServices()
-						.getSqlExceptionHelper()
-						.convert( e, "Unable to check batched mutation result - " + sqlString );
-			}
-		};
+		else {
+			reusableValueBindings.clear();
+		}
+		return reusableValueBindings;
 	}
 
 	private void executeBatch() {
 		final int batchCount = currentBatchIndex;
-		final FlushOperation[] operations = batchOperations;
 		try {
-			session.getJdbcCoordinator().executeBatch();
+			batch.execute();
 			runPostBatchCallbacks( batchCount );
 		}
 		finally {
+			batch.release();
 			batchKey = null;
 			batch = null;
-			batchOperations = null;
 			currentBatchIndex = 0;
+			reusableValueBindingsOperation = null;
+			reusableValueBindings = null;
 		}
 	}
 
@@ -200,7 +168,9 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 			throw new AssertionFailure( "Expecting at most " + operations.length + " batched operations; but got " + batchCount );
 		}
 		for ( int i = 0; i < batchCount; i++ ) {
-			super.afterOperationExecution( operations[i], newlyManagedEntityConsumer, fixupOperationConsumer );
+			final FlushOperation operation = operations[i];
+			operations[i] = null;
+			super.afterOperationExecution( operation, newlyManagedEntityConsumer, fixupOperationConsumer );
 		}
 	}
 

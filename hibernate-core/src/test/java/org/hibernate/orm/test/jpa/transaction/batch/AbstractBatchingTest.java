@@ -8,15 +8,19 @@ import java.sql.SQLException;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.batch.spi.BatchedResultChecker;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
+import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
+import org.hibernate.engine.jdbc.batch.spi.StatementBinder;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.sql.model.PreparableMutationOperation;
 
 import org.hibernate.testing.orm.junit.SettingProvider;
 
@@ -26,6 +30,7 @@ import org.hibernate.testing.orm.junit.SettingProvider;
 public abstract class AbstractBatchingTest {
 
 	protected static BatchWrapper batchWrapper;
+	protected static SingleStatementBatchWrapper singleStatementBatchWrapper;
 	protected static boolean wasReleaseCalled;
 	protected static int numberOfStatementsBeforeRelease = -1;
 	protected static int numberOfStatementsAfterRelease = -1;
@@ -50,17 +55,32 @@ public abstract class AbstractBatchingTest {
 		}
 
 		@Override
-		public Batch buildBatch(
+		public GroupedBatch buildGroupedBatch(
 				BatchKey key,
 				Integer explicitBatchSize,
 				Supplier<PreparedStatementGroup> statementGroupSupplier,
 				JdbcCoordinator jdbcCoordinator) {
 			batchWrapper = new BatchWrapper(
 					throwError,
-					super.buildBatch( key, explicitBatchSize, statementGroupSupplier, jdbcCoordinator ),
+					super.buildGroupedBatch( key, explicitBatchSize, statementGroupSupplier, jdbcCoordinator ),
 					jdbcCoordinator
 			);
 			return batchWrapper;
+		}
+
+		@Override
+		public SingleStatementBatch buildSingleStatementBatch(
+				BatchKey key,
+				Integer explicitBatchSize,
+				PreparableMutationOperation mutationOperation,
+				JdbcCoordinator jdbcCoordinator) {
+			singleStatementBatchWrapper = new SingleStatementBatchWrapper(
+					throwError,
+					super.buildSingleStatementBatch( key, explicitBatchSize, mutationOperation, jdbcCoordinator ),
+					jdbcCoordinator,
+					mutationOperation.getSqlString()
+			);
+			return singleStatementBatchWrapper;
 		}
 	}
 
@@ -77,15 +97,15 @@ public abstract class AbstractBatchingTest {
 		}
 	}
 
-	public static class BatchWrapper implements Batch {
+	public static class BatchWrapper implements GroupedBatch {
 		private final boolean throwError;
-		private final Batch wrapped;
+		private final GroupedBatch wrapped;
 		private final JdbcCoordinator jdbcCoordinator;
 
 		private int numberOfBatches;
 		private int numberOfSuccessfulBatches;
 
-		public BatchWrapper(boolean throwError, Batch wrapped, JdbcCoordinator jdbcCoordinator) {
+		public BatchWrapper(boolean throwError, GroupedBatch wrapped, JdbcCoordinator jdbcCoordinator) {
 			this.throwError = throwError;
 			this.wrapped = wrapped;
 			this.jdbcCoordinator = jdbcCoordinator;
@@ -152,6 +172,76 @@ public abstract class AbstractBatchingTest {
 			wasReleaseCalled = true;
 			wrapped.release();
 			numberOfStatementsAfterRelease = wrapped.getStatementGroup().getNumberOfActiveStatements();
+		}
+	}
+
+	public static class SingleStatementBatchWrapper implements SingleStatementBatch {
+		private final boolean throwError;
+		private final SingleStatementBatch wrapped;
+		private final JdbcCoordinator jdbcCoordinator;
+		private final String sqlString;
+
+		private int numberOfBatches;
+		private int numberOfSuccessfulBatches;
+
+		public SingleStatementBatchWrapper(
+				boolean throwError,
+				SingleStatementBatch wrapped,
+				JdbcCoordinator jdbcCoordinator,
+				String sqlString) {
+			this.throwError = throwError;
+			this.wrapped = wrapped;
+			this.jdbcCoordinator = jdbcCoordinator;
+			this.sqlString = sqlString;
+		}
+
+		public int getNumberOfBatches() {
+			return numberOfBatches;
+		}
+
+		public int getNumberOfSuccessfulBatches() {
+			return numberOfSuccessfulBatches;
+		}
+
+		@Override
+		public BatchKey getKey() {
+			return wrapped.getKey();
+		}
+
+		@Override
+		public void addObserver(BatchObserver observer) {
+			wrapped.addObserver( observer );
+		}
+
+		@Override
+		public void addToBatch(StatementBinder statementBinder, BatchedResultChecker resultChecker) {
+			numberOfBatches++;
+			wrapped.addToBatch( statementBinder, resultChecker );
+			numberOfStatementsBeforeRelease = 1;
+
+			if ( throwError ) {
+				final JdbcServices jdbcServices = jdbcCoordinator.getJdbcSessionOwner()
+						.getJdbcSessionContext()
+						.getJdbcServices();
+				throw jdbcServices.getSqlExceptionHelper().convert(
+						new SQLException( "fake SQLException" ),
+						"could not perform addBatch",
+							sqlString
+					);
+			}
+			numberOfSuccessfulBatches++;
+		}
+
+		@Override
+		public void execute() {
+			wrapped.execute();
+		}
+
+		@Override
+		public void release() {
+			wasReleaseCalled = true;
+			wrapped.release();
+			numberOfStatementsAfterRelease = 0;
 		}
 	}
 }

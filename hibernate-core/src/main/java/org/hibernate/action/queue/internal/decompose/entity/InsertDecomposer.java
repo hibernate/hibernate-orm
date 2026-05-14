@@ -43,6 +43,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 	private final EntityInsertMutationPlanner insertMutationPlanner;
 	private final EntityMutationPlanContributor mutationPlanContributor;
 
+	private final String origin;
+
 	public InsertDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
 	}
@@ -55,6 +57,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 		this.insertMutationPlanner = new EntityInsertMutationPlanner( entityPersister, sessionFactory );
 		this.mutationPlanContributor = mutationPlanContributor;
+
+		this.origin = "EntityInsertAction(" + entityPersister.getEntityName() + ")";
 	}
 
 	/// Static set of table mutations used to perform the entity creation.
@@ -113,7 +117,9 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		);
 
 		var insertable = entityPersister.getPropertyInsertability();
-		var valuesAnalysis = new InsertValuesAnalysis( entityPersister, state );
+		var valuesAnalysis = insertMutationPlanner.needsInsertValuesAnalysis()
+				? new InsertValuesAnalysis( entityPersister, state )
+				: null;
 		final boolean[] effectiveInsertability = entityPersister.isDynamicInsert()
 				? insertMutationPlanner.resolveInsertability( state )
 				: insertable;
@@ -147,11 +153,19 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 				continue;
 			}
 			final var tableInsert = effectiveGroup.get( tableDescriptor.name() );
-			var operation = tableInsert.createMutationOperation( valuesAnalysis, sessionFactory );
 
-			if ( !valuesAnalysis.include( tableDescriptor ) ) {
+			if ( valuesAnalysis != null && !valuesAnalysis.include( tableDescriptor ) ) {
 				continue;
 			}
+			var operation = insertMutationPlanner.resolveJdbcInsertOperation(
+					tableDescriptor.name(),
+					tableInsert,
+					valuesAnalysis
+			);
+			final var shapeKey = insertMutationPlanner.resolveStatementShapeKey(
+					tableDescriptor.name(),
+					tableInsert
+			);
 
 			final BindPlan bindPlan = insertMutationPlanner.createInsertBindPlan(
 					tableDescriptor,
@@ -170,7 +184,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					operation,
 					bindPlan,
 					ordinalBase * 1_000 + (localOrd++),
-					"EntityInsertAction(" + entityPersister.getEntityName() + ")",
+					origin,
+					shapeKey,
 					needsIdPrePhase
 			);
 
@@ -180,23 +195,38 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			previousOperation = op;
 		}
 
-		final List<FlushOperation> additionalOperations = new ArrayList<>();
-		mutationPlanContributor.contributeAdditionalInsert(
-				new EntityMutationPlanContributor.InsertContext(
-						entityPersister,
-						action,
-						ordinalBase,
-						session,
-						decompositionContext,
-						entity,
-						identifier,
-						state,
-						cacheInsert
-				),
-				additionalOperations::add
-		);
+		if ( mutationPlanContributor == EntityMutationPlanContributor.STANDARD ) {
+			emitTailOperation( previousOperation, postInsertHandling, operationConsumer );
+		}
+		else {
+			final List<FlushOperation> additionalOperations = new ArrayList<>();
+			mutationPlanContributor.contributeAdditionalInsert(
+					new EntityMutationPlanContributor.InsertContext(
+							entityPersister,
+							action,
+							ordinalBase,
+							session,
+							decompositionContext,
+							entity,
+							identifier,
+							state,
+							cacheInsert
+					),
+					additionalOperations::add
+			);
 
-		emitTailOperations( previousOperation, additionalOperations, postInsertHandling, operationConsumer );
+			emitTailOperations( previousOperation, additionalOperations, postInsertHandling, operationConsumer );
+		}
+	}
+
+	private void emitTailOperation(
+			FlushOperation previousOperation,
+			PostExecutionCallback postExecutionCallback,
+			Consumer<FlushOperation> operationConsumer) {
+		if ( previousOperation != null ) {
+			previousOperation.setPostExecutionCallback( postExecutionCallback );
+			operationConsumer.accept( previousOperation );
+		}
 	}
 
 	private void emitTailOperations(

@@ -131,7 +131,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 
 		if ( fixupOperationConsumer != null ) {
 			// If this op was cycle-broken, the patcher stored intended FK values in op.intendedFkValues.
-			if ( !flushOperation.getIntendedFkValues().isEmpty() ) {
+			if ( flushOperation.hasIntendedFkValues() ) {
 				final Object entityId = flushOperation.getBindPlan().getEntityId();
 
 				final FlushOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
@@ -145,7 +145,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			}
 
 			// If this op was cycle-broken for unique swap, the patcher stored intended values in op.intendedUniqueValues.
-			if ( !flushOperation.getIntendedUniqueValues().isEmpty() ) {
+			if ( flushOperation.hasIntendedUniqueValues() ) {
 				final Object entityId = flushOperation.getBindPlan().getEntityId();
 
 				final FlushOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
@@ -213,7 +213,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 					.getResultSetReturn()
 					.executeUpdate( stmnt, preparable.getSqlString() );
 
-			final var resultChecker = flushOperation.getBindPlan().getOperationResultChecker();
+			final var resultChecker = flushOperation.getOperationResultChecker();
 			if ( resultChecker != null ) {
 				resultChecker.checkResult( affectedRowCount, -1, preparable.getSqlString(), session.getFactory() );
 			}

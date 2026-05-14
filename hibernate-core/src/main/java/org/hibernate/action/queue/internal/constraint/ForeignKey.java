@@ -28,7 +28,32 @@ public record ForeignKey(
 		TargetType targetType,
 		boolean isAssociation,
 		boolean nullable,
-		Deferrability deferrability) implements Constraint, Serializable {
+		Deferrability deferrability,
+		String normalizedKeyTable,
+		String normalizedTargetTable) implements Constraint, Serializable {
+
+	public ForeignKey(
+			String keyTable,
+			String targetTable,
+			SelectableMappings keyColumns,
+			SelectableMappings targetColumns,
+			TargetType targetType,
+			boolean isAssociation,
+			boolean nullable,
+			Deferrability deferrability) {
+		this(
+				keyTable,
+				targetTable,
+				keyColumns,
+				targetColumns,
+				targetType,
+				isAssociation,
+				nullable,
+				deferrability,
+				ConstraintModel.normalizeTableExpression( keyTable ),
+				ConstraintModel.normalizeTableExpression( targetTable )
+		);
+	}
 
 	public enum TargetType {
 		/// Foreign key targets a primary key

@@ -26,7 +26,28 @@ public record UniqueConstraint(
 		SelectableMappings columns,
 		Deferrability deferrability,
 		boolean nullable,
-		String[] propertyNames) implements Constraint, Serializable {
+		String[] propertyNames,
+		String normalizedTableName) implements Constraint, Serializable {
+
+	public UniqueConstraint(
+			String tableName,
+			String constraintName,
+			ConstraintType type,
+			SelectableMappings columns,
+			Deferrability deferrability,
+			boolean nullable,
+			String[] propertyNames) {
+		this(
+				tableName,
+				constraintName,
+				type,
+				columns,
+				deferrability,
+				nullable,
+				propertyNames,
+				ConstraintModel.normalizeTableExpression( tableName )
+		);
+	}
 
 	public enum ConstraintType {
 		/// Primary key constraint

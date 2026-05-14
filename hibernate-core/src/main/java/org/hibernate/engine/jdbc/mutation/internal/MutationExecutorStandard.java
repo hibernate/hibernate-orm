@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
 import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
@@ -48,7 +48,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 	/**
 	 * The batched statements
 	 */
-	private final Batch batch;
+	private final GroupedBatch batch;
 
 	/**
 	 * Any non-batched JDBC statements
@@ -136,7 +136,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		else {
 			assert generatedValuesDelegate == null : "Unsupported batched mutation for entity target with generated values delegate";
 			final List<PreparableMutationOperation> batchedMutationsRef = batchedJdbcMutations;
-			this.batch = session.getJdbcCoordinator().getBatch(
+			this.batch = session.getJdbcCoordinator().getGroupedBatch(
 					batchKey,
 					batchSize,
 					() -> ModelMutationHelper.toPreparedStatementGroup(

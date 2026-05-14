@@ -9,19 +9,15 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperati
 import org.hibernate.action.queue.internal.constraint.UniqueConstraint;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
-import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-
-import java.sql.SQLException;
 
 /// Bind plan for a single collection row insert.
 ///
 /// @author Steve Ebersole
-public class SingleRowInsertBindPlan implements BindPlan, OperationResultChecker {
+public class SingleRowInsertBindPlan implements BindPlan {
 	private final CollectionPersister persister;
 	private final CollectionJdbcOperations.Values values;
 
@@ -78,15 +74,5 @@ public class SingleRowInsertBindPlan implements BindPlan, OperationResultChecker
 		}
 
 		values.applyValues( collection, key, entry, entryIndex, session, jdbcValueBindings );
-	}
-
-	@Override
-	public boolean checkResult(
-			int affectedRowCount,
-			int batchPosition,
-			String sqlString,
-			SessionFactoryImplementor sessionFactory) throws SQLException {
-		// something we should check here?
-		return true;
 	}
 }

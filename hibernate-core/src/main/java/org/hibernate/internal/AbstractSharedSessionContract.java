@@ -1625,6 +1625,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 				typedQueryReference.getHints().forEach( query::setHint );
 				selectionQuery = (SelectionQueryImplementor<R>) query;
 			}
+			typedQueryReference.getOptions().forEach( selectionQuery::addOption );
 
 			applyQuerySettingsAndHints( selectionQuery );
 
@@ -1650,6 +1651,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 							memento -> memento.toMutationQuery( this ),
 							memento -> memento.toMutationQuery( this ) );
 			statementReference.getHints().forEach( query::setHint );
+			statementReference.getOptions().forEach( query::addOption );
 			return query;
 		}
 	}

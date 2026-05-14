@@ -21,8 +21,18 @@ import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
+import jakarta.persistence.QueryHint;
+import jakarta.persistence.query.JakartaQuery;
+import jakarta.persistence.query.NativeQuery;
+import jakarta.persistence.query.QueryOptions;
 import org.hibernate.StatelessSession;
 import org.hibernate.annotations.processing.HQL;
+import org.hibernate.annotations.processing.SQL;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -40,6 +50,10 @@ public interface BookAuthorRepository {
 
 	@Delete
 	void deleteById(String isbn);
+
+	@Delete
+	@QueryOptions(timeout = 700, flush = QueryFlushMode.NO_FLUSH)
+	int deleteByTitle(String title);
 
 	@Insert
 	void insertBooks0(Book[] books);
@@ -94,6 +108,10 @@ public interface BookAuthorRepository {
 	List<Book> byPubDate0(LocalDate publicationDate);
 
 	@Find
+	@QueryOptions(timeout = 600, hints = @QueryHint(name = "find.hint", value = "yes"))
+	List<Book> booksByTitleWithOptions(String title);
+
+	@Find
 	@OrderBy(value = "title", ignoreCase = true)
 	@OrderBy(value = "isbn", descending = true)
 	List<Book> byPubDate1(LocalDate publicationDate, Limit limit, Sort<? super Book> order);
@@ -134,6 +152,49 @@ public interface BookAuthorRepository {
 
 	@Query("from Book where title like :title")
 	List<Book> books0(String title);
+
+	@HQL("from Book where title like :title")
+	default List<Book> defaultBooksWithHql(String title) {
+		return List.of();
+	}
+
+	@SQL("select * from books where title like :title")
+	default List<Book> defaultBooksWithSql(String title) {
+		return List.of();
+	}
+
+	@Query("from Book where title like :title")
+	default List<Book> defaultBooksWithJakartaDataQuery(String title) {
+		return List.of();
+	}
+
+	@JakartaQuery("from Book where title like :title")
+	default List<Book> defaultBooksWithJakartaQuery(String title) {
+		return List.of();
+	}
+
+	@NativeQuery("select * from books where title like :title")
+	default List<Book> defaultBooksWithNativeQuery(String title) {
+		return List.of();
+	}
+
+	@JakartaQuery("delete from Book where title = :title")
+	default int defaultDeleteWithJakartaQuery(String title) {
+		return 0;
+	}
+
+	@JakartaQuery("from Book where title like :title")
+	@QueryOptions(
+			cacheStoreMode = CacheStoreMode.BYPASS,
+			cacheRetrieveMode = CacheRetrieveMode.BYPASS,
+			timeout = 500,
+			hints = @QueryHint(name = "org.hibernate.readOnly", value = "true"),
+			lockMode = LockModeType.PESSIMISTIC_READ,
+			lockScope = PessimisticLockScope.EXTENDED,
+			entityGraph = "Book.summary",
+			flush = QueryFlushMode.NO_FLUSH
+	)
+	List<Book> booksWithOptions(String title);
 
 	@Query("from Book where title like :title")
 	List<Book> books1(@Param("title") String titlePattern, Order<Book> order);

@@ -59,6 +59,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		collectOrdering( declaration, paramTypes, containerType );
 		inTry( declaration );
 		createQuery( declaration, true );
+		QueryOptionsSupport.setQueryOptions( this, declaration, false, false );
 		declaration.append( ";\n" );
 		results( declaration, paramTypes, containerType );
 		castResult( declaration );

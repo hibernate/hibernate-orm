@@ -3192,7 +3192,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final boolean mutation = isInsertUpdateDelete( queryString );
 		final String resultSetMapping =
 				isNative && !mutation && !isReactive()
-						? nativeResultSetMapping( method, returnType )
+						? nativeResultSetMapping( method, returnType, containerTypeName )
 						: null;
 
 		final QueryMethod attribute =
@@ -3224,7 +3224,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return typeAsString( memberMethodType( method ).getReturnType() );
 	}
 
-	private @Nullable String nativeResultSetMapping(ExecutableElement method, @Nullable TypeMirror returnType) {
+	private @Nullable String nativeResultSetMapping(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			@Nullable String containerType) {
 		final List<AnnotationMirror> entityResults =
 				resultAnnotations( method, ENTITY_RESULT, ENTITY_RESULTS );
 		final List<AnnotationMirror> constructorResults =
@@ -3234,6 +3237,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( entityResults.isEmpty() && constructorResults.isEmpty() && columnResults.isEmpty() ) {
 			return null;
 		}
+		validateNativeResultSetMappingType( method, returnType, containerType,
+				entityResults, constructorResults, columnResults );
 
 		final List<String> resultMappings = new ArrayList<>();
 		for ( AnnotationMirror entityResult : entityResults ) {
@@ -3252,6 +3257,107 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return resultMappings.size() == 1
 				? resultMappings.get( 0 )
 				: resultSetMapping( "compound" ) + "( " + String.join( ", ", resultMappings ) + " )";
+	}
+
+	private void validateNativeResultSetMappingType(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			@Nullable String containerType,
+			List<AnnotationMirror> entityResults,
+			List<AnnotationMirror> constructorResults,
+			List<AnnotationMirror> columnResults) {
+		if ( returnType != null ) {
+			final TypeMirror resultSetMappingType =
+					nativeResultSetMappingType( returnType, entityResults, constructorResults, columnResults );
+			if ( resultSetMappingType != null
+				&& !isCompatibleResultSetMappingType( resultSetMappingType, returnType, containerType ) ) {
+				message( method,
+						"result set mapping type '" + stripAnnotations( typeAsString( resultSetMappingType ) )
+						+ "' does not match query method return type '"
+						+ stripAnnotations( typeAsString( returnType ) ) + "'",
+						Diagnostic.Kind.ERROR );
+			}
+		}
+	}
+
+	private boolean isCompatibleResultSetMappingType(
+			TypeMirror resultSetMappingType,
+			TypeMirror returnType,
+			@Nullable String containerType) {
+		return containerType == null || "[]".equals( containerType )
+				? isAssignableToReturnType( resultSetMappingType, returnType )
+				: isSameReturnType( resultSetMappingType, returnType );
+	}
+
+	private @Nullable TypeMirror nativeResultSetMappingType(
+			TypeMirror returnType,
+			List<AnnotationMirror> entityResults,
+			List<AnnotationMirror> constructorResults,
+			List<AnnotationMirror> columnResults) {
+		final int entityCount = entityResults.size();
+		final int constructorCount = constructorResults.size();
+		final int columnCount = columnResults.size();
+		if ( entityCount + constructorCount + columnCount > 1 ) {
+			return objectArrayType();
+		}
+		else if ( entityCount == 1 ) {
+			return annotationClassType( entityResults.get( 0 ), "entityClass" );
+		}
+		else if ( constructorCount == 1 ) {
+			return annotationClassType( constructorResults.get( 0 ), "targetClass" );
+		}
+		else if ( columnCount == 1 ) {
+			return columnResultType( columnResults.get( 0 ), returnType );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private TypeMirror columnResultType(AnnotationMirror columnResult, @Nullable TypeMirror inferredColumnType) {
+		final TypeMirror explicitType = annotationClassTypeOrNull( columnResult, "type" );
+		if ( explicitType == null || isVoidType( explicitType ) ) {
+			return inferredColumnType == null
+				|| isVoidType( inferredColumnType )
+						? objectType()
+						: inferredColumnType;
+		}
+		else {
+			return explicitType;
+		}
+	}
+
+	private boolean isSameReturnType(TypeMirror resultSetMappingType, TypeMirror returnType) {
+		return isSameType( resultSetMappingType, returnType )
+			|| isEquivalentPrimitiveType( resultSetMappingType, returnType )
+			|| isEquivalentPrimitiveType( returnType, resultSetMappingType );
+	}
+
+	private boolean isAssignableToReturnType(TypeMirror resultSetMappingType, TypeMirror returnType) {
+		if ( isSameReturnType( resultSetMappingType, returnType ) ) {
+			return true;
+		}
+		else if ( isVoidType( resultSetMappingType ) || isVoidType( returnType ) ) {
+			return false;
+		}
+		else {
+			return context.getTypeUtils()
+					.isAssignable( boxedType( resultSetMappingType ), boxedType( returnType ) );
+		}
+	}
+
+	private TypeMirror boxedType(TypeMirror type) {
+		return type.getKind().isPrimitive()
+				? context.getTypeUtils().boxedClass( (PrimitiveType) type ).asType()
+				: type;
+	}
+
+	private TypeMirror objectType() {
+		return context.getElementUtils().getTypeElement( JAVA_OBJECT ).asType();
+	}
+
+	private ArrayType objectArrayType() {
+		return context.getTypeUtils().getArrayType( objectType() );
 	}
 
 	private List<AnnotationMirror> resultAnnotations(Element element, String annotationName, String containerName) {
@@ -3406,6 +3512,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return value == null ? null : className( value );
 	}
 
+	private TypeMirror annotationClassType(AnnotationMirror annotationMirror, String member) {
+		final TypeMirror type = annotationClassTypeOrNull( annotationMirror, member );
+		if ( type == null ) {
+			throw new AssertionFailure( "missing required class-valued annotation member: " + member );
+		}
+		return type;
+	}
+
+	private @Nullable TypeMirror annotationClassTypeOrNull(AnnotationMirror annotationMirror, String member) {
+		final AnnotationValue value = getAnnotationValue( annotationMirror, member );
+		return value != null && value.getValue() instanceof TypeMirror type ? type : null;
+	}
+
 	private String className(AnnotationValue value) {
 		final Object annotationValue = value.getValue();
 		return annotationValue instanceof TypeMirror type
@@ -3435,6 +3554,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static boolean isVoidClass(String className) {
 		return "void".equals( className )
 			|| VOID.equals( className );
+	}
+
+	private static boolean isVoidType(TypeMirror type) {
+		return type.getKind() == TypeKind.VOID
+			|| VOID.equals( returnTypeClass( type ) );
 	}
 
 	private static String returnTypeClass(TypeMirror returnType) {

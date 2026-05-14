@@ -5,7 +5,6 @@
 package org.hibernate.action.queue.internal.decompose;
 
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
-import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -50,9 +49,9 @@ public class Decomposer implements DecompositionContext {
 	private final SessionImplementor session;
 
 	// Tracks inserts that have unresolved dependencies on transient entities
-	private final Map<AbstractEntityInsertAction, NonNullableTransientDependencies> unresolvedInserts = new IdentityHashMap<>();
+	private Map<AbstractEntityInsertAction, NonNullableTransientDependencies> unresolvedInserts;
 	// Reverse mapping: transient entity -> inserts waiting for it
-	private final Map<Object, Set<AbstractEntityInsertAction>> insertsByTransientEntity = new IdentityHashMap<>();
+	private Map<Object, Set<AbstractEntityInsertAction>> insertsByTransientEntity;
 
 	// Tracks entities being inserted in the current flush
 	// Used to recognize that entities with INSERT actions in this flush are not unresolved dependencies
@@ -64,6 +63,7 @@ public class Decomposer implements DecompositionContext {
 	private Map<Object, int[]> updatedAttributesByDeletedEntity = null;
 	private Map<Object, DelayedValueAccess> generatedIdentifierHandles = null;
 	private Set<Object> ownersWithUpdateCallbacks = null;
+	private boolean flushActive;
 
 	public Decomposer(SessionImplementor session) {
 		this.session = session;
@@ -78,35 +78,64 @@ public class Decomposer implements DecompositionContext {
 		// if this ever shows up as a hot spot (unlikely), we could move collecting these
 		// into the action queue proper as the actions are added and then pass into the
 		// Decomposer as arguments.
-		entitiesBeingInserted = Collections.newSetFromMap(new IdentityHashMap<>());
-		entitiesBeingDeleted = Collections.newSetFromMap(new IdentityHashMap<>());
-		updatedAttributesByDeletedEntity = new IdentityHashMap<>();
-		generatedIdentifierHandles = new IdentityHashMap<>();
-		ownersWithUpdateCallbacks = Collections.newSetFromMap(new IdentityHashMap<>());
+		flushActive = true;
+		generatedIdentifierHandles = null;
+		ownersWithUpdateCallbacks = null;
 
-		for ( AbstractEntityInsertAction insertion : insertions ) {
-			final Object instance = insertion.getInstance();
-			entitiesBeingInserted.add( instance );
-			trackGeneratedIdentifierHandle( insertion );
+		if ( CollectionHelper.isNotEmpty( insertions ) ) {
+			entitiesBeingInserted = Collections.newSetFromMap( new IdentityHashMap<>() );
+			for ( AbstractEntityInsertAction insertion : insertions ) {
+				final Object instance = insertion.getInstance();
+				entitiesBeingInserted.add( instance );
+				trackGeneratedIdentifierHandle( insertion );
+			}
 		}
-		for ( EntityDeleteAction deletion : deletions ) {
-			entitiesBeingDeleted.add( deletion.getInstance() );
+		else {
+			entitiesBeingInserted = null;
 		}
-		for ( OrphanRemovalAction orphanRemoval : orphanRemovals ) {
-			entitiesBeingDeleted.add( orphanRemoval.getInstance() );
+
+		if ( CollectionHelper.isNotEmpty( deletions ) || CollectionHelper.isNotEmpty( orphanRemovals ) ) {
+			entitiesBeingDeleted = Collections.newSetFromMap( new IdentityHashMap<>() );
+
+			for ( EntityDeleteAction deletion : deletions ) {
+				entitiesBeingDeleted.add( deletion.getInstance() );
+			}
+			for ( OrphanRemovalAction orphanRemoval : orphanRemovals ) {
+				entitiesBeingDeleted.add( orphanRemoval.getInstance() );
+			}
 		}
-		for ( EntityUpdateAction update : updates ) {
-			if ( entitiesBeingDeleted.contains( update.getInstance() ) ) {
+		else {
+			entitiesBeingDeleted = null;
+		}
+
+		if ( entitiesBeingDeleted != null ) {
+			updatedAttributesByDeletedEntity = null;
+			for ( EntityUpdateAction update : updates ) {
+				if ( !entitiesBeingDeleted.contains( update.getInstance() ) ) {
+					continue;
+				}
+				if ( updatedAttributesByDeletedEntity == null ) {
+					updatedAttributesByDeletedEntity = new IdentityHashMap<>();
+				}
 				updatedAttributesByDeletedEntity.put( update.getInstance(), update.getDirtyFields() );
 			}
 		}
+		else {
+			updatedAttributesByDeletedEntity = null;
+		}
 
-		ACTION_LOGGER.tracef("Beginning flush with %d INSERT actions, %d DELETE actions",
-			entitiesBeingInserted.size(), entitiesBeingDeleted.size());
+		if ( ACTION_LOGGER.isTraceEnabled() ) {
+			ACTION_LOGGER.tracef(
+					"Beginning flush with %d INSERT actions, %d DELETE actions",
+					entitiesBeingInserted == null ? 0 : entitiesBeingInserted.size(),
+					entitiesBeingDeleted == null ? 0 : entitiesBeingDeleted.size()
+			);
+		}
 	}
 
 	/// End a flush operation - clear the tracking sets
 	public void endFlush() {
+		flushActive = false;
 		entitiesBeingInserted = null;
 		entitiesBeingDeleted = null;
 		updatedAttributesByDeletedEntity = null;
@@ -140,7 +169,13 @@ public class Decomposer implements DecompositionContext {
 
 	@Override
 	public boolean registerOwnerUpdateCallbacks(Object owner) {
-		return ownersWithUpdateCallbacks == null || ownersWithUpdateCallbacks.add( owner );
+		if ( !flushActive ) {
+			return true;
+		}
+		if ( ownersWithUpdateCallbacks == null ) {
+			ownersWithUpdateCallbacks = Collections.newSetFromMap( new IdentityHashMap<>() );
+		}
+		return ownersWithUpdateCallbacks.add( owner );
 	}
 
 	/// Filter out dependencies on entities being inserted in the current flush
@@ -165,8 +200,12 @@ public class Decomposer implements DecompositionContext {
 				}
 			}
 			else {
-				ACTION_LOGGER.tracef("  -> Filtering out dependency on %s (being inserted in this flush)",
-					transientEntity.getClass().getSimpleName());
+				if ( ACTION_LOGGER.isTraceEnabled() ) {
+					ACTION_LOGGER.tracef(
+							"  -> Filtering out dependency on %s (being inserted in this flush)",
+							transientEntity.getClass().getSimpleName()
+					);
+				}
 			}
 		}
 
@@ -179,7 +218,10 @@ public class Decomposer implements DecompositionContext {
 			Consumer<FlushOperation> operationConsumer) {
 		// Special handling for entity inserts - check for unresolved transient dependencies
 		if (executable instanceof AbstractEntityInsertAction insert) {
-			ACTION_LOGGER.tracef("Decomposing INSERT for %s", insert.getEntityName());
+			final boolean traceEnabled = ACTION_LOGGER.isTraceEnabled();
+			if ( traceEnabled ) {
+				ACTION_LOGGER.tracef( "Decomposing INSERT for %s", insert.getEntityName() );
+			}
 			final NonNullableTransientDependencies transientDeps = insert.findNonNullableTransientEntities();
 
 			// Filter out dependencies on entities being inserted in this same flush
@@ -187,12 +229,16 @@ public class Decomposer implements DecompositionContext {
 
 			if (unresolvedDeps != null && !unresolvedDeps.isEmpty()) {
 				// This insert has unresolved dependencies - defer decomposition
-				ACTION_LOGGER.tracef("  -> Has unresolved dependencies, deferring");
+				if ( traceEnabled ) {
+					ACTION_LOGGER.tracef( "  -> Has unresolved dependencies, deferring" );
+				}
 				trackUnresolvedInsert(insert, unresolvedDeps);
 				return;
 			}
 
-			ACTION_LOGGER.tracef("  -> No unresolved dependencies, decomposing");
+			if ( traceEnabled ) {
+				ACTION_LOGGER.tracef( "  -> No unresolved dependencies, decomposing" );
+			}
 			insert.getPersister().getInsertDecomposer().decompose(
 					insert,
 					ordinalBase,
@@ -276,14 +322,25 @@ public class Decomposer implements DecompositionContext {
 	/// @param insert the insert action with unresolved dependencies
 	/// @param dependencies the non-nullable transient dependencies
 	public void trackUnresolvedInsert(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
-		ACTION_LOGGER.tracef("Tracking unresolved insert for %s", insert.getEntityName());
-		for (Object transientEntity : dependencies.getNonNullableTransientEntities()) {
-			ACTION_LOGGER.tracef("  - depends on: %s@%s",
-				transientEntity.getClass().getSimpleName(),
-				System.identityHashCode(transientEntity));
+		if ( ACTION_LOGGER.isTraceEnabled() ) {
+			ACTION_LOGGER.tracef( "Tracking unresolved insert for %s", insert.getEntityName() );
+			for (Object transientEntity : dependencies.getNonNullableTransientEntities()) {
+				ACTION_LOGGER.tracef(
+						"  - depends on: %s@%s",
+						transientEntity.getClass().getSimpleName(),
+						System.identityHashCode(transientEntity)
+				);
+			}
 		}
 
 		trackGeneratedIdentifierHandle( insert );
+
+		if ( unresolvedInserts == null ) {
+			unresolvedInserts = new IdentityHashMap<>();
+		}
+		if ( insertsByTransientEntity == null ) {
+			insertsByTransientEntity = new IdentityHashMap<>();
+		}
 
 		unresolvedInserts.put(insert, dependencies);
 
@@ -317,6 +374,9 @@ public class Decomposer implements DecompositionContext {
 	/// @return list of AbstractEntityInsertActions that were resolved (all dependencies now satisfied)
 	public List<AbstractEntityInsertAction> resolveDependentActions(Object managedEntity) {
 		// Find inserts that were waiting for this entity
+		if ( insertsByTransientEntity == null ) {
+			return Collections.emptyList();
+		}
 		final Set<AbstractEntityInsertAction> dependentInserts = insertsByTransientEntity.remove(managedEntity);
 
 		if (dependentInserts == null || dependentInserts.isEmpty()) {
@@ -350,6 +410,9 @@ public class Decomposer implements DecompositionContext {
 	/// @param operationConsumer Consumer for any [table operations][FlushOperation] produced.
 	public void resolveAndDecompose(Object managedEntity, Consumer<FlushOperation> operationConsumer) {
 		// Find inserts that were waiting for this entity
+		if ( insertsByTransientEntity == null ) {
+			return;
+		}
 		final Set<AbstractEntityInsertAction> dependentInserts = insertsByTransientEntity.remove(managedEntity);
 
 		if (dependentInserts == null || dependentInserts.isEmpty()) {
@@ -385,7 +448,7 @@ public class Decomposer implements DecompositionContext {
 	///
 	/// @return true if there are unresolved inserts
 	public boolean hasUnresolvedInserts() {
-		return !unresolvedInserts.isEmpty();
+		return unresolvedInserts != null && !unresolvedInserts.isEmpty();
 	}
 
 	/// Validate that there are no unresolved inserts remaining.
@@ -393,7 +456,7 @@ public class Decomposer implements DecompositionContext {
 	///
 	/// @throws TransientPropertyValueException if unresolved inserts remain
 	public void validateNoUnresolvedInserts() {
-		if (unresolvedInserts.isEmpty()) {
+		if ( unresolvedInserts == null || unresolvedInserts.isEmpty() ) {
 			return;
 		}
 
@@ -431,17 +494,19 @@ public class Decomposer implements DecompositionContext {
 
 	/// Clear all tracked unresolved inserts. Used for cleanup.
 	public void clear() {
-		unresolvedInserts.clear();
-		insertsByTransientEntity.clear();
+		unresolvedInserts = null;
+		insertsByTransientEntity = null;
 		generatedIdentifierHandles = null;
 	}
 
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		final int queueSize = unresolvedInserts.size();
+		final int queueSize = unresolvedInserts == null ? 0 : unresolvedInserts.size();
 		ACTION_LOGGER.serializingUnresolvedInsertEntries(queueSize);
 		oos.writeInt( queueSize );
-		for ( AbstractEntityInsertAction unresolvedAction : unresolvedInserts.keySet() ) {
-			oos.writeObject( unresolvedAction );
+		if ( unresolvedInserts != null ) {
+			for ( AbstractEntityInsertAction unresolvedAction : unresolvedInserts.keySet() ) {
+				oos.writeObject( unresolvedAction );
+			}
 		}
 	}
 	public static Decomposer deserialize(

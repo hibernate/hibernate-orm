@@ -36,7 +36,6 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.hibernate.action.queue.internal.constraint.ConstraintModel.normalizeIdentifier;
@@ -120,17 +119,16 @@ public final class ConstraintModelBuilder {
 
 		final var reclassifiedForeignKeys = reclassifyForeignKeyTargetTypes( foreignKeys, uniqueConstraints, entityPersisters );
 
-		// Index unique constraints by table for fast lookup
-		Map<String, List<UniqueConstraint>> uniqueConstraintsByTable = uniqueConstraints.stream()
-				.collect(Collectors.groupingBy( constraint -> normalizeTableExpression( constraint.tableName() ) ));
+		// Index constraints by raw and normalized table names.  Runtime graph building
+		// usually asks with mapping-model table names, so the raw key avoids repeated
+		// normalization; the normalized key preserves quoted/schema-tolerant lookups.
+		Map<String, List<UniqueConstraint>> uniqueConstraintsByTable = indexUniqueConstraintsByTable( uniqueConstraints );
 
 		// Index foreign keys by target table (inbound FKs - pointing TO this table)
-		Map<String, List<ForeignKey>> inboundForeignKeysByTable = reclassifiedForeignKeys.stream()
-				.collect(Collectors.groupingBy( foreignKey -> normalizeTableExpression( foreignKey.targetTable() ) ));
+		Map<String, List<ForeignKey>> inboundForeignKeysByTable = indexForeignKeysByTargetTable( reclassifiedForeignKeys );
 
 		// Index foreign keys by key table (outbound FKs - FROM this table)
-		Map<String, List<ForeignKey>> outboundForeignKeysByTable = reclassifiedForeignKeys.stream()
-				.collect(Collectors.groupingBy( foreignKey -> normalizeTableExpression( foreignKey.keyTable() ) ));
+		Map<String, List<ForeignKey>> outboundForeignKeysByTable = indexForeignKeysByKeyTable( reclassifiedForeignKeys );
 
 		// Identify tables with cyclic foreign key relationships (bidirectional FKs)
 		var tablesWithCyclicForeignKeys = identifyTablesWithCyclicForeignKeys(
@@ -600,7 +598,6 @@ public final class ConstraintModelBuilder {
 					primaryKey
 			);
 		}
-
 		for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {
 			addCollectionUniqueConstraint(
 					attributeMapping,
@@ -625,6 +622,43 @@ public final class ConstraintModelBuilder {
 						null
 				);
 			}
+		}
+	}
+
+	private Map<String, List<UniqueConstraint>> indexUniqueConstraintsByTable(List<UniqueConstraint> uniqueConstraints) {
+		final Map<String, List<UniqueConstraint>> constraintsByTable = new HashMap<>();
+		for ( UniqueConstraint constraint : uniqueConstraints ) {
+			addIndexedValue( constraintsByTable, constraint.tableName(), constraint );
+			addIndexedValue( constraintsByTable, constraint.normalizedTableName(), constraint );
+		}
+		return constraintsByTable;
+	}
+
+	private Map<String, List<ForeignKey>> indexForeignKeysByTargetTable(ArrayList<ForeignKey> foreignKeys) {
+		final Map<String, List<ForeignKey>> foreignKeysByTable = new HashMap<>();
+		for ( ForeignKey foreignKey : foreignKeys ) {
+			addIndexedValue( foreignKeysByTable, foreignKey.targetTable(), foreignKey );
+			addIndexedValue( foreignKeysByTable, foreignKey.normalizedTargetTable(), foreignKey );
+		}
+		return foreignKeysByTable;
+	}
+
+	private Map<String, List<ForeignKey>> indexForeignKeysByKeyTable(ArrayList<ForeignKey> foreignKeys) {
+		final Map<String, List<ForeignKey>> foreignKeysByTable = new HashMap<>();
+		for ( ForeignKey foreignKey : foreignKeys ) {
+			addIndexedValue( foreignKeysByTable, foreignKey.keyTable(), foreignKey );
+			addIndexedValue( foreignKeysByTable, foreignKey.normalizedKeyTable(), foreignKey );
+		}
+		return foreignKeysByTable;
+	}
+
+	private static <T> void addIndexedValue(Map<String, List<T>> valuesByKey, String key, T value) {
+		if ( key == null || key.isEmpty() ) {
+			return;
+		}
+		final List<T> values = valuesByKey.computeIfAbsent( key, unused -> new ArrayList<>() );
+		if ( !values.contains( value ) ) {
+			values.add( value );
 		}
 	}
 
@@ -1049,10 +1083,9 @@ public final class ConstraintModelBuilder {
 		final java.util.Set<String> tables = new java.util.HashSet<>();
 		for (var fk : foreignKeys) {
 			if (fk.isAssociation()) {
-				String keyTable = (fk.keyTable());
-				String targetTable = (fk.targetTable());
-				if (tableNamesMatch( keyTable, targetTable )) {
-					tables.add(keyTable);
+				if (fk.normalizedKeyTable().equals( fk.normalizedTargetTable() )) {
+					tables.add(fk.keyTable());
+					tables.add(fk.normalizedKeyTable());
 				}
 			}
 		}
@@ -1078,11 +1111,12 @@ public final class ConstraintModelBuilder {
 
 			// Check for bidirectional relationships
 			for (ForeignKey inbound : inboundFKs) {
-				String sourceTable = inbound.keyTable();
+				String sourceTable = inbound.normalizedKeyTable();
 				for (ForeignKey outbound : outboundFKs) {
-					if (tableNamesMatch( outbound.targetTable(), sourceTable )) {
+					if (outbound.normalizedTargetTable().equals( sourceTable )) {
 						// Found bidirectional FK: table <-> sourceTable
 						tables.add(table);
+						tables.add(normalizeTableExpression( table ));
 						break;
 					}
 				}

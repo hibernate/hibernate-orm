@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import org.hibernate.SessionEventListener;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -88,9 +89,7 @@ public class BatchingBatchFailureTest implements SessionEventListener {
 				}
 				else {
 //					//check to see that there aren't any statements queued up (this can be an issue if using SavePoints)
-					final PreparedStatementDetails statementDetails = batch.getStatementGroup()
-							.getSingleStatementDetails();
-					assertThat( statementDetails.getStatement() ).isNull();
+					assertThat( hasActiveStatement( batch ) ).isFalse();
 				}
 			}
 			catch (Exception fieldException) {
@@ -101,6 +100,18 @@ public class BatchingBatchFailureTest implements SessionEventListener {
 			session.getTransaction().rollback();
 			session.close();
 		}
+	}
+
+	private boolean hasActiveStatement(Batch batch) throws Exception {
+		if ( batch instanceof GroupedBatch groupedBatch ) {
+			final PreparedStatementDetails statementDetails = groupedBatch.getStatementGroup()
+					.getSingleStatementDetails();
+			return statementDetails.getStatement() != null;
+		}
+
+		final Field field = batch.getClass().getDeclaredField( "statement" );
+		field.setAccessible( true );
+		return field.get( batch ) != null;
 	}
 
 	@Entity(name = "User")

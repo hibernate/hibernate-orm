@@ -9,6 +9,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
+import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupSingleTable;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -166,10 +168,25 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public Batch getBatch(BatchKey key, Integer batchSize, Supplier<PreparedStatementGroup> statementGroupSupplier) {
+	public GroupedBatch getGroupedBatch(
+			BatchKey key,
+			Integer batchSize,
+			Supplier<PreparedStatementGroup> statementGroupSupplier) {
+		return getBatch(
+				key,
+				GroupedBatch.class,
+				() -> owner.getJdbcSessionContext().getBatchBuilder()
+						.buildGroupedBatch( key, batchSize, statementGroupSupplier, this )
+		);
+	}
+
+	private <B extends Batch> B getBatch(
+			BatchKey key,
+			Class<B> batchType,
+			Supplier<B> batchSupplier) {
 		if ( currentBatch != null ) {
-			if ( currentBatch.getKey().equals( key ) ) {
-				return currentBatch;
+			if ( currentBatch.getKey().equals( key ) && batchType.isInstance( currentBatch ) ) {
+				return batchType.cast( currentBatch );
 			}
 			else {
 				try {
@@ -184,19 +201,30 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			}
 		}
 
-		currentBatch =
-				owner.getJdbcSessionContext().getBatchBuilder()
-						.buildBatch( key, batchSize, statementGroupSupplier, this );
-		return currentBatch;
+		currentBatch = batchSupplier.get();
+		return batchType.cast( currentBatch );
 	}
 
 	@Override
-	public Batch getBatch(BatchKey key, Integer batchSize, PreparableMutationOperation mutationOperation) {
+	public GroupedBatch getGroupedBatch(BatchKey key, Integer batchSize, PreparableMutationOperation mutationOperation) {
 		final var session = (SharedSessionContractImplementor) owner;
-		return getBatch(
+		return getGroupedBatch(
 				key,
 				batchSize,
 				() -> new PreparedStatementGroupSingleTable( mutationOperation, session )
+		);
+	}
+
+	@Override
+	public SingleStatementBatch getSingleStatementBatch(
+			BatchKey key,
+			Integer batchSize,
+			PreparableMutationOperation mutationOperation) {
+		return getBatch(
+				key,
+				SingleStatementBatch.class,
+				() -> owner.getJdbcSessionContext().getBatchBuilder()
+						.buildSingleStatementBatch( key, batchSize, mutationOperation, this )
 		);
 	}
 

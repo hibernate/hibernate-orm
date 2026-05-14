@@ -24,50 +24,49 @@ public record ConstraintModel(
 
 	/// Get unique constraints for a specific table
 	public List<UniqueConstraint> getUniqueConstraintsForTable(String tableName) {
-		final List<UniqueConstraint> constraints = uniqueConstraintsByTable.get( normalizeTableExpression( tableName ) );
+		List<UniqueConstraint> constraints = uniqueConstraintsByTable.get( tableName );
 		if ( constraints != null ) {
 			return constraints;
 		}
 
-		for ( Map.Entry<String, List<UniqueConstraint>> entry : uniqueConstraintsByTable.entrySet() ) {
-			if ( tableNamesMatch( entry.getKey(), tableName ) ) {
-				return entry.getValue();
-			}
+		constraints = uniqueConstraintsByTable.get( normalizeTableExpression( tableName ) );
+		return constraints == null ? List.of() : constraints;
+	}
+
+	public List<ForeignKey> getOutboundForeignKeysForTable(String tableName) {
+		return getForeignKeysForTable( outboundForeignKeysByTable, tableName );
+	}
+
+	public List<ForeignKey> getInboundForeignKeysForTable(String tableName) {
+		return getForeignKeysForTable( inboundForeignKeysByTable, tableName );
+	}
+
+	private List<ForeignKey> getForeignKeysForTable(Map<String, List<ForeignKey>> foreignKeysByTable, String tableName) {
+		List<ForeignKey> foreignKeys = foreignKeysByTable.get( tableName );
+		if ( foreignKeys != null ) {
+			return foreignKeys;
 		}
 
-		return List.of();
+		foreignKeys = foreignKeysByTable.get( normalizeTableExpression( tableName ) );
+		return foreignKeys == null ? List.of() : foreignKeys;
 	}
 
 	/// Check if a table has cyclic foreign key relationships (bidirectional FKs).
 	/// Useful for determining if DELETE operations need ordinal-based grouping.
 	public boolean hasTableCyclicForeignKeys(String tableName) {
-		final String normalizedTableName = normalizeTableExpression( tableName );
-		if ( tablesWithCyclicForeignKeys.contains( normalizedTableName ) ) {
+		if ( tablesWithCyclicForeignKeys.contains( tableName ) ) {
 			return true;
 		}
 
-		for ( String cyclicTable : tablesWithCyclicForeignKeys ) {
-			if ( tableNamesMatch( cyclicTable, tableName ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return tablesWithCyclicForeignKeys.contains( normalizeTableExpression( tableName ) );
 	}
 
 	public boolean hasSelfReferentialTable(String tableName) {
-		final String normalizedTableName = normalizeTableExpression( tableName );
-		if ( selfReferentialTables.contains( normalizedTableName ) ) {
+		if ( selfReferentialTables.contains( tableName ) ) {
 			return true;
 		}
 
-		for ( String selfReferentialTable : selfReferentialTables ) {
-			if ( tableNamesMatch( selfReferentialTable, tableName ) ) {
-				return true;
-			}
-		}
-
-		return false;
+		return selfReferentialTables.contains( normalizeTableExpression( tableName ) );
 	}
 
 	static boolean tableNamesMatch(String tableName1, String tableName2) {

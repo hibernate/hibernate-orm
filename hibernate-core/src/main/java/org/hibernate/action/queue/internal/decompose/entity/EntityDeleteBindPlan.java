@@ -10,17 +10,50 @@ import org.hibernate.action.queue.spi.bind.Checkers;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
+import org.hibernate.action.queue.spi.meta.TableKeyDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ModelPart.JdbcValueBiConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.sql.SQLException;
 
 /// @author Steve Ebersole
 public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
+
+	/// Static, non-capturing [JdbcValueBiConsumer] for handling key values for delete restriction (WHERE).
+	private static final JdbcValueBiConsumer<EntityDeleteBindPlan, TableKeyDescriptor> KEY_RESTRICTION_BINDER =
+			(index, bindPlan, keyDescriptor, jdbcValue, jdbcValueMapping) -> {
+				final var keyColumn = keyDescriptor.getSelectable( index );
+				bindPlan.valueBindings.bindRestriction( index, jdbcValue, keyColumn );
+			};
+
+
+	/// Static, non-capturing [JdbcValueBiConsumer] for handling version values for delete restriction (WHERE).
+	private static final JdbcValueBiConsumer<EntityDeleteBindPlan, Object> VERSION_RESTRICTION_BINDER =
+			(valueIndex, bindPlan, noop, jdbcValue, selectableMapping) -> bindPlan.valueBindings.bindValue(
+					jdbcValue,
+					selectableMapping.getSelectionExpression(),
+					ParameterUsage.RESTRICT
+			);
+
+
+	/// Static, non-capturing [JdbcValueBiConsumer] for handling attribute values for delete restriction (WHERE) - optimistic locking.
+	private static final JdbcValueBiConsumer<EntityDeleteBindPlan, Object> ATTRIBUTE_RESTRICTION_BINDER =
+			(valueIndex, bindPlan, noop, jdbcValue, selectableMapping) -> {
+				if ( !selectableMapping.isFormula() && jdbcValue != null ) {
+					bindPlan.valueBindings.bindValue(
+							jdbcValue,
+							selectableMapping.getSelectionExpression(),
+							ParameterUsage.RESTRICT
+					);
+				}
+			};
+
 	private final EntityTableDescriptor tableDescriptor;
 	private final EntityPersister entityPersister;
 	private final Object identifier;
@@ -30,6 +63,10 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	private final Object[] loadedState;
 	private final int[] sameFlushUpdatedAttributeIndexes;
 	private final OptimisticLockStyle effectiveOptLockStyle;
+
+	// temporary state used during decomposition to allow model-part decomposition to be non-capturing
+	private JdbcValueBindings valueBindings;
+
 
 	public EntityDeleteBindPlan(
 			EntityTableDescriptor tableDescriptor,
@@ -107,16 +144,20 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 		// when building the static DELETE operation
 		final var keyDescriptor = tableDescriptor.keyDescriptor();
 
-		entityPersister.getIdentifierMapping().breakDownJdbcValues(
-				identifier,
-				(index, jdbcValue, jdbcValueMapping) -> {
-					// Use the table key column (e.g., FK column for joined subclass)
-					// not the entity identifier column
-					final var keyColumn = keyDescriptor.getSelectable(index);
-					valueBindings.bindRestriction(index, jdbcValue, keyColumn);
-				},
-				session
-		);
+		this.valueBindings = valueBindings;
+		try {
+			entityPersister.getIdentifierMapping().breakDownJdbcValues(
+					identifier,
+					0,
+					this,
+					keyDescriptor,
+					KEY_RESTRICTION_BINDER,
+					session
+			);
+		}
+		finally {
+			this.valueBindings = null;
+		}
 	}
 
 	protected void applyVersionBasedOptLocking(
@@ -127,21 +168,21 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 			return;
 		}
 		if ( tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
-			versionMapping.decompose(
-					version,
-					0,
-					jdbcValueBindings,
-					null,
-					(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-						bindings.bindValue(
-								jdbcValue,
-								selectableMapping.getSelectionExpression(),
-								ParameterUsage.RESTRICT
-						);
-					},
-					session
-			);
-		}
+				this.valueBindings = jdbcValueBindings;
+				try {
+					versionMapping.decompose(
+							version,
+							0,
+							this,
+							null,
+							VERSION_RESTRICTION_BINDER,
+							session
+					);
+				}
+				finally {
+					this.valueBindings = null;
+				}
+			}
 	}
 
 	protected void applyNonVersionOptLocking(
@@ -160,19 +201,33 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 			if ( !versionability[attribute.getStateArrayPosition()] ) {
 				continue;
 			}
+				decomposeAttributeForRestriction(
+						loadedState[attribute.getStateArrayPosition()],
+						jdbcValueBindings,
+						attribute,
+						session
+				);
+			}
+	}
+
+	private void decomposeAttributeForRestriction(
+			Object value,
+			JdbcValueBindings jdbcValueBindings,
+			AttributeMapping attribute,
+			SharedSessionContractImplementor session) {
+		this.valueBindings = jdbcValueBindings;
+		try {
 			attribute.decompose(
-					loadedState[attribute.getStateArrayPosition()],
-					(valueIndex, jdbcValue, selectableMapping) -> {
-						if ( !selectableMapping.isFormula() && jdbcValue != null ) {
-							jdbcValueBindings.bindValue(
-									jdbcValue,
-									selectableMapping.getSelectionExpression(),
-									ParameterUsage.RESTRICT
-							);
-						}
-					},
+					value,
+					0,
+					this,
+					null,
+					ATTRIBUTE_RESTRICTION_BINDER,
 					session
 			);
+		}
+		finally {
+			this.valueBindings = null;
 		}
 	}
 
@@ -230,6 +285,31 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 
 	@Override
 	public boolean checkResult(
+			FlushOperation flushOperation,
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return checkResult(
+				(EntityTableDescriptor) flushOperation.getMutatingTableDescriptor(),
+				affectedRowCount,
+				batchPosition,
+				sqlString,
+				sessionFactory
+		);
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return checkResult( tableDescriptor, affectedRowCount, batchPosition, sqlString, sessionFactory );
+	}
+
+	private boolean checkResult(
+			EntityTableDescriptor tableDescriptor,
 			int affectedRowCount,
 			int batchPosition,
 			String sqlString,

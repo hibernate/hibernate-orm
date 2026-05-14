@@ -5,14 +5,15 @@
 package org.hibernate.engine.jdbc.batch.internal;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 import org.hibernate.HibernateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.StatementObserver;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
 import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
@@ -32,7 +33,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  *
  * @author Steve Ebersole
  */
-public class BatchImpl implements Batch {
+public class BatchImpl implements GroupedBatch {
 	private final BatchKey key;
 	private final int batchSizeToUse;
 	private final PreparedStatementGroup statementGroup;
@@ -99,6 +100,9 @@ public class BatchImpl implements Batch {
 				staleStateMappers = new StaleStateMapper[batchSizeToUse];
 			}
 			staleStateMappers[batchPosition] = staleStateMapper;
+		}
+		else if ( staleStateMappers != null ) {
+			staleStateMappers[batchPosition] = null;
 		}
 		addToBatch( jdbcValueBindings, inclusionChecker );
 	}
@@ -288,7 +292,14 @@ public class BatchImpl implements Batch {
 		}
 		finally {
 			jdbcCoordinator.afterStatementExecution();
+			clearStaleStateMappers( batchPosition );
 			batchPosition = 0;
+		}
+	}
+
+	private void clearStaleStateMappers(int batchCount) {
+		if ( staleStateMappers != null ) {
+			Arrays.fill( staleStateMappers, 0, batchCount, null );
 		}
 	}
 

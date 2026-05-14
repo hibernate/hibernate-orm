@@ -8,8 +8,8 @@ import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
@@ -174,7 +174,7 @@ public class BatchingTest implements BatchKey {
 
 			final BatchBuilderImpl batchBuilder = new BatchBuilderImpl( 2 );
 			final BatchKey batchKey = new BasicBatchKey( "this" );
-			final Batch insertBatch = batchBuilder.buildBatch( batchKey, 3, SANDBOX_TBL, session, insertSql );
+			final GroupedBatch insertBatch = batchBuilder.buildBatch( batchKey, 3, SANDBOX_TBL, session, insertSql );
 			assertThat( insertBatch ).isNotNull();
 
 			final JournalingBatchObserver batchObserver = new JournalingBatchObserver();

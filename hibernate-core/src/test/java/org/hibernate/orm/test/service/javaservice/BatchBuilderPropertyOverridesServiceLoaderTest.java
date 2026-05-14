@@ -6,9 +6,9 @@ package org.hibernate.orm.test.service.javaservice;
 
 import java.util.function.Supplier;
 
-import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 
@@ -48,7 +48,7 @@ public class BatchBuilderPropertyOverridesServiceLoaderTest {
 
 	public static class PropertyBatchBuilder implements BatchBuilder {
 		@Override
-		public Batch buildBatch(
+		public GroupedBatch buildGroupedBatch(
 				BatchKey key,
 				Integer batchSize,
 				Supplier<PreparedStatementGroup> statementGroupSupplier,
@@ -59,7 +59,7 @@ public class BatchBuilderPropertyOverridesServiceLoaderTest {
 
 	public static class ServiceLoaderBatchBuilder implements BatchBuilder {
 		@Override
-		public Batch buildBatch(
+		public GroupedBatch buildGroupedBatch(
 				BatchKey key,
 				Integer batchSize,
 				Supplier<PreparedStatementGroup> statementGroupSupplier,

@@ -10,11 +10,14 @@ import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
+import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupSingleTable;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.jdbc.JdbcInsertMutation;
 
@@ -33,7 +36,7 @@ public class BatchBuilderImpl implements BatchBuilder {
 	 * Constructs a BatchBuilderImpl
 	 *
 	 * @param globalBatchSize The batch size to use.  Can be overridden
-	 * on {@link #buildBatch}
+	 * on {@link #buildGroupedBatch}
 	 */
 	public BatchBuilderImpl(int globalBatchSize) {
 		if ( globalBatchSize > 1 ) {
@@ -54,7 +57,7 @@ public class BatchBuilderImpl implements BatchBuilder {
 	}
 
 	@Override
-	public Batch buildBatch(
+	public GroupedBatch buildGroupedBatch(
 			BatchKey key,
 			Integer explicitBatchSize,
 			Supplier<PreparedStatementGroup> statementGroupSupplier,
@@ -62,6 +65,17 @@ public class BatchBuilderImpl implements BatchBuilder {
 		final int batchSize = batchSize( explicitBatchSize );
 		assert batchSize > 1;
 		return new BatchImpl( key, statementGroupSupplier.get(), batchSize, jdbcCoordinator );
+	}
+
+	@Override
+	public SingleStatementBatch buildSingleStatementBatch(
+			BatchKey key,
+			Integer explicitBatchSize,
+			PreparableMutationOperation mutationOperation,
+			JdbcCoordinator jdbcCoordinator) {
+		final int batchSize = batchSize( explicitBatchSize );
+		assert batchSize > 1;
+		return new SingleStatementBatchImpl( key, mutationOperation, batchSize, jdbcCoordinator );
 	}
 
 	/**

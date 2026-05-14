@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMappingImpl;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -399,9 +400,14 @@ public class UniqueSlotExtractor {
 
 	/// Build a map of table names to entity persisters for quick lookup.
 	public static Map<String, EntityPersister> buildPersisterMap(SharedSessionContractImplementor session) {
+		return buildPersisterMap( session.getFactory() );
+	}
+
+	/// Build a map of table names to entity persisters for quick lookup.
+	public static Map<String, EntityPersister> buildPersisterMap(SessionFactoryImplementor factory) {
 		Map<String, EntityPersister> map = new java.util.HashMap<>();
 
-		session.getFactory().getMappingMetamodel().forEachEntityDescriptor(persister -> {
+		factory.getMappingMetamodel().forEachEntityDescriptor(persister -> {
 			for ( var tableMapping : persister.getTableMappings() ) {
 				map.put( tableMapping.getTableName(), persister );
 				map.put( normalizeTableExpression( tableMapping.getTableName() ), persister );

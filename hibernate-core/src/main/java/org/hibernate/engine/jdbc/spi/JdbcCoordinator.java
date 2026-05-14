@@ -15,6 +15,8 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
+import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -50,17 +52,27 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @implNote Any previous Batch is executed and released prior to returning
 	 */
-	Batch getBatch(
+	GroupedBatch getGroupedBatch(
 			BatchKey key,
 			Integer batchSize,
 			Supplier<PreparedStatementGroup> statementGroupSupplier);
 
 	/**
-	 * Get a batch for a single preparable mutation operation.
+	 * Get a mutation batch for a single preparable mutation operation.
 	 *
 	 * @implNote Any previous Batch is executed and released prior to returning
 	 */
-	Batch getBatch(
+	GroupedBatch getGroupedBatch(
+			BatchKey key,
+			Integer batchSize,
+			PreparableMutationOperation mutationOperation);
+
+	/**
+	 * Get a batch for a single JDBC statement shape.
+	 *
+	 * @implNote Any previous Batch is executed and released prior to returning
+	 */
+	SingleStatementBatch getSingleStatementBatch(
 			BatchKey key,
 			Integer batchSize,
 			PreparableMutationOperation mutationOperation);

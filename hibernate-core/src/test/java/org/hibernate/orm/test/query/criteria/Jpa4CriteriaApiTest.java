@@ -5,8 +5,11 @@
 package org.hibernate.orm.test.query.criteria;
 
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -37,7 +40,9 @@ class Jpa4CriteriaApiTest {
 					145,
 					true,
 					LocalDate.of( 2026, 1, 15 ),
-					Status.PUBLISHED
+					Status.PUBLISHED,
+					"hibernate",
+					"criteria"
 			) );
 			entityManager.persist( new Article(
 					2L,
@@ -57,6 +62,7 @@ class Jpa4CriteriaApiTest {
 			final BooleanAttribute<Article> publishedAttribute = Jpa4CriteriaApiTest_.Article_.published;
 			final TemporalAttribute<Article, LocalDate> publishedOnAttribute = Jpa4CriteriaApiTest_.Article_.publishedOn;
 			final ComparableAttribute<Article, Status> statusAttribute = Jpa4CriteriaApiTest_.Article_.status;
+			final var tagsAttribute = Jpa4CriteriaApiTest_.Article_.tags;
 
 			final var textLiteral = builder.stringLiteral( "Hibernate" );
 			final var temporalLiteral = builder.temporalLiteral( LocalDate.of( 2025, 1, 1 ) );
@@ -69,6 +75,7 @@ class Jpa4CriteriaApiTest {
 			final var published = article.get( publishedAttribute );
 			final var publishedOn = article.get( publishedOnAttribute );
 			final var status = article.get( statusAttribute );
+			final var tags = article.get( tagsAttribute );
 
 			query.where(
 					builder.and(
@@ -77,13 +84,25 @@ class Jpa4CriteriaApiTest {
 							pages.gt( 100 ),
 							published.not().equalTo( booleanLiteral ),
 							publishedOn.greaterThan( temporalLiteral ),
-							status.greaterThan( Status.DRAFT )
+							status.greaterThan( Status.DRAFT ),
+							tags.isNotEmpty(),
+							tags.size().ge( 2 ),
+							tags.contains( builder.literal( "criteria" ) ),
+							tags.notContains( "legacy" )
 					)
 			);
 
 			final List<Article> results = entityManager.createQuery( query ).getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( "Hibernate Criteria", results.get( 0 ).title );
+
+			final var emptyTagsQuery = builder.createQuery( Article.class );
+			final var emptyTagsArticle = emptyTagsQuery.from( Article.class );
+			emptyTagsQuery.where( emptyTagsArticle.get( tagsAttribute ).isEmpty() );
+
+			final List<Article> emptyTagsResults = entityManager.createQuery( emptyTagsQuery ).getResultList();
+			assertEquals( 1, emptyTagsResults.size() );
+			assertEquals( "Draft Criteria", emptyTagsResults.get( 0 ).title );
 		} );
 
 		final EntityType<Article> articleType =
@@ -112,16 +131,27 @@ class Jpa4CriteriaApiTest {
 
 		private Status status;
 
+		@ElementCollection
+		private Set<String> tags = new LinkedHashSet<>();
+
 		public Article() {
 		}
 
-		public Article(Long id, String title, int pages, boolean published, LocalDate publishedOn, Status status) {
+		public Article(
+				Long id,
+				String title,
+				int pages,
+				boolean published,
+				LocalDate publishedOn,
+				Status status,
+				String... tags) {
 			this.id = id;
 			this.title = title;
 			this.pages = pages;
 			this.published = published;
 			this.publishedOn = publishedOn;
 			this.status = status;
+			this.tags.addAll( List.of( tags ) );
 		}
 	}
 

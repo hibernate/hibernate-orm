@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushModeFromFlushMode;
 
 /**
@@ -70,7 +69,7 @@ public final class OptionsHelper {
 		final Set<EntityAgent.Option> options = new HashSet<>();
 		addIfNotNull( options, entityAgent.getCacheRetrieveMode() );
 		addIfNotNull( options, entityAgent.getCacheStoreMode() );
-		return unmodifiableSet( options );
+		return options;
 	}
 
 	public static void applyOption(TypedQuery<?> query, TypedQuery.Option option) {
@@ -145,7 +144,7 @@ public final class OptionsHelper {
 		if ( queryFlushMode != null && queryFlushMode != QueryFlushMode.DEFAULT ) {
 			options.add( queryFlushMode );
 		}
-		return unmodifiableSet( options );
+		return options;
 	}
 
 	private static void addLockOptions(Set<TypedQuery.Option> options, LockOptions lockOptions) {

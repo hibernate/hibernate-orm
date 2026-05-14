@@ -8230,7 +8230,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public ComparisonPredicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
+	public Predicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
 		inferrableTypeAccessStack.push( () -> determineValueMapping( predicate.getRightHandExpression(), fromClauseIndex ) );
 
@@ -8256,8 +8256,67 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				predicate.isNegated()
 						? predicate.getSqmOperator().negated()
 						: predicate.getSqmOperator();
-		handleTypeComparison( lhs, rhs, sqmOperator == ComparisonOperator.EQUAL );
-		return new ComparisonPredicate( lhs, sqmOperator, rhs, getBooleanType() );
+		// Avoid rendering predicate-valued expressions as scalar boolean comparisons.
+		final Predicate booleanExpressionPredicate = toBooleanExpressionPredicate( lhs, sqmOperator, rhs );
+		if ( booleanExpressionPredicate != null ) {
+			return booleanExpressionPredicate;
+		}
+		else {
+			handleTypeComparison( lhs, rhs, sqmOperator == ComparisonOperator.EQUAL );
+			return new ComparisonPredicate( lhs, sqmOperator, rhs, getBooleanType() );
+		}
+	}
+
+	private Predicate toBooleanExpressionPredicate(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		final Boolean rhsLiteral = booleanLiteralValue( rhs );
+		if ( lhs instanceof Predicate predicate && rhsLiteral != null ) {
+			return toBooleanExpressionPredicate( predicate, operator, rhsLiteral );
+		}
+
+		final Boolean lhsLiteral = booleanLiteralValue( lhs );
+		if ( lhsLiteral != null && rhs instanceof Predicate predicate ) {
+			return toBooleanExpressionPredicate( predicate, operator, lhsLiteral );
+		}
+
+		return null;
+	}
+
+	private static Boolean booleanLiteralValue(Expression expression) {
+		// UnparsedNumericLiteral.getLiteralValue() parses
+		// and may fail when the inferred type is too narrow
+		if ( expression instanceof QueryLiteral<?> literal
+				&& literal.getLiteralValue() instanceof Boolean booleanLiteral ) {
+			return booleanLiteral;
+		}
+		else if ( expression instanceof JdbcLiteral<?> literal
+				&& literal.getLiteralValue() instanceof Boolean booleanLiteral ) {
+			return booleanLiteral;
+		}
+		return null;
+	}
+
+	private Predicate toBooleanExpressionPredicate(Predicate predicate, ComparisonOperator operator, boolean literal) {
+		return switch ( operator ) {
+			case EQUAL -> literal ? predicate : negateBooleanExpressionPredicate( predicate );
+			case NOT_EQUAL -> literal ? negateBooleanExpressionPredicate( predicate ) : predicate;
+			default -> null;
+		};
+	}
+
+	private Predicate negateBooleanExpressionPredicate(Predicate predicate) {
+		if ( predicate instanceof BooleanExpressionPredicate booleanExpressionPredicate ) {
+			return new BooleanExpressionPredicate(
+					booleanExpressionPredicate.getExpression(),
+					!booleanExpressionPredicate.isNegated(),
+					booleanExpressionPredicate.getExpressionType()
+			);
+		}
+		else if ( predicate instanceof NegatedPredicate negatedPredicate ) {
+			return negatedPredicate.getPredicate();
+		}
+		else {
+			return new NegatedPredicate( predicate );
+		}
 	}
 
 	private void handleTypeComparison(Expression lhs, Expression rhs, boolean inclusive) {

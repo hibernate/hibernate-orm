@@ -25,6 +25,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
 	private final @Nullable String returnTypeClass;
 	private final @Nullable String containerType;
+	private final @Nullable String resultSetMapping;
 	private final boolean isUpdate;
 	private final boolean isNative;
 
@@ -39,6 +40,8 @@ public class QueryMethod extends AbstractQueryMethod {
 			String returnTypeClass,
 			@Nullable
 			String containerType,
+			@Nullable
+			String resultSetMapping,
 			List<String> paramNames,
 			List<String> paramTypes,
 			boolean isUpdate,
@@ -63,6 +66,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		this.queryString = queryString;
 		this.returnTypeClass = returnTypeClass;
 		this.containerType = containerType;
+		this.resultSetMapping = resultSetMapping;
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;
 	}
@@ -165,7 +169,12 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append(createQueryMethod())
 					.append("(")
 					.append(getConstantName());
-			if ( returnTypeClass != null && !isUpdate ) {
+			if ( resultSetMapping != null && !isUpdate && !isReactive() ) {
+				declaration
+						.append(", ")
+						.append(resultSetMapping);
+			}
+			else if ( returnTypeClass != null && !isUpdate ) {
 				declaration
 						.append(", ")
 						.append(annotationMetaEntity.importType(returnTypeClass))

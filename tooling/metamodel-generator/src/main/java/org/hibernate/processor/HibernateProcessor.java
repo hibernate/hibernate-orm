@@ -60,8 +60,14 @@ import static org.hibernate.processor.HibernateProcessor.LAZY_XML_PARSING;
 import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.SUPPRESS_JAKARTA_DATA_METAMODEL;
+import static org.hibernate.processor.util.Constants.COLUMN_RESULT;
+import static org.hibernate.processor.util.Constants.COLUMN_RESULTS;
+import static org.hibernate.processor.util.Constants.CONSTRUCTOR_RESULT;
+import static org.hibernate.processor.util.Constants.CONSTRUCTOR_RESULTS;
 import static org.hibernate.processor.util.Constants.EMBEDDABLE;
 import static org.hibernate.processor.util.Constants.ENTITY;
+import static org.hibernate.processor.util.Constants.ENTITY_RESULT;
+import static org.hibernate.processor.util.Constants.ENTITY_RESULTS;
 import static org.hibernate.processor.util.Constants.FIND;
 import static org.hibernate.processor.util.Constants.HIB_FETCH_PROFILE;
 import static org.hibernate.processor.util.Constants.HIB_FETCH_PROFILES;
@@ -118,6 +124,7 @@ import static org.hibernate.processor.util.TypeUtils.isMemberType;
 		HIB_NAMED_QUERY, HIB_NAMED_QUERIES, HIB_NAMED_NATIVE_QUERY, HIB_NAMED_NATIVE_QUERIES,
 		// standard for JPA 4
 		JAKARTA_QUERY, NATIVE_QUERY, QUERY_OPTIONS,
+		ENTITY_RESULT, ENTITY_RESULTS, CONSTRUCTOR_RESULT, CONSTRUCTOR_RESULTS, COLUMN_RESULT, COLUMN_RESULTS,
 		// Hibernate query methods
 		HQL, SQL, FIND,
 		// Jakarta Data repositories

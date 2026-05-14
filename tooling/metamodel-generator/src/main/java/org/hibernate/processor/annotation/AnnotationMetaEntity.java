@@ -3189,6 +3189,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName( resultType ) );
 			validateHql( method, returnType, mirror, value, processedQuery, paramNames, paramTypes );
 		}
+		final boolean mutation = isInsertUpdateDelete( queryString );
+		final String resultSetMapping =
+				isNative && !mutation && !isReactive()
+						? nativeResultSetMapping( method, returnType )
+						: null;
 
 		final QueryMethod attribute =
 				new QueryMethod(
@@ -3198,9 +3203,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						returnType == null ? null : returnType.toString(),
 						returnType == null ? null : returnTypeClass( returnType ),
 						containerTypeName,
+						resultSetMapping,
 						paramNames,
 						paramTypes,
-						isInsertUpdateDelete( queryString ),
+						mutation,
 						isNative,
 						repository,
 						sessionType[0],
@@ -3216,6 +3222,219 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private String fullReturnType(ExecutableElement method) {
 		return typeAsString( memberMethodType( method ).getReturnType() );
+	}
+
+	private @Nullable String nativeResultSetMapping(ExecutableElement method, @Nullable TypeMirror returnType) {
+		final List<AnnotationMirror> entityResults =
+				resultAnnotations( method, ENTITY_RESULT, ENTITY_RESULTS );
+		final List<AnnotationMirror> constructorResults =
+				resultAnnotations( method, CONSTRUCTOR_RESULT, CONSTRUCTOR_RESULTS );
+		final List<AnnotationMirror> columnResults =
+				resultAnnotations( method, COLUMN_RESULT, COLUMN_RESULTS );
+		if ( entityResults.isEmpty() && constructorResults.isEmpty() && columnResults.isEmpty() ) {
+			return null;
+		}
+
+		final List<String> resultMappings = new ArrayList<>();
+		for ( AnnotationMirror entityResult : entityResults ) {
+			resultMappings.add( entityResult( method, entityResult ) );
+		}
+		for ( AnnotationMirror constructorResult : constructorResults ) {
+			resultMappings.add( constructorResult( method, constructorResult ) );
+		}
+		final TypeMirror inferredColumnType =
+				entityResults.isEmpty() && constructorResults.isEmpty() && columnResults.size() == 1
+						? returnType
+						: null;
+		for ( AnnotationMirror columnResult : columnResults ) {
+			resultMappings.add( columnResult( columnResult, inferredColumnType ) );
+		}
+		return resultMappings.size() == 1
+				? resultMappings.get( 0 )
+				: resultSetMapping( "compound" ) + "( " + String.join( ", ", resultMappings ) + " )";
+	}
+
+	private List<AnnotationMirror> resultAnnotations(Element element, String annotationName, String containerName) {
+		final List<AnnotationMirror> result = new ArrayList<>();
+		for ( AnnotationMirror annotationMirror : element.getAnnotationMirrors() ) {
+			if ( annotationTypeMatches( annotationMirror, annotationName ) ) {
+				result.add( annotationMirror );
+			}
+			else if ( annotationTypeMatches( annotationMirror, containerName ) ) {
+				final AnnotationValue value = getAnnotationValue( annotationMirror );
+				if ( value != null ) {
+					@SuppressWarnings("unchecked")
+					final List<? extends AnnotationValue> annotationValues =
+							(List<? extends AnnotationValue>) value.getValue();
+					for ( AnnotationValue annotationValue : annotationValues ) {
+						result.add( (AnnotationMirror) annotationValue.getValue() );
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	private static boolean annotationTypeMatches(AnnotationMirror annotationMirror, String annotationName) {
+		final Element annotationType = annotationMirror.getAnnotationType().asElement();
+		return annotationType instanceof TypeElement typeElement
+			&& typeElement.getQualifiedName().contentEquals( annotationName );
+	}
+
+	private String entityResult(ExecutableElement method, AnnotationMirror entityResult) {
+		final String entityClass = annotationClassName( entityResult, "entityClass" );
+		final List<String> fields = fieldResults( method, entityResult, entityClass );
+		final String discriminatorColumn = annotationString( entityResult, "discriminatorColumn" );
+		final StringBuilder mapping = new StringBuilder()
+				.append( resultSetMapping( "entity" ) )
+				.append( '(' )
+				.append( classLiteral( entityClass ) );
+		if ( !discriminatorColumn.isEmpty() ) {
+			mapping
+					.append( ", " )
+					.append( QueryOptionsSupport.stringLiteral( discriminatorColumn ) );
+		}
+		for ( String field : fields ) {
+			mapping
+					.append( ", " )
+					.append( field );
+		}
+		mapping.append( ')' );
+		final String lockMode = enumValue( entityResult, "lockMode" );
+		if ( lockMode != null && !lockMode.endsWith( ".NONE" ) ) {
+			mapping
+					.append( ".withLockMode(" )
+					.append( lockMode )
+					.append( ')' );
+		}
+		return mapping.toString();
+	}
+
+	private List<String> fieldResults(
+			ExecutableElement method,
+			AnnotationMirror result,
+			String entityClass) {
+		final List<String> fields = new ArrayList<>();
+		for ( AnnotationMirror fieldResult : annotationArray( result, "fields" ) ) {
+			final String name = annotationString( fieldResult, "name" );
+			final String column = annotationString( fieldResult, "column" );
+			fields.add( resultSetMapping( "field" )
+					+ "(" + classLiteral( entityClass )
+					+ ", " + fieldTypeLiteral( method, fieldResult, entityClass, name )
+					+ ", " + QueryOptionsSupport.stringLiteral( name )
+					+ ", " + QueryOptionsSupport.stringLiteral( column ) + ")" );
+		}
+		return fields;
+	}
+
+	private String fieldTypeLiteral(
+			ExecutableElement method,
+			AnnotationMirror fieldResult,
+			String entityClass,
+			String fieldName) {
+		final TypeElement entityElement = context.getElementUtils().getTypeElement( entityClass );
+		if ( entityElement == null ) {
+			return classLiteral( JAVA_OBJECT );
+		}
+		final Element member = memberMatchingPath( entityElement, fieldName );
+		if ( member == null ) {
+			message( method, fieldResult,
+					"no matching field named '" + fieldName + "' in entity class '" + entityClass + "'",
+					Diagnostic.Kind.ERROR );
+			return classLiteral( JAVA_OBJECT );
+		}
+		return classLiteral( returnTypeClass( memberType( member ) ) );
+	}
+
+	private String constructorResult(ExecutableElement method, AnnotationMirror constructorResult) {
+		final String targetClass = annotationClassName( constructorResult, "targetClass" );
+		final List<String> arguments = new ArrayList<>();
+		for ( AnnotationMirror column : annotationArray( constructorResult, "columns" ) ) {
+			arguments.add( columnResult( column, null ) );
+		}
+		for ( AnnotationMirror entity : annotationArray( constructorResult, "entities" ) ) {
+			arguments.add( entityResult( method, entity ) );
+		}
+		return resultSetMapping( "constructor" )
+				+ "(" + classLiteral( targetClass )
+				+ (arguments.isEmpty() ? "" : ", " + String.join( ", ", arguments ))
+				+ ")";
+	}
+
+	private String columnResult(AnnotationMirror columnResult, @Nullable TypeMirror inferredColumnType) {
+		final String name = annotationString( columnResult, "name" );
+		final String explicitType = annotationClassNameOrNull( columnResult, "type" );
+		final String type = explicitType == null || isVoidClass( explicitType )
+				? inferredColumnType == null ? null : returnTypeClass( inferredColumnType )
+				: explicitType;
+		return type == null || isVoidClass( type )
+				? resultSetMapping( "column" ) + "(" + QueryOptionsSupport.stringLiteral( name ) + ")"
+				: resultSetMapping( "column" )
+						+ "(" + QueryOptionsSupport.stringLiteral( name ) + ", " + classLiteral( type ) + ")";
+	}
+
+	private List<AnnotationMirror> annotationArray(AnnotationMirror annotationMirror, String member) {
+		final AnnotationValue value = getAnnotationValue( annotationMirror, member );
+		if ( value == null ) {
+			return emptyList();
+		}
+		final List<AnnotationMirror> result = new ArrayList<>();
+		@SuppressWarnings("unchecked")
+		final List<? extends AnnotationValue> annotationValues =
+				(List<? extends AnnotationValue>) value.getValue();
+		for ( AnnotationValue annotationValue : annotationValues ) {
+			result.add( (AnnotationMirror) annotationValue.getValue() );
+		}
+		return result;
+	}
+
+	private String annotationString(AnnotationMirror annotationMirror, String member) {
+		final AnnotationValue value = getAnnotationValue( annotationMirror, member );
+		return value == null ? "" : value.getValue().toString();
+	}
+
+	private String annotationClassName(AnnotationMirror annotationMirror, String member) {
+		final String className = annotationClassNameOrNull( annotationMirror, member );
+		if ( className == null ) {
+			throw new AssertionFailure( "missing required class-valued annotation member: " + member );
+		}
+		return className;
+	}
+
+	private @Nullable String annotationClassNameOrNull(AnnotationMirror annotationMirror, String member) {
+		final AnnotationValue value = getAnnotationValue( annotationMirror, member );
+		return value == null ? null : className( value );
+	}
+
+	private String className(AnnotationValue value) {
+		final Object annotationValue = value.getValue();
+		return annotationValue instanceof TypeMirror type
+				? returnTypeClass( type )
+				: annotationValue.toString();
+	}
+
+	private String classLiteral(String className) {
+		return importType( className ) + ".class";
+	}
+
+	private String resultSetMapping(String member) {
+		return staticImport( RESULT_SET_MAPPING, member );
+	}
+
+	private @Nullable String enumValue(AnnotationMirror annotationMirror, String member) {
+		final AnnotationValue value = getAnnotationValue( annotationMirror, member );
+		if ( value != null && value.getValue() instanceof VariableElement variable ) {
+			final TypeElement type = (TypeElement) variable.getEnclosingElement();
+			return importType( type.getQualifiedName().toString() ) + "." + variable.getSimpleName();
+		}
+		else {
+			return null;
+		}
+	}
+
+	private static boolean isVoidClass(String className) {
+		return "void".equals( className )
+			|| VOID.equals( className );
 	}
 
 	private static String returnTypeClass(TypeMirror returnType) {

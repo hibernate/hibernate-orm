@@ -21,9 +21,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Declares a named query written in native SQL.
  * <p>
- * Whereas {@link jakarta.persistence.NamedNativeQuery} allows settings to be
- * specified using stringly-typed {@link jakarta.persistence.QueryHint}s, this
- * annotation is typesafe.
+ * Whereas the JPA {@link jakarta.persistence.NamedNativeQuery @NamedNativeQuery}
+ * annotation allows custom settings specific to Hibernate to be specified via
+ * stringly-typed {@linkplain jakarta.persistence.QueryHint query hints}, this
+ * annotation is completely typesafe.
  * <p>
  * Note that the members of this annotation correspond to hints enumerated by
  * {@link org.hibernate.jpa.AvailableHints}.
@@ -31,6 +32,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Emmanuel Bernard
  *
  * @see org.hibernate.query.NativeQuery
+ * @see org.hibernate.annotations.NamedQuery
+ * @see jakarta.persistence.NamedNativeQuery
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)

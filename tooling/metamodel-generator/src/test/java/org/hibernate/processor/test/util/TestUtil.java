@@ -29,8 +29,10 @@ import javax.tools.Diagnostic;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.metamodel.BooleanAttribute;
 import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
+import jakarta.persistence.metamodel.TextAttribute;
 
 /**
  * @author Hardy Ferentschik
@@ -135,7 +137,7 @@ public class TestUtil {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
 		assertNotNull( field, "Cannot find field '" + fieldName + "' in " + clazz.getName() );
 		ParameterizedType type = (ParameterizedType) field.getGenericType();
-		Type actualType = type.getActualTypeArguments()[1];
+		Type actualType = getSingularAttributeTypeArgument( type );
 		if ( expectedType.isArray() ) {
 			expectedType = expectedType.getComponentType();
 			actualType = getComponentType( actualType );
@@ -145,6 +147,23 @@ public class TestUtil {
 				actualType,
 				"Types do not match: " + buildErrorString( errorString, clazz )
 		);
+	}
+
+	private static Type getSingularAttributeTypeArgument(ParameterizedType type) {
+		final var typeArguments = type.getActualTypeArguments();
+		if ( typeArguments.length > 1 ) {
+			return typeArguments[1];
+		}
+
+		if ( type.getRawType() == TextAttribute.class ) {
+			return String.class;
+		}
+		if ( type.getRawType() == BooleanAttribute.class ) {
+			return Boolean.class;
+		}
+
+		fail( "Cannot determine singular attribute value type from " + type );
+		return null;
 	}
 
 	public static void assertSetAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType,

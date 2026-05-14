@@ -45,6 +45,12 @@ public final class Constants {
 	public static final String NAMED_NATIVE_QUERIES = "jakarta.persistence.NamedNativeQueries";
 	public static final String SQL_RESULT_SET_MAPPING = "jakarta.persistence.SqlResultSetMapping";
 	public static final String SQL_RESULT_SET_MAPPINGS = "jakarta.persistence.SqlResultSetMappings";
+	public static final String ENTITY_RESULT = "jakarta.persistence.EntityResult";
+	public static final String ENTITY_RESULTS = "jakarta.persistence.EntityResult.EntityResults";
+	public static final String CONSTRUCTOR_RESULT = "jakarta.persistence.ConstructorResult";
+	public static final String CONSTRUCTOR_RESULTS = "jakarta.persistence.ConstructorResult.ConstructorResults";
+	public static final String COLUMN_RESULT = "jakarta.persistence.ColumnResult";
+	public static final String COLUMN_RESULTS = "jakarta.persistence.ColumnResult.ColumnResults";
 	public static final String NAMED_ENTITY_GRAPH = "jakarta.persistence.NamedEntityGraph";
 	public static final String NAMED_ENTITY_GRAPHS = "jakarta.persistence.NamedEntityGraphs";
 
@@ -56,6 +62,7 @@ public final class Constants {
 	public static final String STATIC_TYPED_QUERY_REFERENCE = "jakarta.persistence.query.StaticTypedQueryReference";
 	public static final String STATIC_STATEMENT_REFERENCE = "jakarta.persistence.query.StaticStatementReference";
 	public static final String ENTITY_GRAPH = "jakarta.persistence.EntityGraph";
+	public static final String RESULT_SET_MAPPING = "jakarta.persistence.sql.ResultSetMapping";
 
 	public static final String HIB_NAMED_QUERY = "org.hibernate.annotations.NamedQuery";
 	public static final String HIB_NAMED_QUERIES = "org.hibernate.annotations.NamedQueries";

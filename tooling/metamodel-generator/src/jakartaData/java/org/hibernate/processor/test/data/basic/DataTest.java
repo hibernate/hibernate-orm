@@ -44,6 +44,12 @@ class DataTest {
 		assertTrue( repository.contains( "_defaultBooksWithJakartaDataQuery(String title)" ) );
 		assertTrue( repository.contains( "_defaultBooksWithJakartaQuery(String title)" ) );
 		assertTrue( repository.contains( "_defaultBooksWithNativeQuery(String title)" ) );
+		assertTrue( repository.contains(
+				"createNativeQuery(NATIVE_BOOK_WITH_RESULT_MAPPING_String, entity(Book.class, field(Book.class, String.class, \"isbn\", \"book_isbn\")))" ) );
+		assertTrue( repository.contains(
+				"createNativeQuery(BOOK_COUNT_WITH_NATIVE_RESULT_MAPPING_String, column(\"book_count\", Long.class))" ) );
+		assertTrue( repository.contains(
+				"createNativeQuery(BOOK_TITLES_WITH_NATIVE_RESULT_MAPPING_String, constructor(BookTitle.class, column(\"book_title\", String.class)))" ) );
 		assertTrue( repository.contains( "_defaultDeleteWithJakartaQuery(String title)" ) );
 		assertTrue( repository.contains( "\"BookAuthorRepository.defaultBooksWithJakartaQuery\"" ) );
 		assertFalse( repository.contains( "@Override\n\tpublic List<Book> defaultBooksWithJakartaQuery(String title)" ) );

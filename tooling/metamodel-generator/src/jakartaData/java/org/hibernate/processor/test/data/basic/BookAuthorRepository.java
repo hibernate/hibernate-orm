@@ -23,6 +23,11 @@ import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
@@ -42,6 +47,8 @@ import java.util.stream.Stream;
 
 @Repository(dataStore = "myds")
 public interface BookAuthorRepository {
+
+	record BookTitle(String title) {}
 
 	StatelessSession session();
 
@@ -177,6 +184,18 @@ public interface BookAuthorRepository {
 	default List<Book> defaultBooksWithNativeQuery(String title) {
 		return List.of();
 	}
+
+	@NativeQuery("select isbn as book_isbn, title, text, publicationDate, price, pages from books where isbn = ?2")
+	@EntityResult(entityClass = Book.class, fields = @FieldResult(name = "isbn", column = "book_isbn"))
+	Book nativeBookWithResultMapping(EntityManager entityManager, String isbn);
+
+	@NativeQuery("select count(*) as book_count from books where title like :title")
+	@ColumnResult(name = "book_count")
+	Long bookCountWithNativeResultMapping(String title);
+
+	@NativeQuery("select title as book_title from books where title like :title")
+	@ConstructorResult(targetClass = BookTitle.class, columns = @ColumnResult(name = "book_title", type = String.class))
+	List<BookTitle> bookTitlesWithNativeResultMapping(String title);
 
 	@JakartaQuery("delete from Book where title = :title")
 	default int defaultDeleteWithJakartaQuery(String title) {

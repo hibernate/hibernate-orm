@@ -5,6 +5,7 @@
 package org.hibernate.action.queue;
 
 import jakarta.persistence.*;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.cfg.FlushSettings;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.orm.junit.*;
@@ -110,7 +111,12 @@ public class ActionQueuePerformanceTest {
 	/// Test simple inserts with no FK dependencies
 	@DomainModel(annotatedClasses = SimpleEntity.class)
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"))
+	@ServiceRegistry(settings = {
+			@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"),
+			// make it apples/apples
+			@Setting(name = BatchSettings.ORDER_INSERTS, value = "true"),
+			@Setting(name = BatchSettings.ORDER_UPDATES, value = "true")
+	})
 	public static class SimpleLegacyTest {
 		@Test
 		public void testSimpleInserts(SessionFactoryScope scope) {
@@ -131,7 +137,12 @@ public class ActionQueuePerformanceTest {
 	/// Test parent-child inserts with FK dependencies
 	@DomainModel(annotatedClasses = {Parent.class, Child.class})
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"))
+	@ServiceRegistry(settings = {
+			@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"),
+			// make it apples/apples
+			@Setting(name = BatchSettings.ORDER_INSERTS, value = "true"),
+			@Setting(name = BatchSettings.ORDER_UPDATES, value = "true")
+	})
 	public static class ParentChildLegacyTest {
 		@Test
 		public void testParentChildInserts(SessionFactoryScope scope) {
@@ -152,7 +163,12 @@ public class ActionQueuePerformanceTest {
 	/// Test self-referencing FKs (tree structure)
 	@DomainModel(annotatedClasses = Node.class)
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"))
+	@ServiceRegistry(settings = {
+			@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"),
+			// make it apples/apples
+			@Setting(name = BatchSettings.ORDER_INSERTS, value = "true"),
+			@Setting(name = BatchSettings.ORDER_UPDATES, value = "true")
+	})
 	public static class SelfRefLegacyTest {
 		@Test
 		public void testSelfReferencingInserts(SessionFactoryScope scope) {

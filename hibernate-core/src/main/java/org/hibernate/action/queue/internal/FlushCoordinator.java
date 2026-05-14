@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.extractCollectionOrdinal;
 
@@ -361,6 +362,10 @@ public class FlushCoordinator {
 	/// @param groups the operation groups
 	/// @return a simple flush plan
 	private FlushPlan createSimplePlan(List<FlushOperationGroup> groups) {
+		if ( groups.size() == 1 ) {
+			return new FlushPlan( List.of( new SimplePlanStep( groups.get( 0 ).operations() ) ) );
+		}
+
 		// Collect all operations from all groups, maintaining their order
 		final List<FlushOperation> allOperations = new ArrayList<>();
 		for (FlushOperationGroup group : groups) {
@@ -377,7 +382,7 @@ public class FlushCoordinator {
 		private final List<FlushOperation> operations;
 
 		SimplePlanStep(List<FlushOperation> operations) {
-			this.operations = List.copyOf(operations);
+			this.operations = operations;
 		}
 
 		@Override
@@ -561,9 +566,12 @@ public class FlushCoordinator {
 	}
 
 	private void executeStep(PlanStep step, FlushPlan plan, PlanStepExecutor executor) {
+		final Consumer<Object> newlyManagedEntityConsumer = decomposer.hasUnresolvedInserts()
+				? newlyManagedEntities::add
+				: null;
 		executor.execute(
 				step.operations(),
-				newlyManagedEntities::add,
+				newlyManagedEntityConsumer,
 				plan::enqueueFixup
 		);
 	}

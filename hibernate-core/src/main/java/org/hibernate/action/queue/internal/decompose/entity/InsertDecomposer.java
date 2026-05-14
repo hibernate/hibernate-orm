@@ -147,11 +147,15 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 				continue;
 			}
 			final var tableInsert = effectiveGroup.get( tableDescriptor.name() );
-			var operation = tableInsert.createMutationOperation( valuesAnalysis, sessionFactory );
 
 			if ( !valuesAnalysis.include( tableDescriptor ) ) {
 				continue;
 			}
+			var operation = insertMutationPlanner.resolveJdbcInsertOperation(
+					tableDescriptor.name(),
+					tableInsert,
+					valuesAnalysis
+			);
 
 			final BindPlan bindPlan = insertMutationPlanner.createInsertBindPlan(
 					tableDescriptor,

@@ -10,6 +10,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.service.ServiceRegistry;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -311,6 +312,9 @@ public class ActionQueueThroughputBenchmark {
 				.applySetting(AvailableSettings.USE_SQL_COMMENTS, "false")
 				.applySetting(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
 				.applySetting( "hibernate.flush.queue.type", queueImpl)
+				// for apples/apples
+				.applySetting( BatchSettings.ORDER_INSERTS, "true" )
+				.applySetting( BatchSettings.ORDER_UPDATES, "true" )
 				.build();
 
 		return new MetadataSources(registry)

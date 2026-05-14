@@ -24,6 +24,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.sql.model.jdbc.JdbcInsertMutation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableInsert;
@@ -47,21 +48,37 @@ class EntityInsertMutationPlanner {
 	private final EntityPersister entityPersister;
 	private final SessionFactoryImplementor sessionFactory;
 	private final Map<String, TableInsert> staticInsertOperations;
+	private final Map<String, JdbcInsertMutation> staticJdbcInsertOperations;
 
 	EntityInsertMutationPlanner(
 			EntityPersister entityPersister,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityPersister = entityPersister;
 		this.sessionFactory = sessionFactory;
-		this.staticInsertOperations = entityPersister.isDynamicInsert()
-				? null
-				: generateStaticOperations();
+		if ( entityPersister.isDynamicInsert() ) {
+			staticInsertOperations = null;
+			staticJdbcInsertOperations = null;
+		}
+		else {
+			staticInsertOperations = generateStaticOperations();
+			staticJdbcInsertOperations = generateStaticJdbcOperations( staticInsertOperations );
+		}
 	}
 
 	/// Static set of table mutations used to perform entity creation, or `null`
 	/// when the entity is configured for dynamic insert.
 	Map<String, TableInsert> getStaticInsertOperations() {
 		return staticInsertOperations;
+	}
+
+	JdbcInsertMutation resolveJdbcInsertOperation(
+			String tableName,
+			TableInsert tableInsert,
+			InsertValuesAnalysis valuesAnalysis) {
+		if ( staticJdbcInsertOperations != null && tableInsert == staticInsertOperations.get( tableName ) ) {
+			return staticJdbcInsertOperations.get( tableName );
+		}
+		return tableInsert.createMutationOperation( valuesAnalysis, sessionFactory );
 	}
 
 	boolean[] resolveInsertability(Object[] state) {
@@ -172,6 +189,14 @@ class EntityInsertMutationPlanner {
 			staticOperations.put( name, operationBuilder.buildMutation() );
 		} );
 		return Collections.unmodifiableMap( staticOperations );
+	}
+
+	private Map<String, JdbcInsertMutation> generateStaticJdbcOperations(Map<String, TableInsert> staticOperations) {
+		final Map<String, JdbcInsertMutation> jdbcOperations = CollectionHelper.linkedMapOfSize( staticOperations.size() );
+		staticOperations.forEach( (name, operation) -> {
+			jdbcOperations.put( name, operation.createMutationOperation( null, sessionFactory ) );
+		} );
+		return Collections.unmodifiableMap( jdbcOperations );
 	}
 
 	private TableInsertBuilder createTableInsertBuilder(TableDescriptor tableDescriptor) {

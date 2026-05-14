@@ -360,7 +360,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public <T> SqmSelectStatement<T> createQuery(String hql, Class<T> resultClass) {
 		if ( queryEngine.getHqlTranslator().translate( hql, resultClass )
 				instanceof SqmSelectStatement<T> selectStatement ) {
-			return new SqmSelectStatement<>( selectStatement );
+			return new SqmSelectStatement<>( selectStatement, resultClass );
 		}
 		else {
 			throw new IllegalArgumentException("Not a 'select' statement");

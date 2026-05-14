@@ -4,8 +4,6 @@
  */
 package org.hibernate.action.queue.internal.cyclebreak;
 
-import org.hibernate.action.queue.spi.plan.FlushOperation;
-
 import org.hibernate.action.queue.spi.bind.DelayedValueAccess;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
@@ -45,9 +43,9 @@ public class CycleBreakPatcher {
 				continue;
 			}
 			if ( intended instanceof DelayedValueAccess
-					&& (isUniqueSwap
-							? flushOperation.getIntendedUniqueValues().containsKey( col )
-							: flushOperation.getIntendedFkValues().containsKey( col )) ) {
+					&& ( isUniqueSwap
+							? flushOperation.hasIntendedUniqueValue( col )
+							: flushOperation.hasIntendedFkValue( col ) ) ) {
 				continue;
 			}
 			final Object intendedForFixup = intended instanceof DelayedValueAccess handle && handle.isResolved()
@@ -66,10 +64,10 @@ public class CycleBreakPatcher {
 
 			// 4) Record intended value for later fixup UPDATE
 			if (isUniqueSwap) {
-				flushOperation.getIntendedUniqueValues().put(col, intendedForFixup);
+				flushOperation.addIntendedUniqueValue( col, intendedForFixup );
 			}
 			else {
-				flushOperation.getIntendedFkValues().put(col, intendedForFixup);
+				flushOperation.addIntendedFkValue( col, intendedForFixup );
 			}
 		}
 	}
@@ -102,9 +100,9 @@ public class CycleBreakPatcher {
 				continue;
 			}
 			if ( intended instanceof DelayedValueAccess
-					&& (isUniqueSwap
-							? flushOperation.getIntendedUniqueValues().containsKey( col )
-							: flushOperation.getIntendedFkValues().containsKey( col )) ) {
+					&& ( isUniqueSwap
+							? flushOperation.hasIntendedUniqueValue( col )
+							: flushOperation.hasIntendedFkValue( col ) ) ) {
 				continue;
 			}
 			final Object intendedForFixup = intended instanceof DelayedValueAccess handle && handle.isResolved()
@@ -123,10 +121,10 @@ public class CycleBreakPatcher {
 
 			// 4) Record intended value for later fixup UPDATE
 			if (isUniqueSwap) {
-				flushOperation.getIntendedUniqueValues().put(col, intendedForFixup);
+				flushOperation.addIntendedUniqueValue( col, intendedForFixup );
 			}
 			else {
-				flushOperation.getIntendedFkValues().put(col, intendedForFixup);
+				flushOperation.addIntendedFkValue( col, intendedForFixup );
 			}
 		}
 	}

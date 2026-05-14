@@ -113,7 +113,9 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		);
 
 		var insertable = entityPersister.getPropertyInsertability();
-		var valuesAnalysis = new InsertValuesAnalysis( entityPersister, state );
+		var valuesAnalysis = insertMutationPlanner.needsInsertValuesAnalysis()
+				? new InsertValuesAnalysis( entityPersister, state )
+				: null;
 		final boolean[] effectiveInsertability = entityPersister.isDynamicInsert()
 				? insertMutationPlanner.resolveInsertability( state )
 				: insertable;
@@ -148,7 +150,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			}
 			final var tableInsert = effectiveGroup.get( tableDescriptor.name() );
 
-			if ( !valuesAnalysis.include( tableDescriptor ) ) {
+			if ( valuesAnalysis != null && !valuesAnalysis.include( tableDescriptor ) ) {
 				continue;
 			}
 			var operation = insertMutationPlanner.resolveJdbcInsertOperation(

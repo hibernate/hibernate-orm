@@ -49,12 +49,14 @@ class EntityInsertMutationPlanner {
 	private final SessionFactoryImplementor sessionFactory;
 	private final Map<String, TableInsert> staticInsertOperations;
 	private final Map<String, JdbcInsertMutation> staticJdbcInsertOperations;
+	private final boolean hasOptionalMutableTables;
 
 	EntityInsertMutationPlanner(
 			EntityPersister entityPersister,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityPersister = entityPersister;
 		this.sessionFactory = sessionFactory;
+		this.hasOptionalMutableTables = determineHasOptionalMutableTables();
 		if ( entityPersister.isDynamicInsert() ) {
 			staticInsertOperations = null;
 			staticJdbcInsertOperations = null;
@@ -69,6 +71,10 @@ class EntityInsertMutationPlanner {
 	/// when the entity is configured for dynamic insert.
 	Map<String, TableInsert> getStaticInsertOperations() {
 		return staticInsertOperations;
+	}
+
+	boolean needsInsertValuesAnalysis() {
+		return entityPersister.isDynamicInsert() || hasOptionalMutableTables;
 	}
 
 	JdbcInsertMutation resolveJdbcInsertOperation(
@@ -197,6 +203,17 @@ class EntityInsertMutationPlanner {
 			jdbcOperations.put( name, operation.createMutationOperation( null, sessionFactory ) );
 		} );
 		return Collections.unmodifiableMap( jdbcOperations );
+	}
+
+	private boolean determineHasOptionalMutableTables() {
+		for ( TableDescriptor tableDescriptor : entityPersister.getTableDescriptors() ) {
+			if ( tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
+					&& !entityTableDescriptor.isInverse()
+					&& entityTableDescriptor.isOptional() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private TableInsertBuilder createTableInsertBuilder(TableDescriptor tableDescriptor) {

@@ -41,10 +41,10 @@ public class FlushOperation {
 	private BindingPatch bindingPatch;
 
 	// Captured “intended” FK values when we cycle-break (used for fixup update synthesis)
-	private final Map<String, Object> intendedFkValues = new LinkedHashMap<>();
+	private Map<String, Object> intendedFkValues;
 
 	// Captured “intended” unique constraint values when we cycle-break UPDATE swap cycles
-	private final Map<String, Object> intendedUniqueValues = new LinkedHashMap<>();
+	private Map<String, Object> intendedUniqueValues;
 
 	// Cached analysis/checker from bind phase (optional)
 	private ValuesAnalysis cachedValuesAnalysis;
@@ -126,11 +126,41 @@ public class FlushOperation {
 	}
 
 	public Map<String, Object> getIntendedFkValues() {
-		return intendedFkValues;
+		return intendedFkValues == null ? Map.of() : intendedFkValues;
 	}
 
 	public Map<String, Object> getIntendedUniqueValues() {
-		return intendedUniqueValues;
+		return intendedUniqueValues == null ? Map.of() : intendedUniqueValues;
+	}
+
+	public boolean hasIntendedFkValues() {
+		return intendedFkValues != null && !intendedFkValues.isEmpty();
+	}
+
+	public boolean hasIntendedUniqueValues() {
+		return intendedUniqueValues != null && !intendedUniqueValues.isEmpty();
+	}
+
+	public boolean hasIntendedFkValue(String column) {
+		return intendedFkValues != null && intendedFkValues.containsKey( column );
+	}
+
+	public boolean hasIntendedUniqueValue(String column) {
+		return intendedUniqueValues != null && intendedUniqueValues.containsKey( column );
+	}
+
+	public void addIntendedFkValue(String column, Object value) {
+		if ( intendedFkValues == null ) {
+			intendedFkValues = new LinkedHashMap<>();
+		}
+		intendedFkValues.put( column, value );
+	}
+
+	public void addIntendedUniqueValue(String column, Object value) {
+		if ( intendedUniqueValues == null ) {
+			intendedUniqueValues = new LinkedHashMap<>();
+		}
+		intendedUniqueValues.put( column, value );
 	}
 
 	public Object getCachedInsertValuesAnalysis() {

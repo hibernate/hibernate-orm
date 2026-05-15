@@ -36,7 +36,7 @@ public class SQLServerJsonArrayFunction extends JsonArrayFunction {
 		}
 		else {
 			if ( sqlAstArguments.isEmpty() ) {
-				sqlAppender.appendSql( "'[]'" );
+				sqlAppender.appendSql( "N'[]'" );
 			}
 			else {
 				final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
@@ -51,7 +51,7 @@ public class SQLServerJsonArrayFunction extends JsonArrayFunction {
 					argumentsCount = sqlAstArguments.size();
 				}
 				if ( nullBehavior == JsonNullBehavior.ABSENT ) {
-					sqlAppender.appendSql( "(select '['+string_agg(substring(t.d,2,len(t.d)-2),',')" );
+					sqlAppender.appendSql( "(select N'['+string_agg(substring(t.d,2,len(t.d)-2),',')" );
 					sqlAppender.appendSql( "within group (order by t.k)+']' from (values" );
 					char separator = ' ';
 					for ( int i = 0; i < argumentsCount; i++ ) {

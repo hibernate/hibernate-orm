@@ -70,12 +70,20 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
 
 	public OptionalTableUpdateOperation(
-			MutationTarget<?> mutationTarget,
+			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate upsert,
 			@SuppressWarnings("unused") SessionFactoryImplementor factory) {
-		this.mutationTarget = (EntityMutationTarget) mutationTarget;
+		this( mutationTarget, upsert, upsert.getExpectation(), factory );
+	}
+
+	protected OptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate upsert,
+			Expectation expectation,
+			@SuppressWarnings("unused") SessionFactoryImplementor factory) {
+		this.mutationTarget = mutationTarget;
 		this.tableMapping = (EntityTableMapping) upsert.getMutatingTable().getTableMapping();
-		this.expectation = upsert.getExpectation();
+		this.expectation = expectation;
 		this.valueBindings = upsert.getValueBindings();
 		this.keyBindings = upsert.getKeyBindings();
 		this.optimisticLockBindings = upsert.getOptimisticLockBindings();
@@ -425,8 +433,20 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					}
 				} );
 			}
-			jdbcCoordinator.getResultSetReturn()
-					.executeUpdate( insertStatement, sql );
+			final int rowCount = jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement, sql );
+			expectation.verifyOutcome(
+					rowCount,
+					insertStatement,
+					-1,
+					sql
+			);
+		}
+		catch (SQLException e) {
+			throw jdbcServices.getSqlExceptionHelper().convert(
+					e,
+					"Unable to execute mutation PreparedStatement against table '" + tableMapping.getTableName() + "'",
+					sql
+			);
 		}
 		finally {
 			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insertStatement );

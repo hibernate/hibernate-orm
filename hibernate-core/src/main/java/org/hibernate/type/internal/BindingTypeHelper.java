@@ -12,8 +12,10 @@ import java.time.ZonedDateTime;
 import java.util.Calendar;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.BindingContext;
+import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -84,6 +86,12 @@ public class BindingTypeHelper {
 		else {
 			return null;
 		}
+	}
+
+	public static JdbcMapping resolveBindType(JdbcMapping baseType, JdbcParameter jdbcParameter) {
+		return baseType instanceof NullType && jdbcParameter.getExpressionType() != null
+				? jdbcParameter.getExpressionType().getSingleJdbcMapping()
+				: baseType;
 	}
 
 	public static JdbcMapping resolveBindType(

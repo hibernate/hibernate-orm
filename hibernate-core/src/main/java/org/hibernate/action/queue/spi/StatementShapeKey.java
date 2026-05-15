@@ -7,7 +7,10 @@ package org.hibernate.action.queue.spi;
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.action.queue.internal.support.OperationGroupKey;
+import org.hibernate.action.queue.spi.meta.CollectionTableDescriptor;
+import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
 /// Helps identify similar mutations more concretely that just type+table.  This
@@ -49,29 +52,50 @@ public record StatementShapeKey(String tableExpression, MutationKind kind, int s
 		return new StatementShapeKey( tableName, MutationKind.NO_OP, hash);
 	}
 
+	public static StatementShapeKey forMutation(
+			String tableName,
+			MutationKind kind,
+			TableDescriptor tableDescriptor,
+			MutationOperation mutationOperation) {
+		final int h = hashMutationShape( tableName, kind, tableDescriptor, mutationOperation );
+		return new StatementShapeKey( tableName, kind, h );
+	}
+
 	private static int hashMutationShape(
 			String normalizedTableName,
 			MutationKind kind,
 			FlushOperation flushOperation) {
+		return hashMutationShape(
+				normalizedTableName,
+				kind,
+				flushOperation.getMutatingTableDescriptor(),
+				flushOperation.getJdbcOperation()
+		);
+	}
+
+	private static int hashMutationShape(
+			String normalizedTableName,
+			MutationKind kind,
+			TableDescriptor tableDescriptor,
+			MutationOperation mutationOperation) {
 		// Always include table + kind (guards against collisions)
 		int hash = 17;
 		hash = 31 * hash + normalizedTableName.hashCode();
 		hash = 31 * hash + kind.hashCode();
 
 		// Include navigableRole for collections to distinguish multiple collections on same table
-		var tableDescriptor = flushOperation.getMutatingTableDescriptor();
-		if ( tableDescriptor instanceof org.hibernate.action.queue.spi.meta.CollectionTableDescriptor ctd ) {
+		if ( tableDescriptor instanceof CollectionTableDescriptor ctd ) {
 			if ( ctd.navigableRole() != null ) {
 				hash = 31 * hash + ctd.navigableRole().hashCode();
 			}
 		}
 
-		if ( flushOperation.getJdbcOperation() instanceof PreparableMutationOperation pmo ) {
+		if ( mutationOperation instanceof PreparableMutationOperation pmo ) {
 			hash = 31 * hash + pmo.getSqlString().hashCode();
 		}
 		else {
 			// we have some form of "self executing" operation
-			hash = 31 * hash + flushOperation.getJdbcOperation().hashCode();
+			hash = 31 * hash + mutationOperation.hashCode();
 		}
 
 		return hash;

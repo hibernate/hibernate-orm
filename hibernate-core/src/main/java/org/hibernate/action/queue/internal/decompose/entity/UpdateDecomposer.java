@@ -9,6 +9,7 @@ import org.hibernate.action.queue.spi.decompose.entity.UpdateCacheHandling;
 
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.spi.MutationKind;
+import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
@@ -42,7 +43,6 @@ import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.ast.builder.VersionUpdateBuilder;
-import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,15 +77,15 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
 /// @author Steve Ebersole
 public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		implements Function<EntityTableDescriptor, TableMapping> {
+	private final EntityMutationPlanContributor mutationPlanContributor;
+
 	private final Map<TableDescriptor, TableDescriptorAsTableMapping> tableMappingAdapters = new IdentityHashMap<>();
 
 	private final Map<String, LogicalTableUpdate<?>> staticUpdateOperations;
 	private final Map<String, MutationOperation> staticJdbcUpdateOperations;
-
-	private final TableUpdateStandard versionUpdate;
 	private final MutationOperation versionJdbcUpdate;
-
-	private final EntityMutationPlanContributor mutationPlanContributor;
+	private final Map<String, StatementShapeKey> staticStatementShapeKeys;
+	private final String origin;
 
 	public UpdateDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
@@ -97,6 +97,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			EntityMutationPlanContributor mutationPlanContributor) {
 		super( entityPersister, sessionFactory );
 
+		this.mutationPlanContributor = mutationPlanContributor;
+
 		this.staticUpdateOperations = entityPersister.isDynamicUpdate()
 				// entity specified dynamic-update - skip static operations
 				? null
@@ -104,14 +106,18 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		this.staticJdbcUpdateOperations = staticUpdateOperations == null
 				? null
 				: generateStaticJdbcOperations( staticUpdateOperations );
+		this.staticStatementShapeKeys = staticJdbcUpdateOperations == null
+				? null
+				: generateStaticStatementShapeKeys( staticJdbcUpdateOperations );
 
-		this.versionUpdate = entityPersister.getVersionMapping() != null
+		var versionUpdate = entityPersister.getVersionMapping() != null
 				? new VersionUpdateBuilder( entityPersister ).buildMutation()
 				: null;
 		this.versionJdbcUpdate = versionUpdate == null
 				? null
 				: versionUpdate.createMutationOperation( null, sessionFactory );
-		this.mutationPlanContributor = mutationPlanContributor;
+
+		this.origin = "EntityUpdateAction(" + entityPersister.getEntityName() + ")";
 	}
 
 	public Map<String, LogicalTableUpdate<?>> getStaticUpdateOperations() {
@@ -298,6 +304,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				continue;
 			}
 			var operation = resolveJdbcUpdateOperation( tableDescriptor.name(), tableUpdate );
+			var shapeKey = resolveStatementShapeKey( tableDescriptor.name(), tableUpdate );
 
 			// For static updates, only execute secondary tables when one of their
 			// attributes actually drove the update.  Static mutation groups may
@@ -341,7 +348,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 					operation,
 					bindPlan,
 					ordinalBase * 1_000 + (localOrd++),
-					"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
+					origin,
+					shapeKey
 			);
 
 			if ( previousOperation != null ) {
@@ -635,6 +643,20 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		return Collections.unmodifiableMap( jdbcOperations );
 	}
 
+	private Map<String, StatementShapeKey> generateStaticStatementShapeKeys(
+			Map<String, MutationOperation> staticJdbcOperations) {
+		final Map<String, StatementShapeKey> shapeKeys = new HashMap<>();
+		staticJdbcOperations.forEach( (name, operation) -> {
+			shapeKeys.put( name, StatementShapeKey.forMutation(
+					name,
+					MutationKind.UPDATE,
+					findTableDescriptor( name ),
+					operation
+			) );
+		} );
+		return Collections.unmodifiableMap( shapeKeys );
+	}
+
 	private MutationOperation resolveJdbcUpdateOperation(
 			String tableName,
 			LogicalTableUpdate<?> tableUpdate) {
@@ -642,6 +664,15 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			return staticJdbcUpdateOperations.get( tableName );
 		}
 		return tableUpdate.createMutationOperation( null, sessionFactory );
+	}
+
+	private StatementShapeKey resolveStatementShapeKey(
+			String tableName,
+			LogicalTableUpdate<?> tableUpdate) {
+		if ( staticStatementShapeKeys != null && tableUpdate == staticUpdateOperations.get( tableName ) ) {
+			return staticStatementShapeKeys.get( tableName );
+		}
+		return null;
 	}
 
 	private TableUpdateBuilder<?> createTableUpdateBuilder(TableDescriptor tableDescriptor) {

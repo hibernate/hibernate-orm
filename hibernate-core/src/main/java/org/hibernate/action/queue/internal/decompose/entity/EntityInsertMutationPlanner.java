@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
+import org.hibernate.action.queue.spi.MutationKind;
+import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
@@ -49,6 +51,7 @@ class EntityInsertMutationPlanner {
 	private final SessionFactoryImplementor sessionFactory;
 	private final Map<String, TableInsert> staticInsertOperations;
 	private final Map<String, JdbcInsertMutation> staticJdbcInsertOperations;
+	private final Map<String, StatementShapeKey> staticStatementShapeKeys;
 	private final boolean hasOptionalMutableTables;
 
 	EntityInsertMutationPlanner(
@@ -60,10 +63,12 @@ class EntityInsertMutationPlanner {
 		if ( entityPersister.isDynamicInsert() ) {
 			staticInsertOperations = null;
 			staticJdbcInsertOperations = null;
+			staticStatementShapeKeys = null;
 		}
 		else {
 			staticInsertOperations = generateStaticOperations();
 			staticJdbcInsertOperations = generateStaticJdbcOperations( staticInsertOperations );
+			staticStatementShapeKeys = generateStaticStatementShapeKeys( staticJdbcInsertOperations );
 		}
 	}
 
@@ -85,6 +90,15 @@ class EntityInsertMutationPlanner {
 			return staticJdbcInsertOperations.get( tableName );
 		}
 		return tableInsert.createMutationOperation( valuesAnalysis, sessionFactory );
+	}
+
+	StatementShapeKey resolveStatementShapeKey(
+			String tableName,
+			TableInsert tableInsert) {
+		if ( staticStatementShapeKeys != null && tableInsert == staticInsertOperations.get( tableName ) ) {
+			return staticStatementShapeKeys.get( tableName );
+		}
+		return null;
 	}
 
 	boolean[] resolveInsertability(Object[] state) {
@@ -203,6 +217,29 @@ class EntityInsertMutationPlanner {
 			jdbcOperations.put( name, operation.createMutationOperation( null, sessionFactory ) );
 		} );
 		return Collections.unmodifiableMap( jdbcOperations );
+	}
+
+	private Map<String, StatementShapeKey> generateStaticStatementShapeKeys(
+			Map<String, JdbcInsertMutation> staticJdbcOperations) {
+		final Map<String, StatementShapeKey> shapeKeys = CollectionHelper.linkedMapOfSize( staticJdbcOperations.size() );
+		staticJdbcOperations.forEach( (name, operation) -> {
+			shapeKeys.put( name, StatementShapeKey.forMutation(
+					name,
+					MutationKind.INSERT,
+					findTableDescriptor( name ),
+					operation
+			) );
+		} );
+		return Collections.unmodifiableMap( shapeKeys );
+	}
+
+	private EntityTableDescriptor findTableDescriptor(String tableName) {
+		for ( EntityTableDescriptor tableDescriptor : entityPersister.getTableDescriptors() ) {
+			if ( tableDescriptor.name().equals( tableName ) ) {
+				return tableDescriptor;
+			}
+		}
+		throw new IllegalArgumentException( "Unknown entity table `" + tableName + "`" );
 	}
 
 	private boolean determineHasOptionalMutableTables() {

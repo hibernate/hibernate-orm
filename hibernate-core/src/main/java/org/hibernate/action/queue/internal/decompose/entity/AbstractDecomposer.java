@@ -4,10 +4,9 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
-import org.hibernate.action.queue.spi.decompose.entity.EntityActionDecomposer;
-import org.hibernate.action.queue.spi.decompose.entity.EntityActionDecomposer;
-
 import org.hibernate.action.internal.EntityAction;
+import org.hibernate.action.queue.spi.decompose.entity.EntityActionDecomposer;
+import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
@@ -16,12 +15,14 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
 
+;
+
 /// Base support for [EntityAction]-based [EntityActionDecomposer] implementations.
 ///
-/// Entity persisters construct decomposers directly.  State-management-specific
-/// behavior should be introduced through [EntityMutationPlanContributor] when
-/// the logical action needs a different graph mutation plan, rather than by
-/// replacing the decomposer hierarchy for that state-management strategy.
+/// Entity persisters construct decomposers directly.  State-management-specific behavior should be
+/// introduced through [org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor] when
+/// the logical action needs a different graph mutation plan, rather than by/ replacing the decomposer
+/// hierarchy for that state-management strategy.
 ///
 /// @author Steve Ebersole
 public abstract class AbstractDecomposer<T extends EntityAction> implements EntityActionDecomposer<T> {
@@ -31,6 +32,15 @@ public abstract class AbstractDecomposer<T extends EntityAction> implements Enti
 	public AbstractDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		this.entityPersister = entityPersister;
 		this.sessionFactory = sessionFactory;
+	}
+
+	protected EntityTableDescriptor findTableDescriptor(String tableName) {
+		for ( EntityTableDescriptor tableDescriptor : entityPersister.getTableDescriptors() ) {
+			if ( tableDescriptor.name().equals( tableName ) ) {
+				return tableDescriptor;
+			}
+		}
+		throw new IllegalArgumentException( "Unknown entity table `" + tableName + "`" );
 	}
 
 	protected void handleValueGeneration(
@@ -60,25 +70,17 @@ public abstract class AbstractDecomposer<T extends EntityAction> implements Enti
 			return;
 		}
 
-		final boolean writePropertyValue = eventType == null
-				? generator.writePropertyValue()
-				: generator.writePropertyValue( eventType );
+		final boolean writePropertyValue = generator.writePropertyValue();
 		final String[] columnValues = writePropertyValue
 				? null
-				: eventType == null
-						? generator.getReferencedColumnValues( dialect )
-						: generator.getReferencedColumnValues( dialect, eventType );
-		final boolean[] columnInclusions = eventType == null
-				? null
-				: generator.getColumnInclusions( dialect, eventType );
+				: generator.getReferencedColumnValues( dialect );
+		final boolean[] columnInclusions = null;
 		attributeMapping.forEachSelectable( (j, mapping) -> {
-			if ( columnInclusions == null || columnInclusions[j] ) {
-				if ( writePropertyValue ) {
-					builder.addValueColumn( mapping );
-				}
-				else {
-					builder.addValueColumn( columnValues[j], mapping );
-				}
+			if ( writePropertyValue ) {
+				builder.addColumnAssignment( mapping );
+			}
+			else {
+				builder.addColumnAssignment( mapping, columnValues[j] );
 			}
 		} );
 	}

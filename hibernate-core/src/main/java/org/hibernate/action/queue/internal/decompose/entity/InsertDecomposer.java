@@ -43,6 +43,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 	private final EntityInsertMutationPlanner insertMutationPlanner;
 	private final EntityMutationPlanContributor mutationPlanContributor;
 
+	private final String origin;
+
 	public InsertDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
 	}
@@ -55,6 +57,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 		this.insertMutationPlanner = new EntityInsertMutationPlanner( entityPersister, sessionFactory );
 		this.mutationPlanContributor = mutationPlanContributor;
+
+		this.origin = "EntityInsertAction(" + entityPersister.getEntityName() + ")";
 	}
 
 	/// Static set of table mutations used to perform the entity creation.
@@ -158,6 +162,10 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					tableInsert,
 					valuesAnalysis
 			);
+			final var shapeKey = insertMutationPlanner.resolveStatementShapeKey(
+					tableDescriptor.name(),
+					tableInsert
+			);
 
 			final BindPlan bindPlan = insertMutationPlanner.createInsertBindPlan(
 					tableDescriptor,
@@ -176,7 +184,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					operation,
 					bindPlan,
 					ordinalBase * 1_000 + (localOrd++),
-					"EntityInsertAction(" + entityPersister.getEntityName() + ")",
+					origin,
+					shapeKey,
 					needsIdPrePhase
 			);
 

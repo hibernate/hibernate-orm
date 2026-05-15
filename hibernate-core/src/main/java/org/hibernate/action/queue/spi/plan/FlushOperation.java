@@ -72,7 +72,7 @@ public class FlushOperation implements OperationResultChecker {
 			BindPlan bindPlan,
 			int ordinal,
 			String origin) {
-		this(tableDescriptor, kind, jdbcOperation, bindPlan, ordinal, origin, false);
+		this(tableDescriptor, kind, jdbcOperation, bindPlan, ordinal, origin, null, false);
 	}
 
 	public FlushOperation(
@@ -83,6 +83,29 @@ public class FlushOperation implements OperationResultChecker {
 			int ordinal,
 			String origin,
 			boolean needsIdPrePhase) {
+		this(tableDescriptor, kind, jdbcOperation, bindPlan, ordinal, origin, null, needsIdPrePhase);
+	}
+
+	public FlushOperation(
+			TableDescriptor tableDescriptor,
+			MutationKind kind,
+			MutationOperation jdbcOperation,
+			BindPlan bindPlan,
+			int ordinal,
+			String origin,
+			StatementShapeKey shapeKey) {
+		this(tableDescriptor, kind, jdbcOperation, bindPlan, ordinal, origin, shapeKey, false);
+	}
+
+	public FlushOperation(
+			TableDescriptor tableDescriptor,
+			MutationKind kind,
+			MutationOperation jdbcOperation,
+			BindPlan bindPlan,
+			int ordinal,
+			String origin,
+			StatementShapeKey shapeKey,
+			boolean needsIdPrePhase) {
 		this.tableDescriptor = tableDescriptor;
 		this.kind = kind;
 		this.jdbcOperation = jdbcOperation;
@@ -90,12 +113,18 @@ public class FlushOperation implements OperationResultChecker {
 		this.ordinal = ordinal;
 		this.origin = origin;
 		this.needsIdPrePhase = needsIdPrePhase;
+		this.shapeKey = shapeKey == null ? determineShapeKey( tableDescriptor, kind, jdbcOperation ) : shapeKey;
+	}
 
-		this.shapeKey = switch (kind) {
-			case INSERT -> StatementShapeKey.forInsert(tableDescriptor.name(), this);
-			case UPDATE -> StatementShapeKey.forUpdate(tableDescriptor.name(), this);
-			case UPDATE_ORDER -> StatementShapeKey.forUpdateOrder(tableDescriptor.name(), this);
-			case DELETE -> StatementShapeKey.forDelete(tableDescriptor.name(), this);
+	private static StatementShapeKey determineShapeKey(
+			TableDescriptor tableDescriptor,
+			MutationKind kind,
+			MutationOperation jdbcOperation) {
+		return switch (kind) {
+			case INSERT -> StatementShapeKey.forMutation( tableDescriptor.name(), MutationKind.INSERT, tableDescriptor, jdbcOperation );
+			case UPDATE -> StatementShapeKey.forMutation( tableDescriptor.name(), MutationKind.UPDATE, tableDescriptor, jdbcOperation );
+			case UPDATE_ORDER -> StatementShapeKey.forMutation( tableDescriptor.name(), MutationKind.UPDATE_ORDER, tableDescriptor, jdbcOperation );
+			case DELETE -> StatementShapeKey.forMutation( tableDescriptor.name(), MutationKind.DELETE, tableDescriptor, jdbcOperation );
 			case NO_OP -> StatementShapeKey.forNoOp(tableDescriptor.name());
 		};
 	}

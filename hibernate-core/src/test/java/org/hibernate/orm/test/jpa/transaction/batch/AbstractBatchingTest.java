@@ -119,6 +119,11 @@ public abstract class AbstractBatchingTest {
 		}
 
 		@Override
+		public void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker, java.util.function.Consumer<Object> generatedKeyConsumer) {
+			wrapped.addToBatch( jdbcValueBindings, inclusionChecker, generatedKeyConsumer );
+		}
+
+		@Override
 		public void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker) {
 			numberOfBatches++;
 			wrapped.addToBatch( jdbcValueBindings, inclusionChecker );

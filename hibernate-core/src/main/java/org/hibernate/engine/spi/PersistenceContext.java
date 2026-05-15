@@ -568,17 +568,17 @@ public interface PersistenceContext {
 	Map<EntityKey,EntityHolder> getEntityHoldersByKey();
 
 	/**
-	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
+	 * Provides access to the managed entities associated with the persistence context in a manner that
 	 * is safe from reentrant access.  Specifically, it is safe from additions/removals while iterating.
 	 */
-	Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
+	ManagedEntity[] reentrateSafeManagedEntities();
 
 //	/**
 //	 * Get the mapping from entity instance to entity entry
 //	 *
 //	 * @deprecated Due to the introduction of EntityEntryContext and bytecode enhancement; only valid really for
 //	 * sizing, see {@link #getNumberOfManagedEntities}.  For iterating the entity/EntityEntry combos, see
-//	 * {@link #reentrantSafeEntityEntries}
+//	 * {@link #reentrateSafeManagedEntities}
 //	 */
 //	@Deprecated
 //	Map getEntityEntries();

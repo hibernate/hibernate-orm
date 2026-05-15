@@ -24,6 +24,8 @@ import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 import java.sql.SQLException;
 import java.util.function.Consumer;
 
+/// PlanStepExecutor with support for JDBC batching.
+///
 /// @author Steve Ebersole
 public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	private final int batchSize;
@@ -113,33 +115,27 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 		currentBatchIndex = 0;
 		reusableValueBindingsOperation = null;
 		reusableValueBindings = null;
-		batch = session.getJdbcCoordinator().getBatch(
-				operationShapeKey,
-			batchSize,
-			preparable
-	);
+		batch = session.getJdbcCoordinator().getBatch( operationShapeKey, batchSize, preparable );
 	}
 
 	private void applyToBatch(
 			PreparableMutationOperation preparable,
 			FlushOperation flushOperation) {
-		if ( currentBatchIndex > 0 ) {
-			session.getJdbcServices().getSqlStatementLogger().logStatement( preparable.getSqlString() );
-		}
-
-		final JdbcValueBindings valueBindings = getReusableValueBindings( preparable, flushOperation );
-		flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
+		var bindPlan = flushOperation.getBindPlan();
+		var valueBindings = getReusableValueBindings( preparable, flushOperation );
+		bindPlan.bindValues( valueBindings, flushOperation, session );
 
 		batchOperations[currentBatchIndex] = flushOperation;
 
 		try {
+			final String sqlString = preparable.getSqlString();
 			batch.addToBatch(
 					batchValueBindings.wrap( valueBindings ),
 					null,
 					buildStaleStateMapper(
-							flushOperation.getBindPlan().getOperationResultChecker(),
+							bindPlan.getOperationResultChecker(),
 							currentBatchIndex,
-							preparable.getSqlString()
+							sqlString
 					)
 			);
 		}
@@ -175,7 +171,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 		if ( resultChecker == null ) {
 			return null;
 		}
-		ReusableStaleStateMapper mapper = staleStateMappers[batchPosition];
+		var mapper = staleStateMappers[batchPosition];
 		if ( mapper == null ) {
 			mapper = new ReusableStaleStateMapper( session );
 			staleStateMappers[batchPosition] = mapper;

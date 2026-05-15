@@ -1,0 +1,119 @@
+-- NOTE: if you edit this file, make sure to use 'real' tabs, NOT spaces (check your editor settings)
+
+@@@@ FIXTURE @@@@
+=== ID ===
+complexselect
+
+=== SQL ===
+-- Non-indented single line comment
+with recent_customer_activity as (select "o".`customer_id`,COUNT(*) AS order_count,MAX(o.created_at)
+AS last_order_date,SUM(o.total_amount) AS total_spent FROM orders o WHERE o.created_at >=
+CURRENT_DATE - INTERVAL '12 months' GROUP BY o.customer_id HAVING SUM(o.total_amount) > 1000),/* Non-indented multi-line
+comment */
+product_performance AS (SELECT oi.product_id,/* Indented multi-line
+comment */
+trim(both '' from [oi].description),AVG(oi.unit_price)
+AS avg_price,SUM(oi.quantity) AS total_units_sold FROM order_items oi GROUP BY oi.product_id
+HAVING SUM(oi.quantity) > 10) select c.customer_id,UPPER(c.full_name) AS customer_name, c.region,
+rca.order_count,rca.total_spent,latest_order.order_id,latest_order.created_at AS latest_order_date,
+pp.avg_price,pp.total_units_sold,ROUND(rca.total_spent / NULLIF(rca.order_count, 0),2) AS avg_order_value,
+COUNT(DISTINCT s.shipment_id) AS shipment_count FROM customers c JOIN recent_customer_activity rca ON
+rca.customer_id = c.customer_id LEFT JOIN orders o ON o.customer_id = c.customer_id AND o.status = 'COMPLETED'
+LEFT JOIN shipments s ON s.order_id = o.order_id AND s.shipped_at IS NOT NULL LEFT JOIN LATERAL (SELECT
+o2.order_id,o2.created_at FROM orders o2 WHERE o2.customer_id = c.customer_id AND o2.status IN ('COMPLETED',
+'SHIPPED') ORDER BY o2.created_at DESC FETCH FIRST 1 ROW ONLY) latest_order ON TRUE JOIN order_items oi ON oi.order_id =
+o.order_id JOIN product_performance pp ON pp.product_id = oi.product_id AND pp.avg_price > 20
+WHERE c.is_active = TRUE
+-- Indented single line comment
+AND EXISTS (SELECT 1 FROM customer_tags ct WHERE ct.customer_id = c.customer_id
+AND ct.tag_name = 'VIP') GROUP BY c.customer_id,c.full_name,c.region,rca.order_count,rca.total_spent,
+latest_order.order_id,latest_order.created_at,pp.avg_price,pp.total_units_sold HAVING COUNT(DISTINCT
+s.shipment_id) >= 2 ORDER BY rca.total_spent DESC,latest_order.created_at DESC OFFSET 10 ROWS FETCH
+FIRST 5 ROWS WITH TIES;
+
+=== EXPECTED ===
+-- Non-indented single line comment
+WITH recent_customer_activity AS (
+	SELECT
+		"o".`customer_id`,
+		COUNT(*) AS order_count,
+		MAX(o.created_at) AS last_order_date,
+		SUM(o.total_amount) AS total_spent
+	FROM orders o
+	WHERE o.created_at >= CURRENT_DATE - INTERVAL '12 months'
+	GROUP BY o.customer_id
+	HAVING SUM(o.total_amount) > 1000
+),
+/* Non-indented multi-line
+comment */
+product_performance AS (
+	SELECT
+		oi.product_id,
+		/* Indented multi-line
+		comment */
+		TRIM(BOTH '' FROM [oi].description),
+		AVG(oi.unit_price) AS avg_price,
+		SUM(oi.quantity) AS total_units_sold
+	FROM order_items oi
+	GROUP BY oi.product_id
+	HAVING SUM(oi.quantity) > 10
+)
+SELECT
+	c.customer_id,
+	UPPER(c.full_name) AS customer_name,
+	c.region,
+	rca.order_count,
+	rca.total_spent,
+	latest_order.order_id,
+	latest_order.created_at AS latest_order_date,
+	pp.avg_price,
+	pp.total_units_sold,
+	ROUND(rca.total_spent / NULLIF(rca.order_count, 0), 2) AS avg_order_value,
+	COUNT(DISTINCT s.shipment_id) AS shipment_count
+FROM customers c
+JOIN recent_customer_activity rca
+	ON rca.customer_id = c.customer_id
+LEFT JOIN orders o
+	ON o.customer_id = c.customer_id
+	AND o.status = 'COMPLETED'
+LEFT JOIN shipments s
+	ON s.order_id = o.order_id
+	AND s.shipped_at IS NOT NULL
+LEFT JOIN LATERAL (
+	SELECT o2.order_id, o2.created_at
+	FROM orders o2
+	WHERE o2.customer_id = c.customer_id
+		AND o2.status IN ('COMPLETED', 'SHIPPED')
+	ORDER BY o2.created_at DESC
+	FETCH FIRST 1 ROW ONLY
+) latest_order
+	ON TRUE
+JOIN order_items oi
+	ON oi.order_id = o.order_id
+JOIN product_performance pp
+	ON pp.product_id = oi.product_id
+	AND pp.avg_price > 20
+WHERE c.is_active = TRUE
+	-- Indented single line comment
+	AND EXISTS (
+		SELECT 1
+		FROM customer_tags ct
+		WHERE ct.customer_id = c.customer_id
+			AND ct.tag_name = 'VIP'
+	)
+GROUP BY
+	c.customer_id,
+	c.full_name,
+	c.region,
+	rca.order_count,
+	rca.total_spent,
+	latest_order.order_id,
+	latest_order.created_at,
+	pp.avg_price,
+	pp.total_units_sold
+HAVING COUNT(DISTINCT s.shipment_id) >= 2
+ORDER BY rca.total_spent DESC, latest_order.created_at DESC
+OFFSET 10 ROWS
+FETCH FIRST 5 ROWS
+WITH TIES;
+

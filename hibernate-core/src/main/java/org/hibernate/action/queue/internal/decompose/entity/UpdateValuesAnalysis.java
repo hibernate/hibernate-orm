@@ -13,6 +13,7 @@ import org.hibernate.persister.entity.mutation.AttributeAnalysis;
 import org.hibernate.persister.entity.mutation.TableSet;
 import org.hibernate.sql.model.TableMapping;
 
+import java.util.BitSet;
 import java.util.List;
 import java.util.function.Function;
 
@@ -22,15 +23,16 @@ import java.util.function.Function;
 ///
 /// @author Steve Ebersole
 public class UpdateValuesAnalysis implements org.hibernate.persister.entity.mutation.UpdateValuesAnalysis {
-	private final TableDescriptorSet tablesWithNonNullValues = new TableDescriptorSet();
-	private final TableDescriptorSet tablesWithPreviousNonNullValues = new TableDescriptorSet();
-	private final TableDescriptorSet tablesNeedingUpdate = new TableDescriptorSet();
-	private final TableDescriptorSet tablesNeedingDynamicUpdate = new TableDescriptorSet();
-	private final TableSet legacyTablesWithNonNullValues = new TableSet();
-	private final TableSet legacyTablesWithPreviousNonNullValues = new TableSet();
-	private final TableSet legacyTablesNeedingUpdate = new TableSet();
-	private final TableSet legacyTablesNeedingDynamicUpdate = new TableSet();
+	private final GraphEntityMutationTarget mutationTarget;
 	private final Function<EntityTableDescriptor, TableMapping> legacyTableMappingAccess;
+	private BitSet tablesWithNonNullValues;
+	private BitSet tablesWithPreviousNonNullValues;
+	private BitSet tablesNeedingUpdate;
+	private BitSet tablesNeedingDynamicUpdate;
+	private TableSet legacyTablesWithNonNullValues;
+	private TableSet legacyTablesWithPreviousNonNullValues;
+	private TableSet legacyTablesNeedingUpdate;
+	private TableSet legacyTablesNeedingDynamicUpdate;
 	private final Object[] values;
 	private final boolean[] dirtiness;
 	private final boolean hasDirtyAttributes;
@@ -41,6 +43,7 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 			Object[] previousValues,
 			int[] dirtyAttributeIndexes,
 			Function<EntityTableDescriptor, TableMapping> legacyTableMappingAccess) {
+		this.mutationTarget = mutationTarget;
 		this.legacyTableMappingAccess = legacyTableMappingAccess;
 		this.values = values;
 		if ( dirtyAttributeIndexes == null ) {
@@ -63,19 +66,19 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 			boolean checkForDirtiness = true;
 
 			if ( values == null ) {
-				addTable( table, tablesWithNonNullValues, legacyTablesWithNonNullValues );
+				addTableWithNonNullValues( table );
 				checkForNonNull = false;
 			}
 
 			if ( previousValues == null ) {
-				addTable( table, tablesWithPreviousNonNullValues, legacyTablesWithPreviousNonNullValues );
+				addTableWithPreviousNonNullValues( table );
 				checkForPreviousNonNull = false;
 			}
 
 			if ( dirtyAttributeIndexes == null ) {
 				// No dirty tracking - update all tables with columns
 				if ( !table.columns().isEmpty() ) {
-					addTable( table, tablesNeedingUpdate, legacyTablesNeedingUpdate );
+					addTableNeedingUpdate( table );
 				}
 				checkForDirtiness = false;
 			}
@@ -85,28 +88,43 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 
 				if ( checkForNonNull ) {
 					if ( values[attribute.getStateArrayPosition()] != null ) {
-						addTable( table, tablesWithNonNullValues, legacyTablesWithNonNullValues );
+						addTableWithNonNullValues( table );
 					}
 				}
 
 				if ( checkForPreviousNonNull ) {
 					if ( previousValues[attribute.getStateArrayPosition()] != null ) {
-						addTable( table, tablesWithPreviousNonNullValues, legacyTablesWithPreviousNonNullValues );
+						addTableWithPreviousNonNullValues( table );
 					}
 				}
 
 				if ( checkForDirtiness ) {
 					if ( dirtiness[attribute.getStateArrayPosition()] ) {
-						addTable( table, tablesNeedingUpdate, legacyTablesNeedingUpdate );
+						addTableNeedingUpdate( table );
 					}
 				}
 			}
 		} );
 	}
 
-	private void addTable(EntityTableDescriptor table, TableDescriptorSet graphSet, TableSet legacySet) {
-		graphSet.add( table );
-		legacySet.add( legacyTableMappingAccess.apply( table ) );
+	private void addTableWithNonNullValues(EntityTableDescriptor table) {
+		tablesWithNonNullValues = addTable( table, tablesWithNonNullValues );
+	}
+
+	private void addTableWithPreviousNonNullValues(EntityTableDescriptor table) {
+		tablesWithPreviousNonNullValues = addTable( table, tablesWithPreviousNonNullValues );
+	}
+
+	private void addTableNeedingUpdate(EntityTableDescriptor table) {
+		tablesNeedingUpdate = addTable( table, tablesNeedingUpdate );
+	}
+
+	private BitSet addTable(EntityTableDescriptor table, BitSet graphSet) {
+		if ( graphSet == null ) {
+			graphSet = new BitSet();
+		}
+		graphSet.set( table.getRelativePosition() );
+		return graphSet;
 	}
 
 	private boolean[] buildDirtinessArray(EntityMappingType targetPart, int[] dirtyAttributeIndexes) {
@@ -123,15 +141,19 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 	}
 
 	public boolean hasNonNullValues(EntityTableDescriptor table) {
-		return tablesWithNonNullValues.contains( table );
+		return contains( tablesWithNonNullValues, table );
 	}
 
 	public boolean hasPreviousNonNullValues(EntityTableDescriptor table) {
-		return tablesWithPreviousNonNullValues.contains( table );
+		return contains( tablesWithPreviousNonNullValues, table );
 	}
 
 	public boolean needsUpdate(EntityTableDescriptor table) {
-		return tablesNeedingUpdate.contains( table );
+		return contains( tablesNeedingUpdate, table );
+	}
+
+	private boolean contains(BitSet graphSet, EntityTableDescriptor table) {
+		return graphSet != null && graphSet.get( table.getRelativePosition() );
 	}
 
 	public boolean[] getDirtiness() {
@@ -149,22 +171,46 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 
 	@Override
 	public TableSet getTablesNeedingUpdate() {
+		if ( legacyTablesNeedingUpdate == null ) {
+			legacyTablesNeedingUpdate = buildLegacyTableSet( tablesNeedingUpdate );
+		}
 		return legacyTablesNeedingUpdate;
 	}
 
 	@Override
 	public TableSet getTablesWithNonNullValues() {
+		if ( legacyTablesWithNonNullValues == null ) {
+			legacyTablesWithNonNullValues = buildLegacyTableSet( tablesWithNonNullValues );
+		}
 		return legacyTablesWithNonNullValues;
 	}
 
 	@Override
 	public TableSet getTablesWithPreviousNonNullValues() {
+		if ( legacyTablesWithPreviousNonNullValues == null ) {
+			legacyTablesWithPreviousNonNullValues = buildLegacyTableSet( tablesWithPreviousNonNullValues );
+		}
 		return legacyTablesWithPreviousNonNullValues;
 	}
 
 	@Override
 	public TableSet getTablesNeedingDynamicUpdate() {
+		if ( legacyTablesNeedingDynamicUpdate == null ) {
+			legacyTablesNeedingDynamicUpdate = buildLegacyTableSet( tablesNeedingDynamicUpdate );
+		}
 		return legacyTablesNeedingDynamicUpdate;
+	}
+
+	private TableSet buildLegacyTableSet(BitSet graphSet) {
+		final TableSet legacySet = new TableSet();
+		if ( graphSet != null ) {
+			mutationTarget.forEachMutableTableDescriptor( table -> {
+				if ( graphSet.get( table.getRelativePosition() ) ) {
+					legacySet.add( legacyTableMappingAccess.apply( table ) );
+				}
+			} );
+		}
+		return legacySet;
 	}
 
 	@Override

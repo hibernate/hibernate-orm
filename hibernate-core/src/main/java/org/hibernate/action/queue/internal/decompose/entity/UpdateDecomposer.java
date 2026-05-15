@@ -35,6 +35,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
@@ -50,6 +51,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasValueGenerationOnExecution;
 import static org.hibernate.generator.EventType.UPDATE;
@@ -73,7 +75,8 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
 /// See [EntityMutationPlanContributor].
 ///
 /// @author Steve Ebersole
-public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
+public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
+		implements Function<EntityTableDescriptor, TableMapping> {
 	private final Map<TableDescriptor, TableDescriptorAsTableMapping> tableMappingAdapters = new IdentityHashMap<>();
 
 	private final Map<String, LogicalTableUpdate<?>> staticUpdateOperations;
@@ -247,7 +250,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				state,
 				previousState,
 				dirtyAttributeIndexes,
-				this::getTableMappingAdapter
+				this
 		);
 
 
@@ -659,6 +662,11 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 	private TableDescriptorAsTableMapping getTableMappingAdapter(TableDescriptor tableDescriptor) {
 		return tableMappingAdapters.computeIfAbsent( tableDescriptor, this::createTableMappingAdapter );
+	}
+
+	@Override
+	public TableDescriptorAsTableMapping apply(EntityTableDescriptor tableDescriptor) {
+		return getTableMappingAdapter( tableDescriptor );
 	}
 
 	private TableDescriptorAsTableMapping createTableMappingAdapter(TableDescriptor tableDescriptor) {

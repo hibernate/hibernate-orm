@@ -36,7 +36,10 @@ tasks.register( "formatChecks" ) {
 
 
 def enforceRulesTask = tasks.register('enforceRules') {
-    inputs.dir("src/main/java")
+    def mainSources = file("src/main/java")
+    inputs.dir(mainSources).optional()
+    onlyIf{mainSources.exists()}
+
     doLast {
         def illegalImport = ~/^import (sun|java.awt|org.slf4j)/
         def missingNewline = ~/^\s*}\s*(else|catch|finally)/

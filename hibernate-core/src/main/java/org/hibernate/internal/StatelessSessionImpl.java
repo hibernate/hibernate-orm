@@ -784,6 +784,9 @@ public class StatelessSessionImpl
 	// Hibernate Reactive calls this
 	protected Object idToUpsert(Object entity, EntityPersister persister) {
 		final Object id = persister.getIdentifier( entity, this );
+		if ( id == null ) {
+			throw new IllegalArgumentException( "Object passed to upsert() has no identifier" );
+		}
 		final Boolean unsaved =
 				persister.getIdentifierMapping()
 						.getUnsavedStrategy()

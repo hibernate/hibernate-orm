@@ -10,12 +10,15 @@ import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.internal.cyclebreak.BindingPatch;
 import org.hibernate.action.queue.spi.bind.ChainedPostExecutionCallback;
+import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.PreExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ValuesAnalysis;
 
+import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -26,7 +29,7 @@ import java.util.Map;
 /// @author Steve Ebersole
 /// @since 8.0
 @Incubating
-public class FlushOperation {
+public class FlushOperation implements OperationResultChecker {
 	private final TableDescriptor tableDescriptor;
 	private final MutationKind kind;
 	private final StatementShapeKey shapeKey;
@@ -41,10 +44,10 @@ public class FlushOperation {
 	private BindingPatch bindingPatch;
 
 	// Captured “intended” FK values when we cycle-break (used for fixup update synthesis)
-	private final Map<String, Object> intendedFkValues = new LinkedHashMap<>();
+	private Map<String, Object> intendedFkValues;
 
 	// Captured “intended” unique constraint values when we cycle-break UPDATE swap cycles
-	private final Map<String, Object> intendedUniqueValues = new LinkedHashMap<>();
+	private Map<String, Object> intendedUniqueValues;
 
 	// Cached analysis/checker from bind phase (optional)
 	private ValuesAnalysis cachedValuesAnalysis;
@@ -69,7 +72,7 @@ public class FlushOperation {
 			BindPlan bindPlan,
 			int ordinal,
 			String origin) {
-		this(tableDescriptor, kind, jdbcOperation, bindPlan, ordinal, origin, false);
+		this(tableDescriptor, kind, jdbcOperation, bindPlan, ordinal, origin, null, false);
 	}
 
 	public FlushOperation(
@@ -80,6 +83,29 @@ public class FlushOperation {
 			int ordinal,
 			String origin,
 			boolean needsIdPrePhase) {
+		this(tableDescriptor, kind, jdbcOperation, bindPlan, ordinal, origin, null, needsIdPrePhase);
+	}
+
+	public FlushOperation(
+			TableDescriptor tableDescriptor,
+			MutationKind kind,
+			MutationOperation jdbcOperation,
+			BindPlan bindPlan,
+			int ordinal,
+			String origin,
+			StatementShapeKey shapeKey) {
+		this(tableDescriptor, kind, jdbcOperation, bindPlan, ordinal, origin, shapeKey, false);
+	}
+
+	public FlushOperation(
+			TableDescriptor tableDescriptor,
+			MutationKind kind,
+			MutationOperation jdbcOperation,
+			BindPlan bindPlan,
+			int ordinal,
+			String origin,
+			StatementShapeKey shapeKey,
+			boolean needsIdPrePhase) {
 		this.tableDescriptor = tableDescriptor;
 		this.kind = kind;
 		this.jdbcOperation = jdbcOperation;
@@ -87,12 +113,18 @@ public class FlushOperation {
 		this.ordinal = ordinal;
 		this.origin = origin;
 		this.needsIdPrePhase = needsIdPrePhase;
+		this.shapeKey = shapeKey == null ? determineShapeKey( tableDescriptor, kind, jdbcOperation ) : shapeKey;
+	}
 
-		this.shapeKey = switch (kind) {
-			case INSERT -> StatementShapeKey.forInsert(tableDescriptor.name(), this);
-			case UPDATE -> StatementShapeKey.forUpdate(tableDescriptor.name(), this);
-			case UPDATE_ORDER -> StatementShapeKey.forUpdateOrder(tableDescriptor.name(), this);
-			case DELETE -> StatementShapeKey.forDelete(tableDescriptor.name(), this);
+	private static StatementShapeKey determineShapeKey(
+			TableDescriptor tableDescriptor,
+			MutationKind kind,
+			MutationOperation jdbcOperation) {
+		return switch (kind) {
+			case INSERT -> StatementShapeKey.forMutation( tableDescriptor.name(), MutationKind.INSERT, tableDescriptor, jdbcOperation );
+			case UPDATE -> StatementShapeKey.forMutation( tableDescriptor.name(), MutationKind.UPDATE, tableDescriptor, jdbcOperation );
+			case UPDATE_ORDER -> StatementShapeKey.forMutation( tableDescriptor.name(), MutationKind.UPDATE_ORDER, tableDescriptor, jdbcOperation );
+			case DELETE -> StatementShapeKey.forMutation( tableDescriptor.name(), MutationKind.DELETE, tableDescriptor, jdbcOperation );
 			case NO_OP -> StatementShapeKey.forNoOp(tableDescriptor.name());
 		};
 	}
@@ -121,16 +153,59 @@ public class FlushOperation {
 		return bindPlan;
 	}
 
+	public OperationResultChecker getOperationResultChecker() {
+		return bindPlan.hasOperationResultChecker() ? this : null;
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return bindPlan.checkResult( this, affectedRowCount, batchPosition, sqlString, sessionFactory );
+	}
+
 	public BindingPatch getBindingPatch() {
 		return bindingPatch;
 	}
 
 	public Map<String, Object> getIntendedFkValues() {
-		return intendedFkValues;
+		return intendedFkValues == null ? Map.of() : intendedFkValues;
 	}
 
 	public Map<String, Object> getIntendedUniqueValues() {
-		return intendedUniqueValues;
+		return intendedUniqueValues == null ? Map.of() : intendedUniqueValues;
+	}
+
+	public boolean hasIntendedFkValues() {
+		return intendedFkValues != null && !intendedFkValues.isEmpty();
+	}
+
+	public boolean hasIntendedUniqueValues() {
+		return intendedUniqueValues != null && !intendedUniqueValues.isEmpty();
+	}
+
+	public boolean hasIntendedFkValue(String column) {
+		return intendedFkValues != null && intendedFkValues.containsKey( column );
+	}
+
+	public boolean hasIntendedUniqueValue(String column) {
+		return intendedUniqueValues != null && intendedUniqueValues.containsKey( column );
+	}
+
+	public void addIntendedFkValue(String column, Object value) {
+		if ( intendedFkValues == null ) {
+			intendedFkValues = new LinkedHashMap<>();
+		}
+		intendedFkValues.put( column, value );
+	}
+
+	public void addIntendedUniqueValue(String column, Object value) {
+		if ( intendedUniqueValues == null ) {
+			intendedUniqueValues = new LinkedHashMap<>();
+		}
+		intendedUniqueValues.put( column, value );
 	}
 
 	public Object getCachedInsertValuesAnalysis() {

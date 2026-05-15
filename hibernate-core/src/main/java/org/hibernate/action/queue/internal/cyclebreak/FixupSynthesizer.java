@@ -4,8 +4,6 @@
  */
 package org.hibernate.action.queue.internal.cyclebreak;
 
-import org.hibernate.action.queue.spi.plan.FlushOperation;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.plan.FlushOperation;

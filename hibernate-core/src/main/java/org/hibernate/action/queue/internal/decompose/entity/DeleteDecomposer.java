@@ -21,12 +21,12 @@ import java.util.function.Consumer;
 /// A state-management contributor may supply those operation shapes when a
 /// logical delete is represented by a non-DELETE mutation, such as soft-delete.
 ///
-/// See [EntityMutationPlanContributor#getStaticDeleteOperations()].
+/// @see org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor#getStaticDeleteOperations().
 ///
 /// @author Steve Ebersole
 public interface DeleteDecomposer extends EntityActionDecomposer<EntityDeleteAction> {
 	/// Static set of table mutations used to perform the entity delete.
-	/// These may come from [EntityMutationPlanContributor] for certain
+	/// These may come from [org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor] for certain
 	/// [org.hibernate.persister.state.spi.StateManagement] strategies.
 	Map<String, ? extends TableMutation<?>> getStaticDeleteOperations();
 

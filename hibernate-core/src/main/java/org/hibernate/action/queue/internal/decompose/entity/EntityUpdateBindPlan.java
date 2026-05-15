@@ -13,6 +13,7 @@ import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
+import org.hibernate.action.queue.spi.meta.TableKeyDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -20,15 +21,39 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ModelPart.JdbcValueBiConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.ValuesAnalysis;
 
 import java.sql.SQLException;
 
+import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 import static org.hibernate.generator.EventType.UPDATE;
 
 /// @author Steve Ebersole
 public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
+
+	/// Static, non-capturing [JdbcValueBiConsumer] for binding attribute values for update assignment (SET).
+	private static final JdbcValueBiConsumer<EntityUpdateBindPlan, AttributeMapping> UPDATE_SET_BINDER =
+			(valueIndex, bindPlan, attribute, jdbcValue, selectableMapping) -> {
+				if ( selectableMapping.isUpdateable()
+						&& !selectableMapping.isFormula()
+						&& bindPlan.shouldBindUpdateValue( attribute, valueIndex, bindPlan.bindingSession ) ) {
+					bindPlan.valueBindings.bindValue(
+							jdbcValue,
+							selectableMapping.getSelectionExpression(),
+							ParameterUsage.SET
+					);
+				}
+			};
+
+	/// Static, non-capturing [JdbcValueBiConsumer] for binding key values for update restriction (WHERE).
+	private static final JdbcValueBiConsumer<EntityUpdateBindPlan, TableKeyDescriptor> KEY_RESTRICTION_BINDER =
+			(index, bindPlan, keyDescriptor, jdbcValue, jdbcValueMapping) -> {
+				final var keyColumn = keyDescriptor.getSelectable( index );
+				bindPlan.valueBindings.bindRestriction( index, jdbcValue, keyColumn );
+			};
+
 	private final EntityTableDescriptor tableDescriptor;
 	private final EntityPersister entityPersister;
 	private final Object entity;
@@ -42,6 +67,11 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	private final UpdateValuesAnalysis valuesAnalysis;
 	private final boolean isDynamic;
 	private final GeneratedValuesCollector generatedValuesCollector;
+
+	// temporary state used during decomposition to allow model-part decomposition to be non-capturing
+	private JdbcValueBindings valueBindings;
+	private SharedSessionContractImplementor bindingSession;
+	private FlushOperation bindingFlushOperation;
 
 	public EntityUpdateBindPlan(
 			EntityTableDescriptor tableDescriptor,
@@ -124,39 +154,44 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			var attribute = tableDescriptor.attributes().get( i );
-			if ( shouldIncludeInUpdate( attribute, session ) ) {
-				decomposeAttributeForSet(
-						state[attribute.getStateArrayPosition()],
-						attribute,
-						valueBindings,
-						flushOperation,
-						session
-				);
+		this.bindingFlushOperation = flushOperation;
+		try {
+			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+				var attribute = tableDescriptor.attributes().get( i );
+				if ( shouldIncludeInUpdate( attribute, session ) ) {
+					decomposeAttributeForSet(
+							state[attribute.getStateArrayPosition()],
+							attribute,
+							valueBindings,
+							session
+					);
+				}
+			}
+
+			if ( identifier == null ) {
+				assert entityPersister.getInsertDelegate() != null;
+			}
+			else {
+				breakDownKeyJdbcValue( valueBindings, session );
+			}
+
+			// Apply optimistic locking if needed
+			if ( effectiveOptLockStyle.isVersion() ) {
+				assert entityPersister.getVersionMapping() != null;
+				applyVersionBasedOptLocking( valueBindings, session );
+			}
+			else if ( effectiveOptLockStyle.isAllOrDirty() ) {
+				assert previousState != null;
+				applyNonVersionOptLocking( valueBindings, session );
+			}
+
+			// Apply partitioned selection restrictions if needed
+			if ( entityPersister.hasPartitionedSelectionMapping() && previousState != null ) {
+				applyPartitionedSelectionRestrictions( valueBindings, session );
 			}
 		}
-
-		if ( identifier == null ) {
-			assert entityPersister.getInsertDelegate() != null;
-		}
-		else {
-			breakDownKeyJdbcValue( valueBindings, session );
-		}
-
-		// Apply optimistic locking if needed
-		if ( effectiveOptLockStyle.isVersion() ) {
-			assert entityPersister.getVersionMapping() != null;
-			applyVersionBasedOptLocking( valueBindings, session );
-		}
-		else if ( effectiveOptLockStyle.isAllOrDirty() ) {
-			assert previousState != null;
-			applyNonVersionOptLocking( valueBindings, session );
-		}
-
-		// Apply partitioned selection restrictions if needed
-		if ( entityPersister.hasPartitionedSelectionMapping() && previousState != null ) {
-			applyPartitionedSelectionRestrictions( valueBindings, session );
+		finally {
+			this.bindingFlushOperation = null;
 		}
 	}
 
@@ -164,7 +199,6 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			Object value,
 			AttributeMapping attribute,
 			JdbcValueBindings valueBindings,
-			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		assert !attribute.isPluralAttributeMapping();
 
@@ -174,32 +208,32 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			return;
 		}
 
-		attribute.decompose(
-				value,
-				(valueIndex, jdbcValue, selectableMapping) -> {
-					if ( selectableMapping.isUpdateable()
-							&& !selectableMapping.isFormula()
-							&& shouldBindUpdateValue( attribute, valueIndex, flushOperation, session ) ) {
-						valueBindings.bindValue(
-								jdbcValue,
-								selectableMapping.getSelectionExpression(),
-								ParameterUsage.SET
-						);
-					}
-				},
-				session
-		);
+		this.valueBindings = valueBindings;
+		this.bindingSession = session;
+		try {
+			attribute.decompose(
+					value,
+					0,
+					this,
+					attribute,
+					UPDATE_SET_BINDER,
+					session
+			);
+		}
+		finally {
+			this.valueBindings = null;
+			this.bindingSession = null;
+		}
 	}
 
 	private boolean shouldBindUpdateValue(
 			AttributeMapping attribute,
 			int selectableIndex,
-			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		return BindPlanHelper.shouldBindJdbcValue(
+		return shouldBindJdbcValue(
 				attribute,
 				selectableIndex,
-				flushOperation,
+				bindingFlushOperation,
 				entityPersister,
 				UPDATE,
 				entity,
@@ -254,16 +288,20 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		// when building the static UPDATE operation
 		final var keyDescriptor = tableDescriptor.keyDescriptor();
 
-		entityPersister.getIdentifierMapping().breakDownJdbcValues(
-				identifier,
-				(index, jdbcValue, jdbcValueMapping) -> {
-					// Use the table key column (e.g., FK column for joined subclass)
-					// not the entity identifier column
-					final var keyColumn = keyDescriptor.getSelectable(index);
-					valueBindings.bindRestriction(index, jdbcValue, keyColumn);
-				},
-				session
-		);
+		this.valueBindings = valueBindings;
+		try {
+			entityPersister.getIdentifierMapping().breakDownJdbcValues(
+					identifier,
+					0,
+					this,
+					keyDescriptor,
+					KEY_RESTRICTION_BINDER,
+					session
+			);
+		}
+		finally {
+			this.valueBindings = null;
+		}
 	}
 
 	protected void applyVersionBasedOptLocking(
@@ -399,6 +437,31 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 
 	@Override
 	public boolean checkResult(
+			FlushOperation flushOperation,
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return checkResult(
+				(EntityTableDescriptor) flushOperation.getMutatingTableDescriptor(),
+				affectedRowCount,
+				batchPosition,
+				sqlString,
+				sessionFactory
+		);
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return checkResult( tableDescriptor, affectedRowCount, batchPosition, sqlString, sessionFactory );
+	}
+
+	private boolean checkResult(
+			EntityTableDescriptor tableDescriptor,
 			int affectedRowCount,
 			int batchPosition,
 			String sqlString,
@@ -414,4 +477,5 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 				sessionFactory
 		);
 	}
+
 }

@@ -37,7 +37,7 @@ public final class FkFixupUpdateFactory {
 		assert cycleBrokenOp.getKind() == MutationKind.INSERT;
 
 		// No fixup needed if no foreign-key values were deferred during cycle breaking
-		if (cycleBrokenOp.getIntendedFkValues().isEmpty()) {
+		if ( !cycleBrokenOp.hasIntendedFkValues() ) {
 			return null;
 		}
 

@@ -33,6 +33,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.persister.entity.EntityPersister;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -40,6 +41,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
@@ -83,10 +85,16 @@ public class GraphBasedActionQueue implements ActionQueue {
 	public GraphBasedActionQueue(
 			ConstraintModel constraintModel,
 			PlanningOptions planningOptions,
+			Map<String, EntityPersister> entityPersistersByTable,
 			boolean deferIdentityInserts,
 			SessionImplementor session) {
 		this.session = session;
-		this.flushCoordinator = new FlushCoordinator( constraintModel, planningOptions, session );
+		this.flushCoordinator = new FlushCoordinator(
+				constraintModel,
+				planningOptions,
+				entityPersistersByTable,
+				session
+		);
 		this.auditMutationCollector = new GraphAuditMutationCollector();
 		this.deferIdentityInserts = deferIdentityInserts;
 

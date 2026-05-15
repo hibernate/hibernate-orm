@@ -36,7 +36,7 @@ public final class UniqueSwapUpdateFactory {
 		assert cycleBrokenOp.getKind() == MutationKind.UPDATE;
 
 		// No fixup needed if no unique-key values were deferred during cycle breaking
-		if (cycleBrokenOp.getIntendedUniqueValues().isEmpty()) {
+		if ( !cycleBrokenOp.hasIntendedUniqueValues() ) {
 			return null;
 		}
 

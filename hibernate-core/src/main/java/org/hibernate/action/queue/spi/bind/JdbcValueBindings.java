@@ -13,9 +13,11 @@ import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Locale;
 
 /// Used to track JDBC value bindings (generally parameters) used in mutation operations.
@@ -26,21 +28,66 @@ import java.util.Locale;
 public class JdbcValueBindings {
 	private final TableDescriptor tableDescriptor;
 	private final JdbcValueDescriptorAccess jdbcValueDescriptorAccess;
-	private final BindingGroup bindingGroup;
+	private final MutationBindTemplate bindTemplate;
+	private final Object[] valuesBySlot;
+	private final boolean[] boundSlots;
+	private BindingGroup bindingGroup;
 
 	public JdbcValueBindings(TableDescriptor tableDescriptor, JdbcValueDescriptorAccess jdbcValueDescriptorAccess) {
 		this.tableDescriptor = tableDescriptor;
 		this.jdbcValueDescriptorAccess = jdbcValueDescriptorAccess;
-		this.bindingGroup = new BindingGroup( tableDescriptor.name() );
+		this.bindTemplate = jdbcValueDescriptorAccess instanceof PreparableMutationOperation preparable
+				? MutationBindTemplate.forOperation( preparable )
+				: null;
+		if ( bindTemplate == null ) {
+			this.valuesBySlot = null;
+			this.boundSlots = null;
+			this.bindingGroup = new BindingGroup( tableDescriptor.name() );
+		}
+		else {
+			this.valuesBySlot = new Object[bindTemplate.slots().length];
+			this.boundSlots = new boolean[bindTemplate.slots().length];
+		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public void beforeStatement(PreparedStatement preparedStatement, SharedSessionContractImplementor session) {
-		bindingGroup.forEachBinding( (binding) -> {
+		if ( bindTemplate == null ) {
+			bindingGroup.forEachBinding( (binding) -> {
+				try {
+					binding.getValueBinder().bind(
+							preparedStatement,
+							resolveValue( binding.getValue() ),
+							binding.getPosition(),
+							session
+					);
+				}
+				catch (SQLException e) {
+					throw session.getJdbcServices().getSqlExceptionHelper().convert(
+							e,
+							String.format(
+									Locale.ROOT,
+									"Unable to bind parameter #%s - %s",
+									binding.getPosition(),
+									binding.getValue()
+							)
+					);
+				}
+			} );
+			return;
+		}
+
+		final BindSlot[] slots = bindTemplate.slots();
+		for ( int i = 0; i < slots.length; i++ ) {
+			if ( !boundSlots[i] ) {
+				continue;
+			}
+			final BindSlot slot = slots[i];
 			try {
-				binding.getValueBinder().bind(
+				slot.jdbcMapping().getJdbcValueBinder().bind(
 						preparedStatement,
-						resolveValue( binding.getValue() ),
-						binding.getPosition(),
+						resolveValue( valuesBySlot[i] ),
+						slot.jdbcPosition(),
 						session
 				);
 			}
@@ -50,12 +97,12 @@ public class JdbcValueBindings {
 						String.format(
 								Locale.ROOT,
 								"Unable to bind parameter #%s - %s",
-								binding.getPosition(),
-								binding.getValue()
+								slot.jdbcPosition(),
+								valuesBySlot[i]
 						)
 				);
 			}
-		} );
+		}
 	}
 
 	public static Object resolveValue(Object value) {
@@ -63,6 +110,18 @@ public class JdbcValueBindings {
 	}
 
 	public void bindValue(Object columnValue, String columnName, ParameterUsage parameterUsage) {
+		if ( bindTemplate != null ) {
+			final BindSlot slot = bindTemplate.findSlot( columnName, parameterUsage );
+			if ( slot == null ) {
+				throw new HibernateException( "Unable to locate JdbcValueDescriptor for column `" + columnName + "`" );
+			}
+			if ( !boundSlots[slot.index()] ) {
+				valuesBySlot[slot.index()] = columnValue;
+				boundSlots[slot.index()] = true;
+			}
+			return;
+		}
+
 		final var jdbcValueDescriptor = jdbcValueDescriptorAccess.resolveValueDescriptor(
 				tableDescriptor.name(),
 				columnName,
@@ -75,21 +134,62 @@ public class JdbcValueBindings {
 	}
 
 	public Object getBoundValue(String columnName, ParameterUsage usage) {
+		if ( bindTemplate != null ) {
+			final BindSlot slot = bindTemplate.findSlot( columnName, usage );
+			return slot == null || !boundSlots[slot.index()] ? null : valuesBySlot[slot.index()];
+		}
 		final Binding binding = bindingGroup.findBinding( columnName, usage );
 		return binding == null ? null : binding.getValue();
 	}
 
 	public boolean hasBinding(String columnName, ParameterUsage usage) {
+		if ( bindTemplate != null ) {
+			final BindSlot slot = bindTemplate.findSlot( columnName, usage );
+			return slot != null && boundSlots[slot.index()];
+		}
 		return bindingGroup.findBinding( columnName, usage ) != null;
 	}
 
 	public BindingGroup getBindingGroup() {
+		if ( bindTemplate != null ) {
+			final BindingGroup compatibilityGroup = new BindingGroup( tableDescriptor.name() );
+			final BindSlot[] slots = bindTemplate.slots();
+			for ( int i = 0; i < slots.length; i++ ) {
+				if ( boundSlots[i] ) {
+					final BindSlot slot = slots[i];
+					compatibilityGroup.bindValue( slot.columnName(), valuesBySlot[i], slot.valueDescriptor() );
+				}
+			}
+			return compatibilityGroup;
+		}
 		return bindingGroup;
 	}
 
 	public void replaceValue(String columnName, ParameterUsage parameterUsage, Object newValue) {
+		if ( bindTemplate != null ) {
+			final BindSlot slot = bindTemplate.findSlot( columnName, parameterUsage );
+			if ( slot == null || !boundSlots[slot.index()] ) {
+				throw new IllegalArgumentException( String.format( Locale.ROOT,
+						"Could not locate binding [%s : %s]",
+						parameterUsage.toString(),
+						columnName
+				) );
+			}
+			valuesBySlot[slot.index()] = newValue;
+			return;
+		}
 		final Binding binding = bindingGroup.getBinding( columnName, parameterUsage );
 		binding.setValue( newValue );
+	}
+
+	public void clear() {
+		if ( bindTemplate != null ) {
+			Arrays.fill( valuesBySlot, null );
+			Arrays.fill( boundSlots, false );
+		}
+		else {
+			bindingGroup.clear();
+		}
 	}
 
 	/// Form of [#bindValue(Object, String, ParameterUsage)] which is intended for use

@@ -10,13 +10,16 @@ import org.hibernate.action.queue.internal.GraphBasedActionQueue;
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.action.queue.internal.constraint.ConstraintModel;
+import org.hibernate.action.queue.internal.constraint.UniqueSlotExtractor;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.Map;
 
 import static org.hibernate.cfg.FlushSettings.DEFERRABLE_AVOID_BREAK;
 import static org.hibernate.cfg.FlushSettings.DEFERRABLE_EDGES_IGNORE;
@@ -31,11 +34,15 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 public class GraphBasedActionQueueFactory implements ActionQueueFactory, Serializable {
 	private final PlanningOptions planningOptions;
 	private final ConstraintModel constraintModel;
+	private final Map<String, EntityPersister> entityPersistersByTable;
 	private final boolean deferIdentityInserts;
 
 	public GraphBasedActionQueueFactory(SessionFactoryImplementor factory) {
 		planningOptions = factory.getGraphPlanningOptions();
 		constraintModel = factory.getMappingMetamodel().getConstraintModel();
+		entityPersistersByTable = planningOptions.orderByUniqueKeySlots()
+				? UniqueSlotExtractor.buildPersisterMap( factory )
+				: Map.of();
 		deferIdentityInserts = factory.getServiceRegistry()
 				.requireService( ConfigurationService.class )
 				.getSetting( GRAPH_DEFER_IDENTITY_INSERTS, BOOLEAN, false );
@@ -49,6 +56,10 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 		return constraintModel;
 	}
 
+	public Map<String, EntityPersister> getEntityPersistersByTable() {
+		return entityPersistersByTable;
+	}
+
 	public boolean deferIdentityInserts() {
 		return deferIdentityInserts;
 	}
@@ -60,7 +71,13 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 
 	@Override
 	public ActionQueue buildActionQueue(SessionImplementor session) {
-		return new GraphBasedActionQueue( constraintModel, planningOptions, deferIdentityInserts, session );
+		return new GraphBasedActionQueue(
+				constraintModel,
+				planningOptions,
+				entityPersistersByTable,
+				deferIdentityInserts,
+				session
+		);
 	}
 
 	@Override

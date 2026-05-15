@@ -4,11 +4,8 @@
  */
 package org.hibernate.action.queue.internal;
 
-import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.action.queue.spi.MutationKind;
-import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.PlanningOptions;
-import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -37,6 +34,7 @@ import org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.queue.internal.support.OperationGroupKey;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -45,6 +43,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.extractCollectionOrdinal;
 
@@ -103,12 +102,20 @@ public class FlushCoordinator {
 	private final transient ConstraintModel constraintModel;
 
 	public FlushCoordinator(ConstraintModel constraintModel, PlanningOptions planningOptions, SessionImplementor session) {
+		this( constraintModel, planningOptions, Map.of(), session );
+	}
+
+	public FlushCoordinator(
+			ConstraintModel constraintModel,
+			PlanningOptions planningOptions,
+			Map<String, EntityPersister> entityPersistersByTable,
+			SessionImplementor session) {
 		this.constraintModel = constraintModel;
 		this.planningOptions = planningOptions;
 		this.session = session;
 
 		decomposer = new Decomposer( session );
-		graphBuilder = new StandardGraphBuilder( constraintModel, planningOptions, session );
+		graphBuilder = new StandardGraphBuilder( constraintModel, planningOptions, session, entityPersistersByTable );
 		flushPlanner = new StandardFlushPlanner( planningOptions );
 	}
 
@@ -264,12 +271,12 @@ public class FlushCoordinator {
 				return true;
 			}
 
-			// Multiple UPDATEs on table with unique constraints might have cycles (swaps)
-			if (singleGroup.kind() == MutationKind.UPDATE
-					&& planningOptions.orderByUniqueKeySlots()
-					&& singleGroup.hasUniqueConstraints()) {
-				return false;  // Need graph to detect swaps within the group
-			}
+		// Multiple UPDATEs on table with unique constraints might have cycles (swaps)
+		if (singleGroup.kind() == MutationKind.UPDATE
+				&& planningOptions.orderByUniqueKeySlots()
+				&& hasNonPrimaryUniqueConstraints( singleGroup.tableExpression() )) {
+			return false;  // Need graph to detect swaps within the group
+		}
 
 			// Otherwise, single group has no inter-group dependencies
 			return true;
@@ -347,8 +354,17 @@ public class FlushCoordinator {
 	private boolean hasUniqueConstraintConflicts(List<FlushOperationGroup> groups) {
 		// Check if any group operates on a table with unique constraints
 		for (FlushOperationGroup group : groups) {
-			if ( group.hasUniqueConstraints() ) {
+			if ( hasNonPrimaryUniqueConstraints( group.tableExpression() ) ) {
 				// This table has unique constraints - need graph to detect swaps
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasNonPrimaryUniqueConstraints(String tableExpression) {
+		for ( var constraint : constraintModel.getUniqueConstraintsForTable( tableExpression ) ) {
+			if ( !constraint.isPrimaryKey() ) {
 				return true;
 			}
 		}
@@ -361,6 +377,10 @@ public class FlushCoordinator {
 	/// @param groups the operation groups
 	/// @return a simple flush plan
 	private FlushPlan createSimplePlan(List<FlushOperationGroup> groups) {
+		if ( groups.size() == 1 ) {
+			return new FlushPlan( List.of( new SimplePlanStep( groups.get( 0 ).operations() ) ) );
+		}
+
 		// Collect all operations from all groups, maintaining their order
 		final List<FlushOperation> allOperations = new ArrayList<>();
 		for (FlushOperationGroup group : groups) {
@@ -377,7 +397,7 @@ public class FlushCoordinator {
 		private final List<FlushOperation> operations;
 
 		SimplePlanStep(List<FlushOperation> operations) {
-			this.operations = List.copyOf(operations);
+			this.operations = operations;
 		}
 
 		@Override
@@ -402,18 +422,19 @@ public class FlushCoordinator {
 		decomposer.beginFlush( insertions, updates, orphanRemovals, deletions );
 
 		final ArrayList<FlushOperation> operations = new ArrayList<>();
+		final Consumer<FlushOperation> operationCollector = operations::add;
 		int ordinalBase = 0;
 
 		// Decompose each phase separately, maintaining ordinal ordering
-		ordinalBase = decomposePhase(orphanCollectionRemovals, ordinalBase, operations);
-		ordinalBase = decomposePhase(orphanRemovals, ordinalBase, operations);
-		ordinalBase = decomposePhase(insertions, ordinalBase, operations);
-		ordinalBase = decomposePhase(updates, ordinalBase, operations);
-		ordinalBase = decomposePhase(collectionQueuedOps, ordinalBase, operations);
-		ordinalBase = decomposePhase(collectionRemovals, ordinalBase, operations);
-		ordinalBase = decomposePhase(collectionUpdates, ordinalBase, operations);
-		ordinalBase = decomposePhase(collectionCreations, ordinalBase, operations);
-		ordinalBase = decomposePhase(deletions, ordinalBase, operations);
+		ordinalBase = decomposePhase( orphanCollectionRemovals, ordinalBase, operationCollector );
+		ordinalBase = decomposePhase( orphanRemovals, ordinalBase, operationCollector );
+		ordinalBase = decomposePhase( insertions, ordinalBase, operationCollector );
+		ordinalBase = decomposePhase( updates, ordinalBase, operationCollector );
+		ordinalBase = decomposePhase( collectionQueuedOps, ordinalBase, operationCollector );
+		ordinalBase = decomposePhase( collectionRemovals, ordinalBase, operationCollector );
+		ordinalBase = decomposePhase( collectionUpdates, ordinalBase, operationCollector );
+		ordinalBase = decomposePhase( collectionCreations, ordinalBase, operationCollector );
+		ordinalBase = decomposePhase( deletions, ordinalBase, operationCollector );
 
 		decomposer.endFlush();
 
@@ -421,9 +442,12 @@ public class FlushCoordinator {
 		return groupOperations(operations);
 	}
 
-	private int decomposePhase(List<? extends Executable> executables, int ordinalBase, List<FlushOperation> operations) {
+	private int decomposePhase(
+			List<? extends Executable> executables,
+			int ordinalBase,
+			Consumer<FlushOperation> operationConsumer) {
 		for (Executable e : executables) {
-			decomposer.decompose(e, ordinalBase++, operations::add);
+			decomposer.decompose( e, ordinalBase++, operationConsumer );
 		}
 		return ordinalBase;
 	}
@@ -545,8 +569,12 @@ public class FlushCoordinator {
 	/// Executes planned operations in order. Handles fixups emitted from cycle breaks.
 	private void executePlan(FlushPlan plan) {
 		final PlanStepExecutor executor = PlanStepExecutorFactory.create( session );
+		final Consumer<Object> newlyManagedEntityConsumer = decomposer.hasUnresolvedInserts()
+				? newlyManagedEntities::add
+				: null;
+		final Consumer<FlushOperation> fixupOperationConsumer = plan::enqueueFixup;
 		for ( PlanStep step : plan.steps() ) {
-			executeStep(step, plan, executor);
+			executeStep( step, executor, newlyManagedEntityConsumer, fixupOperationConsumer );
 		}
 
 		// Batched execution emits cycle-break fixups from post-batch callbacks.
@@ -560,11 +588,15 @@ public class FlushCoordinator {
 		}
 	}
 
-	private void executeStep(PlanStep step, FlushPlan plan, PlanStepExecutor executor) {
+	private void executeStep(
+			PlanStep step,
+			PlanStepExecutor executor,
+			Consumer<Object> newlyManagedEntityConsumer,
+			Consumer<FlushOperation> fixupOperationConsumer) {
 		executor.execute(
 				step.operations(),
-				newlyManagedEntities::add,
-				plan::enqueueFixup
+				newlyManagedEntityConsumer,
+				fixupOperationConsumer
 		);
 	}
 
@@ -578,7 +610,8 @@ public class FlushCoordinator {
 		// Try to resolve inserts for each entity that became managed
 		for (Object managedEntity : newlyManagedEntities) {
 			var resolvedOperations = new ArrayList<FlushOperation>();
-			decomposer.resolveAndDecompose(managedEntity, resolvedOperations::add);
+			final Consumer<FlushOperation> operationCollector = resolvedOperations::add;
+			decomposer.resolveAndDecompose( managedEntity, operationCollector );
 
 			if (!resolvedOperations.isEmpty()) {
 				// Group resolved operations and recursively flush
@@ -633,7 +666,12 @@ public class FlushCoordinator {
 		this.decomposer = decomposer;
 		this.session = session;
 
-		graphBuilder = new StandardGraphBuilder( actionQueueFactory.getConstraintModel(), actionQueueFactory.getPlanningOptions(), session );
+		graphBuilder = new StandardGraphBuilder(
+				actionQueueFactory.getConstraintModel(),
+				actionQueueFactory.getPlanningOptions(),
+				session,
+				actionQueueFactory.getEntityPersistersByTable()
+		);
 		flushPlanner = new StandardFlushPlanner( actionQueueFactory.getPlanningOptions() );
 	}
 }

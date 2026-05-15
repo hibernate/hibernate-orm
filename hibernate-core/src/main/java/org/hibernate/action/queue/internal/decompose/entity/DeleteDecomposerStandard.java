@@ -10,6 +10,7 @@ import org.hibernate.action.queue.spi.decompose.entity.PostDeleteHandling;
 
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.spi.MutationKind;
+import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
@@ -26,8 +27,10 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.MutationOperation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -35,7 +38,7 @@ import java.util.function.Consumer;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 
 
-/// [Decomposer][EntityActionDecomposer] for entity delete operations.
+/// [Decomposer][org.hibernate.action.queue.spi.decompose.entity.EntityActionDecomposer] for entity delete operations.
 ///
 /// Converts an [EntityDeleteAction] into a group of [FlushOperation] to be performed.
 /// The standard delete lifecycle is always handled here, including natural-id
@@ -51,11 +54,17 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
 /// See [EntityMutationPlanContributor].
 ///
 /// @author Steve Ebersole
-public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
+public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAction> implements DeleteDecomposer {
 	private final Map<String, TableDelete> staticDeleteMutations;
+	private final Map<String, MutationOperation> staticJdbcDeleteMutations;
+	private final Map<String, StatementShapeKey> staticStatementShapeKeys;
 	private Map<String, TableDelete> staticNoVersionDeleteMutations;
+	private Map<String, MutationOperation> staticNoVersionJdbcDeleteMutations;
+	private Map<String, StatementShapeKey> staticNoVersionStatementShapeKeys;
 	private final EntityMutationPlanContributor mutationPlanContributor;
 	private final Map<String, ? extends TableMutation<?>> staticDeleteOperations;
+
+	private final String origin;
 
 	public DeleteDecomposerStandard(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
@@ -72,6 +81,10 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		this.staticDeleteMutations = staticDeleteOperations.isEmpty()
 				? generateMutations( "", null, null, true, null )
 				: Map.of();
+		this.staticJdbcDeleteMutations = generateStaticJdbcOperations( staticDeleteMutations );
+		this.staticStatementShapeKeys = generateStaticStatementShapeKeys( staticJdbcDeleteMutations );
+
+		this.origin = "EntityDeleteAction(" + entityPersister.getEntityName() + ")";
 	}
 
 	public Map<String, ? extends TableMutation<?>> getStaticDeleteOperations() {
@@ -118,10 +131,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 				postDeleteHandling
 		);
 
-		if ( mutationPlanContributor.contributeReplacementDelete(
-				context,
-				operationConsumer
-		) ) {
+		if ( mutationPlanContributor.contributeReplacementDelete( context, operationConsumer ) ) {
 			return;
 		}
 
@@ -293,7 +303,8 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					mutation,
 					bindPlan,
 					ordinalBase * 1_000 + (localOrd++),
-					"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
+					origin,
+					null
 			);
 			op.setPreExecutionCallback( postDeleteHandling.getPreDeleteHandling() );
 
@@ -325,6 +336,8 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 			applyVersion = false;
 			if ( staticNoVersionDeleteMutations == null ) {
 				staticNoVersionDeleteMutations = generateMutations("", null, null, false, session );
+				staticNoVersionJdbcDeleteMutations = generateStaticJdbcOperations( staticNoVersionDeleteMutations );
+				staticNoVersionStatementShapeKeys = generateStaticStatementShapeKeys( staticNoVersionJdbcDeleteMutations );
 			}
 			tableDeletesToUse = staticNoVersionDeleteMutations;
 		}
@@ -336,7 +349,8 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		int localOrd = 0;
 		FlushOperation previousOperation = null;
 		for ( Map.Entry<String, TableDelete> entry : tableDeletesToUse.entrySet() ) {
-			var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
+			var mutation = resolveJdbcDeleteOperation( entry.getKey(), entry.getValue(), applyVersion );
+			final var shapeKey = resolveStatementShapeKey( entry.getKey(), entry.getValue(), applyVersion );
 			var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
 			var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
 
@@ -358,7 +372,8 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					mutation,
 					bindPlan,
 					ordinalBase * 1_000 + (localOrd++),
-					"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
+					origin,
+					shapeKey
 			);
 			op.setPreExecutionCallback( postDeleteHandling.getPreDeleteHandling() );
 
@@ -369,6 +384,60 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		}
 
 		return previousOperation;
+	}
+
+	private Map<String, MutationOperation> generateStaticJdbcOperations(Map<String, TableDelete> staticOperations) {
+		final Map<String, MutationOperation> jdbcOperations = linkedMapOfSize( staticOperations.size() );
+		staticOperations.forEach( (name, operation) -> {
+			jdbcOperations.put( name, operation.createMutationOperation( null, sessionFactory ) );
+		} );
+		return Collections.unmodifiableMap( jdbcOperations );
+	}
+
+	private Map<String, StatementShapeKey> generateStaticStatementShapeKeys(
+			Map<String, MutationOperation> staticJdbcOperations) {
+		final Map<String, StatementShapeKey> shapeKeys = linkedMapOfSize( staticJdbcOperations.size() );
+		staticJdbcOperations.forEach( (name, operation) -> {
+			shapeKeys.put( name, StatementShapeKey.forMutation(
+					name,
+					MutationKind.DELETE,
+					findTableDescriptor( name ),
+					operation
+			) );
+		} );
+		return Collections.unmodifiableMap( shapeKeys );
+	}
+
+	private MutationOperation resolveJdbcDeleteOperation(
+			String tableName,
+			TableDelete tableDelete,
+			boolean applyVersion) {
+		var staticDeletes = applyVersion
+				? staticDeleteMutations
+				: staticNoVersionDeleteMutations;
+		var staticJdbcDeletes = applyVersion
+				? staticJdbcDeleteMutations
+				: staticNoVersionJdbcDeleteMutations;
+		if ( staticJdbcDeletes != null && tableDelete == staticDeletes.get( tableName ) ) {
+			return staticJdbcDeletes.get( tableName );
+		}
+		return tableDelete.createMutationOperation( null, sessionFactory );
+	}
+
+	private StatementShapeKey resolveStatementShapeKey(
+			String tableName,
+			TableDelete tableDelete,
+			boolean applyVersion) {
+		var staticDeletes = applyVersion
+				? staticDeleteMutations
+				: staticNoVersionDeleteMutations;
+		var staticShapeKeys = applyVersion
+				? staticStatementShapeKeys
+				: staticNoVersionStatementShapeKeys;
+		if ( staticShapeKeys != null && tableDelete == staticDeletes.get( tableName ) ) {
+			return staticShapeKeys.get( tableName );
+		}
+		return null;
 	}
 
 	private OptimisticLockStyle definedOptimisticLockStyle() {

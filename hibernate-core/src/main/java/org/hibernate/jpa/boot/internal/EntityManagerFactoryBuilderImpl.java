@@ -122,6 +122,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+import static org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor.collectSchemaManagementActions;
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 import static org.hibernate.jpa.internal.util.LogHelper.logPersistenceUnitInformation;
 import static org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper.interpretTransactionType;
@@ -229,6 +230,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		var mergedSettings = new MergedSettings();
 
 		mergedSettings.getConfigurationValues().putAll( cfg.properties() );
+		collectSchemaManagementActions( cfg, mergedSettings.getConfigurationValues()::putIfAbsent );
 		mergedSettings.getConfigurationValues().put( PERSISTENCE_UNIT_NAME, cfg.name() );
 
 		// see if the persistence.xml settings named a Hibernate config file

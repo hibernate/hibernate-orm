@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceUnitTransactionType;
+import jakarta.persistence.SchemaManagementAction;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import org.hibernate.SessionFactory;
@@ -671,51 +672,73 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 
 	@Override
 	public HibernatePersistenceConfiguration provider(String providerClassName) {
-		return (HibernatePersistenceConfiguration) super.provider( providerClassName );
+		super.provider( providerClassName );
+		return this;
 	}
 
 	@Override
 	public HibernatePersistenceConfiguration jtaDataSource(String dataSourceJndiName) {
-		return (HibernatePersistenceConfiguration) super.jtaDataSource( dataSourceJndiName );
+		super.jtaDataSource( dataSourceJndiName );
+		return this;
 	}
 
 	@Override
 	public HibernatePersistenceConfiguration nonJtaDataSource(String dataSourceJndiName) {
-		return (HibernatePersistenceConfiguration) super.nonJtaDataSource( dataSourceJndiName );
+		super.nonJtaDataSource( dataSourceJndiName );
+		return this;
 	}
 
 	@Override
 	public HibernatePersistenceConfiguration managedClass(Class<?> managedClass) {
-		return (HibernatePersistenceConfiguration) super.managedClass( managedClass );
+		super.managedClass( managedClass );
+		return this;
 	}
 
 	@Override
 	public HibernatePersistenceConfiguration mappingFile(String name) {
-		return (HibernatePersistenceConfiguration) super.mappingFile( name );
+		super.mappingFile( name );
+		return this;
 	}
 
 	@Override
 	public HibernatePersistenceConfiguration transactionType(PersistenceUnitTransactionType transactionType) {
-		return (HibernatePersistenceConfiguration) super.transactionType( transactionType );
+		super.transactionType( transactionType );
+		return this;
 	}
 
 	@Override
 	public HibernatePersistenceConfiguration sharedCacheMode(SharedCacheMode sharedCacheMode) {
-		return (HibernatePersistenceConfiguration) super.sharedCacheMode( sharedCacheMode );
+		super.sharedCacheMode( sharedCacheMode );
+		return this;
 	}
 
 	@Override
 	public HibernatePersistenceConfiguration validationMode(ValidationMode validationMode) {
-		return (HibernatePersistenceConfiguration) super.validationMode( validationMode );
+		super.validationMode( validationMode );
+		return this;
+	}
+
+	@Override
+	public HibernatePersistenceConfiguration schemaManagementDatabaseAction(SchemaManagementAction action) {
+		super.schemaManagementDatabaseAction( action );
+		return this;
+	}
+
+	@Override
+	public HibernatePersistenceConfiguration schemaManagementScriptsAction(SchemaManagementAction action) {
+		super.schemaManagementScriptsAction( action );
+		return this;
 	}
 
 	@Override
 	public HibernatePersistenceConfiguration property(String name, Object value) {
-		return (HibernatePersistenceConfiguration) super.property( name, value );
+		super.property( name, value );
+		return this;
 	}
 
 	@Override
 	public HibernatePersistenceConfiguration properties(Map<String, ?> properties) {
-		return (HibernatePersistenceConfiguration) super.properties( properties );
+		super.properties( properties );
+		return this;
 	}
 }

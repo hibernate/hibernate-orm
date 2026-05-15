@@ -7,10 +7,12 @@ package org.hibernate.jpa.boot.spi;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceUnitTransactionType;
+import jakarta.persistence.SchemaManagementAction;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -24,12 +26,12 @@ import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.scan.spi.ScanningResult;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.tool.schema.Action;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -37,7 +39,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 
+import static org.hibernate.cfg.MappingSettings.GLOBALLY_QUOTED_IDENTIFIERS;
+import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.hibernate.cfg.SchemaToolingSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.asProperties;
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
 /**
@@ -56,7 +64,7 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 			@NonNull HibernatePersistenceConfiguration persistenceConfiguration,
 			@NonNull StandardServiceRegistry standardServiceRegistry) {
 		this.persistenceConfiguration = persistenceConfiguration;
-		this.properties = CollectionHelper.asProperties( persistenceConfiguration.properties() );
+		this.properties = persistenceConfigurationProperties( persistenceConfiguration );
 		this.managedClassNames = persistenceConfiguration.managedClasses().stream().map( Class::getName ).toList();
 
 		final ScanningResult scanningResult = performScanning( persistenceConfiguration, standardServiceRegistry );
@@ -71,9 +79,44 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 
 	public PersistenceConfigurationDescriptor(@NonNull PersistenceConfiguration persistenceConfiguration) {
 		this.persistenceConfiguration = persistenceConfiguration;
-		this.properties = CollectionHelper.asProperties( persistenceConfiguration.properties() );
+		this.properties = persistenceConfigurationProperties( persistenceConfiguration );
 		this.managedClassNames = persistenceConfiguration.managedClasses().stream().map( Class::getName ).toList();
 		this.discoveredClassNames = List.of();
+	}
+
+	private static Properties persistenceConfigurationProperties(PersistenceConfiguration persistenceConfiguration) {
+		final var properties = asProperties( persistenceConfiguration.properties() );
+		collectSchemaManagementActions( persistenceConfiguration, (name, value) -> {
+			if ( !properties.containsKey( name ) ) {
+				properties.put( name, value );
+			}
+		} );
+		return properties;
+	}
+
+	@Internal
+	public static void collectSchemaManagementActions(
+			PersistenceConfiguration persistenceConfiguration,
+			BiConsumer<String, Object> collector) {
+		collectSchemaManagementAction(
+				persistenceConfiguration.schemaManagementDatabaseAction(),
+				JAKARTA_HBM2DDL_DATABASE_ACTION,
+				collector
+		);
+		collectSchemaManagementAction(
+				persistenceConfiguration.schemaManagementScriptsAction(),
+				JAKARTA_HBM2DDL_SCRIPTS_ACTION,
+				collector
+		);
+	}
+
+	private static void collectSchemaManagementAction(
+			SchemaManagementAction action,
+			String settingName,
+			BiConsumer<String, Object> collector) {
+		if ( action != null && action != SchemaManagementAction.NONE ) {
+			collector.accept( settingName, Action.interpretJpaSetting( action ) );
+		}
 	}
 
 	@Override
@@ -93,7 +136,7 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 
 	@Override
 	public boolean isUseQuotedIdentifiers() {
-		return properties.get( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS ) == Boolean.TRUE;
+		return properties.get( GLOBALLY_QUOTED_IDENTIFIERS ) == Boolean.TRUE;
 	}
 
 	@Override

@@ -103,7 +103,34 @@ dependencies {
 jar {
     manifest {
         attributes(
-                'Main-Class': 'org.hibernate.Version'
+                'Main-Class': 'org.hibernate.Version',
+                // Override the base Import-Package to mark optional dependencies as resolution:=optional.
+                // These packages are referenced in the compiled bytecode but only loaded conditionally
+                // at runtime (guarded by Class.forName / classForName availability checks), so OSGi
+                // containers must not require them to be present.
+                'Import-Package': [
+                        // Temporarily support JTA 1.1 (see base plugin comment)
+                        'javax.transaction;version="[1.1,2)"',
+                        // Oracle JDBC / OSON: loaded conditionally via OracleJdbcHelper.isUsable()
+                        // and JacksonIntegration.ableToLoadJacksonOSONFactory()
+                        'oracle.*;resolution:=optional',
+                        // Jackson 2.x (core, databind, dataformat-xml): loaded conditionally via
+                        // JacksonIntegration.ableToLoadJackson*Mapper()
+                        'com.fasterxml.jackson.*;resolution:=optional',
+                        // Jackson 3 (tools.jackson): loaded conditionally via
+                        // JacksonIntegration.ableToLoadJackson3*Mapper()
+                        'tools.jackson.*;resolution:=optional',
+                        // Bean Validation API: integrated only when a provider is present
+                        'jakarta.validation.*;resolution:=optional',
+                        // CDI API: integrated only when a BeanManager is present
+                        'jakarta.enterprise.*;resolution:=optional',
+                        // JSON-B API: loaded conditionally in JsonBJsonFormatMapper
+                        'jakarta.json.bind.*;resolution:=optional',
+                        // PostgreSQL driver types: used only when running against PostgreSQL
+                        'org.postgresql.*;resolution:=optional',
+                        // All other referenced packages are required
+                        '*'
+                ].join(',')
         )
     }
 }

@@ -10,6 +10,19 @@ plugins {
 
 description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
 
+jar {
+	manifest {
+		attributes(
+				'Import-Package': [
+						// PostgreSQL JDBC spatial types: used only when running against PostgreSQL
+						'org.postgresql.*;resolution:=optional',
+						// All other referenced packages are required
+						'*'
+				].join(',')
+		)
+	}
+}
+
 dependencies {
 	api project( ':hibernate-core' )
 	api libs.geolatte

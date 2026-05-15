@@ -369,6 +369,28 @@ jobs:
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
           DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
 
+      - name: Check OSGi optional imports
+        run: ./gradlew
+          :hibernate-core:checkOptionalImports
+          :hibernate-vector:checkOptionalImports
+          :hibernate-agroal:checkOptionalImports
+          :hibernate-ant:checkOptionalImports
+          :hibernate-c3p0:checkOptionalImports
+          :hibernate-community-dialects:checkOptionalImports
+          :hibernate-envers:checkOptionalImports
+          :hibernate-graalvm:checkOptionalImports
+          :hibernate-hikaricp:checkOptionalImports
+          :hibernate-jcache:checkOptionalImports
+          :hibernate-jfr:checkOptionalImports
+          :hibernate-micrometer:checkOptionalImports
+          :hibernate-processor:checkOptionalImports
+          :hibernate-scan-jandex:checkOptionalImports
+          :hibernate-spatial:checkOptionalImports
+          :hibernate-testing:checkOptionalImports
+        env:
+          POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}
+          DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
+
       # For jobs running on 'pull_request', upload build scan data.
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.

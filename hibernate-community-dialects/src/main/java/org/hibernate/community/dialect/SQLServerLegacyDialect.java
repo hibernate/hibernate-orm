@@ -63,7 +63,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -110,6 +109,8 @@ import java.util.TimeZone;
 import static org.hibernate.Timeouts.NO_WAIT_MILLI;
 import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
@@ -873,7 +874,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor(
 				sqle -> {
-					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+					switch ( extractErrorCode( sqle ) ) {
 						case 2627:
 						case 2601:
 							return extractUsingTemplate( "'", "'", sqle.getMessage() );
@@ -890,33 +891,26 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 			return super.buildSQLExceptionConversionDelegate(); //null
 		}
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-			if ( "HY008".equals( sqlState ) ) {
+			if ( "HY008".equals( extractSqlState( sqlException ) ) ) {
 				return new QueryTimeoutException( message, sqlException, sql );
 			}
-
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			switch ( errorCode ) {
-				case 1222:
-					return new LockTimeoutException( message, sqlException, sql );
-				case 2627:
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-					);
-				case 2601:
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-					);
-				default:
-					return null;
-			}
+			return switch ( extractErrorCode( sqlException ) ) {
+				case 1222 -> new LockTimeoutException( message, sqlException, sql );
+				case 2627 -> new ConstraintViolationException(
+						message,
+						sqlException,
+						sql,
+						ConstraintViolationException.ConstraintKind.UNIQUE,
+						getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+				);
+				case 2601 -> new ConstraintViolationException(
+						message,
+						sqlException,
+						sql,
+						getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+				);
+				default -> null;
+			};
 		};
 	}
 

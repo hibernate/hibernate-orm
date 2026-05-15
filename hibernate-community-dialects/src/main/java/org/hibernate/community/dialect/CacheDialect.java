@@ -33,7 +33,6 @@ import org.hibernate.exception.DataException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.IntervalType;
@@ -55,6 +54,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlStateClassCode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
@@ -372,12 +373,13 @@ public class CacheDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			String sqlStateClassCode = JdbcExceptionHelper.extractSqlStateClassCode( sqlException );
+			final String sqlStateClassCode = extractSqlStateClassCode( sqlException );
 			if ( sqlStateClassCode != null ) {
-				int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+				final int errorCode = extractErrorCode( sqlException );
 				if ( errorCode >= 119 && errorCode <= 127 && errorCode != 126 ) {
-					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
-					return new ConstraintViolationException( message, sqlException, sql, constraintName );
+					return new ConstraintViolationException( message, sqlException, sql,
+							getViolatedConstraintNameExtractor()
+									.extractConstraintName(sqlException) );
 				}
 
 				if ( sqlStateClassCode.equals("22")

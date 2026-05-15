@@ -213,7 +213,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 					.getResultSetReturn()
 					.executeUpdate( stmnt, preparable.getSqlString() );
 
-			final var resultChecker = flushOperation.getBindPlan().getOperationResultChecker();
+			final var resultChecker = flushOperation.getOperationResultChecker();
 			if ( resultChecker != null ) {
 				resultChecker.checkResult( affectedRowCount, -1, preparable.getSqlString(), session.getFactory() );
 			}

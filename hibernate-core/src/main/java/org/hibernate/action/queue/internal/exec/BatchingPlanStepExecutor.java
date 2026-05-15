@@ -133,7 +133,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 					batchValueBindings.wrap( valueBindings ),
 					null,
 					buildStaleStateMapper(
-							bindPlan.getOperationResultChecker(),
+							flushOperation.getOperationResultChecker(),
 							currentBatchIndex,
 							sqlString
 					)

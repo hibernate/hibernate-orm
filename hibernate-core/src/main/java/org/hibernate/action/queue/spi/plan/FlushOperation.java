@@ -10,12 +10,15 @@ import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.internal.cyclebreak.BindingPatch;
 import org.hibernate.action.queue.spi.bind.ChainedPostExecutionCallback;
+import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.PreExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ValuesAnalysis;
 
+import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -26,7 +29,7 @@ import java.util.Map;
 /// @author Steve Ebersole
 /// @since 8.0
 @Incubating
-public class FlushOperation {
+public class FlushOperation implements OperationResultChecker {
 	private final TableDescriptor tableDescriptor;
 	private final MutationKind kind;
 	private final StatementShapeKey shapeKey;
@@ -119,6 +122,19 @@ public class FlushOperation {
 
 	public BindPlan getBindPlan() {
 		return bindPlan;
+	}
+
+	public OperationResultChecker getOperationResultChecker() {
+		return bindPlan.hasOperationResultChecker() ? this : null;
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return bindPlan.checkResult( this, affectedRowCount, batchPosition, sqlString, sessionFactory );
 	}
 
 	public BindingPatch getBindingPatch() {

@@ -285,6 +285,31 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 
 	@Override
 	public boolean checkResult(
+			FlushOperation flushOperation,
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return checkResult(
+				(EntityTableDescriptor) flushOperation.getMutatingTableDescriptor(),
+				affectedRowCount,
+				batchPosition,
+				sqlString,
+				sessionFactory
+		);
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return checkResult( tableDescriptor, affectedRowCount, batchPosition, sqlString, sessionFactory );
+	}
+
+	private boolean checkResult(
+			EntityTableDescriptor tableDescriptor,
 			int affectedRowCount,
 			int batchPosition,
 			String sqlString,

@@ -4,7 +4,10 @@
  */
 package org.hibernate.orm.test.annotations.beanvalidation;
 
+import java.util.List;
+
 import org.hibernate.cfg.ValidationSettings;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -38,7 +41,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 		Address.class,
 		Tv.class,
 		TvOwner.class,
-		Rock.class
+		Rock.class,
+		RangeChecks.class
 })
 @SessionFactory
 class DDLTest {
@@ -159,5 +163,84 @@ class DDLTest {
 		assertThat( serialColumn.isNullable() )
 				.as( "Validator annotations are applied on tuner as it is @NotNull" )
 				.isTrue();
+	}
+
+	@Test
+	void testIndividualRangeConstraints(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( RangeChecks.class.getName() );
+
+		assertCheckConstraints( classMapping, "minOnly", ">=5" );
+		assertCheckConstraints( classMapping, "maxOnly", "<=100" );
+		assertCheckConstraints( classMapping, "decimalMinInclusive", ">=1.5" );
+		assertCheckConstraints( classMapping, "decimalMinExclusive", ">1.5" );
+		assertCheckConstraints( classMapping, "decimalMaxInclusive", "<=99.5" );
+		assertCheckConstraints( classMapping, "decimalMaxExclusive", "<99.5" );
+		assertCheckConstraints( classMapping, "positive", ">0" );
+		assertCheckConstraints( classMapping, "positiveOrZero", ">=0" );
+		assertCheckConstraints( classMapping, "negative", "<0" );
+		assertCheckConstraints( classMapping, "negativeOrZero", "<=0" );
+	}
+
+	@Test
+	void testOverlappingConstraintsGrouped(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( RangeChecks.class.getName() );
+
+		assertCheckConstraints( classMapping, "minAndPositive", ">=5" );
+		assertCheckConstraints( classMapping, "maxAndNegative", "<=-5" );
+		assertCheckConstraints( classMapping, "decimalMinAndPositiveOrZero", ">=3.0" );
+	}
+
+	@Test
+	void testComposedAndConstraint(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( RangeChecks.class.getName() );
+
+		// @CustomMinAndPositive = AND(@Min(5), @Positive) -> only >=5
+		assertCheckConstraints( classMapping, "composedAnd", ">=5" );
+	}
+
+	@Test
+	void testComposedOrConstraintMixedSides(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( RangeChecks.class.getName() );
+
+		// @CustomMinOrMax = OR(@Min(10), @Max(-10)) -> single check with OR expression
+		List<CheckConstraint> checks = getCheckConstraints( classMapping, "composedOr" );
+		assertThat( checks ).hasSize( 1 );
+		String constraint = checks.get( 0 ).getConstraint();
+		assertThat( constraint )
+				.as( "OR composition with both sides should produce a single OR expression" )
+				.contains( ">=10" )
+				.contains( " OR " )
+				.contains( "<=-10" );
+	}
+
+	@Test
+	void testComposedOrConstraintSingleSideMergedIntoParent(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( RangeChecks.class.getName() );
+
+		// @Min(3) + @CustomMinOrPositiveOrZero(OR: @Min(10), @PositiveOrZero)
+		// OR result: least restrictive of >=10 and >=0 -> >=0
+		// merged into parent: most restrictive of >=3 and >=0 -> >=3
+		// -> single check >=3
+		assertCheckConstraints( classMapping, "composedOrSingleSideMerged", ">=3" );
+	}
+
+	private static void assertCheckConstraints(PersistentClass classMapping, String propertyName, String expectedOperatorAndValue) {
+		List<CheckConstraint> checks = getCheckConstraints( classMapping, propertyName );
+		List<String> constraints = checks.stream()
+				.map( CheckConstraint::getConstraint )
+				.toList();
+
+		assertThat( constraints )
+				.as( "Check constraints for property '%s'", propertyName )
+				.hasSize( 1 );
+
+		assertThat( constraints )
+				.as( "Check constraints for property '%s' should contain '%s'", propertyName, expectedOperatorAndValue )
+				.allMatch( c -> c.contains( expectedOperatorAndValue ) );
+	}
+
+	private static List<CheckConstraint> getCheckConstraints(PersistentClass classMapping, String propertyName) {
+		Column column = (Column) classMapping.getProperty( propertyName ).getSelectables().get( 0 );
+		return column.getCheckConstraints();
 	}
 }

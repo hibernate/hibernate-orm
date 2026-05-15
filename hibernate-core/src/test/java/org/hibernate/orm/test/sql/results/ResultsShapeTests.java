@@ -228,6 +228,22 @@ public class ResultsShapeTests {
 		} );
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20159")
+	public void testDuplicatedSelectionWithDifferentAlias(SessionFactoryScope scope) {
+		final String hql = "select o.id as orderId, o.id as id from Order o";
+
+		scope.inTransaction( (session) -> {
+			final String[] resultAliases = session.createQuery( hql, Object[].class )
+					.setTupleTransformer( (tuple, aliases) -> aliases )
+					.list()
+					.get( 0 );
+			assertThat( resultAliases ).hasSize( 2 );
+			assertThat( resultAliases[0] ).isEqualTo( "orderId" );
+			assertThat( resultAliases[1] ).isEqualTo( "id" );
+		} );
+	}
+
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {

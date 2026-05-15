@@ -384,9 +384,10 @@ public class ModelBinder {
 	}
 
 	private String physicalTableName(MappingDocument sourceDocument, String tableName) {
-		final var jdbcEnvironment = sourceDocument.getMetadataCollector().getDatabase().getJdbcEnvironment();
+		final var database = sourceDocument.getMetadataCollector().getDatabase();
+		final var jdbcEnvironment = database.getJdbcEnvironment();
 		return sourceDocument.getBuildingOptions().getPhysicalNamingStrategy()
-				.toPhysicalTableName( jdbcEnvironment.getIdentifierHelper().toIdentifier( tableName ), jdbcEnvironment )
+				.toPhysicalTableName( database.toIdentifier( tableName ), jdbcEnvironment )
 				.render( jdbcEnvironment.getDialect() );
 	}
 

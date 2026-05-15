@@ -6,7 +6,6 @@ package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Inheritance;
-import jakarta.persistence.Table;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
@@ -58,6 +57,7 @@ import static org.hibernate.boot.model.internal.QueryBinder.bindNativeStatement;
 import static org.hibernate.boot.model.internal.QueryBinder.bindQuery;
 import static org.hibernate.boot.model.internal.QueryBinder.bindSqlResultSetMapping;
 import static org.hibernate.boot.model.internal.QueryBinder.bindStatement;
+import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.hasTableAnnotation;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -244,7 +244,7 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context)
 				throws MappingException {
 
-		detectMappedSuperclassProblems( classDetails );
+		detectMappedSuperclassProblems( classDetails, context );
 
 		bindQueries( classDetails, context );
 		handleImport( classDetails, context );
@@ -271,14 +271,14 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void detectMappedSuperclassProblems(ClassDetails annotatedClass) {
+	private static void detectMappedSuperclassProblems(ClassDetails annotatedClass, MetadataBuildingContext context) {
 		if ( isMappedSuperclass( annotatedClass ) ) {
 			// @Entity and @MappedSuperclass on the same class leads to NPE down the road
 			if ( isEntity( annotatedClass ) ) {
 				throw new AnnotationException( "Type '" + annotatedClass.getName()
 						+ "' is annotated both '@Entity' and '@MappedSuperclass'" );
 			}
-			if ( annotatedClass.hasDirectAnnotationUsage( Table.class ) ) {
+			if ( hasTableAnnotation( annotatedClass, context ) ) {
 				throw new AnnotationException( "Mapped superclass '" + annotatedClass.getName()
 						+ "' may not specify a '@Table'" );
 			}

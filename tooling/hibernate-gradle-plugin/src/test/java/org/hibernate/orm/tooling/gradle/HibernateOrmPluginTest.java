@@ -24,6 +24,7 @@ class HibernateOrmPluginTest {
 		assertNotNull(project.getTasks().findByName("generateCfg"));
 		assertNotNull(project.getTasks().findByName("generateHbm"));
 		assertNotNull(project.getTasks().findByName("generateDao"));
+		assertNotNull(project.getTasks().findByName("generateSchemaAnnotations"));
 
 		Object extension = project.getExtensions().getByName("hibernate");
 		assertNotNull(extension);

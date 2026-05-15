@@ -5,9 +5,6 @@
 package org.hibernate.orm.tooling.gradle.reveng;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -21,10 +18,7 @@ import org.gradle.work.DisableCachingByDefault;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
-import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
 import org.hibernate.tool.reveng.api.metadata.MetadataConstants;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
@@ -86,7 +80,7 @@ public abstract class RevengTask extends DefaultTask {
 
 	Properties getHibernateProperties() {
 		if (hibernateProperties == null) {
-			loadPropertiesFile(getPropertyFile());
+			hibernateProperties = RevengFileHelper.loadPropertiesFile( getLogger(), getPropertyFile() );
 		}
 		return hibernateProperties;
 	}
@@ -118,15 +112,7 @@ public abstract class RevengTask extends DefaultTask {
 	}
 
 	private File getFile(String filename) {
-		SourceSetContainer ssc = getProject().getExtensions().getByType(SourceSetContainer.class);
-		SourceSet ss = ssc.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-		SourceDirectorySet sds = ss.getResources();
-		for (File f : sds.getFiles()) {
-			if (filename.equals(f.getName())) {
-				return f;
-			}
-		}
-		throw new BuildException("File '" + filename + "' could not be found");
+		return RevengFileHelper.findRequiredResourceFile( getProject(), filename );
 	}
 
 	private File getPropertyFile() {
@@ -140,21 +126,6 @@ public abstract class RevengTask extends DefaultTask {
 		}
 
 		return new File[] { getFile(revengFile) };
-	}
-
-	private void loadPropertiesFile(File propertyFile) {
-		getLogger().lifecycle("Loading the properties file : " + propertyFile.getPath());
-		try (FileInputStream is = new FileInputStream(propertyFile)) {
-			hibernateProperties = new Properties();
-			hibernateProperties.load(is);
-			getLogger().lifecycle("Properties file is loaded");
-		}
-		catch (FileNotFoundException e) {
-			throw new BuildException(propertyFile + " not found.", e);
-		}
-		catch (IOException e) {
-			throw new BuildException("Problem while loading " + propertyFile, e);
-		}
 	}
 
 	abstract void doWork();

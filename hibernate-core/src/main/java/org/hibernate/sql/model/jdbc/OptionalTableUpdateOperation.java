@@ -69,13 +69,29 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
 
+	@Deprecated(forRemoval = true)
 	public OptionalTableUpdateOperation(
 			MutationTarget<?> mutationTarget,
 			OptionalTableUpdate upsert,
 			@SuppressWarnings("unused") SessionFactoryImplementor factory) {
-		this.mutationTarget = (EntityMutationTarget) mutationTarget;
+		this( (EntityMutationTarget) mutationTarget, upsert, upsert.getExpectation(), factory );
+	}
+
+	public OptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate upsert,
+			@SuppressWarnings("unused") SessionFactoryImplementor factory) {
+		this( mutationTarget, upsert, upsert.getExpectation(), factory );
+	}
+
+	protected OptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate upsert,
+			Expectation expectation,
+			@SuppressWarnings("unused") SessionFactoryImplementor factory) {
+		this.mutationTarget = mutationTarget;
 		this.tableMapping = (EntityTableMapping) upsert.getMutatingTable().getTableMapping();
-		this.expectation = upsert.getExpectation();
+		this.expectation = expectation;
 		this.valueBindings = upsert.getValueBindings();
 		this.keyBindings = upsert.getKeyBindings();
 		this.optimisticLockBindings = upsert.getOptimisticLockBindings();

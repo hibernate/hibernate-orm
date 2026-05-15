@@ -8842,21 +8842,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								if ( shouldExplicitFetch( maxDepth, fetchable ) ) {
 									explicitFetch = true;
 								}
-								if ( currentBagRole != null
-										&& fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
-									final var collectionClassification =
-											pluralAttributeMapping.getMappedType()
-													.getCollectionSemantics()
-													.getCollectionClassification();
-									if ( collectionClassification == CollectionClassification.BAG ) {
-										// To avoid a MultipleBagFetchException due to fetch profiles in a circular model,
-										// we skip join fetching in case we encounter an existing bag role
-										joined = false;
-									}
-								}
 							}
 //						}
 					}
+				}
+			}
+
+			// To avoid a MultipleBagFetchException, we skip join fetching
+			// in case we encounter an existing bag role
+			if ( currentBagRole != null
+					&& fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+				final var collectionClassification =
+						pluralAttributeMapping.getMappedType()
+								.getCollectionSemantics()
+								.getCollectionClassification();
+				if ( collectionClassification == CollectionClassification.BAG ) {
+					joined = false;
 				}
 			}
 

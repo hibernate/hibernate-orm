@@ -4,11 +4,8 @@
  */
 package org.hibernate.action.queue.internal;
 
-import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.action.queue.spi.MutationKind;
-import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.PlanningOptions;
-import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -265,12 +262,12 @@ public class FlushCoordinator {
 				return true;
 			}
 
-			// Multiple UPDATEs on table with unique constraints might have cycles (swaps)
-			if (singleGroup.kind() == MutationKind.UPDATE
-					&& planningOptions.orderByUniqueKeySlots()
-					&& singleGroup.hasUniqueConstraints()) {
-				return false;  // Need graph to detect swaps within the group
-			}
+		// Multiple UPDATEs on table with unique constraints might have cycles (swaps)
+		if (singleGroup.kind() == MutationKind.UPDATE
+				&& planningOptions.orderByUniqueKeySlots()
+				&& hasNonPrimaryUniqueConstraints( singleGroup.tableExpression() )) {
+			return false;  // Need graph to detect swaps within the group
+		}
 
 			// Otherwise, single group has no inter-group dependencies
 			return true;
@@ -348,8 +345,17 @@ public class FlushCoordinator {
 	private boolean hasUniqueConstraintConflicts(List<FlushOperationGroup> groups) {
 		// Check if any group operates on a table with unique constraints
 		for (FlushOperationGroup group : groups) {
-			if ( group.hasUniqueConstraints() ) {
+			if ( hasNonPrimaryUniqueConstraints( group.tableExpression() ) ) {
 				// This table has unique constraints - need graph to detect swaps
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasNonPrimaryUniqueConstraints(String tableExpression) {
+		for ( var constraint : constraintModel.getUniqueConstraintsForTable( tableExpression ) ) {
+			if ( !constraint.isPrimaryKey() ) {
 				return true;
 			}
 		}

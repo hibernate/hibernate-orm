@@ -67,19 +67,18 @@ public class BindingGroup {
 	 * Create a binding
 	 */
 	public void bindValue(String columnName, Object value, JdbcValueDescriptor valueDescriptor) {
-		final Binding binding = new Binding( columnName, value, valueDescriptor );
-		final int position = binding.getPosition();
+		final int position = valueDescriptor.getJdbcPosition();
 		for ( int i = 0; i < bindings.size(); i++ ) {
 			final int existingPosition = bindings.get( i ).getPosition();
 			if ( position == existingPosition ) {
 				return;
 			}
 			if ( position < existingPosition ) {
-				bindings.add( i, binding );
+				bindings.add( i, new Binding( columnName, value, valueDescriptor ) );
 				return;
 			}
 		}
-		bindings.add( binding );
+		bindings.add( new Binding( columnName, value, valueDescriptor ) );
 	}
 
 	/**

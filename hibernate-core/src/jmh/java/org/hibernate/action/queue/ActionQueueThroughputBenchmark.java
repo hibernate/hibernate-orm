@@ -262,6 +262,171 @@ public class ActionQueueThroughputBenchmark {
 		}
 	}
 
+	@Entity(name = "RetailCustomer")
+	@Table(name = "retail_customer")
+	public static class RetailCustomer {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "retail_customer_gen")
+		@SequenceGenerator(name = "retail_customer_gen", sequenceName = "retail_customer_seq", allocationSize = 50)
+		private Long id;
+		private String name;
+		private String status;
+		private int loyaltyPoints;
+
+		public RetailCustomer() {}
+		public RetailCustomer(String name, int loyaltyPoints) {
+			this.name = name;
+			this.status = "NEW";
+			this.loyaltyPoints = loyaltyPoints;
+		}
+	}
+
+	@Entity(name = "RetailOrder")
+	@Table(name = "retail_order")
+	public static class RetailOrder {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "retail_order_gen")
+		@SequenceGenerator(name = "retail_order_gen", sequenceName = "retail_order_seq", allocationSize = 50)
+		private Long id;
+		private String orderNumber;
+		private String status;
+		private int totalCents;
+
+		@ManyToOne(optional = false)
+		@JoinColumn(name = "customer_id")
+		private RetailCustomer customer;
+
+		public RetailOrder() {}
+		public RetailOrder(String orderNumber, RetailCustomer customer, int totalCents) {
+			this.orderNumber = orderNumber;
+			this.customer = customer;
+			this.totalCents = totalCents;
+			this.status = "OPEN";
+		}
+	}
+
+	@Entity(name = "RetailPayment")
+	@Table(name = "retail_payment")
+	public static class RetailPayment {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "retail_payment_gen")
+		@SequenceGenerator(name = "retail_payment_gen", sequenceName = "retail_payment_seq", allocationSize = 50)
+		private Long id;
+		private String providerReference;
+		private String status;
+		private int amountCents;
+
+		@ManyToOne(optional = false)
+		@JoinColumn(name = "order_id")
+		private RetailOrder order;
+
+		public RetailPayment() {}
+		public RetailPayment(String providerReference, RetailOrder order, int amountCents) {
+			this.providerReference = providerReference;
+			this.order = order;
+			this.amountCents = amountCents;
+			this.status = "AUTHORIZED";
+		}
+	}
+
+	@Entity(name = "RetailShipment")
+	@Table(name = "retail_shipment")
+	public static class RetailShipment {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "retail_shipment_gen")
+		@SequenceGenerator(name = "retail_shipment_gen", sequenceName = "retail_shipment_seq", allocationSize = 50)
+		private Long id;
+		private String trackingNumber;
+		private String status;
+
+		@ManyToOne(optional = false)
+		@JoinColumn(name = "order_id")
+		private RetailOrder order;
+
+		public RetailShipment() {}
+		public RetailShipment(String trackingNumber, RetailOrder order) {
+			this.trackingNumber = trackingNumber;
+			this.order = order;
+			this.status = "PENDING";
+		}
+	}
+
+	@Entity(name = "BusinessAuditEvent")
+	@Table(name = "business_audit_event")
+	public static class BusinessAuditEvent {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "business_audit_event_gen")
+		@SequenceGenerator(name = "business_audit_event_gen", sequenceName = "business_audit_event_seq", allocationSize = 50)
+		private Long id;
+		private String eventType;
+		private String actor;
+		private String subject;
+
+		public BusinessAuditEvent() {}
+		public BusinessAuditEvent(String eventType, String actor, String subject) {
+			this.eventType = eventType;
+			this.actor = actor;
+			this.subject = subject;
+		}
+	}
+
+	@Entity(name = "BusinessOutboxEvent")
+	@Table(name = "business_outbox_event")
+	public static class BusinessOutboxEvent {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "business_outbox_event_gen")
+		@SequenceGenerator(name = "business_outbox_event_gen", sequenceName = "business_outbox_event_seq", allocationSize = 50)
+		private Long id;
+		private String aggregateName;
+		private String eventName;
+		private String payload;
+
+		public BusinessOutboxEvent() {}
+		public BusinessOutboxEvent(String aggregateName, String eventName, String payload) {
+			this.aggregateName = aggregateName;
+			this.eventName = eventName;
+			this.payload = payload;
+		}
+	}
+
+	@Entity(name = "InventoryReservation")
+	@Table(name = "inventory_reservation")
+	public static class InventoryReservation {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "inventory_reservation_gen")
+		@SequenceGenerator(name = "inventory_reservation_gen", sequenceName = "inventory_reservation_seq", allocationSize = 50)
+		private Long id;
+		private String sku;
+		private String warehouse;
+		private int quantity;
+
+		public InventoryReservation() {}
+		public InventoryReservation(String sku, String warehouse, int quantity) {
+			this.sku = sku;
+			this.warehouse = warehouse;
+			this.quantity = quantity;
+		}
+	}
+
+	@Entity(name = "SearchIndexDocument")
+	@Table(name = "search_index_document")
+	public static class SearchIndexDocument {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "search_index_document_gen")
+		@SequenceGenerator(name = "search_index_document_gen", sequenceName = "search_index_document_seq", allocationSize = 50)
+		private Long id;
+		private String documentType;
+		private String externalId;
+		private String title;
+
+		public SearchIndexDocument() {}
+		public SearchIndexDocument(String documentType, String externalId, String title) {
+			this.documentType = documentType;
+			this.externalId = externalId;
+			this.title = title;
+		}
+	}
+
 	// ========== State Classes ==========
 
 	@State(Scope.Benchmark)
@@ -271,6 +436,23 @@ public class ActionQueueThroughputBenchmark {
 		@Setup(Level.Trial)
 		public void setup() {
 			sessionFactory = createSessionFactory("legacy");
+		}
+
+		@TearDown(Level.Trial)
+		public void tearDown() {
+			if (sessionFactory != null) {
+				sessionFactory.close();
+			}
+		}
+	}
+
+	@State(Scope.Benchmark)
+	public static class LegacyQueueNoOrderingState {
+		SessionFactory sessionFactory;
+
+		@Setup(Level.Trial)
+		public void setup() {
+			sessionFactory = createSessionFactory("legacy", "legacy_unordered", false, false);
 		}
 
 		@TearDown(Level.Trial)
@@ -301,9 +483,17 @@ public class ActionQueueThroughputBenchmark {
 	// ========== Helper Methods ==========
 
 	private static SessionFactory createSessionFactory(String queueImpl) {
+		return createSessionFactory(queueImpl, queueImpl, true, true);
+	}
+
+	private static SessionFactory createSessionFactory(
+			String queueImpl,
+			String databaseName,
+			boolean orderInserts,
+			boolean orderUpdates) {
 		ServiceRegistry registry = new StandardServiceRegistryBuilder()
 				.applySetting(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect")
-				.applySetting(AvailableSettings.URL, "jdbc:h2:mem:throughput_" + queueImpl + ";DB_CLOSE_DELAY=-1")
+				.applySetting(AvailableSettings.URL, "jdbc:h2:mem:throughput_" + databaseName + ";DB_CLOSE_DELAY=-1")
 				.applySetting(AvailableSettings.USER, "sa")
 				.applySetting(AvailableSettings.PASS, "")
 				.applySetting(AvailableSettings.HBM2DDL_AUTO, "create-drop")
@@ -313,8 +503,8 @@ public class ActionQueueThroughputBenchmark {
 				.applySetting(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
 				.applySetting( "hibernate.flush.queue.type", queueImpl)
 				// for apples/apples
-				.applySetting( BatchSettings.ORDER_INSERTS, "true" )
-				.applySetting( BatchSettings.ORDER_UPDATES, "true" )
+				.applySetting( BatchSettings.ORDER_INSERTS, Boolean.toString( orderInserts ) )
+				.applySetting( BatchSettings.ORDER_UPDATES, Boolean.toString( orderUpdates ) )
 				.build();
 
 		return new MetadataSources(registry)
@@ -328,6 +518,14 @@ public class ActionQueueThroughputBenchmark {
 				.addAnnotatedClass(SeqChild.class)
 				.addAnnotatedClass(SeqOrderHeader.class)
 				.addAnnotatedClass(SeqOrderedItem.class)
+				.addAnnotatedClass(RetailCustomer.class)
+				.addAnnotatedClass(RetailOrder.class)
+				.addAnnotatedClass(RetailPayment.class)
+				.addAnnotatedClass(RetailShipment.class)
+				.addAnnotatedClass(BusinessAuditEvent.class)
+				.addAnnotatedClass(BusinessOutboxEvent.class)
+				.addAnnotatedClass(InventoryReservation.class)
+				.addAnnotatedClass(SearchIndexDocument.class)
 				.addAnnotatedClass(SecondaryTableEntity.class)
 				.buildMetadata()
 				.buildSessionFactory();
@@ -907,6 +1105,162 @@ public class ActionQueueThroughputBenchmark {
 			session.beginTransaction();
 			session.createMutationQuery("delete from SeqChild").executeUpdate();
 			session.createMutationQuery("delete from SeqParent").executeUpdate();
+			session.getTransaction().commit();
+		}
+	}
+
+	// ========== Realistic Ordering Benchmarks ==========
+
+	@Benchmark
+	public void realisticInterleavedInsert_OrderInserts_Legacy(LegacyQueueState state, Blackhole bh) {
+		realisticInterleavedInsert(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void realisticInterleavedInsert_NoOrderInserts_Legacy(LegacyQueueNoOrderingState state, Blackhole bh) {
+		realisticInterleavedInsert(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void realisticInterleavedInsert_OrderInserts_Graph(GraphQueueState state, Blackhole bh) {
+		realisticInterleavedInsert(state.sessionFactory, bh);
+	}
+
+	private void realisticInterleavedInsert(SessionFactory sf, Blackhole bh) {
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < 50; i++) {
+				RetailCustomer customer = new RetailCustomer("Customer-" + i, i);
+				RetailOrder order = new RetailOrder("ORD-" + i, customer, 10_000 + i);
+				RetailPayment payment = new RetailPayment("PAY-" + i, order, order.totalCents);
+				RetailShipment shipment = new RetailShipment("TRK-" + i, order);
+
+				session.persist(customer);
+				session.persist(order);
+				session.persist(payment);
+				session.persist(shipment);
+			}
+			session.getTransaction().commit();
+			bh.consume(session);
+		}
+
+		cleanupRetailTables(sf);
+	}
+
+	@Benchmark
+	public void realisticSideEffectInsert_OrderInserts_Legacy(LegacyQueueState state, Blackhole bh) {
+		realisticSideEffectInsert(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void realisticSideEffectInsert_NoOrderInserts_Legacy(LegacyQueueNoOrderingState state, Blackhole bh) {
+		realisticSideEffectInsert(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void realisticSideEffectInsert_OrderInserts_Graph(GraphQueueState state, Blackhole bh) {
+		realisticSideEffectInsert(state.sessionFactory, bh);
+	}
+
+	private void realisticSideEffectInsert(SessionFactory sf, Blackhole bh) {
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < 75; i++) {
+				session.persist(new BusinessAuditEvent("ORDER_PLACED", "user-" + i, "order-" + i));
+				session.persist(new BusinessOutboxEvent("Order", "OrderPlaced", "{id:" + i + "}"));
+				session.persist(new InventoryReservation("SKU-" + (i % 20), "WH-" + (i % 3), 1 + (i % 5)));
+				session.persist(new SearchIndexDocument("order", "order-" + i, "Order " + i));
+			}
+			session.getTransaction().commit();
+			bh.consume(session);
+		}
+
+		cleanupSideEffectTables(sf);
+	}
+
+	@Benchmark
+	public void realisticInterleavedUpdate_OrderUpdates_Legacy(LegacyQueueState state, Blackhole bh) {
+		realisticInterleavedUpdate(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void realisticInterleavedUpdate_NoOrderUpdates_Legacy(LegacyQueueNoOrderingState state, Blackhole bh) {
+		realisticInterleavedUpdate(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void realisticInterleavedUpdate_OrderUpdates_Graph(GraphQueueState state, Blackhole bh) {
+		realisticInterleavedUpdate(state.sessionFactory, bh);
+	}
+
+	private void realisticInterleavedUpdate(SessionFactory sf, Blackhole bh) {
+		List<Long> customerIds = new ArrayList<>(50);
+		List<Long> orderIds = new ArrayList<>(50);
+		List<Long> paymentIds = new ArrayList<>(50);
+		List<Long> shipmentIds = new ArrayList<>(50);
+
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < 50; i++) {
+				RetailCustomer customer = new RetailCustomer("Customer-" + i, i);
+				RetailOrder order = new RetailOrder("ORD-" + i, customer, 10_000 + i);
+				RetailPayment payment = new RetailPayment("PAY-" + i, order, order.totalCents);
+				RetailShipment shipment = new RetailShipment("TRK-" + i, order);
+
+				session.persist(customer);
+				session.persist(order);
+				session.persist(payment);
+				session.persist(shipment);
+
+				customerIds.add(customer.id);
+				orderIds.add(order.id);
+				paymentIds.add(payment.id);
+				shipmentIds.add(shipment.id);
+			}
+			session.getTransaction().commit();
+		}
+
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < 50; i++) {
+				RetailCustomer customer = session.find(RetailCustomer.class, customerIds.get(i));
+				RetailOrder order = session.find(RetailOrder.class, orderIds.get(i));
+				RetailPayment payment = session.find(RetailPayment.class, paymentIds.get(i));
+				RetailShipment shipment = session.find(RetailShipment.class, shipmentIds.get(i));
+
+				customer.status = "ACTIVE";
+				customer.loyaltyPoints += 25;
+				order.status = "FULFILLED";
+				order.totalCents += 100;
+				payment.status = "CAPTURED";
+				payment.amountCents = order.totalCents;
+				shipment.status = "SHIPPED";
+			}
+			session.getTransaction().commit();
+			bh.consume(session);
+		}
+
+		cleanupRetailTables(sf);
+	}
+
+	private void cleanupRetailTables(SessionFactory sf) {
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			session.createMutationQuery("delete from RetailShipment").executeUpdate();
+			session.createMutationQuery("delete from RetailPayment").executeUpdate();
+			session.createMutationQuery("delete from RetailOrder").executeUpdate();
+			session.createMutationQuery("delete from RetailCustomer").executeUpdate();
+			session.getTransaction().commit();
+		}
+	}
+
+	private void cleanupSideEffectTables(SessionFactory sf) {
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			session.createMutationQuery("delete from SearchIndexDocument").executeUpdate();
+			session.createMutationQuery("delete from InventoryReservation").executeUpdate();
+			session.createMutationQuery("delete from BusinessOutboxEvent").executeUpdate();
+			session.createMutationQuery("delete from BusinessAuditEvent").executeUpdate();
 			session.getTransaction().commit();
 		}
 	}

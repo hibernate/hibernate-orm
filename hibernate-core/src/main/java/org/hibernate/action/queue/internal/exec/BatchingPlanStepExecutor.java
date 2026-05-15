@@ -22,7 +22,6 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.function.Consumer;
 
 /// @author Steve Ebersole
@@ -33,7 +32,8 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	private int currentBatchIndex;
 
 	private Batch batch;
-	private FlushOperation[] batchOperations;
+	private final FlushOperation[] batchOperations;
+	private final BatchJdbcValueBindings batchValueBindings;
 
 	private Consumer<Object> newlyManagedEntityConsumer;
 	private Consumer<FlushOperation> fixupOperationConsumer;
@@ -41,6 +41,8 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	public BatchingPlanStepExecutor(int batchSize, SharedSessionContractImplementor session) {
 		super(session);
 		this.batchSize = batchSize;
+		this.batchOperations = new FlushOperation[batchSize];
+		this.batchValueBindings = new BatchJdbcValueBindings( session );
 	}
 
 	@Override
@@ -107,10 +109,9 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 		currentBatchIndex = 0;
 		batch = session.getJdbcCoordinator().getBatch(
 				operationShapeKey,
-				batchSize,
-				preparable
-		);
-		batchOperations = new FlushOperation[batchSize];
+			batchSize,
+			preparable
+	);
 	}
 
 	private void applyToBatch(
@@ -125,20 +126,24 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 
 		batchOperations[currentBatchIndex] = flushOperation;
 
-		batch.addToBatch(
-				new BatchJdbcValueBindings( valueBindings, session ),
-				null,
-				buildStaleStateMapper(
-						flushOperation.getBindPlan().getOperationResultChecker(),
-						currentBatchIndex,
-						preparable.getSqlString()
-				)
-		);
+		try {
+			batch.addToBatch(
+					batchValueBindings.wrap( valueBindings ),
+					null,
+					buildStaleStateMapper(
+							flushOperation.getBindPlan().getOperationResultChecker(),
+							currentBatchIndex,
+							preparable.getSqlString()
+					)
+			);
+		}
+		finally {
+			batchValueBindings.clear();
+		}
 		currentBatchIndex++;
 
 		if ( currentBatchIndex == batchSize ) {
 			runPostBatchCallbacks( currentBatchIndex );
-			Arrays.fill( batchOperations, null );
 			currentBatchIndex = 0;
 		}
 	}
@@ -169,7 +174,6 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 
 	private void executeBatch() {
 		final int batchCount = currentBatchIndex;
-		final FlushOperation[] operations = batchOperations;
 		try {
 			session.getJdbcCoordinator().executeBatch();
 			runPostBatchCallbacks( batchCount );
@@ -177,7 +181,6 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 		finally {
 			batchKey = null;
 			batch = null;
-			batchOperations = null;
 			currentBatchIndex = 0;
 		}
 	}
@@ -188,7 +191,9 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 			throw new AssertionFailure( "Expecting at most " + operations.length + " batched operations; but got " + batchCount );
 		}
 		for ( int i = 0; i < batchCount; i++ ) {
-			super.afterOperationExecution( operations[i], newlyManagedEntityConsumer, fixupOperationConsumer );
+			final FlushOperation operation = operations[i];
+			operations[i] = null;
+			super.afterOperationExecution( operation, newlyManagedEntityConsumer, fixupOperationConsumer );
 		}
 	}
 
@@ -219,14 +224,20 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	}
 
 	private static class BatchJdbcValueBindings implements org.hibernate.engine.jdbc.mutation.JdbcValueBindings {
-		private final JdbcValueBindings valueBindings;
 		private final SharedSessionContractImplementor session;
+		private JdbcValueBindings valueBindings;
 
-		private BatchJdbcValueBindings(
-				JdbcValueBindings valueBindings,
-				SharedSessionContractImplementor session) {
-			this.valueBindings = valueBindings;
+		private BatchJdbcValueBindings(SharedSessionContractImplementor session) {
 			this.session = session;
+		}
+
+		private BatchJdbcValueBindings wrap(JdbcValueBindings valueBindings) {
+			this.valueBindings = valueBindings;
+			return this;
+		}
+
+		private void clear() {
+			this.valueBindings = null;
 		}
 
 		@Override

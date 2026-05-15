@@ -78,7 +78,7 @@ public class ByteArrayMappingTests {
 			else {
 				assertThat(
 						jdbcMapping.getJdbcType().getDdlTypeCode(),
-						isOneOf( SqlTypes.ARRAY, SqlTypes.JSON, SqlTypes.SQLXML, SqlTypes.VARBINARY, SqlTypes.LONG32VARCHAR )
+						isOneOf( SqlTypes.ARRAY, SqlTypes.JSON, SqlTypes.SQLXML, SqlTypes.VARBINARY, SqlTypes.LONG32VARCHAR, SqlTypes.LONG32NVARCHAR, SqlTypes.CLOB, SqlTypes.NCLOB )
 				);
 			}
 		}

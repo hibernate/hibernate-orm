@@ -11,12 +11,14 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.hibernate.ReadOnlyMode.READ_ONLY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
@@ -45,6 +47,12 @@ public class FindMutipleTest {
 			List<Record> all = s.findMultiple(Record.class, List.of(456L, 123L));
 			assertSame(record, all.get(0));
 		});
+	}
+
+	@Test void testNullKey(SessionFactoryScope scope) {
+		scope.inTransaction( s ->
+				assertThrows( IllegalArgumentException.class,
+						() -> s.findMultiple( Record.class, Arrays.asList( 123L, null ) ) ) );
 	}
 
 	@Entity(name = "Record")

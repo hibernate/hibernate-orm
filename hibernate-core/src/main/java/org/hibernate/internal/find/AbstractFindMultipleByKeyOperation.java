@@ -33,6 +33,7 @@ import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.hibernate.Timeouts.WAIT_FOREVER;
@@ -157,6 +158,17 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 			enabledFetchProfiles = new HashSet<>();
 		}
 		enabledFetchProfiles.add( profileName );
+	}
+
+	protected void checkKeys(List<?> keys) {
+		if ( keys == null ) {
+			throw new IllegalArgumentException( "Null keys" );
+		}
+		for ( Object key : keys ) {
+			if ( key == null ) {
+				throw new IllegalArgumentException( "Null key" );
+			}
+		}
 	}
 
 	private void setCacheMode(CacheMode cacheMode) {

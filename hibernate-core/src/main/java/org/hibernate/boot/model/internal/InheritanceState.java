@@ -34,6 +34,7 @@ import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
 import static org.hibernate.boot.model.internal.PropertyBinder.isEmbeddedId;
+import static org.hibernate.boot.spi.AccessType.DEFAULT;
 import static org.hibernate.boot.spi.AccessType.getAccessStrategy;
 import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 
@@ -228,13 +229,19 @@ public class InheritanceState {
 
 			getMappedSuperclassesTillNextEntityOrdered();
 
-			accessType = determineDefaultAccessType();
+			final var defaultAccessType = determineDefaultAccessType();
+
+			if ( classDetails.hasDirectAnnotationUsage( Access.class ) ) {
+				accessType = getAccessStrategy( classDetails.getDirectAnnotationUsage( Access.class ).value() );
+			}
+			else {
+				accessType = defaultAccessType;
+			}
 
 			final ArrayList<PropertyData> elements = new ArrayList<>();
 			int idPropertyCount = 0;
 			for ( var classToProcessForMappedSuperclass : classesToProcessForMappedSuperclass ) {
-				final var container =
-						new PropertyContainer( classToProcessForMappedSuperclass, classDetails, accessType );
+				final var container = new PropertyContainer( classToProcessForMappedSuperclass, classDetails, defaultAccessType );
 				idPropertyCount = addElementsOfClass( elements, container, buildingContext, idPropertyCount );
 			}
 			if ( idPropertyCount == 0 && !inheritanceState.hasParents() ) {
@@ -249,11 +256,7 @@ public class InheritanceState {
 
 	private AccessType determineDefaultAccessType() {
 
-		// first consider cases very well-defined in the spec
-
-		if ( classDetails != null && classDetails.hasDirectAnnotationUsage( Access.class ) ) {
-			return getAccessStrategy( classDetails.getDirectAnnotationUsage( Access.class ).value() );
-		}
+		// do not check for `@Access` to determine the default access type of the hierarchy
 
 		final var idAccessType = determineAccessTypeFromId( classDetails );
 		if ( idAccessType != null ) {
@@ -271,10 +274,6 @@ public class InheritanceState {
 
 		final var rootEntity = getRootEntity();
 		if ( rootEntity != null ) {
-			if ( rootEntity.hasDirectAnnotationUsage( Access.class ) ) {
-				return getAccessStrategy( rootEntity.getDirectAnnotationUsage( Access.class ).value() );
-			}
-
 			final var rootMemberAccessType = determineAccessTypeFromMembers( rootEntity );
 			if ( rootMemberAccessType != null ) {
 				return rootMemberAccessType;
@@ -287,9 +286,6 @@ public class InheritanceState {
 				candidate != null && !isObjectClass( candidate );
 				candidate = candidate.getSuperClass() ) {
 			if ( isMappedSuperclass( candidate ) ) {
-				if ( candidate.hasDirectAnnotationUsage( Access.class ) ) {
-					return getAccessStrategy( candidate.getDirectAnnotationUsage( Access.class ).value() );
-				}
 				final var accessType = determineAccessTypeFromMembers( candidate );
 				if ( accessType != null ) {
 					return accessType;
@@ -297,10 +293,7 @@ public class InheritanceState {
 			}
 		}
 
-		throw new AnnotationException(
-				"Entity '" + classDetails.getName() + "' has no identifier"
-						+ " (every '@Entity' class must declare or inherit at least one '@Id' or '@EmbeddedId' property)"
-		);
+		return DEFAULT;
 	}
 
 	private static AccessType determineAccessTypeFromId(ClassDetails accessTypeSource) {

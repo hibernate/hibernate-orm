@@ -27,7 +27,7 @@ import org.hibernate.sql.model.ValuesAnalysis;
 
 import java.sql.SQLException;
 
-import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.shouldBindJdbcValue;
+import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 import static org.hibernate.generator.EventType.UPDATE;
 
 /// @author Steve Ebersole
@@ -71,6 +71,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	// temporary state used during decomposition to allow model-part decomposition to be non-capturing
 	private JdbcValueBindings valueBindings;
 	private SharedSessionContractImplementor bindingSession;
+	private FlushOperation bindingFlushOperation;
 
 	public EntityUpdateBindPlan(
 			EntityTableDescriptor tableDescriptor,
@@ -153,38 +154,44 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			var attribute = tableDescriptor.attributes().get( i );
-			if ( shouldIncludeInUpdate( attribute, session ) ) {
-				decomposeAttributeForSet(
-						state[attribute.getStateArrayPosition()],
-						attribute,
-						valueBindings,
-						session
-				);
+		this.bindingFlushOperation = flushOperation;
+		try {
+			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+				var attribute = tableDescriptor.attributes().get( i );
+				if ( shouldIncludeInUpdate( attribute, session ) ) {
+					decomposeAttributeForSet(
+							state[attribute.getStateArrayPosition()],
+							attribute,
+							valueBindings,
+							session
+					);
+				}
+			}
+
+			if ( identifier == null ) {
+				assert entityPersister.getInsertDelegate() != null;
+			}
+			else {
+				breakDownKeyJdbcValue( valueBindings, session );
+			}
+
+			// Apply optimistic locking if needed
+			if ( effectiveOptLockStyle.isVersion() ) {
+				assert entityPersister.getVersionMapping() != null;
+				applyVersionBasedOptLocking( valueBindings, session );
+			}
+			else if ( effectiveOptLockStyle.isAllOrDirty() ) {
+				assert previousState != null;
+				applyNonVersionOptLocking( valueBindings, session );
+			}
+
+			// Apply partitioned selection restrictions if needed
+			if ( entityPersister.hasPartitionedSelectionMapping() && previousState != null ) {
+				applyPartitionedSelectionRestrictions( valueBindings, session );
 			}
 		}
-
-		if ( identifier == null ) {
-			assert entityPersister.getInsertDelegate() != null;
-		}
-		else {
-			breakDownKeyJdbcValue( valueBindings, session );
-		}
-
-		// Apply optimistic locking if needed
-		if ( effectiveOptLockStyle.isVersion() ) {
-			assert entityPersister.getVersionMapping() != null;
-			applyVersionBasedOptLocking( valueBindings, session );
-		}
-		else if ( effectiveOptLockStyle.isAllOrDirty() ) {
-			assert previousState != null;
-			applyNonVersionOptLocking( valueBindings, session );
-		}
-
-		// Apply partitioned selection restrictions if needed
-		if ( entityPersister.hasPartitionedSelectionMapping() && previousState != null ) {
-			applyPartitionedSelectionRestrictions( valueBindings, session );
+		finally {
+			this.bindingFlushOperation = null;
 		}
 	}
 
@@ -223,7 +230,15 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			AttributeMapping attribute,
 			int selectableIndex,
 			SharedSessionContractImplementor session) {
-		return shouldBindJdbcValue( UPDATE, attribute, selectableIndex, entity, entityPersister, session );
+		return shouldBindJdbcValue(
+				attribute,
+				selectableIndex,
+				bindingFlushOperation,
+				entityPersister,
+				UPDATE,
+				entity,
+				session
+		);
 	}
 
 	protected boolean shouldIncludeInUpdate(

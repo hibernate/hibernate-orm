@@ -30,7 +30,7 @@ import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import java.sql.SQLException;
 import java.util.List;
 
-import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.shouldBindJdbcValue;
+import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 import static org.hibernate.generator.EventType.INSERT;
 
 /// Bind plan for entity insert operations.
@@ -87,6 +87,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	// temporary state used during decomposition to allow model-part decomposition to be non-capturing
 	private JdbcValueBindings valueBindings;
 	private SharedSessionContractImplementor bindingSession;
+	private FlushOperation bindingFlushOperation;
 	private Object bindingAttributeValue;
 
 	public EntityInsertBindPlan(
@@ -141,46 +142,52 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			Object identifier,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		// Decompose attribute values on-demand during binding
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			final var attribute = tableDescriptor.attributes().get( i );
-			if ( !attribute.isPluralAttributeMapping() && insertable[attribute.getStateArrayPosition()] ) {
-				final Object attributeValue = resolveInsertAttributeValue( attribute, session );
-				this.valueBindings = valueBindings;
-				this.bindingSession = session;
-				this.bindingAttributeValue = attributeValue;
-				try {
-					attribute.decompose(
-							attributeValue,
-							0,
-							this,
-							attribute,
-							INSERT_SET_BINDER,
-							session
-					);
-				}
-				finally {
-					this.valueBindings = null;
-					this.bindingSession = null;
-					this.bindingAttributeValue = null;
+		this.bindingFlushOperation = flushOperation;
+		try {
+			// Decompose attribute values on-demand during binding
+			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+				final var attribute = tableDescriptor.attributes().get( i );
+				if ( !attribute.isPluralAttributeMapping() && insertable[attribute.getStateArrayPosition()] ) {
+					final Object attributeValue = resolveInsertAttributeValue( attribute, session );
+					this.valueBindings = valueBindings;
+					this.bindingSession = session;
+					this.bindingAttributeValue = attributeValue;
+					try {
+						attribute.decompose(
+								attributeValue,
+								0,
+								this,
+								attribute,
+								INSERT_SET_BINDER,
+								session
+						);
+					}
+					finally {
+						this.valueBindings = null;
+						this.bindingSession = null;
+						this.bindingAttributeValue = null;
+					}
 				}
 			}
-		}
 
-		if ( tableDescriptor.isIdentifierTable() ) {
-			// Bind discriminator, if needed
-			entityPersister.bindDiscriminatorForInsert( valueBindings );
-		}
+			if ( tableDescriptor.isIdentifierTable() ) {
+				// Bind discriminator, if needed
+				entityPersister.bindDiscriminatorForInsert( valueBindings );
+			}
 
-		bindTemporalStartingValue( valueBindings, session );
+			bindTemporalStartingValue( valueBindings, session );
 
-		// Bind the key columns (identifier for root table, FK for joined subclass tables)
-		// unless using identity generation (identifier == null)
-		if ( identifier != null ) {
-			breakDownKeyJdbcValue( valueBindings, session );
+			// Bind the key columns (identifier for root table, FK for joined subclass tables)
+			// unless using identity generation (identifier == null)
+			if ( identifier != null ) {
+				breakDownKeyJdbcValue( valueBindings, session );
+			}
+			else {
+				assert entityPersister.getInsertDelegate() != null;
+			}
 		}
-		else {
-			assert entityPersister.getInsertDelegate() != null;
+		finally {
+			this.bindingFlushOperation = null;
 		}
 	}
 
@@ -216,7 +223,15 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			AttributeMapping attribute,
 			int selectableIndex,
 			SharedSessionContractImplementor session) {
-		return shouldBindJdbcValue( INSERT, attribute, selectableIndex, entity, entityPersister, session );
+		return shouldBindJdbcValue(
+				attribute,
+				selectableIndex,
+				bindingFlushOperation,
+				entityPersister,
+				INSERT,
+				entity,
+				session
+		);
 	}
 
 	private Object generatedIdentifierHandleOrNull(Object attributeValue) {

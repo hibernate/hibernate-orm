@@ -207,6 +207,8 @@ public class MyRevision extends ChangelogMapping { ... }
 No DDL changes are needed. The default `REV`/`REVTYPE` column names and encoding match between Envers and core. The `REVINFO` table rows continue the same sequence.
 
 
+`Map` values in `@ElementCollection` are now declared `not null` by default.
+
 [[dependency-changes]]
 == Changes in Dependencies
 

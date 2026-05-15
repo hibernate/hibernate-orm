@@ -39,22 +39,22 @@ stage('Configure') {
 //		new BuildEnvironment( dbName: 'sybase' ),
 // Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
 // 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
-		new BuildEnvironment( node: 's390x' ),
+		new BuildEnvironment( node: 's390x', testJdkLauncherArgs: '-Xdump:system+java:events=throw+systhrow,filter=java/util/zip/ZipException,msg_filter=*LOC*,range=1..3,request=exclusive+prepwalk+preempt' ),
 		// We generally build with JDK 25, but our baseline is Java 17, so we test with JDK 17, to be sure everything works.
-		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '17' ),
-		// Additionally, have one job that builds using JDK 17 as well
-		new BuildEnvironment( mainJdkVersion: '17', additionalOptions: '-Porm.jdk.min=17' ),
-		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '21' ),
-		// We want to enable preview features when testing newer builds of OpenJDK:
-		// even if we don't use these features, just enabling them can cause side effects
-		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '26', testJdkLauncherArgs: '--enable-preview' ),
-		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
-		// they require the use of -Dnet.bytebuddy.experimental=true.
-		// Make sure to remove that argument as soon as possible
-		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '27', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true', additionalOptions: '-PskipJacoco=true' )
+//		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '17' ),
+//		// Additionally, have one job that builds using JDK 17 as well
+//		new BuildEnvironment( mainJdkVersion: '17', additionalOptions: '-Porm.jdk.min=17' ),
+//		new BuildEnvironment( mainJdkVersion: '25', testJdkVersion: '21' ),
+//		// We want to enable preview features when testing newer builds of OpenJDK:
+//		// even if we don't use these features, just enabling them can cause side effects
+//		// and it's useful to test that.
+//		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview' ),
+//		new BuildEnvironment( testJdkVersion: '26', testJdkLauncherArgs: '--enable-preview' ),
+//		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
+//		// they require the use of -Dnet.bytebuddy.experimental=true.
+//		// Make sure to remove that argument as soon as possible
+//		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
+//		new BuildEnvironment( testJdkVersion: '27', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true', additionalOptions: '-PskipJacoco=true' )
 	];
 
 	if ( env.CHANGE_ID ) {

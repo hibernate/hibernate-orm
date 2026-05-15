@@ -5,6 +5,7 @@
 package org.hibernate.engine.jdbc.batch.internal;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 import org.hibernate.HibernateException;
@@ -99,6 +100,9 @@ public class BatchImpl implements Batch {
 				staleStateMappers = new StaleStateMapper[batchSizeToUse];
 			}
 			staleStateMappers[batchPosition] = staleStateMapper;
+		}
+		else if ( staleStateMappers != null ) {
+			staleStateMappers[batchPosition] = null;
 		}
 		addToBatch( jdbcValueBindings, inclusionChecker );
 	}
@@ -288,7 +292,14 @@ public class BatchImpl implements Batch {
 		}
 		finally {
 			jdbcCoordinator.afterStatementExecution();
+			clearStaleStateMappers( batchPosition );
 			batchPosition = 0;
+		}
+	}
+
+	private void clearStaleStateMappers(int batchCount) {
+		if ( staleStateMappers != null ) {
+			Arrays.fill( staleStateMappers, 0, batchCount, null );
 		}
 	}
 

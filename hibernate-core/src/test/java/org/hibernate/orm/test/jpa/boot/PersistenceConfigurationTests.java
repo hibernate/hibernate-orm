@@ -4,7 +4,9 @@
  */
 package org.hibernate.orm.test.jpa.boot;
 
+import java.io.StringWriter;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,10 +23,13 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.PersistenceConfiguration;
+import jakarta.persistence.SchemaManagementAction;
 
 import static jakarta.persistence.PersistenceConfiguration.JDBC_PASSWORD;
 import static jakarta.persistence.PersistenceConfiguration.JDBC_URL;
 import static jakarta.persistence.PersistenceConfiguration.JDBC_USER;
+import static jakarta.persistence.PersistenceConfiguration.SCHEMAGEN_CREATE_TARGET;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Simple tests for {@linkplain PersistenceConfiguration} and {@linkplain HibernatePersistenceConfiguration}.
@@ -86,6 +91,35 @@ public class PersistenceConfigurationTests {
 		try (EntityManagerFactory emf = cfg4.createEntityManagerFactory()) {
 			assert emf.isOpen();
 		}
+	}
+
+	@Test
+	@RequiresDialect( H2Dialect.class )
+	void testSchemaManagementActions() {
+		final var createScript = new StringWriter();
+		final var cfg = new PersistenceConfiguration( "emf-schema-management-actions" );
+		TestingDatabaseInfo.forEachSetting( cfg::property );
+		cfg.property(
+						JDBC_URL,
+						"jdbc:h2:mem:db_persistence_configuration_schema_management;"
+								+ "DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE"
+				)
+				.property( SCHEMAGEN_CREATE_TARGET, createScript )
+				.schemaManagementDatabaseAction( SchemaManagementAction.DROP_AND_CREATE )
+				.schemaManagementScriptsAction( SchemaManagementAction.CREATE )
+				.managedClass( Book.class )
+				.managedClass( Person.class );
+
+		try ( var emf = cfg.createEntityManagerFactory() ) {
+			assertThat( emf.isOpen() ).isTrue();
+			TransactionUtil2.inTransaction( emf.unwrap( SessionFactoryImplementor.class ), (em) -> {
+				em.createSelectionQuery( "from Book", Book.class ).list();
+			} );
+		}
+
+		final String script = createScript.toString().toLowerCase( Locale.ROOT );
+		assertThat( script ).contains( "create table books" );
+		assertThat( script ).doesNotContain( "drop table" );
 	}
 
 	@Test

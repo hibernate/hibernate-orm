@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.schema;
 
+import jakarta.persistence.SchemaManagementAction;
+
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 
 /**
@@ -244,6 +246,10 @@ public enum Action {
 			return action;
 		}
 
+		if ( value instanceof SchemaManagementAction action ) {
+			return interpretJpaSchemaManagementAction( action );
+		}
+
 		final String name = value.toString().trim();
 		if ( name.isEmpty() ) {
 			// default is NONE
@@ -274,6 +280,17 @@ public enum Action {
 		}
 
 		throw new IllegalArgumentException( "Unrecognized JPA schema management action setting: '" + value + "'" );
+	}
+
+	private static Action interpretJpaSchemaManagementAction(SchemaManagementAction action) {
+		return switch ( action ) {
+			case NONE -> NONE;
+			case CREATE -> CREATE_ONLY;
+			case DROP -> DROP;
+			case DROP_AND_CREATE -> CREATE;
+			case VALIDATE -> VALIDATE;
+			case POPULATE -> POPULATE;
+		};
 	}
 
 	/**

@@ -4,13 +4,17 @@
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.hibernate.orm.test.jpa.Cat;
 import org.hibernate.orm.test.jpa.Distributor;
@@ -40,7 +44,9 @@ import org.hibernate.orm.test.jpa.pack.various.Seat;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 
+import org.jboss.shrinkwrap.api.asset.Asset;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 
 import org.jboss.shrinkwrap.api.ArchivePath;
@@ -166,7 +172,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		archive.addAsResource( "org/hibernate/orm/test/jpa/pack/defaultpar/package-info.class", path );
 
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo ( testPackage, true );
 		return testPackage;
 	}
@@ -195,7 +201,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		archive.addAsResource( "org/hibernate/orm/test/jpa/pack/defaultpar_1_0/package-info.class", path );
 
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -203,7 +209,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 	protected File buildExplicitPar() {
 		// explicitpar/persistence.xml references externaljar.jar so build that from here.
 		// this is the reason for tests failing after clean at least on my (Steve) local system
-		buildExternalJar();
+		File externalJar = buildExternalJar();
 
 		String fileName = "explicitpar.par";
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
@@ -220,9 +226,23 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		archive.addAsResource( "explicitpar/META-INF/orm.xml", path );
 
 		path = ArchivePaths.create( "META-INF/persistence.xml" );
-		archive.addAsResource( "explicitpar/META-INF/persistence.xml", path );
+		// archive.addAsResource( "explicitpar/META-INF/persistence.xml", path );
+		try (InputStream inputStream = bundleClassLoader.getResourceAsStream( "explicitpar/META-INF/persistence.xml" )) {
+			String content = new String( inputStream.readAllBytes(), StandardCharsets.UTF_8 );
+			archive.addAsResource( new Asset() {
+				@Override
+				public InputStream openStream() {
+					return new ByteArrayInputStream( content
+							.replaceAll( "(<jar-file>).*?(</jar-file>)", "$1" + externalJar + "$2" )
+							.getBytes( StandardCharsets.UTF_8 ) );
+				}
+			}, path );
+		}
+		catch (Exception e) {
+			Assertions.fail( e );
+		}
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( externalJar.getParent(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -247,7 +267,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		archive.addAsResource( "explicitpar2/META-INF/persistence.xml", ArchivePaths.create( "META-INF/persistence.xml" ) );
 		archive.addAsResource( jar, ArchivePaths.create( "META-INF/externaljar2.jar" ) );
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -269,8 +289,9 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/explodedpar/package-info.class" );
 		archive.addAsResource( "org/hibernate/orm/test/jpa/pack/explodedpar/package-info.class", path );
 
-		File testPackage = new File( packageTargetDir, fileName );
-		archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
+		File explodedDir = testPackageDirectory();
+		File testPackage = new File( explodedDir, fileName );
+		archive.as( ExplodedExporter.class ).exportExploded( explodedDir );
 		return testPackage;
 	}
 
@@ -290,7 +311,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/excludehbmpar/Mouse.hbm.xml" );
 		archive.addAsResource( "excludehbmpar/org/hibernate/orm/test/jpa/pack/excludehbmpar/Mouse.hbm.xml", path );
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -309,7 +330,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/cfgxmlpar/hibernate.cfg.xml" );
 		archive.addAsResource( "cfgxmlpar/org/hibernate/orm/test/jpa/pack/cfgxmlpar/hibernate.cfg.xml", path );
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -324,7 +345,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		ArchivePath path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addAsResource( "space par/META-INF/persistence.xml", path );
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -342,7 +363,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "overridenpar.properties" );
 		archive.addAsResource( "overridenpar/overridenpar.properties", path );
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -357,7 +378,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		ArchivePath path = ArchivePaths.create( "META-INF/orm.xml" );
 		archive.addAsResource( "externaljar/META-INF/orm.xml", path );
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -372,7 +393,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		ArchivePath path = ArchivePaths.create( "META-INF/orm.xml" );
 		archive.addAsResource( "externaljar/META-INF/orm.xml", path );
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -389,7 +410,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 			);
 		}
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -416,7 +437,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "WEB-INF/classes/org/hibernate/orm/test/jpa/pack/war/Mouse.hbm.xml" );
 		archive.addAsResource( "war/WEB-INF/classes/org/hibernate/orm/test/jpa/pack/war/Mouse.hbm.xml", path );
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -426,7 +447,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
 		archive.addAsResource( includeFile );
 
-		File testPackage = new File( packageTargetDir, fileName );
+		File testPackage = new File( testPackageDirectory(), fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
 		return testPackage;
 	}
@@ -436,9 +457,16 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
 		archive.addAsResource( includeFile );
 
-			File testPackage = new File( packageTargetDir, fileName );
-			archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
+		File explodedDir = testPackageDirectory();
+		File testPackage = new File( explodedDir, fileName );
+			archive.as( ExplodedExporter.class ).exportExploded( explodedDir );
 			return testPackage;
+	}
+
+	private static File testPackageDirectory() {
+		File file = new File( packageTargetDir, UUID.randomUUID().toString() );
+		file.mkdirs();
+		return file;
 	}
 
 }

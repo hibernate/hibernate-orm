@@ -17,10 +17,8 @@ import org.hibernate.ReadOnlyMode;
 import org.hibernate.RemovalsMode;
 import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.List;
@@ -35,7 +33,7 @@ import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossRefere
 /// @see KeyType
 ///
 /// @author Steve Ebersole
-public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleByKeyOperation {
+public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleByKeyOperation<T> {
 	private final StatefulLoadAccessContext loadAccessContext;
 
 	public StatefulFindMultipleByKeyOperation(
@@ -56,19 +54,18 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 			List<?> keys,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph) {
+		checkKeys( keys );
+
 		// todo (natural-id-class) : these impls are temporary
 		//		longer term, move the logic here as much of it can be shared
-		if ( getKeyType() == KeyType.NATURAL ) {
-			return findByNaturalIds( keys, graphSemantic, rootGraph, loadAccessContext );
-		}
-		else {
-			return findByIds( keys, graphSemantic, rootGraph, loadAccessContext );
-		}
+		return getKeyType() == KeyType.NATURAL
+				? findByNaturalIds( keys, graphSemantic, rootGraph, loadAccessContext )
+				: findByIds( keys, graphSemantic, rootGraph, loadAccessContext );
 	}
 
 	private List<T> findByNaturalIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, StatefulLoadAccessContext loadAccessContext) {
-		final NaturalIdMapping naturalIdMapping = getEntityDescriptor().requireNaturalIdMapping();
-		final SessionImplementor session = loadAccessContext.getSession();
+		final var naturalIdMapping = getEntityDescriptor().requireNaturalIdMapping();
+		final var session = loadAccessContext.getSession();
 
 		performAnyNeededCrossReferenceSynchronizations(
 				getNaturalIdSynchronization() != NaturalIdSynchronization.DISABLED,

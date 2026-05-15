@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 /**
  * @author Steve Ebersole
  */
-public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultipleByKeyOperation {
+public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultipleByKeyOperation<T> {
 
 	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiLoadOptions();
 	@NonNull
@@ -52,18 +52,11 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 			List<?> keys,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph) {
-		for ( Object key : keys ) {
-			if ( key == null ) {
-				throw new IllegalArgumentException( "Null key" );
-			}
-		}
+		checkKeys( keys );
 
-		if ( getKeyType() == KeyType.NATURAL ) {
-			return findByNaturalIds( keys, graphSemantic, rootGraph );
-		}
-		else {
-			return findByIds( keys, graphSemantic, rootGraph );
-		}
+		return getKeyType() == KeyType.NATURAL
+				? findByNaturalIds( keys, graphSemantic, rootGraph )
+				: findByIds( keys, graphSemantic, rootGraph );
 	}
 
 	private List<T> findByNaturalIds(

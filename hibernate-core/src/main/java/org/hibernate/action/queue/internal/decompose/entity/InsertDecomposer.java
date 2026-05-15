@@ -186,23 +186,38 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			previousOperation = op;
 		}
 
-		final List<FlushOperation> additionalOperations = new ArrayList<>();
-		mutationPlanContributor.contributeAdditionalInsert(
-				new EntityMutationPlanContributor.InsertContext(
-						entityPersister,
-						action,
-						ordinalBase,
-						session,
-						decompositionContext,
-						entity,
-						identifier,
-						state,
-						cacheInsert
-				),
-				additionalOperations::add
-		);
+		if ( mutationPlanContributor == EntityMutationPlanContributor.STANDARD ) {
+			emitTailOperation( previousOperation, postInsertHandling, operationConsumer );
+		}
+		else {
+			final List<FlushOperation> additionalOperations = new ArrayList<>();
+			mutationPlanContributor.contributeAdditionalInsert(
+					new EntityMutationPlanContributor.InsertContext(
+							entityPersister,
+							action,
+							ordinalBase,
+							session,
+							decompositionContext,
+							entity,
+							identifier,
+							state,
+							cacheInsert
+					),
+					additionalOperations::add
+			);
 
-		emitTailOperations( previousOperation, additionalOperations, postInsertHandling, operationConsumer );
+			emitTailOperations( previousOperation, additionalOperations, postInsertHandling, operationConsumer );
+		}
+	}
+
+	private void emitTailOperation(
+			FlushOperation previousOperation,
+			PostExecutionCallback postExecutionCallback,
+			Consumer<FlushOperation> operationConsumer) {
+		if ( previousOperation != null ) {
+			previousOperation.setPostExecutionCallback( postExecutionCallback );
+			operationConsumer.accept( previousOperation );
+		}
 	}
 
 	private void emitTailOperations(

@@ -7,8 +7,6 @@ package org.hibernate.action.queue.internal.decompose.entity;
 import org.hibernate.action.queue.spi.decompose.entity.GraphEntityMutationTarget;
 
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.mutation.AttributeAnalysis;
 import org.hibernate.persister.entity.mutation.TableSet;
 import org.hibernate.sql.model.TableMapping;
@@ -125,27 +123,6 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 		}
 		graphSet.set( table.getRelativePosition() );
 		return graphSet;
-	}
-
-	private boolean[] buildDirtinessArray(EntityMappingType targetPart, int[] dirtyAttributeIndexes) {
-		return dirtiness;
-	}
-
-	private boolean isAttributeDirty(AttributeMapping attribute, int[] dirtyAttributeIndexes) {
-		for ( int i = 0; i < dirtyAttributeIndexes.length; i++ ) {
-			if ( attribute.getStateArrayPosition() == dirtyAttributeIndexes[i] ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean hasNonNullValues(EntityTableDescriptor table) {
-		return contains( tablesWithNonNullValues, table );
-	}
-
-	public boolean hasPreviousNonNullValues(EntityTableDescriptor table) {
-		return contains( tablesWithPreviousNonNullValues, table );
 	}
 
 	public boolean needsUpdate(EntityTableDescriptor table) {

@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,20 +38,25 @@ public class StandardGraphBuilder implements GraphBuilder {
 	private final ConstraintModel constraintModel;
 	private final PlanningOptions planningOptions;
 	private final SharedSessionContractImplementor session;
-	private final Map<String, EntityPersister> entityPersistersByTable;
+	private Map<String, EntityPersister> entityPersistersByTable;
 
 	public StandardGraphBuilder(
 			ConstraintModel constraintModel,
 			PlanningOptions planningOptions,
 			SharedSessionContractImplementor session) {
+		this( constraintModel, planningOptions, session, Map.of() );
+	}
+
+	public StandardGraphBuilder(
+			ConstraintModel constraintModel,
+			PlanningOptions planningOptions,
+			SharedSessionContractImplementor session,
+			Map<String, EntityPersister> entityPersistersByTable) {
 		this.constraintModel = constraintModel;
 		this.planningOptions = planningOptions;
 		this.session = session;
 
-		// Persister lookup used for runtime unique-slot extraction.
-		entityPersistersByTable = planningOptions.orderByUniqueKeySlots()
-				? UniqueSlotExtractor.buildPersisterMap( session )
-				: Map.of();
+		this.entityPersistersByTable = entityPersistersByTable;
 	}
 
 	// Convenience accessors for planning options
@@ -66,6 +72,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 	public Graph build(List<FlushOperationGroup> groups, DeferrableConstraintMode deferrableConstraintMode) {
 		// Split UPDATE groups that need per-row unique-slot ordering into separate nodes.
 		List<FlushOperationGroup> expandedGroups = planningOptions.orderByUniqueKeySlots()
+				&& hasMultiOperationUpdateGroups( groups )
 				? splitUpdateGroupsForUniqueSlotOrdering( groups, deferrableConstraintMode )
 				: groups;
 
@@ -101,8 +108,85 @@ public class StandardGraphBuilder implements GraphBuilder {
 			}
 		}
 
-		long edgeId = 1;
-		for ( ForeignKey foreignKey : constraintModel.foreignKeys() ) {
+		long edgeId = createForeignKeyEdges(
+				sortedGroups,
+				insertNodeByTable,
+				updateNodeByTable,
+				deleteNodeByTable,
+				outgoing,
+				1,
+				deferrableConstraintMode
+		);
+
+		edgeId = createInsertToOrderUpdateEdges( insertNodeByTable, updateNodeByTable, outgoing, edgeId );
+
+		// Create unique-slot ordering edges from runtime release/occupy facts.
+		if ( planningOptions.orderByUniqueKeySlots() ) {
+			if ( hasUniqueSlotReleaseCandidates( expandedGroups ) ) {
+				edgeId = addUniqueSlotEdges(
+						nodes,
+						expandedGroups,
+						deleteNodeByTable,
+						insertNodeByTable,
+						outgoing,
+						edgeId,
+						deferrableConstraintMode
+				);
+			}
+		}
+		else {
+			// Fallback: Create table-level DELETE -> INSERT edges to prevent unique constraint violations
+			// For tables with both DELETE and INSERT operations, ensure DELETEs execute first
+			// to avoid conflicts (e.g., moving an element between collections on a join table with unique constraints)
+			// NOTE: This is less precise than addUniqueSlotEdges() and can create unnecessary edges
+			// These edges are breakable to allow cycles to be resolved (e.g., orphan removal scenarios)
+			edgeId = addTableLevelDeleteInsertEdges( deleteNodeByTable, insertNodeByTable, outgoing, edgeId );
+		}
+
+		for ( List<GraphEdge> es : outgoing.values() ) {
+			es.sort( Comparator.comparingLong( x -> x.stableId ) );
+		}
+
+		return new Graph( nodes, outgoing );
+	}
+
+	private boolean hasMultiOperationUpdateGroups(List<FlushOperationGroup> groups) {
+		for ( FlushOperationGroup group : groups ) {
+			if ( group.kind() == MutationKind.UPDATE && group.operations().size() > 1 ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasUniqueSlotReleaseCandidates(List<FlushOperationGroup> groups) {
+		for ( FlushOperationGroup group : groups ) {
+			if ( group.kind() == MutationKind.DELETE
+					|| group.kind() == MutationKind.UPDATE
+					|| group.kind() == MutationKind.UPDATE_ORDER ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Map<String, EntityPersister> getEntityPersistersByTable() {
+		if ( entityPersistersByTable.isEmpty() ) {
+			entityPersistersByTable = UniqueSlotExtractor.buildPersisterMap( session );
+		}
+		return entityPersistersByTable;
+	}
+
+	private long createForeignKeyEdges(
+			ArrayList<FlushOperationGroup> sortedGroups,
+			Map<String, List<GroupNode>> insertNodeByTable,
+			Map<String, List<GroupNode>> updateNodeByTable,
+			Map<String, List<GroupNode>> deleteNodeByTable,
+			Map<GroupNode, List<GraphEdge>> outgoing,
+			long edgeId,
+			DeferrableConstraintMode deferrableConstraintMode) {
+		final LinkedHashSet<ForeignKey> relevantForeignKeys = collectRelevantForeignKeys( sortedGroups );
+		for ( ForeignKey foreignKey : relevantForeignKeys ) {
 			if ( ignoreDeferrableForOrdering() && isEffectivelyDeferred( foreignKey, deferrableConstraintMode ) ) {
 				// if the foreign-key is known to be deferrable in the database,
 				// and we are allowed to take advantage of that, then there is no
@@ -110,8 +194,8 @@ public class StandardGraphBuilder implements GraphBuilder {
 				continue;
 			}
 
-			final String childTable = (foreignKey.keyTable());
-			final String parentTable = (foreignKey.targetTable());
+			final String childTable = foreignKey.keyTable();
+			final String parentTable = foreignKey.targetTable();
 
 			// Hoist all map lookups to avoid redundant lookups in multiple sections below
 			final List<GroupNode> parentInserts = insertNodeByTable.get( parentTable );
@@ -120,13 +204,6 @@ public class StandardGraphBuilder implements GraphBuilder {
 			final List<GroupNode> childDeletes = deleteNodeByTable.get( childTable );
 			final List<GroupNode> parentUpdates = updateNodeByTable.get( parentTable );
 			final List<GroupNode> childUpdates = updateNodeByTable.get( childTable );
-
-			// Early exit if this FK doesn't involve any operations in this flush
-			if ( parentInserts == null && childInserts == null
-					&& parentDeletes == null && childDeletes == null
-					&& parentUpdates == null && childUpdates == null ) {
-				continue;
-			}
 
 			// Create all FK-based edges using helper methods
 			edgeId = createInsertToInsertEdges(
@@ -144,35 +221,17 @@ public class StandardGraphBuilder implements GraphBuilder {
 			edgeId = createUpdateToDeleteEdges( foreignKey, childUpdates, parentDeletes, outgoing, edgeId );
 			edgeId = createUpdateToDeleteEdges( foreignKey, parentUpdates, childDeletes, outgoing, edgeId );
 		}
+		return edgeId;
+	}
 
-		edgeId = createInsertToOrderUpdateEdges( insertNodeByTable, updateNodeByTable, outgoing, edgeId );
-
-		// Create unique-slot ordering edges from runtime release/occupy facts.
-		if ( planningOptions.orderByUniqueKeySlots() ) {
-			edgeId = addUniqueSlotEdges(
-					nodes,
-					expandedGroups,
-					deleteNodeByTable,
-					insertNodeByTable,
-					outgoing,
-					edgeId,
-					deferrableConstraintMode
-			);
+	private LinkedHashSet<ForeignKey> collectRelevantForeignKeys(ArrayList<FlushOperationGroup> sortedGroups) {
+		final LinkedHashSet<ForeignKey> relevantForeignKeys = new LinkedHashSet<>();
+		for ( FlushOperationGroup group : sortedGroups ) {
+			final String tableExpression = group.tableExpression();
+			relevantForeignKeys.addAll( constraintModel.getOutboundForeignKeysForTable( tableExpression ) );
+			relevantForeignKeys.addAll( constraintModel.getInboundForeignKeysForTable( tableExpression ) );
 		}
-		else {
-			// Fallback: Create table-level DELETE -> INSERT edges to prevent unique constraint violations
-			// For tables with both DELETE and INSERT operations, ensure DELETEs execute first
-			// to avoid conflicts (e.g., moving an element between collections on a join table with unique constraints)
-			// NOTE: This is less precise than addUniqueSlotEdges() and can create unnecessary edges
-			// These edges are breakable to allow cycles to be resolved (e.g., orphan removal scenarios)
-			edgeId = addTableLevelDeleteInsertEdges( deleteNodeByTable, insertNodeByTable, outgoing, edgeId );
-		}
-
-		for ( List<GraphEdge> es : outgoing.values() ) {
-			es.sort( Comparator.comparingLong( x -> x.stableId ) );
-		}
-
-		return new Graph( nodes, outgoing );
+		return relevantForeignKeys;
 	}
 
 	/// Create same-table INSERT -> UPDATE_ORDER edges.
@@ -895,7 +954,11 @@ public class StandardGraphBuilder implements GraphBuilder {
 			Map<UniqueSlot, List<UniqueSlotOccupy>> occupiesBySlot,
 			DeferrableConstraintMode deferrableConstraintMode) {
 		FlushOperationGroup group = node.group();
-		UniqueSlotExtractor extractor = new UniqueSlotExtractor( constraintModel, session, entityPersistersByTable );
+		UniqueSlotExtractor extractor = new UniqueSlotExtractor(
+				constraintModel,
+				session,
+				getEntityPersistersByTable()
+		);
 
 		for ( FlushOperation operation : group.operations() ) {
 			List<UniqueSlot> oldSlots = removeEffectivelyDeferredSlots(
@@ -972,7 +1035,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 		UniqueSlotExtractor extractor = new UniqueSlotExtractor(
 				constraintModel,
 				session,
-				entityPersistersByTable
+				getEntityPersistersByTable()
 		);
 
 		// Extract slots from each operation in the group
@@ -1064,7 +1127,11 @@ public class StandardGraphBuilder implements GraphBuilder {
 			DeferrableConstraintMode deferrableConstraintMode) {
 		List<FlushOperationGroup> result = new ArrayList<>();
 
-		UniqueSlotExtractor extractor = new UniqueSlotExtractor( constraintModel, session, entityPersistersByTable );
+		UniqueSlotExtractor extractor = new UniqueSlotExtractor(
+				constraintModel,
+				session,
+				getEntityPersistersByTable()
+		);
 
 		for ( FlushOperationGroup group : groups ) {
 			if ( group.kind() != MutationKind.UPDATE || group.operations().size() <= 1 ) {

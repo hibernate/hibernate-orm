@@ -7,6 +7,7 @@ package org.hibernate.boot.beanvalidation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
@@ -14,12 +15,18 @@ import java.util.Map;
 import java.util.Set;
 
 import jakarta.validation.NoProviderFoundException;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Negative;
+import jakarta.validation.constraints.NegativeOrZero;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.beanvalidation.GroupsPerOperation.Operation;
@@ -245,6 +252,7 @@ class TypeSafeActivator {
 					findPropertyByName( persistentClass,
 							prefix + propertyDescriptor.getPropertyName() );
 			if ( property != null ) {
+				final var bounds = new Bounds();
 				final boolean hasNotNull = applyConstraints(
 						propertyDescriptor.getConstraintDescriptors(),
 						property,
@@ -253,8 +261,10 @@ class TypeSafeActivator {
 						activateNotNull,
 						false,
 						dialect,
-						constraintCompositionTypeCache
+						constraintCompositionTypeCache,
+						bounds
 				);
+				bounds.apply( property, dialect );
 				if ( property.isComposite() && propertyDescriptor.isCascaded() ) {
 					final var component = (Component) property.getValue();
 					applyDDL(
@@ -283,7 +293,8 @@ class TypeSafeActivator {
 			boolean canApplyNotNull,
 			boolean useOrLogicForComposedConstraint,
 			Dialect dialect,
-			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache) {
+			Map<Class<? extends Annotation>, Boolean> constraintCompositionTypeCache,
+			Bounds bounds) {
 
 		boolean firstItem = true;
 		boolean composedResultHasNotNull = false;
@@ -298,8 +309,10 @@ class TypeSafeActivator {
 				// apply bean validation specific constraints
 				applyDigits( property, constraintDescriptor );
 				applySize( property, constraintDescriptor, propertyDesc );
-				applyMin( property, constraintDescriptor, dialect );
-				applyMax( property, constraintDescriptor, dialect );
+
+				// collect range bounds - only the most restrictive will be applied
+				bounds.lower( extractLowerBound( constraintDescriptor ) );
+				bounds.upper( extractUpperBound( constraintDescriptor ) );
 
 				// Apply Hibernate Validator specific constraints - we cannot import any HV specific classes though!
 				// No need to check explicitly for @Range. @Range is a composed constraint using @Min and @Max which
@@ -308,15 +321,23 @@ class TypeSafeActivator {
 
 				// Composing constraints
 				if ( !constraintDescriptor.getComposingConstraints().isEmpty() ) {
-					// pass an empty set as composing constraints inherit the main constraint and thus are matching already
+					final boolean isOrComposition =
+							isConstraintCompositionOfTypeOr( constraintDescriptor, constraintCompositionTypeCache );
+					// OR composition uses a separate Bounds with least-restrictive merging;
+					// AND composition shares the parent's Bounds
+					final var composingBounds = isOrComposition ? new Bounds( true ) : bounds;
 					final boolean hasNotNullFromComposingConstraints = applyConstraints(
 							constraintDescriptor.getComposingConstraints(),
 							property, propertyDesc, null,
 							canApplyNotNull,
-							isConstraintCompositionOfTypeOr( constraintDescriptor, constraintCompositionTypeCache ),
+							isOrComposition,
 							dialect,
-							constraintCompositionTypeCache
+							constraintCompositionTypeCache,
+							composingBounds
 					);
+					if ( isOrComposition ) {
+						composingBounds.mergeInto( bounds, property, dialect );
+					}
 					hasNotNull |= hasNotNullFromComposingConstraints;
 				}
 			}
@@ -372,41 +393,170 @@ class TypeSafeActivator {
 		}
 	}
 
-	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
-		if ( Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
-			@SuppressWarnings("unchecked")
-			final var minConstraint = (ConstraintDescriptor<Min>) descriptor;
-			final long min = minConstraint.getAnnotation().value();
-			for ( var selectable : property.getSelectables() ) {
-				if ( selectable instanceof Column column ) {
-					applySQLCheck( column, column.getQuotedName( dialect ) + ">=" + min );
-				}
-			}
+	private record Bound(BigDecimal value, boolean inclusive) {
+		String lowerCondition() {
+			return (inclusive ? ">=" : ">") + value.toPlainString();
+		}
+
+		String upperCondition() {
+			return (inclusive ? "<=" : "<") + value.toPlainString();
 		}
 	}
 
-	private static void applyMax(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
-		if ( Max.class.equals( descriptor.getAnnotation().annotationType() ) ) {
-			@SuppressWarnings("unchecked")
-			final var maxConstraint = (ConstraintDescriptor<Max>) descriptor;
-			final long max = maxConstraint.getAnnotation().value();
-			for ( var selectable : property.getSelectables() ) {
-				if ( selectable instanceof Column column ) {
-					applySQLCheck( column, column.getQuotedName( dialect ) + "<=" + max );
+	private static final class Bounds {
+		private Bound lower;
+		private Bound upper;
+		private final boolean orComposition;
+
+		Bounds() {
+			this( false );
+		}
+
+		Bounds(boolean orComposition) {
+			this.orComposition = orComposition;
+		}
+
+		public void lower(Bound bound) {
+			lower = orComposition
+					? leastRestrictiveLowerBound( lower, bound )
+					: moreRestrictiveLowerBound( lower, bound );
+		}
+
+		public void upper(Bound bound) {
+			upper = orComposition
+					? leastRestrictiveUpperBound( upper, bound )
+					: moreRestrictiveUpperBound( upper, bound );
+		}
+
+		public void apply(Property property, Dialect dialect) {
+			if ( lower == null && upper == null ) {
+				return;
+			}
+			if ( orComposition && lower != null && upper != null ) {
+				final String lowerCondition = lower.lowerCondition();
+				final String upperCondition = upper.upperCondition();
+
+				for ( var selectable : property.getSelectables() ) {
+					if ( selectable instanceof Column column ) {
+						final String name = column.getQuotedName( dialect );
+						applySQLCheck( column, name + lowerCondition + " OR " + name + upperCondition );
+					}
+				}
+			}
+			else {
+				if ( lower != null ) {
+					applyBound( property, lower.lowerCondition(), dialect );
+				}
+				if ( upper != null ) {
+					applyBound( property, upper.upperCondition(), dialect );
 				}
 			}
 		}
-	}
 
-	private static void applySQLCheck(Column column, String checkConstraint) {
-		// need to check whether the new check is already part of the existing check,
-		// because applyDDL can be called multiple times
-		for ( var columnCheckConstraint : column.getCheckConstraints() ) {
-			if ( columnCheckConstraint.getConstraint().equalsIgnoreCase( checkConstraint ) ) {
-				return; //EARLY EXIT
+		private static void applyBound(Property property, String condition, Dialect dialect) {
+			for ( var selectable : property.getSelectables() ) {
+				if ( selectable instanceof Column column ) {
+					applySQLCheck( column, column.getQuotedName( dialect ) + condition);
+				}
 			}
 		}
-		column.addCheckConstraint( new CheckConstraint( checkConstraint ) );
+		private static void applySQLCheck(Column column, String checkConstraint) {
+			// need to check whether the new check is already part of the existing check,
+			// because applyDDL can be called multiple times
+			for ( var columnCheckConstraint : column.getCheckConstraints() ) {
+				if ( columnCheckConstraint.getConstraint().equalsIgnoreCase( checkConstraint ) ) {
+					return; //EARLY EXIT
+				}
+			}
+			column.addCheckConstraint( new CheckConstraint( checkConstraint ) );
+		}
+
+		public void mergeInto(Bounds parent, Property property, Dialect dialect) {
+			if ( lower != null && upper != null ) {
+				// both sides present - can't reduce to a single bound, apply an OR expression
+				apply( property, dialect );
+			}
+			else {
+				// single side - merge into parent so it participates in most-restrictive selection
+				parent.lower( lower );
+				parent.upper( upper );
+			}
+		}
+
+		public String toString() {
+			return "Bounds[" +
+				"lower=" + lower + ", " +
+				"upper=" + upper +
+				", orComposition=" + orComposition + ']';
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Bound extractLowerBound(ConstraintDescriptor<?> descriptor) {
+		final var annotationType = descriptor.getAnnotation().annotationType();
+		if ( Min.class.equals( annotationType ) ) {
+			return new Bound( BigDecimal.valueOf( ( (ConstraintDescriptor<Min>) descriptor ).getAnnotation().value() ), true );
+		}
+		else if ( DecimalMin.class.equals( annotationType ) ) {
+			final var annotation = ( (ConstraintDescriptor<DecimalMin>) descriptor ).getAnnotation();
+			return new Bound( new BigDecimal( annotation.value() ), annotation.inclusive() );
+		}
+		else if ( Positive.class.equals( annotationType ) ) {
+			return new Bound( BigDecimal.ZERO, false );
+		}
+		else if ( PositiveOrZero.class.equals( annotationType ) ) {
+			return new Bound( BigDecimal.ZERO, true );
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Bound extractUpperBound(ConstraintDescriptor<?> descriptor) {
+		final var annotationType = descriptor.getAnnotation().annotationType();
+		if ( Max.class.equals( annotationType ) ) {
+			return new Bound( BigDecimal.valueOf( ( (ConstraintDescriptor<Max>) descriptor ).getAnnotation().value() ), true );
+		}
+		else if ( DecimalMax.class.equals( annotationType ) ) {
+			final var annotation = ( (ConstraintDescriptor<DecimalMax>) descriptor ).getAnnotation();
+			return new Bound( new BigDecimal( annotation.value() ), annotation.inclusive() );
+		}
+		else if ( Negative.class.equals( annotationType ) ) {
+			return new Bound( BigDecimal.ZERO, false );
+		}
+		else if ( NegativeOrZero.class.equals( annotationType ) ) {
+			return new Bound( BigDecimal.ZERO, true );
+		}
+		return null;
+	}
+
+	private static Bound moreRestrictiveLowerBound(Bound a, Bound b) {
+		return selectBound( a, b, true, true );
+	}
+
+	private static Bound moreRestrictiveUpperBound(Bound a, Bound b) {
+		return selectBound( a, b, false, true );
+	}
+
+	private static Bound leastRestrictiveLowerBound(Bound a, Bound b) {
+		return selectBound( a, b, false, false );
+	}
+
+	private static Bound leastRestrictiveUpperBound(Bound a, Bound b) {
+		return selectBound( a, b, true, false );
+	}
+
+	private static Bound selectBound(Bound a, Bound b, boolean preferHigherValue, boolean preferExclusive) {
+		if ( a == null ) {
+			return b;
+		}
+		if ( b == null ) {
+			return a;
+		}
+		final int cmp = a.value.compareTo( b.value );
+		if ( cmp != 0 ) {
+			return ( cmp > 0 ) == preferHigherValue ? a : b;
+		}
+		return ( !a.inclusive ) == preferExclusive ? a : b;
 	}
 
 	private static boolean isNotNullDescriptor(ConstraintDescriptor<?> descriptor) {

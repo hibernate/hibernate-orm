@@ -109,6 +109,16 @@ public interface DialectSpecificSettings {
 	String MYSQL_NO_BACKSLASH_ESCAPES = "hibernate.dialect.mysql.no_backslash_escapes";
 
 	/**
+	 * Specifies whether foreign key are handled by the server or the storage engine.
+	 * <p>
+	 * Ignored if Hibernate is able to determine this by querying the server
+	 * {@code @@innodb_native_foreign_keys} at startup.
+	 *
+	 * @settingDefault {@code false}
+	 */
+	String MYSQL_FOREIGN_KEYS_IN_SERVER = "hibernate.dialect.mysql.foreign_keys_in_server";
+
+	/**
 	 * Specifies a custom CockroachDB version string. The expected format of the string is
 	 * the one returned from the {@code version()} function, e.g.:
 	 * {@code "CockroachDB CCL v23.1.8 (x86_64-pc-linux-gnu, built 2023/08/04 18:11:44, go1.19.10)"}

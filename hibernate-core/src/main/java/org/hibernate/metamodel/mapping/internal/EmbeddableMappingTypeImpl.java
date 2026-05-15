@@ -220,6 +220,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					bootDescriptor.getOwner().getTable()
 							.getQualifiedName( creationContext.getSqlStringGenerationContext() ),
 					aggregateColumn,
+					null,
 					bootDescriptor.getParentAggregateColumn() != null
 							? bootDescriptor.getParentAggregateColumn().getSelectablePath()
 							: null,
@@ -227,6 +228,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					creationContext.getTypeConfiguration(),
 					insertable,
 					updatable,
+					false,
 					false,
 					dialect,
 					null,

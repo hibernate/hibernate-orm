@@ -23,7 +23,7 @@ import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -386,13 +386,12 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private static String[] adapterAliases(SqmSelectStatement<?> sqm) {
 		final List<String> aliases = new ArrayList<>();
 		for ( var sqmSelection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
-			// The row a tuple transformer gets to see only contains 1 element for a dynamic instantiation
 			final var selectableNode = sqmSelection.getSelectableNode();
-			if ( selectableNode instanceof SqmDynamicInstantiation<?> ) {
-				aliases.add( sqmSelection.getAlias() );
+			if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
+				selectableNode.visitSubSelectableNodes( subSelection -> aliases.add( subSelection.getAlias() ) );
 			}
 			else {
-				selectableNode.visitSubSelectableNodes( subSelection -> aliases.add( subSelection.getAlias() ) );
+				aliases.add( sqmSelection.getAlias() );
 			}
 		}
 		return toStringArray( aliases );

@@ -37,11 +37,12 @@ public class ConfigXsdSupport {
 	 * 7: Jakarta Persistence 3.1
 	 * 8: Jakarta Persistence 3.2
 	 * 9: configurationXML 8.0 (JPA 4.0)
+	 * 10: Jakarta Persistence 4.0
 	 */
-	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[10];
+	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[11];
 
 	public XsdDescriptor latestJpaDescriptor() {
-		return getJPA31();
+		return getJPA40();
 	}
 
 	public static boolean shouldBeMappedToLatestJpaDescriptor(String uri) {
@@ -76,6 +77,9 @@ public class ConfigXsdSupport {
 			case "3.2": {
 				return getJPA32();
 			}
+			case "4.0": {
+				return getJPA40();
+			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized JPA persistence.xml XSD version : `" + version + "`" );
 			}
@@ -104,8 +108,8 @@ public class ConfigXsdSupport {
 			XsdDescriptor cfgXml = xsdCache[index];
 			if ( cfgXml == null ) {
 				cfgXml = LocalXsdResolver.buildXsdDescriptor(
-						"org/hibernate/xsd/cfg/configuration-3.2.0.xsd",
-						"3.2.0" ,
+						"org/hibernate/xsd/cfg/configuration-8.0.xsd",
+						"8.0" ,
 						"http://www.hibernate.org/xsd/orm/configuration"
 				);
 				xsdCache[index] = cfgXml;
@@ -223,6 +227,22 @@ public class ConfigXsdSupport {
 				xsdCache[index] = jpa32;
 			}
 			return jpa32;
+		}
+	}
+
+	public static XsdDescriptor getJPA40() {
+		final int index = 10;
+		synchronized ( xsdCache ) {
+			XsdDescriptor jpa40 = xsdCache[index];
+			if ( jpa40 == null ) {
+				jpa40 = LocalXsdResolver.buildXsdDescriptor(
+						"org/hibernate/jpa/persistence_4_0.xsd",
+						"4.0",
+						"https://jakarta.ee/xml/ns/persistence"
+				);
+				xsdCache[index] = jpa40;
+			}
+			return jpa40;
 		}
 	}
 

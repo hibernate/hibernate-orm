@@ -28,12 +28,12 @@ import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 public class LocalXsdResolver {
 
 	public static String latestJpaVerison() {
-		return "3.2";
+		return "4.0";
 	}
 
 	public static boolean isValidJpaVersion(String version) {
 		return switch ( version ) {
-			case "1.0", "2.0", "2.1", "2.2", "3.0", "3.1", "3.2" -> true;
+			case "1.0", "2.0", "2.1", "2.2", "3.0", "3.1", "3.2", "4.0" -> true;
 			default -> false;
 		};
 	}

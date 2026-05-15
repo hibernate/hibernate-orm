@@ -20,24 +20,45 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public interface JaxbLifecycleCallbackContainer {
-	@Nullable JaxbPrePersistImpl getPrePersist();
-	void setPrePersist(@Nullable JaxbPrePersistImpl value);
+	@Nullable JaxbLifecycleCallbackImpl getPreMerge();
+	void setPreMerge(@Nullable JaxbLifecycleCallbackImpl value);
 
-	@Nullable JaxbPostPersistImpl getPostPersist();
-	void setPostPersist(@Nullable JaxbPostPersistImpl value);
+	@Nullable JaxbLifecycleCallbackImpl getPrePersist();
+	void setPrePersist(@Nullable JaxbLifecycleCallbackImpl value);
 
-	@Nullable JaxbPreRemoveImpl getPreRemove();
-	void setPreRemove(@Nullable JaxbPreRemoveImpl value);
+	@Nullable JaxbLifecycleCallbackImpl getPostPersist();
+	void setPostPersist(@Nullable JaxbLifecycleCallbackImpl value);
 
-	@Nullable JaxbPostRemoveImpl getPostRemove();
-	void setPostRemove(@Nullable JaxbPostRemoveImpl value);
+	@Nullable JaxbLifecycleCallbackImpl getPreRemove();
+	void setPreRemove(@Nullable JaxbLifecycleCallbackImpl value);
 
-	@Nullable JaxbPreUpdateImpl getPreUpdate();
-	void setPreUpdate(@Nullable JaxbPreUpdateImpl value);
+	@Nullable JaxbLifecycleCallbackImpl getPostRemove();
+	void setPostRemove(@Nullable JaxbLifecycleCallbackImpl value);
 
-	@Nullable JaxbPostUpdateImpl getPostUpdate();
-	void setPostUpdate(@Nullable JaxbPostUpdateImpl value);
+	@Nullable JaxbLifecycleCallbackImpl getPreUpdate();
+	void setPreUpdate(@Nullable JaxbLifecycleCallbackImpl value);
 
-	@Nullable JaxbPostLoadImpl getPostLoad();
-	void setPostLoad(@Nullable JaxbPostLoadImpl value);
+	@Nullable JaxbLifecycleCallbackImpl getPostUpdate();
+	void setPostUpdate(@Nullable JaxbLifecycleCallbackImpl value);
+
+	@Nullable JaxbLifecycleCallbackImpl getPreUpsert();
+	void setPreUpsert(@Nullable JaxbLifecycleCallbackImpl value);
+
+	@Nullable JaxbLifecycleCallbackImpl getPostUpsert();
+	void setPostUpsert(@Nullable JaxbLifecycleCallbackImpl value);
+
+	@Nullable JaxbLifecycleCallbackImpl getPreInsert();
+	void setPreInsert(@Nullable JaxbLifecycleCallbackImpl value);
+
+	@Nullable JaxbLifecycleCallbackImpl getPostInsert();
+	void setPostInsert(@Nullable JaxbLifecycleCallbackImpl value);
+
+	@Nullable JaxbLifecycleCallbackImpl getPreDelete();
+	void setPreDelete(@Nullable JaxbLifecycleCallbackImpl value);
+
+	@Nullable JaxbLifecycleCallbackImpl getPostDelete();
+	void setPostDelete(@Nullable JaxbLifecycleCallbackImpl value);
+
+	@Nullable JaxbLifecycleCallbackImpl getPostLoad();
+	void setPostLoad(@Nullable JaxbLifecycleCallbackImpl value);
 }

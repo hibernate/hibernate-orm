@@ -81,6 +81,12 @@ public class MappingXsdSupport {
 			"https://jakarta.ee/xml/ns/persistence/orm"
 	);
 
+	public static final XsdDescriptor jpa40 = LocalXsdResolver.buildXsdDescriptor(
+			"org/hibernate/jpa/orm_4_0.xsd",
+			"4.0",
+			"https://jakarta.ee/xml/ns/persistence/orm"
+	);
+
 	public static final XsdDescriptor hbmXml = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd",
 			"4.0",
@@ -102,7 +108,7 @@ public class MappingXsdSupport {
 	}
 
 	public static XsdDescriptor latestJpaDescriptor() {
-		return jpa32;
+		return jpa40;
 	}
 
 	public XsdDescriptor jpaXsd(String version) {
@@ -127,6 +133,9 @@ public class MappingXsdSupport {
 			}
 			case "3.2:": {
 				return jpa32;
+			}
+			case "4.0": {
+				return jpa40;
 			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized JPA orm.xml XSD version : `" + version + "`" );

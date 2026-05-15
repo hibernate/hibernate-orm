@@ -2,13 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.where.hbm;
+package org.hibernate.orm.test.where.xml;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
+import org.hibernate.orm.test.where.hbm.File;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Max Rydahl Andersen
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "hbm/where/File.hbm.xml")
+@DomainModel(xmlMappings = "mappings/where/File.orm.xml")
 @SessionFactory
 public class WhereTest {
 	@BeforeEach

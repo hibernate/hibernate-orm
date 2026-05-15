@@ -2118,9 +2118,9 @@ public class SessionImpl
 	private <T> T doFind(Class<T> entityClass, Object primaryKey, LockMode lockMode, Map<String, Object> properties) {
 		checkOpen();
 
-		final FindOption[] options = determineFindOptions( lockMode, properties );
+		final var options = determineFindOptions( lockMode, properties );
 
-		final EntityPersister entityDescriptor = requireEntityPersisterForLoad( entityClass );
+		final var entityDescriptor = requireEntityPersisterForLoad( entityClass );
 		//noinspection unchecked
 		return (T) byKeyWithGraph( entityDescriptor, properties, options ).performFind( primaryKey );
 	}

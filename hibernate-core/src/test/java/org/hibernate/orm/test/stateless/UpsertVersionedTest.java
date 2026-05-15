@@ -6,6 +6,7 @@ package org.hibernate.orm.test.stateless;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Version;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.MariaDBDialect;
@@ -66,7 +67,7 @@ public class UpsertVersionedTest {
 			} );
 			fail();
 		}
-		catch (StaleStateException sse) {
+		catch (OptimisticLockException sse) {
 			//expected
 		}
 		scope.inStatelessTransaction( s-> {
@@ -93,7 +94,7 @@ public class UpsertVersionedTest {
 		scope.inStatelessTransaction(s-> assertDoesNotThrow(() -> s.upsert(new Record(123L, 1L, "goodbye earth"))) );
 
 		// Stale upsert, should throw StaleStateException
-		scope.inStatelessTransaction(s-> assertThrows(StaleStateException.class, () -> s.upsert(new Record(123L,null, null))) );
+		scope.inStatelessTransaction(s-> assertThrows(OptimisticLockException.class, () -> s.upsert(new Record(123L,null, null))) );
 	}
 
 	@Entity(name = "Record")

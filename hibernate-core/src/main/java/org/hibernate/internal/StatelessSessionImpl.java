@@ -18,9 +18,11 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
+import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -200,6 +202,11 @@ public class StatelessSessionImpl
 	}
 
 	@Override
+	public void markForRollbackOnly() {
+		// not necessary, according to spec and heritage
+	}
+
+	@Override
 	public StatelessSessionImplementor getStatelessSession() {
 		return this;
 	}
@@ -312,13 +319,20 @@ public class StatelessSessionImpl
 
 	@Override
 	public void insertMultiple(List<?> entities) {
+		checkOpen();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
 			for ( Object entity : entities ) {
-				insert( null, entity );
+				doInsert( null, entity );
 			}
 			getJdbcCoordinator().executeBatch();
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -328,6 +342,18 @@ public class StatelessSessionImpl
 	@Override
 	public Object insert(String entityName, Object entity) {
 		checkOpen();
+		try {
+			return doInsert( entityName, entity );
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	private Object doInsert(String entityName, Object entity) {
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id;
@@ -456,13 +482,20 @@ public class StatelessSessionImpl
 
 	@Override
 	public void deleteMultiple(List<?> entities) {
+		checkOpen();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
 			for ( Object entity : entities ) {
-				delete( null, entity );
+				doDelete( null, entity );
 			}
 			getJdbcCoordinator().executeBatch();
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -472,6 +505,18 @@ public class StatelessSessionImpl
 	@Override
 	public void delete(String entityName, Object entity) {
 		checkOpen();
+		try {
+			doDelete( entityName, entity );
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	private void doDelete(String entityName, Object entity) {
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
@@ -536,13 +581,20 @@ public class StatelessSessionImpl
 
 	@Override
 	public void updateMultiple(List<?> entities) {
+		checkOpen();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
 			for ( Object entity : entities ) {
-				update( null, entity );
+				doUpdate( null, entity );
 			}
 			getJdbcCoordinator().executeBatch();
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -552,6 +604,18 @@ public class StatelessSessionImpl
 	@Override
 	public void update(String entityName, Object entity) {
 		checkOpen();
+		try {
+			doUpdate( entityName, entity );
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	private void doUpdate(String entityName, Object entity) {
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
@@ -625,13 +689,20 @@ public class StatelessSessionImpl
 
 	@Override
 	public void upsertMultiple(List<?> entities) {
+		checkOpen();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
 			for ( Object entity : entities ) {
-				upsert( null, entity );
+				doUpsert( null, entity );
 			}
 			getJdbcCoordinator().executeBatch();
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -641,6 +712,18 @@ public class StatelessSessionImpl
 	@Override
 	public void upsert(String entityName, Object entity) {
 		checkOpen();
+		try {
+			doUpsert( entityName, entity );
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	private void doUpsert(String entityName, Object entity) {
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = idToUpsert( entity, persister );
@@ -1000,8 +1083,8 @@ public class StatelessSessionImpl
 		return get( graph, graphSemantic, id, LockMode.NONE );
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public  <T> T get(
+	@Override
+	public <T> T get(
 			EntityGraph<T> graph, GraphSemantic graphSemantic,
 			Object id, LockMode lockMode) {
 		final var rootGraph = (RootGraphImplementor<T>) graph;
@@ -1011,7 +1094,8 @@ public class StatelessSessionImpl
 		effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
 
 		try {
-			return (T) get( rootGraph.getGraphedType().getTypeName(), id, lockMode );
+			Object result = get( rootGraph.getGraphedType().getTypeName(), id, lockMode );
+			return graph.getGraphedType().getJavaType().cast( result );
 		}
 		finally {
 			effectiveEntityGraph.clear();
@@ -1021,58 +1105,75 @@ public class StatelessSessionImpl
 	@Override
 	public <T> List<T> findMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
 		checkOpen();
-
-		final var entityDescriptor = requireEntityPersister( entityClass.getName() );
-		var operation = new StatelessFindMultipleByKeyOperation<T>(
-				entityDescriptor,
-				this,
-				null,
-				getCacheMode(),
-				isDefaultReadOnly(),
-				getFactory(),
-				findOptions
-		);
-		return operation.performFind( keys, null, null );
+		try {
+			var operation = new StatelessFindMultipleByKeyOperation<T>(
+					requireEntityPersisterForLoad( entityClass.getName() ),
+					this,
+					null,
+					getCacheMode(),
+					isDefaultReadOnly(),
+					getFactory(),
+					findOptions
+			);
+			return operation.performFind( keys, null, null );
+		}
+		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
 	public <T> List<T> findMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
 		checkOpen();
-
-		final var graph = (RootGraphImplementor<T>) entityGraph;
-		final var type = graph.getGraphedType();
-
-		final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
-			case POJO -> requireEntityPersister( type.getJavaType() );
-			case MAP -> requireEntityPersister( type.getTypeName() );
-		};
-		var operation = new StatelessFindMultipleByKeyOperation<T>(
-				entityDescriptor,
-				this,
-				null,
-				getCacheMode(),
-				isDefaultReadOnly(),
-				getFactory(),
-				findOptions
-		);
-		return operation.performFind( keys, GraphSemantic.LOAD, graph );
+		try {
+			final var graph = (RootGraphImplementor<T>) entityGraph;
+			final var type = graph.getGraphedType();
+			var operation = new StatelessFindMultipleByKeyOperation<T>(
+					switch ( type.getRepresentationMode() ) {
+						case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
+						case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
+					},
+					this,
+					null,
+					getCacheMode(),
+					isDefaultReadOnly(),
+					getFactory(),
+					findOptions
+			);
+			return operation.performFind( keys, GraphSemantic.LOAD, graph );
+		}
+		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
 	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids, LockMode lockMode) {
 		checkOpen();
-
-		final var persister = requireEntityPersister( entityClass.getName() );
-		var operation = new StatelessFindMultipleByKeyOperation<T>(
-				persister,
-				this,
-				null,
-				getCacheMode(),
-				isDefaultReadOnly(),
-				getFactory(),
-				lockMode
-		);
-		return operation.performFind( ids, null, null );
+		try {
+			var operation = new StatelessFindMultipleByKeyOperation<T>(
+					requireEntityPersisterForLoad( entityClass.getName() ),
+					this,
+					null,
+					getCacheMode(),
+					isDefaultReadOnly(),
+					getFactory(),
+					lockMode
+			);
+			return operation.performFind( ids, null, null );
+		}
+		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
@@ -1082,36 +1183,61 @@ public class StatelessSessionImpl
 
 	@Override
 	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, GraphSemantic graphSemantic, List<?> ids) {
-		final var rootGraph = (RootGraphImplementor<T>) entityGraph;
-		final var entityDescriptor = requireEntityPersister( rootGraph.getGraphedType().getTypeName() );
-		var operation = new StatelessFindMultipleByKeyOperation<T>(
-				entityDescriptor,
-				this,
-				null,
-				getCacheMode(),
-				isDefaultReadOnly(),
-				getFactory()
-		);
-		return operation.performFind( ids, GraphSemantic.LOAD, rootGraph );
+		checkOpen();
+		try {
+			final var rootGraph = (RootGraphImplementor<T>) entityGraph;
+			var operation = new StatelessFindMultipleByKeyOperation<T>(
+					requireEntityPersisterForLoad( rootGraph.getGraphedType().getTypeName() ),
+					this,
+					null,
+					getCacheMode(),
+					isDefaultReadOnly(),
+					getFactory()
+			);
+			return operation.performFind( ids, graphSemantic, rootGraph );
+		}
+		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
 	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids) {
-		final var entityDescriptor = requireEntityPersister( entityClass.getName() );
-		var operation = new StatelessFindMultipleByKeyOperation<T>(
-				entityDescriptor,
-				this,
-				null,
-				getCacheMode(),
-				isDefaultReadOnly(),
-				getFactory()
-		);
-		return operation.performFind( ids, null, null );
+		checkOpen();
+		try {
+			var operation = new StatelessFindMultipleByKeyOperation<T>(
+					requireEntityPersisterForLoad( entityClass.getName() ),
+					this,
+					null,
+					getCacheMode(),
+					isDefaultReadOnly(),
+					getFactory()
+			);
+			return operation.performFind( ids, null, null );
+		}
+		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
 	public void refresh(Object entity) {
-		refresh( bestGuessEntityName( entity ), entity, LockMode.NONE );
+		checkOpen();
+		try {
+			doRefresh( bestGuessEntityName( entity ), entity, LockMode.NONE );
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
@@ -1121,12 +1247,33 @@ public class StatelessSessionImpl
 
 	@Override
 	public void refresh(Object entity, LockMode lockMode) {
-		refresh( bestGuessEntityName( entity ), entity, lockMode );
+		checkOpen();
+		try {
+			doRefresh( bestGuessEntityName( entity ), entity, lockMode );
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
 		checkOpen();
+		try {
+			doRefresh( entityName, entity, lockMode );
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	private void doRefresh(String entityName, Object entity, LockMode lockMode) {
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		if ( SESSION_LOGGER.isTraceEnabled() ) {
@@ -1160,7 +1307,16 @@ public class StatelessSessionImpl
 
 	@Override
 	public void refresh(Object entity, LockModeType lockModeType) {
-		refresh( bestGuessEntityName( entity ), entity, LockMode.fromJpaLockMode( lockModeType ) );
+		checkOpen();
+		try {
+			doRefresh( bestGuessEntityName( entity ), entity, LockMode.fromJpaLockMode( lockModeType ) );
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
@@ -1173,7 +1329,17 @@ public class StatelessSessionImpl
 		// for now, a simple implementation -
 		// todo (jpa4) : we will definitely want to improve this.
 
-		entities.forEach( this::refresh );
+		try {
+			for ( Object entity : entities ) {
+				doRefresh( bestGuessEntityName( entity ), entity, LockMode.NONE );
+			}
+		}
+		catch ( MappingException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
 	}
 
 	@Override
@@ -1325,6 +1491,15 @@ public class StatelessSessionImpl
 	@Override
 	public <T> T fetch(T association) {
 		checkOpen();
+		try {
+			return doFetch( association );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	private <T> T doFetch(T association) {
 		final var persistenceContext = getPersistenceContext();
 		final var initializer = extractLazyInitializer( association );
 		if ( initializer != null ) {

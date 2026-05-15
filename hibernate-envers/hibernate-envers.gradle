@@ -87,14 +87,7 @@ tasks.withType( Test.class ).configureEach { test ->
         def threadCount = Runtime.runtime.availableProcessors()
         def testThreads = project.findProperty( "test.threads" )
         if ( testThreads == null ) {
-            def dbCount = threadCount.intdiv( 2 ) ?: 1
-            if ( dbCount > 8 ) {
-                testThreads = 4
-            } else if ( dbCount > 2 ) {
-                testThreads = dbCount.intdiv( 2 ) ?: 1
-            } else {
-                testThreads = dbCount
-            }
+            testThreads = Math.min( threadCount, 4 )
         }
         else {
             testThreads = Integer.parseInt( testThreads.toString() )

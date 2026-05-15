@@ -1021,10 +1021,9 @@ spanner_pg() {
 
 spanner_emulator() {
   local dialect=${1:-GOOGLE_STANDARD_SQL}
-  if [[ $DB_COUNT -gt 8 ]]; then
+  DB_COUNT=$(( DB_COUNT * 2 ))
+  if [[ $DB_COUNT -gt 4 ]]; then
     DB_COUNT=4
-  elif [[ $DB_COUNT -gt 2 ]]; then
-    DB_COUNT=$(( DB_COUNT / 2 ))
   fi
 
   # Start all emulator containers using compose

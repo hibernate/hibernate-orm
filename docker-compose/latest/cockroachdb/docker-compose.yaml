@@ -1,6 +1,6 @@
 services:
   cockroach:
-    image: ${COCKROACHDB_IMAGE:-cockroachdb/cockroach:v26.1.3@sha256:2161518dc0ac731b9329f5a9bade5d93989f465633c370ec2b4e6201233b9922}
+    image: ${COCKROACHDB_IMAGE:-cockroachdb/cockroach:v26.1.4@sha256:66082934e823505f0f171eafd397b35396f3a7dba588225a01b2434eb4b53e77}
     container_name: cockroach
     ports:
       - "26257:26257"

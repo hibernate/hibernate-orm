@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 
 
-/// [Decomposer][EntityActionDecomposer] for entity delete operations.
+/// [Decomposer][org.hibernate.action.queue.spi.decompose.entity.EntityActionDecomposer] for entity delete operations.
 ///
 /// Converts an [EntityDeleteAction] into a group of [FlushOperation] to be performed.
 /// The standard delete lifecycle is always handled here, including natural-id
@@ -53,7 +53,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
 /// See [EntityMutationPlanContributor].
 ///
 /// @author Steve Ebersole
-public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
+public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAction> implements DeleteDecomposer {
 	private final Map<String, TableDelete> staticDeleteMutations;
 	private final Map<String, MutationOperation> staticJdbcDeleteMutations;
 	private Map<String, TableDelete> staticNoVersionDeleteMutations;

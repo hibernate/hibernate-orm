@@ -66,6 +66,7 @@ import org.hibernate.query.criteria.JpaJsonValueNode;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.spi.QueryEngine;
+
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
@@ -4563,6 +4564,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final var returnableType = returnType( ctx.castTarget() );
 		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( functionName );
+		if ( creationOptions.isSafeModeEnabled() && functionTemplate == null ) {
+			throw new SemanticException( "Unknown function [" + functionName + "] is not allowed in safe mode" );
+		}
 		if ( functionTemplate == null ) {
 			functionTemplate = new NamedSqmFunctionDescriptor(
 					functionName,
@@ -4581,6 +4585,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitColumnFunction(HqlParser.ColumnFunctionContext ctx) {
+		if ( creationOptions.isSafeModeEnabled() ) {
+			throw new SemanticException( "Function [column] is not allowed in safe mode" );
+		}
 		final String columnName = toName( ctx.jpaNonstandardFunctionName() );
 		final var semanticPathPart = visitPath( ctx.path() );
 		final var resultType = returnType( ctx.castTarget() );
@@ -4663,6 +4670,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmFunctionDescriptor getFunctionTemplate(HqlParser.GenericFunctionContext ctx) {
 		final String functionName = getFunctionName( ctx );
 		final var functionTemplate = getFunctionDescriptor( functionName );
+		if ( creationOptions.isSafeModeEnabled() && functionTemplate == null ) {
+			throw new SemanticException( "Unknown function [" + functionName + "] is not allowed in safe mode" );
+		}
+
 		if ( functionTemplate == null ) {
 			return new NamedSqmFunctionDescriptor(
 					functionName,

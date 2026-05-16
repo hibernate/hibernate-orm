@@ -25,6 +25,11 @@ public interface SqmCreationOptions {
 	}
 
 	/**
+	 * @see org.hibernate.cfg.AvailableSettings#SAFE_MODE_ENABLED
+	 */
+	default boolean isSafeModeEnabled() { return false; }
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#JSON_FUNCTIONS_ENABLED
 	 */
 	default boolean isJsonFunctionsEnabled() {

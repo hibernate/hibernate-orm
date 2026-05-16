@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 import java.util.Set;
 
@@ -2165,8 +2166,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	private <T> SqmFunctionDescriptor getFunctionTemplate(String name, BasicType<T> resultType) {
-		final var functionTemplate = getFunctionDescriptor( name );
-		if ( functionTemplate == null ) {
+		try {
+			return queryEngine.getSqmFunctionRegistry().getFunctionDescriptor( name );
+		}
+		catch ( SemanticException e ) {
+			throw e;
+		}
+		catch ( NoSuchElementException e ) {
 			return new NamedSqmFunctionDescriptor(
 					name,
 					true,
@@ -2174,9 +2180,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 					StandardFunctionReturnTypeResolvers.invariant( resultType ),
 					null
 			);
-		}
-		else {
-			return functionTemplate;
 		}
 	}
 

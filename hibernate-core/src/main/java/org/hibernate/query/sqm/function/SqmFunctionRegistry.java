@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import org.hibernate.internal.util.collections.CaseInsensitiveDictionary;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.NamedFunctionDescriptorBuilder;
 import org.hibernate.query.sqm.produce.function.NamedSetReturningFunctionDescriptorBuilder;
@@ -40,8 +41,14 @@ public class SqmFunctionRegistry {
 	private final CaseInsensitiveDictionary<SqmFunctionDescriptor> functionMap = new CaseInsensitiveDictionary<>();
 	private final CaseInsensitiveDictionary<SqmSetReturningFunctionDescriptor> setReturningFunctionMap = new CaseInsensitiveDictionary<>();
 	private final CaseInsensitiveDictionary<String> alternateKeyMap = new CaseInsensitiveDictionary<>();
+	private boolean safeModeEnabled;
 
 	public SqmFunctionRegistry() {
+		this.safeModeEnabled = false;
+	}
+
+	public void setSafeModeEnabled(boolean safeModeEnabled) {
+		this.safeModeEnabled = safeModeEnabled;
 	}
 
 	public Set<String> getValidFunctionKeys() {
@@ -85,10 +92,26 @@ public class SqmFunctionRegistry {
 		if ( alternateKeyResolution != null ) {
 			final var function = functionMap.get( alternateKeyResolution );
 			if ( function != null ) {
+				validateSafeModeIfEnabled( functionName, function );
 				return function;
 			}
 		}
-		return functionMap.get( functionName );
+		final var function = functionMap.get( functionName );
+		if ( function != null ) {
+			validateSafeModeIfEnabled( functionName, function );
+		}
+		return function;
+	}
+
+	private void validateSafeModeIfEnabled(String functionName, SqmFunctionDescriptor function) {
+		if ( safeModeEnabled ) {
+			if ( "sql".equals( functionName ) ) {
+				throw new SemanticException( "Function [sql] is not allowed in safe mode" );
+			}
+			else if (  "column".equals( functionName ) ) {
+				throw new SemanticException( "Function [column] is not allowed in safe mode" );
+			}
+		}
 	}
 
 	/**
@@ -99,6 +122,9 @@ public class SqmFunctionRegistry {
 	public SqmFunctionDescriptor getFunctionDescriptor(String functionName) {
 		final var functionDescriptor = findFunctionDescriptor( functionName );
 		if ( functionDescriptor == null ) {
+			if ( safeModeEnabled ) {
+				throw new SemanticException( "Unknown function [" + functionName + "] is not allowed in safe mode" );
+			}
 			throw new NoSuchElementException( functionName );
 		}
 		return functionDescriptor;

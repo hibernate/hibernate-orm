@@ -12,9 +12,11 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
+import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 import static org.hibernate.processor.util.Constants.BOOLEAN;
 import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.VOID;
+import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -23,6 +25,7 @@ import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFrom
  */
 public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
+	private final @Nullable String namedQueryName;
 	private final @Nullable String returnTypeClass;
 	private final @Nullable String containerType;
 	private final @Nullable String resultSetMapping;
@@ -34,6 +37,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			ExecutableElement method,
 			String methodName,
 			String queryString,
+			@Nullable String namedQueryName,
 			@Nullable
 			String returnTypeName,
 			@Nullable
@@ -64,6 +68,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				fullReturnType,
 				nullable );
 		this.queryString = queryString;
+		this.namedQueryName = namedQueryName;
 		this.returnTypeClass = returnTypeClass;
 		this.containerType = containerType;
 		this.resultSetMapping = resultSetMapping;
@@ -159,8 +164,23 @@ public class QueryMethod extends AbstractQueryMethod {
 			}
 			else {
 				declaration
-						.append(".getCriteriaBuilder()))");
+					.append(".getCriteriaBuilder()))");
 			}
+		}
+		else if ( useNamedQuery() ) {
+			localSession( declaration );
+			declaration
+					.append('.')
+					.append(createNamedQueryMethod())
+					.append("(")
+					.append(stringLiteral(castNonNull(namedQueryName)));
+			if ( returnTypeClass != null && !isUpdate ) {
+				declaration
+						.append(", ")
+						.append(annotationMetaEntity.importType(returnTypeClass))
+						.append(".class");
+			}
+			declaration.append(")");
 		}
 		else {
 			localSession( declaration );
@@ -200,6 +220,14 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	boolean isUsingSpecification() {
+		return !useNamedQuery() && requiresSpecification();
+	}
+
+	private boolean useNamedQuery() {
+		return namedQueryName != null && !requiresSpecification();
+	}
+
+	private boolean requiresSpecification() {
 		return returnTypeClass != null
 			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
@@ -214,6 +242,14 @@ public class QueryMethod extends AbstractQueryMethod {
 		else {
 			return isUpdate ? "createMutationQuery" : "createSelectionQuery";
 		}
+	}
+
+	private String createNamedQueryMethod() {
+		return isUpdate
+			&& !isUsingEntityManager()
+			&& !isReactive()
+				? "createNamedMutationQuery"
+				: "createNamedQuery";
 	}
 
 	private void castResult(StringBuilder declaration) {

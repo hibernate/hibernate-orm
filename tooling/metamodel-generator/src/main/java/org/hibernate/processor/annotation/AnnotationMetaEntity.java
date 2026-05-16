@@ -3200,6 +3200,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						this, method,
 						method.getSimpleName().toString(),
 						processedQuery,
+						namedRepositoryQueryName( method, mirror ),
 						returnType == null ? null : returnType.toString(),
 						returnType == null ? null : returnTypeClass( returnType ),
 						containerTypeName,
@@ -3218,6 +3219,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						hasAnnotation( method, NULLABLE )
 				);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
+	}
+
+	private @Nullable String namedRepositoryQueryName(ExecutableElement method, AnnotationMirror mirror) {
+		return repository && isNamedRepositoryQueryAnnotation( mirror ) ? staticQueryName( method ) : null;
+	}
+
+	private static boolean isNamedRepositoryQueryAnnotation(AnnotationMirror mirror) {
+		final String annotationName =
+				( (TypeElement) mirror.getAnnotationType().asElement() ).getQualifiedName().toString();
+		return JAKARTA_QUERY.equals( annotationName )
+			|| NATIVE_QUERY.equals( annotationName )
+			|| JD_QUERY.equals( annotationName );
+	}
+
+	private static String staticQueryName(ExecutableElement method) {
+		return method.getEnclosingElement().getSimpleName() + "." + method.getSimpleName();
 	}
 
 	private String fullReturnType(ExecutableElement method) {

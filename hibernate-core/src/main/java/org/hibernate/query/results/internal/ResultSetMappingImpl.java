@@ -123,7 +123,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	public void visitLegacyFetchBuilders(Consumer<LegacyFetchBuilder> resultBuilderConsumer) {
 		if ( legacyFetchBuilders != null ) {
 			for ( var entry : legacyFetchBuilders.entrySet() ) {
-				for ( LegacyFetchBuilder fetchBuilder : entry.getValue().values() ) {
+				for ( var fetchBuilder : entry.getValue().values() ) {
 					resultBuilderConsumer.accept( fetchBuilder );
 				}
 			}

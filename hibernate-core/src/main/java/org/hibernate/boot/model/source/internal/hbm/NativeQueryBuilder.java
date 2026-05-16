@@ -71,6 +71,10 @@ class NativeQueryBuilder<E> extends AbstractNamedQueryBuilder<E, NativeQueryBuil
 				getCacheable(),
 				getCacheMode(),
 				getCacheRegion(),
+				null,
+				null,
+				null,
+				null,
 				getQuerySpaces(),
 				getHints()
 		);

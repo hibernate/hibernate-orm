@@ -87,7 +87,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		);
 	}
 
-	private static SqlResultSetMappingDescriptor from(
+	public static SqlResultSetMappingDescriptor from(
 			String name,
 			EntityResult[] entityResults,
 			ConstructorResult[] constructorResults,

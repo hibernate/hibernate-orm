@@ -26,7 +26,9 @@ import org.hibernate.boot.models.annotations.internal.CheckConstraintJpaAnnotati
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnResultsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ConstructorResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ConstructorResultsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ConvertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ConverterJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ConvertsJpaAnnotation;
@@ -41,6 +43,7 @@ import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EntityListenerJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EntityResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityResultsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EnumeratedJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EnumeratedValueJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ExcludeDefaultListenersJpaAnnotation;
@@ -283,9 +286,24 @@ public interface JpaAnnotations {
 			false
 	);
 
+	OrmAnnotationDescriptor<ColumnResult.ColumnResults,ColumnResultsJpaAnnotation> COLUMN_RESULTS = new OrmAnnotationDescriptor<>(
+			ColumnResult.ColumnResults.class,
+			ColumnResultsJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
 	OrmAnnotationDescriptor<ColumnResult,ColumnResultJpaAnnotation> COLUMN_RESULT = new OrmAnnotationDescriptor<>(
 			ColumnResult.class,
 			ColumnResultJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false,
+			COLUMN_RESULTS
+	);
+
+	OrmAnnotationDescriptor<ConstructorResult.ConstructorResults,ConstructorResultsJpaAnnotation> CONSTRUCTOR_RESULTS = new OrmAnnotationDescriptor<>(
+			ConstructorResult.ConstructorResults.class,
+			ConstructorResultsJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
@@ -294,7 +312,8 @@ public interface JpaAnnotations {
 			ConstructorResult.class,
 			ConstructorResultJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
-			false
+			false,
+			CONSTRUCTOR_RESULTS
 	);
 
 	OrmAnnotationDescriptor<Converts,ConvertsJpaAnnotation> CONVERTS = new OrmAnnotationDescriptor<>(
@@ -389,11 +408,19 @@ public interface JpaAnnotations {
 			false
 	);
 
+	OrmAnnotationDescriptor<EntityResult.EntityResults,EntityResultsJpaAnnotation> ENTITY_RESULTS = new OrmAnnotationDescriptor<>(
+			EntityResult.EntityResults.class,
+			EntityResultsJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
 	OrmAnnotationDescriptor<EntityResult,EntityResultJpaAnnotation> ENTITY_RESULT = new OrmAnnotationDescriptor<>(
 			EntityResult.class,
 			EntityResultJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
-			false
+			false,
+			ENTITY_RESULTS
 	);
 
 	OrmAnnotationDescriptor<Enumerated,EnumeratedJpaAnnotation> ENUMERATED = new OrmAnnotationDescriptor<>(

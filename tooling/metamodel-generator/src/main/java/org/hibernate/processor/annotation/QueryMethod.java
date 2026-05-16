@@ -116,7 +116,9 @@ public class QueryMethod extends AbstractQueryMethod {
 		inTry( declaration );
 		createQuery( declaration, true );
 		setParameters( declaration, paramTypes );
-		QueryOptionsSupport.setQueryOptions( this, declaration, isUpdate, isNative );
+		if ( !useNamedQuery() ) {
+			QueryOptionsSupport.setQueryOptions( this, declaration, isUpdate, isNative );
+		}
 		declaration.append( ";\n" );
 		results( declaration, paramTypes, containerType );
 		castResult( declaration );

@@ -1733,6 +1733,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								generatedMethodName,
 								method.getSimpleName().toString(),
 								queryReturnType.statement,
+								isNative,
 								queryReturnType.resultTypeName,
 								queryReturnType.resultTypeClass,
 								paramNames,

@@ -75,6 +75,7 @@ import static org.hibernate.models.internal.util.StringHelper.isEmpty;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
+	private static final String JAKARTA_DATA_QUERY = "jakarta.data.repository.Query";
 
 	public static void bindQuery(
 			NamedQuery namedQuery,
@@ -224,19 +225,19 @@ public abstract class QueryBinder {
 			MethodDetails methodDetails,
 			MetadataBuildingContext context,
 			ModelsContext modelsContext) {
-		final var query = methodDetails.getAnnotationUsage( JakartaQuery.class, modelsContext );
-		if ( query != null ) {
+		final String queryString = staticQueryString( methodDetails, modelsContext );
+		if ( queryString != null ) {
 			final String registrationName = staticQueryName( classDetails, methodDetails );
 			if ( BOOT_LOGGER.isTraceEnabled() ) {
-				BOOT_LOGGER.bindingNamedQuery( registrationName, query.value().replace( '\n', ' ' ) );
+				BOOT_LOGGER.bindingNamedQuery( registrationName, queryString.replace( '\n', ' ' ) );
 			}
 
 			final var options = methodDetails.getAnnotationUsage( QueryOptions.class, modelsContext );
-			if ( isStatement( query.value() ) ) {
+			if ( isStatement( queryString ) ) {
 				final var definition = new NamedHqlMutationDefinitionImpl<>(
 						registrationName,
 						staticQueryLocation( classDetails, methodDetails ),
-						query.value(),
+						queryString,
 						null,
 						queryFlushMode( options ),
 						timeout( options ),
@@ -249,7 +250,7 @@ public abstract class QueryBinder {
 				final var definition = new NamedHqlSelectionDefinitionImpl<>(
 						registrationName,
 						staticQueryLocation( classDetails, methodDetails ),
-						query.value(),
+						queryString,
 						staticSelectionResultType( methodDetails ),
 						entityGraphName( options ),
 						queryFlushMode( options ),
@@ -271,6 +272,33 @@ public abstract class QueryBinder {
 				);
 				context.getMetadataCollector().addNamedQuery( definition );
 			}
+		}
+	}
+
+	private static String staticQueryString(MethodDetails methodDetails, ModelsContext modelsContext) {
+		final var jakartaQuery = methodDetails.getAnnotationUsage( JakartaQuery.class, modelsContext );
+		if ( jakartaQuery != null ) {
+			return jakartaQuery.value();
+		}
+
+		for ( Annotation annotation : methodDetails.getDirectAnnotationUsages() ) {
+			if ( JAKARTA_DATA_QUERY.equals( annotation.annotationType().getName() ) ) {
+				return annotationValue( annotation );
+			}
+		}
+		return null;
+	}
+
+	private static String annotationValue(Annotation annotation) {
+		try {
+			return (String) annotation.annotationType().getMethod( "value" ).invoke( annotation );
+		}
+		catch (ClassCastException | ReflectiveOperationException e) {
+			throw new AnnotationException(
+					"Annotation '@" + annotation.annotationType().getName()
+							+ "' did not expose a String-valued 'value' member",
+					e
+			);
 		}
 	}
 

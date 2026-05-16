@@ -30,7 +30,6 @@ import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
@@ -69,6 +68,7 @@ import java.util.Set;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Locale.ROOT;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
@@ -158,7 +158,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			queryOptions.setTimeout( memento.getTimeout() );
 		}
 
-		if ( StringHelper.isNotEmpty( memento.getComment() ) ) {
+		if ( isNotEmpty( memento.getComment() ) ) {
 			queryOptions.setComment( memento.getComment() );
 		}
 
@@ -181,6 +181,26 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 			if ( selectionMemento.getFetchSize() != null ) {
 				queryOptions.setFetchSize( selectionMemento.getFetchSize() );
+			}
+
+			if ( isNotEmpty( selectionMemento.getEntityGraphName() ) ) {
+				applyEntityGraphHint( GraphSemantic.LOAD, selectionMemento.getEntityGraphName(), HINT_SPEC_LOAD_GRAPH );
+			}
+
+			if ( selectionMemento.getHibernateLockMode() != null ) {
+				queryOptions.getLockOptions().setLockMode( selectionMemento.getHibernateLockMode() );
+			}
+
+			if ( selectionMemento.getPessimisticLockScope() != null ) {
+				queryOptions.getLockOptions().setLockScope( selectionMemento.getPessimisticLockScope() );
+			}
+
+			if ( selectionMemento.getLockTimeout() != null ) {
+				queryOptions.getLockOptions().setTimeout( selectionMemento.getLockTimeout() );
+			}
+
+			if ( selectionMemento.getFollowOnLockingStrategy() != null ) {
+				queryOptions.getLockOptions().setFollowOnStrategy( selectionMemento.getFollowOnLockingStrategy() );
 			}
 		}
 	}

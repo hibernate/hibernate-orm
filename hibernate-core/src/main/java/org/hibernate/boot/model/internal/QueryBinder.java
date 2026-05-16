@@ -351,6 +351,10 @@ public abstract class QueryBinder {
 						null,
 						cacheMode( options ),
 						null,
+						lockMode( options ),
+						lockScope( options ),
+						null,
+						null,
 						Set.of(),
 						hints( options )
 				);

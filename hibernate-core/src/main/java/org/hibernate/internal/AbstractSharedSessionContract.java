@@ -162,6 +162,7 @@ import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
@@ -1626,6 +1627,10 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 				bindReferenceArguments( query, typedQueryReference );
 				typedQueryReference.getHints().forEach( query::setHint );
 				selectionQuery = query;
+			}
+			final String entityGraphName = typedQueryReference.getEntityGraphName();
+			if ( !isEmpty( entityGraphName ) ) {
+				selectionQuery.setHint( HINT_SPEC_LOAD_GRAPH, entityGraphName );
 			}
 			typedQueryReference.getOptions().forEach( selectionQuery::addOption );
 

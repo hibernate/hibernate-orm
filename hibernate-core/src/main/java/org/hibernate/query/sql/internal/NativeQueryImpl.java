@@ -379,6 +379,12 @@ public class NativeQueryImpl<R>
 		resultType = null;
 		resultSetMapping = MutationResultSetMapping.INSTANCE;
 		resultMappingSuppliedToCtor = false;
+		super.applyMementoOptions( mutationMemento );
+
+		final var mementoQuerySpaces = mutationMemento.getQuerySpaces();
+		if ( mementoQuerySpaces != null ) {
+			querySpaces = makeCopy( mementoQuerySpaces );
+		}
 	}
 
 

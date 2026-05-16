@@ -6,6 +6,7 @@ package org.hibernate.scan.jandex;
 
 import jakarta.persistence.spi.Discoverable;
 import org.hibernate.boot.scan.internal.ResultCollector;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 
 /// Scans the Jandex Index finding all "managed" classes.
@@ -14,6 +15,8 @@ import org.jboss.jandex.IndexView;
 ///
 /// @author Steve Ebersole
 public class IndexScanner {
+	private static final DotName JAKARTA_DATA_REPOSITORY = DotName.createSimple( "jakarta.data.repository.Repository" );
+
 	/// Find the managed classes and add them to the result collector.
 	///
 	/// @param jandexIndex The Jandex index to scan.
@@ -24,12 +27,19 @@ public class IndexScanner {
 		var discoverableUses = jandexIndex.getAnnotations( Discoverable.class );
 
 		// `discoverableUses` are the annotations, annotated with `@Discoverable`, for which we want to scan
-		discoverableUses.forEach( discoverableUse -> {
-			var discoveredAnnotationType = discoverableUse.target().asClass();
-			var discoveredAnnotationUses = jandexIndex.getAnnotations( discoveredAnnotationType.name() );
-			discoveredAnnotationUses.forEach( discoveredAnnotationUse -> {
-				resultCollector.addClass( discoveredAnnotationUse.target().asClass().name().toString() );
-			} );
-		} );
+		discoverableUses.forEach( discoverableUse ->
+				addDiscoveredClasses( discoverableUse.target().asClass().name(), jandexIndex, resultCollector ) );
+
+		// Treat Jakarta Data repositories as if they were annotated with an annotation marked `@Discoverable`.
+		addDiscoveredClasses( JAKARTA_DATA_REPOSITORY, jandexIndex, resultCollector );
+	}
+
+	private static void addDiscoveredClasses(
+			DotName discoveredAnnotationType,
+			IndexView jandexIndex,
+			ResultCollector resultCollector) {
+		jandexIndex.getAnnotations( discoveredAnnotationType )
+				.forEach( discoveredAnnotationUse ->
+						resultCollector.addClass( discoveredAnnotationUse.target().asClass().name().toString() ) );
 	}
 }

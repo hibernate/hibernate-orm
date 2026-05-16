@@ -37,6 +37,7 @@ class StaticQueryMethod implements MetaAttribute {
 	private final String methodName;
 	private final String queryMethodName;
 	private final boolean statement;
+	private final boolean nativeQuery;
 	private final @Nullable String resultTypeName;
 	private final @Nullable String resultTypeClass;
 	private final List<String> paramNames;
@@ -49,6 +50,7 @@ class StaticQueryMethod implements MetaAttribute {
 			String methodName,
 			String queryMethodName,
 			boolean statement,
+			boolean nativeQuery,
 			@Nullable String resultTypeName,
 			@Nullable String resultTypeClass,
 			List<String> paramNames,
@@ -59,6 +61,7 @@ class StaticQueryMethod implements MetaAttribute {
 		this.methodName = methodName;
 		this.queryMethodName = queryMethodName;
 		this.statement = statement;
+		this.nativeQuery = nativeQuery;
 		this.resultTypeName = resultTypeName;
 		this.resultTypeClass = resultTypeClass;
 		this.paramNames = paramNames;
@@ -237,7 +240,7 @@ class StaticQueryMethod implements MetaAttribute {
 	private void queryOptions(StringBuilder declaration) {
 		final AnnotationMirror optionsAnnotation = queryOptions;
 		if ( optionsAnnotation != null ) {
-			final String entityGraph = statement ? null : entityGraph( optionsAnnotation );
+			final String entityGraph = statement || nativeQuery ? null : entityGraph( optionsAnnotation );
 			final String hints = hints( optionsAnnotation );
 			final List<String> options = options( optionsAnnotation );
 			if ( entityGraph != null || hints != null || !options.isEmpty() ) {

@@ -11,6 +11,8 @@ import org.hibernate.MappingException;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 
+import static org.hibernate.internal.util.PrimitiveHelper.boxedType;
+
 @Internal
 public final class GeneratorTypeHelper {
 	public static void checkGeneratorGeneratedType(Generator generator, GeneratorCreationContext context) {
@@ -26,7 +28,7 @@ public final class GeneratorTypeHelper {
 	private static void checkAssignable(Generator generator, Class<?> generatedType, GeneratorCreationContext context) {
 		final var attributeType = context.getType().getReturnedClass();
 		if ( attributeType != null
-				&& !wrap( attributeType ).isAssignableFrom( wrap( generatedType ) ) ) {
+				&& !boxedType( attributeType ).isAssignableFrom( boxedType( generatedType ) ) ) {
 			throw new MappingException( String.format(
 					Locale.ROOT,
 					"Generator '%s' declares generated type '%s', which is not assignable to generated attribute '%s' of type '%s'",
@@ -53,38 +55,6 @@ public final class GeneratorTypeHelper {
 		return property == null ? "<unknown>" : property.getName();
 	}
 
-	private static Class<?> wrap(Class<?> type) {
-		if ( !type.isPrimitive() ) {
-			return type;
-		}
-		else if ( type == boolean.class ) {
-			return Boolean.class;
-		}
-		else if ( type == byte.class ) {
-			return Byte.class;
-		}
-		else if ( type == char.class ) {
-			return Character.class;
-		}
-		else if ( type == double.class ) {
-			return Double.class;
-		}
-		else if ( type == float.class ) {
-			return Float.class;
-		}
-		else if ( type == int.class ) {
-			return Integer.class;
-		}
-		else if ( type == long.class ) {
-			return Long.class;
-		}
-		else if ( type == short.class ) {
-			return Short.class;
-		}
-		else {
-			return Void.class;
-		}
-	}
 
 	private GeneratorTypeHelper() {
 	}

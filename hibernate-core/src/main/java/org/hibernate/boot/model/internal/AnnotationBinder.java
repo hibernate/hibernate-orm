@@ -247,6 +247,7 @@ public final class AnnotationBinder {
 		detectMappedSuperclassProblems( classDetails );
 
 		bindQueries( classDetails, context );
+		QueryBinder.bindStaticQueries( classDetails, context );
 		handleImport( classDetails, context );
 		//bindFilterDefs( classDetails, context );
 		bindTypeDescriptorRegistrations( classDetails, context );

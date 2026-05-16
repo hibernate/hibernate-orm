@@ -12,6 +12,7 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FindOption;
+import jakarta.persistence.Reference;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TransactionRequiredException;
@@ -1500,7 +1501,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			Class<R> expectedResultType,
 			RootGraphImplementor<R> entityGraph) {
 		checkSelectionQuery( hql, hqlInterpretation );
-		var selectionQuery = new SelectionQueryImpl<>( hql, hqlInterpretation, expectedResultType, entityGraph, this );
+		final var selectionQuery =
+				new SelectionQueryImpl<>( hql, hqlInterpretation, expectedResultType, entityGraph, this );
 		if ( expectedResultType != null ) {
 			checkResultType( expectedResultType, selectionQuery );
 		}
@@ -1617,13 +1619,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 				selectionQuery = new SelectionQueryImpl<>( (SqmSelectStatement<R>) criteria, specification.getResultType(), this );
 			}
 			else {
-				//noinspection unchecked
 				final var resultType = (Class<R>) typedQueryReference.getResultType();
-				final QueryImplementor<R> query = buildNamedQuery( typedQueryReference.getName(),
+				final var query = buildNamedQuery( typedQueryReference.getName(),
 								memento -> memento.toSelectionQuery( this, resultType ),
 								memento -> memento.toSelectionQuery( this, resultType ) );
+				bindReferenceArguments( query, typedQueryReference );
 				typedQueryReference.getHints().forEach( query::setHint );
-				selectionQuery = (SelectionQueryImplementor<R>) query;
+				selectionQuery = query;
 			}
 			typedQueryReference.getOptions().forEach( selectionQuery::addOption );
 
@@ -1645,17 +1647,42 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			return new MutationQueryImpl<>( (SqmDmlStatement<?>) criteria, this );
 		}
 		else {
-			// this cast is fine because of all our impls of TypedQueryReference return Class<R>
-			final MutationQuery query =
+			final var query =
 					buildNamedQuery( statementReference.getName(),
 							memento -> memento.toMutationQuery( this ),
 							memento -> memento.toMutationQuery( this ) );
+			bindReferenceArguments( query, statementReference );
 			statementReference.getHints().forEach( query::setHint );
 			statementReference.getOptions().forEach( query::addOption );
 			return query;
 		}
 	}
 
+	private static void bindReferenceArguments(QueryImplementor<?> query, Reference reference) {
+		final var arguments = reference.getArguments();
+		if ( arguments != null && !arguments.isEmpty() ) {
+			final var parameterNames = reference.getParameterNames();
+			if ( hasNamedParameters( query ) && parameterNames != null ) {
+				for ( int i = 0; i < arguments.size(); i++ ) {
+					query.setParameter( parameterNames.get( i ), arguments.get( i ) );
+				}
+			}
+			else {
+				for ( int i = 0; i < arguments.size(); i++ ) {
+					query.setParameter( i + 1, arguments.get( i ) );
+				}
+			}
+		}
+	}
+
+	private static boolean hasNamedParameters(QueryImplementor<?> query) {
+		for ( var parameter : query.getParameters() ) {
+			if ( parameter.getName() != null ) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Native Query

@@ -10,10 +10,21 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedStatement;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.StoredProcedureParameter;
+import jakarta.persistence.Timeout;
+import jakarta.persistence.query.JakartaQuery;
+import jakarta.persistence.query.QueryOptions;
 import org.hibernate.AnnotationException;
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.boot.model.source.internal.hbm.NativeQueryBuilder;
@@ -29,16 +40,30 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static java.lang.Character.isWhitespace;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.query.internal.Helper.extractHints;
+import static org.hibernate.internal.util.PrimitiveHelper.boxedType;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_OBJECT_ARRAY;
 import static org.hibernate.models.internal.util.StringHelper.isEmpty;
 
 /**
@@ -56,30 +81,28 @@ public abstract class QueryBinder {
 			MetadataBuildingContext context,
 			boolean isDefault,
 			AnnotationTarget annotationTarget) {
-		if ( namedQuery == null ) {
-			return;
-		}
+		if ( namedQuery != null ) {
+			final String queryName = namedQuery.name();
+			final String queryString = namedQuery.query();
 
-		final String queryName = namedQuery.name();
-		final String queryString = namedQuery.query();
+			if ( queryName.isBlank() ) {
+				throw new AnnotationException(
+						"Class or package level '@NamedQuery' annotation must specify a 'name'" );
+			}
 
-		if ( queryName.isBlank() ) {
-			throw new AnnotationException(
-					"Class or package level '@NamedQuery' annotation must specify a 'name'" );
-		}
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.bindingNamedQuery( queryName,
+						queryString.replace( '\n', ' ' ) );
+			}
 
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.bindingNamedQuery( queryName,
-					queryString.replace( '\n', ' ' ) );
-		}
-
-		final var definition = NamedHqlSelectionDefinitionImpl.from( namedQuery, annotationTarget );
-		final var collector = context.getMetadataCollector();
-		if ( isDefault ) {
-			collector.addDefaultQuery( definition );
-		}
-		else {
-			collector.addNamedQuery( definition );
+			final var definition = NamedHqlSelectionDefinitionImpl.from( namedQuery, annotationTarget );
+			final var collector = context.getMetadataCollector();
+			if ( isDefault ) {
+				collector.addDefaultQuery( definition );
+			}
+			else {
+				collector.addNamedQuery( definition );
+			}
 		}
 	}
 
@@ -87,48 +110,44 @@ public abstract class QueryBinder {
 			NamedStatement annotation,
 			MetadataBuildingContext context,
 			AnnotationTarget location) {
-		if ( annotation == null ) {
-			return;
+		if ( annotation != null ) {
+			final String registrationName = annotation.name();
+
+			if ( registrationName.isBlank() ) {
+				throw new AnnotationException(
+						"Class or package level '@NamedStatement' annotation must specify a 'name'" );
+			}
+
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.bindingNamedMutation( registrationName,
+						annotation.statement().replace( '\n', ' ' ) );
+			}
+
+			final var definition = NamedHqlMutationDefinitionImpl.from( annotation, location );
+			context.getMetadataCollector().addNamedQuery( definition );
 		}
-
-		final String registrationName = annotation.name();
-
-		if ( registrationName.isBlank() ) {
-			throw new AnnotationException(
-					"Class or package level '@NamedStatement' annotation must specify a 'name'" );
-		}
-
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.bindingNamedMutation( registrationName,
-					annotation.statement().replace( '\n', ' ' ) );
-		}
-
-		final var definition = NamedHqlMutationDefinitionImpl.from( annotation, location );
-		context.getMetadataCollector().addNamedQuery( definition );
 	}
 
 	public static void bindNativeStatement(
 			NamedNativeStatement annotation,
 			MetadataBuildingContext context,
 			AnnotationTarget location) {
-		if ( annotation == null ) {
-			return;
+		if ( annotation != null ) {
+			final String registrationName = annotation.name();
+
+			if ( registrationName.isBlank() ) {
+				throw new AnnotationException(
+						"Class or package level '@NamedStatement' annotation must specify a 'name'" );
+			}
+
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.bindingNamedNativeMutation( registrationName,
+						annotation.statement().replace( '\n', ' ' ) );
+			}
+
+			final var definition = NamedNativeMutationDefinitionImpl.from( annotation, location );
+			context.getMetadataCollector().addNamedNativeQuery( definition );
 		}
-
-		final String registrationName = annotation.name();
-
-		if ( registrationName.isBlank() ) {
-			throw new AnnotationException(
-					"Class or package level '@NamedStatement' annotation must specify a 'name'" );
-		}
-
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.bindingNamedNativeMutation( registrationName,
-					annotation.statement().replace( '\n', ' ' ) );
-		}
-
-		final var definition = NamedNativeMutationDefinitionImpl.from( annotation, location );
-		context.getMetadataCollector().addNamedNativeQuery( definition );
 	}
 
 	public static void bindNativeQuery(
@@ -188,6 +207,256 @@ public abstract class QueryBinder {
 		return namedNativeQuery.entities().length > 0
 			|| namedNativeQuery.classes().length > 0
 			|| namedNativeQuery.columns().length > 0;
+	}
+
+	public static void bindStaticQueries(
+			ClassDetails classDetails,
+			MetadataBuildingContext context) {
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		for ( MethodDetails methodDetails : classDetails.getMethods() ) {
+			bindStaticQuery( classDetails, methodDetails, context, modelsContext );
+			bindStaticNativeQuery( classDetails, methodDetails, context, modelsContext );
+		}
+	}
+
+	private static void bindStaticQuery(
+			ClassDetails classDetails,
+			MethodDetails methodDetails,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext) {
+		final var query = methodDetails.getAnnotationUsage( JakartaQuery.class, modelsContext );
+		if ( query != null ) {
+			final String registrationName = staticQueryName( classDetails, methodDetails );
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.bindingNamedQuery( registrationName, query.value().replace( '\n', ' ' ) );
+			}
+
+			final var options = methodDetails.getAnnotationUsage( QueryOptions.class, modelsContext );
+			if ( isStatement( query.value() ) ) {
+				final var definition = new NamedHqlMutationDefinitionImpl<>(
+						registrationName,
+						staticQueryLocation( classDetails, methodDetails ),
+						query.value(),
+						null,
+						queryFlushMode( options ),
+						timeout( options ),
+						null,
+						hints( options )
+				);
+				context.getMetadataCollector().addNamedQuery( definition );
+			}
+			else {
+				final var definition = new NamedHqlSelectionDefinitionImpl<>(
+						registrationName,
+						staticQueryLocation( classDetails, methodDetails ),
+						query.value(),
+						staticSelectionResultType( methodDetails ),
+						entityGraphName( options ),
+						queryFlushMode( options ),
+						timeout( options ),
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						cacheMode( options ),
+						null,
+						lockMode( options ),
+						lockScope( options ),
+						null,
+						null,
+						Map.of(),
+						hints( options )
+				);
+				context.getMetadataCollector().addNamedQuery( definition );
+			}
+		}
+	}
+
+	private static void bindStaticNativeQuery(
+			ClassDetails classDetails,
+			MethodDetails methodDetails,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext) {
+		final var query = methodDetails.getAnnotationUsage(
+				jakarta.persistence.query.NativeQuery.class,
+				modelsContext
+		);
+		if ( query != null ) {
+			final String registrationName = staticQueryName( classDetails, methodDetails );
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.bindingNamedNativeQuery( registrationName, query.value().replace( '\n', ' ' ) );
+			}
+
+			final var options = methodDetails.getAnnotationUsage( QueryOptions.class, modelsContext );
+			if ( isStatement( query.value() ) ) {
+				final var definition = new NamedNativeMutationDefinitionImpl<>(
+						registrationName,
+						staticQueryLocation( classDetails, methodDetails ),
+						query.value(),
+						new HashSet<>(),
+						queryFlushMode( options ),
+						timeout( options ),
+						null,
+						hints( options )
+				);
+				context.getMetadataCollector().addNamedNativeQuery( definition );
+			}
+			else {
+				final String resultSetMappingName =
+						bindStaticNativeQueryResultSetMapping( registrationName, methodDetails, context,
+								modelsContext );
+				final var definition = new NamedNativeSelectionDefinitionImpl<>(
+						registrationName,
+						staticQueryLocation( classDetails, methodDetails ),
+						query.value(),
+						staticSelectionResultType( methodDetails ),
+						resultSetMappingName,
+						queryFlushMode( options ),
+						timeout( options ),
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						cacheMode( options ),
+						null,
+						Set.of(),
+						hints( options )
+				);
+				context.getMetadataCollector().addNamedNativeQuery( definition );
+			}
+		}
+	}
+
+	private static String bindStaticNativeQueryResultSetMapping(
+			String registrationName,
+			MethodDetails methodDetails,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext) {
+		final var entityResults = repeatedAnnotations( methodDetails, EntityResult.class, modelsContext );
+		final var constructorResults = repeatedAnnotations( methodDetails, ConstructorResult.class, modelsContext );
+		final var columnResults = repeatedAnnotations( methodDetails, ColumnResult.class, modelsContext );
+		if ( entityResults.length > 0 || constructorResults.length > 0 || columnResults.length > 0 ) {
+			context.getMetadataCollector().addResultSetMapping(
+					SqlResultSetMappingDescriptor.from( registrationName, entityResults, constructorResults, columnResults )
+			);
+			return registrationName;
+		}
+		return null;
+	}
+
+	private static <A extends Annotation> A[] repeatedAnnotations(
+			MethodDetails methodDetails,
+			Class<A> annotationType,
+			ModelsContext modelsContext) {
+		final A[] annotations = methodDetails.getRepeatedAnnotationUsages( annotationType, modelsContext );
+		//noinspection unchecked
+		return annotations == null ? (A[]) EMPTY_OBJECT_ARRAY : annotations;
+	}
+
+	private static Class<?> staticSelectionResultType(MethodDetails methodDetails) {
+		final var returnType = methodDetails.getReturnType();
+		return returnType.isImplementor( List.class )
+			|| returnType.isImplementor( Stream.class )
+				? erasedClass( firstTypeArgument( methodDetails ) )
+				: boxedType( returnType.toJavaClass() );
+	}
+
+	private static Type firstTypeArgument(MethodDetails methodDetails) {
+		final Type genericReturnType = methodDetails.toJavaMember().getGenericReturnType();
+		if ( genericReturnType instanceof ParameterizedType parameterizedType
+				&& parameterizedType.getActualTypeArguments().length == 1 ) {
+			return parameterizedType.getActualTypeArguments()[0];
+		}
+		return Object.class;
+	}
+
+	private static Class<?> erasedClass(Type type) {
+		if ( type instanceof Class<?> typeClass ) {
+			return typeClass;
+		}
+		else if ( type instanceof ParameterizedType parameterizedType ) {
+			return erasedClass( parameterizedType.getRawType() );
+		}
+		else if ( type instanceof GenericArrayType genericArrayType ) {
+			return Array.newInstance( erasedClass( genericArrayType.getGenericComponentType() ), 0 ).getClass();
+		}
+		else if ( type instanceof WildcardType wildcardType ) {
+			return wildcardType.getUpperBounds().length == 0
+					? Object.class
+					: erasedClass( wildcardType.getUpperBounds()[0] );
+		}
+		else {
+			return Object.class;
+		}
+	}
+
+	private static boolean isStatement(String queryString) {
+		final String keyword = firstKeyword( queryString );
+		return "insert".equalsIgnoreCase( keyword )
+			|| "update".equalsIgnoreCase( keyword )
+			|| "delete".equalsIgnoreCase( keyword );
+	}
+
+	private static String firstKeyword(String queryString) {
+		final String trimmed = queryString.trim();
+		final int length = trimmed.length();
+		for ( int i = 0; i < length; i++ ) {
+			if ( isWhitespace( trimmed.charAt( i ) ) ) {
+				return trimmed.substring( 0, i );
+			}
+		}
+		return trimmed;
+	}
+
+	private static String staticQueryName(ClassDetails classDetails, MethodDetails methodDetails) {
+		return unqualifiedClassName( classDetails ) + "." + methodDetails.getName();
+	}
+
+	private static String unqualifiedClassName(ClassDetails classDetails) {
+		final String className = classDetails.getClassName() == null ? classDetails.getName() : classDetails.getClassName();
+		final int packageSeparator = className.lastIndexOf( '.' );
+		final String unqualifiedName = packageSeparator < 0 ? className : className.substring( packageSeparator + 1 );
+		final int nestedClassSeparator = unqualifiedName.lastIndexOf( '$' );
+		return nestedClassSeparator < 0 ? unqualifiedName : unqualifiedName.substring( nestedClassSeparator + 1 );
+	}
+
+	private static String staticQueryLocation(ClassDetails classDetails, MethodDetails methodDetails) {
+		return classDetails.getName() + "#" + methodDetails.getName();
+	}
+
+	private static FlushMode queryFlushMode(QueryOptions options) {
+		if ( options == null || options.flush() == QueryFlushMode.DEFAULT ) {
+			return null;
+		}
+		return options.flush() == QueryFlushMode.FLUSH ? FlushMode.ALWAYS : FlushMode.MANUAL;
+	}
+
+	private static Timeout timeout(QueryOptions options) {
+		return options == null || options.timeout() < 0 ? null : Timeout.milliseconds( options.timeout() );
+	}
+
+	private static Map<String,Object> hints(QueryOptions options) {
+		return options == null ? Map.of() : extractHints( options.hints() );
+	}
+
+	private static String entityGraphName(QueryOptions options) {
+		return options == null || options.entityGraph().isBlank() ? null : options.entityGraph();
+	}
+
+	private static CacheMode cacheMode(QueryOptions options) {
+		return options == null ? null : CacheMode.fromJpaModes( options.cacheRetrieveMode(), options.cacheStoreMode() );
+	}
+
+	private static LockMode lockMode(QueryOptions options) {
+		return options == null ? null : LockMode.fromJpaLockMode( options.lockMode() );
+	}
+
+	private static PessimisticLockScope lockScope(QueryOptions options) {
+		return options == null ? null : options.lockScope();
 	}
 //
 //	private static <T> NamedNativeQueryDefinition<T> createNamedQueryDefinition(

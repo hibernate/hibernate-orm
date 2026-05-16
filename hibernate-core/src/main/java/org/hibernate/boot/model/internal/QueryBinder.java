@@ -46,7 +46,6 @@ import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -414,7 +413,7 @@ public abstract class QueryBinder {
 			return erasedClass( parameterizedType.getRawType() );
 		}
 		else if ( type instanceof GenericArrayType genericArrayType ) {
-			return Array.newInstance( erasedClass( genericArrayType.getGenericComponentType() ), 0 ).getClass();
+			return erasedClass( genericArrayType.getGenericComponentType() ).arrayType();
 		}
 		else if ( type instanceof WildcardType wildcardType ) {
 			return wildcardType.getUpperBounds().length == 0

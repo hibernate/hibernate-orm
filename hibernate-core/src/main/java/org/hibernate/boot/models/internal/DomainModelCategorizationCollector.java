@@ -6,6 +6,14 @@ package org.hibernate.boot.models.internal;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.PostRemove;
+import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreRemove;
+import jakarta.persistence.PreUpdate;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -33,6 +41,9 @@ public class DomainModelCategorizationCollector {
 	private final Set<ClassDetails> rootEntities = new HashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
 	private final Map<String,ClassDetails> embeddables = new HashMap<>();
+	private final Set<String> idClasses = new HashSet<>();
+	private final Set<ClassDetails> entityListenerClasses = new HashSet<>();
+	private final Set<String> packageNames = new HashSet<>();
 
 	public DomainModelCategorizationCollector(
 			GlobalRegistrations globalRegistrations,
@@ -55,6 +66,30 @@ public class DomainModelCategorizationCollector {
 
 	public Map<String, ClassDetails> getEmbeddables() {
 		return embeddables;
+	}
+
+	public Set<String> getIdClasses() {
+		return idClasses;
+	}
+
+	/**
+	 * Classes that have methods annotated with JPA lifecycle callback annotations
+	 * ({@code @PrePersist}, {@code @PostPersist}, {@code @PreRemove}, {@code @PostRemove},
+	 * {@code @PreUpdate}, {@code @PostUpdate}, {@code @PostLoad}).
+	 * <p>
+	 * These are classes that act as entity listeners (either standalone listener classes
+	 * referenced via {@code @EntityListeners} or entity classes with callback methods).
+	 */
+	public Set<ClassDetails> getEntityListenerClasses() {
+		return entityListenerClasses;
+	}
+
+	/**
+	 * Package names discovered from {@code package-info} classes encountered
+	 * during categorization.
+	 */
+	public Set<String> getPackageNames() {
+		return packageNames;
 	}
 
 	public void apply(JaxbEntityMappingsImpl jaxbRoot, XmlDocumentContext xmlDocumentContext) {
@@ -121,9 +156,42 @@ public class DomainModelCategorizationCollector {
 			}
 		}
 
+		if ( hasIdClass( classDetails ) ) {
+			idClasses.add( classDetails.getDirectAnnotationUsage( IdClass.class ).value().getName() );
+		}
+
 		if ( isConverter( classDetails ) ) {
 			globalRegistrations.collectConverter( classDetails );
 		}
+
+		if ( hasJpaLifecycleCallbackMethods( classDetails ) ) {
+			entityListenerClasses.add( classDetails );
+		}
+
+		if ( isPackageInfo( classDetails ) ) {
+			String className = classDetails.getClassName();
+			packageNames.add( className.substring( 0, className.lastIndexOf( '.' ) ) );
+		}
+	}
+
+	private static boolean hasJpaLifecycleCallbackMethods(ClassDetails classDetails) {
+		return classDetails.getMethods().stream().anyMatch( method ->
+				method.hasDirectAnnotationUsage( PrePersist.class )
+				|| method.hasDirectAnnotationUsage( PostPersist.class )
+				|| method.hasDirectAnnotationUsage( PreRemove.class )
+				|| method.hasDirectAnnotationUsage( PostRemove.class )
+				|| method.hasDirectAnnotationUsage( PreUpdate.class )
+				|| method.hasDirectAnnotationUsage( PostUpdate.class )
+				|| method.hasDirectAnnotationUsage( PostLoad.class ) );
+	}
+
+	private static boolean hasIdClass(ClassDetails classDetails) {
+		return classDetails.getDirectAnnotationUsage( IdClass.class ) != null;
+	}
+
+	private static boolean isPackageInfo(ClassDetails classDetails) {
+		String className = classDetails.getClassName();
+		return className != null && className.endsWith( ".package-info" );
 	}
 
 	private static boolean isConverter(ClassDetails classDetails) {

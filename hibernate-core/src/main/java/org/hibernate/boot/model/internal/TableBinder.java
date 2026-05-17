@@ -72,6 +72,7 @@ public class TableBinder {
 	private boolean isJPA2ElementCollection;
 	private UniqueConstraint[] uniqueConstraints;
 	private Index[] indexes;
+	private String type;
 	private String options;
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
@@ -108,6 +109,10 @@ public class TableBinder {
 
 	public void setOptions(String options) {
 		this.options = options;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 
 	public void setJPA2ElementCollection(boolean isJPA2ElementCollection) {
@@ -293,6 +298,7 @@ public class TableBinder {
 				isAbstract,
 				uniqueConstraints,
 				indexes,
+				type,
 				options,
 				buildingContext,
 				null,
@@ -448,6 +454,7 @@ public class TableBinder {
 				uniqueConstraints,
 				null,
 				null,
+				null,
 				buildingContext,
 				null,
 				null
@@ -471,6 +478,7 @@ public class TableBinder {
 				uniqueConstraints,
 				null,
 				null,
+				null,
 				buildingContext,
 				subselect,
 				denormalizedSuperTableXref
@@ -484,6 +492,7 @@ public class TableBinder {
 			boolean isAbstract,
 			UniqueConstraint[] uniqueConstraints,
 			Index[] indexes,
+			String type,
 			String options,
 			MetadataBuildingContext buildingContext,
 			String subselect,
@@ -508,6 +517,8 @@ public class TableBinder {
 		if ( indexes != null ) {
 			new IndexBinder( buildingContext ).bindIndexes( table, indexes );
 		}
+
+		addTableType( table, type );
 
 		if ( options != null ) {
 			table.setOptions( options );
@@ -916,6 +927,12 @@ public class TableBinder {
 	static void addTableComment(Table table, String comment) {
 		if ( isNotBlank( comment ) ) {
 			table.setComment( comment );
+		}
+	}
+
+	static void addTableType(Table table, String type) {
+		if ( isNotBlank( type ) ) {
+			table.setType( type );
 		}
 	}
 

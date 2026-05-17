@@ -1,6 +1,16 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.5.Final (May 17, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39039
+
+
+** Bug
+    * HHH-20394 Cascade profile causes LAZY associations to be eagerly fetched even if they won't be affected
+    * HHH-20357 Component.sortProperties() reorders Envers originalId key, breaking joined audit-table FK/joins for JOINED inheritance
+
 Changes in 7.3.4.Final (May 10, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

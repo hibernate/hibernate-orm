@@ -69,6 +69,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private boolean hasDenormalizedTables;
 	private String comment;
 	private String viewQuery;
+	private String type;
 	private String options;
 	private String extraDeclarations;
 
@@ -853,6 +854,14 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public void setOptions(String options) {
 		this.options = options;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 
 	public String getExtraDeclarations() {

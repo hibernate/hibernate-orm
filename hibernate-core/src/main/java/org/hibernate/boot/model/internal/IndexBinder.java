@@ -31,6 +31,7 @@ import jakarta.persistence.UniqueConstraint;
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -160,6 +161,8 @@ class IndexBinder {
 			String[] orderings,
 			boolean unique,
 			boolean declaredAsIndex,
+			String type,
+			String using,
 			String options,
 			Selectable[] columns) {
 		final var source =
@@ -171,7 +174,8 @@ class IndexBinder {
 			}
 		}
 		final var dialect = getDialect();
-		if ( unique && !hasFormula && dialect.supportsUniqueConstraints() ) {
+		if ( unique && !hasFormula && dialect.supportsUniqueConstraints()
+				&& isEmpty( type ) && isEmpty( using ) ) {
 			final String keyName = getImplicitNamingStrategy().determineUniqueKeyName( source ).render( dialect );
 			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
 			uniqueKey.setExplicit( true );
@@ -190,6 +194,12 @@ class IndexBinder {
 			final String keyName = getImplicitNamingStrategy().determineIndexName( source ).render( dialect );
 			final Index index = table.getOrCreateIndex( keyName );
 			index.setUnique( unique );
+			if ( isNotEmpty( type ) ) {
+				index.setType( type );
+			}
+			if ( isNotEmpty( using ) ) {
+				index.setUsing( using );
+			}
 			index.setOptions( options );
 			for ( int i = 0; i < columns.length; i++ ) {
 				index.addColumn( columns[i], orderings != null ? orderings[i] : null );
@@ -212,6 +222,8 @@ class IndexBinder {
 			initializeColumns( columnExpressions, ordering, parsed );
 			final String name = index.name();
 			final boolean unique = index.unique();
+			final String type = index.type();
+			final String using = index.using();
 			final String options = index.options();
 			createIndexOrUniqueKey(
 					table,
@@ -221,6 +233,8 @@ class IndexBinder {
 					ordering,
 					unique,
 					true,
+					type,
+					using,
 					options,
 					selectables( table, name, columnExpressions )
 			);
@@ -240,6 +254,8 @@ class IndexBinder {
 					null,
 					true,
 					false,
+					null,
+					null,
 					options,
 					columns( table, name, columnNames )
 			);

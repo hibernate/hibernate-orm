@@ -667,6 +667,7 @@ public abstract class CollectionBinder {
 			final JoinColumn[] joins;
 			final JoinColumn[] inverseJoins;
 			final Index[] jpaIndexes;
+			final String type;
 			final String options;
 
 			//JPA 2 has priority
@@ -678,6 +679,7 @@ public abstract class CollectionBinder {
 				joins = collectionTable.joinColumns();
 				inverseJoins = null;
 				jpaIndexes = collectionTable.indexes();
+				type = collectionTable.type();
 				options = collectionTable.options();
 			}
 			else {
@@ -688,6 +690,7 @@ public abstract class CollectionBinder {
 				joins = assocTable.joinColumns();
 				inverseJoins = assocTable.inverseJoinColumns();
 				jpaIndexes = assocTable.indexes();
+				type = assocTable.type();
 				options = assocTable.options();
 			}
 
@@ -706,6 +709,7 @@ public abstract class CollectionBinder {
 			}
 			associationTableBinder.setUniqueConstraints( uniqueConstraints );
 			associationTableBinder.setJpaIndex( jpaIndexes );
+			associationTableBinder.setType( type );
 			associationTableBinder.setOptions( options );
 			//set check constraint in the second pass
 			annJoins = ArrayHelper.isEmpty( joins ) ? null : joins;

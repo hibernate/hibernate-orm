@@ -12,6 +12,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Index;
 import org.hibernate.tool.schema.spi.Exporter;
 
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -35,18 +36,31 @@ public class StandardIndexExporter implements Exporter<Index> {
 	@Override
 	public String[] getSqlCreateStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
 		final var createIndex = new StringBuilder()
-				.append( dialect.getCreateIndexString( index.isUnique() ) )
+				.append( createIndexString( index ) )
 				.append( " " )
 				.append( indexName( index, context, metadata ) )
 				.append( " on " )
-				.append( context.format( index.getTable().getQualifiedTableName() ) )
-				.append( " (" );
+				.append( context.format( index.getTable().getQualifiedTableName() ) );
+		if ( isNotEmpty( index.getUsing() ) ) {
+			createIndex.append( " using " )
+					.append( index.getUsing() );
+		}
+		createIndex.append( " (" );
 		appendColumnList( index, createIndex );
 		createIndex.append( ")" );
 		if ( isNotEmpty( index.getOptions() ) ) {
 			createIndex.append( " " ).append( index.getOptions() );
 		}
 		return new String[] { createIndex.toString() };
+	}
+
+	private String createIndexString(Index index) {
+		final String createIndexString = dialect.getCreateIndexString( index.isUnique() );
+		final String type = index.getType();
+		return isBlank( type )
+				? createIndexString
+				: createIndexString.replaceFirst( " (?i:index)",
+						' ' + type + " index" );
 	}
 
 	private String indexName(Index index, SqlStringGenerationContext context, Metadata metadata) {

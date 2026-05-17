@@ -31,6 +31,8 @@ public class Index implements Exportable, Serializable {
 	private Identifier name;
 	private Table table;
 	private boolean unique;
+	private String type = "";
+	private String using = "";
 	private String options = "";
 	private final java.util.List<Selectable> selectables = new ArrayList<>();
 	private final java.util.Map<Selectable, String> selectableOrderMap = new HashMap<>();
@@ -49,6 +51,22 @@ public class Index implements Exportable, Serializable {
 
 	public boolean isUnique() {
 		return unique;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getUsing() {
+		return using;
+	}
+
+	public void setUsing(String using) {
+		this.using = using;
 	}
 
 	public String getOptions() {

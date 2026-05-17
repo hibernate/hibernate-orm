@@ -31,6 +31,7 @@ import static java.util.Collections.addAll;
 import static java.util.Comparator.comparing;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.appendColumn;
 
@@ -87,7 +88,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			else {
 				final var extra = new StringBuilder();
 
-				createTable.append( tableCreateString( table.hasPrimaryKey() ) )
+				createTable.append( tableCreateString( table ) )
 						.append( ' ' )
 						.append( formattedTableName )
 						.append( " (" );
@@ -386,9 +387,16 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 	}
 
-	protected String tableCreateString(boolean hasPrimaryKey) {
-		return hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString();
-
+	private String tableCreateString(Table table) {
+		final String createTableString =
+				table.hasPrimaryKey()
+						? dialect.getCreateTableString()
+						: dialect.getCreateMultisetTableString();
+		final String type = table.getType();
+		return isBlank( type )
+				? createTableString
+				: createTableString.replaceFirst( " (?i:table)",
+						' ' + type + " table" );
 	}
 
 	protected String primaryKeyString(PrimaryKey key) {

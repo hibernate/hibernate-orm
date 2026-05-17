@@ -458,6 +458,7 @@ public class EntityBinder {
 			TableBinder.addJpaIndexes( table, jpaTableUsage.indexes(), context );
 			TableBinder.addTableCheck( table, jpaTableUsage.check() );
 			TableBinder.addTableComment( table, jpaTableUsage.comment() );
+			TableBinder.addTableType( table, jpaTableUsage.type() );
 			TableBinder.addTableOptions( table, jpaTableUsage.options() );
 		}
 
@@ -2201,6 +2202,7 @@ public class EntityBinder {
 		final var table = join.getTable();
 		TableBinder.addTableCheck( table, joinTable.check() );
 		TableBinder.addTableComment( table, joinTable.comment() );
+		TableBinder.addTableType( table, joinTable.type() );
 		TableBinder.addTableOptions( table, joinTable.options() );
 		return join;
 	}
@@ -2220,6 +2222,7 @@ public class EntityBinder {
 		new IndexBinder( context ).bindIndexes( table, secondaryTable.indexes() );
 		TableBinder.addTableCheck( table, secondaryTable.check() );
 		TableBinder.addTableComment( table, secondaryTable.comment() );
+		TableBinder.addTableType( table, secondaryTable.type() );
 		TableBinder.addTableOptions( table, secondaryTable.options() );
 		return join;
 	}

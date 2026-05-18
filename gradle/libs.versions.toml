@@ -101,7 +101,7 @@ mavenTransport = "1.9.24"
 #Buildscript
 forbiddenapis = "3.8"
 jsoup = "1.22.1"
-slf4j = "2.0.17"
+slf4j = "2.0.18"
 
 # Asciidocs
 hibernate-asciidoctor-theme = "6.1.2.Final"

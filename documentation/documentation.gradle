@@ -170,6 +170,7 @@ dependencies {
 	javadocClasspath libs.jakarta.validation
 	javadocClasspath libs.jakarta.cdi
 	javadocClasspath libs.jakarta.jacc
+	javadocClasspath libs.jakarta.data
 	javadocClasspath libs.jakarta.jsonbApi
 	javadocClasspath libs.ant
 	javadocClasspath libs.jdbc.postgresql

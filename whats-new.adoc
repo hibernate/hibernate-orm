@@ -18,6 +18,24 @@ IMPORTANT: If migrating from earlier versions, be sure to also check out the lin
 Support for Jakarta Persistence has been moved to version 4.0.
 See https://in.relation.to/2026/01/20/JPA-4-M1/[our blog] for discussion of the changes in version 4.0.
 
+
+[[graph-flushing]]
+=== Graph-based Flushing
+
+8.0 introduces graph-based flush coordination that plans insert, update, delete, and collection work using the mapped relational constraints of the domain model.  Instead of relying primarily on operation ordering heuristics, the graph queue builds a dependency model for each flush and executes work in an order that better reflects foreign keys, uniqueness constraints, optional tables, secondary tables, and other mapping relationships.
+
+The goal is both correctness and performance: fewer special-case ordering failures, more predictable batching, and a clearer foundation for future flush-time optimizations.  The new graph approach is designed to handle complex object graphs more naturally, especially in applications with deeply related entities, mixed entity and collection changes, and database schemas where constraint ordering matters.
+
+The new graph-based flush coordination is enabled by default, but the legacy strategy remains *_temporarily_* available by configuration using
+
+[source,properties]
+----
+hibernate.flush.queue.type=legacy
+----
+
+`org.hibernate.cfg.FlushSettings` defines a number of new settings for controlling the graph-based flush coordination.
+
+
 [[procedure-outputs]]
 == Improvements to ProcedureCall
 

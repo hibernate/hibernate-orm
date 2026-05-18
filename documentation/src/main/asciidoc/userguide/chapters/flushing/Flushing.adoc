@@ -249,6 +249,10 @@ offers 2 different `ActionQueue` implementations; which is used is indicated by 
 
 If using the `graph` queue, there are some toggles you can you use to control various aspects of behavior -
 
+`hibernate.jdbc.batch_size`::
+	Specifies the maximum number of statements Hibernate will add to a JDBC batch before executing that batch.
+	By default, this is defined by the Dialect but may be overridden at either the SessionFactory or Session level.
+
 `hibernate.flush.plan.foreignkey.order`::
 	Controls whether the graph-based flush planner orders operations using foreign-key dependencies.
 	This setting defaults to `true`.

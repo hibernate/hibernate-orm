@@ -4,6 +4,8 @@
  */
 package org.hibernate.collection.spi;
 
+import org.hibernate.Incubating;
+
 /// Marker interface for objects that carry both an element and its snapshot position/key.
 /// Used during collection update decomposition to provide the snapshot position/key for
 /// DELETE operations on indexed collections.
@@ -12,7 +14,10 @@ package org.hibernate.collection.spi;
 /// when generating WHERE clauses that restrict by index (e.g., `WHERE listOrder = ?` or `WHERE mapKey = ?`).
 ///
 /// @param <K> The type of the index/key - Integer for Lists, the map key type for Maps
+///
 /// @author Steve Ebersole
+/// @since 8.0
+@Incubating
 public interface SnapshotIndexed<K> {
 	/// The element (entity or value) at this position.
 	Object element();

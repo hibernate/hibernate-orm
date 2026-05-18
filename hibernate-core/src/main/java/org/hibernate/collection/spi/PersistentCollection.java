@@ -328,25 +328,6 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	boolean hasDeletes(CollectionPersister persister);
 
 	/**
-	 * Get entities (elements) that were present in the snapshot but are no longer in the current collection.
-	 * Used by decomposers to plan DELETE operations for join table rows.
-	 * <p>
-	 * Unlike {@link #getDeletes(CollectionPersister, boolean)}, this method tracks actual entity removals
-	 * rather than positional changes, making it suitable for join table collections where we need to
-	 * delete rows based on entity identity, not position.
-	 *
-	 * @param persister The collection persister
-	 *
-	 * @return An iterator over entities removed from the collection
-	 *
-	 * @since 8
-	 */
-	default Iterator<?> getRemovedEntities(CollectionPersister persister) {
-		// Default implementation delegates to existing getDeletes for backward compatibility
-		return getDeletes(persister, !persister.hasIndex());
-	}
-
-	/**
 	 * Get entities (elements) that are present in the current collection but were not in the snapshot.
 	 * Used by decomposers to plan INSERT operations for join table rows.
 	 * <p>
@@ -357,8 +338,9 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 *
 	 * @return An iterator over entities added to the collection
 	 *
-	 * @since 8
+	 * @since 8.0
 	 */
+	@Incubating
 	default Iterator<?> getAddedEntities(CollectionPersister persister) {
 		// Default implementation returns empty - subclasses should override
 		return java.util.Collections.emptyIterator();
@@ -380,8 +362,9 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 *
 	 * @return The complete change set, or {@code null} if not applicable to this collection type
 	 *
-	 * @since 8
+	 * @since 8.0
 	 */
+	@Incubating
 	default CollectionChangeSet getChangeSet(CollectionPersister persister) {
 		// Default implementation returns null - only indexed collections override
 		return null;

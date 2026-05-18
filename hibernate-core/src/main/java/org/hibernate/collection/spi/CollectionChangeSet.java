@@ -4,12 +4,17 @@
  */
 package org.hibernate.collection.spi;
 
+import org.hibernate.Incubating;
+
 import java.util.List;
 
 /// Represents the complete set of changes between a collection's snapshot state
 /// and its current state. Used for planning collection update operations.
 ///
 /// @author Steve Ebersole
+/// @since 8.0
+///
+@Incubating
 public record CollectionChangeSet(
 		List<Removal> removals,
 		List<Addition> additions,

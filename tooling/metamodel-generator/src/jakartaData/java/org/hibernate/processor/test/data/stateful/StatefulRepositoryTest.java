@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,7 @@ import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
 
+import static java.nio.charset.Charset.defaultCharset;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -80,14 +82,14 @@ class StatefulRepositoryTest {
 	@Test
 	void defaultConstructorPathOpensStatefulAndStatelessHibernateSessions() throws IOException {
 		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-		try ( StandardJavaFileManager fileManager = compiler.getStandardFileManager( diagnostics, null, null ) ) {
-			final List<File> sourceFiles = List.of(
+		final var compiler = ToolProvider.getSystemJavaCompiler();
+		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
+			final var sourceFiles = List.of(
 					sourceFile( StatefulBook.class ),
 					sourceFile( StatefulBookRepository.class ),
 					sourceFile( StatelessBookRepository.class )
 			);
-			final List<String> options = List.of(
+			final var options = List.of(
 					"-d",
 					TestUtil.getOutBaseDir( StatefulRepositoryTest.class ).getAbsolutePath(),
 					"-classpath",
@@ -95,7 +97,7 @@ class StatefulRepositoryTest {
 					"-processor",
 					HibernateProcessor.class.getName()
 			);
-			final JavaCompiler.CompilationTask task = compiler.getTask(
+			final var task = compiler.getTask(
 					null,
 					fileManager,
 					diagnostics,
@@ -149,7 +151,7 @@ class StatefulRepositoryTest {
 		final String messages = diagnostics.getDiagnostics()
 				.stream()
 				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( null ) )
+				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
 				.collect( Collectors.joining( "\n" ) );
 
 		assertTrue( messages.contains( "repository mixes stateful and stateless lifecycle annotations" ) );
@@ -169,7 +171,7 @@ class StatefulRepositoryTest {
 		return diagnostics.getDiagnostics()
 				.stream()
 				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( null ) )
+				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
 				.collect( Collectors.joining( "\n" ) );
 	}
 

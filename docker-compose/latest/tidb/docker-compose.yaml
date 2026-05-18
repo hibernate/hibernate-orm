@@ -10,7 +10,7 @@ services:
       timeout: 5s
       retries: 15
   mysql-client:
-    image: docker.io/library/mysql:9.6@sha256:c5df04bee1a42b74a5841c6409e669cf62126cd0416f00c1cea8ab933b9361b9
+    image: docker.io/library/mysql:9.7@sha256:c11782aa2a96624c1efc121768641d96954faa136d6aa82751b032d8c426ffbc
     entrypoint: [ "/bin/sh", "-c" ]
     depends_on:
       tidb:

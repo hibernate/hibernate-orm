@@ -1,6 +1,6 @@
 services:
   db2spatial:
-    image: ${DB_IMAGE_DB2_SPATIAL:-docker.io/ibmcom/db2:11.5.5.0@sha256:9577b5f306efdbc2792297275b8331059d0818eb70700d8106d986da2908d45c}
+    image: ${DB_IMAGE_DB2_SPATIAL:-docker.io/ibmcom/db2:11.5.8.0@sha256:d678ec116f66992366bf8e7f23df24fe16ccc3f70710243d2c88e3c687670e4c}
     container_name: db2spatial
     privileged: true
     ports:

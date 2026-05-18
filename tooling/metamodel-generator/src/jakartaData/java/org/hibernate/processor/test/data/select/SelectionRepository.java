@@ -7,6 +7,7 @@ package org.hibernate.processor.test.data.select;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.data.Order;
 import jakarta.data.repository.By;
 import jakarta.data.repository.CrudRepository;
 import jakarta.data.repository.Find;
@@ -64,6 +65,10 @@ public interface SelectionRepository extends CrudRepository<SelectionBook, Long>
 	@Find
 	@First
 	SelectionBook firstByStatus(SelectionStatus status);
+
+	@Find
+	@First
+	SelectionBook firstByStatus(SelectionStatus status, Order<SelectionBook> order);
 
 	@Find
 	@First(3)

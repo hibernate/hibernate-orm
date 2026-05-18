@@ -59,6 +59,9 @@ class SelectionTest {
 		assertTrue( repository.contains( ".setMaxResults(1)" ) );
 		assertTrue( repository.contains( ".setMaxResults(3)" ) );
 		assertTrue( repository.contains( ".setMaxResults(2)" ) );
+		assertTrue( repository.contains(
+				"SelectionBook firstByStatus(SelectionStatus status, @Nonnull Order<SelectionBook> order)" ) );
+		assertTrue( repository.contains( "for (var _sort : order.sorts())" ) );
 		assertTrue( repository.contains( "select title from SelectionBook where status = :status" ) );
 		assertTrue( repository.contains( "select title, pages from SelectionBook where status = :status" ) );
 	}
@@ -102,6 +105,8 @@ class SelectionTest {
 		assertTrue( messages.contains( "multiple '@Select' annotations require a record return type" ) );
 		assertTrue( messages.contains( "'@First' value must be greater than 0" ) );
 		assertTrue( messages.contains( "'@First' may not be combined with a parameter of type 'jakarta.data.Limit'" ) );
+		assertTrue( messages.contains(
+				"Jakarta Data repository method annotations are mutually exclusive: @Find, @Query" ) );
 	}
 
 	private static File sourceFile(Class<?> type) {

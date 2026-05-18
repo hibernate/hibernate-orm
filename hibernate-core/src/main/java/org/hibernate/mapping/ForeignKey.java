@@ -33,10 +33,6 @@ public class ForeignKey extends Constraint {
 		super( table );
 	}
 
-	@Deprecated(since = "7")
-	public ForeignKey() {
-	}
-
 	@Override
 	public String getExportIdentifier() {
 		// Not sure name is always set.  Might need some implicit naming

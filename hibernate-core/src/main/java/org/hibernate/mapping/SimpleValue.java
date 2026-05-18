@@ -57,9 +57,7 @@ import org.hibernate.usertype.DynamicParameterizedType.ParameterType;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
-import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_GENERATOR_NAME;
 import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
-import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 import static org.hibernate.mapping.MappingHelper.classForName;
@@ -75,9 +73,6 @@ import static org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings.toNati
  * @author Yanming Zhou
  */
 public abstract class SimpleValue implements KeyValue {
-
-	@Deprecated(since = "7.0", forRemoval = true)
-	public static final String DEFAULT_ID_GEN_STRATEGY = ASSIGNED_GENERATOR_NAME;
 
 	private final MetadataBuildingContext buildingContext;
 	private final MetadataImplementor metadata;
@@ -420,28 +415,6 @@ public abstract class SimpleValue implements KeyValue {
 	@Internal
 	public GeneratorCreator getCustomIdGeneratorCreator() {
 		return customIdGeneratorCreator;
-	}
-
-	@Deprecated(since = "7.0", forRemoval = true)
-	@Override @SuppressWarnings("removal")
-	public Generator createGenerator(Dialect dialect, RootClass rootClass) {
-		return createGenerator( dialect, rootClass, null, new GeneratorSettings() {
-			@Override
-			public String getDefaultCatalog() {
-				return null;
-			}
-
-			@Override
-			public String getDefaultSchema() {
-				return null;
-			}
-
-			@Override
-			public SqlStringGenerationContext getSqlStringGenerationContext() {
-				final var database = buildingContext.getMetadataCollector().getDatabase();
-				return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );
-			}
-		} );
 	}
 
 	@Override

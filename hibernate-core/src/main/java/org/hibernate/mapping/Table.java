@@ -322,12 +322,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return unmodifiableCollection( foreignKeys.values() );
 	}
 
-	/**
-	 * @deprecated because {@link ForeignKeyKey} should be private.
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	public Map<ForeignKeyKey, ForeignKey> getForeignKeys() {
-		return unmodifiableMap( foreignKeys );
+	public Collection<ForeignKey> getForeignKeys() {
+		return unmodifiableCollection( foreignKeys.values() );
 	}
 
 	public Map<String, UniqueKey> getUniqueKeys() {
@@ -576,11 +572,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	public void createForeignKeys(MetadataBuildingContext context) {
 	}
 
-	@Deprecated(since="7.0", forRemoval = true)
-	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition) {
-		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, null, null );
-	}
-
 	public ForeignKey createForeignKey(String keyName, List<Column> keyColumns, String referencedEntityName, String keyDefinition, String options) {
 		return createForeignKey( keyName, keyColumns, referencedEntityName, keyDefinition, options, null );
 	}
@@ -742,7 +733,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	@Internal
 	public void reorderColumns(List<Column> columns) {
-		assert this.columns.size() == columns.size() && this.columns.values().containsAll( columns );
+		assert this.columns.size() == columns.size()
+			&& this.columns.values().containsAll( columns );
 		this.columns.clear();
 		for ( var column : columns ) {
 			this.columns.put( column.getCanonicalName(), column );
@@ -757,20 +749,18 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		this.viewQuery = viewQuery;
 	}
 
-	@Deprecated(since = "7") // this class should be private!
-	public static class ForeignKeyKey implements Serializable {
-		private final String referencedClassName;
-		private final Column[] columns;
-		private final Column[] referencedColumns;
-
-		ForeignKeyKey(List<Column> columns, String referencedClassName, List<Column> referencedColumns) {
+	private record ForeignKeyKey(Column[] columns, String referencedClassName, Column[] referencedColumns)
+			implements Serializable {
+		private ForeignKeyKey {
 			Objects.requireNonNull( columns );
 			Objects.requireNonNull( referencedClassName );
-			this.referencedClassName = referencedClassName;
-			this.columns = columns.toArray( EMPTY_COLUMN_ARRAY );
-			this.referencedColumns = referencedColumns != null
-					? referencedColumns.toArray( EMPTY_COLUMN_ARRAY )
-					: EMPTY_COLUMN_ARRAY;
+		}
+		private ForeignKeyKey(List<Column> columns, String referencedClassName, List<Column> referencedColumns) {
+			this( columns.toArray( EMPTY_COLUMN_ARRAY ),
+					referencedClassName,
+					referencedColumns == null
+							? EMPTY_COLUMN_ARRAY
+							: referencedColumns.toArray( EMPTY_COLUMN_ARRAY ) );
 		}
 
 		public int hashCode() {
@@ -781,14 +771,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			return other instanceof ForeignKeyKey foreignKeyKey
 				&& Arrays.equals( foreignKeyKey.columns, columns )
 				&& Arrays.equals( foreignKeyKey.referencedColumns, referencedColumns );
-		}
-
-		@Override
-		public String toString() {
-			return "ForeignKeyKey{columns=" + Arrays.toString( columns ) +
-					", referencedClassName='" + referencedClassName +
-					"', referencedColumns=" + Arrays.toString( referencedColumns ) +
-					'}';
 		}
 	}
 

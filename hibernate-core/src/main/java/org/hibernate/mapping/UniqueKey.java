@@ -26,10 +26,6 @@ public class UniqueKey extends Constraint {
 		super( table );
 	}
 
-	@Deprecated(since = "7")
-	public UniqueKey() {
-	}
-
 	public void addColumn(Column column, String order) {
 		addColumn( column );
 		if ( isNotEmpty( order ) ) {

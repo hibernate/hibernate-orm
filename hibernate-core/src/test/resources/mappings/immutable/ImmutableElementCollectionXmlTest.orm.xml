@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <package>org.hibernate.orm.test.immutable.xml</package>
+
+    <entity class="ImmutableElementCollectionXmlTest$Author" access="PROPERTY">
+        <table name="IM_EC_AUTHOR"/>
+
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+
+            <basic name="name"/>
+
+            <element-collection name="aliases">
+                <mutable>false</mutable>
+                <column name="ALIAS_NAME"/>
+                <collection-table name="IM_EC_AUTHOR_ALIASES">
+                    <join-column name="AUTHOR_ID"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+
+</entity-mappings>

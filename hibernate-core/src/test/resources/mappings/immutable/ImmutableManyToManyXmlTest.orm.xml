@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <package>org.hibernate.orm.test.immutable.xml</package>
+
+    <entity class="ImmutableManyToManyXmlTest$Book" access="PROPERTY">
+        <table name="IM_MTM_BOOK"/>
+
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+
+            <basic name="title"/>
+
+            <many-to-many name="authors">
+                <mutable>false</mutable>
+                <join-table name="IM_MTM_BOOK_AUTHOR">
+                    <join-column name="BOOK_ID"/>
+                    <inverse-join-column name="AUTHOR_ID"/>
+                </join-table>
+            </many-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="ImmutableManyToManyXmlTest$BookAuthor" access="PROPERTY">
+        <table name="IM_MTM_AUTHOR"/>
+
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+
+            <basic name="name"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

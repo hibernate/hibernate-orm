@@ -42,6 +42,7 @@ dependencies {
     compileOnly libs.jakarta.jacc
     compileOnly libs.jakarta.validation
     compileOnly libs.jakarta.cdi
+    compileOnly libs.jakarta.data
     compileOnly libs.jakarta.jsonbApi
     compileOnly libs.jackson
     compileOnly libs.jacksonXml
@@ -61,6 +62,7 @@ dependencies {
     testImplementation libs.test.shrinkwrap
     testImplementation libs.test.shrinkwrapDescriptors
     testImplementation libs.jakarta.cdi
+    testImplementation libs.jakarta.data
     testImplementation libs.jakarta.jacc
     testImplementation libs.jakarta.validation
     testImplementation( libs.test.validator ) {
@@ -247,6 +249,10 @@ tasks.register('testJar', Jar) {
 
 artifacts {
     tests testJar
+}
+
+compileTestJava {
+    options.compilerArgs += [ "-AsuppressJakartaDataMetamodel=true" ]
 }
 
 tasks.register( "generateAnnotationClasses", JavaCompile ) {

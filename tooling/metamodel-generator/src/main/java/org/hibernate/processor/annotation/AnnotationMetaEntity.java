@@ -2482,6 +2482,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else if ( parameterType.startsWith( LIST + "<" + HIB_RESTRICTION ) ) {
 			return "restriction (should be 'List<Restriction<? super " + entityTypeName + ">>')";
 		}
+		else if ( parameterType.startsWith( JD_RESTRICTION ) ) {
+			return "restriction (should be 'Restriction<? super " + entityTypeName + ">')";
+		}
+		else if ( parameterType.startsWith( LIST + "<" + JD_RESTRICTION ) ) {
+			return "restriction (should be 'List<Restriction<? super " + entityTypeName + ">>')";
+		}
 		else if ( parameterType.startsWith( JD_SORT ) ) {
 			return "sort (should be 'Sort<? super " + entityTypeName + ">')";
 		}
@@ -2548,6 +2554,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						return null;
 					case HIB_ORDER:
 					case HIB_RESTRICTION:
+					case JD_RESTRICTION:
 					case JD_SORT:
 					case JD_ORDER:
 						for ( TypeMirror arg : type.getTypeArguments() ) {

@@ -23,14 +23,23 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 
 	private final Element element;
 	private final AnnotationMetaEntity parent;
-	private final String type;
+	private final String metaType;
+	private final String typeDeclaration;
+	private final @Nullable String classLiteralType;
 	private final @Nullable String path;
 
 	public DataAnnotationMetaAttribute(
-			AnnotationMetaEntity parent, Element element, String type, @Nullable String path) {
+			AnnotationMetaEntity parent,
+			Element element,
+			String metaType,
+			String typeDeclaration,
+			@Nullable String classLiteralType,
+			@Nullable String path) {
 		this.element = element;
 		this.parent = parent;
-		this.type = type;
+		this.metaType = metaType;
+		this.typeDeclaration = typeDeclaration;
+		this.classLiteralType = classLiteralType;
 		this.path = path;
 	}
 
@@ -44,35 +53,49 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 		return true;
 	}
 
-	private boolean isTextual() {
-		return STRING.equals(type);
-	}
-
 	@Override
 	public String getAttributeDeclarationString() {
 		final String className = parent.importType( parent.getQualifiedName() );
 		final String elementName = element.getSimpleName().toString();
 		final String memberName = path == null ? elementName : path + '.' + elementName;
-		final String impl = isTextual()
-				? parent.importType("jakarta.data.metamodel.impl.TextAttributeRecord")
-				: parent.importType("jakarta.data.metamodel.impl.SortableAttributeRecord");
+		final String importedMetaType = parent.importType( metaType );
 		return new StringBuilder()
 				.append("\n/**\n * Static metamodel for attribute {@link ")
 				.append(className)
 				.append("#")
 				.append(memberName)
 				.append( "}\n **/\n" )
-				.append( parent.importType( getMetaType() ) )
-				.append( "<" )
-				.append( className )
-				.append( "> " )
+				.append( importedMetaType )
+				.append( typeArguments( className ) )
+				.append( ' ' )
 				.append( getPropertyName().replace('.','_') )
-				.append(" = new ")
-				.append( impl )
-				.append( "<>(" )
+				.append(" = ")
+				.append( importedMetaType )
+				.append( ".of(" )
+				.append( className )
+				.append( ".class, " )
 				.append( fieldName() )
+				.append( classLiteralArgument() )
 				.append( ");" )
 				.toString();
+	}
+
+	private String typeArguments(String className) {
+		return switch ( metaType ) {
+			case
+				"jakarta.data.metamodel.TextAttribute",
+				"jakarta.data.metamodel.BooleanAttribute",
+				"jakarta.data.metamodel.SortableAttribute"
+					-> "<" + className + ">";
+			default
+					-> "<" + className + ", " + parent.importType( typeDeclaration ) + ">";
+		};
+	}
+
+	private String classLiteralArgument() {
+		return classLiteralType == null
+				? ""
+				: ", " + parent.importType( classLiteralType ) + ".class";
 	}
 
 	@Override
@@ -110,14 +133,12 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getMetaType() {
-		return isTextual()
-				? "jakarta.data.metamodel.TextAttribute"
-				: "jakarta.data.metamodel.SortableAttribute";
+		return metaType;
 	}
 
 	@Override
 	public String getTypeDeclaration() {
-		return type;
+		return typeDeclaration;
 	}
 
 	@Override
@@ -125,7 +146,9 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 		return new StringBuilder()
 				.append( "DataAnnotationMetaAttribute" )
 				.append( "{element=" ).append( element )
-				.append( ", type='" ).append( type ).append( '\'' )
+				.append( ", metaType='" ).append( metaType ).append( '\'' )
+				.append( ", typeDeclaration='" ).append( typeDeclaration ).append( '\'' )
+				.append( ", classLiteralType='" ).append( classLiteralType ).append( '\'' )
 				.append( '}' ).toString();
 	}
 }

@@ -40,6 +40,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -82,6 +83,7 @@ import static org.hibernate.grammars.hql.HqlLexer.GROUP;
 import static org.hibernate.grammars.hql.HqlLexer.HAVING;
 import static org.hibernate.grammars.hql.HqlLexer.LEFT_PAREN;
 import static org.hibernate.grammars.hql.HqlLexer.ORDER;
+import static org.hibernate.grammars.hql.HqlLexer.SELECT;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -1808,6 +1810,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addQueryMethod(ExecutableElement method) {
+		validateFirst( method );
+		validateSelectUse( method );
 		final TypeMirror returnType = memberMethodType( method ).getReturnType();
 		final TypeKind kind = returnType.getKind();
 		if ( kind == TypeKind.VOID || kind == TypeKind.ARRAY || kind.isPrimitive() ) {
@@ -1935,6 +1939,51 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					.anyMatch( param -> typeNameEquals( param.asType(), JD_ORDER )
 										|| typeNameEquals( param.asType(), JD_SORT )
 										|| typeNameEqualsArray( param.asType(), JD_SORT ) );
+	}
+
+	private void validateFirst(ExecutableElement method) {
+		final AnnotationMirror first = getAnnotationMirror( method, JD_FIRST );
+		if ( first == null ) {
+			return;
+		}
+		if ( !hasAnnotation( method, JD_FIND, JD_QUERY ) ) {
+			message( method, first,
+					"'@First' may only be used on Jakarta Data '@Find' or '@Query' methods",
+					Diagnostic.Kind.ERROR );
+		}
+		final AnnotationValue value = getAnnotationValue( first );
+		if ( value != null && value.getValue() instanceof Integer limit && limit <= 0 ) {
+			message( method, first, value,
+					"'@First' value must be greater than 0",
+					Diagnostic.Kind.ERROR );
+		}
+		for ( VariableElement parameter : method.getParameters() ) {
+			final TypeMirror parameterType = parameter.asType();
+			if ( typeNameEquals( parameterType, JD_PAGE_REQUEST ) || typeNameEquals( parameterType, JD_LIMIT ) ) {
+				message( parameter,
+						"'@First' may not be combined with a parameter of type '"
+						+ ((TypeElement) ((DeclaredType) parameterType).asElement()).getQualifiedName() + "'",
+						Diagnostic.Kind.ERROR );
+			}
+		}
+	}
+
+	private void validateSelectUse(ExecutableElement method) {
+		if ( hasSelectAnnotation( method )
+				&& !hasAnnotation( method, JD_FIND, JD_QUERY ) ) {
+			final AnnotationMirror select = getAnnotationMirror( method, JD_SELECT );
+			final AnnotationMirror mirror = select == null ? getAnnotationMirror( method, JD_SELECT_LIST ) : select;
+			if ( mirror == null ) {
+				message( method,
+						"'@Select' may only be used on Jakarta Data '@Find' or '@Query' methods",
+						Diagnostic.Kind.ERROR );
+			}
+			else {
+				message( method, mirror,
+						"'@Select' may only be used on Jakarta Data '@Find' or '@Query' methods",
+						Diagnostic.Kind.ERROR );
+			}
+		}
 	}
 
 	private static TypeMirror ununi(TypeMirror returnType) {
@@ -2239,79 +2288,447 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else if ( returnType.getKind() == TypeKind.ARRAY ) {
 			final ArrayType arrayType = (ArrayType) returnType;
 			final TypeMirror componentType = arrayType.getComponentType();
-			if ( componentType.getKind() != TypeKind.DECLARED ) {
+			if ( componentType.getKind() == TypeKind.DECLARED
+					&& containsAnnotation( ((DeclaredType) componentType).asElement(), ENTITY ) ) {
+				final DeclaredType declaredType = (DeclaredType) componentType;
+				final TypeElement entity = (TypeElement) declaredType.asElement();
+				// multiple results, it has to be a criteria finder
+				createCriteriaFinder( method, arrayType.getComponentType(), "[]", entity, null );
+			}
+			else if ( componentType.getKind().isPrimitive() ) {
 				message( method,
-						"incorrect return type '" + returnType + "' is not an array with entity elements",
+						"incorrect return type '" + returnType + "': arrays of selected attribute values must have reference-type elements",
 						Diagnostic.Kind.ERROR );
 			}
 			else {
-				final DeclaredType declaredType = (DeclaredType) componentType;
-				final TypeElement entity = (TypeElement) declaredType.asElement();
-				if ( !containsAnnotation( entity, ENTITY ) ) {
-					message( method,
-							"incorrect return type '" + returnType + "' is not annotated '@Entity'",
-							Diagnostic.Kind.ERROR );
-				}
-				else {
-					// multiple results, it has to be a criteria finder
-					createCriteriaFinder( method, arrayType.getComponentType(), "[]", entity );
+				final TypeElement entity = finderEntityType( method );
+				if ( entity != null ) {
+					final ResultSelection selection = resultSelection( method, componentType, entity, false );
+					if ( selection != null ) {
+						createCriteriaFinder( method, componentType, "[]", entity, selection );
+					}
 				}
 			}
 		}
-		else if ( returnType.getKind() == TypeKind.DECLARED ) {
+		else if ( returnType.getKind() == TypeKind.DECLARED
+				&& containsAnnotation( ((DeclaredType) returnType).asElement(), ENTITY ) ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement entity = (TypeElement) declaredType.asElement();
-			if ( !containsAnnotation( entity, ENTITY ) ) {
+			if ( hasSelectAnnotation( method ) ) {
 				message( method,
-						"incorrect return type '" + declaredType + "' is not annotated '@Entity'",
+						"'@Select' may not be used on a '@Find' method that returns entity type '" + declaredType + "'",
 						Diagnostic.Kind.ERROR );
 			}
+			else if ( containerType != null
+				&& !containerType.getQualifiedName().contentEquals( OPTIONAL ) ) {
+				// multiple results, so it has to be a criteria finder
+				createCriteriaFinder( method, declaredType, containerType.toString(), entity, null );
+			}
 			else {
-				if ( containerType != null
-					&& !containerType.getQualifiedName().contentEquals( OPTIONAL ) ) {
-					// multiple results, so it has to be a criteria finder
-					createCriteriaFinder( method, declaredType, containerType.toString(), entity );
+				for ( VariableElement parameter : method.getParameters() ) {
+					final String type = parameter.asType().toString();
+					if ( isPageParam( type ) ) {
+						message( parameter, "pagination would have no effect", Diagnostic.Kind.ERROR );
+					}
+					else if ( isOrderParam( type ) ) {
+						message( parameter, "ordering would have no effect", Diagnostic.Kind.ERROR );
+					}
 				}
-				else {
-					for ( VariableElement parameter : method.getParameters() ) {
-						final String type = parameter.asType().toString();
-						if ( isPageParam( type ) ) {
-							message( parameter, "pagination would have no effect", Diagnostic.Kind.ERROR );
-						}
-						else if ( isOrderParam( type ) ) {
-							message( parameter, "ordering would have no effect", Diagnostic.Kind.ERROR );
-						}
-					}
-					final String containerTypeName = containerType == null ? null : OPTIONAL;
-					final long parameterCount =
-							method.getParameters().stream()
-									.filter( AnnotationMetaEntity::isFinderParameterMappingToAttribute )
-									.count();
-					switch ( (int) parameterCount ) {
-						case 0:
-							message( method, "missing parameter", Diagnostic.Kind.ERROR );
-							break;
-						case 1:
-							createSingleParameterFinder( method, declaredType, entity, containerTypeName );
-							break;
-						default:
-							createMultipleParameterFinder( method, declaredType, entity, containerTypeName );
-					}
+				final String containerTypeName = containerType == null ? null : OPTIONAL;
+				final long parameterCount =
+						method.getParameters().stream()
+								.filter( AnnotationMetaEntity::isFinderParameterMappingToAttribute )
+								.count();
+				switch ( (int) parameterCount ) {
+					case 0:
+						message( method, "missing parameter", Diagnostic.Kind.ERROR );
+						break;
+					case 1:
+						createSingleParameterFinder( method, declaredType, entity, containerTypeName );
+						break;
+					default:
+						createMultipleParameterFinder( method, declaredType, entity, containerTypeName );
 				}
 			}
 		}
 		else {
-			message( method,
-					"incorrect return type '" + returnType + "' is not an entity type",
-					Diagnostic.Kind.ERROR );
+			final TypeElement entity = finderEntityType( method );
+			if ( entity != null ) {
+				final ResultSelection selection = resultSelection( method, returnType, entity, false );
+				if ( selection != null ) {
+					if ( containerType != null && containerType.getQualifiedName().contentEquals( JD_CURSORED_PAGE ) ) {
+						message( method,
+								"'@Find' methods returning 'CursoredPage' must return an entity type, not a selected attribute or record projection",
+								Diagnostic.Kind.ERROR );
+					}
+					else {
+						createCriteriaFinder(
+								method,
+								returnType,
+								containerType == null ? null : containerType.getQualifiedName().toString(),
+								entity,
+								selection
+						);
+					}
+				}
+			}
 		}
+	}
+
+	private @Nullable TypeElement finderEntityType(ExecutableElement method) {
+		final TypeElement explicitEntity = explicitFindEntityType( method );
+		if ( explicitEntity != null ) {
+			return explicitEntity;
+		}
+		if ( primaryEntity != null ) {
+			return primaryEntity;
+		}
+		message( method,
+				"repository method returns a projection, so '@Find' must specify an entity type",
+				Diagnostic.Kind.ERROR );
+		return null;
+	}
+
+	private @Nullable TypeElement explicitFindEntityType(ExecutableElement method) {
+		final AnnotationMirror find = getAnnotationMirror( method, JD_FIND );
+		if ( find == null ) {
+			return null;
+		}
+		final TypeMirror value = annotationClassTypeOrNull( find, "value" );
+		if ( value == null || isVoidType( value ) ) {
+			return null;
+		}
+		if ( value.getKind() == TypeKind.DECLARED ) {
+			final TypeElement typeElement = (TypeElement) ((DeclaredType) value).asElement();
+			if ( containsAnnotation( typeElement, ENTITY ) ) {
+				return typeElement;
+			}
+		}
+		message( method, find,
+				"'@Find' entity type '" + value + "' is not annotated '@Entity'",
+				Diagnostic.Kind.ERROR );
+		return null;
+	}
+
+	private boolean hasSelectAnnotation(Element element) {
+		return !selectAnnotations( element ).isEmpty();
+	}
+
+	private @Nullable ResultSelection resultSelection(
+			ExecutableElement method,
+			TypeMirror resultType,
+			TypeElement entity,
+			boolean queryMethod) {
+		final List<SelectAnnotation> selects = selectAnnotations( method );
+		if ( resultType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) resultType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			if ( typeElement.getKind() == ElementKind.RECORD ) {
+				return recordSelection( method, declaredType, typeElement, entity, selects );
+			}
+		}
+		return scalarSelection( method, resultType, entity, selects, queryMethod );
+	}
+
+	private @Nullable ResultSelection scalarSelection(
+			ExecutableElement method,
+			TypeMirror resultType,
+			TypeElement entity,
+			List<SelectAnnotation> selects,
+			boolean queryMethod) {
+		if ( selects.isEmpty() ) {
+			message( method,
+					"incorrect return type '" + resultType + "' is not an entity type"
+					+ (queryMethod ? "" : "; add '@Select(\"attributeName\")' to select an entity attribute"),
+					Diagnostic.Kind.ERROR );
+			return null;
+		}
+		if ( selects.size() != 1 ) {
+			message( method,
+					"multiple '@Select' annotations require a record return type",
+					Diagnostic.Kind.ERROR );
+			return null;
+		}
+		final SelectAnnotation select = selects.get( 0 );
+		final SelectedAttribute selectedAttribute = selectedAttribute( method, select, entity );
+		if ( selectedAttribute == null ) {
+			return null;
+		}
+		if ( !sameSelectedType( resultType, selectedAttribute.type() ) ) {
+			messageSelect( method, select,
+					"selected attribute '" + select.path() + "' of entity '" + entity.getQualifiedName()
+					+ "' has type '" + stripAnnotations( typeAsString( selectedAttribute.type() ) )
+					+ "', which does not match method return type '"
+					+ stripAnnotations( typeAsString( resultType ) ) + "'" );
+			return null;
+		}
+		return new ResultSelection( selectionResultTypeName( resultType ), List.of( selectedAttribute.path() ), false );
+	}
+
+	private @Nullable ResultSelection recordSelection(
+			ExecutableElement method,
+			DeclaredType resultType,
+			TypeElement recordType,
+			TypeElement entity,
+			List<SelectAnnotation> methodSelects) {
+		if ( !resultType.getTypeArguments().isEmpty() ) {
+			message( method,
+					"record projection type '" + resultType + "' may not be generic",
+					Diagnostic.Kind.ERROR );
+			return null;
+		}
+		final List<? extends RecordComponentElement> components = recordType.getRecordComponents();
+		if ( methodSelects.size() > 0 && methodSelects.size() != components.size() ) {
+			message( method,
+					"'@Select' count (" + methodSelects.size() + ") does not match record component count ("
+					+ components.size() + ") of '" + recordType.getQualifiedName() + "'",
+					Diagnostic.Kind.ERROR );
+			return null;
+		}
+		final List<String> paths = new ArrayList<>();
+		for ( int i = 0; i < components.size(); i++ ) {
+			final RecordComponentElement component = components.get( i );
+			final SelectAnnotation select =
+					methodSelects.isEmpty()
+							? componentSelect( component )
+							: methodSelects.get( i );
+			final SelectedAttribute selectedAttribute = selectedAttribute( method, select, entity );
+			if ( selectedAttribute == null ) {
+				return null;
+			}
+			if ( !sameSelectedType( component.asType(), selectedAttribute.type() ) ) {
+				messageSelect( method, select,
+						"selected attribute '" + select.path() + "' of entity '" + entity.getQualifiedName()
+						+ "' has type '" + stripAnnotations( typeAsString( selectedAttribute.type() ) )
+						+ "', which does not match record component '" + component.getSimpleName()
+						+ "' of type '" + stripAnnotations( typeAsString( component.asType() ) ) + "'" );
+				return null;
+			}
+			paths.add( selectedAttribute.path() );
+		}
+		return new ResultSelection( returnTypeClass( resultType ), paths, true );
+	}
+
+	private SelectAnnotation componentSelect(RecordComponentElement component) {
+		final List<SelectAnnotation> selects = selectAnnotations( component );
+		return selects.isEmpty()
+				? new SelectAnnotation( null, null, component.getSimpleName().toString() )
+				: selects.get( 0 );
+	}
+
+	private @Nullable SelectedAttribute selectedAttribute(
+			ExecutableElement method,
+			SelectAnnotation select,
+			TypeElement entity) {
+		if ( select.path().isBlank() ) {
+			messageSelect( method, select, "'@Select' value must not be empty" );
+			return null;
+		}
+		final String path = normalizeSelectionPath( select.path(), entity );
+		final Element member = memberMatchingPath( entity, path );
+		if ( member == null ) {
+			messageSelect( method, select,
+					"no matching field named '" + select.path()
+					+ "' in entity class '" + entity.getQualifiedName() + "'" );
+			return null;
+		}
+		final TypeMirror type = selectableAttributeType( entity, member );
+		if ( !isBasicSelection( member, type ) ) {
+			messageSelect( method, select,
+					"selected attribute '" + select.path() + "' of entity '" + entity.getQualifiedName()
+					+ "' is not a single-valued basic attribute" );
+			return null;
+		}
+		return new SelectedAttribute( path, type );
+	}
+
+	private void messageSelect(ExecutableElement method, SelectAnnotation select, String text) {
+		if ( select.mirror() == null ) {
+			message( method, text, Diagnostic.Kind.ERROR );
+		}
+		else if ( select.value() == null ) {
+			message( method, select.mirror(), text, Diagnostic.Kind.ERROR );
+		}
+		else {
+			message( method, select.mirror(), select.value(), text, Diagnostic.Kind.ERROR );
+		}
+	}
+
+	private String normalizeSelectionPath(String path, TypeElement entity) {
+		return isIdRef( path )
+				? idAttributeName( entity )
+				: path.replace( '$', '.' );
+	}
+
+	private static String idAttributeName(TypeElement entity) {
+		return entity.getEnclosedElements().stream()
+				.filter( member -> hasAnnotation( member, ID ) )
+				.map( TypeUtils::propertyName )
+				.findFirst()
+				.orElse( ID_ROLE_NAME );
+	}
+
+	private TypeMirror selectableAttributeType(TypeElement entity, Element member) {
+		final TypeMirror memberType = memberType( member );
+		return requireNonNullElse(
+				resolveTypeMirror(
+						entity,
+						member.getEnclosingElement(),
+						memberType.toString()
+				), memberType
+		);
+	}
+
+	private boolean isBasicSelection(Element member, TypeMirror type) {
+		if ( isPluralAttribute( member )
+				|| type.getKind() == TypeKind.ARRAY
+				|| containsAnnotation( member, EMBEDDED, ELEMENT_COLLECTION,
+						ONE_TO_ONE, ONE_TO_MANY, MANY_TO_ONE, MANY_TO_MANY, MANY_TO_ANY ) ) {
+			return false;
+		}
+		if ( type.getKind() == TypeKind.DECLARED ) {
+			final Element typeElement = ((DeclaredType) type).asElement();
+			return !containsAnnotation( typeElement, ENTITY, EMBEDDABLE );
+		}
+		return true;
+	}
+
+	private boolean sameSelectedType(TypeMirror targetType, TypeMirror selectedType) {
+		final Types types = context.getTypeUtils();
+		return types.isSameType( boxedType( targetType ), boxedType( selectedType ) );
+	}
+
+	private String selectionResultTypeName(TypeMirror resultType) {
+		return returnTypeClass( boxedType( resultType ) );
+	}
+
+	private List<SelectAnnotation> selectAnnotations(Element element) {
+		final List<SelectAnnotation> result = new ArrayList<>();
+		for ( AnnotationMirror annotationMirror : element.getAnnotationMirrors() ) {
+			if ( annotationTypeMatches( annotationMirror, JD_SELECT ) ) {
+				result.add( selectAnnotation( annotationMirror ) );
+			}
+			else if ( annotationTypeMatches( annotationMirror, JD_SELECT_LIST ) ) {
+				final AnnotationValue value = getAnnotationValue( annotationMirror );
+				if ( value != null ) {
+					@SuppressWarnings("unchecked")
+					final List<? extends AnnotationValue> annotationValues =
+							(List<? extends AnnotationValue>) value.getValue();
+					for ( AnnotationValue annotationValue : annotationValues ) {
+						result.add( selectAnnotation( (AnnotationMirror) annotationValue.getValue() ) );
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	private SelectAnnotation selectAnnotation(AnnotationMirror annotationMirror) {
+		final AnnotationValue value = getAnnotationValue( annotationMirror );
+		if ( value == null ) {
+			return new SelectAnnotation( annotationMirror, null, "" );
+		}
+		final String path = value.getValue().toString();
+		if ( path.contains( "<error>" ) ) {
+			throw new ProcessLaterException();
+		}
+		return new SelectAnnotation( annotationMirror, value, path );
+	}
+
+	private record SelectAnnotation(
+			@Nullable AnnotationMirror mirror,
+			@Nullable AnnotationValue value,
+			String path) {
+	}
+
+	private record SelectedAttribute(String path, TypeMirror type) {
+	}
+
+	private @Nullable ResultSelection querySelection(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			AnnotationMirror query,
+			String queryString) {
+		final boolean explicitMethodSelect = hasSelectAnnotation( method );
+		if ( returnType == null ) {
+			if ( explicitMethodSelect ) {
+				message( method, query,
+						"'@Select' requires a concrete query result type",
+						Diagnostic.Kind.ERROR );
+			}
+			return null;
+		}
+		if ( isInsertUpdateDelete( queryString ) ) {
+			if ( explicitMethodSelect ) {
+				message( method, query,
+						"'@Select' may not be used on a mutation query",
+						Diagnostic.Kind.ERROR );
+			}
+			return null;
+		}
+		final boolean recordReturn = returnType.getKind() == TypeKind.DECLARED
+				&& ((TypeElement) ((DeclaredType) returnType).asElement()).getKind() == ElementKind.RECORD;
+		if ( !explicitMethodSelect && !recordReturn ) {
+			return null;
+		}
+		if ( returnType.getKind() == TypeKind.DECLARED
+				&& containsAnnotation( ((DeclaredType) returnType).asElement(), ENTITY ) ) {
+			if ( explicitMethodSelect ) {
+				message( method, query,
+						"'@Select' may not be used on a '@Query' method that returns entity type '" + returnType + "'",
+						Diagnostic.Kind.ERROR );
+			}
+			return null;
+		}
+		if ( hasSelectClause( queryString ) ) {
+			if ( explicitMethodSelect || recordHasSelectAnnotation( returnType ) ) {
+				message( method, query,
+						"'@Select' may only be used on a '@Query' method with no explicit SELECT clause",
+						Diagnostic.Kind.ERROR );
+			}
+			return null;
+		}
+		if ( primaryEntity == null ) {
+			message( method, query,
+					"repository method returns a projection, so the repository must have a well-defined primary entity type",
+					Diagnostic.Kind.ERROR );
+			return null;
+		}
+		return resultSelection( method, returnType, primaryEntity, true );
+	}
+
+	private boolean recordHasSelectAnnotation(TypeMirror returnType) {
+		if ( returnType.getKind() != TypeKind.DECLARED ) {
+			return false;
+		}
+		final TypeElement typeElement = (TypeElement) ((DeclaredType) returnType).asElement();
+		return typeElement.getKind() == ElementKind.RECORD
+			&& typeElement.getRecordComponents().stream().anyMatch( this::hasSelectAnnotation );
+	}
+
+	private static String addSelectClause(String queryString, ResultSelection selection) {
+		return "select " + String.join( ", ", selection.paths() ) + " " + queryString;
+	}
+
+	private static boolean hasSelectClause(String hql) {
+		final var hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
+		for ( final var token : hqlLexer.getAllTokens() ) {
+			if ( token.getChannel() == DEFAULT_CHANNEL ) {
+				return token.getType() == SELECT;
+			}
+		}
+		return false;
 	}
 
 	/**
 	 * Create a finder method which returns multiple results.
 	 */
 	private void createCriteriaFinder(
-			ExecutableElement method, TypeMirror returnType, @Nullable String containerType, TypeElement entity) {
+			ExecutableElement method,
+			TypeMirror returnType,
+			@Nullable String containerType,
+			TypeElement entity,
+			@Nullable ResultSelection selection) {
 		final String methodName = method.getSimpleName().toString();
 		final List<String> paramNames = parameterNames( method, entity );
 		final List<String> paramTypes = parameterTypes( method );
@@ -2333,7 +2750,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				new CriteriaFinderMethod(
 						this, method,
 						methodName,
-						typeAsString( returnType, false ),
+						entity.getQualifiedName().toString(),
+						selection,
 						containerType,
 						paramNames,
 						paramTypes,
@@ -2688,6 +3106,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							this, method,
 							methodName,
 							typeAsString( returnType, false ),
+							null,
 							containerType,
 							paramNames,
 							paramTypes,
@@ -2794,6 +3213,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									this, method,
 									methodName,
 									typeAsString( returnType, false ),
+									null,
 									containerType,
 									paramNames,
 									paramTypes,
@@ -3358,16 +3778,35 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						? emptyList()
 						: orderByList( method, (TypeElement) resultType.asElement() );
 
+		final ResultSelection querySelection =
+				!isNative && annotationTypeMatches( mirror, JD_QUERY )
+						? querySelection( method, returnType, mirror, queryString )
+						: null;
+		final String selectedQueryString =
+				querySelection == null ? queryString : addSelectClause( queryString, querySelection );
 		final String processedQuery;
 		if ( isNative ) {
-			processedQuery = queryString;
+			processedQuery = selectedQueryString;
 			validateSql( method, mirror, processedQuery, paramNames, value );
 		}
 		else {
-			processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName( resultType ) );
+			processedQuery = addFromClauseIfNecessary( selectedQueryString, implicitEntityName( resultType ) );
 			validateHql( method, returnType, mirror, value, processedQuery, paramNames, paramTypes );
 		}
 		final boolean mutation = isInsertUpdateDelete( queryString );
+		if ( mutation && hasAnnotation( method, JD_FIRST ) ) {
+			final AnnotationMirror first = getAnnotationMirror( method, JD_FIRST );
+			if ( first == null ) {
+				message( method,
+						"'@First' may not be used on a mutation query",
+						Diagnostic.Kind.ERROR );
+			}
+			else {
+				message( method, first,
+						"'@First' may not be used on a mutation query",
+						Diagnostic.Kind.ERROR );
+			}
+		}
 		final String resultSetMapping =
 				isNative && !mutation && !isReactive()
 						? nativeResultSetMapping( method, returnType, containerTypeName )

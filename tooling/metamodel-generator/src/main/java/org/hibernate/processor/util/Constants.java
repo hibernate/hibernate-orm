@@ -86,6 +86,9 @@ public final class Constants {
 	public static final String JD_UPDATE = "jakarta.data.repository.Update";
 	public static final String JD_DELETE = "jakarta.data.repository.Delete";
 	public static final String JD_SAVE = "jakarta.data.repository.Save";
+	public static final String JD_SELECT = "jakarta.data.repository.Select";
+	public static final String JD_SELECT_LIST = "jakarta.data.repository.Select.List";
+	public static final String JD_FIRST = "jakarta.data.repository.First";
 	public static final String JD_LIMIT = "jakarta.data.Limit";
 	public static final String JD_SORT = "jakarta.data.Sort";
 	public static final String JD_ORDER = "jakarta.data.Order";

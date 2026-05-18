@@ -30,7 +30,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
 			String fullReturnType) {
-		super( annotationMetaEntity, method, methodName, entity, null, belongsToDao, sessionType,
+		super( annotationMetaEntity, method, methodName, entity, null, null, belongsToDao, sessionType,
 				sessionName, emptyList(), paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository,
 				parameterConstraints, fullReturnType, false );
 		this.paramNullability = paramNullability;

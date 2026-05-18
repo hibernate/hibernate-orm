@@ -7,6 +7,8 @@ package org.hibernate.processor.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.List;
@@ -25,6 +27,7 @@ import static org.hibernate.processor.util.Constants.HIB_RESTRICTION;
 import static org.hibernate.processor.util.Constants.HIB_SELECTION_QUERY;
 import static org.hibernate.processor.util.Constants.HIB_SORT_DIRECTION;
 import static org.hibernate.processor.util.Constants.JD_CURSORED_PAGE;
+import static org.hibernate.processor.util.Constants.JD_FIRST;
 import static org.hibernate.processor.util.Constants.JD_LIMIT;
 import static org.hibernate.processor.util.Constants.JD_ORDER;
 import static org.hibernate.processor.util.Constants.JD_PAGE;
@@ -39,6 +42,8 @@ import static org.hibernate.processor.util.Constants.SESSION_TYPES;
 import static org.hibernate.processor.util.Constants.STREAM;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY;
 import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
+import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
+import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
@@ -134,6 +139,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	boolean hasOrder() {
 		return paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam)
 			|| !orderBys.isEmpty();
+	}
+
+	@Nullable String orderingTypeName() {
+		return returnTypeName;
 	}
 
 	String strip(final String fullType) {
@@ -554,6 +563,17 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				.append("_select\n");
 	}
 
+	void setFirstResultLimit(StringBuilder declaration) {
+		final AnnotationMirror first = getAnnotationMirror( method, JD_FIRST );
+		if ( first != null ) {
+			final AnnotationValue value = getAnnotationValue( first );
+			declaration
+					.append("\t\t\t.setMaxResults(")
+					.append(value == null ? 1 : value.getValue())
+					.append(")\n");
+		}
+	}
+
 	private void totalResults(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append("\tlong _totalResults = \n\t\t\t\t");
@@ -577,7 +597,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	void collectOrdering(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
 		if ( hasOrdering(paramTypes) ) {
-			if ( returnTypeName != null ) {
+			final String orderingTypeName = orderingTypeName();
+			if ( orderingTypeName != null ) {
 				final boolean cursoredPage = isJakartaCursoredPage( containerType );
 				final String add;
 				if ( cursoredPage ) {
@@ -588,7 +609,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 							.append("<")
 							.append(annotationMetaEntity.importType(HIB_ORDER))
 							.append("<? super ")
-							.append(annotationMetaEntity.importType(returnTypeName))
+							.append(annotationMetaEntity.importType(orderingTypeName))
 							.append(">>();\n");
 					add = "_orders.add";
 				}
@@ -605,7 +626,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 							.append('(')
 							.append(annotationMetaEntity.staticImport(HIB_ORDER, orderBy.descending  ? "desc" : "asc"))
 							.append('(')
-							.append(annotationMetaEntity.importType(returnTypeName))
+							.append(annotationMetaEntity.importType(orderingTypeName))
 							.append(".class, \"")
 							.append(orderBy.fieldName)
 							.append("\")");
@@ -667,7 +688,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append('(')
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
-								.append(annotationMetaEntity.importType(returnTypeName))
+								.append(annotationMetaEntity.importType(orderingTypeName))
 								.append(".class, _sort.property())")
 								.append("\n\t\t\t\t\t")
 								.append(".reversedIf(_sort.isDescending())")
@@ -687,7 +708,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append('(')
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
-								.append(annotationMetaEntity.importType(returnTypeName))
+								.append(annotationMetaEntity.importType(orderingTypeName))
 								.append(".class, _sort.property())")
 								.append("\n\t\t\t\t\t")
 								.append(".reversedIf(_sort.isDescending())")
@@ -703,7 +724,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append('(')
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
-								.append(annotationMetaEntity.importType(returnTypeName))
+								.append(annotationMetaEntity.importType(orderingTypeName))
 								.append(".class, ")
 								.append(name)
 								.append(".property())")

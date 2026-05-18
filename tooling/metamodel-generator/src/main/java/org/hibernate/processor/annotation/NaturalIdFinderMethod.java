@@ -34,7 +34,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
 			String fullReturnType) {
-		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+		super( annotationMetaEntity, method, methodName, entity, entity, containerType, belongsToDao, sessionType, sessionName,
 				fetchProfiles, paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType,
 				true );
 		this.paramNullability = paramNullability;

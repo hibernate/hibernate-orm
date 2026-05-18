@@ -21,11 +21,13 @@ import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	private final List<ParameterConstraint> parameterConstraints;
+	private final @Nullable ResultSelection selection;
 
 	public AbstractCriteriaMethod(
 			AnnotationMetaEntity annotationMetaEntity,
 			ExecutableElement method,
 			String methodName, String entity,
+			@Nullable ResultSelection selection,
 			@Nullable String containerType,
 			boolean belongsToDao,
 			String sessionType, String sessionName,
@@ -38,10 +40,12 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			List<ParameterConstraint> parameterConstraints,
 			String fullReturnType,
 			boolean nullable) {
-		super(annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+		super(annotationMetaEntity, method, methodName, entity, selection == null ? entity : selection.resultTypeName(),
+				containerType, belongsToDao, sessionType, sessionName,
 				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, convertToDataExceptions,
 				fullReturnType, nullable);
 		this.parameterConstraints = parameterConstraints;
+		this.selection = selection;
 	}
 
 	@Override
@@ -130,15 +134,49 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	void createCriteriaQuery(StringBuilder declaration) {
 		final String entityClass = annotationMetaEntity.importType(entity);
+		final String resultClass =
+				annotationMetaEntity.importType(selection == null ? entity : selection.resultTypeName());
 		declaration
 				.append("\tvar _query = _builder.")
 				.append(createCriteriaMethod())
 				.append('(')
-				.append(entityClass)
+				.append(resultClass)
 				.append(".class);\n")
 				.append("\tvar _entity = _query.from(")
 				.append(entityClass)
 				.append(".class);\n");
+		if ( selection != null ) {
+			select( declaration, selection );
+		}
+	}
+
+	private void select(StringBuilder declaration, ResultSelection selection) {
+		declaration
+				.append("\t_query.select(");
+		if ( selection.recordProjection() ) {
+			declaration
+					.append("_builder.construct(")
+					.append(annotationMetaEntity.importType(selection.resultTypeName()))
+					.append(".class");
+			for ( String path : selection.paths() ) {
+				declaration
+						.append(", ");
+				selectionExpression( declaration, path );
+			}
+			declaration
+					.append(")");
+		}
+		else {
+			selectionExpression( declaration, selection.paths().get( 0 ) );
+		}
+		declaration
+				.append(");\n");
+	}
+
+	private void selectionExpression(StringBuilder declaration, String path) {
+		declaration
+				.append("_entity");
+		path( declaration, path );
 	}
 
 	private void createBuilder(StringBuilder declaration) {

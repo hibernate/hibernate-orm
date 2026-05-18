@@ -135,6 +135,40 @@ The API for `ProcedureCall` and `ProcedureOutputs` has been redesigned for a num
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
+
+[[graph-flushing-spi]]
+=== Graph-based Flushing
+
+Many changes were needed across various SPIs to accommodate the new Graph-based `ActionQueue`, focused around the new
+`org.hibernate.action.queue.spi` package which primarily defines -
+
+* `ActionQueue`
+* `ActionQueueFactory`
+* `QueueType`
+* `PlanningOptions`
+* graph planning/bind/decompose/meta/plan contracts
+
+Main SPI touch points include -
+
+* `SessionFactoryImplementor#getActionQueueFactory()` exposes the configured queue factory
+* `org.hibernate.engine.spi.ActionQueue` was renamed to `ActionQueueLegacy` implementing the new `org.hibernate.action.queue.spi.ActionQueue` interface
+* session/event access now points at `org.hibernate.action.queue.spi.ActionQueue`
+* Collection SPI additions for graph decomposition
+    - `PersistentCollection#getRemovedEntities`
+    - `#getAddedEntities`
+    - `#getChangeSet`
+    - `CollectionChangeSet`
+    - `SnapshotIndexed`
+* Persister/state-management SPI hooks for graph decomposition
+* Split `org.hibernate.sql.model.MutationTarget` into `GraphMutationTarget` and `LegacyMutationTarget`
+* `StateManagement` support for graph-aware collection/entity state changes
+* `Batch` split
+    - `Batch` narrowed to lifecycle only
+    - `GroupedBatch` (extends `Batch`) supports legacy "grouped statement" execution
+    - `SingleStatementBatch`, `StatementBinder`, and `BatchedResultChecker` support single statement batching (graph)
+
+
+
 === Classmate removal
 
 The dependency on Classmate was removed, which had a minor impact on certain SPIs.
@@ -168,7 +202,7 @@ address this conflict, we've renamed the `NamedSqmQueryMemento` method to
 Jakarta Persistence clarifies that scanning is the responsibility of the
 container, rather than the provider.  To that effect, the scanning SPI, and
 related ArchiveDescriptor SPI, have been rewritten.  During "EE bootstrap",
-Hibernate no longer performs scanning.  Instead the `jakarta.persistence.spi.PersistenceUnitInfo`
+Hibernate no longer performs scanning.  Instead, the `jakarta.persistence.spi.PersistenceUnitInfo`
 has been augmented to make it clear that the container passes in any classes
 discovered during scanning.
 
@@ -187,6 +221,18 @@ bootstrapping and supply the root and/or non-root URLs.
 == Changes in Behavior
 
 This section describes changes in behavior that applications should be aware of.
+
+
+[[graph-flushing-behavior]]
+=== Graph-based Flushing
+
+As described in link:{whatsNewBase}#graph-flushing[What's New] and <<graph-flushing-spi,SPI Changes>>, 8.0 changes how Hibernate coordinates work needed for flushing.  This new coordinator can often lead to different SQL or SQL being performed in different order.  The legacy strategy remains *_temporarily_* available by configuration using
+
+[source,properties]
+----
+hibernate.flush.queue.type=legacy
+----
+
 
 [[detached-collection-queries]]
 === Queries Returning Detached Collections

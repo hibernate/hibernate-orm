@@ -445,32 +445,6 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	}
 
 	@Override
-	public Iterator<?> getRemovedEntities(CollectionPersister persister) {
-		final List<?> sn = (List<?>) getSnapshot();
-		if ( sn == null || sn.isEmpty() ) {
-			return java.util.Collections.emptyIterator();
-		}
-
-		// Find entities in snapshot that are no longer in current list (by identity)
-		final List<Object> removedEntities = new ArrayList<>();
-		for ( Object snapshotEntity : sn ) {
-			if ( snapshotEntity != null ) {
-				boolean found = false;
-				for ( Object currentEntity : list ) {
-					if ( currentEntity == snapshotEntity ) {
-						found = true;
-						break;
-					}
-				}
-				if ( !found ) {
-					removedEntities.add( snapshotEntity );
-				}
-			}
-		}
-		return removedEntities.iterator();
-	}
-
-	@Override
 	public Iterator<?> getAddedEntities(CollectionPersister persister) {
 		final List<?> sn = (List<?>) getSnapshot();
 		final Type elementType = persister.getElementType();

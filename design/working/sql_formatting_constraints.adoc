@@ -78,7 +78,10 @@
 
 === 3.1 New Line BEFORE
 
-* Each major clause: `SELECT`, `FROM`, `WHERE`, `GROUP BY`, `HAVING`, `ORDER BY`, `OFFSET`, `FETCH`
+* Each major query clause: `SELECT`, `FROM`, `WHERE`, `GROUP BY`, `HAVING`, `ORDER BY`, `OFFSET`, `FETCH`, `LIMIT`, `UNION`, `INTERSECT`, `EXCEPT`
+* Each major DML clause: `INSERT`, `UPDATE`, `DELETE`, `MERGE`, `VALUES`, `SET`, `RETURNING`
+* DML-specific clauses: `ON CONFLICT`, `ON DUPLICATE KEY`, `DO UPDATE`, `DO NOTHING`, `USING`
+* MERGE conditionals: `WHEN MATCHED THEN`, `WHEN NOT MATCHED THEN`
 * Each `JOIN` clause (`JOIN`, `LEFT JOIN`, `INNER JOIN`, `RIGHT JOIN`, `FULL JOIN`, `CROSS JOIN`, `LATERAL JOIN`)
 * Each list item when list has >3 elements (see section 4)
 * Each `AND`/`OR` in ON/WHERE clauses (after first condition)
@@ -125,9 +128,11 @@
 * SELECT column/expression lists
 * GROUP BY lists
 * ORDER BY lists
+* SET assignment lists (UPDATE/MERGE statements)
 * Function argument lists (when >3 args)
 * Operator value lists: `IN (...)`, `ALL (...)`, `ANY (...)` value lists
-* INSERT VALUES lists
+
+*Note:* Parenthesized lists (INSERT column lists, VALUES tuples) stay on single line regardless of item count - they are treated as atomic units.
 
 '''
 
@@ -280,7 +285,7 @@ WITH TIES
 
 === 7.5 CASE Expressions
 
-Structure:
+*Standalone CASE:*
 
 [source,sql]
 ----
@@ -290,6 +295,48 @@ CASE
 	ELSE value
 END
 ----
+
+*CASE in SELECT list (with other items):*
+
+[source,sql]
+----
+SELECT
+	col1,
+	col2,
+	CASE
+		WHEN condition THEN value
+		ELSE value
+	END AS alias,
+	col3
+----
+
+*CASE in SELECT list (single item):*
+
+[source,sql]
+----
+SELECT
+	CASE
+		WHEN condition THEN value
+		ELSE value
+	END
+FROM table1
+----
+
+*CASE in assignment (UPDATE/SET):*
+
+[source,sql]
+----
+UPDATE table1
+SET column_name =
+	CASE
+		WHEN condition THEN value
+		ELSE value
+	END
+----
+
+* CASE keyword indented at +1 from context (same level as list items or assignment values)
+* WHEN/ELSE clauses indented +1 from CASE
+* END keyword indented at same level as CASE
 
 === 7.6 Operator Lists (IN, ALL, ANY, EXISTS)
 
@@ -385,6 +432,216 @@ WHERE id IN (
 
 '''
 
+== 11. DML Statement Formatting
+
+=== 11.1 INSERT Statements
+
+*Basic INSERT with column list:*
+
+[source,sql]
+----
+INSERT INTO table_name
+	(col1, col2, col3, col4)
+VALUES
+	(val1, val2, val3, val4);
+----
+
+* Column list in parentheses stays on single line (indented +1 from INSERT)
+* Column list treated as atomic unit regardless of item count
+* VALUES keyword on new line at INSERT context level
+* Value tuple in parentheses stays on single line (indented +1 from VALUES)
+
+*INSERT without column list:*
+
+[source,sql]
+----
+INSERT INTO table_name
+VALUES
+	(val1, val2, val3, val4);
+----
+
+*Multi-row INSERT:*
+
+[source,sql]
+----
+INSERT INTO table_name
+	(col1, col2, col3)
+VALUES
+	(val1a, val2a, val3a),
+	(val1b, val2b, val3b),
+	(val1c, val2c, val3c);
+----
+
+* Each value tuple on separate line with +1 indent
+* Trailing commas on all rows except last
+
+*INSERT...SELECT:*
+
+[source,sql]
+----
+INSERT INTO table_name
+	(col1, col2, col3)
+SELECT col1, col2, col3
+FROM source_table
+WHERE condition;
+----
+
+* SELECT formatted according to standard SELECT rules
+* No VALUES keyword
+
+=== 11.2 UPDATE Statements
+
+*UPDATE with SET clause:*
+
+[source,sql]
+----
+UPDATE table_name
+SET column1 = value1
+WHERE condition;
+----
+
+* Single assignment stays inline with SET keyword (space after SET)
+
+*UPDATE with multiple assignments (>3):*
+
+[source,sql]
+----
+UPDATE table_name
+SET
+	column1 = value1,
+	column2 = value2,
+	column3 = value3,
+	column4 = value4
+WHERE condition;
+----
+
+* SET clause follows SELECT list rules: ≤3 assignments inline, >3 multiline
+* Multiline: each assignment on separate line at +1 indent from UPDATE context
+* Trailing commas on all assignments except last
+
+*UPDATE with FROM clause:*
+
+[source,sql]
+----
+UPDATE table_name t
+SET column1 = s.value
+FROM source_table s
+WHERE t.id = s.id;
+----
+
+*UPDATE with subquery assignment:*
+
+[source,sql]
+----
+UPDATE table_name
+SET column_name = (
+	SELECT value
+	FROM other_table
+	WHERE condition
+)
+WHERE condition;
+----
+
+* Newline after `=`, opening `(` on same line as `=`
+* Subquery indented +1 from UPDATE context
+* Closing `)` dedented to UPDATE context level
+
+*UPDATE with CASE assignment:*
+
+[source,sql]
+----
+UPDATE table_name
+SET column_name =
+	CASE
+		WHEN condition THEN value
+		ELSE other_value
+	END
+WHERE condition;
+----
+
+* Newline after `=`
+* CASE indented +1 from UPDATE context
+* See section 7.5 for CASE formatting details
+
+=== 11.3 PostgreSQL ON CONFLICT
+
+*ON CONFLICT with DO NOTHING:*
+
+[source,sql]
+----
+INSERT INTO table_name
+	(col1, col2)
+VALUES
+	(val1, val2)
+ON CONFLICT (column)
+DO NOTHING;
+----
+
+*ON CONFLICT with DO UPDATE:*
+
+[source,sql]
+----
+INSERT INTO table_name
+	(col1, col2)
+VALUES
+	(val1, val2)
+ON CONFLICT (column)
+DO UPDATE
+SET column = excluded.column
+RETURNING *;
+----
+
+* ON CONFLICT at INSERT context level
+* Constraint specification in parentheses inline: `(column)` or `ON CONSTRAINT name`
+* DO UPDATE/DO NOTHING at INSERT context level
+* SET follows standard UPDATE rules
+* RETURNING at INSERT context level
+
+=== 11.4 MySQL ON DUPLICATE KEY
+
+*ON DUPLICATE KEY UPDATE:*
+
+[source,sql]
+----
+INSERT INTO table_name
+	(col1, col2)
+VALUES
+	(val1, val2)
+ON DUPLICATE KEY
+UPDATE col1 = VALUES(col1), col2 = VALUES(col2);
+----
+
+* No SET keyword in this syntax variant
+* Assignment list follows same ≤3/inline, >3/multiline rules as SET clause
+* `VALUES(col)` is a function reference (not a major VALUES clause), stays inline after `=`
+
+=== 11.5 MERGE Statements
+
+*MERGE with conditional actions:*
+
+[source,sql]
+----
+MERGE INTO target t
+USING source s
+ON
+	(t.id = s.id)
+WHEN MATCHED THEN
+	UPDATE
+	SET t.column = s.column
+WHEN NOT MATCHED THEN
+	INSERT (col1, col2)
+	VALUES
+		(s.col1, s.col2);
+----
+
+* USING at MERGE context level
+* ON at MERGE context level (not indented), condition in parentheses indented +1 from ON
+* WHEN MATCHED THEN / WHEN NOT MATCHED THEN at MERGE context level
+* UPDATE, INSERT, SET, VALUES indented +1 from MERGE context (inside THEN block)
+* Column lists and value tuples stay inline (parenthesized lists)
+
+'''
+
 == Revision History
 
 * Extracted base constraints from `testComplexQuery()`
@@ -407,6 +664,19 @@ WHERE id IN (
 ** Added detail on comment indentation: inherits from current context, with special handling for comments between conditions in WHERE/ON/HAVING clauses
 ** Documented multi-line comment processing: leading whitespace is stripped from continuation lines before applying base indentation
 ** Confirmed hint comment preservation behavior
+* Added comprehensive DML formatting rules (2026-05-14):
+** Section 4.3: Clarified that list formatting rules apply to SELECT/GROUP BY/ORDER BY/SET lists, but NOT to parenthesized lists (INSERT columns, VALUES tuples) which stay inline
+** Section 3.1: Added all DML keywords (INSERT, UPDATE, DELETE, MERGE, VALUES, SET, RETURNING, ON CONFLICT, DO UPDATE, etc.)
+** Section 7.5: Expanded CASE expression formatting to cover different contexts (standalone, in SELECT list, in assignments)
+** New Section 11: Comprehensive DML formatting rules covering:
+*** INSERT statements (basic, multi-row, INSERT...SELECT)
+*** UPDATE statements (with SET, FROM, subquery assignments, CASE assignments)
+*** PostgreSQL ON CONFLICT (DO NOTHING, DO UPDATE, RETURNING)
+*** MySQL ON DUPLICATE KEY UPDATE
+*** MERGE statements (WHEN MATCHED/NOT MATCHED, nested UPDATE/INSERT)
+* Refined MERGE and VALUES handling (2026-05-19):
+** Section 11.5: Clarified that ON is at MERGE level (not indented), condition is indented +1 from ON
+** Section 11.4: Added note that VALUES(col) in MySQL ON DUPLICATE KEY UPDATE is a function (stays inline), distinct from VALUES clause keyword
 
 '''
 

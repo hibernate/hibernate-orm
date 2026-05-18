@@ -89,6 +89,11 @@ public final class Constants {
 	public static final String JD_SELECT = "jakarta.data.repository.Select";
 	public static final String JD_SELECT_LIST = "jakarta.data.repository.Select.List";
 	public static final String JD_FIRST = "jakarta.data.repository.First";
+	public static final String JD_PERSIST = "jakarta.data.repository.stateful.Persist";
+	public static final String JD_MERGE = "jakarta.data.repository.stateful.Merge";
+	public static final String JD_REFRESH = "jakarta.data.repository.stateful.Refresh";
+	public static final String JD_REMOVE = "jakarta.data.repository.stateful.Remove";
+	public static final String JD_DETACH = "jakarta.data.repository.stateful.Detach";
 	public static final String JD_LIMIT = "jakarta.data.Limit";
 	public static final String JD_SORT = "jakarta.data.Sort";
 	public static final String JD_ORDER = "jakarta.data.Order";
@@ -195,6 +200,7 @@ public final class Constants {
 	public static final String PANACHE_REACTIVE_ENTITY_BASE = "io.quarkus.hibernate.reactive.panache.PanacheEntityBase";
 
 	public static final String SPRING_OBJECT_PROVIDER = "org.springframework.beans.factory.ObjectProvider";
+	public static final String SPRING_SESSION_PROVIDER = SPRING_OBJECT_PROVIDER + "<" + HIB_SESSION + ">";
 	public static final String SPRING_STATELESS_SESSION_PROVIDER = SPRING_OBJECT_PROVIDER + "<" + HIB_STATELESS_SESSION + ">";
 	public static final String SPRING_COMPONENT = "org.springframework.stereotype.Component";
 
@@ -223,6 +229,7 @@ public final class Constants {
 					MUTINY_STATELESS_SESSION,
 					UNI_MUTINY_SESSION,
 					UNI_MUTINY_STATELESS_SESSION,
+					SPRING_SESSION_PROVIDER,
 					SPRING_STATELESS_SESSION_PROVIDER
 			);
 

@@ -10,6 +10,8 @@ import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER_FACTORY;
+import static org.hibernate.processor.util.Constants.ENTITY_MANAGER;
+import static org.hibernate.processor.util.Constants.HIB_SESSION;
 import static org.hibernate.processor.util.Constants.HIB_SESSION_FACTORY;
 import static org.hibernate.processor.util.Constants.INJECT;
 import static org.hibernate.processor.util.Constants.MUTINY_SESSION;
@@ -100,9 +102,18 @@ public class DefaultConstructor implements MetaAttribute {
 					.append(sessionVariableName)
 					.append(" = ")
 					.append(sessionVariableName)
-					.append("Factory.unwrap(")
-					.append(annotationMetaEntity.importType( sessionFactoryType ))
-					.append(".class).openStatelessSession()");
+					.append("Factory");
+			if ( ENTITY_MANAGER.equals( sessionTypeName ) ) {
+				declaration
+						.append(".createEntityManager()");
+			}
+			else {
+				declaration
+						.append(".unwrap(")
+						.append(annotationMetaEntity.importType( sessionFactoryType ))
+						.append(".class).")
+						.append(HIB_SESSION.equals( sessionTypeName ) ? "openSession()" : "openStatelessSession()");
+			}
 			if ( MUTINY_SESSION.equals(sessionTypeName)
 					|| MUTINY_STATELESS_SESSION.equals(sessionTypeName) ) {
 				// this is crap

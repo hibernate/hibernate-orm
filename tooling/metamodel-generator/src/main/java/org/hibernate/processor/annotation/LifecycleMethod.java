@@ -104,6 +104,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		preamble(declaration);
 		nullCheck(declaration, parameterName);
 		fireEvents(declaration, "Pre");
+		declareReturnArgument( declaration );
 		if ( !isReactive() ) {
 			declaration.append( "\ttry {\n" );
 		}
@@ -121,6 +122,15 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		returnArgument(declaration);
 		declaration.append("}");
 		return declaration.toString();
+	}
+
+	private void declareReturnArgument(StringBuilder declaration) {
+		if ( isMerge() && parameterKind != ParameterKind.NORMAL && !isReactive() ) {
+			declaration
+					.append("\t")
+					.append(resolveAsString( method.getReturnType() ))
+					.append(" _result;\n");
+		}
 	}
 
 	private void fireEvents(StringBuilder declaration, String prefix) {
@@ -189,9 +199,13 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		if ( returnArgument && !isReactive() ) {
 			declaration
 					.append( "\treturn " )
-					.append( parameterName )
+					.append( returnedArgumentName() )
 					.append( ";\n" );
 		}
+	}
+
+	private String returnedArgumentName() {
+		return isMerge() && parameterKind != ParameterKind.NORMAL ? "_result" : parameterName;
 	}
 
 	private void returnArgumentReactively(StringBuilder declaration) {
@@ -233,33 +247,101 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private void delegateBlockingly(StringBuilder declaration) {
-		if ( isGeneratedIdUpsert() ) {
+		if ( isMerge() ) {
+			delegateMergeBlockingly( declaration );
+		}
+		else if ( isStatefulOperation() && parameterKind != ParameterKind.NORMAL ) {
+			delegateStatefulManyBlockingly( declaration );
+		}
+		else {
+			if ( isGeneratedIdUpsert() ) {
+				declaration
+						.append("\t\tif (")
+						.append(sessionName)
+						.append(getObjectCall())
+						.append(".getIdentifier(")
+						.append(parameterName)
+						.append(") == null)\n")
+						.append("\t\t\t")
+						.append(sessionName)
+						.append(getObjectCall())
+						.append('.')
+						.append("insert");
+				argument( declaration );
+				declaration
+						.append(";\n")
+						.append("\t\telse\n\t");
+			}
 			declaration
-					.append("\t\tif (")
-					.append(sessionName)
-					.append(getObjectCall())
-					.append(".getIdentifier(")
-					.append(parameterName)
-					.append(") == null)\n")
-					.append("\t\t\t")
+					.append("\t\t")
 					.append(sessionName)
 					.append(getObjectCall())
 					.append('.')
-					.append("insert");
+					.append(operationName);
 			argument( declaration );
 			declaration
-					.append(";\n")
-					.append("\t\telse\n\t");
+					.append(";\n");
 		}
+	}
+
+	private void delegateStatefulManyBlockingly(StringBuilder declaration) {
 		declaration
-				.append("\t\t")
+				.append("\t\tfor (var _entity : ")
+				.append(parameterName)
+				.append(") {\n")
+				.append("\t\t\t")
 				.append(sessionName)
 				.append(getObjectCall())
 				.append('.')
-				.append(operationName);
-		argument( declaration );
-		declaration
-				.append(";\n");
+				.append(operationName)
+				.append("(_entity);\n")
+				.append("\t\t}\n");
+	}
+
+	private void delegateMergeBlockingly(StringBuilder declaration) {
+		switch ( parameterKind ) {
+			case NORMAL:
+				declaration
+						.append("\t\t")
+						.append(parameterName)
+						.append(" = ")
+						.append(sessionName)
+						.append(getObjectCall())
+						.append(".merge(")
+						.append(parameterName)
+						.append(");\n");
+				break;
+			case LIST:
+				declaration
+						.append("\t\t_result = new ")
+						.append(annotationMetaEntity.importType( "java.util.ArrayList" ))
+						.append("<>();\n")
+						.append("\t\tfor (var _entity : ")
+						.append(parameterName)
+						.append(") {\n")
+						.append("\t\t\t_result.add(")
+						.append(sessionName)
+						.append(getObjectCall())
+						.append(".merge(_entity));\n")
+						.append("\t\t}\n");
+				break;
+			case ARRAY:
+				declaration
+						.append("\t\t_result = ")
+						.append(parameterName)
+						.append(".clone();\n")
+						.append("\t\tfor (var _index = 0; _index < ")
+						.append(parameterName)
+						.append(".length; _index++) {\n")
+						.append("\t\t\t_result[_index] = ")
+						.append(sessionName)
+						.append(getObjectCall())
+						.append(".merge(")
+						.append(parameterName)
+						.append("[_index]);\n")
+						.append("\t\t}\n");
+				break;
+		}
 	}
 
 	private void argument(StringBuilder declaration) {
@@ -350,6 +432,17 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 
 	private boolean isGeneratedIdUpsert() {
 		return "upsert".equals( operationName ) && hasGeneratedId;
+	}
+
+	private boolean isMerge() {
+		return "merge".equals( operationName );
+	}
+
+	private boolean isStatefulOperation() {
+		return switch ( operationName ) {
+			case "persist", "merge", "refresh", "remove", "detach" -> true;
+			default -> false;
+		};
 	}
 
 	private void preamble(StringBuilder declaration) {

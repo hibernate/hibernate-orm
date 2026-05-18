@@ -42,7 +42,7 @@ import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
  */
 public class NativeGenerator
 		implements OnExecutionGenerator, BeforeExecutionGenerator, Configurable, ExportableProducer,
-						AnnotationBasedGenerator<org.hibernate.annotations.NativeGenerator> {
+		BulkInsertionCapableIdentifierGenerator, AnnotationBasedGenerator<org.hibernate.annotations.NativeGenerator> {
 	private GenerationType generationType;
 	private org.hibernate.annotations.NativeGenerator annotation;
 	private Generator dialectNativeGenerator;
@@ -177,5 +177,24 @@ public class NativeGenerator
 						.requireService( ConfigurationService.class )
 		);
 		properties.put( INCREMENT_PARAM, 1 );
+	}
+
+	@Override
+	public boolean supportsBulkInsertionIdentifierGeneration() {
+		if ( dialectNativeGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableIdentifierGenerator ) {
+			return bulkInsertionCapableIdentifierGenerator.supportsBulkInsertionIdentifierGeneration();
+		}
+
+		return false;
+	}
+
+	@Override
+	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
+		if ( dialectNativeGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableIdentifierGenerator ) {
+			return bulkInsertionCapableIdentifierGenerator.determineBulkInsertionIdentifierGenerationSelectFragment(
+					context );
+		}
+
+		return null;
 	}
 }

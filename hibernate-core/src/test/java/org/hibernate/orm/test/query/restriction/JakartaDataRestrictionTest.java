@@ -15,6 +15,9 @@ import jakarta.data.restrict.Restrict;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.restriction.JakartaDataRestriction;
 import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -182,6 +185,24 @@ public class JakartaDataRestrictionTest {
 		assertTitles( scope, TITLE.notEndsWith( "Hibernate" ),
 				"Hibernate in Action",
 				"Jakarta Data Guide" );
+	}
+
+	@Test
+	void integerDivisionUsesPortableOperator(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var builder = session.getCriteriaBuilder();
+			final var query = builder.createQuery( Book.class );
+			final var root = query.from( Book.class );
+
+			final var predicate = from( PAGES.dividedInto( 1000 ).greaterThan( 2 ) )
+					.toPredicate( root, builder );
+			assertEquals( SqmComparisonPredicate.class, predicate.getClass() );
+			final var comparison = (SqmComparisonPredicate) predicate;
+			assertEquals( SqmBinaryArithmetic.class, comparison.getLeftHandExpression().getClass() );
+			final var division = (SqmBinaryArithmetic<?>) comparison.getLeftHandExpression();
+
+			assertEquals( BinaryArithmeticOperator.DIVIDE_PORTABLE, division.getOperator() );
+		} );
 	}
 
 	@Test

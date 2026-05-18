@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.query.restriction;
 
+import jakarta.data.expression.TemporalExpression;
 import jakarta.data.metamodel.NavigableAttribute;
 import jakarta.data.metamodel.NumericAttribute;
 import jakarta.data.metamodel.TextAttribute;
@@ -17,6 +18,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 
 import static org.hibernate.query.Order.asc;
@@ -52,6 +55,13 @@ public class JakartaDataRestrictionTest {
 		assertTitles( scope, ISBN.in( List.of( "9781932394153", "9780131889988" ) ),
 				"Hibernate in Action",
 				"Jakarta Data Guide" );
+		assertTitles( scope, PAGES.in( List.of( 250, 400 ) ),
+				"Hibernate in Action",
+				"Jakarta Data Guide" );
+		assertTitles( scope, PAGES.in( PAGES.plus( 0 ) ),
+				"Hibernate in Action",
+				"Jakarta Data Guide",
+				"Java Persistence with Hibernate" );
 		assertTitles( scope, TITLE.notContains( "Hibernate" ),
 				"Jakarta Data Guide" );
 	}
@@ -103,9 +113,39 @@ public class JakartaDataRestrictionTest {
 				"Java Persistence with Hibernate" );
 	}
 
+	@Test
+	void currentTemporalExpressionRestrictions(SessionFactoryScope scope) {
+		persistBooks( scope );
+
+		assertTitles( scope, Restrict.all(
+						TemporalExpression.localDate().notNull(),
+						TemporalExpression.localTime().notNull(),
+						TemporalExpression.localDateTime().notNull()
+				),
+				"Hibernate in Action",
+				"Jakarta Data Guide",
+				"Java Persistence with Hibernate" );
+	}
+
+	@Test
+	void numericCastRestrictions(SessionFactoryScope scope) {
+		persistBooks( scope );
+
+		assertTitles( scope, PAGES.asLong().greaterThan( 500L ),
+				"Java Persistence with Hibernate" );
+		assertTitles( scope, PAGES.asDouble().between( 200.0, 450.0 ),
+				"Hibernate in Action",
+				"Jakarta Data Guide" );
+		assertTitles( scope, PAGES.asBigInteger().greaterThanEqual( BigInteger.valueOf( 1000 ) ),
+				"Java Persistence with Hibernate" );
+		assertTitles( scope, PAGES.asBigDecimal().lessThan( BigDecimal.valueOf( 500 ) ),
+				"Hibernate in Action",
+				"Jakarta Data Guide" );
+	}
+
 	private static void assertTitles(
 			SessionFactoryScope scope,
-			jakarta.data.restrict.Restriction<Book> restriction,
+			jakarta.data.restrict.Restriction<? super Book> restriction,
 			String... expectedTitles) {
 		final List<String> titles = scope.fromSession( session ->
 				SelectionSpecification.create( Book.class, "from Book" )

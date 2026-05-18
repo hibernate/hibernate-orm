@@ -5,6 +5,13 @@
 package org.hibernate.query.restriction;
 
 import org.hibernate.Internal;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
 import jakarta.data.constraint.AtLeast;
 import jakarta.data.constraint.AtMost;
@@ -26,7 +33,11 @@ import jakarta.data.metamodel.Attribute;
 import jakarta.data.restrict.BasicRestriction;
 import jakarta.data.restrict.CompositeRestriction;
 import jakarta.data.restrict.Restrict;
+import jakarta.data.spi.expression.function.CurrentDate;
+import jakarta.data.spi.expression.function.CurrentDateTime;
+import jakarta.data.spi.expression.function.CurrentTime;
 import jakarta.data.spi.expression.function.FunctionExpression;
+import jakarta.data.spi.expression.function.NumericCast;
 import jakarta.data.spi.expression.function.NumericFunctionExpression;
 import jakarta.data.spi.expression.function.NumericOperatorExpression;
 import jakarta.data.spi.expression.function.TextFunctionExpression;
@@ -36,6 +47,9 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -151,41 +165,47 @@ public final class JakartaDataRestriction {
 			return builder.not( in( expression, notIn.expressions(), root, builder ) );
 		}
 		else if ( constraint instanceof Between<?> between ) {
-			return builder.between(
-					comparableExpression( expression ),
-					comparableExpression( expression( between.lowerBound(), root, builder ) ),
-					comparableExpression( expression( between.upperBound(), root, builder ) )
+			return between(
+					expression,
+					expression( between.lowerBound(), root, builder ),
+					expression( between.upperBound(), root, builder ),
+					false
 			);
 		}
 		else if ( constraint instanceof NotBetween<?> notBetween ) {
-			return builder.not( builder.between(
-					comparableExpression( expression ),
-					comparableExpression( expression( notBetween.lowerBound(), root, builder ) ),
-					comparableExpression( expression( notBetween.upperBound(), root, builder ) )
-			) );
+			return between(
+					expression,
+					expression( notBetween.lowerBound(), root, builder ),
+					expression( notBetween.upperBound(), root, builder ),
+					true
+			);
 		}
 		else if ( constraint instanceof GreaterThan<?> greaterThan ) {
-			return builder.greaterThan(
-					comparableExpression( expression ),
-					comparableExpression( expression( greaterThan.bound(), root, builder ) )
+			return comparison(
+					expression,
+					ComparisonOperator.GREATER_THAN,
+					expression( greaterThan.bound(), root, builder )
 			);
 		}
 		else if ( constraint instanceof LessThan<?> lessThan ) {
-			return builder.lessThan(
-					comparableExpression( expression ),
-					comparableExpression( expression( lessThan.bound(), root, builder ) )
+			return comparison(
+					expression,
+					ComparisonOperator.LESS_THAN,
+					expression( lessThan.bound(), root, builder )
 			);
 		}
 		else if ( constraint instanceof AtLeast<?> atLeast ) {
-			return builder.greaterThanOrEqualTo(
-					comparableExpression( expression ),
-					comparableExpression( expression( atLeast.bound(), root, builder ) )
+			return comparison(
+					expression,
+					ComparisonOperator.GREATER_THAN_OR_EQUAL,
+					expression( atLeast.bound(), root, builder )
 			);
 		}
 		else if ( constraint instanceof AtMost<?> atMost ) {
-			return builder.lessThanOrEqualTo(
-					comparableExpression( expression ),
-					comparableExpression( expression( atMost.bound(), root, builder ) )
+			return comparison(
+					expression,
+					ComparisonOperator.LESS_THAN_OR_EQUAL,
+					expression( atMost.bound(), root, builder )
 			);
 		}
 		else if ( constraint instanceof Like like ) {
@@ -219,16 +239,19 @@ public final class JakartaDataRestriction {
 			List<? extends jakarta.data.expression.Expression<?, ?>> expressions,
 			Root<?> root,
 			CriteriaBuilder builder) {
-		final var in = builder.in( objectExpression( expression ) );
+		final var values = new ArrayList<jakarta.persistence.criteria.Expression<?>>( expressions.size() );
 		for ( var value : expressions ) {
 			if ( value instanceof Literal<?> literal ) {
-				in.value( literal.value() );
+				verifyValueType( expression, literal.value() );
+				values.add( literal( literal.value(), expression, builder ) );
 			}
 			else {
-				in.value( objectExpression( expression( value, root, builder ) ) );
+				final var valueExpression = expression( value, root, builder );
+				verifyAssignableExpressionType( expression, valueExpression );
+				values.add( valueExpression );
 			}
 		}
-		return in;
+		return expression.in( values.toArray( jakarta.persistence.criteria.Expression<?>[]::new ) );
 	}
 
 	private static jakarta.persistence.criteria.Expression<?> expression(
@@ -243,6 +266,18 @@ public final class JakartaDataRestriction {
 		}
 		else if ( expression instanceof Literal<?> literal ) {
 			return builder.literal( literal.value() );
+		}
+		else if ( expression instanceof CurrentDate<?> ) {
+			return hibernateCriteriaBuilder( builder ).localDate();
+		}
+		else if ( expression instanceof CurrentTime<?> ) {
+			return hibernateCriteriaBuilder( builder ).localTime();
+		}
+		else if ( expression instanceof CurrentDateTime<?> ) {
+			return hibernateCriteriaBuilder( builder ).localDateTime();
+		}
+		else if ( expression instanceof NumericCast<?, ?> numericCast ) {
+			return numericCast( numericCast, root, builder );
 		}
 		else if ( expression instanceof TextFunctionExpression<?> function ) {
 			return textFunction( function, root, builder );
@@ -318,13 +353,40 @@ public final class JakartaDataRestriction {
 		final var arguments = function.arguments();
 		return switch ( function.name() ) {
 			case NumericFunctionExpression.ABS ->
-					builder.abs( numberExpression( arguments.get( 0 ), root, builder ) );
+					abs( numberExpression( arguments.get( 0 ), root, builder ), builder );
 			case NumericFunctionExpression.NEG ->
-					builder.neg( numberExpression( arguments.get( 0 ), root, builder ) );
+					neg( numberExpression( arguments.get( 0 ), root, builder ), builder );
 			case NumericFunctionExpression.LENGTH ->
 					builder.length( stringExpression( arguments.get( 0 ), root, builder ) );
 			default -> function( function, root, builder );
 		};
+	}
+
+	private static jakarta.persistence.criteria.Expression<?> numericCast(
+			NumericCast<?, ?> cast,
+			Root<?> root,
+			CriteriaBuilder builder) {
+		final var expression = numberExpression( cast.expression(), root, builder );
+		final var type = wrapperType( cast.type() );
+		if ( type == Long.class ) {
+			return builder.toLong( expression );
+		}
+		else if ( type == Double.class ) {
+			return builder.toDouble( expression );
+		}
+		else if ( type == BigInteger.class ) {
+			return builder.toBigInteger( expression );
+		}
+		else if ( type == BigDecimal.class ) {
+			return builder.toBigDecimal( expression );
+		}
+		else if ( expression instanceof JpaExpression<?> jpaExpression ) {
+			return hibernateCriteriaBuilder( builder ).cast( jpaExpression, cast.type() );
+		}
+		else {
+			throw new UnsupportedOperationException(
+					"Unsupported Jakarta Data numeric cast target type: " + cast.type().getName() );
+		}
 	}
 
 	private static jakarta.persistence.criteria.Expression<?> numericOperation(
@@ -339,6 +401,37 @@ public final class JakartaDataRestriction {
 			case TIMES -> builder.prod( left, right );
 			case DIVIDE -> builder.quot( left, right );
 		};
+	}
+
+	private static Predicate comparison(
+			jakarta.persistence.criteria.Expression<?> expression,
+			ComparisonOperator operator,
+			jakarta.persistence.criteria.Expression<?> bound) {
+		verifyExpressionType( expression, Comparable.class );
+		verifyExpressionType( bound, Comparable.class );
+		return new SqmComparisonPredicate(
+				sqmExpression( expression ),
+				operator,
+				sqmExpression( bound ),
+				nodeBuilder( expression )
+		);
+	}
+
+	private static Predicate between(
+			jakarta.persistence.criteria.Expression<?> expression,
+			jakarta.persistence.criteria.Expression<?> lowerBound,
+			jakarta.persistence.criteria.Expression<?> upperBound,
+			boolean negated) {
+		verifyExpressionType( expression, Comparable.class );
+		verifyExpressionType( lowerBound, Comparable.class );
+		verifyExpressionType( upperBound, Comparable.class );
+		return new SqmBetweenPredicate(
+				sqmExpression( expression ),
+				sqmExpression( lowerBound ),
+				sqmExpression( upperBound ),
+				negated,
+				nodeBuilder( expression )
+		);
 	}
 
 	private static jakarta.persistence.criteria.Expression<?> function(
@@ -366,49 +459,120 @@ public final class JakartaDataRestriction {
 		return typedExpression( expression, String.class );
 	}
 
-	private static jakarta.persistence.criteria.Expression<Number> numberExpression(
+	private static jakarta.persistence.criteria.Expression<? extends Number> numberExpression(
 			jakarta.data.expression.Expression<?, ?> expression,
 			Root<?> root,
 			CriteriaBuilder builder) {
-		return numberExpression( expression( expression, root, builder ) );
+		final var expressionType = wrapperType( expression.type() );
+		if ( !Number.class.isAssignableFrom( expressionType ) ) {
+			throw new UnsupportedOperationException(
+					"Expected " + Number.class.getName() + " expression but got: " + expressionType.getName() );
+		}
+		return typedNumberExpression( expression( expression, root, builder ), expressionType.asSubclass( Number.class ) );
 	}
 
-	private static jakarta.persistence.criteria.Expression<Number> numberExpression(
-			jakarta.persistence.criteria.Expression<?> expression) {
-		return typedExpression( expression, Number.class );
+	private static <N extends Number> jakarta.persistence.criteria.Expression<N> typedNumberExpression(
+			jakarta.persistence.criteria.Expression<?> expression,
+			Class<N> expectedType) {
+		verifyExpressionType( expression, expectedType );
+		return expression.as( expectedType );
 	}
 
-	private static jakarta.persistence.criteria.Expression<Comparable<Object>> comparableExpression(
-			jakarta.persistence.criteria.Expression<?> expression) {
-		verifyExpressionType( expression, Comparable.class );
-		return castExpression( expression );
+	private static <N extends Number> jakarta.persistence.criteria.Expression<N> abs(
+			jakarta.persistence.criteria.Expression<N> expression,
+			CriteriaBuilder builder) {
+		return builder.abs( expression );
 	}
 
-	private static jakarta.persistence.criteria.Expression<Object> objectExpression(
-			jakarta.persistence.criteria.Expression<?> expression) {
-		return castExpression( expression );
+	private static <N extends Number> jakarta.persistence.criteria.Expression<N> neg(
+			jakarta.persistence.criteria.Expression<N> expression,
+			CriteriaBuilder builder) {
+		return builder.neg( expression );
 	}
 
 	private static <T> jakarta.persistence.criteria.Expression<T> typedExpression(
 			jakarta.persistence.criteria.Expression<?> expression,
 			Class<T> expectedType) {
 		verifyExpressionType( expression, expectedType );
-		return castExpression( expression );
+		return expression.as( expectedType );
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T> jakarta.persistence.criteria.Expression<T> castExpression(
-			jakarta.persistence.criteria.Expression<?> expression) {
-		return (jakarta.persistence.criteria.Expression<T>) expression;
+	private static jakarta.persistence.criteria.Expression<?> literal(
+			Object value,
+			jakarta.persistence.criteria.Expression<?> expression,
+			CriteriaBuilder builder) {
+		if ( value != null ) {
+			return builder.literal( value );
+		}
+		else {
+			final var javaType = wrapperType( expression.getJavaType() );
+			return javaType == null
+					? builder.nullLiteral( Object.class )
+					: nullLiteral( javaType, builder );
+		}
+	}
+
+	private static <T> jakarta.persistence.criteria.Expression<T> nullLiteral(Class<T> javaType, CriteriaBuilder builder) {
+		return builder.nullLiteral( javaType );
+	}
+
+	private static SqmExpression<?> sqmExpression(jakarta.persistence.criteria.Expression<?> expression) {
+		if ( expression instanceof SqmExpression<?> sqmExpression ) {
+			return sqmExpression;
+		}
+		else {
+			throw new UnsupportedOperationException(
+					"Jakarta Data expression requires a Hibernate SQM expression but got: "
+							+ expression.getClass().getName() );
+		}
+	}
+
+	private static NodeBuilder nodeBuilder(jakarta.persistence.criteria.Expression<?> expression) {
+		return sqmExpression( expression ).nodeBuilder();
 	}
 
 	private static void verifyExpressionType(
 			jakarta.persistence.criteria.Expression<?> expression,
 			Class<?> expectedType) {
-		final Class<?> javaType = wrapperType( expression.getJavaType() );
-		if ( javaType != null && !expectedType.isAssignableFrom( javaType ) ) {
+		final Class<?> expressionType = expression.getJavaType();
+		if ( expressionType != null ) {
+			final var javaType = wrapperType( expressionType );
+			if ( !expectedType.isAssignableFrom( javaType ) ) {
+				throw new UnsupportedOperationException(
+						"Expected " + expectedType.getName() + " expression but got: " + javaType.getName() );
+			}
+		}
+	}
+
+	private static void verifyAssignableExpressionType(
+			jakarta.persistence.criteria.Expression<?> expression,
+			jakarta.persistence.criteria.Expression<?> valueExpression) {
+		final var expressionType = wrapperType( expression.getJavaType() );
+		final var valueType = wrapperType( valueExpression.getJavaType() );
+		if ( expressionType != null && valueType != null && !expressionType.isAssignableFrom( valueType ) ) {
 			throw new UnsupportedOperationException(
-					"Expected " + expectedType.getName() + " expression but got: " + javaType.getName() );
+					"Expected " + expressionType.getName() + " expression but got: " + valueType.getName() );
+		}
+	}
+
+	private static void verifyValueType(
+			jakarta.persistence.criteria.Expression<?> expression,
+			Object value) {
+		final var expressionType = wrapperType( expression.getJavaType() );
+		if ( value != null && expressionType != null && !expressionType.isInstance( value ) ) {
+			throw new UnsupportedOperationException(
+					"Expected " + expressionType.getName() + " value but got: " + value.getClass().getName() );
+		}
+	}
+
+	private static HibernateCriteriaBuilder hibernateCriteriaBuilder(CriteriaBuilder builder) {
+		if ( builder instanceof HibernateCriteriaBuilder hibernateCriteriaBuilder ) {
+			return hibernateCriteriaBuilder;
+		}
+		else {
+			throw new UnsupportedOperationException(
+					"Jakarta Data expression requires a Hibernate CriteriaBuilder but got: "
+							+ builder.getClass().getName() );
 		}
 	}
 

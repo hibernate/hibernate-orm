@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 
+import org.gradle.api.plugins.ExtensionAware
+
 plugins {
 	id "local.publishing-java-module"
 	id "local.publishing-group-relocation"
@@ -137,6 +139,18 @@ compileTestJava {
 			"-proc:none",
 			"-AsuppressJakartaDataMetamodel=true"
 	]
+}
+
+[
+		"compileQuarkusOrmPanacheJava",
+		"compileQuarkusHrPanacheJava",
+		"compileJakartaDataJava"
+].each { taskName ->
+	tasks.named( taskName, JavaCompile ) {
+		(options as ExtensionAware).extensions.configure( "checkerFrameworkCompile" ) { checkerFrameworkCompile ->
+			checkerFrameworkCompile.getEnabled().set( false )
+		}
+	}
 }
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension

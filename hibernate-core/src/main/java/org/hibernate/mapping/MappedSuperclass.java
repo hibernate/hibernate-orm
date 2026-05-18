@@ -230,11 +230,4 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 	public Table getImplicitTable() {
 		return implicitTable;
 	}
-
-	@Override @Deprecated(forRemoval = true)
-	public void applyProperty(Property property) {
-		assert property.getValue().getTable() != null
-			&& property.getValue().getTable().equals( getImplicitTable() );
-		addDeclaredProperty( property );
-	}
 }

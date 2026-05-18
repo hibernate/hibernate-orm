@@ -24,10 +24,4 @@ public interface IdentifiableTypeClass extends TableContainer {
 
 	boolean isVersioned();
 	Property getVersion();
-
-	/**
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7.2", forRemoval = true)
-	void applyProperty(Property property);
 }

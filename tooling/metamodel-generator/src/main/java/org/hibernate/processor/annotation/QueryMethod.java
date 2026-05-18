@@ -116,6 +116,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		results( declaration, paramTypes, containerType );
 		castResult( declaration );
 		select( declaration );
+		setFirstResultLimit( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
 		execute( declaration, initiallyUnwrapped() );
 		convertExceptions( declaration );

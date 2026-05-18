@@ -25,6 +25,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			ExecutableElement method,
 			String methodName,
 			String entity,
+			@Nullable String resultTypeName,
 			@Nullable String containerType,
 			boolean belongsToDao,
 			String sessionType,
@@ -39,7 +40,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			boolean nullable) {
 		super( annotationMetaEntity, method,
 				methodName,
-				paramNames, paramTypes, entity,
+				paramNames, paramTypes, resultTypeName,
 				sessionType, sessionName,
 				belongsToDao, orderBys,
 				addNonnullAnnotation,
@@ -74,6 +75,11 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	@Override
 	@Nullable String containerType() {
 		return containerType;
+	}
+
+	@Override
+	String orderingTypeName() {
+		return entity;
 	}
 
 	void comment(StringBuilder declaration) {

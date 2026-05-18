@@ -20,6 +20,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 			AnnotationMetaEntity annotationMetaEntity,
 			ExecutableElement method,
 			String methodName, String entity,
+			@Nullable ResultSelection selection,
 			@Nullable String containerType,
 			List<String> paramNames, List<String> paramTypes,
 			List<Boolean> paramNullability,
@@ -33,7 +34,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 			boolean dataRepository,
 			String fullReturnType,
 			boolean nullable) {
-		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+		super( annotationMetaEntity, method, methodName, entity, selection, containerType, belongsToDao, sessionType, sessionName,
 				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, parameterConstraints,
 				fullReturnType, nullable );
 		this.paramNullability = paramNullability;
@@ -63,6 +64,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		results( declaration, paramTypes, containerType );
 		castResult( declaration );
 		select( declaration );
+		setFirstResultLimit( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
 		boolean unwrapped = initiallyUnwrapped();
 		unwrapped = enableFetchProfile( declaration, unwrapped );

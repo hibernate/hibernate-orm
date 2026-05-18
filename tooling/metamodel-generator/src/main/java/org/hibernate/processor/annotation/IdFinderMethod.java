@@ -34,7 +34,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			boolean dataRepository,
 			String fullReturnType,
 			boolean nullable) {
-		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
+		super( annotationMetaEntity, method, methodName, entity, entity, containerType, belongsToDao, sessionType, sessionName,
 				fetchProfiles, paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType,
 				nullable );
 		int idParameter = idParameter(paramNames, paramTypes);

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.BridgeMembersClassInfo;
@@ -54,6 +55,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
+@ServiceProvider(value = BytecodeProvider.class)
 public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "$HibernateInstantiator";

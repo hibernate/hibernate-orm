@@ -33,6 +33,9 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -185,6 +188,7 @@ import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.mapIns
  * @author Steve Ebersole
  * @author Yoobin Yoon
  */
+@ServiceConsumer(value = CriteriaBuilderExtension.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	private final String uuid;

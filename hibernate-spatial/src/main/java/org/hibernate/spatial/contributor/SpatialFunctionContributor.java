@@ -4,9 +4,11 @@
  */
 package org.hibernate.spatial.contributor;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 
+@ServiceProvider(value = FunctionContributor.class)
 public class SpatialFunctionContributor implements FunctionContributor {
 
 	@Override

@@ -4,6 +4,9 @@
  */
 package org.hibernate.service.internal;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -18,6 +21,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
  *
  * @author Steve Ebersole
  */
+@ServiceConsumer(value = SessionFactoryServiceContributor.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryServiceRegistryFactory {
 	private final ServiceRegistryImplementor theBasicServiceRegistry;
 

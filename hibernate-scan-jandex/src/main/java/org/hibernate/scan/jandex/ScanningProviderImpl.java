@@ -4,6 +4,7 @@
  */
 package org.hibernate.scan.jandex;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.scan.spi.Scanner;
 import org.hibernate.boot.scan.spi.ScanningContext;
 import org.hibernate.boot.scan.spi.ScanningProvider;
@@ -12,6 +13,7 @@ import org.jboss.jandex.IndexView;
 /// Jandex-based implementation of ScannerProvider.
 ///
 /// @author Steve Ebersole
+@ServiceProvider(value = ScanningProvider.class)
 public class ScanningProviderImpl implements ScanningProvider {
 	public static final String JANDEX_INDEX = "hibernate.jandex.index";
 

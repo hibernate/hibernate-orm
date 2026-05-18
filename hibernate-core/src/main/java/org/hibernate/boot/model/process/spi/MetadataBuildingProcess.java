@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -123,6 +126,8 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
  *
  * @author Steve Ebersole
  */
+@ServiceConsumer(value = AdditionalMappingContributor.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
+@ServiceConsumer(value = TypeContributor.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class MetadataBuildingProcess {
 
 	private static final Comparator<TypeContributor> TYPE_CONTRIBUTOR_COMPARATOR = Comparator.comparingInt(

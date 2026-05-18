@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import org.hibernate.Internal;
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
@@ -39,6 +42,7 @@ import static org.hibernate.boot.cfgxml.spi.CfgXmlAccessService.LOADED_CONFIG_KE
  * @see StandardServiceRegistryImpl
  * @see BootstrapServiceRegistryBuilder
  */
+@ServiceConsumer(value = ServiceContributor.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class StandardServiceRegistryBuilder {
 	/**
 	 * Creates a {@code StandardServiceRegistryBuilder} specific to the needs

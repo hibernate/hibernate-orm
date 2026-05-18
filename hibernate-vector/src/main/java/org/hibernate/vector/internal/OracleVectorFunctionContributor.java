@@ -4,11 +4,13 @@
  */
 package org.hibernate.vector.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 
+@ServiceProvider(value = FunctionContributor.class)
 public class OracleVectorFunctionContributor implements FunctionContributor {
 
 	@Override

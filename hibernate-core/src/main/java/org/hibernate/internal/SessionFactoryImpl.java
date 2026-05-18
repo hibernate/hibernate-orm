@@ -4,6 +4,9 @@
  */
 package org.hibernate.internal;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityHandler;
@@ -171,6 +174,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  * @author Chris Cranford
  */
 // Extended by Hibernate Reactive
+@ServiceConsumer(value = EventMonitor.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final String name;

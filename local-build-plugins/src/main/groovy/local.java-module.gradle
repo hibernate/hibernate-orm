@@ -50,6 +50,7 @@ dependencies {
     implementation libs.logging
 
     compileOnly libs.loggingAnnotations
+    compileOnly 'biz.aQute.bnd:biz.aQute.bnd.annotation:7.2.0'
     // Used for compiling some Oracle specific JdbcTypes
     compileOnly libs.jdbc.oracle
     compileOnly (libs.jdbc.oracleJdbcJacksonOsonExtension) {

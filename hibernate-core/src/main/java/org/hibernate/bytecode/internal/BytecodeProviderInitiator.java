@@ -7,12 +7,16 @@ package org.hibernate.bytecode.internal;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import org.hibernate.Internal;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+@ServiceConsumer(value = BytecodeProvider.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public final class BytecodeProviderInitiator implements StandardServiceInitiator<BytecodeProvider> {
 
 	/**

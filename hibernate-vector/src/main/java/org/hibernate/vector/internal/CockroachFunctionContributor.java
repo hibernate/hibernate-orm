@@ -5,10 +5,12 @@
 package org.hibernate.vector.internal;
 
 import org.hibernate.boot.model.FunctionContributions;
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 
+@ServiceProvider(value = FunctionContributor.class)
 public class CockroachFunctionContributor implements FunctionContributor {
 
 	@Override

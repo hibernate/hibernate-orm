@@ -7,6 +7,9 @@ package org.hibernate.engine.jdbc.dialect.internal;
 import java.util.Collection;
 import java.util.Map;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -21,6 +24,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  *
  * @author Steve Ebersole
  */
+@ServiceConsumer(value = DialectResolver.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class DialectResolverInitiator implements StandardServiceInitiator<DialectResolver> {
 	/**
 	 * Singleton access

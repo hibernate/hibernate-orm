@@ -4,11 +4,13 @@
  */
 package org.hibernate.vector.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 
+@ServiceProvider(value = FunctionContributor.class)
 public class MySQLFunctionContributor implements FunctionContributor {
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {

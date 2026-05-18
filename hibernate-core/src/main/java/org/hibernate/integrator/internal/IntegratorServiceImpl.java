@@ -6,6 +6,9 @@ package org.hibernate.integrator.internal;
 
 import java.util.LinkedHashSet;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
@@ -17,6 +20,7 @@ import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 /**
  * @author Steve Ebersole
  */
+@ServiceConsumer(value = Integrator.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class IntegratorServiceImpl implements IntegratorService {
 
 	private final LinkedHashSet<Integrator> integrators = new LinkedHashSet<>();

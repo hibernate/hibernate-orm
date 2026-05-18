@@ -20,8 +20,7 @@ import static org.hibernate.processor.util.TypeUtils.isPrimitive;
  */
 public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
-	private final List<Boolean> multivalued;
-	private final List<Boolean> paramPatterns;
+	private final List<ParameterConstraint> parameterConstraints;
 
 	public AbstractCriteriaMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -36,15 +35,13 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			List<OrderBy> orderBys,
 			boolean addNonnullAnnotation,
 			boolean convertToDataExceptions,
-			List<Boolean> multivalued,
-			List<Boolean> paramPatterns,
+			List<ParameterConstraint> parameterConstraints,
 			String fullReturnType,
 			boolean nullable) {
 		super(annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
 				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, convertToDataExceptions,
 				fullReturnType, nullable);
-		this.multivalued = multivalued;
-		this.paramPatterns = paramPatterns;
+		this.parameterConstraints = parameterConstraints;
 	}
 
 	@Override
@@ -152,10 +149,32 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				.append(".getCriteriaBuilder();\n");
 	}
 
+	@Override
+	void parameters(List<String> paramTypes, StringBuilder declaration) {
+		declaration
+				.append("(");
+		sessionParameter( declaration );
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			if ( i > 0 ) {
+				declaration
+						.append(", ");
+			}
+			if ( isNonNull(i, paramTypes) ) {
+				notNull( declaration );
+			}
+			declaration
+					.append(annotationMetaEntity.importType(paramTypes.get(i)))
+					.append(" ")
+					.append(parameterVariableName(i));
+		}
+		declaration
+				.append(")");
+	}
+
 	void nullChecks(StringBuilder declaration, List<String> paramTypes) {
 		for ( int i = 0; i<paramNames.size(); i++ ) {
 			if ( isNonNull(i, paramTypes) ) {
-				nullCheck( declaration, paramNames.get(i) );
+				nullCheck( declaration, parameterVariableName(i) );
 			}
 		}
 	}
@@ -185,7 +204,8 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	private void condition(StringBuilder declaration, int i, String paramName, String paramType) {
 		declaration
 				.append("\n\t\t\t");
-		final String parameterName = parameterName(paramName);
+		final String parameterName = parameterVariableName(i);
+		final ParameterConstraint parameterConstraint = parameterConstraints.get(i);
 		if ( isNullable(i) && !isPrimitive(paramType) ) {
 			declaration
 					.append(parameterName)
@@ -197,7 +217,21 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 					.append(".isNull()")
 					.append("\n\t\t\t\t: ");
 		}
-		if ( multivalued.get(i) ) {
+		if ( parameterConstraint == ParameterConstraint.RUNTIME ) {
+			declaration
+					.append( annotationMetaEntity.importType( "org.hibernate.query.restriction.JakartaDataRestriction" ) )
+					.append( ".predicate(_entity" );
+			path( declaration, paramName );
+			declaration
+					.append( ", " )
+					.append( parameterName )
+					.append( ", _entity, _builder)" );
+		}
+		else if ( parameterConstraint.isMultivalued() ) {
+			if ( parameterConstraint == ParameterConstraint.NOT_IN ) {
+				declaration
+						.append( "_builder.not(" );
+			}
 			declaration
 					.append("_entity");
 			path( declaration, paramName );
@@ -212,12 +246,16 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 					//TODO: only safe if we are binding literals as parameters!!!
 					.append(parameterName)
 					.append(")");
+			if ( parameterConstraint == ParameterConstraint.NOT_IN ) {
+				declaration
+						.append( ")" );
+			}
 		}
 		else {
 			//TODO: change to use Expression.equalTo() in JPA 3.2
 			declaration
 					.append("_builder.")
-					.append(paramPatterns.get(i) ? "like" : "equal")
+					.append(criteriaBuilderMethod( parameterConstraint ))
 					.append("(_entity");
 			path( declaration, paramName );
 			declaration
@@ -226,6 +264,32 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 					.append(parameterName)
 					.append(')');
 		}
+	}
+
+	private static String criteriaBuilderMethod(ParameterConstraint parameterConstraint) {
+		return switch ( parameterConstraint ) {
+			case EQUAL -> "equal";
+			case NOT_EQUAL -> "notEqual";
+			case GREATER_THAN -> "greaterThan";
+			case AT_LEAST -> "greaterThanOrEqualTo";
+			case LESS_THAN -> "lessThan";
+			case AT_MOST -> "lessThanOrEqualTo";
+			case LIKE -> "like";
+			case NOT_LIKE -> "notLike";
+			case IN, NOT_IN, RUNTIME ->
+					throw new IllegalArgumentException( "Unexpected parameter constraint: " + parameterConstraint );
+		};
+	}
+
+	private String parameterVariableName(int index) {
+		final String baseName = parameterName( paramNames.get(index) );
+		int collisions = 0;
+		for ( int i = 0; i < index; i++ ) {
+			if ( parameterName( paramNames.get(i) ).equals( baseName ) ) {
+				collisions++;
+			}
+		}
+		return collisions == 0 ? baseName : baseName + (collisions + 1);
 	}
 
 	private void path(StringBuilder declaration, String paramName) {

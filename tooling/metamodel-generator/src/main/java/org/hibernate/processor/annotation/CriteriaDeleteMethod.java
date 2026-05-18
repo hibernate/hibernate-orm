@@ -23,8 +23,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 			List<String> paramNames,
 			List<String> paramTypes,
 			List<Boolean> paramNullability,
-			List<Boolean> multivalued,
-			List<Boolean> paramPatterns,
+			List<ParameterConstraint> parameterConstraints,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
@@ -33,7 +32,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 			String fullReturnType) {
 		super( annotationMetaEntity, method, methodName, entity, null, belongsToDao, sessionType,
 				sessionName, emptyList(), paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository,
-				multivalued, paramPatterns, fullReturnType, false );
+				parameterConstraints, fullReturnType, false );
 		this.paramNullability = paramNullability;
 	}
 

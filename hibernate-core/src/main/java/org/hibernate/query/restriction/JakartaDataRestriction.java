@@ -117,10 +117,23 @@ public final class JakartaDataRestriction {
 			Root<?> root,
 			CriteriaBuilder builder) {
 		final var expression = expression( restriction.expression(), root, builder );
-		return constraint( expression, restriction.constraint(), root, builder );
+		return constraintPredicate( expression, restriction.constraint(), root, builder );
 	}
 
-	private static Predicate constraint(
+	public static Predicate predicate(
+			jakarta.persistence.criteria.Expression<?> expression,
+			Constraint<?> constraint,
+			Root<?> root,
+			CriteriaBuilder builder) {
+		return constraintPredicate(
+				requireNonNull( expression, "expression" ),
+				requireNonNull( constraint, "constraint" ),
+				requireNonNull( root, "root" ),
+				requireNonNull( builder, "builder" )
+		);
+	}
+
+	private static Predicate constraintPredicate(
 			jakarta.persistence.criteria.Expression<?> expression,
 			Constraint<?> constraint,
 			Root<?> root,

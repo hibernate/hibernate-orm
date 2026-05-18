@@ -15,4 +15,5 @@ public class MyEntity {
 	private Long id;
 	@Column(unique = true)
 	private String name;
+	private Integer age;
 }

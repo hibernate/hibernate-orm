@@ -6,9 +6,11 @@ package org.hibernate.query.restriction;
 
 import org.hibernate.Internal;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -401,7 +403,12 @@ public final class JakartaDataRestriction {
 			case PLUS -> builder.sum( left, right );
 			case MINUS -> builder.diff( left, right );
 			case TIMES -> builder.prod( left, right );
-			case DIVIDE -> builder.quot( left, right );
+			case DIVIDE -> new SqmBinaryArithmetic<>(
+					BinaryArithmeticOperator.DIVIDE_PORTABLE,
+					sqmExpression( left ),
+					sqmExpression( right ),
+					nodeBuilder( left )
+			);
 		};
 	}
 

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <package>org.hibernate.orm.test.immutable.xml</package>
+
+    <entity class="ImmutableOneToManyXmlTest$Country" access="PROPERTY">
+        <table name="IM_OTM_COUNTRY"/>
+
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+
+            <basic name="name"/>
+
+            <one-to-many name="regions">
+                <mutable>false</mutable>
+                <join-column name="COUNTRY_ID"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="ImmutableOneToManyXmlTest$Region" access="PROPERTY">
+        <table name="IM_OTM_REGION"/>
+
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+
+            <basic name="name"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

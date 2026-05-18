@@ -57,18 +57,7 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 
 		final var buffer =
 				new StringBuilder( dialect.getAlterTableString( sourceTableName ) )
-						.append( foreignKey.getKeyDefinition() != null
-								? dialect.getAddForeignKeyConstraintString(
-										quotedConstraintName( foreignKey, metadata ),
-										foreignKey.getKeyDefinition()
-								)
-								: dialect.getAddForeignKeyConstraintString(
-										quotedConstraintName( foreignKey, metadata ),
-										columnNames,
-										targetTableName,
-										targetColumnNames,
-										foreignKey.isReferenceToPrimaryKey()
-								) );
+						.append( constraintString( foreignKey, metadata, columnNames, targetTableName, targetColumnNames ) );
 
 		if ( dialect.supportsCascadeDelete() ) {
 			final var onDeleteAction = foreignKey.getOnDeleteAction();
@@ -82,6 +71,20 @@ public class StandardForeignKeyExporter implements Exporter<ForeignKey> {
 		}
 
 		return new String[] { buffer.toString() };
+	}
+
+	private String constraintString(
+			ForeignKey foreignKey,
+			Metadata metadata,
+			String[] columnNames,
+			String targetTableName,
+			String[] targetColumnNames) {
+		final String keyDefinition = foreignKey.getKeyDefinition();
+		final String constraintName = quotedConstraintName( foreignKey, metadata );
+		return keyDefinition != null
+				? dialect.getAddForeignKeyConstraintString( constraintName, keyDefinition )
+				: dialect.getAddForeignKeyConstraintString( constraintName, columnNames,
+						targetTableName, targetColumnNames, foreignKey.isReferenceToPrimaryKey() );
 	}
 
 	private String quotedConstraintName(ForeignKey foreignKey, Metadata metadata) {

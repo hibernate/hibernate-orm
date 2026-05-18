@@ -9,13 +9,14 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.internal.TokenBasedFormatterImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,21 +35,29 @@ public class TokenBasedFormatterTest {
 	private static final String SQL_SEP = "=== SQL ===";
 	private static final String ID_SEP = "=== ID ===";
 
+	private final Map<String, SqlFixture> dmlFixtures = new HashMap<>(20);
+
 	private static final TokenBasedFormatterImpl formatter = new TokenBasedFormatterImpl();
 
 	@Test
-	public void testFixtures(ServiceRegistryScope registryScope) {
-		testDMLFixtures( registryScope );
-		testDDLFixtures( registryScope );
+	public void testFixtures() {
+		testDMLFixtures();
+		testDDLFixtures();
 	}
 
-	private void testDMLFixtures(ServiceRegistryScope registryScope) {
-		for ( SqlFixture fixture : loadFixtures(registryScope, "org/hibernate/orm/test/jdbc/util/dml_sql_fixtures.txt") ) {
+	// Utility method to be able to debug a single fixture (uncomment '@Test')
+	@Test
+	public void testSelectedDmlFixture() {
+		dmlFixtures.get( "merge_upsert" ).verify();
+	}
+
+	private void testDMLFixtures() {
+		for ( SqlFixture fixture : dmlFixtures.values() ) {
 			fixture.verify();
 		}
 	}
 
-	private void testDDLFixtures(ServiceRegistryScope registryScope) {
+	private void testDDLFixtures() {
 		// todo
 	}
 
@@ -64,7 +73,12 @@ public class TokenBasedFormatterTest {
 		assertTrue(formatted == null || formatted.isEmpty(), "Null should be handled gracefully");
 	}
 
-	private List<SqlFixture> loadFixtures(ServiceRegistryScope registryScope, String path) {
+	@BeforeAll
+	public void setup(ServiceRegistryScope registryScope) {
+		this.dmlFixtures.putAll( loadFixtures(registryScope, "org/hibernate/orm/test/jdbc/util/dml_sql_fixtures.txt") );
+	}
+
+	private Map<String, SqlFixture> loadFixtures(ServiceRegistryScope registryScope, String path) {
 		final StandardServiceRegistry serviceRegistry = registryScope.getRegistry();
 		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		String input = null;
@@ -78,8 +92,8 @@ public class TokenBasedFormatterTest {
 		return parseFixtures( input );
 	}
 
-	private List<SqlFixture> parseFixtures(String input) {
-		final List<SqlFixture> testFixtures = new ArrayList<>(20);
+	private Map<String, SqlFixture> parseFixtures(String input) {
+		final Map<String, SqlFixture> testFixtures = new HashMap<>(20);
 		String[] fixtures = input.split( FIXTURE_SEP );
 		// Ignore the header above the first fixture
 		for ( int i = 1; i < fixtures.length; i++ ) {
@@ -91,7 +105,7 @@ public class TokenBasedFormatterTest {
 			final String id = idsql[0].substring(ID_SEP.length() + 1).trim();
 
 			if ( !(id.isBlank() || sql.isBlank() || expected.isBlank()) ) {
-				testFixtures.add( new SqlFixture( id, sql, expected ) );
+				testFixtures.put( id, new SqlFixture( id, sql, expected ) );
 			}
 		}
 
@@ -100,7 +114,14 @@ public class TokenBasedFormatterTest {
 
 	private record SqlFixture(String id, String sql, String expected) {
 		public void verify() {
-				assertEquals( expected, formatter.format( sql ), "Sql formatting of \"%s\" failed".formatted(id) );
+				String actual = formatter.format( sql );
+				System.out.println("=== Testing: " + id + " ===");
+				System.out.println("Expected:");
+				System.out.println(expected);
+				System.out.println("\nActual:");
+				System.out.println(actual);
+				System.out.println("===");
+				assertEquals( expected, actual, "Sql formatting of \"%s\" failed".formatted(id) );
 			}
 		}
 

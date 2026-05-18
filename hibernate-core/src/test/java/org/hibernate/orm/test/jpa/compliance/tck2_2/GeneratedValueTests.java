@@ -23,6 +23,7 @@ import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -59,8 +60,13 @@ public class GeneratedValueTests {
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
-		final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
+		final Generator gen = keyValue.createGenerator(
+				dialect,
+				(RootClass) entityMapping,
+				entityMapping.getIdentifierProperty(),
+				new GeneratorSettingsImpl( bootModel )
+		);
+		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
@@ -82,8 +88,13 @@ public class GeneratedValueTests {
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
-		final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
+		final Generator gen = keyValue.createGenerator(
+				dialect,
+				(RootClass) entityMapping,
+				entityMapping.getIdentifierProperty(),
+				new GeneratorSettingsImpl( bootModel )
+		);
+		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
@@ -108,8 +119,13 @@ public class GeneratedValueTests {
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
-		final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
+		final Generator gen = keyValue.createGenerator(
+				dialect,
+				(RootClass) entityMapping,
+				entityMapping.getIdentifierProperty(),
+				new GeneratorSettingsImpl( bootModel )
+		);
+		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
@@ -136,8 +152,13 @@ public class GeneratedValueTests {
 				ExplicitSequenceGeneratorImplicitNameEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
-		final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
+		final Generator gen = keyValue.createGenerator(
+				dialect,
+				(RootClass) entityMapping,
+				entityMapping.getIdentifierProperty(),
+				new GeneratorSettingsImpl( bootModel )
+		);
+		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		Database database = bootModel.getDatabase();
 		SqlStringGenerationContext sqlStringGenerationContext =
 				SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
@@ -177,8 +198,13 @@ public class GeneratedValueTests {
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitTableGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
-		final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
+		final Generator gen = keyValue.createGenerator(
+				dialect,
+				(RootClass) entityMapping,
+				entityMapping.getIdentifierProperty(),
+				new GeneratorSettingsImpl( bootModel )
+		);
+		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
@@ -198,8 +224,13 @@ public class GeneratedValueTests {
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorImplicitNameEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
-		final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
+		final Generator gen = keyValue.createGenerator(
+				dialect,
+				(RootClass) entityMapping,
+				entityMapping.getIdentifierProperty(),
+				new GeneratorSettingsImpl( bootModel )
+		);
+		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
@@ -219,8 +250,13 @@ public class GeneratedValueTests {
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
-		final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
+		final Generator gen = keyValue.createGenerator(
+				dialect,
+				(RootClass) entityMapping,
+				entityMapping.getIdentifierProperty(),
+				new GeneratorSettingsImpl( bootModel )
+		);
+		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
@@ -242,8 +278,13 @@ public class GeneratedValueTests {
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitIncrementGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
-		final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
+		final Generator gen = keyValue.createGenerator(
+				dialect,
+				(RootClass) entityMapping,
+				entityMapping.getIdentifierProperty(),
+				new GeneratorSettingsImpl( bootModel )
+		);
+		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		assertTyping( IncrementGenerator.class, generator );
@@ -257,8 +298,13 @@ public class GeneratedValueTests {
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitIncrementGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator generator1 = keyValue.createGenerator( dialect, (RootClass) entityMapping);
-		final IdentifierGenerator generator = generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null;
+		final Generator gen = keyValue.createGenerator(
+				dialect,
+				(RootClass) entityMapping,
+				entityMapping.getIdentifierProperty(),
+				new GeneratorSettingsImpl( bootModel )
+		);
+		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		assertTyping( IncrementGenerator.class, generator );

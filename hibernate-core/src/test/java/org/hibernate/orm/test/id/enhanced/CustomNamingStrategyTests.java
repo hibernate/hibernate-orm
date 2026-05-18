@@ -26,6 +26,7 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -56,10 +57,16 @@ public class CustomNamingStrategyTests {
 
 			KeyValue keyValue = entityDescriptor.getIdentifier();
 			Dialect dialect = jdbcEnvironment.getDialect();
-			final Generator generator1 = keyValue.createGenerator( dialect, entityDescriptor);
-			final SequenceStyleGenerator generator = (SequenceStyleGenerator) (generator1 instanceof IdentifierGenerator ? (IdentifierGenerator) generator1 : null);
+			final Generator generator = keyValue.createGenerator(
+					dialect,
+					entityDescriptor,
+					entityDescriptor.getIdentifierProperty(),
+					new GeneratorSettingsImpl( domainModelScope.getDomainModel() )
+			);
+			final SequenceStyleGenerator sequenceStyleGenerator =
+					(SequenceStyleGenerator) (generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null);
 
-			final String sequenceName = generator.getDatabaseStructure().getPhysicalName().getObjectName().getText();
+			final String sequenceName = sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().getObjectName().getText();
 			assertThat( sequenceName ).isEqualTo( "ents_ids_seq" );
 		} );
 	}

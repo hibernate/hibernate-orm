@@ -27,7 +27,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.orm.test.idgen.n_ative.GeneratorSettingsImpl;
+import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;

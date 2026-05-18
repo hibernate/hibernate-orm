@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class CheckForExistingForeignKeyTest {
 
-	private class SchemaMigrator extends AbstractSchemaMigrator {
+	private static class SchemaMigrator extends AbstractSchemaMigrator {
 
 		/**
 		 * Needed constructor.
@@ -75,10 +75,10 @@ public class CheckForExistingForeignKeyTest {
 		}
 	}
 
-	private class ColumnReferenceMappingImpl implements ColumnReferenceMapping {
+	private static class ColumnReferenceMappingImpl implements ColumnReferenceMapping {
 
-		private ColumnInformation referencingColumnMetadata;
-		private ColumnInformation referencedColumnMetadata;
+		private final ColumnInformation referencingColumnMetadata;
+		private final ColumnInformation referencedColumnMetadata;
 
 		public ColumnReferenceMappingImpl(ColumnInformation referencingColumnMetadata, ColumnInformation referencedColumnMetadata) {
 			this.referencingColumnMetadata = referencingColumnMetadata;
@@ -96,7 +96,7 @@ public class CheckForExistingForeignKeyTest {
 		}
 	}
 
-	private class IdentifierHelperImpl implements IdentifierHelper {
+	private static class IdentifierHelperImpl implements IdentifierHelper {
 
 		@Override
 		public Identifier normalizeQuoting(Identifier identifier) {
@@ -162,7 +162,7 @@ public class CheckForExistingForeignKeyTest {
 		method.setAccessible( true );
 
 		// foreignKey name with same name should match
-		ForeignKey foreignKey = new ForeignKey();
+		ForeignKey foreignKey = new ForeignKey( null );
 		TableInformation tableInformation = new TableInformationImpl( null, null, null, false, null );
 		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, tableInformation );
 		assertFalse( found, "Key should not be found" );
@@ -185,7 +185,7 @@ public class CheckForExistingForeignKeyTest {
 		method.setAccessible( true );
 
 		// foreignKey name with same name should match
-		ForeignKey foreignKey = new ForeignKey();
+		ForeignKey foreignKey = new ForeignKey( null );
 		foreignKey.setName( "objectId2id" );
 		boolean found = (boolean) method.invoke( new SchemaMigrator(), foreignKey, null );
 		assertFalse( found, "Key should not be found" );
@@ -209,7 +209,7 @@ public class CheckForExistingForeignKeyTest {
 		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
 		method.setAccessible( true );
 
-		ForeignKey foreignKey = new ForeignKey();
+		ForeignKey foreignKey = new ForeignKey( null );
 		foreignKey.setName( "objectId2id" );
 		foreignKey.addColumn( new Column( "id" ) );
 		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
@@ -246,7 +246,7 @@ public class CheckForExistingForeignKeyTest {
 		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
 		method.setAccessible( true );
 
-		ForeignKey foreignKey = new ForeignKey();
+		ForeignKey foreignKey = new ForeignKey( null );
 		foreignKey.setName( "objectId2id_1" );
 		foreignKey.addColumn( new Column( "id" ) );
 		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
@@ -278,12 +278,12 @@ public class CheckForExistingForeignKeyTest {
 	 */
 	@Test
 	public void testCheckForExistingForeignKeyOne2One() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, NoSuchFieldException {
+			InvocationTargetException {
 		// Get the private method
 		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
 		method.setAccessible( true );
 
-		ForeignKey foreignKey = new ForeignKey();
+		ForeignKey foreignKey = new ForeignKey( null );
 		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
 		foreignKey.addColumn( new Column( "id" ) );
 		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
@@ -321,7 +321,7 @@ public class CheckForExistingForeignKeyTest {
 		Method method = AbstractSchemaMigrator.class.getDeclaredMethod( "checkForExistingForeignKey", ForeignKey.class, TableInformation.class );
 		method.setAccessible( true );
 
-		ForeignKey foreignKey = new ForeignKey();
+		ForeignKey foreignKey = new ForeignKey( null );
 		foreignKey.setName( "objectId2id_1" ); // Make sure the match is not successful based on key name
 		foreignKey.addColumn( new Column( "id" ) );
 		foreignKey.setReferencedTable( new Table( "orm", "table2" ) );
@@ -353,7 +353,8 @@ public class CheckForExistingForeignKeyTest {
 		List<ColumnReferenceMapping> columnMappingList = new ArrayList<>();
 		ColumnInformation referencingColumnMetadata = getColumnInformation( "-", referencingColumnName );
 		ColumnInformation referencedColumnMetadata = getColumnInformation( referencedTableName, "-" );
-		ColumnReferenceMapping columnReferenceMapping = new ColumnReferenceMappingImpl( referencingColumnMetadata, referencedColumnMetadata );
+		ColumnReferenceMapping columnReferenceMapping = new ColumnReferenceMappingImpl( referencingColumnMetadata,
+				referencedColumnMetadata );
 		columnMappingList.add( columnReferenceMapping );
 		ForeignKeyInformationImpl foreignKeyInformation = new ForeignKeyInformationImpl( new Identifier( keyName, false ), columnMappingList );
 		return foreignKeyInformation;

@@ -68,7 +68,7 @@ class BuildConfiguration {
 
 // See data category from https://github.com/quarkusio/quarkus/blob/main/.github/native-tests.json
 def configurations = [
-    new BuildConfiguration( name: "JVM test", projects: "!integration-tests/kafka-oauth-keycloak,!integration-tests/kafka-sasl-elytron,!integration-tests/hibernate-search-orm-opensearch,!integration-tests/hibernate-search-orm-elasticsearch-outbox-polling,!integration-tests/hibernate-search-orm-elasticsearch-tenancy,!integration-tests/maven,!integration-tests/quartz,!integration-tests/reactive-messaging-kafka,!integration-tests/resteasy-reactive-kotlin/standard,!integration-tests/opentelemetry-reactive-messaging,!integration-tests/virtual-threads/kafka-virtual-threads,!integration-tests/smallrye-jwt-oidc-webapp,!extensions/oidc-db-token-state-manager/deployment,!docs"),
+    new BuildConfiguration( name: "JVM test", projects: "!integration-tests/kafka-oauth-keycloak,!integration-tests/kafka-sasl-elytron,!integration-tests/hibernate-search-orm-opensearch,!integration-tests/hibernate-search-orm-elasticsearch-outbox-polling,!integration-tests/hibernate-search-orm-elasticsearch-tenancy,!integration-tests/maven,!integration-tests/quartz,!integration-tests/reactive-messaging-kafka,!integration-tests/resteasy-reactive-kotlin/standard,!integration-tests/opentelemetry-reactive-messaging,!integration-tests/virtual-threads/kafka-virtual-threads,!integration-tests/smallrye-jwt-oidc-webapp,!extensions/oidc-db-token-state-manager/deployment,!docs,!integration-tests/gradle"),
     new BuildConfiguration( name: "Data1", nativeProfile: true, projects: "jpa-h2, jpa-h2-embedded, jpa-mariadb, jpa-mssql, jpa-without-entity, hibernate-orm-tenancy/datasource, hibernate-orm-tenancy/connection-resolver, hibernate-orm-tenancy/connection-resolver-legacy-qualifiers"),
     new BuildConfiguration( name: "Data2", nativeProfile: true, projects: "jpa, jpa-mapping-xml/legacy-app, jpa-mapping-xml/modern-app, jpa-mysql, jpa-db2, jpa-oracle"),
     new BuildConfiguration( name: "Data3", nativeProfile: true, projects: "hibernate-orm-panache, hibernate-orm-panache-kotlin, hibernate-orm-envers, hibernate-orm-rest-data-panache"),
@@ -149,6 +149,10 @@ pipeline {
                                         def sedStatus = sh (script: "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' pom.xml", returnStatus: true)
                                         if ( sedStatus != 0 ) {
                                             throw new IllegalArgumentException( "Unable to replace hibernate version in Quarkus pom. Got exit code $sedStatus" )
+                                        }
+                                        def sedStatus2 = sh (script: "sed -i 's@<docker-maven-plugin.version>.*</docker-maven-plugin.version>@<docker-maven-plugin.version>0.48.1</docker-maven-plugin.version>@' build-parent/pom.xml", returnStatus: true)
+                                        if ( sedStatus2 != 0 ) {
+                                            throw new IllegalArgumentException( "Unable to replace Docker Maven plugin version in Quarkus pom. Got exit code $sedStatus" )
                                         }
                                     }
                                     // Need to override the default maven configuration this way, because there is no other way to do it

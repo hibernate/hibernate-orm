@@ -414,40 +414,42 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final List<ExecutableElement> methodsOfClass =
 					methodsIn( context.getAllMembers( element ) );
 			for ( ExecutableElement method : methodsOfClass ) {
-				if ( hasQueryStringAnnotation( method ) ) {
-					if ( method.isDefault() ) {
-						staticQueryMethods.add( method );
+				if ( validateJakartaDataMethodAnnotations( method ) ) {
+					if ( hasQueryStringAnnotation( method ) ) {
+						if ( method.isDefault() ) {
+							staticQueryMethods.add( method );
+						}
+						else {
+							queryMethods.add( method );
+						}
 					}
-					else {
+					else if ( containsAnnotation( method, FIND, JD_FIND ) ) {
 						queryMethods.add( method );
 					}
-				}
-				else if ( containsAnnotation( method, FIND, JD_FIND ) ) {
-					queryMethods.add( method );
-				}
-				else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_SAVE,
-						JD_PERSIST, JD_MERGE, JD_REFRESH, JD_REMOVE, JD_DETACH ) ) {
-					lifecycleMethods.add( method );
-				}
-				else if ( hasAnnotation( method, JD_DELETE ) ) {
-					if ( isDeleteLifecycle( method ) ) {
+					else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_SAVE,
+							JD_PERSIST, JD_MERGE, JD_REFRESH, JD_REMOVE, JD_DETACH ) ) {
 						lifecycleMethods.add( method );
 					}
-					else {
-						queryMethods.add( method );
+					else if ( hasAnnotation( method, JD_DELETE ) ) {
+						if ( isDeleteLifecycle( method ) ) {
+							lifecycleMethods.add( method );
+						}
+						else {
+							queryMethods.add( method );
+						}
 					}
-				}
-				else if ( method.getEnclosingElement().getKind().isInterface()
-						&& !method.isDefault()
-						&& !method.getModifiers().contains( Modifier.PRIVATE )
-						&& !isSessionGetter( method ) ) {
-					final String companionClassName = element.getQualifiedName().toString() + '$';
-					if ( context.getElementUtils().getTypeElement( companionClassName ) == null ) {
-						message( method, "repository method cannot be implemented (skipping whole repository)",
-								Diagnostic.Kind.WARNING );
+					else if ( method.getEnclosingElement().getKind().isInterface()
+							&& !method.isDefault()
+							&& !method.getModifiers().contains( Modifier.PRIVATE )
+							&& !isSessionGetter( method ) ) {
+						final String companionClassName = element.getQualifiedName().toString() + '$';
+						if ( context.getElementUtils().getTypeElement( companionClassName ) == null ) {
+							message( method, "repository method cannot be implemented (skipping whole repository)",
+									Diagnostic.Kind.WARNING );
+						}
+						// NOTE EARLY EXIT with initialized = false
+						return;
 					}
-					// NOTE EARLY EXIT with initialized = false
-					return;
 				}
 			}
 
@@ -909,6 +911,39 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			message( element,
 					"repository must be backed by a 'StatelessSession'",
 					Diagnostic.Kind.ERROR );
+		}
+	}
+
+	private boolean validateJakartaDataMethodAnnotations(ExecutableElement method) {
+		final List<String> annotations = new ArrayList<>();
+		addIfAnnotated( annotations, method, JD_FIND, "@Find" );
+		addIfAnnotated( annotations, method, JD_QUERY, "@Query" );
+		addIfAnnotated( annotations, method, JD_INSERT, "@Insert" );
+		addIfAnnotated( annotations, method, JD_UPDATE, "@Update" );
+		addIfAnnotated( annotations, method, JD_DELETE, "@Delete" );
+		addIfAnnotated( annotations, method, JD_SAVE, "@Save" );
+		addIfAnnotated( annotations, method, JD_PERSIST, "@Persist" );
+		addIfAnnotated( annotations, method, JD_MERGE, "@Merge" );
+		addIfAnnotated( annotations, method, JD_REFRESH, "@Refresh" );
+		addIfAnnotated( annotations, method, JD_REMOVE, "@Remove" );
+		addIfAnnotated( annotations, method, JD_DETACH, "@Detach" );
+		if ( annotations.size() > 1 ) {
+			message( method,
+					"Jakarta Data repository method annotations are mutually exclusive: "
+					+ String.join( ", ", annotations ),
+					Diagnostic.Kind.ERROR );
+			return false;
+		}
+		return true;
+	}
+
+	private static void addIfAnnotated(
+			List<String> annotations,
+			ExecutableElement method,
+			String annotationType,
+			String annotationName) {
+		if ( hasAnnotation( method, annotationType ) ) {
+			annotations.add( annotationName );
 		}
 	}
 
@@ -2443,12 +2478,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				createCriteriaFinder( method, declaredType, containerType.toString(), entity, null );
 			}
 			else {
+				final boolean firstWithOrdering = hasAnnotation( method, JD_FIRST ) && hasOrder( method );
 				for ( VariableElement parameter : method.getParameters() ) {
 					final String type = parameter.asType().toString();
 					if ( isPageParam( type ) ) {
 						message( parameter, "pagination would have no effect", Diagnostic.Kind.ERROR );
 					}
-					else if ( isOrderParam( type ) ) {
+					else if ( isOrderParam( type ) && !firstWithOrdering ) {
 						message( parameter, "ordering would have no effect", Diagnostic.Kind.ERROR );
 					}
 				}
@@ -2457,15 +2493,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						method.getParameters().stream()
 								.filter( AnnotationMetaEntity::isFinderParameterMappingToAttribute )
 								.count();
-				switch ( (int) parameterCount ) {
-					case 0:
-						message( method, "missing parameter", Diagnostic.Kind.ERROR );
-						break;
-					case 1:
-						createSingleParameterFinder( method, declaredType, entity, containerTypeName );
-						break;
-					default:
-						createMultipleParameterFinder( method, declaredType, entity, containerTypeName );
+				if ( firstWithOrdering ) {
+					createCriteriaFinder( method, declaredType, containerTypeName, entity, null );
+				}
+				else {
+					switch ( (int) parameterCount ) {
+						case 0:
+							message( method, "missing parameter", Diagnostic.Kind.ERROR );
+							break;
+						case 1:
+							createSingleParameterFinder( method, declaredType, entity, containerTypeName );
+							break;
+						default:
+							createMultipleParameterFinder( method, declaredType, entity, containerTypeName );
+					}
 				}
 			}
 		}
@@ -2785,7 +2826,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return null;
 		}
 		final boolean recordReturn = returnType.getKind() == TypeKind.DECLARED
-				&& ((TypeElement) ((DeclaredType) returnType).asElement()).getKind() == ElementKind.RECORD;
+				&& ((DeclaredType) returnType).asElement().getKind() == ElementKind.RECORD;
 		if ( !explicitMethodSelect && !recordReturn ) {
 			return null;
 		}
@@ -2954,8 +2995,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 			final String methodKey = methodName + paramTypes;
 			final List<ParameterConstraint> parameterConstraints = new ArrayList<>();
+			boolean restrictionSeen = false;
 			for ( VariableElement parameter : method.getParameters() ) {
-				if ( isFinderParameterMappingToAttribute( parameter ) ) {
+				final String typeName = parameterType( parameter ).toString();
+				if ( isDeleteSpecialParameter( typeName ) ) {
+					parameterConstraints.add( ParameterConstraint.EQUAL );
+					if ( checkDeleteSpecialParameter( entity, parameter, typeName, restrictionSeen ) ) {
+						restrictionSeen = true;
+					}
+				}
+				else if ( isFinderParameterMappingToAttribute( parameter ) ) {
+					if ( restrictionSeen ) {
+						message( parameter,
+								"parameters matching entity attributes must appear before the Restriction parameter",
+								Diagnostic.Kind.ERROR );
+					}
 					final FieldType fieldType = validateFinderParameter( entity, parameter );
 					parameterConstraints.add( parameterConstraint( parameter, fieldType ) );
 				}
@@ -2981,6 +3035,50 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					)
 			);
 		}
+	}
+
+	private boolean checkDeleteSpecialParameter(
+			TypeElement entityType,
+			VariableElement parameter,
+			String typeName,
+			boolean restrictionSeen) {
+		if ( isRestrictionParam( typeName ) ) {
+			if ( restrictionSeen ) {
+				message( parameter,
+						"automatic '@Delete' methods may have at most one Restriction parameter",
+						Diagnostic.Kind.ERROR );
+			}
+			if ( isMultivaluedRestrictionParameter( typeName ) ) {
+				message( parameter,
+						"automatic '@Delete' methods accept a single Restriction parameter, not a collection or array",
+						Diagnostic.Kind.ERROR );
+			}
+			checkFinderParameter( entityType, parameter );
+			return true;
+		}
+		else if ( isPageParam( typeName ) || isOrderParam( typeName ) || isOrderArrayParameter( typeName )
+				|| (isSpecialParam( typeName ) && !isSessionParameter( typeName )) ) {
+			message( parameter,
+					"parameter of type '" + typeName
+					+ "' is not allowed on an automatic '@Delete' method",
+					Diagnostic.Kind.ERROR );
+		}
+		return false;
+	}
+
+	private static boolean isMultivaluedRestrictionParameter(String typeName) {
+		return typeName.startsWith( LIST + "<" )
+			|| typeName.endsWith( "[]" );
+	}
+
+	private static boolean isDeleteSpecialParameter(String typeName) {
+		return isSpecialParam( typeName ) && !isRangeParam( typeName )
+			|| isOrderArrayParameter( typeName );
+	}
+
+	private static boolean isOrderArrayParameter(String typeName) {
+		return (typeName.startsWith( JD_ORDER ) || typeName.startsWith( HIB_ORDER ))
+			&& typeName.endsWith( "[]" );
 	}
 
 	private void wrongTypeArgError(TypeElement entityType, VariableElement parameter, String parameterType) {

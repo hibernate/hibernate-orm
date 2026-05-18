@@ -10,6 +10,7 @@ import jakarta.data.Limit;
 import jakarta.data.repository.CrudRepository;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.First;
+import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Select;
 
@@ -40,4 +41,8 @@ public interface InvalidSelectionRepository extends CrudRepository<SelectionBook
 	@Find
 	@First
 	List<SelectionBook> firstWithLimit(SelectionStatus status, Limit limit);
+
+	@Find
+	@Query("where status = :status")
+	List<SelectionBook> findAndQuery(SelectionStatus status);
 }

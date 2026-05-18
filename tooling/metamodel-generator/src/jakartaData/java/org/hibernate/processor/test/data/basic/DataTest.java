@@ -44,6 +44,15 @@ class DataTest {
 		assertTrue( repository.contains( "_defaultBooksWithJakartaDataQuery(String title)" ) );
 		assertTrue( repository.contains( "_defaultBooksWithJakartaQuery(String title)" ) );
 		assertTrue( repository.contains( "_defaultBooksWithNativeQuery(String title)" ) );
+		assertTrue( repository.contains( "private Event<? super LifecycleEvent<?>> event;" ) );
+		assertTrue( repository.contains( "PreInsertEvent<Book>" ) );
+		assertTrue( repository.contains( "PostInsertEvent<Book>" ) );
+		assertTrue( repository.contains( "PreUpdateEvent<Book>" ) );
+		assertTrue( repository.contains( "PostUpdateEvent<Book>" ) );
+		assertTrue( repository.contains( "PreDeleteEvent<Book>" ) );
+		assertTrue( repository.contains( "PostDeleteEvent<Book>" ) );
+		assertTrue( repository.contains( "PreUpsertEvent<Book>" ) );
+		assertTrue( repository.contains( "PostUpsertEvent<Book>" ) );
 		assertTrue( repository.contains(
 				"createNativeQuery(NATIVE_BOOK_WITH_RESULT_MAPPING_String, entity(Book.class, field(Book.class, String.class, \"isbn\", \"book_isbn\")))" ) );
 		assertTrue( repository.contains(

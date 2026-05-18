@@ -96,7 +96,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		return toUpperCase(string.charAt(0)) + string.substring(1);
 	}
 
-	static final Set<String> eventTypes = Set.of("insert", "update", "delete");
+	static final Set<String> eventTypes = Set.of("insert", "update", "delete", "upsert");
 
 	@Override
 	public String getAttributeDeclarationString() {

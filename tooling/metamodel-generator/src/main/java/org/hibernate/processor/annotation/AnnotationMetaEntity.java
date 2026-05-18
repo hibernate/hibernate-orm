@@ -2191,10 +2191,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) parameterType;
 				final TypeElement typeElement = (TypeElement) declaredType.asElement();
-				return typeElement.getQualifiedName().contentEquals( LIST )
-					&& !declaredType.getTypeArguments().isEmpty()
-						? declaredType.getTypeArguments().get( 0 )
-						: context.getElementUtils().getTypeElement( JAVA_OBJECT ).asType();
+				if ( typeElement.getQualifiedName().contentEquals( LIST ) ) {
+					final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+					return !typeArguments.isEmpty()
+							? typeArguments.get( 0 )
+							: context.getElementUtils().getTypeElement( JAVA_OBJECT ).asType();
+				}
+				else {
+					return parameterType;
+				}
 			default:
 				return parameterType;
 		}

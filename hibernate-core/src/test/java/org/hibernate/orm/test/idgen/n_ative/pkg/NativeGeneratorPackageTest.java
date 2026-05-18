@@ -10,7 +10,7 @@ import org.hibernate.id.NativeGenerator;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.orm.test.idgen.n_ative.GeneratorSettingsImpl;
+import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;

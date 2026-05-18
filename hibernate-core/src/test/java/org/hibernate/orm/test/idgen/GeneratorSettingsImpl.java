@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.idgen.n_ative;
+package org.hibernate.orm.test.idgen;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Database;

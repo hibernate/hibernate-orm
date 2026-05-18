@@ -72,11 +72,6 @@ public sealed interface Selectable permits Column, Formula {
 				: customWriteExpression;
 	}
 
-	@Deprecated(forRemoval = true, since = "7.2")
-	default String getWriteExpr(JdbcMapping jdbcMapping, Dialect dialect) {
-		return jdbcMapping.getJdbcType().wrapWriteExpression( getWriteExpr(), null, dialect );
-	}
-
 	@Incubating
 	default String getWriteExpr(JdbcMapping jdbcMapping, Dialect dialect, MappingContext mappingContext) {
 		final Size size = this instanceof Column column ? column.getColumnSize( dialect, mappingContext ) : null;

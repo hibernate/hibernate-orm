@@ -1241,18 +1241,6 @@ public abstract sealed class PersistentClass
 		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
-	@Override @Deprecated(forRemoval = true)
-	public void applyProperty(Property property) {
-		final var table = property.getValue().getTable();
-		if ( table.equals( getImplicitTable() ) ) {
-			addProperty( property );
-		}
-		else {
-			final var secondaryTable = getSecondaryTable( table.getName() );
-			secondaryTable.addProperty( property );
-		}
-	}
-
 	private boolean containsColumn(Column column) {
 		for ( var declaredProperty : declaredProperties ) {
 			if ( declaredProperty.getSelectables().contains( column ) ) {

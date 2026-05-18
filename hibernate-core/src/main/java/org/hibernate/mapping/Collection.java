@@ -799,16 +799,6 @@ public abstract sealed class Collection
 		this.typeName = typeName;
 	}
 
-	@Deprecated(since = "7.0", forRemoval = true)
-	public Properties getTypeParameters() {
-		return typeParameters;
-	}
-
-	@Deprecated(since = "7.0", forRemoval = true)
-	public void setTypeParameters(Properties parameterMap) {
-		this.typeParameters = parameterMap;
-	}
-
 	public void setTypeParameters(java.util.Map<String,String> typeParameters) {
 		this.typeParameters = new Properties();
 		this.typeParameters.putAll( typeParameters );

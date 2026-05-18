@@ -21,10 +21,8 @@ public abstract class Constraint implements Exportable, Serializable {
 
 	private String name;
 	private final ArrayList<Column> columns = new ArrayList<>();
-	private Table table;
+	private final Table table;
 	private String options = "";
-
-	Constraint() {}
 
 	Constraint(Table table) {
 		this.table = table;
@@ -80,11 +78,6 @@ public abstract class Constraint implements Exportable, Serializable {
 
 	public Table getTable() {
 		return table;
-	}
-
-	@Deprecated(since = "7")
-	public void setTable(Table table) {
-		this.table = table;
 	}
 
 	public List<Column> getColumns() {

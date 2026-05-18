@@ -8,8 +8,6 @@ import java.util.Objects;
 
 import org.hibernate.dialect.Dialect;
 
-import static org.hibernate.internal.util.StringHelper.isBlank;
-
 /**
  * Represents a table or column level {@code check} constraint.
  *
@@ -69,16 +67,6 @@ public class CheckConstraint {
 
 	public void setOptions(String options) {
 		this.options = options;
-	}
-
-	/**
-	 * @deprecated use {@link #constraintString(Dialect)} instead.
-	 */
-	@Deprecated(since = "7.0")
-	public String constraintString() {
-		return isBlank( name )
-				? " check (" + constraint + ")"
-				: " constraint " + name + " check (" + constraint + ")";
 	}
 
 	public String constraintString(Dialect dialect) {

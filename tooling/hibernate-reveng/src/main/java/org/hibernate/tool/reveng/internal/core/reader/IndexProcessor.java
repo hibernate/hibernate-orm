@@ -51,9 +51,8 @@ public class IndexProcessor {
 					if(unique) {
 						UniqueKey key = uniquekeys.get(indexName);
 						if (key==null) {
-							key = new UniqueKey();
+							key = new UniqueKey(table);
 							key.setName(indexName);
-							key.setTable(table);
 							table.addUniqueKey(key);
 							uniquekeys.put(indexName, key);
 						}

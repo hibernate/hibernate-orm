@@ -25,10 +25,6 @@ public class PrimaryKey extends Constraint {
 		super( table );
 	}
 
-	@Deprecated(since = "7")
-	public PrimaryKey() {
-	}
-
 	@Override
 	public void addColumn(Column column) {
 		// force primary key columns to not-null

@@ -224,13 +224,6 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 		this.embeddedIdentifier = embeddedIdentifier;
 	}
 
-	/**
-	 * @deprecated No longer supported
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
-	}
-
 	public void setIdentifier(KeyValue identifier) {
 		this.identifier = identifier;
 	}

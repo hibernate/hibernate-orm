@@ -7,6 +7,7 @@ package org.hibernate.tool.reveng.internal.export.lint;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -18,6 +19,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -40,6 +42,8 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+
+import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 
 public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
@@ -233,17 +237,37 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		TreeMap<Object, Generator> generators =
 				new TreeMap<>();
 
+		GeneratorSettings generatorSettings = new GeneratorSettings() {
+			@Override
+			public String getDefaultCatalog() {
+				return null;
+			}
+
+			@Override
+			public String getDefaultSchema() {
+				return null;
+			}
+
+			@Override
+			public SqlStringGenerationContext getSqlStringGenerationContext() {
+				final var database = getMetadata().getDatabase();
+				return fromExplicit( database.getJdbcEnvironment(), database, getDefaultCatalog(), getDefaultSchema() );
+			}
+		};
+
 		for ( PersistentClass pc : getMetadata().getEntityBindings() ) {
 			if ( !pc.isInherited() ) {
 
 				Generator ig = pc.getIdentifier()
 						.createGenerator(
 								dialect,
-								(RootClass) pc
+								(RootClass) pc,
+								pc.getIdentifierProperty(),
+								generatorSettings
 						);
 
-				if ( ig instanceof PersistentIdentifierGenerator ) {
-					generators.put( getGeneratorKey( (PersistentIdentifierGenerator) ig ), ig );
+				if ( ig instanceof PersistentIdentifierGenerator pig ) {
+					generators.put( getGeneratorKey( pig ), ig );
 				}
 
 			}
@@ -252,13 +276,16 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		for ( org.hibernate.mapping.Collection collection : getMetadata().getCollectionBindings() ) {
 			if ( collection.isIdentified() ) {
 
-				Generator ig = ((IdentifierCollection) collection).getIdentifier().createGenerator(
-						dialect,
-						null
-				);
+				Generator ig = ((IdentifierCollection) collection).getIdentifier()
+						.createGenerator(
+								dialect,
+								null,
+								null,
+								generatorSettings
+						);
 
-				if ( ig instanceof PersistentIdentifierGenerator ) {
-					generators.put( (getGeneratorKey( (PersistentIdentifierGenerator) ig )), ig );
+				if ( ig instanceof PersistentIdentifierGenerator pig ) {
+					generators.put( getGeneratorKey( pig ), ig );
 				}
 
 			}

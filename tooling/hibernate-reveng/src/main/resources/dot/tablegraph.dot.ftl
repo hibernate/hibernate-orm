@@ -44,7 +44,7 @@ digraph TableGraph {
   /* Node ${table.name} */
   <@nodeName table/> [ label = "<@columnLabels name=table.name columns=table.columns/>" ]  
   
-  <@propertyEdges root=table.name?replace(".","_dot_") foreignKeys=table.foreignKeys.values()/>     
+  <@propertyEdges root=table.name?replace(".","_dot_") foreignKeys=table.foreignKeys/>
   </#if>
 </#list>
 

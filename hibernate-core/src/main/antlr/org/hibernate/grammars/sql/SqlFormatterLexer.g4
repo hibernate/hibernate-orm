@@ -17,7 +17,7 @@ BLOCK_COMMENT
     : '/*' .*? '*/'
     ;
 
-// Keywords - ordered by frequency and importance
+// Keywords
 SELECT      : [sS][eE][lL][eE][cC][tT];
 FROM        : [fF][rR][oO][mM];
 WHERE       : [wW][hH][eE][rR][eE];
@@ -82,6 +82,49 @@ CAST        : [cC][aA][sS][tT];
 BOTH        : [bB][oO][tT][hH];
 LEADING     : [lL][eE][aA][dD][iI][nN][gG];
 TRAILING    : [tT][rR][aA][iI][lL][iI][nN][gG];
+MERGE       : [mM][eE][rR][gG][eE];
+CREATE      : [cC][rR][eE][aA][tT][eE];
+REPLACE     : [rR][eE][pP][lL][aA][cC][eE];
+ALTER       : [aA][lL][tT][eE][rR];
+REFRESH     : [rR][eE][fF][rR][eE][sS][hH];
+DROP        : [dD][rR][oO][pP];
+DEFAULT     : [dD][eE][fF][aA][uU][lL][tT];
+UNIQUE      : [uU][nN][iI][qQ][uU][eE];
+PRIMARY     : [pP][rR][iI][mM][aA][rR][yY];
+FOREIGN     : [fF][oO][rR][eE][iI][gG][nN];
+KEY         : [kK][eE][yY];
+CONSTRAINT  : [cC][oO][nN][sS][tT][rR][aA][iI][nN][tT];
+REFERENCES  : [rR][eE][fF][eE][rR][eE][nN][cC][eE][sS];
+CHECK       : [cC][hH][eE][cC][kK];
+GENERATED   : [gG][eE][nN][eE][rR][aA][tT][eE][dD];
+ALWAYS      : [aA][lL][wW][aA][yY][sS];
+IDENTITY    : [iI][dD][eE][nN][tT][iI][tT][yY];
+TRUNCATE    : [tT][rR][uU][nN][cC][aA][tT][eE];
+TABLE       : [tT][aA][bB][lL][eE];
+SEQUENCE    : [sS][eE][qQ][uU][eE][nN][cC][eE];
+START       : [sS][tT][aA][rR][tT];
+INCREMENT   : [iI][nN][cC][rR][eE][mM][eE][nN][tT];
+MINVALUE    : [mM][iI][nN][vV][aA][lL][uU][eE];
+MAXVALUE    : [mM][aA][xX][vV][aA][lL][uU][eE];
+CYCLE       : [cC][yY][cC][lL][eE];
+CACHE       : [cC][aA][cC][hH][eE];
+NO          : [nN][oO];
+INDEX       : [iI][nN][dD][eE][xX];
+VIEW        : [vV][iI][eE][wW];
+TEMP        : [tT][eE][mM][pP];
+MATERIALIZED: [mM][aA][tT][eE][rR][iI][aA][lL][iI][zZ][eE][dD];
+PARTITION   : [pP][aA][rR][tT][iI][tT][iI][oO][nN];
+RANGE       : [rR][aA][nN][gG][eE];
+OF          : [oO][fF];
+FOR         : [fF][oO][rR];
+TO          : [tT][oO];
+CONFLICT    : [cC][oO][nN][fF][lL][iI][cC][tT];
+DO          : [dD][oO];
+NOTHING     : [nN][oO][tT][hH][iI][nN][gG];
+DUPLICATE   : [dD][uU][pP][lL][iI][cC][aA][tT][eE];
+RETURNING   : [rR][eE][tT][uU][rR][nN][iI][nN][gG];
+USING       : [uU][sS][iI][nN][gG];
+MATCHED     : [mM][aA][tT][cC][hH][eE][dD];
 
 // Quoted identifiers - preserve exact quoting style
 DOUBLE_QUOTED_IDENTIFIER

@@ -117,3 +117,189 @@ OFFSET 10 ROWS
 FETCH FIRST 5 ROWS
 WITH TIES;
 
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_basic
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice','alice@ibm.com',75);
+
+=== EXPECTED ===
+INSERT INTO empl
+	(id, name, email, salary)
+VALUES
+	(1, 'alice', 'alice@ibm.com', 75);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_basic_no_columns
+
+=== SQL ===
+insert into empl values (1,'alice','alice@ibm.com',75);
+
+=== EXPECTED ===
+INSERT INTO empl
+VALUES
+	(1, 'alice', 'alice@ibm.com', 75);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_multi_row
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice','alice@ibm.com',75),(2,'lewis','lewis@ibm.com', 100)
+on conflict (email) do nothing;
+
+=== EXPECTED ===
+INSERT INTO empl
+	(id, name, email, salary)
+VALUES
+	(1, 'alice', 'alice@ibm.com', 75),
+	(2, 'lewis', 'lewis@ibm.com', 100)
+ON CONFLICT (email)
+DO NOTHING;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_on_conflict2
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice', 'alice@ibm.com', 75)
+on conflict on constraint user_pk do nothing;
+
+=== EXPECTED ===
+INSERT INTO empl
+	(id, name, email, salary)
+VALUES
+	(1, 'alice', 'alice@ibm.com', 75)
+ON CONFLICT ON CONSTRAINT user_pk
+DO NOTHING;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_from_select
+
+=== SQL ===
+insert into empl_arch (id,name,salary) select (id,name,salary) from empl where active = 'true';
+
+=== EXPECTED ===
+INSERT INTO empl_arch
+	(id, name, salary)
+SELECT (id, name, salary)
+FROM empl
+WHERE active = 'true';
+
+@@@@ FIXTURE @@@@
+=== ID ===
+upsert_returning
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice', 'alice@ibm.com', 75)
+on conflict (email) do update set name = excluded.name returning *;
+
+=== EXPECTED ===
+INSERT INTO empl
+	(id, name, email, salary)
+VALUES
+	(1, 'alice', 'alice@ibm.com', 75)
+ON CONFLICT (email)
+DO UPDATE
+SET name = excluded.name
+RETURNING *;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+upsert2
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice', 'alice@ibm.com', 75)
+on duplicate key update name = values(name),salary=values(salary);
+
+=== EXPECTED ===
+INSERT INTO empl
+	(id, name, email, salary)
+VALUES
+	(1, 'alice', 'alice@ibm.com', 75)
+ON DUPLICATE KEY
+UPDATE name = VALUES(name), salary = VALUES(salary);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update
+
+=== SQL ===
+update empl set salary=salary * 1.10, updated_at='2026-01-01',valid_until='2026-12-31',bonus_perc=bonus_perc*1.10 where dept_id=3;
+
+=== EXPECTED ===
+UPDATE empl
+SET
+	salary = salary * 1.10,
+	updated_at = '2026-01-01',
+	valid_until = '2026-12-31',
+	bonus_perc = bonus_perc * 1.10
+WHERE dept_id = 3;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update_from
+
+=== SQL ===
+update empl e set salary=su.salary from salary_updates su where e.id=su.emp_id;
+
+=== EXPECTED ===
+UPDATE empl e
+SET salary = su.salary
+FROM salary_updates su
+WHERE e.id = su.emp_id;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update_subquery
+
+=== SQL ===
+update empl set dept_id = (select id from dept where name='engineering') where role='developer';
+
+=== EXPECTED ===
+UPDATE empl
+SET dept_id = (
+	SELECT id
+	FROM dept
+	WHERE name = 'engineering'
+)
+WHERE role = 'developer';
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update_case
+
+=== SQL ===
+update orders set status = case when shipped_at is not null then 'SHIPPED' else 'PENDING' end;
+
+=== EXPECTED ===
+UPDATE orders
+SET status =
+	CASE
+		WHEN shipped_at IS NOT NULL THEN 'SHIPPED'
+		ELSE 'PENDING'
+	END;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+merge_upsert
+
+=== SQL ===
+merge into customers c using customer_updates cu on (c.id = cu.id) when matched then update set c.email = cu.email
+when not matched then insert (id, email) values (cu.id, cu.email);
+
+=== EXPECTED ===
+MERGE INTO customers c
+USING customer_updates cu
+ON
+	(c.id = cu.id)
+WHEN MATCHED THEN
+	UPDATE
+	SET c.email = cu.email
+WHEN NOT MATCHED THEN
+	INSERT (id, email)
+	VALUES
+		(cu.id, cu.email);

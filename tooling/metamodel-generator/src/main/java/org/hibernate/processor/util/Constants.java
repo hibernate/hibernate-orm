@@ -92,6 +92,7 @@ public final class Constants {
 	public static final String JD_PAGE_REQUEST = "jakarta.data.page.PageRequest";
 	public static final String JD_PAGE = "jakarta.data.page.Page";
 	public static final String JD_CURSORED_PAGE = "jakarta.data.page.CursoredPage";
+	public static final String JD_RESTRICTION = "jakarta.data.restrict.Restriction";
 	public static final String BASIC_REPOSITORY = "jakarta.data.repository.BasicRepository";
 	public static final String CRUD_REPOSITORY = "jakarta.data.repository.CrudRepository";
 	public static final String DATA_REPOSITORY = "jakarta.data.repository.DataRepository";

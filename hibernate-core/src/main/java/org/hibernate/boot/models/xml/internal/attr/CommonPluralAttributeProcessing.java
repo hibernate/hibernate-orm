@@ -43,6 +43,10 @@ public class CommonPluralAttributeProcessing {
 		final ModelsContext buildingContext = xmlDocumentContext.getModelBuildingContext();
 		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
 
+		if ( jaxbPluralAttribute.isMutable() != null && !jaxbPluralAttribute.isMutable() ) {
+			memberDetails.applyAnnotationUsage( HibernateAnnotations.IMMUTABLE, buildingContext );
+		}
+
 		if ( jaxbPluralAttribute.getFetchMode() != null ) {
 			final FetchAnnotation fetchAnn = (FetchAnnotation) memberDetails.applyAnnotationUsage(
 					HibernateAnnotations.FETCH,

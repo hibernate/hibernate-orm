@@ -79,6 +79,9 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 
 	void setMapKeyForeignKey(JaxbForeignKeyImpl value);
 
+	Boolean isMutable();
+	void setMutable(Boolean mutable);
+
 	String getSqlRestriction();
 	void setSqlRestriction(String sqlRestriction);
 

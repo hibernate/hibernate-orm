@@ -23,8 +23,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 			@Nullable String containerType,
 			List<String> paramNames, List<String> paramTypes,
 			List<Boolean> paramNullability,
-			List<Boolean> multivalued,
-			List<Boolean> paramPatterns,
+			List<ParameterConstraint> parameterConstraints,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
@@ -35,8 +34,8 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 			String fullReturnType,
 			boolean nullable) {
 		super( annotationMetaEntity, method, methodName, entity, containerType, belongsToDao, sessionType, sessionName,
-				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, multivalued,
-				paramPatterns, fullReturnType, nullable );
+				fetchProfiles, paramNames, paramTypes, orderBys, addNonnullAnnotation, dataRepository, parameterConstraints,
+				fullReturnType, nullable );
 		this.paramNullability = paramNullability;
 	}
 

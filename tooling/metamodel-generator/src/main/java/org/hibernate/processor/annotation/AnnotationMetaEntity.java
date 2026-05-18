@@ -2315,16 +2315,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String methodName = method.getSimpleName().toString();
 		final List<String> paramNames = parameterNames( method, entity );
 		final List<String> paramTypes = parameterTypes( method );
-		final List<Boolean> paramPatterns = parameterPatterns( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
-		final List<Boolean> multivalued = new ArrayList<>();
+		final List<ParameterConstraint> parameterConstraints = new ArrayList<>();
 		for ( VariableElement parameter : method.getParameters() ) {
 			if ( isFinderParameterMappingToAttribute( parameter ) ) {
-				multivalued.add( validateFinderParameter( entity, parameter ) == FieldType.MULTIVALUED );
+				final FieldType fieldType = validateFinderParameter( entity, parameter );
+				parameterConstraints.add( parameterConstraint( parameter, fieldType ) );
 			}
 			else {
-				multivalued.add( false );
+				parameterConstraints.add( ParameterConstraint.EQUAL );
 				checkFinderParameter( entity, parameter );
 			}
 		}
@@ -2338,8 +2338,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						paramNames,
 						paramTypes,
 						parameterNullability( method, entity ),
-						multivalued,
-						paramPatterns,
+						parameterConstraints,
 						repository,
 						sessionType[0],
 						sessionType[1],
@@ -2416,16 +2415,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final String methodName = method.getSimpleName().toString();
 			final List<String> paramNames = parameterNames( method, entity );
 			final List<String> paramTypes = parameterTypes( method );
-			final List<Boolean> paramPatterns = parameterPatterns( method );
 			final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 			final String methodKey = methodName + paramTypes;
-			final List<Boolean> multivalued = new ArrayList<>();
+			final List<ParameterConstraint> parameterConstraints = new ArrayList<>();
 			for ( VariableElement parameter : method.getParameters() ) {
 				if ( isFinderParameterMappingToAttribute( parameter ) ) {
-					multivalued.add( validateFinderParameter( entity, parameter ) == FieldType.MULTIVALUED );
+					final FieldType fieldType = validateFinderParameter( entity, parameter );
+					parameterConstraints.add( parameterConstraint( parameter, fieldType ) );
 				}
 				else {
-					multivalued.add( false );
+					parameterConstraints.add( ParameterConstraint.EQUAL );
 				}
 			}
 			putMember( methodKey,
@@ -2436,8 +2435,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramNames,
 							paramTypes,
 							parameterNullability( method, entity ),
-							multivalued,
-							paramPatterns,
+							parameterConstraints,
 							repository,
 							sessionType[0],
 							sessionType[1],
@@ -2646,20 +2644,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
-		final List<Boolean> multivalued = new ArrayList<>();
+		final List<ParameterConstraint> parameterConstraints = new ArrayList<>();
 		final List<@Nullable FieldType> fieldTypes = new ArrayList<>();
+		boolean equalityOnly = true;
 		for ( VariableElement parameter : method.getParameters() ) {
 			if ( isFinderParameterMappingToAttribute( parameter ) ) {
 				final FieldType fieldType = validateFinderParameter( entity, parameter );
+				final ParameterConstraint parameterConstraint = parameterConstraint( parameter, fieldType );
 				fieldTypes.add( fieldType );
-				multivalued.add( fieldType == FieldType.MULTIVALUED );
+				parameterConstraints.add( parameterConstraint );
+				equalityOnly = equalityOnly && parameterConstraint == ParameterConstraint.EQUAL;
 			}
 			else {
-				multivalued.add( false );
+				parameterConstraints.add( ParameterConstraint.EQUAL );
 			}
 		}
 		warnAboutMissingOrder( method );
 		if ( !usingStatelessSession( sessionType[0] ) // no byNaturalId() lookup API for SS
+			&& equalityOnly
 			&& matchesNaturalKey( entity, fieldTypes ) ) {
 			putMember( methodKey,
 					new NaturalIdFinderMethod(
@@ -2681,7 +2683,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			);
 		}
 		else {
-			final List<Boolean> paramPatterns = parameterPatterns( method );
 			putMember( methodKey,
 					new CriteriaFinderMethod(
 							this, method,
@@ -2691,8 +2692,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramNames,
 							paramTypes,
 							parameterNullability( method, entity ),
-							multivalued,
-							paramPatterns,
+							parameterConstraints,
 							repository,
 							sessionType[0],
 							sessionType[1],
@@ -2739,9 +2739,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final FieldType fieldType = validateFinderParameter( entity, parameter );
 		if ( fieldType != null ) {
+			final ParameterConstraint parameterConstraint = parameterConstraint( parameter, fieldType );
 			final String methodKey = methodName + "!";
 			final List<String> profiles = enabledFetchProfiles( method );
-			switch ( pickStrategy( fieldType, sessionType[0], profiles ) ) {
+			switch ( pickStrategy( parameterConstraint == ParameterConstraint.EQUAL ? fieldType : FieldType.BASIC,
+					sessionType[0], profiles ) ) {
 				case ID:
 					putMember( methodKey,
 							new IdFinderMethod(
@@ -2796,8 +2798,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									paramNames,
 									paramTypes,
 									parameterNullability( method, entity ),
-									parameterMultivalued( method, fieldType ),
-									parameterPatterns( method ),
+									parameterConstraints( method, fieldType ),
 									repository,
 									sessionType[0],
 									sessionType[1],
@@ -2814,10 +2815,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static List<Boolean> parameterMultivalued(ExecutableElement method, FieldType fieldType) {
+	private List<ParameterConstraint> parameterConstraints(ExecutableElement method, FieldType fieldType) {
 		return method.getParameters().stream()
 				.map( param -> isFinderParameterMappingToAttribute( param )
-							&& fieldType == FieldType.MULTIVALUED )
+						? parameterConstraint( param, fieldType )
+						: ParameterConstraint.EQUAL )
 				.collect( toList() );
 	}
 
@@ -2876,13 +2878,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( checkParameterType( entityType, param, attributeType ) ) {
 				return FieldType.MULTIVALUED;
 			}
-			else if ( containsAnnotation( param, PATTERN ) ) {
-				final AnnotationMirror mirror = getAnnotationMirror( param, PATTERN );
-				if ( mirror != null && !typeNameEquals( param.asType(), STRING ) ) {
-					message( param, mirror,
-							"parameter annotated '@Pattern' is not of type 'String'",
-							Diagnostic.Kind.ERROR );
-				}
+			else if ( parameterConstraint( param, FieldType.BASIC ) != ParameterConstraint.EQUAL ) {
 				return FieldType.BASIC;
 			}
 			else if ( containsAnnotation( member, ID, EMBEDDED_ID ) ) {
@@ -2946,14 +2942,27 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final Types types = context.getTypeUtils();
 //		if ( entityType.getKind() == CLASS ) { // do no checks if the entity type is a type variable
 		TypeMirror parameterType = parameterType( param );
-		if ( types.isSameType( parameterType, attributeType ) ) {
+		final TypeMirror attributeValueType = boxedType( attributeType );
+		final ParameterConstraint explicitConstraint = explicitParameterConstraint( param, true );
+		if ( isConstraintParameterType( parameterType ) ) {
+			if ( explicitConstraint != null ) {
+				message( param, "'@Is' and '@Pattern' do not apply to Constraint parameters",
+						Diagnostic.Kind.ERROR );
+			}
+			if ( isRawGenericType( parameterType ) ) {
+				message( param, "missing attribute type of constraint parameter", Diagnostic.Kind.ERROR );
+			}
+			else if ( !constraintParameterMatches( parameterType, attributeValueType ) ) {
+				parameterTypeError( entityType, param, attributeValueType );
+			}
+			return false;
+		}
+		else if ( types.isSameType( parameterType, attributeType )
+				|| types.isSameType( boxedType( parameterType ), attributeValueType ) ) {
+			validateParameterConstraint( param, attributeValueType, explicitConstraint, false );
 			return false;
 		}
 		else {
-			if ( attributeType.getKind().isPrimitive() ) {
-				final PrimitiveType primitiveType = (PrimitiveType) attributeType;
-				attributeType = types.boxedClass( primitiveType ).asType();
-			}
 			final TypeKind kind = parameterType.getKind();
 			switch ( kind ) {
 				case TYPEVAR:
@@ -2961,34 +2970,38 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					parameterType = typeVariable.getUpperBound();
 					// INTENTIONAL FALL-THROUGH
 				case DECLARED:
-					if ( types.isSameType( parameterType, attributeType ) ) {
+					if ( types.isSameType( parameterType, attributeValueType ) ) {
+						validateParameterConstraint( param, attributeValueType, explicitConstraint, false );
 						return false;
 					}
 					else {
-						final TypeElement list = context.getTypeElementForFullyQualifiedName( LIST );
 						final TypeElement range = context.getTypeElementForFullyQualifiedName( HIB_RANGE );
-						if ( types.isSameType( parameterType, types.getDeclaredType( list, attributeType ) ) ) {
+						if ( isMultivaluedParameterType( parameterType, attributeValueType ) ) {
+							validateParameterConstraint( param, attributeValueType, explicitConstraint, true );
 							return true;
 						}
-						else if ( types.isSameType( parameterType, types.getDeclaredType( range, attributeType ) ) ) {
+						else if ( types.isSameType( parameterType, types.getDeclaredType( range, attributeValueType ) ) ) {
 							return false;
 						}
 						else {
-							parameterTypeError( entityType, param, attributeType );
+							parameterTypeError( entityType, param, attributeValueType );
 							return false;
 						}
 					}
 				case ARRAY:
-					if ( !types.isSameType( parameterType, types.getArrayType( attributeType ) ) ) {
-						parameterTypeError( entityType, param, attributeType );
+					final ArrayType arrayType = (ArrayType) parameterType;
+					if ( !types.isSameType( boxedType( arrayType.getComponentType() ), attributeValueType ) ) {
+						parameterTypeError( entityType, param, attributeValueType );
 					}
+					validateParameterConstraint( param, attributeValueType, explicitConstraint, true );
 					return true;
 				default:
 					if ( kind.isPrimitive() ) {
 						final PrimitiveType primitiveType = (PrimitiveType) parameterType;
-						if ( !types.isSameType( types.boxedClass( primitiveType ).asType(), attributeType ) ) {
-							parameterTypeError( entityType, param, attributeType );
+						if ( !types.isSameType( types.boxedClass( primitiveType ).asType(), attributeValueType ) ) {
+							parameterTypeError( entityType, param, attributeValueType );
 						}
+						validateParameterConstraint( param, attributeValueType, explicitConstraint, false );
 						return false;
 					}
 					else {
@@ -3001,6 +3014,164 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 //		else {
 //			return false;
 //		}
+	}
+
+	private ParameterConstraint parameterConstraint(VariableElement param, @Nullable FieldType fieldType) {
+		if ( isConstraintParameterType( parameterType( param ) ) ) {
+			return ParameterConstraint.RUNTIME;
+		}
+		final ParameterConstraint explicitConstraint = explicitParameterConstraint( param, false );
+		if ( explicitConstraint != null ) {
+			return explicitConstraint;
+		}
+		else {
+			return fieldType == FieldType.MULTIVALUED
+					? ParameterConstraint.IN
+					: ParameterConstraint.EQUAL;
+		}
+	}
+
+	private @Nullable ParameterConstraint explicitParameterConstraint(
+			VariableElement param,
+			boolean reportUnsupportedConstraint) {
+		final AnnotationMirror is = getAnnotationMirror( param, JD_IS );
+		if ( is != null ) {
+			final AnnotationValue value = getAnnotationValue( is );
+			if ( value == null ) {
+				return ParameterConstraint.EQUAL;
+			}
+			else if ( value.getValue() instanceof TypeMirror constraintType ) {
+				final ParameterConstraint constraint =
+						ParameterConstraint.fromConstraintType( constraintType.toString() );
+				if ( constraint != null ) {
+					return constraint;
+				}
+				else {
+					if ( reportUnsupportedConstraint ) {
+						message( param, is,
+								"unsupported '@Is' constraint type '" + constraintType + "'",
+								Diagnostic.Kind.ERROR );
+					}
+					return ParameterConstraint.EQUAL;
+				}
+			}
+		}
+		return containsAnnotation( param, PATTERN ) ? ParameterConstraint.LIKE : null;
+	}
+
+	private void validateParameterConstraint(
+			VariableElement param,
+			TypeMirror attributeType,
+			@Nullable ParameterConstraint parameterConstraint,
+			boolean multivaluedParameter) {
+		if ( parameterConstraint != null ) {
+			if ( parameterConstraint.isMultivalued() && !multivaluedParameter ) {
+				message( param,
+						"'@Is(" + parameterConstraint + ")' requires a collection or array parameter",
+						Diagnostic.Kind.ERROR );
+			}
+			else if ( !parameterConstraint.isMultivalued() && multivaluedParameter ) {
+				message( param,
+						"'@Is(" + parameterConstraint + ")' does not accept a collection or array parameter",
+						Diagnostic.Kind.ERROR );
+			}
+			if ( parameterConstraint.isStringPattern() && !typeNameEquals( attributeType, STRING ) ) {
+				message( param,
+						"parameter with pattern constraint is not mapped to a String field",
+						Diagnostic.Kind.ERROR );
+			}
+			if ( parameterConstraint.isComparison() && !isComparableType( attributeType ) ) {
+				message( param,
+						"parameter with comparison constraint is not mapped to a Comparable field",
+						Diagnostic.Kind.ERROR );
+			}
+		}
+	}
+
+	private boolean isMultivaluedParameterType(TypeMirror parameterType, TypeMirror attributeType) {
+		if ( parameterType.getKind() != TypeKind.DECLARED ) {
+			return false;
+		}
+		final String typeName = typeName( parameterType );
+		if ( !typeName.equals( LIST ) && !typeName.equals( SET ) && !typeName.equals( COLLECTION ) ) {
+			return false;
+		}
+		final DeclaredType declaredType = (DeclaredType) parameterType;
+		final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+		return typeArguments.size() == 1
+			&& typeArgumentMatchesAttribute( typeArguments.get( 0 ), attributeType );
+	}
+
+	private boolean isConstraintParameterType(TypeMirror parameterType) {
+		if ( parameterType.getKind() == TypeKind.TYPEVAR ) {
+			return isConstraintParameterType( ((TypeVariable) parameterType).getUpperBound() );
+		}
+		else if ( parameterType.getKind() == TypeKind.DECLARED ) {
+			final Types types = context.getTypeUtils();
+			final TypeElement constraint = context.getTypeElementForFullyQualifiedName( JD_CONSTRAINT );
+			return constraint != null
+				&& types.isAssignable( types.erasure( parameterType ), types.erasure( constraint.asType() ) );
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean constraintParameterMatches(TypeMirror parameterType, TypeMirror attributeType) {
+		if ( parameterType.getKind() == TypeKind.TYPEVAR ) {
+			return constraintParameterMatches( ((TypeVariable) parameterType).getUpperBound(), attributeType );
+		}
+		final Types types = context.getTypeUtils();
+		final TypeElement constraint = context.getTypeElementForFullyQualifiedName( JD_CONSTRAINT );
+		if ( constraint == null ) {
+			return false;
+		}
+		if ( types.isAssignable( parameterType, types.getDeclaredType( constraint, attributeType ) ) ) {
+			return true;
+		}
+		else if ( parameterType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) parameterType;
+			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+			return typeArguments.size() == 1
+				&& typeArgumentMatchesAttribute( typeArguments.get( 0 ), attributeType );
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean typeArgumentMatchesAttribute(TypeMirror typeArgument, TypeMirror attributeType) {
+		final Types types = context.getTypeUtils();
+		if ( typeArgument.getKind() == TypeKind.WILDCARD ) {
+			final WildcardType wildcardType = (WildcardType) typeArgument;
+			final TypeMirror superBound = wildcardType.getSuperBound();
+			return superBound != null
+				&& types.isAssignable( attributeType, boxedType( superBound ) );
+		}
+		else {
+			return types.isSameType( boxedType( typeArgument ), attributeType );
+		}
+	}
+
+	private boolean isRawGenericType(TypeMirror parameterType) {
+		if ( parameterType.getKind() == TypeKind.TYPEVAR ) {
+			return isRawGenericType( ((TypeVariable) parameterType).getUpperBound() );
+		}
+		else if ( parameterType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) parameterType;
+			return declaredType.getTypeArguments().isEmpty()
+				&& declaredType.asElement() instanceof TypeElement typeElement
+				&& !typeElement.getTypeParameters().isEmpty();
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean isComparableType(TypeMirror attributeType) {
+		final Types types = context.getTypeUtils();
+		final TypeElement comparable = context.getTypeElementForFullyQualifiedName( Comparable.class.getName() );
+		return types.isAssignable( types.erasure( attributeType ), types.erasure( comparable.asType() ) );
 	}
 
 	private void parameterTypeError(TypeElement entityType, VariableElement param, TypeMirror attributeType) {
@@ -4157,12 +4328,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private ExecutableType memberMethodType(ExecutableElement method) {
 		return (ExecutableType) context.getTypeUtils()
 				.asMemberOf( (DeclaredType) element.asType(), method );
-	}
-
-	private static List<Boolean> parameterPatterns(ExecutableElement method) {
-		return method.getParameters().stream()
-				.map( param -> hasAnnotation( param, PATTERN ) )
-				.toList();
 	}
 
 	private List<String> parameterNames(ExecutableElement method, TypeElement entity) {

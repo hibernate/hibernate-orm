@@ -14,6 +14,8 @@ elif [ "$RDBMS" == 'edb' ]; then
   bash $DIR/../docker_db.sh edb
 elif [ "$RDBMS" == 'spannerpgsql' ]; then
   bash $DIR/../docker_db.sh spanner_pg
+elif [ "$RDBMS" == 'spanner' ]; then
+  bash $DIR/../docker_db.sh spanner
 elif [ "$RDBMS" == 'db2' ]; then
   bash $DIR/../docker_db.sh db2
 elif [ "$RDBMS" == 'oracle' ]; then

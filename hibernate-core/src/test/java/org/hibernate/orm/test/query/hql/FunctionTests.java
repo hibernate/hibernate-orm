@@ -642,6 +642,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "date and timestamp are not compatible")
 	public void testDateTruncWithLocalDatetimeMinusLocalDate(SessionFactoryScope scope) {
 		scope.inTransaction( session ->
 				assertThat( session.createQuery( "select trunc(local datetime, day) - local date", Duration.class )

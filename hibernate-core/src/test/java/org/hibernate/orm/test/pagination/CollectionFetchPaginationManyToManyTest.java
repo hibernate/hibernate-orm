@@ -23,6 +23,7 @@ import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -144,7 +145,7 @@ public class CollectionFetchPaginationManyToManyTest {
 			assertTrue( generated.contains( "author_book_link" ) );
 			assertTrue( generated.contains( "book_entity" ) );
 			var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-			if ( !(dialect instanceof HSQLDialect ) && !(dialect instanceof MariaDBDialect) && !(dialect instanceof OracleDialect) ) {
+			if ( !(dialect instanceof HSQLDialect ) && !(dialect instanceof MariaDBDialect) && !(dialect instanceof OracleDialect) && !(dialect instanceof SpannerDialect) ) {
 				final int existsStart = generated.indexOf( "exists(select 1 from author_book_link" );
 				final int existsWhere = generated.indexOf( " where", existsStart );
 				assertTrue( existsStart >= 0 );

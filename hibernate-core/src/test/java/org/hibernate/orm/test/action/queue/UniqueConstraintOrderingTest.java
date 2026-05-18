@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.FlushSettings;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -274,6 +275,7 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Emulator bug")
+	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Emulator bug")
 	public void testDeleteAndInsertSameEmbeddableUniqueSlot(SessionFactoryScope scope) {
 		var sfi = scope.getSessionFactory();
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {

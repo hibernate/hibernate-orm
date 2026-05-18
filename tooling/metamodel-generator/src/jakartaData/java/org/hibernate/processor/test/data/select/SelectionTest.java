@@ -6,13 +6,12 @@ package org.hibernate.processor.test.data.select;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import org.hibernate.processor.HibernateProcessor;
@@ -21,6 +20,7 @@ import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
 
+import static java.nio.charset.Charset.defaultCharset;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -66,15 +66,15 @@ class SelectionTest {
 	@Test
 	void invalidSelectAndFirstUsesMeaningfulDiagnostics() throws Exception {
 		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-		try ( StandardJavaFileManager fileManager = compiler.getStandardFileManager( diagnostics, null, null ) ) {
-			final List<File> sourceFiles = List.of(
+		final var compiler = ToolProvider.getSystemJavaCompiler();
+		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
+			final var sourceFiles = List.of(
 					sourceFile( SelectionStatus.class ),
 					sourceFile( SelectionPublisher.class ),
 					sourceFile( SelectionBook.class ),
 					sourceFile( InvalidSelectionRepository.class )
 			);
-			final JavaCompiler.CompilationTask task = compiler.getTask(
+			final var task = compiler.getTask(
 					null,
 					fileManager,
 					diagnostics,
@@ -92,7 +92,7 @@ class SelectionTest {
 		final String messages = diagnostics.getDiagnostics()
 				.stream()
 				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( null ) )
+				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
 				.collect( Collectors.joining( "\n" ) );
 
 		assertTrue( messages.contains( "no matching field named 'missing' in entity class" ) );

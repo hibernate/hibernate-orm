@@ -13,7 +13,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.tool.schema.spi.Exporter;
 
 import static org.hibernate.internal.util.StringHelper.isBlank;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -41,15 +41,16 @@ public class StandardIndexExporter implements Exporter<Index> {
 				.append( indexName( index, context, metadata ) )
 				.append( " on " )
 				.append( context.format( index.getTable().getQualifiedTableName() ) );
-		if ( isNotEmpty( index.getUsing() ) ) {
-			createIndex.append( " using " )
-					.append( index.getUsing() );
+		final String using = index.getUsing();
+		if ( isNotBlank( using ) ) {
+			createIndex.append( " using " ).append( using );
 		}
 		createIndex.append( " (" );
 		appendColumnList( index, createIndex );
 		createIndex.append( ")" );
-		if ( isNotEmpty( index.getOptions() ) ) {
-			createIndex.append( " " ).append( index.getOptions() );
+		String options = index.getOptions();
+		if ( isNotBlank( options ) ) {
+			createIndex.append( " " ).append( options );
 		}
 		return new String[] { createIndex.toString() };
 	}

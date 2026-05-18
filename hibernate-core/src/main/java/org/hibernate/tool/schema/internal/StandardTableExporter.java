@@ -32,6 +32,7 @@ import static java.util.Comparator.comparing;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.appendColumn;
 
@@ -54,93 +55,15 @@ public class StandardTableExporter implements Exporter<Table> {
 			Metadata metadata,
 			SqlStringGenerationContext context) {
 		final var tableName = getTableName( table );
-
 		try {
 			final String formattedTableName = context.format( tableName );
-
-			final var createTable = new StringBuilder();
-
-			final String viewQuery = table.getViewQuery();
-			if ( viewQuery != null ) {
-				createTable.append("create view ")
-						.append( formattedTableName );
-				if ( dialect.requiresColumnListInCreateView() ) {
-					createTable.append(" (");
-					var sortedColumns =
-							table.getColumns().stream()
-									.sorted( comparing( c -> viewQuery.indexOf( c.getQuotedName( dialect ) ) ) )
-									.toList();
-					boolean isFirst = true;
-					for ( Column column : sortedColumns ) {
-						if ( isFirst ) {
-							isFirst = false;
-						}
-						else {
-							createTable.append( ", " );
-						}
-						createTable.append( column.getQuotedName( dialect ) );
-					}
-					createTable.append(")");
-				}
-				createTable.append(" as ")
-						.append( viewQuery );
-			}
-			else {
-				final var extra = new StringBuilder();
-
-				createTable.append( tableCreateString( table ) )
-						.append( ' ' )
-						.append( formattedTableName )
-						.append( " (" );
-
-				boolean isFirst = true;
-				for ( Column column : table.getColumns() ) {
-					if ( isFirst ) {
-						isFirst = false;
-					}
-					else {
-						createTable.append( ", " );
-					}
-					appendColumn( createTable, column, table, metadata, dialect, context );
-
-					extra.append( column.getValue().getExtraCreateTableInfo() );
-				}
-				if ( table.getRowId() != null ) {
-					final String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
-					if ( rowIdColumn != null ) {
-						createTable.append(", ").append( rowIdColumn );
-					}
-				}
-				if ( table.hasPrimaryKey() ) {
-					createTable.append( ", " ).append( primaryKeyString( table.getPrimaryKey() ) );
-				}
-
-				createTable.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
-
-				applyTableCheck( table, createTable );
-
-				if ( isNotEmpty( table.getExtraDeclarations() ) ) {
-					createTable.append( ", " ).append( table.getExtraDeclarations() );
-				}
-
-				createTable.append( ')' );
-
-				createTable.append( extra );
-
-				if ( table.getComment() != null ) {
-					createTable.append( dialect.getTableComment( table.getComment() ) );
-				}
-
-				applyTableTypeString( createTable );
-			}
-
-			if ( isNotEmpty( table.getOptions() ) ) {
-				createTable.append( " " );
-				createTable.append( table.getOptions() );
-			}
+			final String ddl =
+					table.isView()
+							? appendCreateView( table, formattedTableName )
+							: appendCreateTable( table, formattedTableName, metadata, context );
 
 			final List<String> sqlStrings = new ArrayList<>();
-			sqlStrings.add( createTable.toString() );
+			sqlStrings.add( ddl );
 			applyComments( table, formattedTableName, sqlStrings );
 			applyInitCommands( table, sqlStrings, context );
 			return sqlStrings.toArray( EMPTY_STRINGS );
@@ -149,6 +72,98 @@ public class StandardTableExporter implements Exporter<Table> {
 			throw new MappingException( "Error creating SQL 'create' commands for table '"
 					+ table.getName() + "' [" + e.getMessage() + "]" , e );
 		}
+	}
+
+	private static void appendOptions(Table table, StringBuilder createTable) {
+		final String options = table.getOptions();
+		if ( isNotBlank( options ) ) {
+			createTable.append( " " ).append( options );
+		}
+	}
+
+	private String appendCreateTable(Table table, String tableName, Metadata metadata, SqlStringGenerationContext context) {
+		final var createTable = new StringBuilder();
+		final var extra = new StringBuilder();
+
+		createTable.append( tableCreateString( table ) )
+				.append( ' ' )
+				.append( tableName )
+				.append( " (" );
+
+		boolean isFirst = true;
+		for ( var column : table.getColumns() ) {
+			if ( isFirst ) {
+				isFirst = false;
+			}
+			else {
+				createTable.append( ", " );
+			}
+			appendColumn( createTable, column, table, metadata, dialect, context );
+
+			extra.append( column.getValue().getExtraCreateTableInfo() );
+		}
+		if ( table.getRowId() != null ) {
+			final String rowIdColumn = dialect.getRowIdColumnString( table.getRowId() );
+			if ( rowIdColumn != null ) {
+				createTable.append(", ").append( rowIdColumn );
+			}
+		}
+		if ( table.hasPrimaryKey() ) {
+			createTable.append( ", " ).append( primaryKeyString( table.getPrimaryKey() ) );
+		}
+
+		createTable.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table, context ) );
+
+		applyTableCheck( table, createTable );
+
+		if ( isNotEmpty( table.getExtraDeclarations() ) ) {
+			createTable.append( ", " ).append( table.getExtraDeclarations() );
+		}
+
+		createTable.append( ')' );
+
+		createTable.append( extra );
+
+		if ( table.getComment() != null ) {
+			createTable.append( dialect.getTableComment( table.getComment() ) );
+		}
+
+		applyTableTypeString( createTable );
+
+		appendOptions( table, createTable );
+
+		return createTable.toString();
+	}
+
+	private String appendCreateView(Table table, String viewName) {
+		final var createTable = new StringBuilder();
+
+		final String viewQuery = table.getViewQuery();
+
+		createTable.append("create view ").append( viewName );
+		if ( dialect.requiresColumnListInCreateView() ) {
+			createTable.append(" (");
+			var sortedColumns =
+					table.getColumns().stream()
+							.sorted( comparing( c -> viewQuery.indexOf( c.getQuotedName( dialect ) ) ) )
+							.toList();
+			boolean isFirst = true;
+			for ( var column : sortedColumns ) {
+				if ( isFirst ) {
+					isFirst = false;
+				}
+				else {
+					createTable.append( ", " );
+				}
+				createTable.append( column.getQuotedName( dialect ) );
+			}
+			createTable.append(")");
+		}
+		createTable.append(" as ").append( viewQuery );
+
+		appendOptions( table, createTable );
+
+		return createTable.toString();
 	}
 
 	/**
@@ -334,14 +349,15 @@ public class StandardTableExporter implements Exporter<Table> {
 				final String checkConstraint = getCheckConstraint( subColumn );
 				if ( !subColumn.isNullable() || checkConstraint != null ) {
 					final String subColumnName = subColumn.getQuotedName( dialect );
-					final String columnExpression = aggregateSupport.aggregateComponentCustomReadExpression(
-							subColumnName,
-							subColumnName,
-							aggregatePath,
-							subColumnName,
-							aggregateColumn,
-							subColumn
-					);
+					final String columnExpression =
+							aggregateSupport.aggregateComponentCustomReadExpression(
+									subColumnName,
+									subColumnName,
+									aggregatePath,
+									subColumnName,
+									aggregateColumn,
+									subColumn
+							);
 					if ( !subColumn.isNullable() ) {
 						buf.append( separator );
 						buf.append( columnExpression );

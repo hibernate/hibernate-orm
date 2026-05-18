@@ -56,6 +56,8 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Adapts Jakarta Data restrictions to Hibernate query restrictions.
+ * @author Gavin King
+ * @since 8.0
  */
 @Internal
 public final class JakartaDataRestriction {

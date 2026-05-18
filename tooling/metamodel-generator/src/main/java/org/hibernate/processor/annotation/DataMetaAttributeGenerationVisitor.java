@@ -20,6 +20,13 @@ import javax.lang.model.util.Types;
 
 import static org.hibernate.processor.util.Constants.EMBEDDABLE;
 import static org.hibernate.processor.util.Constants.ENTITY;
+import static org.hibernate.processor.util.Constants.JD_BASIC_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.JD_BOOLEAN_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.JD_COMPARABLE_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.JD_NAVIGABLE_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.JD_NUMERIC_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.JD_TEMPORAL_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.JD_TEXT_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.MAPPED_SUPERCLASS;
 import static org.hibernate.processor.util.TypeUtils.getTargetEntity;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
@@ -68,7 +75,7 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 		return new DataAnnotationMetaAttribute(
 				entity,
 				element,
-				"jakarta.data.metamodel.BasicAttribute",
+				JD_BASIC_ATTRIBUTE,
 				type,
 				type,
 				path
@@ -101,7 +108,7 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 					? new DataAnnotationMetaAttribute(
 							entity,
 							element,
-							"jakarta.data.metamodel.NavigableAttribute",
+							JD_NAVIGABLE_ATTRIBUTE,
 							type,
 							type,
 							path
@@ -134,7 +141,7 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 	}
 
 	private static boolean requiresClassLiteral(String metaType) {
-		return !"jakarta.data.metamodel.TextAttribute".equals( metaType );
+		return !JD_TEXT_ATTRIBUTE.equals( metaType );
 	}
 
 	private String getMetaType(TypeMirror type) {
@@ -143,24 +150,24 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 						? typeUtils().boxedClass( (PrimitiveType) type ).asType()
 						: typeUtils().erasure( type );
 		if ( isSameType( boxedType, String.class.getName() ) ) {
-			return "jakarta.data.metamodel.TextAttribute";
+			return JD_TEXT_ATTRIBUTE;
 		}
 		else if ( isSameType( boxedType, Boolean.class.getName() ) ) {
-			return "jakarta.data.metamodel.BooleanAttribute";
+			return JD_BOOLEAN_ATTRIBUTE;
 		}
 		else if ( isAssignableTo( boxedType, Number.class.getName() )
 				&& isAssignableToComparable( boxedType, boxedType ) ) {
-			return "jakarta.data.metamodel.NumericAttribute";
+			return JD_NUMERIC_ATTRIBUTE;
 		}
 		else if ( isAssignableTo( boxedType, "java.time.temporal.Temporal" )
 				&& isAssignableToComparable( boxedType, typeUtils().getWildcardType( null, boxedType ) ) ) {
-			return "jakarta.data.metamodel.TemporalAttribute";
+			return JD_TEMPORAL_ATTRIBUTE;
 		}
 		else if ( isAssignableToComparable( boxedType, typeUtils().getWildcardType( null, boxedType ) ) ) {
-			return "jakarta.data.metamodel.ComparableAttribute";
+			return JD_COMPARABLE_ATTRIBUTE;
 		}
 		else {
-			return "jakarta.data.metamodel.BasicAttribute";
+			return JD_BASIC_ATTRIBUTE;
 		}
 	}
 

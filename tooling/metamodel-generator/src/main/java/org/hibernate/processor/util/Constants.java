@@ -119,6 +119,16 @@ public final class Constants {
 	public static final String JD_ORDER_BY = "jakarta.data.repository.OrderBy";
 	public static final String JD_ORDER_BY_LIST = "jakarta.data.repository.OrderBy.List";
 
+	public static final String JD_STATIC_METAMODEL = "jakarta.data.metamodel.StaticMetamodel";
+	public static final String JD_BASIC_ATTRIBUTE = "jakarta.data.metamodel.BasicAttribute";
+	public static final String JD_BOOLEAN_ATTRIBUTE = "jakarta.data.metamodel.BooleanAttribute";
+	public static final String JD_COMPARABLE_ATTRIBUTE = "jakarta.data.metamodel.ComparableAttribute";
+	public static final String JD_NAVIGABLE_ATTRIBUTE = "jakarta.data.metamodel.NavigableAttribute";
+	public static final String JD_NUMERIC_ATTRIBUTE = "jakarta.data.metamodel.NumericAttribute";
+	public static final String JD_SORTABLE_ATTRIBUTE = "jakarta.data.metamodel.SortableAttribute";
+	public static final String JD_TEMPORAL_ATTRIBUTE = "jakarta.data.metamodel.TemporalAttribute";
+	public static final String JD_TEXT_ATTRIBUTE = "jakarta.data.metamodel.TextAttribute";
+
 	public static final String JD_LIFECYCLE_EVENT = "jakarta.data.event.LifecycleEvent";
 
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
@@ -161,6 +171,7 @@ public final class Constants {
 	public static final String UNI_BOOLEAN = UNI+"<java.lang.Boolean>";
 	public static final String BOXED_VOID = "java.lang.Void";
 
+	public static final String STATIC_METAMODEL = "jakarta.persistence.metamodel.StaticMetamodel";
 	public static final String SINGULAR_ATTRIBUTE = "jakarta.persistence.metamodel.SingularAttribute";
 	public static final String BOOLEAN_ATTRIBUTE = "jakarta.persistence.metamodel.BooleanAttribute";
 	public static final String COMPARABLE_ATTRIBUTE = "jakarta.persistence.metamodel.ComparableAttribute";

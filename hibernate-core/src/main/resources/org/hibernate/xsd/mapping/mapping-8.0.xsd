@@ -3367,6 +3367,7 @@
             <xsd:element name="sql-delete-all" type="orm:custom-sql" minOccurs="0"/>
 
             <xsd:element name="filter" type="orm:filter" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="mutable" type="xsd:boolean" minOccurs="0"/>
         </xsd:sequence>
     </xsd:group>
 

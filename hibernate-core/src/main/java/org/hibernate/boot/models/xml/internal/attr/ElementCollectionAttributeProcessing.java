@@ -6,6 +6,7 @@ package org.hibernate.boot.models.xml.internal.attr;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
@@ -16,6 +17,7 @@ import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
@@ -45,13 +47,18 @@ public class ElementCollectionAttributeProcessing {
 				declarer
 		);
 
+		final ModelsContext buildingContext = xmlDocumentContext.getModelBuildingContext();
 		final ElementCollectionJpaAnnotation elementCollectionUsage = (ElementCollectionJpaAnnotation) memberDetails.applyAnnotationUsage(
 				JpaAnnotations.ELEMENT_COLLECTION,
-				xmlDocumentContext.getModelBuildingContext()
+				buildingContext
 		);
 
 		if ( jaxbElementCollection.getFetch() != null ) {
 			elementCollectionUsage.fetch( jaxbElementCollection.getFetch() );
+		}
+
+		if ( jaxbElementCollection.isMutable() != null && !jaxbElementCollection.isMutable() ) {
+			memberDetails.applyAnnotationUsage( HibernateAnnotations.IMMUTABLE, buildingContext );
 		}
 
 		applyElementCollectionElementType( jaxbElementCollection, elementCollectionUsage, memberDetails, xmlDocumentContext );

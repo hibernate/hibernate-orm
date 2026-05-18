@@ -1872,6 +1872,7 @@ public class HbmXmlTransformer {
 		);
 		target.setFetchMode( convert( source.getFetch(), source.getOuterJoin() ) );
 		target.setFetch( convert( source.getLazy() ) );
+		target.setMutable( source.isMutable() );
 
 		if ( isNotEmpty( source.getCollectionType() ) ) {
 			final var jaxbCollectionUserType = new JaxbCollectionUserTypeImpl();

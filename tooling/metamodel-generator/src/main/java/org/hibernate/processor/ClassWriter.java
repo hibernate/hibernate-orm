@@ -29,7 +29,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
+import static org.hibernate.processor.util.Constants.JD_STATIC_METAMODEL;
 import static org.hibernate.processor.util.Constants.SPRING_COMPONENT;
+import static org.hibernate.processor.util.Constants.STATIC_METAMODEL;
 import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isMemberType;
 
@@ -324,8 +326,8 @@ public final class ClassWriter {
 
 	private static String writeStaticMetaModelAnnotation(Metamodel entity) {
 		final String annotation = entity.isJakartaDataStyle()
-				? "jakarta.data.metamodel.StaticMetamodel"
-				: "jakarta.persistence.metamodel.StaticMetamodel";
+				? JD_STATIC_METAMODEL
+				: STATIC_METAMODEL;
 		final String simpleName = entity.importType( entity.getQualifiedName() );
 		return "@" + entity.importType( annotation ) + "(" + simpleName + ".class)";
 	}

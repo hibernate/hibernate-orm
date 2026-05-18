@@ -10,6 +10,9 @@ import org.hibernate.processor.model.Metamodel;
 
 import javax.lang.model.element.Element;
 
+import static org.hibernate.processor.util.Constants.JD_BOOLEAN_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.JD_SORTABLE_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.JD_TEXT_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.STRING;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
@@ -83,9 +86,9 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 	private String typeArguments(String className) {
 		return switch ( metaType ) {
 			case
-				"jakarta.data.metamodel.TextAttribute",
-				"jakarta.data.metamodel.BooleanAttribute",
-				"jakarta.data.metamodel.SortableAttribute"
+				JD_TEXT_ATTRIBUTE,
+				JD_BOOLEAN_ATTRIBUTE,
+				JD_SORTABLE_ATTRIBUTE
 					-> "<" + className + ">";
 			default
 					-> "<" + className + ", " + parent.importType( typeDeclaration ) + ">";

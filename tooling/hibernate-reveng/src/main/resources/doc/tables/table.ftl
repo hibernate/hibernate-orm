@@ -162,7 +162,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<#list table.foreignKeys.values() as foreignKey>
+					<#list table.foreignKeys as foreignKey>
 						<tr>
 							<td>
 								${foreignKey.name?default("Name not specified")}

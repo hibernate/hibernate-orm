@@ -425,7 +425,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				else if ( containsAnnotation( method, FIND, JD_FIND ) ) {
 					queryMethods.add( method );
 				}
-				else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_SAVE ) ) {
+				else if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_SAVE,
+						JD_PERSIST, JD_MERGE, JD_REFRESH, JD_REMOVE, JD_DETACH ) ) {
 					lifecycleMethods.add( method );
 				}
 				else if ( hasAnnotation( method, JD_DELETE ) ) {
@@ -460,9 +461,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return;
 			}
 
-			if ( !lifecycleMethods.isEmpty() ) {
-				validateStatelessSessionType();
-			}
+			validateLifecycleSessionType( lifecycleMethods );
 		}
 		else {
 			determineAccessTypeForHierarchy( element, context );
@@ -885,8 +884,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return nonPersistenceParameter == null;
 	}
 
-	private void validateStatelessSessionType() {
-		if ( !isStatelessSession() ) {
+	private void validateLifecycleSessionType(List<ExecutableElement> lifecycleMethods) {
+		boolean stateful = false;
+		boolean stateless = false;
+		for ( ExecutableElement lifecycleMethod : lifecycleMethods ) {
+			if ( hasStatefulLifecycleAnnotation( lifecycleMethod ) ) {
+				stateful = true;
+			}
+			else {
+				stateless = true;
+			}
+		}
+		if ( stateful && stateless ) {
+			message( element,
+					"repository mixes stateful and stateless lifecycle annotations",
+					Diagnostic.Kind.ERROR );
+		}
+		else if ( stateful && !isStatefulSession() ) {
+			message( element,
+					"repository with stateful lifecycle methods must be backed by a 'Session' or 'EntityManager'",
+					Diagnostic.Kind.ERROR );
+		}
+		else if ( stateless && !isStatelessSession() ) {
 			message( element,
 					"repository must be backed by a 'StatelessSession'",
 					Diagnostic.Kind.ERROR );
@@ -979,6 +998,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void setupSession() {
 		if ( element.getTypeParameters().isEmpty() ) {
 			jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
+			final boolean statefulDataRepository =
+					jakartaDataRepository && hasStatefulLifecycleMethods( element );
 			final ExecutableElement getter = findSessionGetter( element );
 			if ( getter != null ) {
 				// Never make a DAO for Panache subtypes
@@ -1007,9 +1028,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			if ( !repository && jakartaDataRepository ) {
 				repository = true;
-				// Jakarta Data defaults to StatelessSession, not EntityManager
-				sessionType = HIB_STATELESS_SESSION;
-				// If it's Spring, we wrap the StatelessSession in ObjectProvider
+				// Jakarta Data defaults to StatelessSession, unless the repository
+				// uses the dedicated stateful lifecycle model.
+				sessionType = statefulDataRepository ? HIB_SESSION : HIB_STATELESS_SESSION;
+				// If it's Spring, we wrap the session in ObjectProvider
 				sessionType = addRepositoryConstructor( null );
 			}
 			if ( needsDefaultConstructor() ) {
@@ -1019,6 +1041,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				addEventBus();
 			}
 		}
+	}
+
+	private static boolean hasStatefulLifecycleMethods(TypeElement element) {
+		for ( ExecutableElement method : methodsIn( element.getEnclosedElements() ) ) {
+			if ( hasStatefulLifecycleAnnotation( method ) ) {
+				return true;
+			}
+		}
+		final TypeMirror superclass = element.getSuperclass();
+		if ( superclass.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) superclass;
+			if ( hasStatefulLifecycleMethods( (TypeElement) declaredType.asElement() ) ) {
+				return true;
+			}
+		}
+		for ( TypeMirror superinterface : element.getInterfaces() ) {
+			if ( superinterface.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) superinterface;
+				if ( hasStatefulLifecycleMethods( (TypeElement) declaredType.asElement() ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private boolean needsEventBus() {
@@ -1080,6 +1126,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	public boolean isStatelessSession() {
 		return usingStatelessSession( sessionType );
+	}
+
+	public boolean isStatefulSession() {
+		return usingStatefulSession( sessionType );
 	}
 
 	public boolean isReactive() {
@@ -2124,14 +2174,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						"incorrect parameter type '" + parameterType + "' is not annotated '@Entity'",
 						Diagnostic.Kind.ERROR );
 			}
-			else if ( returnArgument
-					&& !isSameType( returnType, declaredParameterType ) ) {
-				message( parameter,
-						"return type '" + returnType
-						+ "' disagrees with parameter type '" + parameterType + "'",
-						Diagnostic.Kind.ERROR );
-			}
-			else {
+			else if ( validateLifecycleReturnType( method, operation, parameter, returnType,
+					declaredParameterType, parameterType, returnArgument ) ) {
 				final String entity = typeAsString( parameterType );
 				final String methodName = method.getSimpleName().toString();
 				putMember(
@@ -2154,6 +2198,56 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				);
 			}
 		}
+	}
+
+	private boolean validateLifecycleReturnType(
+			ExecutableElement method,
+			String operation,
+			VariableElement parameter,
+			TypeMirror returnType,
+			TypeMirror declaredParameterType,
+			TypeMirror parameterType,
+			boolean returnArgument) {
+		if ( "merge".equals( operation ) ) {
+			if ( !returnArgument ) {
+				message( method,
+						"method annotated '@Merge' must have the same return type as its parameter",
+						Diagnostic.Kind.ERROR );
+				return false;
+			}
+		}
+		else if ( isStatefulLifecycleOperation( operation ) && returnArgument ) {
+			message( method,
+					"method annotated '@" + statefulAnnotationName( operation ) + "' must be declared 'void'",
+					Diagnostic.Kind.ERROR );
+			return false;
+		}
+		if ( returnArgument && !isSameType( returnType, declaredParameterType ) ) {
+			message( parameter,
+					"return type '" + returnType
+					+ "' disagrees with parameter type '" + parameterType + "'",
+					Diagnostic.Kind.ERROR );
+			return false;
+		}
+		return true;
+	}
+
+	private static boolean isStatefulLifecycleOperation(String operation) {
+		return switch ( operation ) {
+			case "persist", "merge", "refresh", "remove", "detach" -> true;
+			default -> false;
+		};
+	}
+
+	private static String statefulAnnotationName(String operation) {
+		return switch ( operation ) {
+			case "persist" -> "Persist";
+			case "merge" -> "Merge";
+			case "refresh" -> "Refresh";
+			case "remove" -> "Remove";
+			case "detach" -> "Detach";
+			default -> operation;
+		};
 	}
 
 	private boolean hasGeneratedId(DeclaredType entityType) {
@@ -2276,9 +2370,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else if ( hasAnnotation( method, JD_SAVE ) ) {
 			return "upsert";
 		}
+		else if ( hasAnnotation( method, JD_PERSIST ) ) {
+			return "persist";
+		}
+		else if ( hasAnnotation( method, JD_MERGE ) ) {
+			return "merge";
+		}
+		else if ( hasAnnotation( method, JD_REFRESH ) ) {
+			return "refresh";
+		}
+		else if ( hasAnnotation( method, JD_REMOVE ) ) {
+			return "remove";
+		}
+		else if ( hasAnnotation( method, JD_DETACH ) ) {
+			return "detach";
+		}
 		else {
 			throw new AssertionFailure( "Unrecognized lifecycle operation" );
 		}
+	}
+
+	private static boolean hasStatefulLifecycleAnnotation(ExecutableElement method) {
+		return containsAnnotation( method, JD_PERSIST, JD_MERGE, JD_REFRESH, JD_REMOVE, JD_DETACH );
 	}
 
 	private void addFinderMethod(
@@ -5022,6 +5135,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			|| MUTINY_STATELESS_SESSION.equals( sessionType )
 			|| UNI_MUTINY_STATELESS_SESSION.equals( sessionType )
 			|| SPRING_STATELESS_SESSION_PROVIDER.equals( sessionType );
+	}
+
+	private static boolean usingStatefulSession(String sessionType) {
+		return HIB_SESSION.equals( sessionType )
+			|| ENTITY_MANAGER.equals( sessionType )
+			|| SPRING_SESSION_PROVIDER.equals( sessionType );
 	}
 
 	private static boolean usingReactiveSessionAccess(String sessionType) {

@@ -149,10 +149,14 @@ public class RepositoryConstructor implements MetaAttribute {
 	}
 
 	private String providedSessionType() {
-		return annotationMetaEntity.isProvidedSessionAccess()
-				//TODO: assuming provided sessions are always StatelessSessions for now
-				? HIB_STATELESS_SESSION
-				: sessionTypeName;
+		if ( annotationMetaEntity.isProvidedSessionAccess() ) {
+			final int start = sessionTypeName.indexOf( '<' );
+			final int end = sessionTypeName.lastIndexOf( '>' );
+			return start > 0 && end > start
+					? sessionTypeName.substring( start + 1, end )
+					: HIB_STATELESS_SESSION;
+		}
+		return sessionTypeName;
 	}
 
 	/**

@@ -90,24 +90,6 @@ public final class JakartaDataRestriction {
 		return new Adapter<>( restriction );
 	}
 
-	public static <T> Restriction<T> all(
-			List<? extends jakarta.data.restrict.Restriction<? super T>> restrictions) {
-		final List<Restriction<? super T>> list = new ArrayList<>( restrictions.size() );
-		for ( var restriction : restrictions ) {
-			list.add( from( restriction ) );
-		}
-		return Restriction.all( list );
-	}
-
-	@SafeVarargs
-	public static <T> Restriction<T> all(jakarta.data.restrict.Restriction<? super T>... restrictions) {
-		final List<Restriction<? super T>> list = new ArrayList<>( restrictions.length );
-		for ( var restriction : restrictions ) {
-			list.add( from( restriction ) );
-		}
-		return Restriction.all( list );
-	}
-
 	private static Predicate restriction(
 			jakarta.data.restrict.Restriction<?> restriction,
 			Root<?> root,

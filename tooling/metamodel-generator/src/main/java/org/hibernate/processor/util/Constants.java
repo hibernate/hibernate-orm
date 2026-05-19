@@ -101,6 +101,7 @@ public final class Constants {
 	public static final String JD_PAGE = "jakarta.data.page.Page";
 	public static final String JD_CURSORED_PAGE = "jakarta.data.page.CursoredPage";
 	public static final String JD_RESTRICTION = "jakarta.data.restrict.Restriction";
+	public static final String JD_RESTRICT = "jakarta.data.restrict.Restrict";
 	public static final String JD_CONSTRAINT = "jakarta.data.constraint.Constraint";
 	public static final String JD_EQUAL_TO = "jakarta.data.constraint.EqualTo";
 	public static final String JD_NOT_EQUAL_TO = "jakarta.data.constraint.NotEqualTo";

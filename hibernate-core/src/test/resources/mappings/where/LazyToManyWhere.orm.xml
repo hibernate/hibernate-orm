@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                https://www.hibernate.org/xsd/orm/mapping/mapping-8.0.xsd"
+                 version="8.0">
+    <package>org.hibernate.orm.test.where.xml</package>
+    <entity class="Product" metadata-complete="true">
+        <table name="PRODUCT"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+            <one-to-many name="categoriesOneToMany" target-entity="Category" fetch="LAZY" orphan-removal="false"
+                         classification="SET" not-found="EXCEPTION">
+                <join-column name="productOneToManyId"/>
+                <cascade/>
+            </one-to-many>
+            <one-to-many name="categoriesWithDescOneToMany" target-entity="Category" fetch="LAZY" orphan-removal="false"
+                         classification="SET" not-found="EXCEPTION">
+                <sql-restriction>description is not null</sql-restriction>
+                <join-column name="productWithDescOneToManyId"/>
+                <cascade/>
+            </one-to-many>
+            <many-to-many name="categoriesManyToMany" target-entity="Category" fetch="LAZY" classification="SET">
+                <join-table name="categoriesManyToMany">
+                    <join-column name="productId" table="categoriesManyToMany"/>
+                    <inverse-join-column name="categoryId" table="categoriesManyToMany"/>
+                </join-table>
+            </many-to-many>
+            <many-to-many name="categoriesWithDescManyToMany" target-entity="Category" fetch="LAZY"
+                          classification="SET">
+                <sql-restriction>description is not null</sql-restriction>
+                <join-table name="categoriesWithDescManyToMany">
+                    <join-column name="productId" table="categoriesWithDescManyToMany"/>
+                    <inverse-join-column name="categoryId" table="categoriesWithDescManyToMany"/>
+                </join-table>
+            </many-to-many>
+            <many-to-many name="categoriesWithDescIdLt4ManyToMany" target-entity="Category" fetch="LAZY"
+                          classification="SET">
+                <sql-restriction>description is not null</sql-restriction>
+                <join-table name="categoriesWithDescIdLt4MToM">
+                    <join-column name="productId" table="categoriesWithDescIdLt4MToM"/>
+                    <inverse-join-column name="categoryId" table="categoriesWithDescIdLt4MToM"/>
+                </join-table>
+                <sql-join-table-restriction>categoryId != 4</sql-join-table-restriction>
+            </many-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Category" metadata-complete="true">
+        <table name="CATEGORY"/>
+        <sql-restriction>inactive = 0</sql-restriction>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+            </id>
+            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+            </basic>
+            <basic name="description" fetch="EAGER" optional="true" optimistic-lock="true">
+            </basic>
+            <basic name="inactive" fetch="EAGER" optional="true" optimistic-lock="true">
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

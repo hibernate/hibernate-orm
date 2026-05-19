@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 /**
  * @author Gail Badner
  */
-@DomainModel(xmlMappings = "mappings/where/EagerManyToOneFetchModeJoinWhereTest.orm.xml")
+@DomainModel(xmlMappings = "mappings/where/EagerManyToOneFetchModeJoinWhere.orm.xml")
 @SessionFactory
 public class EagerManyToOneFetchModeJoinWhereTest {
 	@AfterEach

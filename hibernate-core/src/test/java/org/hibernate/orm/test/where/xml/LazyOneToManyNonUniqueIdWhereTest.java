@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gail Badner
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "mappings/where/LazyOneToManyNonUniqueIdWhereTest.orm.xml")
+@DomainModel(xmlMappings = "mappings/where/LazyOneToManyNonUniqueIdWhere.orm.xml")
 @SessionFactory
 @SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support varchar in column definition")
 public class LazyOneToManyNonUniqueIdWhereTest {

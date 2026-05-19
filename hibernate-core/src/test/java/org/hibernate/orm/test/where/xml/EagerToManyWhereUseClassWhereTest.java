@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.where.xml;
 
-import org.hibernate.orm.test.where.hbm.Category;
-import org.hibernate.orm.test.where.hbm.Product;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;

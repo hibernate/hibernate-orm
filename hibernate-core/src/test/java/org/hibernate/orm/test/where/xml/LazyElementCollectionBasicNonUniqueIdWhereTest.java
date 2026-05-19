@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
-@DomainModel(xmlMappings = "mappings/where/LazyElementCollectionBasicNonUniqueIdWhereTest.orm.xml")
+@DomainModel(xmlMappings = "mappings/where/LazyElementCollectionBasicNonUniqueIdWhere.orm.xml")
 @SessionFactory(exportSchema = false)
 public class LazyElementCollectionBasicNonUniqueIdWhereTest {
 	@BeforeAll

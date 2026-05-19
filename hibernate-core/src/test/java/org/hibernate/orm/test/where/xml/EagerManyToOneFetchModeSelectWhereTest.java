@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(settings = @Setting(name=IMPLICIT_NAMING_STRATEGY, value = "legacy-jpa"))
-@DomainModel(xmlMappings = "mappings/where/EagerManyToOneFetchModeSelectWhereTest.orm.xml")
+@DomainModel(xmlMappings = "mappings/where/EagerManyToOneFetchModeSelectWhere.orm.xml")
 @SessionFactory
 public class EagerManyToOneFetchModeSelectWhereTest {
 	@AfterEach

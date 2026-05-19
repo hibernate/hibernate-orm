@@ -2,7 +2,11 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.where.hbm;
+package org.hibernate.orm.test.where.xml;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -11,30 +15,28 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
+ * Tests association collections with default AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS,
+ * which is true.
+ *
  * @author Gail Badner
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "hbm/where/LazyToManyWhere.hbm.xml")
+@DomainModel(xmlMappings = "mappings/where/LazyToManyWhere.orm.xml")
 @SessionFactory
-public class LazyToManyWhereUseClassWhereTest {
-
+public class LazyToManyWhereTest {
 	@AfterEach
 	void dropTestData(SessionFactoryScope factoryScope) {
 		factoryScope.dropData();
 	}
 
 	@Test
-	@JiraKey( "HHH-13011" )
+	@JiraKey( value = "HHH-13011" )
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
 		Product product = new Product();
 		Category flowers = new Category();

@@ -9,7 +9,7 @@
                  https://www.hibernate.org/xsd/orm/mapping/mapping-7.0.xsd"
                  version="7.0">
 
-    <package>org.hibernate.orm.test.where.hbm</package>
+    <package>org.hibernate.orm.test.where.xml</package>
 
     <entity class="Product" access="PROPERTY">
         <table name="PRODUCT"/>

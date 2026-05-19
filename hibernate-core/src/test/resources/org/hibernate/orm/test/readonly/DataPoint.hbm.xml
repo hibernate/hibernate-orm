@@ -39,7 +39,7 @@
         <property name="details"/>
     </class>
 
-    <class name="Container">
+    <class name="Container" table="RO_Container">
         <id name="id">
             <generator class="increment"/>
         </id>

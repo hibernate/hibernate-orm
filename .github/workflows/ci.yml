@@ -45,6 +45,7 @@ jobs:
           - rdbms: mariadb
           - rdbms: postgresql
           - rdbms: spannerpgsql
+          - rdbms: spanner
           - rdbms: edb
           - rdbms: oracle
           - rdbms: db2

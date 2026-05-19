@@ -16,11 +16,18 @@ import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -236,5 +243,77 @@ public class AccessMappingTest {
 		cfg.addAnnotatedClass( Course8.class );
 		cfg.addAnnotatedClass( Student.class );
 		cfg.buildSessionFactory( serviceRegistry ).close();
+	}
+
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20425")
+	@Test
+	public void testFieldAccessOnIdGetter() {
+		var cfg = new Configuration();
+		cfg.addAnnotatedClass( AnimalEntity.class );
+		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry )) {
+			final var entityPersister = factory.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( AnimalEntity.class.getName() );
+			final var identifierMapping =
+					(BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+			assertThat( identifierMapping.getPropertyAccess().getGetter() )
+					.describedAs( "Field access should be used." )
+					.isInstanceOf( GetterFieldImpl.class );
+		}
+	}
+
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20425")
+	@Test
+	public void testPropertyAccessOnIdField() {
+		var cfg = new Configuration();
+		cfg.addAnnotatedClass( PlantEntity.class );
+		try (SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry )) {
+			final var entityPersister = factory.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( PlantEntity.class.getName() );
+			final var identifierMapping =
+					(BasicEntityIdentifierMappingImpl) entityPersister.getIdentifierMapping();
+			assertThat( identifierMapping.getPropertyAccess().getGetter() )
+					.describedAs( "Property access should be used." )
+					.isInstanceOf( GetterMethodImpl.class );
+		}
+	}
+
+	@MappedSuperclass
+	static class AnimalSuperclass {
+		private Long id;
+
+		@Id
+		@Access(AccessType.FIELD)
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+	}
+
+	@Entity(name = "AnimalEntity")
+	static class AnimalEntity extends AnimalSuperclass {
+	}
+
+	@MappedSuperclass
+	static class PlantSuperclass {
+		@Id
+		@Access(AccessType.PROPERTY)
+		private Long id;
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+	}
+
+	@Entity(name = "PlantEntity")
+	static class PlantEntity extends PlantSuperclass {
 	}
 }

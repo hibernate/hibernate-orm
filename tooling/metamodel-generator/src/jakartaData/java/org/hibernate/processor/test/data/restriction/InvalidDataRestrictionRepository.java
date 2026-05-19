@@ -14,6 +14,7 @@ import jakarta.data.repository.CrudRepository;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Repository;
 import jakarta.data.restrict.Restriction;
+import jakarta.persistence.query.NativeQuery;
 
 @Repository
 public interface InvalidDataRestrictionRepository extends CrudRepository<DataRestrictionBook, String> {
@@ -45,4 +46,10 @@ public interface InvalidDataRestrictionRepository extends CrudRepository<DataRes
 
 	@Delete
 	long deleteWithWrongRestriction(Restriction<? super DataRestrictionPublisher> restriction);
+
+	@NativeQuery("select * from data_restriction_book")
+	List<DataRestrictionBook> nativeQueryWithRestriction(Restriction<? super DataRestrictionBook> restriction);
+
+	@NativeQuery("select * from data_restriction_book")
+	List<DataRestrictionBook> nativeQueryWithOrder(Order<? super DataRestrictionBook> order);
 }

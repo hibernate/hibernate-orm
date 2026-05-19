@@ -1818,6 +1818,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( queryReturnType != null ) {
 				final List<String> paramNames = staticQueryParameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
+				if ( isNative && ( !repository || method.isDefault() ) ) {
+					validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
+				}
 				final String processedQuery =
 						staticQueryValidationString( method, queryReturnType.validationReturnType, mirror, queryString );
 				checkParameters( method, queryReturnType.validationReturnType,
@@ -4070,6 +4073,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		final List<String> paramNames = parameterNames( method );
 		final List<String> paramTypes = parameterTypes( method );
+		if ( isNative ) {
+			validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
+		}
 
 		// now check that the query has a parameter for every method parameter
 		checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString, isNative );
@@ -4138,8 +4144,37 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						jakartaDataRepository,
 						fullReturnType( method ),
 						hasAnnotation( method, NULLABLE )
-				);
+					);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
+	}
+
+	private void validateNativeQueryHasNoDynamicAugmentation(
+			ExecutableElement method,
+			AnnotationMirror mirror,
+			List<String> paramTypes) {
+		if ( paramTypes.stream().anyMatch( AnnotationMetaEntity::isRestrictionLikeParam ) ) {
+			message( method, mirror,
+					"'@NativeQuery' methods may not declare Restriction or Range parameters; "
+							+ "native SQL cannot be augmented with restrictions",
+					Diagnostic.Kind.ERROR );
+		}
+		if ( hasAnnotation( method, JD_ORDER_BY, JD_ORDER_BY_LIST )
+				|| paramTypes.stream().anyMatch( AnnotationMetaEntity::isOrderingParam ) ) {
+			message( method, mirror,
+					"'@NativeQuery' methods may not declare Order or Sort parameters or '@OrderBy'; "
+							+ "native SQL cannot be augmented with ordering",
+					Diagnostic.Kind.ERROR );
+		}
+	}
+
+	private static boolean isRestrictionLikeParam(String paramType) {
+		return isRestrictionParam( paramType )
+			|| isRangeParam( paramType );
+	}
+
+	private static boolean isOrderingParam(String paramType) {
+		return isOrderParam( paramType )
+			|| isOrderArrayParameter( paramType );
 	}
 
 	private boolean generatedQueryReferenceMethod(

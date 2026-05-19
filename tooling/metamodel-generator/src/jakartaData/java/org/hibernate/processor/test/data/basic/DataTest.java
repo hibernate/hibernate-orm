@@ -50,10 +50,8 @@ class DataTest {
 		assertTrue( repository.contains( "TypedQueryReference<Long> _countBooksWithIsbn()" ) );
 		assertTrue( repository.contains( "TypedQueryReference<Boolean> _countBooksWithIsbn2()" ) );
 		assertTrue( repository.contains( "SelectionSpecification.create(_booksWithJakartaQueryOrder(title))" ) );
-		assertTrue( repository.contains( "SelectionSpecification.create(_booksWithNativeQueryOrder(title))" ) );
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
 		assertTrue( repository.contains( "\"BookAuthorRepository.booksWithJakartaQueryOrder\"" ) );
-		assertTrue( repository.contains( "\"BookAuthorRepository.booksWithNativeQueryOrder\"" ) );
 		assertTrue( repository.contains( "private Event<? super LifecycleEvent<?>> event;" ) );
 		assertTrue( repository.contains( "PreInsertEvent<Book>" ) );
 		assertTrue( repository.contains( "PostInsertEvent<Book>" ) );

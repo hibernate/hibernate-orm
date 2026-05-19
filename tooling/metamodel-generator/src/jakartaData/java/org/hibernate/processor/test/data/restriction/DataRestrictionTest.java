@@ -106,6 +106,12 @@ class DataRestrictionTest {
 		assertTrue( messages.contains(
 				"automatic '@Delete' methods accept a single Restriction parameter, not a collection or array" ) );
 		assertTrue( messages.contains( "mismatched type of restriction (should be 'Restriction<? super DataRestrictionBook>')" ) );
+		assertTrue( messages.contains(
+				"'@NativeQuery' methods may not declare Restriction or Range parameters; "
+						+ "native SQL cannot be augmented with restrictions" ) );
+		assertTrue( messages.contains(
+				"'@NativeQuery' methods may not declare Order or Sort parameters or '@OrderBy'; "
+						+ "native SQL cannot be augmented with ordering" ) );
 	}
 
 	private static File sourceFile(Class<?> type) {

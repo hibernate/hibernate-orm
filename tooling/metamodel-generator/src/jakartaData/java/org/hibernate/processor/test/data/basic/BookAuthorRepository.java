@@ -188,9 +188,6 @@ public interface BookAuthorRepository {
 	@JakartaQuery("from Book where title like :title")
 	List<Book> booksWithJakartaQueryOrder(String title, Order<? super Book> order);
 
-	@NativeQuery("select * from books where title like :title")
-	List<Book> booksWithNativeQueryOrder(String title, Order<? super Book> order);
-
 	@NativeQuery("select isbn as book_isbn, title, text, publicationDate, price, pages from books where isbn = ?2")
 	@EntityResult(entityClass = Book.class, fields = @FieldResult(name = "isbn", column = "book_isbn"))
 	Book nativeBookWithResultMapping(EntityManager entityManager, String isbn);

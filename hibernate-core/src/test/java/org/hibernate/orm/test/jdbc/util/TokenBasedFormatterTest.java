@@ -48,7 +48,10 @@ public class TokenBasedFormatterTest {
 	// Utility method to be able to debug a single fixture (uncomment '@Test')
 	@Test
 	public void testSelectedDmlFixture() {
-		dmlFixtures.get( "merge_upsert" ).verify();
+		final String id = "";
+		if ( !id.isBlank() ) {
+			dmlFixtures.get( id ).verify();
+		}
 	}
 
 	private void testDMLFixtures() {
@@ -64,7 +67,7 @@ public class TokenBasedFormatterTest {
 	@Test
 	public void testEmptyString() {
 		String formatted = formatter.format("");
-		assertTrue(formatted.isEmpty() || formatted.isBlank(), "Empty string should remain empty");
+		assertTrue(formatted.isBlank(), "Empty string should remain empty");
 	}
 
 	@Test

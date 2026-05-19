@@ -303,3 +303,71 @@ WHEN NOT MATCHED THEN
 	INSERT (id, email)
 	VALUES
 		(cu.id, cu.email);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+simple_delete
+
+=== SQL ===
+delete from eml;
+
+=== EXPECTED ===
+DELETE FROM eml;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+delete_where_in
+
+=== SQL ===
+delete from empl where dept_id in (select id from depts where closed = true);
+
+=== EXPECTED ===
+DELETE FROM empl
+WHERE dept_id IN (
+	SELECT id
+	FROM depts
+	WHERE closed = TRUE
+);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+delete_with_using
+
+=== SQL ===
+delete from employees e using departments d where e.department_id = d.id and d.closed = true;
+
+=== EXPECTED ===
+DELETE FROM employees e
+USING departments d
+WHERE e.department_id = d.id
+	AND d.closed = TRUE;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+truncate
+
+=== SQL ===
+truncate table empl;
+
+=== EXPECTED ===
+TRUNCATE TABLE empl;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+truncate_restart_cascade
+
+=== SQL ===
+truncate table empl restart identity cascade;
+
+=== EXPECTED ===
+TRUNCATE TABLE empl RESTART IDENTITY CASCADE;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+truncate_continue_cascade
+
+=== SQL ===
+truncate table empl continue identity cascade;
+
+=== EXPECTED ===
+TRUNCATE TABLE empl CONTINUE IDENTITY CASCADE;

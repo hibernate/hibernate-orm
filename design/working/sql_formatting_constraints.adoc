@@ -80,7 +80,8 @@
 
 * Each major query clause: `SELECT`, `FROM`, `WHERE`, `GROUP BY`, `HAVING`, `ORDER BY`, `OFFSET`, `FETCH`, `LIMIT`, `UNION`, `INTERSECT`, `EXCEPT`
 * Each major DML clause: `INSERT`, `UPDATE`, `DELETE`, `MERGE`, `VALUES`, `SET`, `RETURNING`
-* DML-specific clauses: `ON CONFLICT`, `ON DUPLICATE KEY`, `DO UPDATE`, `DO NOTHING`, `USING`
+** Exception: `FROM` after `DELETE` stays inline (no newline)
+* DML-specific clauses: `ON CONFLICT`, `ON DUPLICATE KEY`, `DO UPDATE`, `DO NOTHING`, `USING` (in MERGE/DELETE)
 * MERGE conditionals: `WHEN MATCHED THEN`, `WHEN NOT MATCHED THEN`
 * Each `JOIN` clause (`JOIN`, `LEFT JOIN`, `INNER JOIN`, `RIGHT JOIN`, `FULL JOIN`, `CROSS JOIN`, `LATERAL JOIN`)
 * Each list item when list has >3 elements (see section 4)
@@ -640,6 +641,79 @@ WHEN NOT MATCHED THEN
 * UPDATE, INSERT, SET, VALUES indented +1 from MERGE context (inside THEN block)
 * Column lists and value tuples stay inline (parenthesized lists)
 
+=== 11.6 DELETE Statements
+
+*Simple DELETE:*
+
+[source,sql]
+----
+DELETE FROM table_name;
+----
+
+* FROM immediately follows DELETE with space (inline)
+
+*DELETE with WHERE:*
+
+[source,sql]
+----
+DELETE FROM table_name
+WHERE condition;
+----
+
+* FROM inline with DELETE
+* WHERE and subsequent clauses at DELETE context level
+
+*DELETE with subquery in WHERE:*
+
+[source,sql]
+----
+DELETE FROM table_name
+WHERE column IN (
+	SELECT id
+	FROM other_table
+	WHERE condition
+);
+----
+
+* Subquery formatted according to standard subquery rules (section 7.2)
+
+*PostgreSQL DELETE with USING:*
+
+[source,sql]
+----
+DELETE FROM employees e
+USING departments d
+WHERE e.department_id = d.id
+	AND d.closed = TRUE;
+----
+
+* FROM inline with DELETE
+* USING at DELETE context level (newline before USING)
+* WHERE at DELETE context level
+* Multiple conditions follow standard AND/OR formatting rules
+
+=== 11.7 TRUNCATE Statements
+
+*Simple TRUNCATE:*
+
+[source,sql]
+----
+TRUNCATE TABLE table_name;
+----
+
+* TABLE keyword follows TRUNCATE with space (inline)
+* All keywords stay on single line for simple TRUNCATE
+
+*TRUNCATE with options:*
+
+[source,sql]
+----
+TRUNCATE TABLE table_name RESTART IDENTITY CASCADE;
+----
+
+* RESTART, IDENTITY, CASCADE stay inline with TRUNCATE TABLE
+* All keywords on single line (no newlines)
+
 '''
 
 == Revision History
@@ -677,6 +751,17 @@ WHEN NOT MATCHED THEN
 * Refined MERGE and VALUES handling (2026-05-19):
 ** Section 11.5: Clarified that ON is at MERGE level (not indented), condition is indented +1 from ON
 ** Section 11.4: Added note that VALUES(col) in MySQL ON DUPLICATE KEY UPDATE is a function (stays inline), distinct from VALUES clause keyword
+* Added DELETE and TRUNCATE formatting rules (2026-05-19):
+** Lexer grammar: Added DDL keywords (CREATE, ALTER, DROP, TABLE, INDEX, VIEW, SEQUENCE, TRUNCATE, RESTART, CASCADE, CONTINUE, etc.)
+** Formatter: Added special handling for `DELETE FROM` (FROM stays inline with DELETE, unlike SELECT...FROM)
+** New Section 11.6: DELETE formatting rules covering:
+*** Simple DELETE
+*** DELETE with WHERE clause
+*** DELETE with subquery in WHERE
+*** PostgreSQL DELETE with USING clause
+** New Section 11.7: TRUNCATE formatting rules covering:
+*** Simple TRUNCATE TABLE
+*** TRUNCATE with RESTART IDENTITY CASCADE options (all inline)
 
 '''
 

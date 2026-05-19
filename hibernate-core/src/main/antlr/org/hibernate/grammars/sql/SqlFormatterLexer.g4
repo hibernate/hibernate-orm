@@ -125,6 +125,9 @@ DUPLICATE   : [dD][uU][pP][lL][iI][cC][aA][tT][eE];
 RETURNING   : [rR][eE][tT][uU][rR][nN][iI][nN][gG];
 USING       : [uU][sS][iI][nN][gG];
 MATCHED     : [mM][aA][tT][cC][hH][eE][dD];
+RESTART     : [rR][eE][sS][tT][aA][rR][tT];
+CASCADE     : [cC][aA][sS][cC][aA][dD][eE];
+CONTINUE    : [cC][oO][nN][tT][iI][nN][uU][eE];
 
 // Quoted identifiers - preserve exact quoting style
 DOUBLE_QUOTED_IDENTIFIER

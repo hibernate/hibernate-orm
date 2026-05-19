@@ -48,7 +48,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
-import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.query.sqm.internal.SqmUtil.validateCriteriaQuery;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
@@ -412,65 +411,65 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		}
 	}
 
-	/**
-	 * For future, allowing explicit select list.
-	 */
-	private void validateResultType(
-			SqmSelectStatement<T> sqmStatement,
-			SqmRoot<?> sqmRoot,
-			Class<T> resultType,
-			String hql) {
-		if ( resultType == null || Object.class.equals( resultType ) || resultType.isArray() ) {
-			// Nothing to validate in these cases
-			return;
-		}
-
-		final var rootJavaType = sqmRoot.getJavaType();
-		assert rootJavaType != null;
-
-		if ( Map.class.isAssignableFrom( rootJavaType ) ) {
-			if ( Map.class.isAssignableFrom( resultType ) ) {
-				// dynamic model and Map was requested, totally fine
-				return;
-			}
-		}
-
-		final var sqmSelectClause = sqmStatement.getQuerySpec().getSelectClause();
-		final var sqmSelections = sqmSelectClause.getSelections();
-		if ( isEmpty( sqmSelections ) ) {
-			// implicit select clause, verify that resultType matches the root type
-			if ( resultType.isAssignableFrom( rootJavaType ) ) {
-				// it does, we are fine
-				return;
-			}
-		}
-		else if ( sqmSelections.size() > 1 ) {
-			// we have to assume we can.
-			// the Query will ultimately complain if not, but this is the most we can do here
-			return;
-		}
-		else {
-			assert sqmSelections.size() == 1;
-			final var nodeJavaType = sqmSelections.get( 0 ).getNodeJavaType();
-			if ( nodeJavaType == null ) {
-				// again, we have to assume we can
-				return;
-			}
-			else if ( resultType.isAssignableFrom( nodeJavaType.getJavaTypeClass() ) ) {
-				// it matches the selection type, we are fine
-				return;
-			}
-		}
-
-		throw new QueryException(
-				String.format(
-						Locale.ROOT,
-						"Specified result-type [%s] is not valid for this SelectionSpecification",
-						resultType.getName()
-				),
-				hql
-		);
-	}
+//	/**
+//	 * For future, allowing explicit select list.
+//	 */
+//	private void validateResultType(
+//			SqmSelectStatement<T> sqmStatement,
+//			SqmRoot<?> sqmRoot,
+//			Class<T> resultType,
+//			String hql) {
+//		if ( resultType == null || Object.class.equals( resultType ) || resultType.isArray() ) {
+//			// Nothing to validate in these cases
+//			return;
+//		}
+//
+//		final var rootJavaType = sqmRoot.getJavaType();
+//		assert rootJavaType != null;
+//
+//		if ( Map.class.isAssignableFrom( rootJavaType ) ) {
+//			if ( Map.class.isAssignableFrom( resultType ) ) {
+//				// dynamic model and Map was requested, totally fine
+//				return;
+//			}
+//		}
+//
+//		final var sqmSelectClause = sqmStatement.getQuerySpec().getSelectClause();
+//		final var sqmSelections = sqmSelectClause.getSelections();
+//		if ( isEmpty( sqmSelections ) ) {
+//			// implicit select clause, verify that resultType matches the root type
+//			if ( resultType.isAssignableFrom( rootJavaType ) ) {
+//				// it does, we are fine
+//				return;
+//			}
+//		}
+//		else if ( sqmSelections.size() > 1 ) {
+//			// we have to assume we can.
+//			// the Query will ultimately complain if not, but this is the most we can do here
+//			return;
+//		}
+//		else {
+//			assert sqmSelections.size() == 1;
+//			final var nodeJavaType = sqmSelections.get( 0 ).getNodeJavaType();
+//			if ( nodeJavaType == null ) {
+//				// again, we have to assume we can
+//				return;
+//			}
+//			else if ( resultType.isAssignableFrom( nodeJavaType.getJavaTypeClass() ) ) {
+//				// it matches the selection type, we are fine
+//				return;
+//			}
+//		}
+//
+//		throw new QueryException(
+//				String.format(
+//						Locale.ROOT,
+//						"Specified result-type [%s] is not valid for this SelectionSpecification",
+//						resultType.getName()
+//				),
+//				hql
+//		);
+//	}
 
 	@Override
 	public Timeout getTimeout() {

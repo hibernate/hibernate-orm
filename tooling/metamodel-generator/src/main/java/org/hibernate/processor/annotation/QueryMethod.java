@@ -253,8 +253,9 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
-	boolean isUsingSpecification() {
-		return requiresSpecification();
+	final boolean isUsingSpecification() {
+		return specificationTargetType() != null
+			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
 
 	private boolean bindsParametersFromReference() {
@@ -265,19 +266,14 @@ public class QueryMethod extends AbstractQueryMethod {
 	private boolean useQueryReferenceCreateQuery() {
 		return namedQueryName != null
 			&& !isUpdate
-			&& !requiresSpecification()
+			&& !isUsingSpecification()
 			&& useGeneratedQueryReferenceMethod();
 	}
 
 	private boolean useNamedQuery() {
 		return namedQueryName != null
-			&& !requiresSpecification()
+			&& !isUsingSpecification()
 			&& !useQueryReferenceCreateQuery();
-	}
-
-	private boolean requiresSpecification() {
-		return specificationTargetType() != null
-			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
 
 	private @Nullable String specificationTargetType() {

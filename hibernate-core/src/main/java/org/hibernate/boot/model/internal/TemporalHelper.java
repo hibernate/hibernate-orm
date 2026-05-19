@@ -254,11 +254,10 @@ public class TemporalHelper {
 				rowEndColumn.getQuotedName( dialect ),
 				partitioned
 		) );
-		String rowEndColumnName = rowEndColumn.getQuotedName( dialect );
 		table.setOptions( appendOption( table.getOptions(),
 				temporalTableSupport.getTemporalTableOptions(
 						strategy,
-						rowEndColumnName,
+						rowEndColumn.getQuotedName( dialect ),
 						partitioned,
 						currentPartitionName,
 						historyPartitionName

@@ -4,15 +4,12 @@
  */
 package org.hibernate.property.access.spi;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertySetterAccessException;
-import org.hibernate.property.access.internal.AbstractSetterMethodSerialForm;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -126,19 +123,4 @@ public class SetterMethodImpl implements Setter {
 		return setterMethod;
 	}
 
-	@Serial
-	private Object writeReplace() {
-		return new SerialForm( containerClass, propertyName, setterMethod );
-	}
-
-	private static class SerialForm extends AbstractSetterMethodSerialForm implements Serializable {
-		private SerialForm(Class<?> containerClass, String propertyName, Method method) {
-			super( containerClass, propertyName, method );
-		}
-
-		@Serial
-		private Object readResolve() {
-			return new SetterMethodImpl( getContainerClass(), getPropertyName(), resolveMethod() );
-		}
-	}
 }

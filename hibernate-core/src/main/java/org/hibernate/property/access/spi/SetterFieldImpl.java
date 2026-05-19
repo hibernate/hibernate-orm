@@ -4,15 +4,12 @@
  */
 package org.hibernate.property.access.spi;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
 import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
-import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -109,26 +106,4 @@ public class SetterFieldImpl implements Setter {
 		return setterMethod;
 	}
 
-	@Serial
-	private Object writeReplace() {
-		return new SerialForm( containerClass, propertyName, field );
-	}
-
-	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
-		private final Class<?> containerClass;
-		private final String propertyName;
-
-
-		private SerialForm(Class<?> containerClass, String propertyName, Field field) {
-			super( field );
-			this.containerClass = containerClass;
-			this.propertyName = propertyName;
-		}
-
-		@Serial
-		private Object readResolve() {
-			return new SetterFieldImpl( containerClass, propertyName, resolveField() );
-		}
-
-	}
 }

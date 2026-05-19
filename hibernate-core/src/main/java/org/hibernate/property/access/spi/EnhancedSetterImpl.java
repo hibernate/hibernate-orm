@@ -4,12 +4,9 @@
  */
 package org.hibernate.property.access.spi;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.lang.reflect.Field;
 
 import org.hibernate.Internal;
-import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -40,31 +37,5 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 	public void set(Object target, @Nullable Object value) {
 		super.set( target, value );
 		handleEnhancedInjection( target, value, enhancementState, propertyName );
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// serialization
-
-	@Serial
-	private Object writeReplace() {
-		return new SerialForm( getContainerClass(), propertyName, getField() );
-	}
-
-	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
-		private final Class<?> containerClass;
-		private final String propertyName;
-
-
-		private SerialForm(Class<?> containerClass, String propertyName, Field field) {
-			super( field );
-			this.containerClass = containerClass;
-			this.propertyName = propertyName;
-		}
-
-		@Serial
-		private Object readResolve() {
-			return new EnhancedSetterImpl( containerClass, propertyName, resolveField() );
-		}
 	}
 }

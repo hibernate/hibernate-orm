@@ -4,7 +4,6 @@
  */
 package org.hibernate.property.access.spi;
 
-import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -20,7 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface Getter extends Serializable {
+public interface Getter {
 	/**
 	 * Get the property value from the given owner instance.
 	 *

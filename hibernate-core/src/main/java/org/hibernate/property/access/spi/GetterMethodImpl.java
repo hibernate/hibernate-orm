@@ -4,9 +4,6 @@
  */
 package org.hibernate.property.access.spi;
 
-import java.io.ObjectStreamException;
-import java.io.Serial;
-import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -16,7 +13,6 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -110,41 +106,4 @@ public class GetterMethodImpl implements Getter {
 		return getterMethod;
 	}
 
-	@Serial
-	private Object writeReplace() throws ObjectStreamException {
-		return new SerialForm( containerClass, propertyName, getterMethod );
-	}
-
-	private static class SerialForm implements Serializable {
-		private final Class<?> containerClass;
-		private final String propertyName;
-
-		private final Class<?> declaringClass;
-		private final String methodName;
-
-		private SerialForm(Class<?> containerClass, String propertyName, Method method) {
-			this.containerClass = containerClass;
-			this.propertyName = propertyName;
-			this.declaringClass = method.getDeclaringClass();
-			this.methodName = method.getName();
-		}
-
-		@Serial
-		private Object readResolve() {
-			return new GetterMethodImpl( containerClass, propertyName, resolveMethod() );
-		}
-
-		private Method resolveMethod() {
-			try {
-				final var method = declaringClass.getDeclaredMethod( methodName );
-				ReflectHelper.ensureAccessibility( method );
-				return method;
-			}
-			catch (NoSuchMethodException e) {
-				throw new PropertyAccessSerializationException(
-						"Unable to resolve getter method on deserialization: " + declaringClass.getName() + "#" + methodName
-				);
-			}
-		}
-	}
 }

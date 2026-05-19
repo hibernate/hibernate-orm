@@ -4,7 +4,6 @@
  */
 package org.hibernate.property.access.spi;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -15,7 +14,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface Setter extends Serializable {
+public interface Setter {
 
 	void set(Object target, @Nullable Object value);
 

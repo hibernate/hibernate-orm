@@ -5,7 +5,6 @@
 package org.hibernate.tool.schema.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -31,7 +30,6 @@ import static org.hibernate.tool.schema.internal.ColumnDefinitions.getFullColumn
  *
  * @author Gavin King
  */
-@Incubating
 public class StandardTableMigrator implements TableMigrator {
 
 	private static final Logger LOG = Logger.getLogger( Table.class );

@@ -4,7 +4,6 @@
  */
 package org.hibernate.tool.schema.internal;
 
-import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -24,7 +23,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.join;
  *
  * @author Gavin King
  */
-@Incubating
 public class StandardTableCleaner implements Cleaner {
 	protected final Dialect dialect;
 

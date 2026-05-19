@@ -286,9 +286,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	@Override
 	public SqmQuerySpec<T> setSelection(JpaSelection<T> selection) {
 		final SqmSelectClause selectClause = getSelectClause();
-		// NOTE : this call comes from JPA which inherently supports just a
-		// single (possibly "compound") selection.
-		// We have this special case where we return the SqmSelectClause itself if it doesn't have exactly 1 item
+		// NOTE: this call comes from JPA which inherently supports just
+		// a single (possibly "compound") selection.
+		// We have this special case where we return the SqmSelectClause
+		// itself if it doesn't have exactly 1 item
 		if ( selection instanceof SqmSelectClause sqmSelectClause ) {
 			if ( selection != selectClause ) {
 				final List<SqmSelection<?>> selections = sqmSelectClause.getSelections();
@@ -327,7 +328,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public @Nullable SqmPredicate getRestriction() {
-		final SqmWhereClause whereClause = getWhereClause();
+		final var whereClause = getWhereClause();
 		return whereClause == null ? null : whereClause.getPredicate();
 	}
 
@@ -337,11 +338,11 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			setWhereClause( null );
 		}
 		else {
-		SqmWhereClause whereClause = getWhereClause();
-		if ( whereClause == null ) {
-			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
-		}
-		whereClause.setPredicate( (SqmPredicate) restriction );
+			SqmWhereClause whereClause = getWhereClause();
+			if ( whereClause == null ) {
+				setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+			}
+			whereClause.setPredicate( (SqmPredicate) restriction );
 		}
 		return this;
 	}

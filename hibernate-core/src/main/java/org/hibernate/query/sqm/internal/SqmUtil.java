@@ -1010,7 +1010,7 @@ public class SqmUtil {
 
 	public static <X> SqmPredicate restriction(
 			AbstractSqmSelectQuery<X> sqmStatement,
-			Class<X> resultType,
+			Class<? extends X> resultType,
 			Restriction<? super X> restriction) {
 		//noinspection unchecked
 		final var root = (JpaRoot<X>) sqmStatement.getRoot( 0, resultType );

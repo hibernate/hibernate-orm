@@ -112,6 +112,22 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,
+	 * iteratively build a {@linkplain MutationQuery} based on a named HQL
+	 * or criteria statement reference, allowing the addition of
+	 * {@linkplain #restrict restrictions}.
+	 *
+	 * @param statementReference A reference to the base statement.
+	 *
+	 * @param <T> The root entity type for the mutation (the "target").
+	 *
+	 * @since 8.0
+	 */
+	static <T> MutationSpecification<T> create(StatementReference statementReference) {
+		return new MutationSpecificationImpl<>( statementReference );
+	}
+
+	/**
+	 * Returns a specification reference which can be used to programmatically,
 	 * iteratively build a {@linkplain MutationQuery} based on the given criteria update,
 	 * allowing the addition of {@linkplain #restrict restrictions}.
 	 *

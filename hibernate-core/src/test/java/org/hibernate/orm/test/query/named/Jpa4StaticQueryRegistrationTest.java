@@ -23,6 +23,11 @@ import jakarta.persistence.query.StaticStatementReference;
 import jakarta.persistence.query.StaticTypedQueryReference;
 import org.hibernate.FlushMode;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.query.Order;
+import org.hibernate.query.range.Range;
+import org.hibernate.query.restriction.Restriction;
+import org.hibernate.query.specification.MutationSpecification;
+import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -208,6 +213,76 @@ class Jpa4StaticQueryRegistrationTest {
 		} );
 	}
 
+	@Test
+	void createsSelectionSpecificationFromTypedQueryReference(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Book( 7, "SpecificationReference" ) );
+			session.persist( new Book( 8, "SpecificationReference" ) );
+		} );
+
+		scope.inTransaction( session -> {
+			final var reference = new StaticTypedQueryReference<>(
+					"Book.findByTitle",
+					Book.class,
+					"findByTitle",
+					Book.class,
+					List.of( String.class ),
+					List.of( "title" ),
+					List.of( "SpecificationReference" )
+			);
+
+			final var specification = SelectionSpecification.create( reference )
+					.restrict( Restriction.restrict( Book.class, "isbn", Range.singleValue( "isbn-8" ) ) )
+					.sort( Order.desc( Book.class, "id" ) );
+
+			final var books = specification
+					.createQuery( session )
+					.getResultList();
+
+			assertThat( books )
+					.extracting( Book::getIsbn )
+					.containsExactly( "isbn-8" );
+			assertThat( session.createQuery( specification.reference() ).getResultList() )
+					.extracting( Book::getIsbn )
+					.containsExactly( "isbn-8" );
+		} );
+	}
+
+	@Test
+	void createsMutationSpecificationFromStatementReference(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Book( 9, "SpecificationDelete" ) );
+			session.persist( new Book( 10, "SpecificationDelete" ) );
+		} );
+
+		scope.inTransaction( session -> {
+			final var statementReference = new StaticStatementReference(
+					"Book.deleteByTitle",
+					Book.class,
+					"deleteByTitle",
+					List.of( String.class ),
+					List.of( "title" ),
+					List.of( "SpecificationDelete" )
+			);
+			final MutationSpecification<Book> specification = MutationSpecification.create( statementReference );
+
+			final var reference = specification
+					.restrict( Restriction.restrict( Book.class, "isbn", Range.singleValue( "isbn-9" ) ) )
+					.reference();
+
+			assertThat( session.createStatement( reference ).executeUpdate() ).isEqualTo( 1 );
+		} );
+
+		scope.inTransaction( session -> {
+			assertThat( session.createSelectionQuery(
+							"from Jpa4StaticQueryBook where title = :title",
+							Book.class )
+					.setParameter( "title", "SpecificationDelete" )
+					.getSingleResult()
+					.getIsbn() ).isEqualTo( "isbn-10" );
+		} );
+	}
+
 	@Entity( name = "Jpa4StaticQueryBook" )
 	@NamedEntityGraph( name = "Book.summary" )
 	@Table( name = "jpa4_static_query_book" )
@@ -230,6 +305,10 @@ class Jpa4StaticQueryRegistrationTest {
 
 		public String getTitle() {
 			return title;
+		}
+
+		public String getIsbn() {
+			return isbn;
 		}
 
 		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )

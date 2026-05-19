@@ -13,5 +13,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
  *
  * @author Steve Ebersole
  */
-public interface SqmDeleteOrUpdateStatement<T> extends SqmDmlStatement<T>, CriteriaStatement<T>, SqmWhereClauseContainer {
+public interface SqmDeleteOrUpdateStatement<T>
+		extends SqmDmlStatement<T>, CriteriaStatement<T>, SqmWhereClauseContainer {
 }

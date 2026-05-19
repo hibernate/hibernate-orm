@@ -31,6 +31,7 @@ import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.named.NamedMutationMemento;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.internal.CriteriaMutationMementoImpl;
 import org.hibernate.query.named.internal.HqlMutationMementoImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -176,6 +177,15 @@ public class MutationQueryImpl<T>
 		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 
 		validateQuery( targetType, sqm, hql );
+	}
+
+	public MutationQueryImpl(
+			NamedQueryMemento<?> memento,
+			SqmDmlStatement<T> criteria,
+			boolean copyAst,
+			SharedSessionContractImplementor session) {
+		this( criteria, copyAst, session );
+		applyMementoOptions( memento );
 	}
 
 	@Override

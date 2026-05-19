@@ -12,7 +12,6 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FindOption;
-import jakarta.persistence.Reference;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TransactionRequiredException;
@@ -111,6 +110,7 @@ import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.specification.MutationSpecification;
+import org.hibernate.query.specification.internal.MutationSpecificationImpl;
 import org.hibernate.query.specification.internal.SelectionSpecificationImpl;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutationQueryImplementor;
@@ -150,7 +150,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static java.lang.Boolean.TRUE;
 import static org.hibernate.CacheMode.fromJpaModes;
 import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
@@ -159,6 +158,7 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
+import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
@@ -1516,13 +1516,16 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	@Override
 	public MutationQuery createMutationQuery(String hql) {
 		checksBeforeQueryCreation();
+		return getMutationQuery( hql, interpretHql( hql, null ) );
+	}
 
-		final var interpretation = interpretHql( hql, null );
-		if ( interpretation.getSqmStatement() instanceof SqmDmlStatement mutationAst ) {
+	private <T> MutationQueryImplementor<T> getMutationQuery(String hql, HqlInterpretation<T> interpretation) {
+		if ( interpretation.getSqmStatement() instanceof SqmDmlStatement<T> mutationAst ) {
 			return buildHqlMutationQuery( hql, interpretation, mutationAst.getTarget().getJavaType() );
 		}
-
-		throw new IllegalMutationQueryException( "Query string is not a mutation", hql );
+		else {
+			throw new IllegalMutationQueryException( "Query string is not a mutation", hql );
+		}
 	}
 
 	private <T> MutationQueryImplementor<T> buildHqlMutationQuery(String hql, HqlInterpretation<T> interpretation, Class<T> targetType) {
@@ -1563,8 +1566,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 				return buildHqlSelectionQuery( hql, interpretation, null, null  );
 			}
 			else {
-				final SqmDmlStatement mutationAst = (SqmDmlStatement) interpretation.getSqmStatement();
-				return buildHqlMutationQuery( hql, interpretation, mutationAst.getTarget().getJavaType() );
+				return getMutationQuery( hql, interpretation );
 			}
 		}
 		catch (IllegalQueryOperationException illegalQueryType) {
@@ -1616,8 +1618,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		try {
 			final SelectionQueryImplementor<R> selectionQuery;
 			if ( typedQueryReference instanceof SelectionSpecificationImpl<R> specification ) {
-				final var criteria = specification.buildCriteria( getCriteriaBuilder() );
-				selectionQuery = new SelectionQueryImpl<>( (SqmSelectStatement<R>) criteria, specification.getResultType(), this );
+				selectionQuery = specification.createQuery( this );
 			}
 			else {
 				final var resultType = (Class<R>) typedQueryReference.getResultType();
@@ -1627,12 +1628,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 				bindReferenceArguments( query, typedQueryReference );
 				typedQueryReference.getHints().forEach( query::setHint );
 				selectionQuery = query;
+
+				final String entityGraphName = typedQueryReference.getEntityGraphName();
+				if ( !isEmpty( entityGraphName ) ) {
+					selectionQuery.setHint( HINT_SPEC_LOAD_GRAPH, entityGraphName );
+				}
+				typedQueryReference.getOptions().forEach( selectionQuery::addOption );
 			}
-			final String entityGraphName = typedQueryReference.getEntityGraphName();
-			if ( !isEmpty( entityGraphName ) ) {
-				selectionQuery.setHint( HINT_SPEC_LOAD_GRAPH, entityGraphName );
-			}
-			typedQueryReference.getOptions().forEach( selectionQuery::addOption );
 
 			applyQuerySettingsAndHints( selectionQuery );
 
@@ -1647,7 +1649,10 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	@Override
 	public MutationQuery createStatement(StatementReference statementReference) {
 		checksBeforeQueryCreation();
-		if ( statementReference instanceof MutationSpecification<?> specification ) {
+		if ( statementReference instanceof MutationSpecificationImpl<?> specification ) {
+			return specification.createQuery( this );
+		}
+		else if ( statementReference instanceof MutationSpecification<?> specification ) {
 			final var criteria = specification.buildCriteria( getCriteriaBuilder() );
 			return new MutationQueryImpl<>( (SqmDmlStatement<?>) criteria, this );
 		}
@@ -1663,31 +1668,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
-	private static void bindReferenceArguments(QueryImplementor<?> query, Reference reference) {
-		final var arguments = reference.getArguments();
-		if ( arguments != null && !arguments.isEmpty() ) {
-			final var parameterNames = reference.getParameterNames();
-			if ( hasNamedParameters( query ) && parameterNames != null ) {
-				for ( int i = 0; i < arguments.size(); i++ ) {
-					query.setParameter( parameterNames.get( i ), arguments.get( i ) );
-				}
-			}
-			else {
-				for ( int i = 0; i < arguments.size(); i++ ) {
-					query.setParameter( i + 1, arguments.get( i ) );
-				}
-			}
-		}
-	}
-
-	private static boolean hasNamedParameters(QueryImplementor<?> query) {
-		for ( var parameter : query.getParameters() ) {
-			if ( parameter.getName() != null ) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Native Query
@@ -1945,15 +1925,8 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	/**
 	 * Resolves a query name to its registered {@linkplain NamedQueryMemento memento}.
-	 * Based on which kind of
-	 * G
-	 * @param queryName
-	 * @param sqmCreator
-	 * @param nativeCreator
-	 * @return
-	 * @param <Q>
 	 */
-	protected <Q extends Query> Q buildNamedQuery(
+	protected <Q extends Query<?>> Q buildNamedQuery(
 			String queryName,
 			Function<NamedSqmQueryMemento<?>, Q> sqmCreator,
 			Function<NamedNativeQueryMemento<?>, Q> nativeCreator) {
@@ -2032,22 +2005,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		return query.asMutationQuery();
 	}
 
-	protected <T> NativeQueryImplementor<T> createNativeQueryImplementor(String queryName, NamedNativeQueryMemento<T> memento) {
-		final var query = memento.toQuery( this );
-		final Boolean isUnequivocallySelect = query.isSelectQuery();
-		if ( isUnequivocallySelect == TRUE ) {
-			throw new IllegalMutationQueryException(
-					"Expecting named native query (" + queryName + ") to be a mutation query, but found `"
-							+ memento.getSqlString() + "`"
-			);
-		}
-		if ( isEmpty( query.getComment() ) ) {
-			query.setComment( "dynamic native SQL query" );
-		}
-		applyQuerySettingsAndHints( query );
-		return query;
-	}
-
 	@Override
 	public MutationQueryImplementor<?> createMutationQuery(CriteriaStatement<?> criteriaUpdate) {
 		checkOpen();
@@ -2084,7 +2041,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public MutationQuery createNativeStatement(String sql) {
 		checksBeforeQueryCreation();
 		try {
-			final var query = new NativeQueryImpl( sql, true, this );
+			final var query = new NativeQueryImpl<>( sql, true, this );
 			applyQuerySettingsAndHints( query );
 			return query;
 		}
@@ -2122,7 +2079,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public ProcedureCall createStoredProcedureCall(String procedureName) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
-		final var procedureCall = new ProcedureCallImpl( this, procedureName );
+		final var procedureCall = new ProcedureCallImpl<>( this, procedureName );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
@@ -2131,7 +2088,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
-		final var procedureCall = new ProcedureCallImpl( this, procedureName, resultClasses );
+		final var procedureCall = new ProcedureCallImpl<>( this, procedureName, resultClasses );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
@@ -2140,7 +2097,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
-		final var procedureCall = new ProcedureCallImpl( this, procedureName, resultSetMappings );
+		final var procedureCall = new ProcedureCallImpl<>( this, procedureName, resultSetMappings );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
@@ -2149,7 +2106,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public ProcedureCall createStoredProcedureQuery(String procedureName) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
-		final var procedureCall = new ProcedureCallImpl( this, procedureName );
+		final var procedureCall = new ProcedureCallImpl<>( this, procedureName );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
@@ -2158,7 +2115,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public ProcedureCall createStoredProcedureQuery(String procedureName, Class<?>... resultClasses) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
-		final var procedureCall = new ProcedureCallImpl( this, procedureName, resultClasses );
+		final var procedureCall = new ProcedureCallImpl<>( this, procedureName, resultClasses );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
@@ -2167,7 +2124,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
-		final var procedureCall = new ProcedureCallImpl( this, procedureName, resultSetMappings );
+		final var procedureCall = new ProcedureCallImpl<>( this, procedureName, resultSetMappings );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}

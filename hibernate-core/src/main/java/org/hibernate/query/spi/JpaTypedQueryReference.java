@@ -4,10 +4,6 @@
  */
 package org.hibernate.query.spi;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.TypedQuery;
@@ -45,22 +41,6 @@ public interface JpaTypedQueryReference<R> extends JpaReference, TypedQueryRefer
 	@Override
 	default Set<TypedQuery.Option> getOptions() {
 		return Set.of();
-	}
-
-	default CacheRetrieveMode getCacheRetrieveMode() {
-		return null;
-	}
-
-	default CacheStoreMode getCacheStoreMode() {
-		return null;
-	}
-
-	default LockModeType getLockMode() {
-		return null;
-	}
-
-	default PessimisticLockScope getPessimisticLockScope() {
-		return null;
 	}
 
 	@Override

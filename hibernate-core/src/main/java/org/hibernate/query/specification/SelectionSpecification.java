@@ -126,7 +126,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 */
 	@FunctionalInterface
 	interface Augmentation<T> {
-		void augment(CriteriaBuilder builder, CriteriaQuery<T> query, Root<T> root);
+		void augment(CriteriaBuilder builder, CriteriaQuery<T> query, Root<? extends T> root);
 	}
 
 	/**
@@ -228,6 +228,22 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 */
 	static <T> SelectionSpecification<T> create(Class<T> resultType, String hql) {
 		return new SelectionSpecificationImpl<>( hql, resultType );
+	}
+
+	/**
+	 * Returns a specification reference which can be used to programmatically,
+	 * iteratively build a {@linkplain SelectionQuery} based on a named HQL
+	 * or criteria query reference, allowing the addition of {@linkplain #sort sorting}
+	 * and {@linkplain #restrict restrictions}.
+	 *
+	 * @param typedQueryReference A reference to the base query.
+	 *
+	 * @param <T> The root entity type for the query.
+	 *
+	 * @since 8.0
+	 */
+	static <T> SelectionSpecification<? extends T> create(TypedQueryReference<T> typedQueryReference) {
+		return new SelectionSpecificationImpl<>( typedQueryReference, typedQueryReference.getResultType() );
 	}
 
 	/**

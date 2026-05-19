@@ -4,9 +4,6 @@
  */
 package org.hibernate.query.named;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
@@ -30,11 +27,9 @@ public interface NamedSelectionMemento<T> extends NamedQueryMemento<T>, JpaTyped
 	Boolean getCacheable();
 	String getCacheRegion();
 	CacheMode getCacheMode();
-	CacheRetrieveMode getCacheRetrieveMode();
-	CacheStoreMode getCacheStoreMode();
 
 	LockMode getHibernateLockMode();
-	LockModeType getLockMode();
+
 	PessimisticLockScope getPessimisticLockScope();
 	Timeout getLockTimeout();
 	Locking.FollowOn getFollowOnLockingStrategy();

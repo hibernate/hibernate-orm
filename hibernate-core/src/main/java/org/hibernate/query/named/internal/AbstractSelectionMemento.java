@@ -4,9 +4,6 @@
  */
 package org.hibernate.query.named.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,8 +18,6 @@ import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 
 import java.util.Map;
-
-import static java.lang.Boolean.TRUE;
 
 /**
  * @author Steve Ebersole
@@ -119,34 +114,13 @@ public abstract class AbstractSelectionMemento<R>
 	}
 
 	@Override
-	public CacheRetrieveMode getCacheRetrieveMode() {
-		if ( cacheable == TRUE ) {
-			return cacheMode == null ? CacheRetrieveMode.USE : cacheMode.getJpaRetrieveMode();
-		}
-		return CacheRetrieveMode.BYPASS;
-	}
-
-	@Override
-	public CacheStoreMode getCacheStoreMode() {
-		if ( cacheable == TRUE ) {
-			return cacheMode == null ? CacheStoreMode.USE : cacheMode.getJpaStoreMode();
-		}
-		return CacheStoreMode.BYPASS;
-	}
-
-	@Override
 	public LockMode getHibernateLockMode() {
 		return lockMode;
 	}
 
 	@Override
-	public LockModeType getLockMode() {
-		return lockMode == null ? LockModeType.NONE : lockMode.toJpaLockMode();
-	}
-
-	@Override
 	public PessimisticLockScope getPessimisticLockScope() {
-		return lockScope == null ? PessimisticLockScope.NORMAL : lockScope;
+		return lockScope;
 	}
 
 	@Override

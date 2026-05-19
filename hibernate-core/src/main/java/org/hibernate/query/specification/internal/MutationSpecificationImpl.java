@@ -5,6 +5,7 @@
 package org.hibernate.query.specification.internal;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Statement;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -18,8 +19,12 @@ import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.internal.MutationQueryImpl;
+import org.hibernate.query.named.NamedMutationMemento;
+import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.MutationSpecification;
+import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.JpaStatementReference;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryEngine;
@@ -34,12 +39,15 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
 
@@ -62,12 +70,14 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	private final Class<T> mutationTarget;
 	private final SqmDeleteOrUpdateStatement<T> deleteOrUpdateStatement;
 	private final MutationType type;
+	private final StatementReference statementReference;
 
 	public MutationSpecificationImpl(String hql, Class<T> mutationTarget) {
 		this.hql = hql;
 		this.mutationTarget = mutationTarget;
 		this.deleteOrUpdateStatement = null;
 		this.type = null;
+		this.statementReference = null;
 	}
 
 	public MutationSpecificationImpl(CriteriaUpdate<T> criteriaQuery) {
@@ -75,6 +85,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		this.mutationTarget = deleteOrUpdateStatement.getTarget().getManagedType().getJavaType();
 		this.hql = null;
 		this.type = MutationType.UPDATE;
+		this.statementReference = null;
 	}
 
 	public MutationSpecificationImpl(CriteriaDelete<T> criteriaQuery) {
@@ -82,6 +93,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		this.mutationTarget = deleteOrUpdateStatement.getTarget().getManagedType().getJavaType();
 		this.hql = null;
 		this.type = MutationType.DELETE;
+		this.statementReference = null;
 	}
 
 	public MutationSpecificationImpl(MutationType type, Class<T> mutationTarget) {
@@ -89,21 +101,52 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		this.mutationTarget = mutationTarget;
 		this.hql = null;
 		this.type = type;
+		this.statementReference = null;
+	}
+
+	public MutationSpecificationImpl(StatementReference statementReference) {
+		this.deleteOrUpdateStatement = null;
+		this.mutationTarget = null;
+		this.hql = null;
+		this.type = null;
+		this.statementReference = statementReference;
 	}
 
 	@Override
 	public String getName() {
-		return null;
+		return statementReference == null ? null : statementReference.getName();
 	}
 
 	@Override
 	public Map<String,Object> getHints() {
-		return Collections.emptyMap();
+		return statementReference == null ? emptyMap() : statementReference.getHints();
 	}
 
 	@Override
 	public Timeout getTimeout() {
-		return null;
+		return statementReference instanceof JpaStatementReference<?> jpaStatementReference
+				? jpaStatementReference.getTimeout()
+				: null;
+	}
+
+	@Override
+	public List<Class<?>> getParameterTypes() {
+		return statementReference == null ? null : statementReference.getParameterTypes();
+	}
+
+	@Override
+	public List<String> getParameterNames() {
+		return statementReference == null ? null : statementReference.getParameterNames();
+	}
+
+	@Override
+	public List<Object> getArguments() {
+		return statementReference == null ? null : statementReference.getArguments();
+	}
+
+	@Override
+	public Set<Statement.Option> getOptions() {
+		return statementReference == null ? emptySet() : statementReference.getOptions();
 	}
 
 	@Override
@@ -141,22 +184,43 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 
 	public MutationQueryImplementor<T> createQuery(SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
-		final var sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
-		return new MutationQueryImpl<>( sqmStatement, false, sessionImpl );
+		final var buildResult = build( sessionImpl.getFactory().getQueryEngine() );
+		final var query =
+				buildResult.sqmMemento == null
+						? new MutationQueryImpl<>( buildResult.sqmStatement, false, sessionImpl )
+						: new MutationQueryImpl<>( buildResult.sqmMemento, buildResult.sqmStatement, false, sessionImpl );
+		if ( statementReference != null ) {
+			bindReferenceArguments( query, statementReference );
+			final var hints = statementReference.getHints();
+			if ( hints != null ) {
+				hints.forEach( query::setHint );
+			}
+			statementReference.getOptions().forEach( query::addOption );
+		}
+		return query;
 	}
 
-	private SqmDeleteOrUpdateStatement<T> build(QueryEngine queryEngine) {
+
+	private record SqmBuildResult<T>(
+			SqmDeleteOrUpdateStatement<T> sqmStatement,
+			NamedSqmQueryMemento<?> sqmMemento) {
+	}
+
+	private SqmBuildResult<T> build(QueryEngine queryEngine) {
 		final SqmDeleteOrUpdateStatement<T> sqmStatement;
 		final SqmRoot<T> mutationTargetRoot;
+		final NamedSqmQueryMemento<?> sqmMemento;
 		if ( hql != null ) {
 			sqmStatement = resolveSqmTree( hql, queryEngine );
 			mutationTargetRoot = resolveSqmRoot( sqmStatement, mutationTarget );
+			sqmMemento = null;
 		}
 		else if ( deleteOrUpdateStatement != null ) {
-			sqmStatement = (SqmDeleteOrUpdateStatement<T>) deleteOrUpdateStatement
-					.copy( simpleContext() );
+			sqmStatement = (SqmDeleteOrUpdateStatement<T>)
+					deleteOrUpdateStatement.copy( simpleContext() );
 			mutationTargetRoot = resolveSqmRoot( sqmStatement,
 					sqmStatement.getTarget().getManagedType().getJavaType() );
+			sqmMemento = null;
 		}
 		else if ( type != null ) {
 			final var criteriaBuilder = queryEngine.getCriteriaBuilder();
@@ -165,12 +229,27 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 				case DELETE -> criteriaBuilder.createCriteriaDelete( mutationTarget );
 			};
 			mutationTargetRoot = sqmStatement.getTarget();
+			sqmMemento = null;
+		}
+		else if ( statementReference != null ) {
+			if ( statementReference instanceof MutationSpecification<?> mutationSpecification ) {
+				//noinspection unchecked
+				sqmStatement = (SqmDeleteOrUpdateStatement<T>)
+						mutationSpecification.buildCriteria( queryEngine.getCriteriaBuilder() );
+				mutationTargetRoot = sqmStatement.getTarget();
+				sqmMemento = null;
+			}
+			else {
+				sqmMemento = resolveSqmMutationMemento( statementReference, queryEngine );
+				sqmStatement = resolveSqmTree( sqmMemento, queryEngine );
+				mutationTargetRoot = sqmStatement.getTarget();
+			}
 		}
 		else {
 			throw new AssertionFailure( "No HQL or criteria" );
 		}
 		specifications.forEach( consumer -> consumer.accept( sqmStatement, mutationTargetRoot ) );
-		return sqmStatement;
+		return new SqmBuildResult<>( sqmStatement, sqmMemento );
 	}
 
 	@Override
@@ -181,13 +260,13 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	@Override
 	public CriteriaStatement<T> buildCriteria(CriteriaBuilder builder) {
 		final var nodeBuilder = (NodeBuilder) builder;
-		return build( nodeBuilder.getQueryEngine() );
+		return build( nodeBuilder.getQueryEngine() ).sqmStatement;
 	}
 
 	@Override
 	public MutationSpecification<T> validate(CriteriaBuilder builder) {
 		final var nodeBuilder = (NodeBuilder) builder;
-		final var statement = build( nodeBuilder.getQueryEngine() );
+		final var statement = build( nodeBuilder.getQueryEngine() ).sqmStatement;
 		( (AbstractSqmDmlStatement<?>) statement ).validate( hql );
 		return this;
 	}
@@ -197,19 +276,64 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	 * and produce the corresponding SQM tree.
 	 */
 	private static <T> SqmDeleteOrUpdateStatement<T> resolveSqmTree(String hql, QueryEngine queryEngine) {
-		final var hqlInterpretation =
+		final HqlInterpretation<T> hqlInterpretation =
 				queryEngine.getInterpretationCache()
-						.<T>resolveHqlInterpretation( hql, null, queryEngine.getHqlTranslator() );
+						// FIXME : unchecked cast
+						.resolveHqlInterpretation( hql, null, queryEngine.getHqlTranslator() );
+		if ( SqmUtil.isRestrictedMutation( hqlInterpretation.getSqmStatement() ) ) {
+			// NOTE: this copy is to isolate the actual AST tree from the
+			// one stored in the interpretation cache
+			return (SqmDeleteOrUpdateStatement<T>)
+					hqlInterpretation.getSqmStatement()
+							.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
+		}
+		else {
+			throw new IllegalMutationQueryException( "Expecting a delete or update query, but found '" + hql + "'",
+					hql );
+		}
+	}
 
-		if ( !SqmUtil.isRestrictedMutation( hqlInterpretation.getSqmStatement() ) ) {
-			throw new IllegalMutationQueryException( "Expecting a delete or update query, but found '" + hql + "'", hql);
+	/**
+	 * Used during construction to resolve an incoming named statement reference
+	 * and produce the corresponding SQM tree.
+	 */
+	private static <T> SqmDeleteOrUpdateStatement<T> resolveSqmTree(
+			NamedSqmQueryMemento<?> sqmMemento,
+			QueryEngine queryEngine) {
+		final var sqmStatement = sqmMemento.getSqmStatement();
+		if ( sqmStatement == null ) {
+			return resolveSqmTree( sqmMemento.getHqlString(), queryEngine );
+		}
+		else if ( SqmUtil.isRestrictedMutation( sqmStatement ) ) {
+			//noinspection unchecked
+			return (SqmDeleteOrUpdateStatement<T>) sqmStatement.copy( simpleContext() );
+		}
+		else {
+			throw new IllegalMutationQueryException(
+					"Expecting a delete or update query, but found '" + sqmMemento.getHqlString() + "'",
+					sqmMemento.getHqlString()
+			);
 		}
 
-		// NOTE: this copy is to isolate the actual AST tree from the
-		// one stored in the interpretation cache
-		return (SqmDeleteOrUpdateStatement<T>)
-				hqlInterpretation.getSqmStatement()
-						.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
+	}
+
+	private static <T> NamedSqmQueryMemento<T> resolveSqmMutationMemento(
+			StatementReference statementReference,
+			QueryEngine queryEngine) {
+		final NamedQueryMemento<T> namedMemento =
+				queryEngine.getNamedObjectRepository()
+						// FIXME: unchecked cast
+						.getQueryMementoByName( statementReference.getName(), false );
+		if ( namedMemento instanceof NamedMutationMemento<?>
+				&& namedMemento instanceof NamedSqmQueryMemento<T> sqmMemento ) {
+			return sqmMemento;
+		}
+		else {
+			throw new IllegalMutationQueryException(
+					"MutationSpecification only supports HQL or criteria statement references: "
+							+ statementReference.getName()
+			);
+		}
 	}
 
 	/**
@@ -231,6 +355,9 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 					)
 			);
 		}
-		return mutationTargetRoot;
+		else {
+			return mutationTargetRoot;
+		}
 	}
+
 }

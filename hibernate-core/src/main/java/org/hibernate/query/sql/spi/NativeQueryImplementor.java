@@ -14,6 +14,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
@@ -46,6 +47,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -67,7 +69,10 @@ public interface NativeQueryImplementor<R>
 	@Override
 	NamedMutationMemento<?> toMutationMemento(String name);
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
+	Set getOptions();
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Casts
 
 	@Override

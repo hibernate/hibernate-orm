@@ -58,6 +58,10 @@ import static java.util.Objects.requireNonNull;
  * the native restriction API, which is itself a facade over the JPA Criteria
  * API.
  *
+ * @apiNote This class is not intended for direct use by application programs.
+ *          It is called by Jakarta Data repository implementations generated
+ *          by Hibernate Data Repositories.
+ *
  * @author Gavin King
  * @since 8.0
  */

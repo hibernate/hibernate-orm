@@ -15,7 +15,6 @@ import java.util.Set;
 import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.SemanticException;
@@ -53,7 +52,6 @@ import jakarta.persistence.criteria.Predicate;
 
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.singleton;
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**

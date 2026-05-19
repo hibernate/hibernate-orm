@@ -42,13 +42,14 @@ class DataRestrictionTest {
 		assertTrue( repository.contains( "Restriction<? super DataRestrictionBook> restriction" ) );
 		assertTrue( repository.contains( "List<Restriction<? super DataRestrictionBook>> restrictions" ) );
 		assertTrue( repository.contains( "Restriction<? super DataRestrictionBook>[] restrictions" ) );
-		assertTrue( repository.contains(
-				"import static org.hibernate.query.restriction.JakartaDataRestriction.adaptRestriction;" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(restriction));" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(Restrict.all(restrictions)));" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(queryRestriction));" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(deleteRestriction));" ) );
-		assertFalse( repository.contains( "JakartaDataRestriction.adaptRestriction(" ) );
+		assertTrue( repository.contains( "SelectionSpecification.create(_query())" ) );
+		assertTrue( repository.contains( "SelectionSpecification.create(_query(title))" ) );
+		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
+		assertTrue( repository.contains( "\"DataRestrictionRepository.query\"" ) );
 		assertTrue( repository.contains( "for (var _sort : order.sorts())" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.restriction" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.queryRestriction" ) );

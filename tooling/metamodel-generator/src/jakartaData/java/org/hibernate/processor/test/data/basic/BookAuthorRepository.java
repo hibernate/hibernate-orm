@@ -185,6 +185,12 @@ public interface BookAuthorRepository {
 		return List.of();
 	}
 
+	@JakartaQuery("from Book where title like :title")
+	List<Book> booksWithJakartaQueryOrder(String title, Order<? super Book> order);
+
+	@NativeQuery("select * from books where title like :title")
+	List<Book> booksWithNativeQueryOrder(String title, Order<? super Book> order);
+
 	@NativeQuery("select isbn as book_isbn, title, text, publicationDate, price, pages from books where isbn = ?2")
 	@EntityResult(entityClass = Book.class, fields = @FieldResult(name = "isbn", column = "book_isbn"))
 	Book nativeBookWithResultMapping(EntityManager entityManager, String isbn);
@@ -219,6 +225,10 @@ public interface BookAuthorRepository {
 			flush = QueryFlushMode.NO_FLUSH
 	)
 	List<Book> booksWithOptions(String title);
+
+	@Query("select b from Book b join b.authors a where a.name = :authorName")
+	@QueryOptions(cacheStoreMode = CacheStoreMode.BYPASS)
+	List<Book> booksBy(String authorName);
 
 	@Query("from Book where title like :title")
 	List<Book> books1(@Param("title") String titlePattern, Order<Book> order);

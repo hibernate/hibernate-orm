@@ -213,7 +213,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		final var query = createSelectionQuery( buildResult, sessionImpl );
 		if ( typedQueryReference != null ) {
 			bindReferenceArguments( query, typedQueryReference );
-			setHintsAndOptions( query );
+			setHintsAndOptions( query ); // arguably unnecessary
 		}
 		return query;
 	}

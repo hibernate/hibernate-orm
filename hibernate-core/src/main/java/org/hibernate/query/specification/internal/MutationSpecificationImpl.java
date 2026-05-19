@@ -191,13 +191,17 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 						: new MutationQueryImpl<>( buildResult.sqmMemento, buildResult.sqmStatement, false, sessionImpl );
 		if ( statementReference != null ) {
 			bindReferenceArguments( query, statementReference );
-			final var hints = statementReference.getHints();
-			if ( hints != null ) {
-				hints.forEach( query::setHint );
-			}
-			statementReference.getOptions().forEach( query::addOption );
+			setHintsAndOptions( query ); // arguably unnecessary
 		}
 		return query;
+	}
+
+	private void setHintsAndOptions(MutationQueryImpl<T> query) {
+		final var hints = statementReference.getHints();
+		if ( hints != null ) {
+			hints.forEach( query::setHint );
+		}
+		statementReference.getOptions().forEach( query::addOption );
 	}
 
 

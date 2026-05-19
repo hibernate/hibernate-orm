@@ -242,8 +242,10 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @since 8.0
 	 */
-	static <T> SelectionSpecification<? extends T> create(TypedQueryReference<T> typedQueryReference) {
-		return new SelectionSpecificationImpl<>( typedQueryReference, typedQueryReference.getResultType() );
+	static <T> SelectionSpecification<T> create(TypedQueryReference<T> typedQueryReference) {
+		@SuppressWarnings("unchecked")
+		final Class<T> resultType = (Class<T>) typedQueryReference.getResultType();
+		return new SelectionSpecificationImpl<>( typedQueryReference, resultType );
 	}
 
 	/**

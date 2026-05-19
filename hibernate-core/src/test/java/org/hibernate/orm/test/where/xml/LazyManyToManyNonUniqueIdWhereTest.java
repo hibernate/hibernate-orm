@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.where.hbm;
+package org.hibernate.orm.test.where.xml;
 
 import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gail Badner
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "hbm/where/LazyManyToManyNonUniqueIdWhereTest.hbm.xml")
+@DomainModel(xmlMappings = "mappings/where/LazyManyToManyNonUniqueIdWhereTest.orm.xml")
 @SessionFactory
 @SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support varchar in column definition")
 public class LazyManyToManyNonUniqueIdWhereTest {

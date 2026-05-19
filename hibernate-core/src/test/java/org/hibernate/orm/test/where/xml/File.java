@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.where.hbm;
+package org.hibernate.orm.test.where.xml;
 import java.util.Set;
 
 public class File {

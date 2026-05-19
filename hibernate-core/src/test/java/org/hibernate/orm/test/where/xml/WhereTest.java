@@ -9,7 +9,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
-import org.hibernate.orm.test.where.hbm.File;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

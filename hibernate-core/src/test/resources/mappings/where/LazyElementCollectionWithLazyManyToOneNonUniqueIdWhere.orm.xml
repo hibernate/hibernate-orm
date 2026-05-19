@@ -25,7 +25,7 @@
                                 fetch="LAZY" classification="SET">
 
                 <sql-restriction>MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='SIZE'</sql-restriction>
-                <immutable/>
+                <mutable>false</mutable>
                 <association-override name="size">
                     <join-column name="ASSOCIATION_ID" unique="false" nullable="true" insertable="true" updatable="true"/>
                 </association-override>
@@ -36,7 +36,7 @@
             <element-collection name="containedRatings"
                                 target-class="LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest$ContainedRating"
                                 fetch="LAZY" classification="SET">
-                <immutable/>
+                <mutable>false</mutable>
                 <association-override name="rating">
                     <join-column name="RATING_ID" unique="false" nullable="true" insertable="true" updatable="true"/>
                 </association-override>
@@ -61,7 +61,7 @@
                                 target-class="LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest$ContainedSize"
                                 fetch="LAZY" classification="SET" >
                 <sql-restriction>MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'</sql-restriction>
-                <immutable/>
+                <mutable>false</mutable>
                 <collection-table name="COLLECTION_TABLE">
                     <join-column name="MAIN_ID" unique="false" nullable="true" insertable="true" updatable="true"/>
                 </collection-table>
@@ -70,7 +70,7 @@
                                 target-class="LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest$ContainedRating"
                                 fetch="LAZY" classification="SET">
                 <sql-restriction>MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'</sql-restriction>
-                <immutable/>
+                <mutable>false</mutable>
                 <collection-table name="COLLECTION_TABLE">
                     <join-column name="MAIN_ID" unique="false" nullable="true" insertable="true" updatable="true"/>
                 </collection-table>

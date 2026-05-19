@@ -30,7 +30,6 @@ import java.util.Properties;
 
 import static org.hibernate.boot.model.internal.GeneratorParameters.collectParameters;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
-import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
 
 /**
  * Generator that picks a strategy based on the {@linkplain Dialect#getNativeValueGenerationStrategy() dialect}.
@@ -176,6 +175,5 @@ public class NativeGenerator
 				context.getServiceRegistry()
 						.requireService( ConfigurationService.class )
 		);
-		properties.put( INCREMENT_PARAM, 1 );
 	}
 }

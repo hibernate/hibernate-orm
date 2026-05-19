@@ -32,6 +32,7 @@ import static org.hibernate.processor.util.Constants.JD_LIMIT;
 import static org.hibernate.processor.util.Constants.JD_ORDER;
 import static org.hibernate.processor.util.Constants.JD_PAGE;
 import static org.hibernate.processor.util.Constants.JD_PAGE_REQUEST;
+import static org.hibernate.processor.util.Constants.JD_RESTRICT;
 import static org.hibernate.processor.util.Constants.JD_RESTRICTION;
 import static org.hibernate.processor.util.Constants.JD_SORT;
 import static org.hibernate.processor.util.Constants.LIST;
@@ -323,15 +324,25 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
 			if ( isRestrictionParam(paramType) ) {
+				final boolean multipleRestrictions = paramType.startsWith(LIST) || paramType.endsWith("[]");
 				if ( isJakartaDataRestrictionParam( paramType ) ) {
 					declaration
 							.append( "\t_spec.restrict(" )
 							.append( annotationMetaEntity.importType( "org.hibernate.query.restriction.JakartaDataRestriction" ) )
-							.append( paramType.startsWith(LIST) || paramType.endsWith("[]") ? ".all(" : ".from(" )
-							.append( paramName )
-							.append( "));\n" );
+							.append( ".from(" );
+					if ( multipleRestrictions ) {
+						declaration
+								.append( annotationMetaEntity.importType( JD_RESTRICT ) )
+								.append( ".all(" )
+								.append( paramName )
+								.append( ")" );
+					}
+					else {
+						declaration.append( paramName );
+					}
+					declaration.append( "));\n" );
 				}
-				else if ( paramType.startsWith(LIST) || paramType.endsWith("[]") ) {
+				else if ( multipleRestrictions ) {
 					declaration
 							.append( "\t_spec.restrict(" )
 							.append( annotationMetaEntity.importType(HIB_RESTRICTION) )

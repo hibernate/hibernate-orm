@@ -110,15 +110,15 @@ public class JakartaDataRestrictionTest {
 				"Jakarta Data Guide",
 				"Java Persistence with Hibernate" );
 		assertTitles( scope, Restrict.not( Restrict.unrestricted() ) );
-		assertTitles( scope, JakartaDataRestriction.all(
+		assertTitles( scope, from( Restrict.all(
 						TITLE.contains( "Hibernate" ),
 						PAGES.lessThanEqual( 400 )
-				),
+				) ),
 				"Hibernate in Action" );
-		final var restrictions =
+		final List<jakarta.data.restrict.Restriction<? super Book>> restrictions =
 				List.of( TITLE.contains( "Hibernate" ),
 						PAGES.lessThanEqual( 400 ) );
-		assertTitles( scope, JakartaDataRestriction.all( restrictions ),
+		assertTitles( scope, from( Restrict.all( restrictions ) ),
 				"Hibernate in Action" );
 	}
 

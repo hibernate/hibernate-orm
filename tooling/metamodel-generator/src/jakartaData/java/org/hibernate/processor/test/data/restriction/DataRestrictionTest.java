@@ -43,7 +43,7 @@ class DataRestrictionTest {
 		assertTrue( repository.contains( "List<Restriction<? super DataRestrictionBook>> restrictions" ) );
 		assertTrue( repository.contains( "Restriction<? super DataRestrictionBook>[] restrictions" ) );
 		assertTrue( repository.contains( "_spec.restrict(JakartaDataRestriction.from(restriction));" ) );
-		assertTrue( repository.contains( "_spec.restrict(JakartaDataRestriction.all(restrictions));" ) );
+		assertTrue( repository.contains( "_spec.restrict(JakartaDataRestriction.from(Restrict.all(restrictions)));" ) );
 		assertTrue( repository.contains( "_spec.restrict(JakartaDataRestriction.from(queryRestriction));" ) );
 		assertTrue( repository.contains( "_spec.restrict(JakartaDataRestriction.from(deleteRestriction));" ) );
 		assertTrue( repository.contains( "for (var _sort : order.sorts())" ) );

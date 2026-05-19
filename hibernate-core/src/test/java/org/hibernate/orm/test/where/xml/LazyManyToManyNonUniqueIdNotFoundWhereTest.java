@@ -2,16 +2,16 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.where.hbm;
+package org.hibernate.orm.test.where.xml;
 
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "hbm/where/LazyManyToManyNonUniqueIdNotFoundWhereTest.hbm.xml")
+@DomainModel(xmlMappings = "mappings/where/LazyManyToManyNonUniqueIdNotFoundWhereTest.orm.xml")
 @SessionFactory
 @SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support varchar in column definition")
 public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
@@ -82,32 +82,40 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'high', 'RATING' )" );
 				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'small', 'SIZE' )" );
 
-				statement.executeUpdate( "insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-										"VALUES( 1, 'MATERIAL', 1, 'RATING' )" );
+				statement.executeUpdate(
+						"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+						"VALUES( 1, 'MATERIAL', 1, 'RATING' )" );
 				// add a collection element that won't be found
-				statement.executeUpdate( "insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-										"VALUES( 1, 'MATERIAL', 2, 'RATING' )" );
+				statement.executeUpdate(
+						"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+						"VALUES( 1, 'MATERIAL', 2, 'RATING' )" );
 
-				statement.executeUpdate( "insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-										"VALUES( 1, 'MATERIAL', 1, 'SIZE' )" );
-
-				// add a collection element that won't be found
-				statement.executeUpdate( "insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-										"VALUES( 1, 'MATERIAL', 2, 'SIZE' )" );
-
-				statement.executeUpdate( "insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-										"VALUES( 1, 'BUILDING', 1, 'RATING' )" );
+				statement.executeUpdate(
+						"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+						"VALUES( 1, 'MATERIAL', 1, 'SIZE' )" );
 
 				// add a collection element that won't be found
-				statement.executeUpdate( "insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-										"VALUES( 1, 'BUILDING', 2, 'RATING' )" );
+				statement.executeUpdate(
+						"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+						"VALUES( 1, 'MATERIAL', 2, 'SIZE' )" );
 
-				statement.executeUpdate( "insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-										"VALUES( 1, 'BUILDING', 1, 'SIZE' )" );
+				statement.executeUpdate(
+						"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+						"VALUES( 1, 'BUILDING', 1, 'RATING' )" );
 
 				// add a collection element that won't be found
-				statement.executeUpdate( "insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
-										"VALUES( 1, 'BUILDING', 2, 'SIZE' )" );
+				statement.executeUpdate(
+						"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+						"VALUES( 1, 'BUILDING', 2, 'RATING' )" );
+
+				statement.executeUpdate(
+						"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+						"VALUES( 1, 'BUILDING', 1, 'SIZE' )" );
+
+				// add a collection element that won't be found
+				statement.executeUpdate(
+						"insert into ASSOCIATION_TABLE(MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE) " +
+						"VALUES( 1, 'BUILDING', 2, 'SIZE' )" );
 
 				statement.executeUpdate( "insert into MATERIAL_RATINGS(MATERIAL_ID, RATING_ID) VALUES( 1, 1 )" );
 
@@ -123,7 +131,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12875" )
+	@JiraKey(value = "HHH-12875")
 	public void testInitializeFromUniqueAssociationTable(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			Material material = session.find( Material.class, 1 );
@@ -149,7 +157,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12875" )
+	@JiraKey(value = "HHH-12875")
 	public void testInitializeFromNonUniqueAssociationTable(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			Material material = session.find( Material.class, 1 );
@@ -198,30 +206,39 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 		public int getId() {
 			return id;
 		}
+
 		public void setId(int id) {
 			this.id = id;
 		}
+
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}
+
 		public Set<Size> getSizesFromCombined() {
 			return sizesFromCombined;
 		}
+
 		public void setSizesFromCombined(Set<Size> sizesFromCombined) {
 			this.sizesFromCombined = sizesFromCombined;
 		}
+
 		public Set<Rating> getRatingsFromCombined() {
 			return ratingsFromCombined;
 		}
+
 		public void setRatingsFromCombined(Set<Rating> ratingsFromCombined) {
 			this.ratingsFromCombined = ratingsFromCombined;
 		}
+
 		public Set<Rating> getRatings() {
 			return ratings;
 		}
+
 		public void setRatings(Set<Rating> ratings) {
 			this.ratings = ratings;
 		}
@@ -237,30 +254,39 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 		public int getId() {
 			return id;
 		}
+
 		public void setId(int id) {
 			this.id = id;
 		}
+
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}
+
 		public Set<Size> getSizesFromCombined() {
 			return sizesFromCombined;
 		}
+
 		public void setSizesFromCombined(Set<Size> sizesFromCombined) {
 			this.sizesFromCombined = sizesFromCombined;
 		}
+
 		public Set<Rating> getRatingsFromCombined() {
 			return ratingsFromCombined;
 		}
+
 		public void setRatingsFromCombined(Set<Rating> ratingsFromCombined) {
 			this.ratingsFromCombined = ratingsFromCombined;
 		}
+
 		public Set<Rating> getRatings() {
 			return ratings;
 		}
+
 		public void setRatings(Set<Rating> ratings) {
 			this.ratings = ratings;
 		}
@@ -273,12 +299,15 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 		public int getId() {
 			return id;
 		}
+
 		public void setId(int id) {
 			this.id = id;
 		}
+
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}
@@ -291,12 +320,15 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 		public int getId() {
 			return id;
 		}
+
 		public void setId(int id) {
 			this.id = id;
 		}
+
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}

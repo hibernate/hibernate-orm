@@ -207,8 +207,13 @@ public class TokenBasedFormatterImpl implements Formatter {
 					}
 					break;
 				case SqlFormatterLexer.FROM:
+					// Check if we're following a DELETE statement
+					if (isAfterKeyword(SqlFormatterLexer.DELETE, 1)) {
+						space();
+						writeToken(token);
+					}
 					// Check if we're inside a function (like TRIM)
-					if (currentContext().type == ContextType.FUNCTION) {
+					else if (currentContext().type == ContextType.FUNCTION) {
 						// Inside function - just add space and write
 						space();
 						writeToken(token);
@@ -863,7 +868,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 		}
 
 		private boolean isKeyword(int type) {
-			return type >= SqlFormatterLexer.SELECT && type <= SqlFormatterLexer.MATCHED;
+			return type >= SqlFormatterLexer.SELECT && type <= SqlFormatterLexer.CONTINUE;
 		}
 
 		private boolean isAfterKeyword(int keywordType, int lookback) {

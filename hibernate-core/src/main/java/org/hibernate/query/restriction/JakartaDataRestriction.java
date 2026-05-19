@@ -55,8 +55,14 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Converts {@linkplain jakarta.data.restrict.Restriction Jakarta Data restrictions}
- * to {@linkplain Restriction Hibernate query restrictions}.
+ * Converts {@linkplain jakarta.data.restrict.Restriction Jakarta Data
+ * restrictions} to {@linkplain Restriction Hibernate query restrictions} and
+ * {@linkplain jakarta.data.constraint.Constraint Jakarta Data constraints} to
+ * {@linkplain jakarta.persistence.criteria.Predicate JPA predicates}. The
+ * operations of this class act as a bridge between the Jakarta Data APIs and
+ * the native restriction API, which is itself a facade over the JPA Criteria
+ * API.
+ *
  * @author Gavin King
  * @since 8.0
  */
@@ -66,8 +72,9 @@ public final class JakartaDataRestriction {
 	}
 
 	/**
-	 * Adapts a {@linkplain jakarta.data.restrict.Restriction Jakarta Data restrictions}
-	 * to a {@linkplain Restriction Hibernate query restrictions}.
+	 * Exposes a {@linkplain jakarta.data.restrict.Restriction Jakarta Data restriction}
+	 * as a {@linkplain Restriction Hibernate query restriction}, allowing it to be used
+	 * in a specification.
 	 */
 	private record Adapter<T>(jakarta.data.restrict.Restriction<? super T> restriction)
 			implements Restriction<T> {
@@ -77,7 +84,7 @@ public final class JakartaDataRestriction {
 
 		@Override
 		public Restriction<T> negated() {
-			return from( restriction.negate() );
+			return adaptRestriction( restriction.negate() );
 		}
 
 		@Override
@@ -86,10 +93,17 @@ public final class JakartaDataRestriction {
 		}
 	}
 
-	public static <T> Restriction<T> from(jakarta.data.restrict.Restriction<? super T> restriction) {
+	/**
+	 * Adapt the given {@linkplain jakarta.data.restrict.Restriction Jakarta Data restriction}.
+	 */
+	public static <T> Restriction<T> adaptRestriction(jakarta.data.restrict.Restriction<? super T> restriction) {
 		return new Adapter<>( restriction );
 	}
 
+	/**
+	 * Obtain a {@linkplain Predicate JPA criteria predicate} representing the given
+	 * {@linkplain jakarta.data.restrict.Restriction Jakarta Data restriction}.
+	 */
 	private static Predicate restriction(
 			jakarta.data.restrict.Restriction<?> restriction,
 			Root<?> root,
@@ -106,30 +120,32 @@ public final class JakartaDataRestriction {
 		}
 	}
 
+	/**
+	 * Obtain a {@linkplain Predicate JPA criteria predicate} representing the given
+	 * {@linkplain CompositeRestriction composite Jakarta Data restriction}.
+	 */
 	private static Predicate compositeRestriction(
-			CompositeRestriction<?> restriction,
+			CompositeRestriction<?> compositeRestriction,
 			Root<?> root,
 			CriteriaBuilder builder) {
-		final var restrictions = restrictions( restriction.restrictions(), root, builder );
-		final var predicate =
-				switch ( restriction.type() ) {
-					case ALL -> builder.and( restrictions );
-					case ANY -> builder.or( restrictions );
-				};
-		return restriction.isNegated() ? builder.not( predicate ) : predicate;
-	}
-
-	private static Predicate[] restrictions(
-			List<? extends jakarta.data.restrict.Restriction<?>> restrictions,
-			Root<?> root,
-			CriteriaBuilder builder) {
+		var restrictions = compositeRestriction.restrictions();
 		final List<Predicate> list = new ArrayList<>( restrictions.size() );
 		for ( var restriction : restrictions ) {
 			list.add( restriction( restriction, root, builder ) );
 		}
-		return list.toArray( Predicate[]::new );
+		final var predicates = list.toArray( Predicate[]::new );
+		final var predicate =
+				switch ( compositeRestriction.type() ) {
+					case ALL -> builder.and( predicates );
+					case ANY -> builder.or( predicates );
+				};
+		return compositeRestriction.isNegated() ? builder.not( predicate ) : predicate;
 	}
 
+	/**
+	 * Obtain a {@linkplain Predicate JPA criteria predicate} representing the given
+	 * {@linkplain BasicRestriction basic Jakarta Data restriction}.
+	 */
 	private static Predicate basicRestriction(
 			BasicRestriction<?, ?> restriction,
 			Root<?> root,
@@ -138,7 +154,12 @@ public final class JakartaDataRestriction {
 		return constraintPredicate( expression, restriction.constraint(), root, builder );
 	}
 
-	public static Predicate predicate(
+	/**
+	 * Apply the given {@linkplain jakarta.data.constraint.Constraint Jakarta Data constraint}
+	 * to the given {@linkplain jakarta.persistence.criteria.Expression JPA expression},
+	 * returning a {@linkplain Predicate JPA criteria predicate}.
+	 */
+	public static Predicate applyConstraint(
 			jakarta.persistence.criteria.Expression<?> expression,
 			Constraint<?> constraint,
 			Root<?> root,
@@ -150,6 +171,11 @@ public final class JakartaDataRestriction {
 		return constraintPredicate( expression, constraint, root , builder );
 	}
 
+	/**
+	 * Obtain a {@linkplain Predicate JPA criteria predicate} representing the given
+	 * {@linkplain Constraint Jakarta Data constraint} applied to the given
+	 * {@linkplain jakarta.persistence.criteria.Expression JPA expression}.
+	 */
 	private static Predicate constraintPredicate(
 			jakarta.persistence.criteria.Expression<?> expression,
 			Constraint<?> constraint,
@@ -263,6 +289,10 @@ public final class JakartaDataRestriction {
 		return expression.in( values.toArray( jakarta.persistence.criteria.Expression<?>[]::new ) );
 	}
 
+	/**
+	 * Adapt the given {@linkplain jakarta.data.expression.Expression Jakarta Data expression}
+	 * to a {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 */
 	private static jakarta.persistence.criteria.Expression<?> expression(
 			jakarta.data.expression.Expression<?, ?> expression,
 			Root<?> root,
@@ -306,6 +336,10 @@ public final class JakartaDataRestriction {
 		}
 	}
 
+	/**
+	 * Adapt the given {@linkplain jakarta.data.expression.NavigableExpression Jakarta Data path}
+	 * to a {@linkplain jakarta.persistence.criteria.Path JPA criteria path}.
+	 */
 	private static jakarta.persistence.criteria.Path<?> path(NavigableExpression<?, ?> expression, Root<?> root) {
 		if ( expression instanceof Attribute<?> attribute ) {
 			return root.get( attribute.name() );
@@ -319,6 +353,10 @@ public final class JakartaDataRestriction {
 		}
 	}
 
+	/**
+	 * Adapt the given {@linkplain TextFunctionExpression Jakarta Data text function}
+	 * to a {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 */
 	private static jakarta.persistence.criteria.Expression<?> textFunction(
 			TextFunctionExpression<?> function,
 			Root<?> root,
@@ -351,6 +389,10 @@ public final class JakartaDataRestriction {
 		};
 	}
 
+	/**
+	 * Adapt the given {@linkplain NumericFunctionExpression Jakarta Data numeric function}
+	 * to a {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 */
 	private static jakarta.persistence.criteria.Expression<?> numericFunction(
 			NumericFunctionExpression<?, ?> function,
 			Root<?> root,
@@ -367,6 +409,10 @@ public final class JakartaDataRestriction {
 		};
 	}
 
+	/**
+	 * Adapt the given {@linkplain NumericCast Jakarta Data numeric cast} to a
+	 * {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 */
 	private static jakarta.persistence.criteria.Expression<?> numericCast(
 			NumericCast<?, ?> cast,
 			Root<?> root,
@@ -390,6 +436,10 @@ public final class JakartaDataRestriction {
 		}
 	}
 
+	/**
+	 * Adapt the given {@linkplain NumericOperatorExpression Jakarta Data operator expression}
+	 * to a {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 */
 	private static jakarta.persistence.criteria.Expression<?> numericOperation(
 			NumericOperatorExpression<?, ?> operation,
 			Root<?> root,
@@ -497,12 +547,8 @@ public final class JakartaDataRestriction {
 			final var javaType = wrapperType( expression.getJavaType() );
 			return javaType == null
 					? builder.nullLiteral( Object.class )
-					: nullLiteral( javaType, builder );
+					: builder.nullLiteral( javaType );
 		}
-	}
-
-	private static <T> jakarta.persistence.criteria.Expression<T> nullLiteral(Class<T> javaType, CriteriaBuilder builder) {
-		return builder.nullLiteral( javaType );
 	}
 
 	private static SqmExpression<?> sqmExpression(jakarta.persistence.criteria.Expression<?> expression) {

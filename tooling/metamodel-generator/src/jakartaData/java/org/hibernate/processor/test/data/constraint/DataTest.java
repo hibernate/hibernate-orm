@@ -29,7 +29,7 @@ class DataTest {
 		assertTrue( repository.contains( "_entity.get(MyEntity_.name).in(name)" ) );
 		assertTrue( repository.contains( "_builder.not(_entity.get(MyEntity_.name).in((Object[]) name))" ) );
 		assertTrue( repository.contains(
-				"JakartaDataRestriction.predicate(_entity.get(MyEntity_.name), name, _entity, _builder)" ) );
+				"JakartaDataRestriction.applyConstraint(_entity.get(MyEntity_.name), name, _entity, _builder)" ) );
 		assertTrue( repository.contains( "Constraint<? super String> name" ) );
 		assertTrue( repository.contains( "Like name" ) );
 		assertTrue( repository.contains( "_builder.greaterThan(_entity.get(MyEntity_.age), age)" ) );

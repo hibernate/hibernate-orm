@@ -329,7 +329,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					declaration
 							.append( "\t_spec.restrict(" )
 							.append( annotationMetaEntity.importType( "org.hibernate.query.restriction.JakartaDataRestriction" ) )
-							.append( ".from(" );
+							.append( ".adaptRestriction(" );
 					if ( multipleRestrictions ) {
 						declaration
 								.append( annotationMetaEntity.importType( JD_RESTRICT ) )

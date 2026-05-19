@@ -258,7 +258,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		if ( parameterConstraint == ParameterConstraint.RUNTIME ) {
 			declaration
 					.append( annotationMetaEntity.importType( "org.hibernate.query.restriction.JakartaDataRestriction" ) )
-					.append( ".predicate(_entity" );
+					.append( ".applyConstraint(_entity" );
 			path( declaration, paramName );
 			declaration
 					.append( ", " )

@@ -32,7 +32,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hibernate.query.Order.asc;
-import static org.hibernate.query.restriction.JakartaDataRestriction.from;
+import static org.hibernate.query.restriction.JakartaDataRestriction.adaptRestriction;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -110,7 +110,7 @@ public class JakartaDataRestrictionTest {
 				"Jakarta Data Guide",
 				"Java Persistence with Hibernate" );
 		assertTitles( scope, Restrict.not( Restrict.unrestricted() ) );
-		assertTitles( scope, from( Restrict.all(
+		assertTitles( scope, adaptRestriction( Restrict.all(
 						TITLE.contains( "Hibernate" ),
 						PAGES.lessThanEqual( 400 )
 				) ),
@@ -118,7 +118,7 @@ public class JakartaDataRestrictionTest {
 		final List<jakarta.data.restrict.Restriction<? super Book>> restrictions =
 				List.of( TITLE.contains( "Hibernate" ),
 						PAGES.lessThanEqual( 400 ) );
-		assertTitles( scope, from( Restrict.all( restrictions ) ),
+		assertTitles( scope, adaptRestriction( Restrict.all( restrictions ) ),
 				"Hibernate in Action" );
 	}
 
@@ -193,7 +193,7 @@ public class JakartaDataRestrictionTest {
 			final var query = builder.createQuery( Book.class );
 			final var root = query.from( Book.class );
 
-			final var predicate = from( PAGES.dividedInto( 1000 ).greaterThan( 2 ) )
+			final var predicate = adaptRestriction( PAGES.dividedInto( 1000 ).greaterThan( 2 ) )
 					.toPredicate( root, builder );
 			assertEquals( SqmComparisonPredicate.class, predicate.getClass() );
 			final var comparison = (SqmComparisonPredicate) predicate;
@@ -250,7 +250,7 @@ public class JakartaDataRestrictionTest {
 
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> JakartaDataRestriction.predicate(
+					() -> JakartaDataRestriction.applyConstraint(
 							root.get( "pages" ),
 							In.values( "not a page count" ),
 							root,
@@ -260,7 +260,7 @@ public class JakartaDataRestrictionTest {
 
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> JakartaDataRestriction.predicate(
+					() -> JakartaDataRestriction.applyConstraint(
 							root.get( "pages" ),
 							In.expressions( TITLE ),
 							root,
@@ -276,7 +276,7 @@ public class JakartaDataRestrictionTest {
 			String... expectedTitles) {
 		final List<String> titles = scope.fromSession( session ->
 				SelectionSpecification.create( Book.class, "from Book" )
-						.restrict( from( restriction ) )
+						.restrict( adaptRestriction( restriction ) )
 						.sort( asc( Book.class, TITLE.name() ) )
 						.createQuery( session )
 						.getResultList()

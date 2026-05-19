@@ -10,6 +10,9 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 import java.util.Collection;
@@ -1158,6 +1161,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	SqmExpression<Number> quot(Number x, Expression<? extends Number> y);
 
+	SqmExpression<Number> quotPortable(Expression<? extends Number> x, Expression<? extends Number> y);
+
 	@Override
 	SqmExpression<Integer> mod(Expression<Integer> x, Expression<Integer> y);
 
@@ -1287,6 +1292,15 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	SqmFunction<Time> currentTime();
 
 	SqmFunction<Instant> currentInstant();
+
+	@Override
+	SqmExpression<LocalDate> localDate();
+
+	@Override
+	SqmExpression<LocalDateTime> localDateTime();
+
+	@Override
+	SqmExpression<LocalTime> localTime();
 
 	@Override
 	<T> SqmFunction<T> function(String name, Class<T> type, Expression<?>[] args);
@@ -1433,6 +1447,10 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 			Expression<? extends Y> value,
 			Expression<? extends Y> lower,
 			Expression<? extends Y> upper);
+
+	SqmPredicate between(Expression<?> value, Expression<?> lower, Expression<?> upper, boolean negated);
+
+	SqmPredicate comparison(Expression<?> x, ComparisonOperator operator, Expression<?> y);
 
 	@Override
 	<Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Y lower, Y upper);

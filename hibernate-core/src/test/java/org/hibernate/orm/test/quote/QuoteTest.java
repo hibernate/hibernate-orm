@@ -158,7 +158,7 @@ public class QuoteTest {
 	}
 
 	@Entity
-	@Table(name = "`CoNTaiNeR`")
+	@Table(name = "`CoNTaiNeR_Q`")
 	static class Container extends Item {
 
 		@OneToMany(mappedBy = "parent", targetEntity = Item.class)

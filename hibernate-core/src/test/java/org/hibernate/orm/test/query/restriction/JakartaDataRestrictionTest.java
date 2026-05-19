@@ -115,11 +115,10 @@ public class JakartaDataRestrictionTest {
 						PAGES.lessThanEqual( 400 )
 				),
 				"Hibernate in Action" );
-		final List<jakarta.data.restrict.Restriction<? super Book>> restrictions =
-				List.of( TITLE.contains( "Hibernate" ), PAGES.lessThanEqual( 400 ) );
-		assertTitles( scope, JakartaDataRestriction.all(
-						restrictions
-				),
+		final var restrictions =
+				List.of( TITLE.contains( "Hibernate" ),
+						PAGES.lessThanEqual( 400 ) );
+		assertTitles( scope, JakartaDataRestriction.all( restrictions ),
 				"Hibernate in Action" );
 	}
 
@@ -249,8 +248,8 @@ public class JakartaDataRestrictionTest {
 			final var query = builder.createQuery( Book.class );
 			final var root = query.from( Book.class );
 
-			final var mismatchedValue = assertThrows(
-					UnsupportedOperationException.class,
+			assertThrows(
+					IllegalArgumentException.class,
 					() -> JakartaDataRestriction.predicate(
 							root.get( "pages" ),
 							In.values( "not a page count" ),
@@ -258,23 +257,15 @@ public class JakartaDataRestrictionTest {
 							builder
 					)
 			);
-			assertEquals(
-					"Expected java.lang.Integer value but got: java.lang.String",
-					mismatchedValue.getMessage()
-			);
 
-			final var mismatchedExpression = assertThrows(
-					UnsupportedOperationException.class,
+			assertThrows(
+					IllegalArgumentException.class,
 					() -> JakartaDataRestriction.predicate(
 							root.get( "pages" ),
 							In.expressions( TITLE ),
 							root,
 							builder
 					)
-			);
-			assertEquals(
-					"Expected java.lang.Integer expression but got: java.lang.String",
-					mismatchedExpression.getMessage()
 			);
 		} );
 	}

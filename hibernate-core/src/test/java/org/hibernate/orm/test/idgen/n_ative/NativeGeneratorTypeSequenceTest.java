@@ -68,7 +68,7 @@ public class NativeGeneratorTypeSequenceTest {
 	@ParameterizedTest
 	@ArgumentsSource(TestArguments.class)
 	@JiraKey(value = "HHH-20421")
-	public void testNormalBoundary(Class<?> entityClass, int expectedInitialValue, int expectedAllocationSize, SessionFactoryScope scope)
+	public void testNativeGeneratorHonorsSequenceGeneratorInitialValueAndAllocationSize(Class<?> entityClass, int expectedInitialValue, int expectedAllocationSize, SessionFactoryScope scope)
 			throws Exception {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()

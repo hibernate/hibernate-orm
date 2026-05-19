@@ -6,6 +6,7 @@ package org.hibernate.orm.test.query.named;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.ColumnResult;
@@ -17,6 +18,7 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Table;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.query.JakartaQuery;
 import jakarta.persistence.query.QueryOptions;
 import jakarta.persistence.query.StaticStatementReference;
@@ -24,6 +26,7 @@ import jakarta.persistence.query.StaticTypedQueryReference;
 import org.hibernate.FlushMode;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.Order;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.range.Range;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.MutationSpecification;
@@ -58,10 +61,40 @@ class Jpa4StaticQueryRegistrationTest {
 		assertThat( namedObjectRepository.getResultSetMappingMemento( "Book.nativeTitleByTitle" ) ).isNotNull();
 		assertThat( namedObjectRepository.getSelectionQueryMemento( "Book.nativeTitleAndIsbnRows" ) ).isNotNull();
 		assertThat( namedObjectRepository.getResultSetMappingMemento( "Book.nativeTitleAndIsbnRows" ) ).isNotNull();
+		assertSelectionResultType( namedObjectRepository, "Book.optionalByTitle", Book.class );
+		assertSelectionResultType( namedObjectRepository, "Book.arrayByTitle", Book.class );
+		assertSelectionResultType( namedObjectRepository, "Book.titleArrayByTitle", String.class );
+		assertSelectionResultType( namedObjectRepository, "Book.titleAndIsbnArray", Object[].class );
+		assertSelectionResultType( namedObjectRepository, "Book.typedQueryByTitle", Book.class );
+		assertSelectionResultType( namedObjectRepository, "Book.queryByTitle", Book.class );
+		assertSelectionResultType( namedObjectRepository, "Book.selectionQueryByTitle", Book.class );
+		assertSelectionResultType( namedObjectRepository, "Book.keyedResultListByTitle", Book.class );
+		assertThat( namedObjectRepository.getNamedQueries( Book.class ) )
+				.containsKeys(
+						"Book.optionalByTitle",
+						"Book.arrayByTitle",
+						"Book.typedQueryByTitle",
+						"Book.queryByTitle",
+						"Book.selectionQueryByTitle",
+						"Book.keyedResultListByTitle"
+				);
+		assertThat( namedObjectRepository.getNamedQueries( String.class ) )
+				.containsKey( "Book.titleArrayByTitle" );
+		assertThat( namedObjectRepository.getNamedQueries( Object[].class ) )
+				.containsKey( "Book.titleAndIsbnArray" );
 		assertThat( namedObjectRepository.getMutationQueryMemento( "Book.deleteByTitle" ) ).isNotNull();
 		assertThat( namedObjectRepository.getMutationQueryMemento( "Book.deleteByTitleWithOptions" ) ).isNotNull();
 		assertThat( namedObjectRepository.getMutationQueryMemento( "Book.nativeDeleteByTitle" ) ).isNotNull();
 		assertThat( namedObjectRepository.getMutationQueryMemento( "Book.nativeDeleteByTitleWithOptions" ) ).isNotNull();
+	}
+
+	private static void assertSelectionResultType(
+			NamedObjectRepository namedObjectRepository,
+			String queryName,
+			Class<?> resultType) {
+		final var memento = namedObjectRepository.getSelectionQueryMemento( queryName );
+		assertThat( memento ).isNotNull();
+		assertThat( memento.getResultType() ).isEqualTo( resultType );
 	}
 
 	@Test
@@ -313,6 +346,46 @@ class Jpa4StaticQueryRegistrationTest {
 
 		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
 		public List<Book> findByTitle(String title) {
+			throw new UnsupportedOperationException();
+		}
+
+		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
+		public Optional<Book> optionalByTitle(String title) {
+			throw new UnsupportedOperationException();
+		}
+
+		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
+		public Book[] arrayByTitle(String title) {
+			throw new UnsupportedOperationException();
+		}
+
+		@JakartaQuery( "select book.title from Jpa4StaticQueryBook book where book.title = :title" )
+		public String[] titleArrayByTitle(String title) {
+			throw new UnsupportedOperationException();
+		}
+
+		@JakartaQuery( "select book.title, book.isbn from Jpa4StaticQueryBook book where book.title = :title" )
+		public Object[] titleAndIsbnArray(String title) {
+			throw new UnsupportedOperationException();
+		}
+
+		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
+		public TypedQuery<Book> typedQueryByTitle(String title) {
+			throw new UnsupportedOperationException();
+		}
+
+		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
+		public org.hibernate.query.Query<Book> queryByTitle(String title) {
+			throw new UnsupportedOperationException();
+		}
+
+		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
+		public org.hibernate.query.SelectionQuery<Book> selectionQueryByTitle(String title) {
+			throw new UnsupportedOperationException();
+		}
+
+		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
+		public org.hibernate.query.KeyedResultList<Book> keyedResultListByTitle(String title) {
 			throw new UnsupportedOperationException();
 		}
 

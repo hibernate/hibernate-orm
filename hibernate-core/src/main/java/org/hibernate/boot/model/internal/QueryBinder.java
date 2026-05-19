@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -75,6 +76,8 @@ import static org.hibernate.models.internal.util.StringHelper.isEmpty;
  */
 public abstract class QueryBinder {
 	private static final String JAKARTA_DATA_QUERY = "jakarta.data.repository.Query";
+	private static final String JAKARTA_DATA_PAGE = "jakarta.data.page.Page";
+	private static final String JAKARTA_DATA_CURSORED_PAGE = "jakarta.data.page.CursoredPage";
 
 	public static void bindQuery(
 			NamedQuery namedQuery,
@@ -390,10 +393,38 @@ public abstract class QueryBinder {
 
 	private static Class<?> staticSelectionResultType(MethodDetails methodDetails) {
 		final var returnType = methodDetails.getReturnType();
+		final Class<?> returnClass = returnType.toJavaClass();
+		if ( returnClass.isArray() ) {
+			return staticArraySelectionResultType( returnClass );
+		}
+		else if ( isStaticQueryContainerType( returnType ) ) {
+			return erasedClass( firstTypeArgument( methodDetails ) );
+		}
+		else {
+			return boxedType( returnClass );
+		}
+	}
+
+	private static Class<?> staticArraySelectionResultType(Class<?> returnClass) {
+		final Class<?> componentType = returnClass.getComponentType();
+		return componentType == Object.class ? returnClass : boxedType( componentType );
+	}
+
+	private static boolean isStaticQueryContainerType(ClassDetails returnType) {
 		return returnType.isImplementor( List.class )
 			|| returnType.isImplementor( Stream.class )
-				? erasedClass( firstTypeArgument( methodDetails ) )
-				: boxedType( returnType.toJavaClass() );
+			|| returnType.isImplementor( Optional.class )
+			|| returnType.isImplementor( jakarta.persistence.Query.class )
+			|| returnType.isImplementor( jakarta.persistence.TypedQuery.class )
+			|| returnType.isImplementor( org.hibernate.query.Query.class )
+			|| returnType.isImplementor( org.hibernate.query.SelectionQuery.class )
+			|| returnType.isImplementor( org.hibernate.query.KeyedResultList.class )
+			|| isJakartaDataQueryContainerType( returnType.toJavaClass().getName() );
+	}
+
+	private static boolean isJakartaDataQueryContainerType(String typeName) {
+		return JAKARTA_DATA_PAGE.equals( typeName )
+			|| JAKARTA_DATA_CURSORED_PAGE.equals( typeName );
 	}
 
 	private static Type firstTypeArgument(MethodDetails methodDetails) {

@@ -158,9 +158,9 @@ public final class JakartaDataRestriction {
 	 * to the given {@linkplain Expression JPA expression}, returning a {@linkplain Predicate
 	 * JPA criteria predicate}.
 	 */
-	public static Predicate applyConstraint(
-			Expression<?> expression,
-			Constraint<?> constraint,
+	public static <T> Predicate applyConstraint(
+			Expression<? extends T> expression,
+			Constraint<T> constraint,
 			Root<?> root,
 			CriteriaBuilder builder) {
 		requireNonNull( expression, "missing expression" );

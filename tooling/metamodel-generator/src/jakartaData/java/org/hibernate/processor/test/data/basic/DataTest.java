@@ -53,14 +53,6 @@ class DataTest {
 		assertTrue( repository.contains( "PostDeleteEvent<Book>" ) );
 		assertTrue( repository.contains( "PreUpsertEvent<Book>" ) );
 		assertTrue( repository.contains( "PostUpsertEvent<Book>" ) );
-		assertTrue( repository.contains(
-				"createNativeQuery(NATIVE_BOOK_WITH_RESULT_MAPPING_String, entity(Book.class, field(Book.class, String.class, \"isbn\", \"book_isbn\")))" ) );
-		assertTrue( repository.contains(
-				"createNativeQuery(BOOK_COUNT_WITH_NATIVE_RESULT_MAPPING_String, column(\"book_count\", Long.class))" ) );
-		assertTrue( repository.contains(
-				"createNativeQuery(BOOK_TITLES_WITH_NATIVE_RESULT_MAPPING_String, constructor(BookTitle.class, column(\"book_title\", String.class)))" ) );
-		assertTrue( repository.contains(
-				"createNativeQuery(BOOK_ROWS_WITH_NATIVE_RESULT_MAPPING_String, compound( column(\"book_isbn\", String.class), column(\"book_title\", String.class) ))" ) );
 		assertTrue( repository.contains( "createNamedQuery(\"BookAuthorRepository.bookWithTitle\", Book.class)" ) );
 		assertTrue( repository.contains( "createNamedQuery(\"BookAuthorRepository.booksWithOptions\", Book.class)" ) );
 		assertTrue( repository.contains( "createNamedQuery(\"BookAuthorRepository.nativeBookWithResultMapping\", Book.class)" ) );

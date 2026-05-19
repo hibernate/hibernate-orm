@@ -402,7 +402,7 @@ public interface Restriction<X> {
 	 */
 	@SafeVarargs
 	static <T> Restriction<T> all(Restriction<? super T>... restrictions) {
-		return new Conjunction<T>( java.util.List.of( restrictions ) );
+		return new Conjunction<T>( List.of( restrictions ) );
 	}
 
 	/**
@@ -410,7 +410,7 @@ public interface Restriction<X> {
 	 */
 	@SafeVarargs
 	static <T> Restriction<T> any(Restriction<? super T>... restrictions) {
-		return new Disjunction<T>( java.util.List.of( restrictions ) );
+		return new Disjunction<T>( List.of( restrictions ) );
 	}
 
 	/**

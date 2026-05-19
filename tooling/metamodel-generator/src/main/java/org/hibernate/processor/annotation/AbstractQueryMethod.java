@@ -17,6 +17,7 @@ import java.util.Set;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.processor.util.Constants.BOXED_VOID;
 import static org.hibernate.processor.util.Constants.COLLECTORS;
+import static org.hibernate.processor.util.Constants.HIB_JAKARTA_DATA_RESTRICTION;
 import static org.hibernate.processor.util.Constants.HIB_KEYED_PAGE;
 import static org.hibernate.processor.util.Constants.HIB_KEYED_RESULT_LIST;
 import static org.hibernate.processor.util.Constants.HIB_ORDER;
@@ -328,8 +329,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				if ( isJakartaDataRestrictionParam( paramType ) ) {
 					declaration
 							.append( "\t_spec.restrict(" )
-							.append( annotationMetaEntity.importType( "org.hibernate.query.restriction.JakartaDataRestriction" ) )
-							.append( ".adaptRestriction(" );
+							.append( annotationMetaEntity.staticImport(
+									HIB_JAKARTA_DATA_RESTRICTION, "adaptRestriction" ) )
+							.append( "(" );
 					if ( multipleRestrictions ) {
 						declaration
 								.append( annotationMetaEntity.importType( JD_RESTRICT ) )

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
+import static org.hibernate.processor.util.Constants.HIB_JAKARTA_DATA_RESTRICTION;
 import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
@@ -257,8 +258,9 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		}
 		if ( parameterConstraint == ParameterConstraint.RUNTIME ) {
 			declaration
-					.append( annotationMetaEntity.importType( "org.hibernate.query.restriction.JakartaDataRestriction" ) )
-					.append( ".applyConstraint(_entity" );
+					.append( annotationMetaEntity.staticImport(
+							HIB_JAKARTA_DATA_RESTRICTION, "applyConstraint" ) )
+					.append( "(_entity" );
 			path( declaration, paramName );
 			declaration
 					.append( ", " )

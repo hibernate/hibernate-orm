@@ -7,7 +7,7 @@
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
                 https://www.hibernate.org/xsd/orm/mapping/mapping-8.0.xsd"
-                 version="8.0">    
+                 version="8.0">
     <package>org.hibernate.orm.test.where.hbm</package>
     <entity class="LazyManyToManyNonUniqueIdNotFoundWhereTest$Material" metadata-complete="true">
         <table name="MAIN_TABLE"/>
@@ -19,21 +19,26 @@
             <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
                 <column name="NAME" unique="false" nullable="true"/>
             </basic>
-            <many-to-many name="sizesFromCombined" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Size" fetch="LAZY" classification="SET">
-                <join-table name="ASSOCIATION_TABLE">
-                    <join-column name="MAIN_ID" unique="false" table="ASSOCIATION_TABLE"/>
-                    <inverse-join-column name="ASSOCIATION_ID" unique="false"  table="ASSOCIATION_TABLE"/>
-                </join-table>
-                <sql-join-table-restriction>MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='SIZE'</sql-join-table-restriction>
-            </many-to-many>
-            <many-to-many name="ratingsFromCombined" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Rating" fetch="LAZY" classification="SET">
+            <many-to-many name="sizesFromCombined" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Size"
+                          fetch="LAZY" classification="SET">
                 <join-table name="ASSOCIATION_TABLE">
                     <join-column name="MAIN_ID" unique="false" table="ASSOCIATION_TABLE"/>
                     <inverse-join-column name="ASSOCIATION_ID" unique="false" table="ASSOCIATION_TABLE"/>
                 </join-table>
-                <sql-join-table-restriction>MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='RATING'</sql-join-table-restriction>
+                <sql-join-table-restriction>MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='SIZE'
+                </sql-join-table-restriction>
             </many-to-many>
-            <many-to-many name="ratings" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Rating" fetch="LAZY" classification="SET">
+            <many-to-many name="ratingsFromCombined" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Rating"
+                          fetch="LAZY" classification="SET">
+                <join-table name="ASSOCIATION_TABLE">
+                    <join-column name="MAIN_ID" unique="false" table="ASSOCIATION_TABLE"/>
+                    <inverse-join-column name="ASSOCIATION_ID" unique="false" table="ASSOCIATION_TABLE"/>
+                </join-table>
+                <sql-join-table-restriction>MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='RATING'
+                </sql-join-table-restriction>
+            </many-to-many>
+            <many-to-many name="ratings" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Rating" fetch="LAZY"
+                          classification="SET">
                 <join-table name="MATERIAL_RATINGS">
                     <join-column name="MATERIAL_ID" unique="false" table="MATERIAL_RATINGS"/>
                     <inverse-join-column name="RATING_ID" unique="false" table="MATERIAL_RATINGS"/>
@@ -51,23 +56,28 @@
             <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
                 <column name="NAME" unique="false" nullable="true"/>
             </basic>
-            <many-to-many name="sizesFromCombined" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Size" fetch="LAZY" classification="SET">
+            <many-to-many name="sizesFromCombined" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Size"
+                          fetch="LAZY" classification="SET">
                 <join-table name="ASSOCIATION_TABLE">
-                    <join-column name="MAIN_ID" unique="false"  table="ASSOCIATION_TABLE"/>
+                    <join-column name="MAIN_ID" unique="false" table="ASSOCIATION_TABLE"/>
                     <inverse-join-column name="ASSOCIATION_ID" unique="false" table="ASSOCIATION_TABLE"/>
                 </join-table>
-                <sql-join-table-restriction>MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'</sql-join-table-restriction>
+                <sql-join-table-restriction>MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='SIZE'
+                </sql-join-table-restriction>
             </many-to-many>
-            <many-to-many name="ratingsFromCombined" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Rating" fetch="LAZY" classification="SET">
+            <many-to-many name="ratingsFromCombined" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Rating"
+                          fetch="LAZY" classification="SET">
                 <join-table name="ASSOCIATION_TABLE">
-                    <join-column name="MAIN_ID" unique="false"  table="ASSOCIATION_TABLE"/>
+                    <join-column name="MAIN_ID" unique="false" table="ASSOCIATION_TABLE"/>
                     <inverse-join-column name="ASSOCIATION_ID" unique="false" table="ASSOCIATION_TABLE"/>
                 </join-table>
-                <sql-join-table-restriction>MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'</sql-join-table-restriction>
+                <sql-join-table-restriction>MAIN_CODE='BUILDING' AND ASSOCIATION_CODE='RATING'
+                </sql-join-table-restriction>
             </many-to-many>
-            <many-to-many name="ratings" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Rating" fetch="LAZY" classification="SET">
+            <many-to-many name="ratings" target-entity="LazyManyToManyNonUniqueIdNotFoundWhereTest$Rating" fetch="LAZY"
+                          classification="SET">
                 <join-table name="BUILDING_RATINGS">
-                    <join-column name="BUILDING_ID" unique="false"  table="BUILDING_RATINGS"/>
+                    <join-column name="BUILDING_ID" unique="false" table="BUILDING_RATINGS"/>
                     <inverse-join-column name="RATING_ID" unique="false" table="BUILDING_RATINGS"/>
                 </join-table>
             </many-to-many>

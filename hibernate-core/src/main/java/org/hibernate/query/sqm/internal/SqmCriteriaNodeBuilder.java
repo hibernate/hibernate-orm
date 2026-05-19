@@ -1586,6 +1586,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
+	public SqmExpression<Number> quotPortable(Expression<? extends Number> x, Expression<? extends Number> y) {
+		return createSqmArithmeticNode(
+				BinaryArithmeticOperator.DIVIDE_PORTABLE,
+				(SqmExpression<? extends Number>) x,
+				(SqmExpression<? extends Number>) y
+		);
+	}
+
+	@Override
 	public SqmExpression<Integer> mod(Expression<Integer> x, Expression<Integer> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
@@ -2631,6 +2640,27 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				(SqmExpression<? extends Y>) lower,
 				(SqmExpression<? extends Y>) upper,
 				false,
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate between(Expression<?> value, Expression<?> lower, Expression<?> upper, boolean negated) {
+		return new SqmBetweenPredicate(
+				(SqmExpression<?>) value,
+				(SqmExpression<?>) lower,
+				(SqmExpression<?>) upper,
+				negated,
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate comparison(Expression<?> x, ComparisonOperator operator, Expression<?> y) {
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				operator,
+				(SqmExpression<?>) y,
 				this
 		);
 	}

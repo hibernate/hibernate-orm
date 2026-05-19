@@ -4,15 +4,9 @@
  */
 package org.hibernate.query.restriction;
 
-import jakarta.persistence.criteria.Expression;
 import org.hibernate.Internal;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 
 import jakarta.data.constraint.AtLeast;
 import jakarta.data.constraint.AtMost;
@@ -44,6 +38,7 @@ import jakarta.data.spi.expression.function.TextFunctionExpression;
 import jakarta.data.spi.expression.literal.Literal;
 import jakarta.data.spi.expression.path.Path;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
@@ -156,11 +151,11 @@ public final class JakartaDataRestriction {
 
 	/**
 	 * Apply the given {@linkplain jakarta.data.constraint.Constraint Jakarta Data constraint}
-	 * to the given {@linkplain jakarta.persistence.criteria.Expression JPA expression},
-	 * returning a {@linkplain Predicate JPA criteria predicate}.
+	 * to the given {@linkplain Expression JPA expression}, returning a {@linkplain Predicate
+	 * JPA criteria predicate}.
 	 */
 	public static Predicate applyConstraint(
-			jakarta.persistence.criteria.Expression<?> expression,
+			Expression<?> expression,
 			Constraint<?> constraint,
 			Root<?> root,
 			CriteriaBuilder builder) {
@@ -168,16 +163,16 @@ public final class JakartaDataRestriction {
 		requireNonNull( constraint, "missing constraint" );
 		requireNonNull( root, "missing root" );
 		requireNonNull( builder, "missing builder" );
-		return constraintPredicate( expression, constraint, root , builder );
+		return constraintPredicate( expression, constraint, root, builder );
 	}
 
 	/**
 	 * Obtain a {@linkplain Predicate JPA criteria predicate} representing the given
 	 * {@linkplain Constraint Jakarta Data constraint} applied to the given
-	 * {@linkplain jakarta.persistence.criteria.Expression JPA expression}.
+	 * {@linkplain Expression JPA expression}.
 	 */
 	private static Predicate constraintPredicate(
-			jakarta.persistence.criteria.Expression<?> expression,
+			Expression<?> expression,
 			Constraint<?> constraint,
 			Root<?> root,
 			CriteriaBuilder builder) {
@@ -270,11 +265,11 @@ public final class JakartaDataRestriction {
 	}
 
 	private static Predicate in(
-			jakarta.persistence.criteria.Expression<?> expression,
+			Expression<?> expression,
 			List<? extends jakarta.data.expression.Expression<?, ?>> expressions,
 			Root<?> root,
 			CriteriaBuilder builder) {
-		final var values = new ArrayList<jakarta.persistence.criteria.Expression<?>>( expressions.size() );
+		final ArrayList<Expression<?>> values = new ArrayList<>( expressions.size() );
 		for ( var value : expressions ) {
 			if ( value instanceof Literal<?> literal ) {
 				verifyValueType( expression, literal.value() );
@@ -286,14 +281,14 @@ public final class JakartaDataRestriction {
 				values.add( valueExpression );
 			}
 		}
-		return expression.in( values.toArray( jakarta.persistence.criteria.Expression<?>[]::new ) );
+		return expression.in( values.toArray( Expression<?>[]::new ) );
 	}
 
 	/**
 	 * Adapt the given {@linkplain jakarta.data.expression.Expression Jakarta Data expression}
-	 * to a {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 * to a {@linkplain Expression JPA criteria expression}.
 	 */
-	private static jakarta.persistence.criteria.Expression<?> expression(
+	private static Expression<?> expression(
 			jakarta.data.expression.Expression<?, ?> expression,
 			Root<?> root,
 			CriteriaBuilder builder) {
@@ -355,9 +350,9 @@ public final class JakartaDataRestriction {
 
 	/**
 	 * Adapt the given {@linkplain TextFunctionExpression Jakarta Data text function}
-	 * to a {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 * to a {@linkplain Expression JPA criteria expression}.
 	 */
-	private static jakarta.persistence.criteria.Expression<?> textFunction(
+	private static Expression<?> textFunction(
 			TextFunctionExpression<?> function,
 			Root<?> root,
 			CriteriaBuilder builder) {
@@ -391,9 +386,9 @@ public final class JakartaDataRestriction {
 
 	/**
 	 * Adapt the given {@linkplain NumericFunctionExpression Jakarta Data numeric function}
-	 * to a {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 * to a {@linkplain Expression JPA criteria expression}.
 	 */
-	private static jakarta.persistence.criteria.Expression<?> numericFunction(
+	private static Expression<?> numericFunction(
 			NumericFunctionExpression<?, ?> function,
 			Root<?> root,
 			CriteriaBuilder builder) {
@@ -411,9 +406,9 @@ public final class JakartaDataRestriction {
 
 	/**
 	 * Adapt the given {@linkplain NumericCast Jakarta Data numeric cast} to a
-	 * {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 * {@linkplain Expression JPA criteria expression}.
 	 */
-	private static jakarta.persistence.criteria.Expression<?> numericCast(
+	private static Expression<?> numericCast(
 			NumericCast<?, ?> cast,
 			Root<?> root,
 			CriteriaBuilder builder) {
@@ -438,59 +433,45 @@ public final class JakartaDataRestriction {
 
 	/**
 	 * Adapt the given {@linkplain NumericOperatorExpression Jakarta Data operator expression}
-	 * to a {@linkplain jakarta.persistence.criteria.Expression JPA criteria expression}.
+	 * to a {@linkplain Expression JPA criteria expression}.
 	 */
-	private static jakarta.persistence.criteria.Expression<?> numericOperation(
+	private static Expression<?> numericOperation(
 			NumericOperatorExpression<?, ?> operation,
 			Root<?> root,
 			CriteriaBuilder builder) {
-		return new SqmBinaryArithmetic<>(
-				switch ( operation.operator() ) {
-					case PLUS -> BinaryArithmeticOperator.ADD;
-					case MINUS -> BinaryArithmeticOperator.SUBTRACT;
-					case TIMES -> BinaryArithmeticOperator.MULTIPLY;
-					case DIVIDE -> BinaryArithmeticOperator.DIVIDE_PORTABLE;
-				},
-				sqmExpression( numberExpression( operation.left(), root, builder ) ),
-				sqmExpression( numberExpression( operation.right(), root, builder ) ),
-				(NodeBuilder) builder
-		);
+		final var left = numberExpression( operation.left(), root, builder );
+		final var right = numberExpression( operation.right(), root, builder );
+		return switch ( operation.operator() ) {
+			case PLUS -> builder.sum( left, right );
+			case MINUS -> builder.diff( left, right );
+			case TIMES -> builder.prod( left, right );
+			case DIVIDE -> nodeBuilder( builder ).quotPortable( left, right );
+		};
 	}
 
 	private static Predicate comparison(
-			jakarta.persistence.criteria.Expression<?> expression,
+			Expression<?> expression,
 			ComparisonOperator operator,
-			jakarta.persistence.criteria.Expression<?> bound,
+			Expression<?> bound,
 			CriteriaBuilder builder) {
 		verifyExpressionType( expression, Comparable.class );
 		verifyExpressionType( bound, Comparable.class );
-		return new SqmComparisonPredicate(
-				sqmExpression( expression ),
-				operator,
-				sqmExpression( bound ),
-				(NodeBuilder) builder
-		);
+		return nodeBuilder( builder ).comparison( expression, operator, bound );
 	}
 
 	private static Predicate between(
-			jakarta.persistence.criteria.Expression<?> expression,
-			jakarta.persistence.criteria.Expression<?> lowerBound,
-			jakarta.persistence.criteria.Expression<?> upperBound,
+			Expression<?> expression,
+			Expression<?> lowerBound,
+			Expression<?> upperBound,
 			boolean negated,
 			CriteriaBuilder builder) {
 		verifyExpressionType( expression, Comparable.class );
 		verifyExpressionType( lowerBound, Comparable.class );
 		verifyExpressionType( upperBound, Comparable.class );
-		return new SqmBetweenPredicate(
-				sqmExpression( expression ),
-				sqmExpression( lowerBound ),
-				sqmExpression( upperBound ),
-				negated,
-				(NodeBuilder) builder
-		);
+		return nodeBuilder( builder ).between( expression, lowerBound, upperBound, negated );
 	}
 
-	private static jakarta.persistence.criteria.Expression<?> function(
+	private static Expression<?> function(
 			FunctionExpression<?, ?> function,
 			Root<?> root,
 			CriteriaBuilder builder) {
@@ -503,20 +484,19 @@ public final class JakartaDataRestriction {
 				list.toArray( Expression<?>[]::new ) );
 	}
 
-	private static jakarta.persistence.criteria.Expression<String> stringExpression(
+	private static Expression<String> stringExpression(
 			jakarta.data.expression.Expression<?, ?> expression,
 			Root<?> root,
 			CriteriaBuilder builder) {
 		return stringExpression( expression( expression, root, builder ) );
 	}
 
-	private static jakarta.persistence.criteria.Expression<String> stringExpression(
-			jakarta.persistence.criteria.Expression<?> expression) {
+	private static Expression<String> stringExpression(Expression<?> expression) {
 		verifyExpressionType( expression, String.class );
 		return expression.as( String.class );
 	}
 
-	private static jakarta.persistence.criteria.Expression<? extends Number> numberExpression(
+	private static Expression<? extends Number> numberExpression(
 			jakarta.data.expression.Expression<?, ?> expression,
 			Root<?> root,
 			CriteriaBuilder builder) {
@@ -529,16 +509,16 @@ public final class JakartaDataRestriction {
 				expressionType.asSubclass( Number.class ) );
 	}
 
-	private static <N extends Number> jakarta.persistence.criteria.Expression<N> numberExpression(
-			jakarta.persistence.criteria.Expression<?> expression,
+	private static <N extends Number> Expression<N> numberExpression(
+			Expression<?> expression,
 			Class<N> expectedType) {
 		verifyExpressionType( expression, expectedType );
 		return expression.as( expectedType );
 	}
 
-	private static jakarta.persistence.criteria.Expression<?> literal(
+	private static Expression<?> literal(
 			Object value,
-			jakarta.persistence.criteria.Expression<?> expression,
+			Expression<?> expression,
 			CriteriaBuilder builder) {
 		if ( value != null ) {
 			return builder.literal( value );
@@ -551,17 +531,17 @@ public final class JakartaDataRestriction {
 		}
 	}
 
-	private static SqmExpression<?> sqmExpression(jakarta.persistence.criteria.Expression<?> expression) {
-		if ( expression instanceof SqmExpression<?> sqmExpression ) {
-			return sqmExpression;
+	private static NodeBuilder nodeBuilder(CriteriaBuilder builder) {
+		if ( builder instanceof NodeBuilder nodeBuilder ) {
+			return nodeBuilder;
 		}
 		else {
-			throw new IllegalArgumentException( "Not a Hibernate SQM expression" );
+			throw new IllegalArgumentException( "Not Hibernate CriteriaBuilder" );
 		}
 	}
 
 	private static void verifyExpressionType(
-			jakarta.persistence.criteria.Expression<?> expression,
+			Expression<?> expression,
 			Class<?> expectedType) {
 		final var expressionType = expression.getJavaType();
 		if ( expressionType != null ) {
@@ -574,8 +554,8 @@ public final class JakartaDataRestriction {
 	}
 
 	private static void verifyAssignableExpressionType(
-			jakarta.persistence.criteria.Expression<?> expression,
-			jakarta.persistence.criteria.Expression<?> valueExpression) {
+			Expression<?> expression,
+			Expression<?> valueExpression) {
 		final var expressionType = wrapperType( expression.getJavaType() );
 		final var valueType = wrapperType( valueExpression.getJavaType() );
 		if ( expressionType != null && valueType != null && !expressionType.isAssignableFrom( valueType ) ) {
@@ -584,9 +564,7 @@ public final class JakartaDataRestriction {
 		}
 	}
 
-	private static void verifyValueType(
-			jakarta.persistence.criteria.Expression<?> expression,
-			Object value) {
+	private static void verifyValueType(Expression<?> expression, Object value) {
 		final var expressionType = wrapperType( expression.getJavaType() );
 		if ( value != null && expressionType != null && !expressionType.isInstance( value ) ) {
 			throw new IllegalArgumentException(

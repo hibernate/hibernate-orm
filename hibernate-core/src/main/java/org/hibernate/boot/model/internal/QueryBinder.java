@@ -12,6 +12,7 @@ import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
@@ -249,11 +250,12 @@ public abstract class QueryBinder {
 				context.getMetadataCollector().addNamedQuery( definition );
 			}
 			else {
+				final var resultType = staticSelectionResultType( methodDetails );
 				final var definition = new NamedHqlSelectionDefinitionImpl<>(
 						registrationName,
 						staticQueryLocation( classDetails, methodDetails ),
-						queryString,
-						staticSelectionResultType( methodDetails ),
+						staticSelectionQueryString( queryString, resultType ),
+						resultType,
 						entityGraphName( options ),
 						queryFlushMode( options ),
 						timeout( options ),
@@ -274,6 +276,22 @@ public abstract class QueryBinder {
 				);
 				context.getMetadataCollector().addNamedQuery( definition );
 			}
+		}
+	}
+
+	private static String staticSelectionQueryString(String queryString, Class<?> resultType) {
+		final String entityName = queryString.isBlank() ? entityName( resultType ) : null;
+		return entityName == null ? queryString : "from " + entityName;
+	}
+
+	private static String entityName(Class<?> resultType) {
+		final Entity entity = resultType.getAnnotation( Entity.class );
+		if ( entity == null ) {
+			return null;
+		}
+		else {
+			final String explicitName = entity.name();
+			return explicitName.isBlank() ? resultType.getSimpleName() : explicitName;
 		}
 	}
 
@@ -406,7 +424,7 @@ public abstract class QueryBinder {
 	}
 
 	private static Class<?> staticArraySelectionResultType(Class<?> returnClass) {
-		final Class<?> componentType = returnClass.getComponentType();
+		final var componentType = returnClass.getComponentType();
 		return componentType == Object.class ? returnClass : boxedType( componentType );
 	}
 
@@ -429,9 +447,11 @@ public abstract class QueryBinder {
 
 	private static Type firstTypeArgument(MethodDetails methodDetails) {
 		final Type genericReturnType = methodDetails.toJavaMember().getGenericReturnType();
-		if ( genericReturnType instanceof ParameterizedType parameterizedType
-				&& parameterizedType.getActualTypeArguments().length == 1 ) {
-			return parameterizedType.getActualTypeArguments()[0];
+		if ( genericReturnType instanceof ParameterizedType parameterizedType ) {
+			var actualTypeArguments = parameterizedType.getActualTypeArguments();
+			if ( actualTypeArguments.length == 1 ) {
+				return actualTypeArguments[0];
+			}
 		}
 		return Object.class;
 	}
@@ -494,7 +514,9 @@ public abstract class QueryBinder {
 		if ( options == null || options.flush() == QueryFlushMode.DEFAULT ) {
 			return null;
 		}
-		return options.flush() == QueryFlushMode.FLUSH ? FlushMode.ALWAYS : FlushMode.MANUAL;
+		else {
+			return options.flush() == QueryFlushMode.FLUSH ? FlushMode.ALWAYS : FlushMode.MANUAL;
+		}
 	}
 
 	private static Timeout timeout(QueryOptions options) {

@@ -49,6 +49,7 @@ class DataTest {
 		assertTrue( repository.contains( "TypedQueryReference<Long> _bookCountWithNativeResultMapping(String title)" ) );
 		assertTrue( repository.contains( "TypedQueryReference<Long> _countBooksWithIsbn()" ) );
 		assertTrue( repository.contains( "TypedQueryReference<Boolean> _countBooksWithIsbn2()" ) );
+		assertTrue( repository.contains( "TypedQueryReference<Author> _withNoOrder2()" ) );
 		assertTrue( repository.contains( "SelectionSpecification.create(_booksWithJakartaQueryOrder(title))" ) );
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
 		assertTrue( repository.contains( "\"BookAuthorRepository.booksWithJakartaQueryOrder\"" ) );
@@ -69,8 +70,10 @@ class DataTest {
 		assertTrue( repository.contains( "createQuery(_bookRowsWithNativeResultMapping(title))" ) );
 		assertTrue( repository.contains( "createQuery(_countBooksWithIsbn())" ) );
 		assertTrue( repository.contains( "createQuery(_countBooksWithIsbn2())" ) );
+		assertTrue( repository.contains( "createQuery(_withNoOrder2())" ) );
 		assertFalse( repository.contains( "createNamedQuery(\"BookAuthorRepository.countBooksWithIsbn\", long.class)" ) );
 		assertFalse( repository.contains( "createNamedQuery(\"BookAuthorRepository.countBooksWithIsbn2\", boolean.class)" ) );
+		assertFalse( repository.contains( "createNamedQuery(\"BookAuthorRepository.withNoOrder2\", Author.class)" ) );
 		assertTrue( repository.contains( "createNamedMutationQuery(\"BookAuthorRepository.updateAuthorAddress1\")" ) );
 		assertTrue( repository.contains( "createNamedMutationQuery(\"BookAuthorRepository.updateAuthorAddress2\")" ) );
 		assertTrue( repository.contains( "createNamedMutationQuery(\"BookAuthorRepository.updateAuthorAddress3\")" ) );

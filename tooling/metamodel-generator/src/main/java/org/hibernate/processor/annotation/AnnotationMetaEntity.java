@@ -1811,7 +1811,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			AnnotationMirror mirror,
 			boolean isNative) {
 		final AnnotationValue value = getAnnotationValue( mirror );
-		if ( value != null && value.getValue() instanceof String queryString && !queryString.isBlank() ) {
+		if ( value != null && value.getValue() instanceof String queryString ) {
 			final TypeMirror methodReturnType = memberMethodType( method ).getReturnType();
 			final StaticQueryReturnType queryReturnType =
 					staticQueryReturnType( method, methodReturnType, mirror, value, queryString );
@@ -1860,7 +1860,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeMirror returnType,
 			AnnotationMirror mirror,
 			String queryString) {
-		if ( annotationTypeMatches( mirror, JD_QUERY ) ) {
+		if ( annotationTypeMatches( mirror, JD_QUERY ) || annotationTypeMatches( mirror, JAKARTA_QUERY ) ) {
 			final ResultSelection querySelection = querySelection( method, returnType, mirror, queryString );
 			final String selectedQueryString =
 					querySelection == null
@@ -4186,7 +4186,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return canGenerateStaticQueryMethod( method )
 			&& repository
 			&& !isReactive()
-			&& !queryString.isBlank()
 			&& canBindReferenceArguments( queryString, isNative, paramNames, paramTypes )
 			&& canBindReferenceArguments( queryString, isNative, staticQueryParameterNames( method ), paramTypes );
 	}

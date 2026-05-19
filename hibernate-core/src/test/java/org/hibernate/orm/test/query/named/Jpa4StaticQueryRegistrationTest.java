@@ -52,6 +52,8 @@ class Jpa4StaticQueryRegistrationTest {
 
 		assertThat( namedObjectRepository.getSelectionQueryMemento( "Book.findByTitle" ) ).isNotNull();
 		assertThat( namedObjectRepository.getSelectionQueryMemento( "Book.countByTitle" ) ).isNotNull();
+		assertThat( namedObjectRepository.getSelectionQueryMemento( "Book.blankFindAll" ).getSelectionString() )
+				.isEqualTo( "from Jpa4StaticQueryBook" );
 		assertThat( namedObjectRepository.getSelectionQueryMemento( "Book.nativeFindByTitle" ) ).isNotNull();
 		assertThat( namedObjectRepository.getSelectionQueryMemento( "Book.nativeFindAllByTitle" ) ).isNotNull();
 		assertThat( namedObjectRepository.getSelectionQueryMemento( "Book.nativeCountByTitle" ) ).isNotNull();
@@ -113,6 +115,19 @@ class Jpa4StaticQueryRegistrationTest {
 			assertThat( session.createNamedQuery( "Book.countByTitle", Long.class )
 					.setParameter( "title", "Jakarta" )
 					.getSingleResult() ).isEqualTo( 1L );
+
+			assertThat( session.createQuery( new StaticTypedQueryReference<>(
+							"Book.blankFindAll",
+							Book.class,
+							"blankFindAll",
+							Book.class,
+							List.of(),
+							List.of(),
+							List.of()
+					) )
+					.getResultList() )
+					.extracting( Book::getTitle )
+					.contains( "Hibernate", "Jakarta" );
 
 			assertThat( session.createNamedQuery( "Book.nativeFindByTitle", Book.class )
 					.setParameter( 1, "Jakarta" )
@@ -346,6 +361,11 @@ class Jpa4StaticQueryRegistrationTest {
 
 		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
 		public List<Book> findByTitle(String title) {
+			throw new UnsupportedOperationException();
+		}
+
+		@JakartaQuery( "" )
+		public List<Book> blankFindAll() {
 			throw new UnsupportedOperationException();
 		}
 

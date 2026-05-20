@@ -8,11 +8,14 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.FetchProfile;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbFetchProfileImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -22,6 +25,9 @@ import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AttributeAccessorAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchOverrideAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchProfileAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchProfilesAnnotation;
 import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicIdAttributeProcessing;
@@ -191,6 +197,7 @@ public class ManagedTypeProcessor {
 		XmlAnnotationHelper.applyInheritance( jaxbEntity, classDetails, xmlDocumentContext );
 		applyAccessAnnotation( classAccessType, classDetails, xmlDocumentContext );
 		applyCaching( jaxbEntity, classDetails, xmlDocumentContext );
+		applyFetchProfileAnnotation( jaxbEntity, classDetails, xmlDocumentContext );
 
 		if ( jaxbEntity.isAbstract() != null ) {
 			classDetails.applyAnnotationUsage( XmlAnnotations.ABSTRACT,
@@ -305,6 +312,57 @@ public class ManagedTypeProcessor {
 		);
 
 		renderClass( classDetails, xmlDocumentContext );
+	}
+
+	private static void applyFetchProfileAnnotation(JaxbEntityImpl jaxbEntity, MutableClassDetails target, XmlDocumentContext xmlDocumentContext) {
+		final List<JaxbFetchProfileImpl> jaxbFetchProfiles = jaxbEntity.getFetchProfiles();
+		if ( jaxbFetchProfiles.isEmpty() ) {
+			return;
+		}
+
+		final var modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final FetchProfilesAnnotation fetchProfilesUsage = (FetchProfilesAnnotation) target.replaceAnnotationUsage(
+				HibernateAnnotations.FETCH_PROFILE,
+				HibernateAnnotations.FETCH_PROFILES,
+				modelBuildingContext
+		);
+
+		final FetchProfile[] profiles = new FetchProfile[jaxbFetchProfiles.size()];
+		fetchProfilesUsage.value( profiles );
+
+		for ( int i = 0; i < jaxbFetchProfiles.size(); i++ ) {
+			final JaxbFetchProfileImpl jaxbFetchProfile = jaxbFetchProfiles.get( i );
+
+			final FetchProfileAnnotation profileAnnotation = HibernateAnnotations.FETCH_PROFILE.createUsage( modelBuildingContext );
+			profileAnnotation.name( jaxbFetchProfile.getName() );
+
+			final List<JaxbFetchProfileImpl.JaxbFetchImpl> jaxbFetches = jaxbFetchProfile.getFetch();
+			final FetchProfile.FetchOverride[] fetchOverrides = new FetchProfile.FetchOverride[jaxbFetches.size()];
+			for ( int j = 0; j < jaxbFetches.size(); j++ ) {
+				final JaxbFetchProfileImpl.JaxbFetchImpl jaxbFetch = jaxbFetches.get( j );
+				final FetchOverrideAnnotation overrideAnnotation = new FetchOverrideAnnotation();
+
+				final String entityName = jaxbFetch.getEntity();
+				if ( entityName != null ) {
+					overrideAnnotation.entity( xmlDocumentContext.resolveJavaType( entityName ).toJavaClass() );
+				}
+				else {
+					overrideAnnotation.entity( target.toJavaClass() );
+				}
+
+				overrideAnnotation.association( jaxbFetch.getAssociation() );
+
+				final String style = jaxbFetch.getStyle();
+				if ( style != null ) {
+					overrideAnnotation.mode( FetchMode.valueOf( style.toUpperCase() ) );
+				}
+
+				fetchOverrides[j] = overrideAnnotation;
+			}
+
+			profileAnnotation.fetchOverrides( fetchOverrides );
+			profiles[i] = profileAnnotation;
+		}
 	}
 
 	private static void renderClass(MutableClassDetails classDetails, XmlDocumentContext xmlDocumentContext) {

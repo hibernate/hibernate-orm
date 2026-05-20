@@ -175,8 +175,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #- rdbms: autonomous-transaction-processing-serverless-26ai
-          #- rdbms: autonomous-transaction-processing-serverless-19c
+          - rdbms: autonomous-transaction-processing-serverless-26ai
+          - rdbms: autonomous-transaction-processing-serverless-19c
           - rdbms: base-database-service-19c
           - rdbms: base-database-service-21c
           - rdbms: base-database-service-26ai

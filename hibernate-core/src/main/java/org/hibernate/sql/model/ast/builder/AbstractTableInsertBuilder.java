@@ -67,7 +67,7 @@ public abstract class AbstractTableInsertBuilder
 		if ( hasColumnAssignment( valueBinding ) ) {
 			return;
 		}
-		if ( valueBinding.getColumnReference().getJdbcMapping().getJdbcType().isLob()
+		if ( valueBinding.getColumnReference().getJdbcMapping().getJdbcType().isLobOrLong()
 				&& getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindingList == null ) {
 				lobValueBindingList = new ArrayList<>();

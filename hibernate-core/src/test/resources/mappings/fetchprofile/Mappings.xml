@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="8.0">
+    <package>org.hibernate.orm.test.fetchprofiles.join</package>
+
+    <fetch-profile name="enrollment.details">
+        <fetch entity="Enrollment" association="student" style="join"/>
+        <fetch entity="Enrollment" association="offering" style="join"/>
+    </fetch-profile>
+
+    <entity class="Department" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="code">
+                <column name="CODE"/>
+            </basic>
+            <basic name="name">
+                <column name="NAME"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="Student" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="name">
+                <column name="NAME"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="Course" metadata-complete="true">
+        <fetch-profile name="course.details">
+            <fetch association="code.department" style="join"/>
+        </fetch-profile>
+        <attributes>
+            <id name="id"/>
+            <basic name="name">
+                <column name="NAME"/>
+            </basic>
+            <embedded name="code"/>
+        </attributes>
+    </entity>
+
+    <entity class="CourseOffering" metadata-complete="true">
+        <table name="`SECTION`"/>
+        <fetch-profile name="offering.details">
+            <fetch association="enrollments" style="join"/>
+            <fetch association="course" style="join"/>
+        </fetch-profile>
+        <fetch-profile name="offering.details2">
+            <fetch entity="CourseOffering" association="enrollments" style="join"/>
+        </fetch-profile>
+        <attributes>
+            <id name="id"/>
+            <basic name="semester">
+                <column name="SEMESTER"/>
+            </basic>
+            <basic name="year">
+                <column name="`YEAR`"/>
+            </basic>
+            <many-to-one name="course" target-entity="Course" fetch="LAZY">
+                <join-column name="COURSE_ID"/>
+            </many-to-one>
+            <one-to-many name="enrollments" target-entity="Enrollment" classification="SET" fetch="LAZY">
+                <join-column name="SECTION_ID"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Enrollment" metadata-complete="true">
+
+        <attributes>
+            <id name="id"/>
+            <basic name="finalGrade">
+                <column name="FINAL_GRADE"/>
+            </basic>
+            <many-to-one name="offering" target-entity="CourseOffering" fetch="LAZY">
+                <join-column name="SECTION_ID"/>
+            </many-to-one>
+            <many-to-one name="student" target-entity="Student" fetch="LAZY">
+                <join-column name="STUDENT_ID"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <embeddable class="Course$Code" metadata-complete="true">
+        <attributes>
+            <basic name="number">
+                <column name="CODE_NUMBER"/>
+            </basic>
+            <many-to-one name="department" target-entity="Department" fetch="LAZY">
+                <join-column name="DEPT_ID"/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </embeddable>
+
+</entity-mappings>

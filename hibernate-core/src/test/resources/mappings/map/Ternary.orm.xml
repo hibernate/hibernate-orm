@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                https://www.hibernate.org/xsd/orm/mapping/mapping-8.0.xsd"
+                 version="8.0">
+    <package>org.hibernate.orm.test.ternary</package>
+    <entity class="Employee" metadata-complete="true">
+        <table name="Employee"/>
+        <attributes>
+            <id name="name">
+                <column name="name" />
+            </id>
+            <basic name="hireDate" fetch="EAGER" optional="true" optimistic-lock="true">
+            </basic>
+            <many-to-many name="managerBySite" target-entity="Employee" fetch="LAZY" classification="MAP">
+                <map-key-join-column name="siteName"/>
+                <join-table name="employeeSite">
+                    <join-column name="employeeName" table="employeeSite"/>
+                    <inverse-join-column name="managerName" table="employeeSite"/>
+                </join-table>
+            </many-to-many>
+            <many-to-many name="underlings" target-entity="Employee" fetch="LAZY" classification="SET">
+                <join-table name="employeeSite">
+                    <join-column name="managerName" table="employeeSite"/>
+                    <inverse-join-column name="employeeName" table="employeeSite"/>
+                </join-table>
+            </many-to-many>
+        </attributes>
+    </entity>
+    <entity class="Site" metadata-complete="true">
+        <table name="Site"/>
+        <attributes>
+            <id name="name">
+                <column name="name" />
+            </id>
+            <basic name="description" fetch="EAGER" optional="true" optimistic-lock="true">
+            </basic>
+            <many-to-many name="employees" target-entity="Employee" fetch="LAZY" classification="SET">
+                <join-table name="employeeSite">
+                    <join-column name="siteName" table="employeeSite"/>
+                    <inverse-join-column name="employeeName" table="employeeSite"/>
+                </join-table>
+            </many-to-many>
+            <many-to-many name="managers" target-entity="Employee" fetch="LAZY" classification="SET">
+                <join-table name="employeeSite">
+                    <join-column name="siteName" table="employeeSite"/>
+                    <inverse-join-column name="managerName" table="employeeSite"/>
+                </join-table>
+            </many-to-many>
+        </attributes>
+    </entity>
+</entity-mappings>

@@ -5,6 +5,7 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.audit.ModificationType;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -36,19 +37,19 @@ public class DeleteCoordinatorAudit extends AbstractAuditCoordinator implements 
 			Object version,
 			SharedSessionContractImplementor session) {
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
-		final var state = entityEntry.getLoadedState() != null
-				? entityEntry.getLoadedState()
-				: entityPersister().getValues( entity );
+		final Object[] state;
+		final EntityKey entityKey;
+		if ( entityEntry != null ) {
+			state = entityEntry.getLoadedState();
+			entityKey = entityEntry.getEntityKey();
+		}
+		else {
+			state = entityPersister().getValues( entity );
+			entityKey = new EntityKey( id, entityPersister() );
+		}
 
 		currentDeleteCoordinator.delete( entity, id, version, session );
 
-		session.getAuditWorkQueue().enqueue(
-				entityEntry.getEntityKey(),
-				entity,
-				state,
-				ModificationType.DEL,
-				this,
-				session
-		);
+		enqueueAuditEntry( entityKey, entity, state, ModificationType.DEL, session );
 	}
 }

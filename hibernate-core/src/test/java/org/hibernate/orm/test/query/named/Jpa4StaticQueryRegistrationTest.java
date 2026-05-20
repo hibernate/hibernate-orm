@@ -40,7 +40,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DomainModel( annotatedClasses = Jpa4StaticQueryRegistrationTest.Book.class )
+@DomainModel( annotatedClasses = {
+		Jpa4StaticQueryRegistrationTest.Book.class,
+		BookRepository.class
+} )
 @SessionFactory
 class Jpa4StaticQueryRegistrationTest {
 
@@ -88,6 +91,16 @@ class Jpa4StaticQueryRegistrationTest {
 		assertThat( namedObjectRepository.getMutationQueryMemento( "Book.deleteByTitleWithOptions" ) ).isNotNull();
 		assertThat( namedObjectRepository.getMutationQueryMemento( "Book.nativeDeleteByTitle" ) ).isNotNull();
 		assertThat( namedObjectRepository.getMutationQueryMemento( "Book.nativeDeleteByTitleWithOptions" ) ).isNotNull();
+	}
+
+	@Test
+	void registersInheritedRepositoryMethodLevelQueriesAsNamedQueries(SessionFactoryScope scope) {
+		final var namedObjectRepository = scope.getSessionFactory()
+				.getQueryEngine()
+				.getNamedObjectRepository();
+
+		assertSelectionResultType( namedObjectRepository, "BookRepository.inheritedFindByTitle", Book.class );
+		assertSelectionResultType( namedObjectRepository, "BookRepository.inheritedGenericFindByTitle", Book.class );
 	}
 
 	private static void assertSelectionResultType(
@@ -150,6 +163,40 @@ class Jpa4StaticQueryRegistrationTest {
 			assertThat( session.createNamedQuery( "Book.nativeTitleAndIsbnRows", Object[].class )
 					.setParameter( 1, "Jakarta" )
 					.getSingleResult() ).containsExactly( "Jakarta", "isbn-2" );
+		} );
+	}
+
+	@Test
+	void executesInheritedRepositoryMethodLevelQueriesByStaticReference(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Book( 11, "InheritedReference" ) );
+			session.persist( new Book( 12, "InheritedGenericReference" ) );
+		} );
+
+		scope.inTransaction( session -> {
+			final var inheritedReference = new StaticTypedQueryReference<>(
+					"BookRepository.inheritedFindByTitle",
+					BookRepository.class,
+					"inheritedFindByTitle",
+					Book.class,
+					List.of( String.class ),
+					List.of( "title" ),
+					List.of( "InheritedReference" )
+			);
+			assertThat( session.createQuery( inheritedReference ).getSingleResult().getTitle() )
+					.isEqualTo( "InheritedReference" );
+
+			final var inheritedGenericReference = new StaticTypedQueryReference<>(
+					"BookRepository.inheritedGenericFindByTitle",
+					BookRepository.class,
+					"inheritedGenericFindByTitle",
+					Book.class,
+					List.of( String.class ),
+					List.of( "title" ),
+					List.of( "InheritedGenericReference" )
+			);
+			assertThat( session.createQuery( inheritedGenericReference ).getSingleResult().getTitle() )
+					.isEqualTo( "InheritedGenericReference" );
 		} );
 	}
 

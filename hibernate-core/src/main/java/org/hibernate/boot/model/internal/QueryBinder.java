@@ -21,6 +21,7 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.query.JakartaQuery;
+import jakarta.persistence.query.NativeQuery;
 import jakarta.persistence.query.QueryOptions;
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
@@ -50,6 +51,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -63,6 +65,7 @@ import java.util.stream.Stream;
 import static java.lang.Character.isWhitespace;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.query.internal.Helper.extractHints;
+import static org.hibernate.internal.util.GenericsHelper.actualInheritedMemberType;
 import static org.hibernate.internal.util.PrimitiveHelper.boxedType;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_OBJECT_ARRAY;
 import static org.hibernate.models.internal.util.StringHelper.isEmpty;
@@ -76,6 +79,7 @@ import static org.hibernate.models.internal.util.StringHelper.isEmpty;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
+	private static final String JAKARTA_DATA_REPOSITORY = "jakarta.data.repository.Repository";
 	private static final String JAKARTA_DATA_QUERY = "jakarta.data.repository.Query";
 	private static final String JAKARTA_DATA_PAGE = "jakarta.data.page.Page";
 	private static final String JAKARTA_DATA_CURSORED_PAGE = "jakarta.data.page.CursoredPage";
@@ -88,7 +92,6 @@ public abstract class QueryBinder {
 		if ( namedQuery != null ) {
 			final String queryName = namedQuery.name();
 			final String queryString = namedQuery.query();
-
 			if ( queryName.isBlank() ) {
 				throw new AnnotationException(
 						"Class or package level '@NamedQuery' annotation must specify a 'name'" );
@@ -116,7 +119,6 @@ public abstract class QueryBinder {
 			AnnotationTarget location) {
 		if ( annotation != null ) {
 			final String registrationName = annotation.name();
-
 			if ( registrationName.isBlank() ) {
 				throw new AnnotationException(
 						"Class or package level '@NamedStatement' annotation must specify a 'name'" );
@@ -138,7 +140,6 @@ public abstract class QueryBinder {
 			AnnotationTarget location) {
 		if ( annotation != null ) {
 			final String registrationName = annotation.name();
-
 			if ( registrationName.isBlank() ) {
 				throw new AnnotationException(
 						"Class or package level '@NamedStatement' annotation must specify a 'name'" );
@@ -162,7 +163,6 @@ public abstract class QueryBinder {
 		if ( namedNativeQuery != null ) {
 			final String registrationName = namedNativeQuery.name();
 			final String queryString = namedNativeQuery.query();
-
 			if ( registrationName.isBlank() ) {
 				throw new AnnotationException(
 						"Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
@@ -217,9 +217,94 @@ public abstract class QueryBinder {
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		for ( MethodDetails methodDetails : classDetails.getMethods() ) {
-			bindStaticQuery( classDetails, methodDetails, context, modelsContext );
-			bindStaticNativeQuery( classDetails, methodDetails, context, modelsContext );
+		final var processedMethods = new HashSet<MethodSignature>();
+		bindDeclaredStaticQueries( classDetails, classDetails, context, modelsContext, processedMethods );
+		if ( isJakartaDataRepository( classDetails ) ) {
+			bindInheritedRepositoryStaticQueries(
+					classDetails,
+					classDetails,
+					context,
+					modelsContext,
+					processedMethods,
+					new HashSet<>()
+			);
+		}
+	}
+
+	private static void bindDeclaredStaticQueries(
+			ClassDetails registrationClassDetails,
+			ClassDetails methodClassDetails,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext,
+			Set<MethodSignature> processedMethods) {
+		for ( var methodDetails : methodClassDetails.getMethods() ) {
+			processedMethods.add( MethodSignature.of( methodDetails ) );
+			bindStaticQuery( registrationClassDetails, methodDetails, context, modelsContext );
+			bindStaticNativeQuery( registrationClassDetails, methodDetails, context, modelsContext );
+		}
+	}
+
+	private static boolean isJakartaDataRepository(ClassDetails classDetails) {
+		return classDetails.isInterface()
+			&& hasDirectAnnotation( classDetails, JAKARTA_DATA_REPOSITORY );
+	}
+
+	private static boolean hasDirectAnnotation(AnnotationTarget annotationTarget, String annotationTypeName) {
+		for ( var annotation : annotationTarget.getDirectAnnotationUsages() ) {
+			if ( annotationTypeName.equals( annotation.annotationType().getName() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static void bindInheritedRepositoryStaticQueries(
+			ClassDetails repositoryClassDetails,
+			ClassDetails classDetails,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext,
+			Set<MethodSignature> processedMethods,
+			Set<String> processedTypes) {
+		if ( classDetails != null
+				&& classDetails != ClassDetails.OBJECT_CLASS_DETAILS
+				&& processedTypes.add( classDetails.getName() ) ) {
+			for ( var methodDetails : classDetails.getMethods() ) {
+				if ( processedMethods.add( MethodSignature.of( methodDetails ) ) ) {
+					bindStaticQuery( repositoryClassDetails, methodDetails, context, modelsContext );
+					bindStaticNativeQuery( repositoryClassDetails, methodDetails, context, modelsContext );
+				}
+			}
+
+			for ( var implementedInterface : classDetails.getImplementedInterfaces() ) {
+				bindInheritedRepositoryStaticQueries(
+						repositoryClassDetails,
+						implementedInterface.determineRawClass(),
+						context,
+						modelsContext,
+						processedMethods,
+						processedTypes
+				);
+			}
+
+			bindInheritedRepositoryStaticQueries(
+					repositoryClassDetails,
+					classDetails.getSuperClass(),
+					context,
+					modelsContext,
+					processedMethods,
+					processedTypes
+			);
+		}
+	}
+
+	private record MethodSignature(String name, List<String> argumentTypes) {
+		private static MethodSignature of(MethodDetails methodDetails) {
+			return new MethodSignature(
+					methodDetails.getName(),
+					methodDetails.getArgumentTypes().stream()
+							.map( ClassDetails::getName )
+							.toList()
+			);
 		}
 	}
 
@@ -250,7 +335,7 @@ public abstract class QueryBinder {
 				context.getMetadataCollector().addNamedQuery( definition );
 			}
 			else {
-				final var resultType = staticSelectionResultType( methodDetails );
+				final var resultType = staticSelectionResultType( classDetails, methodDetails );
 				final var definition = new NamedHqlSelectionDefinitionImpl<>(
 						registrationName,
 						staticQueryLocation( classDetails, methodDetails ),
@@ -285,7 +370,7 @@ public abstract class QueryBinder {
 	}
 
 	private static String entityName(Class<?> resultType) {
-		final Entity entity = resultType.getAnnotation( Entity.class );
+		final var entity = resultType.getAnnotation( Entity.class );
 		if ( entity == null ) {
 			return null;
 		}
@@ -300,18 +385,22 @@ public abstract class QueryBinder {
 		if ( jakartaQuery != null ) {
 			return jakartaQuery.value();
 		}
-
-		for ( Annotation annotation : methodDetails.getDirectAnnotationUsages() ) {
-			if ( JAKARTA_DATA_QUERY.equals( annotation.annotationType().getName() ) ) {
-				return annotationValue( annotation );
+		else {
+			for ( var annotation : methodDetails.getDirectAnnotationUsages() ) {
+				if ( JAKARTA_DATA_QUERY.equals( annotation.annotationType().getName() ) ) {
+					return annotationValue( annotation );
+				}
 			}
+			return null;
 		}
-		return null;
 	}
 
 	private static String annotationValue(Annotation annotation) {
 		try {
-			return (String) annotation.annotationType().getMethod( "value" ).invoke( annotation );
+			return (String)
+					annotation.annotationType()
+							.getMethod( "value" )
+							.invoke( annotation );
 		}
 		catch (ClassCastException | ReflectiveOperationException e) {
 			throw new AnnotationException(
@@ -327,10 +416,7 @@ public abstract class QueryBinder {
 			MethodDetails methodDetails,
 			MetadataBuildingContext context,
 			ModelsContext modelsContext) {
-		final var query = methodDetails.getAnnotationUsage(
-				jakarta.persistence.query.NativeQuery.class,
-				modelsContext
-		);
+		final var query = methodDetails.getAnnotationUsage( NativeQuery.class, modelsContext );
 		if ( query != null ) {
 			final String registrationName = staticQueryName( classDetails, methodDetails );
 			if ( BOOT_LOGGER.isTraceEnabled() ) {
@@ -352,15 +438,12 @@ public abstract class QueryBinder {
 				context.getMetadataCollector().addNamedNativeQuery( definition );
 			}
 			else {
-				final String resultSetMappingName =
-						bindStaticNativeQueryResultSetMapping( registrationName, methodDetails, context,
-								modelsContext );
 				final var definition = new NamedNativeSelectionDefinitionImpl<>(
 						registrationName,
 						staticQueryLocation( classDetails, methodDetails ),
 						query.value(),
-						staticSelectionResultType( methodDetails ),
-						resultSetMappingName,
+						staticSelectionResultType( classDetails, methodDetails ),
+						bindStaticNativeQueryResultSetMapping( registrationName, methodDetails, context, modelsContext ),
 						queryFlushMode( options ),
 						timeout( options ),
 						null,
@@ -409,23 +492,34 @@ public abstract class QueryBinder {
 		return annotations == null ? (A[]) EMPTY_OBJECT_ARRAY : annotations;
 	}
 
-	private static Class<?> staticSelectionResultType(MethodDetails methodDetails) {
+	private static Class<?> staticSelectionResultType(ClassDetails classDetails, MethodDetails methodDetails) {
 		final var returnType = methodDetails.getReturnType();
-		final Class<?> returnClass = returnType.toJavaClass();
+		final var returnClass = returnType.toJavaClass();
 		if ( returnClass.isArray() ) {
-			return staticArraySelectionResultType( returnClass );
+			return staticArraySelectionResultType( classDetails, methodDetails, returnClass );
 		}
 		else if ( isStaticQueryContainerType( returnType ) ) {
-			return erasedClass( firstTypeArgument( methodDetails ) );
+			return erasedClass( firstTypeArgument( classDetails, methodDetails ) );
 		}
 		else {
-			return boxedType( returnClass );
+			return boxedType( erasedClass( genericReturnType( classDetails, methodDetails ) ) );
 		}
 	}
 
-	private static Class<?> staticArraySelectionResultType(Class<?> returnClass) {
+	private static Class<?> staticArraySelectionResultType(
+			ClassDetails classDetails,
+			MethodDetails methodDetails,
+			Class<?> returnClass) {
 		final var componentType = returnClass.getComponentType();
-		return componentType == Object.class ? returnClass : boxedType( componentType );
+		if ( componentType != Object.class ) {
+			return boxedType( componentType );
+		}
+		else {
+			return genericReturnType( classDetails, methodDetails )
+						instanceof GenericArrayType genericArrayType
+					? boxedType( erasedClass( genericArrayType.getGenericComponentType() ) )
+					: returnClass;
+		}
 	}
 
 	private static boolean isStaticQueryContainerType(ClassDetails returnType) {
@@ -445,15 +539,23 @@ public abstract class QueryBinder {
 			|| JAKARTA_DATA_CURSORED_PAGE.equals( typeName );
 	}
 
-	private static Type firstTypeArgument(MethodDetails methodDetails) {
-		final Type genericReturnType = methodDetails.toJavaMember().getGenericReturnType();
-		if ( genericReturnType instanceof ParameterizedType parameterizedType ) {
+	private static Type firstTypeArgument(ClassDetails classDetails, MethodDetails methodDetails) {
+		if ( genericReturnType( classDetails, methodDetails )
+				instanceof ParameterizedType parameterizedType ) {
 			var actualTypeArguments = parameterizedType.getActualTypeArguments();
 			if ( actualTypeArguments.length == 1 ) {
 				return actualTypeArguments[0];
 			}
 		}
 		return Object.class;
+	}
+
+	private static Type genericReturnType(ClassDetails classDetails, MethodDetails methodDetails) {
+		final var method = methodDetails.toJavaMember();
+		final var containerClass = classDetails.toJavaClass();
+		return method.getDeclaringClass() == containerClass
+				? method.getGenericReturnType()
+				: actualInheritedMemberType( containerClass, method );
 	}
 
 	private static Class<?> erasedClass(Type type) {
@@ -467,9 +569,12 @@ public abstract class QueryBinder {
 			return erasedClass( genericArrayType.getGenericComponentType() ).arrayType();
 		}
 		else if ( type instanceof WildcardType wildcardType ) {
-			return wildcardType.getUpperBounds().length == 0
-					? Object.class
-					: erasedClass( wildcardType.getUpperBounds()[0] );
+			final var upperBounds = wildcardType.getUpperBounds();
+			return upperBounds.length == 0 ? Object.class : erasedClass( upperBounds[0] );
+		}
+		else if ( type instanceof TypeVariable<?> typeVariable ) {
+			final var bounds = typeVariable.getBounds();
+			return bounds.length == 0 ? Object.class : erasedClass( bounds[0] );
 		}
 		else {
 			return Object.class;
@@ -578,24 +683,21 @@ public abstract class QueryBinder {
 			org.hibernate.annotations.NamedNativeQuery namedNativeQuery,
 			MetadataBuildingContext context,
 			AnnotationTarget location) {
-		if ( namedNativeQuery == null ) {
-			return;
+		if ( namedNativeQuery != null ) {
+			final String registrationName = namedNativeQuery.name();
+			if ( registrationName.isBlank() ) {
+				throw new AnnotationException(
+						"Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
+			}
+
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.bindingNamedNativeQuery( registrationName,
+						namedNativeQuery.query().replace( '\n', ' ' ) );
+			}
+
+			final var definition = NamedNativeSelectionDefinitionImpl.from( namedNativeQuery, location );
+			context.getMetadataCollector().addNamedNativeQuery( definition );
 		}
-
-		final String registrationName = namedNativeQuery.name();
-
-		if ( registrationName.isBlank() ) {
-			throw new AnnotationException(
-					"Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
-		}
-
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.bindingNamedNativeQuery( registrationName,
-					namedNativeQuery.query().replace( '\n', ' ' ) );
-		}
-
-		final var definition = NamedNativeSelectionDefinitionImpl.from( namedNativeQuery, location );
-		context.getMetadataCollector().addNamedNativeQuery( definition );
 	}
 
 //	private static CacheMode getCacheMode(CacheRetrieveMode cacheRetrieveMode, CacheStoreMode cacheStoreMode) {
@@ -640,7 +742,7 @@ public abstract class QueryBinder {
 		if ( !sqlString.startsWith( "{" ) || !sqlString.endsWith( "}" ) ) {
 			throw exceptionProducer.get();
 		}
-		final JdbcCall jdbcCall = parseJdbcCall( sqlString, exceptionProducer );
+		final var jdbcCall = parseJdbcCall( sqlString, exceptionProducer );
 
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		final var nameStoredProcedureQuery = JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY.createUsage( modelsContext );
@@ -725,22 +827,21 @@ public abstract class QueryBinder {
 			org.hibernate.annotations.NamedQuery namedQuery,
 			MetadataBuildingContext context,
 			AnnotationTarget location) {
-		if ( namedQuery == null ) {
-			return;
-		}
+		if ( namedQuery != null ) {
+			final String registrationName = namedQuery.name();
+			if ( registrationName.isBlank() ) {
+				throw new AnnotationException(
+						"Class or package level '@NamedQuery' annotation must specify a 'name'" );
+			}
 
-		final String registrationName = namedQuery.name();
-		if ( registrationName.isBlank() ) {
-			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
-		}
+			if ( BOOT_LOGGER.isTraceEnabled() ) {
+				BOOT_LOGGER.bindingNamedQuery( registrationName,
+						namedQuery.query().replace( '\n', ' ' ) );
+			}
 
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.bindingNamedQuery( registrationName,
-					namedQuery.query().replace( '\n', ' ' ) );
+			final var definition = NamedHqlSelectionDefinitionImpl.from( namedQuery, location );
+			context.getMetadataCollector().addNamedQuery( definition );
 		}
-
-		final var definition = NamedHqlSelectionDefinitionImpl.from( namedQuery, location );
-		context.getMetadataCollector().addNamedQuery( definition );
 	}
 
 	public static void bindNamedStoredProcedureQuery(
@@ -775,16 +876,7 @@ public abstract class QueryBinder {
 				.addSecondPass( new ResultSetMappingSecondPass( resultSetMappingAnn, context, isDefault ) );
 	}
 
-	private static class JdbcCall {
-		private final String callableName;
-		private final boolean resultParameter;
-		private final ArrayList<String> parameters;
-
-		public JdbcCall(String callableName, boolean resultParameter, ArrayList<String> parameters) {
-			this.callableName = callableName;
-			this.resultParameter = resultParameter;
-			this.parameters = parameters;
-		}
+	private record JdbcCall(String callableName, boolean resultParameter, ArrayList<String> parameters) {
 	}
 
 	private static JdbcCall parseJdbcCall(String sqlString, Supplier<RuntimeException> exceptionProducer) {

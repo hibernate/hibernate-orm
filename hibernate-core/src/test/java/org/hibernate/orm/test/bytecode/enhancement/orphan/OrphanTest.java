@@ -9,9 +9,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.orm.test.orphan.Part;
-import org.hibernate.orm.test.orphan.Product;
-
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -32,11 +29,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/orphan/Product.hbm.xml"
+				"org/hibernate/orm/test/bytecode/enhancement/orphan/Product.orm.xml"
 		}
 )
 @SessionFactory
-@BytecodeEnhanced
+@BytecodeEnhanced(runNotEnhancedAsWell = true)
 @CustomEnhancementContext({
 		EnhancerTestContext.class, // supports laziness and dirty-checking
 		DefaultEnhancementContext.class
@@ -165,9 +162,9 @@ public class OrphanTest {
 
 		scope.inTransaction(
 				session -> {
-					assertThrows(DetachedObjectException.class,
-								() -> session.lock( prod, LockMode.READ ),
-								"Given entity is not associated with the persistence context"
+					assertThrows( DetachedObjectException.class,
+							() -> session.lock( prod, LockMode.READ ),
+							"Given entity is not associated with the persistence context"
 					);
 				}
 		);
@@ -241,7 +238,7 @@ public class OrphanTest {
 
 		scope.inTransaction(
 				session ->
-					session.merge( cloned )
+						session.merge( cloned )
 		);
 
 		scope.inTransaction(

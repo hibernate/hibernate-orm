@@ -128,6 +128,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalIdImpl;
@@ -1975,6 +1976,32 @@ public class HbmXmlTransformer {
 			// TODO: multiple columns?
 			mapKey.setName( source.getIndex().getColumnAttribute() );
 			target.setMapKeyColumn( mapKey );
+		}
+		else if ( source.getMapKeyManyToMany() != null ) {
+			final var hbmMapKeyManyToMany = source.getMapKeyManyToMany();
+			if ( isNotEmpty( hbmMapKeyManyToMany.getColumnAttribute() ) ) {
+				final var mapKeyJoinColumn = new JaxbMapKeyJoinColumnImpl();
+				mapKeyJoinColumn.setName( hbmMapKeyManyToMany.getColumnAttribute() );
+				target.getMapKeyJoinColumns().add( mapKeyJoinColumn );
+			}
+			else if ( isNotEmpty( hbmMapKeyManyToMany.getColumnOrFormula() ) ) {
+				for ( Serializable columnOrFormula : hbmMapKeyManyToMany.getColumnOrFormula() ) {
+					if ( columnOrFormula instanceof JaxbHbmColumnType column ) {
+						final var mapKeyJoinColumn = new JaxbMapKeyJoinColumnImpl();
+						mapKeyJoinColumn.setName( column.getName() );
+						target.getMapKeyJoinColumns().add( mapKeyJoinColumn );
+					}
+					else {
+						handleUnsupported(
+								"Transformation of formula within map-key-many-to-many is not supported - `%s`",
+								origin()
+						);
+					}
+				}
+			}
+			if ( isNotEmpty( hbmMapKeyManyToMany.getForeignKey() ) ) {
+				target.setMapKeyForeignKey( transformForeignKey( hbmMapKeyManyToMany.getForeignKey() ) );
+			}
 		}
 		else if ( source.getMapKey() != null ) {
 			if ( ! isEmpty( source.getMapKey().getFormulaAttribute() ) ) {

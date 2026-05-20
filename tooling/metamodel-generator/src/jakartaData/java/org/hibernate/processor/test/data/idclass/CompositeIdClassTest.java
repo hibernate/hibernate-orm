@@ -24,14 +24,15 @@ class CompositeIdClassTest {
 	void test() {
 		System.out.println( getMetaModelSourceAsString( MyEntity.class ) );
 		System.out.println( getMetaModelSourceAsString( MyEntity.class, true ) );
-		System.out.println( getMetaModelSourceAsString( MyRepository.class ) );
-		System.out.println( getMetaModelSourceAsString( YourRepository.class ) );
+		System.out.println( getMetaModelSourceAsString( MyRepository.class, true ) );
+		System.out.println( getMetaModelSourceAsString( YourRepository.class, true ) );
 		assertMetamodelClassGeneratedFor( MyEntity.class );
 		assertMetamodelClassGeneratedFor( MyEntity.class, true );
-		assertMetamodelClassGeneratedFor( MyRepository.class );
-		assertMetamodelClassGeneratedFor( YourRepository.class );
+		assertMetamodelClassGeneratedFor( MyRepository.class, true );
+		assertMetamodelClassGeneratedFor( YourRepository.class, true );
 		assertPresenceOfMethodInMetamodelFor(
 				MyRepository.class,
+				true,
 				"findById",
 				MyEntityId.class
 		);

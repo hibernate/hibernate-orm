@@ -16,8 +16,8 @@ class RestrictionTest {
 	@Test
 	@WithClasses({Book.class, Bookshelf.class})
 	void testRestriction() {
-		System.out.println( getMetaModelSourceAsString( Bookshelf.class ) );
+		System.out.println( getMetaModelSourceAsString( Bookshelf.class, true ) );
 		assertMetamodelClassGeneratedFor( Book.class );
-		assertMetamodelClassGeneratedFor( Bookshelf.class );
+		assertMetamodelClassGeneratedFor( Bookshelf.class, true );
 	}
 }

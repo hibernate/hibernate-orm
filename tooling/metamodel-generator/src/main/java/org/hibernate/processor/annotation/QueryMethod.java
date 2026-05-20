@@ -315,7 +315,9 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void createQueryReference(StringBuilder declaration) {
 		if ( useGeneratedQueryReferenceMethod() ) {
 			declaration
-					.append( '_' )
+					.append( annotationMetaEntity.importType(
+							annotationMetaEntity.getQueryMetamodelFullyQualifiedName() ) )
+					.append( '.' )
 					.append( methodName )
 					.append( '(' );
 			appendQueryReferenceArguments( declaration );

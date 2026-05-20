@@ -85,8 +85,8 @@ class QuarkusHrPanacheTest {
 	@WithClasses({ PanacheBook.class, QuarkusBookRepository.class })
 	void testQuarkusRepositoryMetamodel() throws Exception {
 		// Regular repository
-		System.out.println( TestUtil.getMetaModelSourceAsString( QuarkusBookRepository.class ) );
-		Class<?> repositoryClass = getMetamodelClassFor( QuarkusBookRepository.class );
+		System.out.println( TestUtil.getMetaModelSourceAsString( QuarkusBookRepository.class, true ) );
+		Class<?> repositoryClass = getMetamodelClassFor( QuarkusBookRepository.class, true );
 		Assertions.assertNotNull( repositoryClass );
 
 		// Make sure it has the proper supertype
@@ -131,8 +131,8 @@ class QuarkusHrPanacheTest {
 	@WithClasses({ PanacheBook.class, BookRepositoryWithSession.class })
 	void testBookRepositoryWithSessionMetamodel() throws Exception {
 		// Regular repository with default session method
-		System.out.println( TestUtil.getMetaModelSourceAsString( BookRepositoryWithSession.class ) );
-		Class<?> repositoryClass = getMetamodelClassFor( BookRepositoryWithSession.class );
+		System.out.println( TestUtil.getMetaModelSourceAsString( BookRepositoryWithSession.class, true ) );
+		Class<?> repositoryClass = getMetamodelClassFor( BookRepositoryWithSession.class, true );
 		Assertions.assertNotNull( repositoryClass );
 
 		// Make sure we have only the default constructor

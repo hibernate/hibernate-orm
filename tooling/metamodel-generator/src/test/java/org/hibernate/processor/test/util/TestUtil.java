@@ -96,6 +96,14 @@ public class TestUtil {
 		);
 	}
 
+	public static void assertPresenceOfMethodInMetamodelFor(Class<?> clazz, boolean prefix, String methodName,
+			Class<?>... params) {
+		assertTrue(
+				hasMethodInMetamodelFor( clazz, prefix, methodName, params ),
+				buildErrorString( "'" + methodName + "' should appear in metamodel class", clazz )
+		);
+	}
+
 	public static void assertPresenceOfMethodInMetamodelFor(String className, String methodName, Class<?>... params) {
 		assertPresenceOfMethodInMetamodelFor(
 				className,
@@ -443,6 +451,17 @@ public class TestUtil {
 		return getMethodFromMetamodelFor(entityClass.getName(), methodName, params);
 	}
 
+	public static Method getMethodFromMetamodelFor(Class<?> entityClass, boolean prefix, String methodName,
+			Class<?>... params) {
+		Class<?> metaModelClass = getMetamodelClassFor( entityClass, prefix );
+		try {
+			return metaModelClass.getDeclaredMethod( methodName, params );
+		}
+		catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
 	public static Method getMethodFromMetamodelFor(String className, String methodName, Class<?>... params) {
 		Class<?> metaModelClass = getMetamodelClassFor( className );
 		try {
@@ -472,6 +491,10 @@ public class TestUtil {
 
 	private static boolean hasMethodInMetamodelFor(Class<?> clazz, String fieldName, Class<?>... params) {
 		return getMethodFromMetamodelFor( clazz, fieldName, params ) != null;
+	}
+
+	private static boolean hasMethodInMetamodelFor(Class<?> clazz, boolean prefix, String fieldName, Class<?>... params) {
+		return getMethodFromMetamodelFor( clazz, prefix, fieldName, params ) != null;
 	}
 
 	private static boolean hasMethodInMetamodelFor(String className, String fieldName, Class<?>... params) {

@@ -57,15 +57,15 @@ public class DataRepositoryGenericParametersTest {
 	public void test() throws NoSuchMethodException {
 		final var repositoryClass = CatRepository.class;
 
-		System.out.println( getMetaModelSourceAsString( repositoryClass ) );
-		assertMetamodelClassGeneratedFor( repositoryClass );
+		System.out.println( getMetaModelSourceAsString( repositoryClass, true ) );
+		assertMetamodelClassGeneratedFor( repositoryClass, true );
 
 		final var types = new HashMap<Class<?>, Map<String, String>>();
 		collectTypeParameters( repositoryClass, types, Object.class );
 
 		final var actualTypes = ActualTypes.actualTypes( repositoryClass );
 
-		final Class<?> metamodelClass = getMetamodelClassFor( repositoryClass );
+		final Class<?> metamodelClass = getMetamodelClassFor( repositoryClass, true );
 
 		final var methodList = new HashSet<Method>();
 		getMethods( repositoryClass, methodList );

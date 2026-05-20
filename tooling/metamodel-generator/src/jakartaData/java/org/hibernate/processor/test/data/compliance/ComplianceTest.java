@@ -22,9 +22,9 @@ class ComplianceTest {
 	void testWildcards() {
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class, true ) );
-		System.out.println( getMetaModelSourceAsString( BookRepository.class ) );
+		System.out.println( getMetaModelSourceAsString( BookRepository.class, true ) );
 		assertMetamodelClassGeneratedFor( Book.class, true );
 		assertMetamodelClassGeneratedFor( Book.class );
-		assertMetamodelClassGeneratedFor( BookRepository.class );
+		assertMetamodelClassGeneratedFor( BookRepository.class, true );
 	}
 }

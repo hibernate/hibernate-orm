@@ -4,11 +4,15 @@
  */
 package org.hibernate.processor.test.data.eg;
 
+import org.hibernate.StatelessSession;
+
 import jakarta.annotation.Nonnull;
 import jakarta.data.repository.CrudRepository;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.query.QueryOptions;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +24,8 @@ import static jakarta.transaction.Transactional.TxType.REQUIRES_NEW;
 
 @Repository
 public interface Bookshop extends CrudRepository<Book,String> {
+	StatelessSession session();
+
 	@Find
 	@Transactional(REQUIRES_NEW)
 	List<Book> byPublisher(@Size(min=2,max=100) String publisher_name);
@@ -44,6 +50,10 @@ public interface Bookshop extends CrudRepository<Book,String> {
 
 	@Query("where isbn in :isbns and type = Book")
 	List<Book> books(List<String> isbns);
+
+	@Query("select b from Book b join b.authors a where a.name = :authorName")
+	@QueryOptions(cacheStoreMode = CacheStoreMode.BYPASS)
+	List<Book> booksBy(String authorName);
 
 	@Query("delete from Book where type = org.hibernate.processor.test.data.eg.Type.Book")
 	long deleteAllBooks();

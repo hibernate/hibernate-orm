@@ -28,7 +28,7 @@ class TopicPostTest {
 	void test() {
 		assertMetamodelClassGeneratedFor( Post.class, true );
 		assertMetamodelClassGeneratedFor( Post.class );
-		assertMetamodelClassGeneratedFor( PostRepository.class );
+		assertMetamodelClassGeneratedFor( PostRepository.class, true );
 
 		assertPresenceOfMethodInMetamodelFor( Post.class, "getPostsByName", EntityManager.class, List.class );
 		final Method method = getMethodFromMetamodelFor( Post.class, "getPostsByName", EntityManager.class, List.class );
@@ -40,8 +40,8 @@ class TopicPostTest {
 			fail();
 		}
 
-		assertPresenceOfMethodInMetamodelFor( PostRepository.class, "getPostsByName", Collection.class );
-		final Method repositoryMethod = getMethodFromMetamodelFor( PostRepository.class, "getPostsByName", Collection.class );
+		assertPresenceOfMethodInMetamodelFor( PostRepository.class, true, "getPostsByName", Collection.class );
+		final Method repositoryMethod = getMethodFromMetamodelFor( PostRepository.class, true, "getPostsByName", Collection.class );
 		final Type repositoryMethodParam = repositoryMethod.getGenericParameterTypes()[0];
 		if ( repositoryMethodParam instanceof ParameterizedType parameterized ) {
 			assertEquals( String.class, parameterized.getActualTypeArguments()[0] );

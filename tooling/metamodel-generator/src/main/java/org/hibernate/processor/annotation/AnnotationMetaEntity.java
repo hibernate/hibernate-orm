@@ -131,6 +131,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static final String ID_CLASS_MEMBER_NAME = "<ID_CLASS>";
 
 	private final ImportContext importContext;
+	private final @Nullable AnnotationMeta parent;
 	private final TypeElement element;
 	private final Map<String, MetaAttribute> members;
 	private final Context context;
@@ -140,6 +141,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final boolean springInjection;
 	private String qualifiedName;
 	private final boolean jakartaDataStaticModel;
+	private final boolean repositoryGeneration;
+	private final boolean repositoryQueryMetamodel;
 
 	private AccessTypeInformation entityAccessTypeInfo;
 
@@ -190,18 +193,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			boolean jakartaDataStaticMetamodel,
 			@Nullable AnnotationMeta parent,
 			@Nullable TypeElement primaryEntity) {
+		this( element, context, managed, jakartaDataStaticMetamodel, parent, primaryEntity, true, false );
+	}
+
+	private AnnotationMetaEntity(
+			TypeElement element, Context context, boolean managed,
+			boolean jakartaDataStaticMetamodel,
+			@Nullable AnnotationMeta parent,
+			@Nullable TypeElement primaryEntity,
+			boolean repositoryGeneration,
+			boolean repositoryQueryMetamodel) {
 		this.element = element;
 		this.context = context;
+		this.parent = parent;
 		this.managed = managed;
 		this.primaryEntity = primaryEntity;
+		this.repositoryGeneration = repositoryGeneration;
+		this.repositoryQueryMetamodel = repositoryQueryMetamodel;
 		members = new LinkedHashMap<>();
 		quarkusInjection = context.isQuarkusInjection();
 		springInjection = context.isSpringInjection();
 		importContext = parent != null ? parent : new ImportContextImpl( getPackageName( context, element ) );
 		jakartaDataStaticModel = jakartaDataStaticMetamodel;
-		importContext.importType(
-				getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ),
-						jakartaDataStaticModel ) );
 		if ( !element.getQualifiedName().toString().endsWith( "$" ) ) {
 			importContext.importType( element.getQualifiedName().toString() );
 		}
@@ -212,8 +225,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return create( element, context, false, false, false, parent, primaryEntity );
 	}
 
+	public static AnnotationMetaEntity createRepository(TypeElement element, Context context,
+			@Nullable AnnotationMetaEntity parent, @Nullable TypeElement primaryEntity) {
+		final AnnotationMetaEntity annotationMetaEntity =
+				new AnnotationMetaEntity( element, context, false, false, parent, primaryEntity, true, false );
+		if ( parent != null ) {
+			parent.addInnerClass( annotationMetaEntity );
+		}
+		annotationMetaEntity.init();
+		return annotationMetaEntity;
+	}
+
 	public static AnnotationMetaEntity create(TypeElement element, Context context, @Nullable AnnotationMetaEntity parent) {
 		return create( element, context, false, false, false, parent, null );
+	}
+
+	public static AnnotationMetaEntity createQueryMetamodel(TypeElement element, Context context,
+			@Nullable AnnotationMetaEntity parent, @Nullable TypeElement primaryEntity) {
+		final AnnotationMetaEntity annotationMetaEntity =
+				new AnnotationMetaEntity( element, context, false, false, parent, primaryEntity, false, true );
+		if ( parent != null ) {
+			parent.addInnerClass( annotationMetaEntity );
+		}
+		annotationMetaEntity.init();
+		return annotationMetaEntity;
 	}
 
 	public static AnnotationMetaEntity create(
@@ -266,7 +301,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private String getConstructorName() {
-		return getSimpleName() + '_';
+		return repository ? '_' + getSimpleName() : getSimpleName() + '_';
 	}
 
 	@Override
@@ -275,6 +310,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			qualifiedName = element.getQualifiedName().toString();
 		}
 		return qualifiedName;
+	}
+
+	public String getGeneratedClassFullyQualifiedName() {
+		return getGeneratedClassFullyQualifiedName( jakartaDataStaticModel || repository );
+	}
+
+	public String getQueryMetamodelFullyQualifiedName() {
+		return TypeUtils.getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ), false );
+	}
+
+	private String getGeneratedClassFullyQualifiedName(boolean prefixed) {
+		if ( parent instanceof AnnotationMetaEntity parentMetaEntity
+				&& element.getEnclosingElement() instanceof TypeElement ) {
+			return parentMetaEntity.getGeneratedClassFullyQualifiedName()
+					+ "." + getGeneratedSimpleName( prefixed );
+		}
+		else {
+			return TypeUtils.getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ),
+					prefixed );
+		}
+	}
+
+	private String getGeneratedSimpleName(boolean prefixed) {
+		return prefixed ? '_' + getSimpleName() : getSimpleName() + '_';
 	}
 
 	@Override
@@ -405,6 +464,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type '" + getQualifiedName() + "'" );
 
 		setupSession();
+		importContext.importType( getGeneratedClassFullyQualifiedName() );
 
 		final List<ExecutableElement> queryMethods = new ArrayList<>();
 		final List<ExecutableElement> staticQueryMethods = new ArrayList<>();
@@ -416,9 +476,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			for ( ExecutableElement method : methodsOfClass ) {
 				if ( validateJakartaDataMethodAnnotations( method ) ) {
 					if ( hasQueryStringAnnotation( method ) ) {
-						if ( canGenerateStaticQueryMethod( method ) ) {
-							staticQueryMethods.add( method );
-						}
 						if ( !method.isDefault() ) {
 							queryMethods.add( method );
 						}
@@ -468,19 +525,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			determineAccessTypeForHierarchy( element, context );
 			entityAccessTypeInfo = castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
+			if ( repositoryQueryMetamodel && primaryEntity == null ) {
+				primaryEntity = primaryEntity( element );
+			}
 
 			final List<VariableElement> fieldsOfClass = fieldsIn( element.getEnclosedElements() );
-			final List<ExecutableElement> methodsOfClass = methodsIn( element.getEnclosedElements() );
+			final List<ExecutableElement> methodsOfClass =
+					methodsIn( repositoryQueryMetamodel
+							? context.getAllMembers( element )
+							: element.getEnclosedElements() );
 			final List<ExecutableElement> gettersAndSettersOfClass = new ArrayList<>();
 			for ( ExecutableElement method : methodsOfClass ) {
-				if ( element.getTypeParameters().isEmpty()
-						&& containsAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY ) ) {
+				if ( shouldGenerateStaticQueryMethodInMetamodel( method ) ) {
 					staticQueryMethods.add( method );
 				}
 				if ( isGetterOrSetter( method ) ) {
 					gettersAndSettersOfClass.add( method );
 				}
-				else if ( element.getTypeParameters().isEmpty()
+				else if ( !repositoryQueryMetamodel
+						&& element.getTypeParameters().isEmpty()
 						&& containsAnnotation( method, HQL, SQL, FIND ) ) {
 					queryMethods.add( method );
 				}
@@ -1031,7 +1094,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void setupSession() {
-		if ( element.getTypeParameters().isEmpty() ) {
+		if ( repositoryGeneration && element.getTypeParameters().isEmpty() ) {
 			jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
 			final boolean statefulDataRepository =
 					jakartaDataRepository && hasStatefulLifecycleMethods( element );
@@ -1764,6 +1827,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& ( method.isDefault() || !isReactive() && hasNamedRepositoryQueryAnnotation( method ) );
 	}
 
+	private boolean shouldGenerateStaticQueryMethodInMetamodel(ExecutableElement method) {
+		return element.getTypeParameters().isEmpty()
+			&& !hasReactiveReturnType( method )
+			&& ( repositoryQueryMetamodel
+					? canGenerateStaticQueryMethod( method ) && hasQueryStringAnnotation( method )
+					: containsAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY ) );
+	}
+
+	private static boolean hasReactiveReturnType(ExecutableElement method) {
+		final String returnType = method.getReturnType().toString();
+		return returnType.equals( UNI ) || returnType.startsWith( UNI + "<" );
+	}
+
 	private static boolean isCompanionMethod(ExecutableElement method) {
 		return method.getEnclosingElement() instanceof TypeElement typeElement
 			&& typeElement.getQualifiedName().toString().endsWith( "$" );
@@ -1781,27 +1857,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addStaticQueryMethod(ExecutableElement method) {
 		final String methodName = method.getSimpleName().toString();
-		final String generatedMethodName =
-				repository ? '_' + methodName : methodName;
 		final AnnotationMirror hql = getAnnotationMirror( method, HQL );
 		if ( hql != null ) {
-			addStaticQueryMethod( method, generatedMethodName, hql, false );
+			addStaticQueryMethod( method, methodName, hql, false );
 		}
 		final AnnotationMirror sql = getAnnotationMirror( method, SQL );
 		if ( sql != null ) {
-			addStaticQueryMethod( method, generatedMethodName, sql, true );
+			addStaticQueryMethod( method, methodName, sql, true );
 		}
 		final AnnotationMirror jakartaQuery = getAnnotationMirror( method, JAKARTA_QUERY );
 		if ( jakartaQuery != null ) {
-			addStaticQueryMethod( method, generatedMethodName, jakartaQuery, false );
+			addStaticQueryMethod( method, methodName, jakartaQuery, false );
 		}
 		final AnnotationMirror nativeQuery = getAnnotationMirror( method, NATIVE_QUERY );
 		if ( nativeQuery != null ) {
-			addStaticQueryMethod( method, generatedMethodName, nativeQuery, true );
+			addStaticQueryMethod( method, methodName, nativeQuery, true );
 		}
 		final AnnotationMirror jdql = getAnnotationMirror( method, JD_QUERY );
 		if ( jdql != null ) {
-			addStaticQueryMethod( method, generatedMethodName, jdql, false );
+			addStaticQueryMethod( method, methodName, jdql, false );
 		}
 	}
 

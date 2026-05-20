@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor;
 
+import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.annotation.InnerClassMetaAttribute;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
@@ -255,15 +256,24 @@ public final class ClassWriter {
 	}
 
 	public static String getFullyQualifiedClassName(Metamodel entity) {
-		return entity.getElement() instanceof PackageElement packageElement
-				? packageElement.getQualifiedName().toString() + "." + getGeneratedClassName( entity )
-				: getGeneratedClassFullyQualifiedName( (TypeElement) entity.getElement(),
-						entity.getPackageName(), entity.isJakartaDataStyle() );
+		if ( entity instanceof AnnotationMetaEntity annotationMetaEntity ) {
+			return annotationMetaEntity.getGeneratedClassFullyQualifiedName();
+		}
+		else {
+			return entity.getElement() instanceof PackageElement packageElement
+					? packageElement.getQualifiedName() + "." + getGeneratedClassName( entity )
+					: getGeneratedClassFullyQualifiedName( (TypeElement) entity.getElement(),
+							entity.getPackageName(), isPrefixed( entity ) );
+		}
 	}
 
 	private static String getGeneratedClassName(Metamodel entity) {
 		final String className = entity.getSimpleName();
-		return entity.isJakartaDataStyle() ? '_' + className : className + '_';
+		return isPrefixed( entity ) ? '_' + className : className + '_';
+	}
+
+	private static boolean isPrefixed(Metamodel entity) {
+		return entity.isJakartaDataStyle() || entity.isImplementation();
 	}
 
 	private static String getGeneratedSuperclassName(Element superClassElement, boolean jakartaDataStyle) {

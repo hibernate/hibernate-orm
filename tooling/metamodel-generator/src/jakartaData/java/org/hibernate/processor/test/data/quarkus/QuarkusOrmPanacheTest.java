@@ -29,8 +29,8 @@ class QuarkusOrmPanacheTest {
 	@WithClasses({ PanacheBook.class, JakartaDataBookRepository.class })
 	void testJakartaDataRepositoryMetamodel() throws Exception {
 		// JD repository
-		System.out.println( TestUtil.getMetaModelSourceAsString( JakartaDataBookRepository.class ) );
-		Class<?> repositoryClass = getMetamodelClassFor( JakartaDataBookRepository.class );
+		System.out.println( TestUtil.getMetaModelSourceAsString( JakartaDataBookRepository.class, true ) );
+		Class<?> repositoryClass = getMetamodelClassFor( JakartaDataBookRepository.class, true );
 		Assertions.assertNotNull( repositoryClass );
 
 		// Make sure it has the proper supertype

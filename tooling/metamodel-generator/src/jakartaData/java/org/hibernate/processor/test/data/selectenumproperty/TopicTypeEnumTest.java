@@ -18,9 +18,9 @@ class TopicTypeEnumTest {
 	void test() {
 		System.out.println( getMetaModelSourceAsString( Topic.class ) );
 		System.out.println( getMetaModelSourceAsString( Topic.class, true ) );
-		System.out.println( getMetaModelSourceAsString( TopicRepository.class ) );
+		System.out.println( getMetaModelSourceAsString( TopicRepository.class, true ) );
 		assertMetamodelClassGeneratedFor( Topic.class, true );
 		assertMetamodelClassGeneratedFor( Topic.class );
-		assertMetamodelClassGeneratedFor( TopicRepository.class );
+		assertMetamodelClassGeneratedFor( TopicRepository.class, true );
 	}
 }

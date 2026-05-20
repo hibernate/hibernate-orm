@@ -34,9 +34,11 @@ class DataRestrictionTest {
 			DataRestrictionRepository.class
 	})
 	void generatedRepositoryAcceptsJakartaDataRestrictions() {
-		final String repository = getMetaModelSourceAsString( DataRestrictionRepository.class );
+		final String repository = getMetaModelSourceAsString( DataRestrictionRepository.class, true );
+		final String queryMetamodel = getMetaModelSourceAsString( DataRestrictionRepository.class );
 		final String metamodel = getMetaModelSourceAsString( DataRestrictionBook.class, true );
 		System.out.println( repository );
+		System.out.println( queryMetamodel );
 		System.out.println( metamodel );
 
 		assertTrue( repository.contains( "Restriction<? super DataRestrictionBook> restriction" ) );
@@ -46,10 +48,11 @@ class DataRestrictionTest {
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(Restrict.all(restrictions)));" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(queryRestriction));" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(deleteRestriction));" ) );
-		assertTrue( repository.contains( "SelectionSpecification.create(_query())" ) );
-		assertTrue( repository.contains( "SelectionSpecification.create(_query(title))" ) );
+		assertFalse( repository.contains( "TypedQueryReference<" ) );
+		assertTrue( repository.contains( "SelectionSpecification.create(DataRestrictionRepository_.query())" ) );
+		assertTrue( repository.contains( "SelectionSpecification.create(DataRestrictionRepository_.query(title))" ) );
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
-		assertTrue( repository.contains( "\"DataRestrictionRepository.query\"" ) );
+		assertTrue( queryMetamodel.contains( "\"DataRestrictionRepository.query\"" ) );
 		assertTrue( repository.contains( "for (var _sort : order.sorts())" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.restriction" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.queryRestriction" ) );

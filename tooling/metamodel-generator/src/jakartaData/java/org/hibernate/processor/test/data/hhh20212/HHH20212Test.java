@@ -19,8 +19,8 @@ class HHH20212Test {
 	@Test
 	@WithClasses({ HHH20212Entity.class, HHH20212Repository.class })
 	void test() throws Exception {
-		System.out.println( getMetaModelSourceAsString( HHH20212Repository.class ) );
-		assertMetamodelClassGeneratedFor( HHH20212Repository.class );
-		assertNotNull( getMetamodelClassFor( HHH20212Repository.class ).getDeclaredConstructor( StatelessSession.class ) );
+		System.out.println( getMetaModelSourceAsString( HHH20212Repository.class, true ) );
+		assertMetamodelClassGeneratedFor( HHH20212Repository.class, true );
+		assertNotNull( getMetamodelClassFor( HHH20212Repository.class, true ).getDeclaredConstructor( StatelessSession.class ) );
 	}
 }

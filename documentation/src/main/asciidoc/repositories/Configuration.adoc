@@ -44,6 +44,7 @@ In addition, we might add some of the following to the mix.
 |===
 | Optional dependency | Explanation
 
+| `jakarta.data:jakarta.data-stateful` | Jakarta Data Stateful Repositories API
 | `org.hibernate.validator:hibernate-validator` +
 and `org.glassfish.expressly:expressly` | Hibernate Validator
 | `org.apache.logging.log4j:log4j-core` | log4j
@@ -145,7 +146,7 @@ It's always possible to instantiate a repository implementation directly.
 
 [source,java]
 ----
-Library library = new Library_(statelessSession);
+Library library = new _Library(statelessSession);
 ----
 
 This is useful for testing, or for executing in an environment with no support for `jakarta.inject`.

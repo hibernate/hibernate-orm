@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
@@ -36,7 +37,11 @@ public class InsertCoordinatorAudit extends AbstractAuditCoordinator implements 
 			Object[] values,
 			SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, values, session );
-		enqueueAuditEntry( entity, values, ModificationType.ADD, session );
+		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
+		final var entityKey = entityEntry != null
+				? entityEntry.getEntityKey()
+				: new EntityKey( entityPersister().getIdentifier( entity, session ), entityPersister() );
+		enqueueAuditEntry( entityKey, entity, values, ModificationType.ADD, session );
 		return generatedValues;
 	}
 
@@ -47,7 +52,7 @@ public class InsertCoordinatorAudit extends AbstractAuditCoordinator implements 
 			Object[] values,
 			SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, id, values, session );
-		enqueueAuditEntry( entity, values, ModificationType.ADD, session );
+		enqueueAuditEntry( resolveEntityKey( entity, id, session ), entity, values, ModificationType.ADD, session );
 		return generatedValues;
 	}
 }

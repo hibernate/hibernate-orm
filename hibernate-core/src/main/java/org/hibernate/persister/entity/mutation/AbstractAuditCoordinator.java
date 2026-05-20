@@ -49,19 +49,26 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 	 * Enqueue an audit entry for deferred writing at transaction completion.
 	 */
 	protected void enqueueAuditEntry(
+			EntityKey entityKey,
 			Object entity,
 			Object[] values,
 			ModificationType modificationType,
 			SharedSessionContractImplementor session) {
-		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
 		session.getAuditWorkQueue().enqueue(
-				entityEntry.getEntityKey(),
+				entityKey,
 				entity,
 				values,
 				modificationType,
 				this,
 				session
 		);
+	}
+
+	protected EntityKey resolveEntityKey(Object entity, Object id, SharedSessionContractImplementor session) {
+		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
+		return entityEntry != null
+				? entityEntry.getEntityKey()
+				: new EntityKey( id, entityPersister() );
 	}
 
 	/**

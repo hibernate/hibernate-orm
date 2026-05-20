@@ -6,9 +6,10 @@ package org.hibernate.orm.test.query.named;
 
 import java.util.List;
 
+import jakarta.data.repository.Param;
 import jakarta.persistence.query.JakartaQuery;
 
 public interface GenericBookRepository<T> {
 	@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
-	List<T> inheritedGenericFindByTitle(String title);
+	List<T> inheritedGenericFindByTitle(@Param("title") String title);
 }

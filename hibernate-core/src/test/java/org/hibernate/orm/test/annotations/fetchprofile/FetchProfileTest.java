@@ -10,7 +10,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -75,17 +74,15 @@ public class FetchProfileTest {
 
 	@Test
 	@ServiceRegistry
-	@NotImplementedYet(reason = "See HHH-19417")
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-19417" )
 	public void testXmlOverride(ServiceRegistryScope registryScope) {
 		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClasses( Customer5.class, Order.class, Country.class )
 				.addResource( "org/hibernate/orm/test/annotations/fetchprofile/mappings.xml" );
-		// NOTE : until HHH-19417 is addressed, this will fail
-		metadataSources.buildMetadata();
-
-//		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
-//		assertThat( sessionFactory.containsFetchProfileDefinition( "orders-profile" ) ).isTrue();
+		try ( SessionFactoryImplementor sessionFactory =
+					(SessionFactoryImplementor) metadataSources.buildMetadata().buildSessionFactory() ) {
+			assertThat( sessionFactory.containsFetchProfileDefinition( "orders-profile" ) ).isTrue();
+		}
 	}
 
 	@Test

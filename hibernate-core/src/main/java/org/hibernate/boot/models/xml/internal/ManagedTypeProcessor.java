@@ -140,6 +140,11 @@ public class ManagedTypeProcessor {
 
 		classDetails.clearAnnotationUsages();
 
+		// In metadata-complete mode the XML is the sole source of truth — annotations have just
+		// been cleared, so the chosen access type must be stamped on the class regardless of
+		// whether it came from XML or from a fallback.
+		applyAccessAnnotation( classAccessType, classDetails, xmlDocumentContext );
+
 		// from here, processing is the same between override and metadata-complete modes
 		// (aside from the dynamic model handling)
 
@@ -188,7 +193,6 @@ public class ManagedTypeProcessor {
 			XmlDocumentContext xmlDocumentContext) {
 		XmlAnnotationHelper.applyEntity( jaxbEntity, classDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyInheritance( jaxbEntity, classDetails, xmlDocumentContext );
-		applyAccessAnnotation( classAccessType, classDetails, xmlDocumentContext );
 		applyCaching( jaxbEntity, classDetails, xmlDocumentContext );
 
 		if ( jaxbEntity.isAbstract() != null ) {
@@ -421,20 +425,34 @@ public class ManagedTypeProcessor {
 					getMutableClassDetails( xmlDocumentContext,
 							XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity ) );
 
-			final var classAccessType = coalesceSuppliedValues(
+			// Access type that has been explicitly requested via XML or via PU-defaults — if any.
+			// Only an explicit access type is stamped onto the class as @Access; stamping a
+			// fallback would force the chosen strategy and mask the natural annotation-driven
+			// detection (e.g. an @Id inherited from a @MappedSuperclass field), which causes
+			// field-level association mappings such as @OneToMany to be silently dropped.
+			final AccessType explicitAccessType = coalesceSuppliedValues(
 					// look on this <entity/>
 					jaxbEntity::getAccess,
 					// look on the root <entity/>
 					jaxbRoot::getAccess,
+					// look for a default (PU metadata default) access
+					xmlDocumentContext.getEffectiveDefaults()::getDefaultPropertyAccessType
+			);
+
+			// Access type used internally for XML attribute processing, with a fallback chain.
+			final var classAccessType = coalesceSuppliedValues(
+					() -> explicitAccessType,
 					// look for @Access on the entity class
 					() -> determineAccessTypeFromClassAnnotations( classDetails ),
-					// look for a default (PU metadata default) access
-					xmlDocumentContext.getEffectiveDefaults()::getDefaultPropertyAccessType,
 					// look at @Id/@EmbeddedId
 					() -> determineAccessTypeFromClassMembers( classDetails ),
 					// fallback to PROPERTY
 					() -> AccessType.PROPERTY
 			);
+
+			if ( explicitAccessType != null ) {
+				applyAccessAnnotation( explicitAccessType, classDetails, xmlDocumentContext );
+			}
 
 			// from here, processing is the same between override and metadata-complete modes
 			processEntityMetadata(

@@ -6,7 +6,7 @@ package org.hibernate.orm.test.jdbc.util;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.engine.jdbc.internal.TokenBasedFormatterImpl;
+import org.hibernate.engine.jdbc.internal.TokenBasedSQLFormatterImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Jan Schatteman
  */
 @ServiceRegistry
-public class TokenBasedFormatterTest {
+public class TokenBasedSQLFormatterTest {
 
 	private static final String FIXTURE_SEP = "@@@@ FIXTURE @@@@";
 	private static final String EXPECTED_SEP = "=== EXPECTED ===";
@@ -37,7 +37,7 @@ public class TokenBasedFormatterTest {
 
 	private final Map<String, SqlFixture> dmlFixtures = new HashMap<>(20);
 
-	private static final TokenBasedFormatterImpl formatter = new TokenBasedFormatterImpl();
+	private static final TokenBasedSQLFormatterImpl formatter = new TokenBasedSQLFormatterImpl();
 
 	@Test
 	public void testFixtures() {

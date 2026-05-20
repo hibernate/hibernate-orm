@@ -123,9 +123,8 @@ public class ChangelogSupplier<T> implements ChangesetIdentifierSupplier<T> {
 	@SuppressWarnings("unchecked")
 	public ChangesetContext<T> generateContext(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
-		final var persister =
-				sessionImpl.getFactory().getMappingMetamodel()
-						.getEntityDescriptor( changelogClass.getName() );
+		final EntityPersister persister = sessionImpl.getFactory().getMappingMetamodel()
+				.getEntityDescriptor( changelogClass );
 		final Object changelog = persister.instantiate( null, sessionImpl );
 		if ( listener != null ) {
 			listener.newChangeset( changelog );

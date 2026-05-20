@@ -52,13 +52,9 @@ public class AuditChangeSet<E, C> {
 			Object[] values,
 			ModificationType modificationType,
 			E entityAuditHandler) {
-		final MutableEntityChange<E> existing = entityChanges.get( entityKey );
-		if ( existing == null ) {
-			entityChanges.put( entityKey, new MutableEntityChange<>( entity, values, modificationType, entityAuditHandler ) );
-		}
-		else {
-			merge( entityKey, existing, entity, values, modificationType );
-		}
+		entityChanges.compute( entityKey, (key, existing) -> existing == null
+				? new MutableEntityChange<>( entity, values, modificationType, entityAuditHandler )
+				: merge( existing, entity, values, modificationType ) );
 	}
 
 	/// Add a collection audit change if one has not already been captured.
@@ -110,15 +106,14 @@ public class AuditChangeSet<E, C> {
 		collectionChanges.clear();
 	}
 
-	private void merge(
-			EntityKey entityKey,
+	private static <E> MutableEntityChange<E> merge(
 			MutableEntityChange<E> existing,
 			Object entity,
 			Object[] newValues,
 			ModificationType incoming) {
 		final ModificationType merged = mergeModificationType( existing.modificationType, incoming );
 		if ( merged == null ) {
-			entityChanges.remove( entityKey );
+			return null;
 		}
 		else {
 			existing.modificationType = merged;
@@ -126,6 +121,7 @@ public class AuditChangeSet<E, C> {
 			if ( entity != null ) {
 				existing.entity = entity;
 			}
+			return existing;
 		}
 	}
 

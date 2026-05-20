@@ -20,11 +20,11 @@ import org.jboss.logging.Logger;
  *
  * @author Hibernate Team
  */
-public class TokenBasedFormatterImpl implements Formatter {
+public class TokenBasedSQLFormatterImpl implements Formatter {
 
-	private static final Logger log = Logger.getLogger( TokenBasedFormatterImpl.class );
+	private static final Logger log = Logger.getLogger( TokenBasedSQLFormatterImpl.class );
 
-	private static final String INDENT = "\t";
+	private static final String INDENT = "    ";
 	private static final String LINE_SEPARATOR = System.lineSeparator();
 
 	@Override
@@ -119,60 +119,34 @@ public class TokenBasedFormatterImpl implements Formatter {
 					SqlFormatterLexer.EXCEPT,
 					SqlFormatterLexer.INSERT,
 					SqlFormatterLexer.DELETE,
-					SqlFormatterLexer.MERGE:
-					newLineIfNeeded();
+					SqlFormatterLexer.MERGE,
+					SqlFormatterLexer.RETURNING:
+					newLine(true);
 					baseIndent = currentContext().indent;
 					writeToken(token);
 					break;
 				case SqlFormatterLexer.UPDATE:
-					// UPDATE can be:
-					// 1. UPDATE table ... (DML statement - newline)
-					// 2. DO UPDATE (after ON CONFLICT - same line)
-					// 3. UPDATE inside MERGE WHEN MATCHED (indented)
-					Token updatePrev = peekBack(1);
-					if (updatePrev != null && updatePrev.getType() == SqlFormatterLexer.DO) {
-						// DO UPDATE - stay on same line
-						space();
-						writeToken(token);
-					}
-					else {
-						// Regular UPDATE statement or MERGE UPDATE
-						newLineIfNeeded();
-						baseIndent = currentContext().indent;
-						writeToken(token);
-					}
+					processUpdate(token);
 					break;
-				case SqlFormatterLexer.INTO:
+				case SqlFormatterLexer.INTO,
+					SqlFormatterLexer.LATERAL,
+					SqlFormatterLexer.CONFLICT,
+					SqlFormatterLexer.DUPLICATE,
+					SqlFormatterLexer.KEY,
+					SqlFormatterLexer.MATCHED,
+					SqlFormatterLexer.NOTHING,
+					SqlFormatterLexer.CONSTRAINT:
 					space();
 					writeToken(token);
 					break;
 				case SqlFormatterLexer.USING:
 					// USING in MERGE statement - newline at MERGE context level
-					newLineIfNeeded();
+					newLine(true);
 					baseIndent = currentContext().indent;
 					writeToken(token);
 					break;
 				case SqlFormatterLexer.VALUES:
-					// VALUES can be:
-					// 1. Major VALUES clause in INSERT (newline)
-					// 2. VALUES(col) function in MySQL ON DUPLICATE KEY UPDATE (inline)
-					Token valuesPrev = peekBack(1);
-					if (valuesPrev != null && valuesPrev.getType() == SqlFormatterLexer.EQ) {
-						// VALUES(col) function in UPDATE assignment
-						space();
-						writeToken(token);
-					}
-					else {
-						// Major VALUES clause
-						newLineIfNeeded();
-						baseIndent = currentContext().indent;
-						writeToken(token);
-					}
-					break;
-				case SqlFormatterLexer.RETURNING:
-					newLineIfNeeded();
-					baseIndent = currentContext().indent;
-					writeToken(token);
+					processValues( token );
 					break;
 				case SqlFormatterLexer.SET:
 					processSetClause(token);
@@ -187,46 +161,16 @@ public class TokenBasedFormatterImpl implements Formatter {
 					processWhen(token);
 					break;
 				case SqlFormatterLexer.AS:
-					space();
-					writeToken(token);
-					// Check if followed by (
-					Token next = peekAhead(1);
-					if (next != null && next.getType() == SqlFormatterLexer.LPAREN) {
-						space();
-					}
+					processAs( token );
 					break;
 				case SqlFormatterLexer.SELECT:
-					newLineIfNeeded();
-					baseIndent = currentContext().indent;
-					writeToken(token);
-					// Check if multi-line SELECT list
-					if (shouldListBeMultiline(SqlFormatterLexer.FROM, SqlFormatterLexer.RPAREN)) {
-						newLine();
-						baseIndent = currentContext().indent + 1;
-						currentContext().firstClauseElement = true;
-					}
+					processSelect( token );
 					break;
 				case SqlFormatterLexer.FROM:
-					// Check if we're following a DELETE statement
-					if (isAfterKeyword(SqlFormatterLexer.DELETE, 1)) {
-						space();
-						writeToken(token);
-					}
-					// Check if we're inside a function (like TRIM)
-					else if (currentContext().type == ContextType.FUNCTION) {
-						// Inside function - just add space and write
-						space();
-						writeToken(token);
-					}
-					else {
-						// Major FROM clause
-						newLineIfNeeded();
-						baseIndent = currentContext().indent;
-						writeToken(token);
-					}
+					processFrom( token );
 					break;
 				case SqlFormatterLexer.WHERE, SqlFormatterLexer.HAVING:
-					newLineIfNeeded();
+					newLine(true);
 					baseIndent = currentContext().indent;
 					writeToken(token);
 					currentContext().firstClauseElement = true;
@@ -250,19 +194,9 @@ public class TokenBasedFormatterImpl implements Formatter {
 						space();
 					}
 					else {
-						newLineIfNeeded();
+						newLine(true);
 						baseIndent = currentContext().indent;
 					}
-					writeToken(token);
-					break;
-				case SqlFormatterLexer.LATERAL,
-					SqlFormatterLexer.CONFLICT,
-					SqlFormatterLexer.DUPLICATE,
-					SqlFormatterLexer.KEY,
-					SqlFormatterLexer.MATCHED,
-					SqlFormatterLexer.NOTHING,
-					SqlFormatterLexer.CONSTRAINT:
-					space();
 					writeToken(token);
 					break;
 				case SqlFormatterLexer.THEN:
@@ -279,46 +213,13 @@ public class TokenBasedFormatterImpl implements Formatter {
 					break;
 				case SqlFormatterLexer.AND,
 					SqlFormatterLexer.OR:
-					if (isBetweenAnd()) {
-						space();
-						writeToken(token);
-					}
-					else {
-						newLineIfNeeded();
-						baseIndent = currentContext().indent + 1;
-						writeToken(token);
-					}
+					processAndOr( token );
 					break;
 				case SqlFormatterLexer.BY:
-					space();
-					writeToken(token);
-					// Check if list is multi-line
-					int[] terminators = (peekBack(1) != null && peekBack(1).getType() == SqlFormatterLexer.ORDER)
-							? new int[]{ SqlFormatterLexer.OFFSET, SqlFormatterLexer.FETCH, SqlFormatterLexer.LIMIT }
-							: new int[]{ SqlFormatterLexer.HAVING, SqlFormatterLexer.ORDER, SqlFormatterLexer.OFFSET };
-					if (shouldListBeMultiline(terminators)) {
-						newLine();
-						baseIndent = currentContext().indent + 1;
-						currentContext().firstClauseElement = true;
-					}
+					processBy( token );
 					break;
 				case SqlFormatterLexer.COMMA:
-					writeToken(token);
-					// Check if we should newline after comma
-					Token prevToken = peekBack(1);
-					if (currentContext().firstClauseElement || baseIndent > currentContext().indent) {
-						// Multi-line list - add newline
-						newLine();
-						currentContext().firstClauseElement = false;
-					}
-					else if (prevToken != null && prevToken.getType() == SqlFormatterLexer.RPAREN && currentContext().type == ContextType.MAIN) {
-						// CTE list: ) , next_cte ...
-						// But NOT in UPDATE SET: VALUES(col), col = ...
-						// Check if we're in UPDATE SET by looking for SET keyword before this
-						if (!isAfterKeyword(SqlFormatterLexer.SET, 10) && !isAfterKeyword(SqlFormatterLexer.UPDATE, 15)) {
-							newLine();
-						}
-					}
+					processComma( token );
 					break;
 				case SqlFormatterLexer.LPAREN:
 					processLeftParen(token);
@@ -330,28 +231,153 @@ public class TokenBasedFormatterImpl implements Formatter {
 					processCaseKeyword(token);
 					break;
 				case SqlFormatterLexer.END:
-					if (inContext(ContextType.CASE_EXPR) && isCaseEnd()) {
-						// END should be at the same level as CASE
-						// CASE_EXPR context has indent for WHEN/ELSE (CASE + 1)
-						// So CASE level is currentContext().indent - 1
-						int caseIndent = currentContext().indent - 1;
-						contextStack.pop();
-						newLineIfNeeded();
-						baseIndent = caseIndent;
-					}
-					writeToken(token);
+					processEnd( token );
 					break;
 				case SqlFormatterLexer.SEMICOLON:
-					// If we're ending a MERGE WHEN THEN block, pop the temporary context
-					if (inMergeWhenThenBlock) {
-						contextStack.pop();
-						inMergeWhenThenBlock = false;
-					}
-					writeToken(token);
+					processSemiColon( token );
 					break;
 				default:
 					writeToken(token);
 					break;
+			}
+		}
+
+		private void processSemiColon(Token token) {
+			// If we're ending a MERGE WHEN THEN block, pop the temporary context
+			if (inMergeWhenThenBlock) {
+				contextStack.pop();
+				inMergeWhenThenBlock = false;
+			}
+			writeToken( token );
+		}
+
+		private void processEnd(Token token) {
+			if (inContext(ContextType.CASE_EXPR) && isCaseEnd()) {
+				// END should be at the same level as CASE
+				// CASE_EXPR context has indent for WHEN/ELSE (CASE + 1)
+				// So CASE level is currentContext().indent - 1
+				int caseIndent = currentContext().indent - 1;
+				contextStack.pop();
+				newLine(true);
+				baseIndent = caseIndent;
+			}
+			writeToken( token );
+		}
+
+		private void processComma(Token token) {
+			writeToken( token );
+			// Check if we should newline after comma
+			Token prevToken = peekBack(1);
+			if (currentContext().firstClauseElement || baseIndent > currentContext().indent) {
+				// Multi-line list - add newline
+				newLine(false);
+				currentContext().firstClauseElement = false;
+			}
+			else if (prevToken != null && prevToken.getType() == SqlFormatterLexer.RPAREN && currentContext().type == ContextType.MAIN) {
+				// CTE list: ) , next_cte ...
+				// But NOT in UPDATE SET: VALUES(col), col = ...
+				// Check if we're in UPDATE SET by looking for SET keyword before this
+				if (!isAfterKeyword(SqlFormatterLexer.SET, 10) && !isAfterKeyword(SqlFormatterLexer.UPDATE, 15)) {
+					newLine(false);
+				}
+			}
+		}
+
+		private void processBy(Token token) {
+			space();
+			writeToken( token );
+			// Check if list is multi-line
+			int[] terminators = (peekBack(1) != null && peekBack(1).getType() == SqlFormatterLexer.ORDER)
+					? new int[]{ SqlFormatterLexer.OFFSET, SqlFormatterLexer.FETCH, SqlFormatterLexer.LIMIT }
+					: new int[]{ SqlFormatterLexer.HAVING, SqlFormatterLexer.ORDER, SqlFormatterLexer.OFFSET };
+			if (shouldListBeMultiline(terminators)) {
+				newLine(false);
+				baseIndent = currentContext().indent + 1;
+				currentContext().firstClauseElement = true;
+			}
+		}
+
+		private void processAndOr(Token token) {
+			if (isBetweenAnd()) {
+				space();
+			}
+			else {
+				newLine(true);
+				baseIndent = currentContext().indent + 1;
+			}
+			writeToken( token );
+		}
+
+		private void processFrom(Token token) {
+			// Check if we're following a DELETE statement or if we're inside a function (like TRIM)
+			if (isAfterKeyword(SqlFormatterLexer.DELETE, 1) || currentContext().type == ContextType.FUNCTION) {
+				space();
+				writeToken( token );
+			}
+			else {
+				// Major FROM clause
+				newLine(true);
+				baseIndent = currentContext().indent;
+				writeToken( token );
+			}
+		}
+
+		private void processSelect(Token token) {
+			newLine(true);
+			baseIndent = currentContext().indent;
+			writeToken( token );
+			// Check if multi-line SELECT list
+			if (shouldListBeMultiline(SqlFormatterLexer.FROM, SqlFormatterLexer.RPAREN)) {
+				newLine(false);
+				baseIndent = currentContext().indent + 1;
+				currentContext().firstClauseElement = true;
+			}
+		}
+
+		private void processAs(Token token) {
+			space();
+			writeToken( token );
+			// Check if followed by (
+			Token next = peekAhead(1);
+			if (next != null && next.getType() == SqlFormatterLexer.LPAREN) {
+				space();
+			}
+		}
+
+		private void processValues(Token token) {
+			// VALUES can be:
+			// 1. Major VALUES clause in INSERT (newline)
+			// 2. VALUES(col) function in MySQL ON DUPLICATE KEY UPDATE (inline)
+			Token valuesPrev = peekBack(1);
+			if (valuesPrev != null && valuesPrev.getType() == SqlFormatterLexer.EQ) {
+				// VALUES(col) function in UPDATE assignment
+				space();
+				writeToken( token );
+			}
+			else {
+				// Major VALUES clause
+				newLine(true);
+				baseIndent = currentContext().indent;
+				writeToken( token );
+			}
+		}
+
+		private void processUpdate(Token token) {
+			// UPDATE can be:
+			// 1. UPDATE table ... (DML statement - newline)
+			// 2. DO UPDATE (after ON CONFLICT - same line)
+			// 3. UPDATE inside MERGE WHEN MATCHED (indented)
+			Token updatePrev = peekBack(1);
+			if (updatePrev != null && updatePrev.getType() == SqlFormatterLexer.DO) {
+				// DO UPDATE - stay on same line
+				space();
+				writeToken( token );
+			}
+			else {
+				// Regular UPDATE statement or MERGE UPDATE
+				newLine(true);
+				baseIndent = currentContext().indent;
+				writeToken( token );
 			}
 		}
 
@@ -362,14 +388,14 @@ public class TokenBasedFormatterImpl implements Formatter {
 			if (baseIndent == currentContext().indent && !currentContext().firstClauseElement) {
 				commentIndent = currentContext().indent + 1;
 			}
-			newLineIfNeeded();
+			newLine(true);
 			// Apply proper indentation
 			if (atLineStart) {
 				indent(commentIndent);
 				atLineStart = false;
 			}
 			output.append(token.getText());
-			newLine();
+			newLine(false);
 		}
 
 		private void processBlockComment(Token token) {
@@ -385,7 +411,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 			// Multi-line comments: put on own line and carry over indentation to continuation lines
 			if (commentText.contains("\n")) {
 				// Ensure comment starts on its own line with proper indentation
-				newLineIfNeeded();
+				newLine(true);
 
 				// Apply indentation for the first line
 				if (atLineStart) {
@@ -409,13 +435,13 @@ public class TokenBasedFormatterImpl implements Formatter {
 					}
 				}
 				// Add newline after comment
-				newLine();
+				newLine(false);
 			}
 			else {
 				// Single-line block comment - put on own line
-				newLineIfNeeded();
+				newLine(true);
 				writeToken(token);
-				newLine();
+				newLine(false);
 			}
 		}
 
@@ -433,26 +459,15 @@ public class TokenBasedFormatterImpl implements Formatter {
 				if (prevType == SqlFormatterLexer.VALUES) {
 					// Check if VALUES is a function (after =) or a VALUES clause
 					Token beforeValues = peekBack(2);
-					if (beforeValues != null && beforeValues.getType() == SqlFormatterLexer.EQ) {
-						// VALUES(col) function in UPDATE - treat as regular function
-						newContextType = ContextType.FUNCTION;
-						isParenthesizedList = false;
-					}
-					else {
-						// VALUES (tuple) clause - newline and indent, but keep content inline
-						isParenthesizedList = true;
-						newContextType = ContextType.FUNCTION;
-					}
+					isParenthesizedList = (beforeValues == null || beforeValues.getType() != SqlFormatterLexer.EQ);
 				}
 				else if (prevType == SqlFormatterLexer.IDENTIFIER && isAfterKeyword(SqlFormatterLexer.INTO, 3)) {
 					// INSERT INTO table (columns) - newline and indent, but keep content inline
 					isParenthesizedList = true;
-					newContextType = ContextType.FUNCTION;
 				}
 				else if (prevType == SqlFormatterLexer.ON && isAfterKeyword(SqlFormatterLexer.MERGE, 10)) {
 					// MERGE ... ON (condition) - newline and indent, but keep content inline
 					isParenthesizedList = true;
-					newContextType = ContextType.FUNCTION;
 				}
 				else if (prevType == SqlFormatterLexer.AS) {
 					// CTE or subquery after AS
@@ -493,7 +508,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 
 			// For parenthesized lists (INSERT columns, VALUES tuples, MERGE ON conditions), newline before (
 			if (isParenthesizedList) {
-				newLine();
+				newLine(false);
 				baseIndent = currentContext().indent + 1;
 			}
 
@@ -511,7 +526,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 				if (shouldOperatorListBeMultiline()) {
 					Context ctx = new Context(ContextType.OPERATOR_LIST, baseIndent + 1, true, false);
 					contextStack.push(ctx);
-					newLine();
+					newLine(false);
 					baseIndent++;
 				}
 				else {
@@ -521,7 +536,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 			}
 			else {
 				// Subquery/CTE - newline and indent
-				newLine();
+				newLine(false);
 				contextStack.push(new Context(newContextType, baseIndent + 1));
 				baseIndent = currentContext().indent;
 			}
@@ -537,7 +552,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 						// Operator list - only newline if it was explicitly made multi-line
 						if (ctx.isMultiline) {
 							baseIndent = currentContext().indent;
-							newLineIfNeeded();
+							newLine(true);
 						}
 						// else: single-line list, no newline needed
 					}
@@ -546,7 +561,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 						// The closing paren should be at the same level as where the subquery was opened
 						// Since context was pushed with indent = baseIndent + 1, we dedent to ctx.indent - 1
 						baseIndent = ctx.indent - 1;
-						newLineIfNeeded();
+						newLine(true);
 					}
 				}
 			}
@@ -564,13 +579,13 @@ public class TokenBasedFormatterImpl implements Formatter {
 			};
 
 			// Always newline before SET
-			newLineIfNeeded();
+			newLine(true);
 			if (shouldListBeMultiline(terminators)) {
 				// Multi-line SET: newline after SET keyword
-				newLineIfNeeded();
+				newLine(true);
 				baseIndent = currentContext().indent;
 				writeToken(token);
-				newLine();
+				newLine(false);
 				baseIndent = currentContext().indent + 1;
 				currentContext().firstClauseElement = true;
 			}
@@ -599,22 +614,20 @@ public class TokenBasedFormatterImpl implements Formatter {
 				space();
 				writeToken(token);
 			}
-			else if (next != null && (next.getType() == SqlFormatterLexer.CONFLICT ||
-					next.getType() == SqlFormatterLexer.DUPLICATE)) {
+			else if (
+					// ON CONFLICT or ON DUPLICATE KEY - major clause
+					(next != null && (next.getType() == SqlFormatterLexer.CONFLICT || next.getType() == SqlFormatterLexer.DUPLICATE)) ||
+					// MERGE ... ON - at MERGE level (not indented)
+					(isAfterKeyword(SqlFormatterLexer.USING, 5) || isAfterKeyword(SqlFormatterLexer.MERGE, 10))
+			) {
 				// ON CONFLICT or ON DUPLICATE KEY - major clause
-				newLineIfNeeded();
-				baseIndent = currentContext().indent;
-				writeToken(token);
-			}
-			else if (isAfterKeyword(SqlFormatterLexer.USING, 5) || isAfterKeyword(SqlFormatterLexer.MERGE, 10)) {
-				// MERGE ... ON - at MERGE level (not indented)
-				newLineIfNeeded();
+				newLine(true);
 				baseIndent = currentContext().indent;
 				writeToken(token);
 			}
 			else {
 				// JOIN ON - indent +1
-				newLineIfNeeded();
+				newLine(true);
 				baseIndent = currentContext().indent + 1;
 				writeToken(token);
 				currentContext().firstClauseElement = true;
@@ -624,7 +637,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 		private void processDo(Token token) {
 			// DO UPDATE or DO NOTHING (PostgreSQL ON CONFLICT)
 			// DO is part of ON CONFLICT clause, add newline before it
-			newLineIfNeeded();
+			newLine(true);
 			baseIndent = currentContext().indent;
 			writeToken(token);
 			// UPDATE or NOTHING should stay on same line after DO
@@ -641,18 +654,9 @@ public class TokenBasedFormatterImpl implements Formatter {
 				inMergeWhenThenBlock = false;
 			}
 
-			if (inContext(ContextType.CASE_EXPR)) {
-				// CASE expression: WHEN at CASE indent level
-				newLineIfNeeded();
-				baseIndent = currentContext().indent;
-				writeToken(token);
-			}
-			else {
-				// MERGE WHEN: major clause
-				newLineIfNeeded();
-				baseIndent = currentContext().indent;
-				writeToken(token);
-			}
+			newLine(true);
+			baseIndent = currentContext().indent;
+			writeToken(token);
 		}
 
 		private void processElse(Token token) {
@@ -662,7 +666,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 
 			if (inContext(ContextType.CASE_EXPR)) {
 				// CASE expression: ELSE at CASE indent level (same as WHEN)
-				newLineIfNeeded();
+				newLine(true);
 				baseIndent = currentContext().indent;
 				writeToken(token);
 			}
@@ -685,7 +689,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 				// WHEN MATCHED THEN or WHEN NOT MATCHED THEN
 				space();
 				writeToken(token);
-				newLine();
+				newLine(false);
 				// Push a new context with +1 indent for statements inside THEN block (UPDATE, INSERT, etc.)
 				contextStack.push(new Context(ContextType.MAIN, currentContext().indent + 1));
 				inMergeWhenThenBlock = true;
@@ -712,7 +716,7 @@ public class TokenBasedFormatterImpl implements Formatter {
 			Token prev = peekBack(1);
 			if (prev != null && prev.getType() == SqlFormatterLexer.EQ) {
 				// Assignment: newline, then CASE at +1 indent
-				newLine();
+				newLine(false);
 				baseIndent = currentContext().indent + 1;
 			}
 
@@ -725,18 +729,8 @@ public class TokenBasedFormatterImpl implements Formatter {
 			// 1. Part of "NOT MATCHED" in MERGE
 			// 2. Logical NOT operator
 			// 3. Part of "IS NOT NULL"
-
-			Token next = peekAhead(1);
-			if (next != null && next.getType() == SqlFormatterLexer.MATCHED) {
-				// MERGE "WHEN NOT MATCHED"
-				space();
-				writeToken(token);
-			}
-			else {
-				// Regular NOT operator or IS NOT
-				space();
-				writeToken(token);
-			}
+			space();
+			writeToken(token);
 		}
 
 		private void processEquals(Token token) {
@@ -1007,16 +1001,11 @@ public class TokenBasedFormatterImpl implements Formatter {
 			return pos >= 0 ? tokens.get(pos) : null;
 		}
 
-		private void newLine() {
-			if (!atLineStart) {
+		// If checkIfNeeded is true the output cannot be empty, if it's false, we only check we're not at a line start
+		private void newLine(boolean checkIfNeeded) {
+			if ( !atLineStart && !(checkIfNeeded && output.isEmpty()) ) {
 				output.append(LINE_SEPARATOR);
 				atLineStart = true;
-			}
-		}
-
-		private void newLineIfNeeded() {
-			if (!atLineStart && !output.isEmpty()) {
-				newLine();
 			}
 		}
 

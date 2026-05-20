@@ -182,7 +182,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		else if ( useQueryReferenceCreateQuery() ) {
 			localSession( declaration );
 			declaration
-					.append(".createQuery(");
+					.append( isUpdate ? ".createStatement(" : ".createQuery(" );
 			createQueryReference( declaration );
 			declaration.append(")");
 		}
@@ -265,7 +265,6 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private boolean useQueryReferenceCreateQuery() {
 		return namedQueryName != null
-			&& !isUpdate
 			&& !isUsingSpecification()
 			&& useGeneratedQueryReferenceMethod();
 	}

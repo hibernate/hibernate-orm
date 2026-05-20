@@ -83,9 +83,10 @@ class DataTest {
 		assertFalse( repository.contains( "createNamedQuery(\"BookAuthorRepository.countBooksWithIsbn\", long.class)" ) );
 		assertFalse( repository.contains( "createNamedQuery(\"BookAuthorRepository.countBooksWithIsbn2\", boolean.class)" ) );
 		assertFalse( repository.contains( "createNamedQuery(\"BookAuthorRepository.withNoOrder2\", Author.class)" ) );
-		assertTrue( repository.contains( "createNamedMutationQuery(\"BookAuthorRepository.updateAuthorAddress1\")" ) );
-		assertTrue( repository.contains( "createNamedMutationQuery(\"BookAuthorRepository.updateAuthorAddress2\")" ) );
-		assertTrue( repository.contains( "createNamedMutationQuery(\"BookAuthorRepository.updateAuthorAddress3\")" ) );
+		assertTrue( repository.contains( "createStatement(BookAuthorRepository_.updateAuthorAddress1(id, name))" ) );
+		assertTrue( repository.contains( "createStatement(BookAuthorRepository_.updateAuthorAddress2(id, name))" ) );
+		assertTrue( repository.contains( "createStatement(BookAuthorRepository_.updateAuthorAddress3(id, name))" ) );
+		assertFalse( repository.contains( "createNamedMutationQuery(\"BookAuthorRepository.updateAuthorAddress" ) );
 		assertFalse( repository.contains( "_defaultDeleteWithJakartaQuery(String title)" ) );
 		assertTrue( queryMetamodel.contains( "defaultDeleteWithJakartaQuery(String title)" ) );
 		assertTrue( queryMetamodel.contains( "\"BookAuthorRepository.defaultBooksWithJakartaQuery\"" ) );

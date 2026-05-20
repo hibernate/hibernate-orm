@@ -34,21 +34,25 @@ class DataRestrictionTest {
 			DataRestrictionRepository.class
 	})
 	void generatedRepositoryAcceptsJakartaDataRestrictions() {
-		final String repository = getMetaModelSourceAsString( DataRestrictionRepository.class );
+		final String repository = getMetaModelSourceAsString( DataRestrictionRepository.class, true );
+		final String queryMetamodel = getMetaModelSourceAsString( DataRestrictionRepository.class );
 		final String metamodel = getMetaModelSourceAsString( DataRestrictionBook.class, true );
 		System.out.println( repository );
+		System.out.println( queryMetamodel );
 		System.out.println( metamodel );
 
 		assertTrue( repository.contains( "Restriction<? super DataRestrictionBook> restriction" ) );
 		assertTrue( repository.contains( "List<Restriction<? super DataRestrictionBook>> restrictions" ) );
 		assertTrue( repository.contains( "Restriction<? super DataRestrictionBook>[] restrictions" ) );
-		assertTrue( repository.contains(
-				"import static org.hibernate.query.restriction.JakartaDataRestriction.adaptRestriction;" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(restriction));" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(Restrict.all(restrictions)));" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(queryRestriction));" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(deleteRestriction));" ) );
-		assertFalse( repository.contains( "JakartaDataRestriction.adaptRestriction(" ) );
+		assertFalse( repository.contains( "TypedQueryReference<" ) );
+		assertTrue( repository.contains( "SelectionSpecification.create(DataRestrictionRepository_.query())" ) );
+		assertTrue( repository.contains( "SelectionSpecification.create(DataRestrictionRepository_.query(title))" ) );
+		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
+		assertTrue( queryMetamodel.contains( "\"DataRestrictionRepository.query\"" ) );
 		assertTrue( repository.contains( "for (var _sort : order.sorts())" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.restriction" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.queryRestriction" ) );
@@ -105,6 +109,12 @@ class DataRestrictionTest {
 		assertTrue( messages.contains(
 				"automatic '@Delete' methods accept a single Restriction parameter, not a collection or array" ) );
 		assertTrue( messages.contains( "mismatched type of restriction (should be 'Restriction<? super DataRestrictionBook>')" ) );
+		assertTrue( messages.contains(
+				"'@NativeQuery' methods may not declare Restriction or Range parameters; "
+						+ "native SQL cannot be augmented with restrictions" ) );
+		assertTrue( messages.contains(
+				"'@NativeQuery' methods may not declare Order or Sort parameters or '@OrderBy'; "
+						+ "native SQL cannot be augmented with ordering" ) );
 	}
 
 	private static File sourceFile(Class<?> type) {

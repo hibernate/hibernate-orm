@@ -37,10 +37,10 @@ class SelectionTest {
 			SelectionRepository.class
 	})
 	void generatedRepositorySupportsSelectAndFirst() {
-		final String repository = getMetaModelSourceAsString( SelectionRepository.class );
+		final String repository = getMetaModelSourceAsString( SelectionRepository.class, true );
 		System.out.println( repository );
 		assertMetamodelClassGeneratedFor( SelectionBook.class );
-		assertMetamodelClassGeneratedFor( SelectionRepository.class );
+		assertMetamodelClassGeneratedFor( SelectionRepository.class, true );
 
 		assertTrue( repository.contains( "_query.select(_entity.get(SelectionBook_.title));" ) );
 		assertTrue( repository.contains( "_query.select(_entity.get(SelectionBook_.pages));" ) );

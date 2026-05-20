@@ -425,9 +425,18 @@ public class HibernateProcessor extends AbstractProcessor {
 			context.logMessage( Diagnostic.Kind.OTHER, "Redoing element '" + elementName + "'" );
 			final TypeElement typeElement = context.getElementUtils().getTypeElement( elementName );
 			try {
+				final Element parent = typeElement.getEnclosingElement();
+				if ( hasAnnotation( typeElement, JD_REPOSITORY ) && hasRepositoryQueryReferenceMethods( typeElement ) ) {
+					final AnnotationMetaEntity queryMetaEntity =
+							AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
+									parentMetadata( parent, context::getMetaEntity ),
+									null );
+					context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
+				}
 				final AnnotationMetaEntity metaEntity =
-						AnnotationMetaEntity.create( typeElement, context,
-								parentMetadata( typeElement, context::getMetaEntity ) );
+						AnnotationMetaEntity.createRepository( typeElement, context,
+								repositoryParentMetadata( parent ),
+								null );
 				context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				context.removeElementToRedo( elementName );
 			}
@@ -468,6 +477,11 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 	}
 
+	private @Nullable AnnotationMetaEntity repositoryParentMetadata(@Nullable Element parent) {
+		final AnnotationMetaEntity dataParent = parentMetadata( parent, context::getDataMetaEntity );
+		return dataParent == null ? parentMetadata( parent, context::getMetaEntity ) : dataParent;
+	}
+
 	private boolean hasPackageAnnotation(Element element, String annotation) {
 		final PackageElement pack = context.getElementUtils().getPackageOf( element ); // null for module descriptor
 		return pack != null && hasAnnotation( pack, annotation );
@@ -498,9 +512,16 @@ public class HibernateProcessor extends AbstractProcessor {
 					|| provider.getValue().toString().isEmpty()
 					|| provider.getValue().toString().equalsIgnoreCase("hibernate") ) {
 					context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
+					if ( hasRepositoryQueryReferenceMethods( typeElement ) ) {
+						final AnnotationMetaEntity queryMetaEntity =
+								AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
+										parentMetadata( parent, context::getMetaEntity ),
+										primaryEntity );
+						context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
+					}
 					final AnnotationMetaEntity metaEntity =
-							AnnotationMetaEntity.create( typeElement, context,
-									parentMetadata( parent, context::getMetaEntity ),
+							AnnotationMetaEntity.createRepository( typeElement, context,
+									repositoryParentMetadata( parent ),
 									primaryEntity );
 					if ( metaEntity.isInitialized() ) {
 						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
@@ -511,9 +532,16 @@ public class HibernateProcessor extends AbstractProcessor {
 			else {
 				if ( isImplicitRepository( typeElement ) ) {
 					context.logMessage( Diagnostic.Kind.OTHER, "Processing implicit repository class '" + element + "'" );
+					if ( hasRepositoryQueryReferenceMethods( typeElement ) ) {
+						final AnnotationMetaEntity queryMetaEntity =
+								AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
+										parentMetadata( parent, context::getMetaEntity ),
+										primaryEntity );
+						context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
+					}
 					final AnnotationMetaEntity metaEntity =
-							AnnotationMetaEntity.create( typeElement, context,
-									parentMetadata( parent, context::getMetaEntity ),
+							AnnotationMetaEntity.createRepository( typeElement, context,
+									repositoryParentMetadata( parent ),
 									primaryEntity );
 					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				}
@@ -569,6 +597,29 @@ public class HibernateProcessor extends AbstractProcessor {
 			}
 		}
 		return false;
+	}
+
+	private boolean hasRepositoryQueryReferenceMethods(TypeElement typeElement) {
+		for ( Element member : context.getAllMembers( typeElement ) ) {
+			if ( member instanceof ExecutableElement method
+					&& !isCompanionMethod( method )
+					&& !hasReactiveReturnType( method )
+					&& hasAnnotation( method, HQL, SQL, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY )
+					&& ( method.isDefault() || hasAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY ) ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean isCompanionMethod(ExecutableElement method) {
+		return method.getEnclosingElement() instanceof TypeElement typeElement
+			&& typeElement.getQualifiedName().toString().endsWith( "$" );
+	}
+
+	private static boolean hasReactiveReturnType(ExecutableElement method) {
+		final String returnType = method.getReturnType().toString();
+		return returnType.equals( Constants.UNI ) || returnType.startsWith( Constants.UNI + "<" );
 	}
 
 	private void createMetaModelClasses() {

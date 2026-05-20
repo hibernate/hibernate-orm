@@ -20,9 +20,9 @@ class SuperDaoTest {
 	@WithClasses({ Book.class, SuperDao.class, Dao.class })
 	void testQueryMethod() {
 //		System.out.println( TestUtil.getMetaModelSourceAsString( SuperDao.class ) );
-		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class, true ) );
 		assertMetamodelClassGeneratedFor( Book.class );
 //		assertMetamodelClassGeneratedFor( SuperDao.class );
-		assertMetamodelClassGeneratedFor( Dao.class );
+		assertMetamodelClassGeneratedFor( Dao.class, true );
 	}
 }

@@ -19,12 +19,12 @@ class VersionedTest {
 	@Test
 	@WithClasses({ Versioned.class, VersionedRepo.class, SpecialVersioned.class, SpecialVersionedRepo.class })
 	void test() {
-		System.out.println( getMetaModelSourceAsString( VersionedRepo.class ) );
+		System.out.println( getMetaModelSourceAsString( VersionedRepo.class, true ) );
 		assertMetamodelClassGeneratedFor( Versioned.class, true );
 		assertMetamodelClassGeneratedFor( Versioned.class );
 		assertMetamodelClassGeneratedFor( SpecialVersioned.class, true );
 		assertMetamodelClassGeneratedFor( SpecialVersioned.class );
-		assertMetamodelClassGeneratedFor( VersionedRepo.class );
-		assertMetamodelClassGeneratedFor( SpecialVersionedRepo.class );
+		assertMetamodelClassGeneratedFor( VersionedRepo.class, true );
+		assertMetamodelClassGeneratedFor( SpecialVersionedRepo.class, true );
 	}
 }

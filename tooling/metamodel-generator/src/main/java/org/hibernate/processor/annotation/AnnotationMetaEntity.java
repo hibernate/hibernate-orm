@@ -131,6 +131,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static final String ID_CLASS_MEMBER_NAME = "<ID_CLASS>";
 
 	private final ImportContext importContext;
+	private final @Nullable AnnotationMeta parent;
 	private final TypeElement element;
 	private final Map<String, MetaAttribute> members;
 	private final Context context;
@@ -140,6 +141,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final boolean springInjection;
 	private String qualifiedName;
 	private final boolean jakartaDataStaticModel;
+	private final boolean repositoryGeneration;
+	private final boolean repositoryQueryMetamodel;
 
 	private AccessTypeInformation entityAccessTypeInfo;
 
@@ -190,18 +193,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			boolean jakartaDataStaticMetamodel,
 			@Nullable AnnotationMeta parent,
 			@Nullable TypeElement primaryEntity) {
+		this( element, context, managed, jakartaDataStaticMetamodel, parent, primaryEntity, true, false );
+	}
+
+	private AnnotationMetaEntity(
+			TypeElement element, Context context, boolean managed,
+			boolean jakartaDataStaticMetamodel,
+			@Nullable AnnotationMeta parent,
+			@Nullable TypeElement primaryEntity,
+			boolean repositoryGeneration,
+			boolean repositoryQueryMetamodel) {
 		this.element = element;
 		this.context = context;
+		this.parent = parent;
 		this.managed = managed;
 		this.primaryEntity = primaryEntity;
+		this.repositoryGeneration = repositoryGeneration;
+		this.repositoryQueryMetamodel = repositoryQueryMetamodel;
 		members = new LinkedHashMap<>();
 		quarkusInjection = context.isQuarkusInjection();
 		springInjection = context.isSpringInjection();
 		importContext = parent != null ? parent : new ImportContextImpl( getPackageName( context, element ) );
 		jakartaDataStaticModel = jakartaDataStaticMetamodel;
-		importContext.importType(
-				getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ),
-						jakartaDataStaticModel ) );
 		if ( !element.getQualifiedName().toString().endsWith( "$" ) ) {
 			importContext.importType( element.getQualifiedName().toString() );
 		}
@@ -212,8 +225,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return create( element, context, false, false, false, parent, primaryEntity );
 	}
 
+	public static AnnotationMetaEntity createRepository(TypeElement element, Context context,
+			@Nullable AnnotationMetaEntity parent, @Nullable TypeElement primaryEntity) {
+		final AnnotationMetaEntity annotationMetaEntity =
+				new AnnotationMetaEntity( element, context, false, false, parent, primaryEntity, true, false );
+		if ( parent != null ) {
+			parent.addInnerClass( annotationMetaEntity );
+		}
+		annotationMetaEntity.init();
+		return annotationMetaEntity;
+	}
+
 	public static AnnotationMetaEntity create(TypeElement element, Context context, @Nullable AnnotationMetaEntity parent) {
 		return create( element, context, false, false, false, parent, null );
+	}
+
+	public static AnnotationMetaEntity createQueryMetamodel(TypeElement element, Context context,
+			@Nullable AnnotationMetaEntity parent, @Nullable TypeElement primaryEntity) {
+		final AnnotationMetaEntity annotationMetaEntity =
+				new AnnotationMetaEntity( element, context, false, false, parent, primaryEntity, false, true );
+		if ( parent != null ) {
+			parent.addInnerClass( annotationMetaEntity );
+		}
+		annotationMetaEntity.init();
+		return annotationMetaEntity;
 	}
 
 	public static AnnotationMetaEntity create(
@@ -266,7 +301,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private String getConstructorName() {
-		return getSimpleName() + '_';
+		return repository ? '_' + getSimpleName() : getSimpleName() + '_';
 	}
 
 	@Override
@@ -275,6 +310,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			qualifiedName = element.getQualifiedName().toString();
 		}
 		return qualifiedName;
+	}
+
+	public String getGeneratedClassFullyQualifiedName() {
+		return getGeneratedClassFullyQualifiedName( jakartaDataStaticModel || repository );
+	}
+
+	public String getQueryMetamodelFullyQualifiedName() {
+		return TypeUtils.getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ), false );
+	}
+
+	private String getGeneratedClassFullyQualifiedName(boolean prefixed) {
+		if ( parent instanceof AnnotationMetaEntity parentMetaEntity
+				&& element.getEnclosingElement() instanceof TypeElement ) {
+			return parentMetaEntity.getGeneratedClassFullyQualifiedName()
+					+ "." + getGeneratedSimpleName( prefixed );
+		}
+		else {
+			return TypeUtils.getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ),
+					prefixed );
+		}
+	}
+
+	private String getGeneratedSimpleName(boolean prefixed) {
+		return prefixed ? '_' + getSimpleName() : getSimpleName() + '_';
 	}
 
 	@Override
@@ -405,6 +464,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type '" + getQualifiedName() + "'" );
 
 		setupSession();
+		importContext.importType( getGeneratedClassFullyQualifiedName() );
 
 		final List<ExecutableElement> queryMethods = new ArrayList<>();
 		final List<ExecutableElement> staticQueryMethods = new ArrayList<>();
@@ -416,10 +476,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			for ( ExecutableElement method : methodsOfClass ) {
 				if ( validateJakartaDataMethodAnnotations( method ) ) {
 					if ( hasQueryStringAnnotation( method ) ) {
-						if ( method.isDefault() ) {
-							staticQueryMethods.add( method );
-						}
-						else {
+						if ( !method.isDefault() ) {
 							queryMethods.add( method );
 						}
 					}
@@ -468,19 +525,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			determineAccessTypeForHierarchy( element, context );
 			entityAccessTypeInfo = castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
+			if ( repositoryQueryMetamodel && primaryEntity == null ) {
+				primaryEntity = primaryEntity( element );
+			}
 
 			final List<VariableElement> fieldsOfClass = fieldsIn( element.getEnclosedElements() );
-			final List<ExecutableElement> methodsOfClass = methodsIn( element.getEnclosedElements() );
+			final List<ExecutableElement> methodsOfClass =
+					methodsIn( repositoryQueryMetamodel
+							? context.getAllMembers( element )
+							: element.getEnclosedElements() );
 			final List<ExecutableElement> gettersAndSettersOfClass = new ArrayList<>();
 			for ( ExecutableElement method : methodsOfClass ) {
-				if ( element.getTypeParameters().isEmpty()
-						&& containsAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY ) ) {
+				if ( shouldGenerateStaticQueryMethodInMetamodel( method ) ) {
 					staticQueryMethods.add( method );
 				}
 				if ( isGetterOrSetter( method ) ) {
 					gettersAndSettersOfClass.add( method );
 				}
-				else if ( element.getTypeParameters().isEmpty()
+				else if ( !repositoryQueryMetamodel
+						&& element.getTypeParameters().isEmpty()
 						&& containsAnnotation( method, HQL, SQL, FIND ) ) {
 					queryMethods.add( method );
 				}
@@ -1031,7 +1094,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void setupSession() {
-		if ( element.getTypeParameters().isEmpty() ) {
+		if ( repositoryGeneration && element.getTypeParameters().isEmpty() ) {
 			jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
 			final boolean statefulDataRepository =
 					jakartaDataRepository && hasStatefulLifecycleMethods( element );
@@ -1759,6 +1822,33 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return containsAnnotation( method, HQL, SQL, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY );
 	}
 
+	private boolean canGenerateStaticQueryMethod(ExecutableElement method) {
+		return !isCompanionMethod( method )
+			&& ( method.isDefault() || !isReactive() && hasNamedRepositoryQueryAnnotation( method ) );
+	}
+
+	private boolean shouldGenerateStaticQueryMethodInMetamodel(ExecutableElement method) {
+		return element.getTypeParameters().isEmpty()
+			&& !hasReactiveReturnType( method )
+			&& ( repositoryQueryMetamodel
+					? canGenerateStaticQueryMethod( method ) && hasQueryStringAnnotation( method )
+					: containsAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY ) );
+	}
+
+	private static boolean hasReactiveReturnType(ExecutableElement method) {
+		final String returnType = method.getReturnType().toString();
+		return returnType.equals( UNI ) || returnType.startsWith( UNI + "<" );
+	}
+
+	private static boolean isCompanionMethod(ExecutableElement method) {
+		return method.getEnclosingElement() instanceof TypeElement typeElement
+			&& typeElement.getQualifiedName().toString().endsWith( "$" );
+	}
+
+	private static boolean hasNamedRepositoryQueryAnnotation(ExecutableElement method) {
+		return containsAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY );
+	}
+
 	private void addStaticQueryMethods(List<ExecutableElement> queryMethods) {
 		for ( ExecutableElement method : queryMethods ) {
 			addStaticQueryMethod( method );
@@ -1767,27 +1857,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addStaticQueryMethod(ExecutableElement method) {
 		final String methodName = method.getSimpleName().toString();
-		final String generatedMethodName =
-				repository && method.isDefault() ? '_' + methodName : methodName;
 		final AnnotationMirror hql = getAnnotationMirror( method, HQL );
 		if ( hql != null ) {
-			addStaticQueryMethod( method, generatedMethodName, hql, false );
+			addStaticQueryMethod( method, methodName, hql, false );
 		}
 		final AnnotationMirror sql = getAnnotationMirror( method, SQL );
 		if ( sql != null ) {
-			addStaticQueryMethod( method, generatedMethodName, sql, true );
+			addStaticQueryMethod( method, methodName, sql, true );
 		}
 		final AnnotationMirror jakartaQuery = getAnnotationMirror( method, JAKARTA_QUERY );
 		if ( jakartaQuery != null ) {
-			addStaticQueryMethod( method, generatedMethodName, jakartaQuery, false );
+			addStaticQueryMethod( method, methodName, jakartaQuery, false );
 		}
 		final AnnotationMirror nativeQuery = getAnnotationMirror( method, NATIVE_QUERY );
 		if ( nativeQuery != null ) {
-			addStaticQueryMethod( method, generatedMethodName, nativeQuery, true );
+			addStaticQueryMethod( method, methodName, nativeQuery, true );
 		}
 		final AnnotationMirror jdql = getAnnotationMirror( method, JD_QUERY );
 		if ( jdql != null ) {
-			addStaticQueryMethod( method, generatedMethodName, jdql, false );
+			addStaticQueryMethod( method, methodName, jdql, false );
 		}
 	}
 
@@ -1800,10 +1888,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( value != null && value.getValue() instanceof String queryString ) {
 			final TypeMirror methodReturnType = memberMethodType( method ).getReturnType();
 			final StaticQueryReturnType queryReturnType =
-					staticQueryReturnType( method, methodReturnType, mirror, value );
+					staticQueryReturnType( method, methodReturnType, mirror, value, queryString );
 			if ( queryReturnType != null ) {
 				final List<String> paramNames = staticQueryParameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
+				if ( isNative && ( !repository || method.isDefault() ) ) {
+					validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
+				}
+				final String processedQuery =
+						staticQueryValidationString( method, queryReturnType.validationReturnType, mirror, queryString );
 				checkParameters( method, queryReturnType.validationReturnType,
 						paramNames, paramTypes, mirror, value, queryString, isNative );
 				if ( isNative ) {
@@ -1811,23 +1904,50 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				else {
 					validateHql( method, queryReturnType.validationReturnType,
-							mirror, value, queryString, paramNames, paramTypes );
+							mirror, value, processedQuery, paramNames, paramTypes );
 				}
-				final StaticQueryMethod attribute =
-						new StaticQueryMethod(
-								this,
-								method,
-								generatedMethodName,
-								method.getSimpleName().toString(),
-								queryReturnType.statement,
-								queryReturnType.resultTypeName,
-								queryReturnType.resultTypeClass,
-								paramNames,
-								paramTypes,
-								getAnnotationMirror( method, QUERY_OPTIONS )
-						);
-				putMember( attribute.getPropertyName() + paramTypes, attribute );
+				if ( canBindReferenceArguments( queryString, isNative, paramNames, paramTypes ) ) {
+					final List<String> referenceParamNames = queryParameterNames( paramNames, paramTypes );
+					final List<String> referenceParamTypes = queryParameterTypes( paramTypes );
+					final StaticQueryMethod attribute =
+							new StaticQueryMethod(
+									this,
+									method,
+									generatedMethodName,
+									method.getSimpleName().toString(),
+									queryReturnType.statement,
+									isNative,
+									queryReturnType.resultTypeName,
+									queryReturnType.resultTypeClass,
+									referenceParamNames,
+									referenceParamTypes,
+									getAnnotationMirror( method, QUERY_OPTIONS )
+							);
+					putMember( attribute.getPropertyName() + referenceParamTypes, attribute );
+				}
 			}
+		}
+	}
+
+	private String staticQueryValidationString(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			AnnotationMirror mirror,
+			String queryString) {
+		if ( annotationTypeMatches( mirror, JD_QUERY ) || annotationTypeMatches( mirror, JAKARTA_QUERY ) ) {
+			final ResultSelection querySelection = querySelection( method, returnType, mirror, queryString );
+			final String selectedQueryString =
+					querySelection == null
+							? queryString
+							: addSelectClause( queryString, querySelection );
+			final DeclaredType declaredReturnType =
+					returnType != null && returnType.getKind() == TypeKind.DECLARED
+							? (DeclaredType) returnType
+							: null;
+			return addFromClauseIfNecessary( selectedQueryString, implicitEntityName( declaredReturnType ) );
+		}
+		else {
+			return queryString;
 		}
 	}
 
@@ -1835,9 +1955,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			ExecutableElement method,
 			TypeMirror methodReturnType,
 			AnnotationMirror mirror,
-			AnnotationValue value) {
+			AnnotationValue value,
+			String queryString) {
+		final boolean statement = isInsertUpdateDelete( queryString );
 		return switch ( methodReturnType.getKind() ) {
-			case VOID, INT, LONG -> new StaticQueryReturnType( true, null, null, methodReturnType );
+			case VOID -> statement
+					? new StaticQueryReturnType( true, null, null, methodReturnType )
+					: illegalStaticQueryReturnType( method, mirror, value );
+			case BOOLEAN, BYTE, SHORT, INT, LONG, CHAR, FLOAT, DOUBLE -> {
+				if ( statement ) {
+					yield switch ( methodReturnType.getKind() ) {
+						case BOOLEAN, INT, LONG -> new StaticQueryReturnType( true, null, null, methodReturnType );
+						default -> illegalStaticQueryReturnType( method, mirror, value );
+					};
+				}
+				else {
+					final TypeMirror queryResultType = boxedType( methodReturnType );
+					yield new StaticQueryReturnType( false,
+							typeAsString( queryResultType ),
+							returnTypeClass( queryResultType ),
+							queryResultType );
+				}
+			}
 			case DECLARED -> {
 				final TypeMirror queryResultType = staticQueryResultType( (DeclaredType) methodReturnType );
 				resultType( method, queryResultType, mirror, value );
@@ -1846,34 +1985,59 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						returnTypeClass( queryResultType ),
 						queryResultType );
 			}
-			case ARRAY -> new StaticQueryReturnType( false,
-					typeAsString( methodReturnType ),
-					returnTypeClass( methodReturnType ),
-					methodReturnType );
-			default -> {
-				message( method, mirror, value,
-						"static query method must return a referenceable query result type, or 'void', 'int', or 'long'",
-						Diagnostic.Kind.ERROR );
-				yield null;
+			case ARRAY -> {
+				final TypeMirror queryResultType = staticArrayQueryResultType( (ArrayType) methodReturnType );
+				yield new StaticQueryReturnType( false,
+						typeAsString( queryResultType ),
+						returnTypeClass( queryResultType ),
+						queryResultType );
 			}
+			default -> illegalStaticQueryReturnType( method, mirror, value );
 		};
+	}
+
+	private @Nullable StaticQueryReturnType illegalStaticQueryReturnType(
+			ExecutableElement method,
+			AnnotationMirror mirror,
+			AnnotationValue value) {
+		message( method, mirror, value,
+				"static query method must return a referenceable query result type,"
+				+ " or a legal mutation result type: 'void', 'boolean', 'int', or 'long'",
+				Diagnostic.Kind.ERROR );
+		return null;
+	}
+
+	private TypeMirror staticArrayQueryResultType(ArrayType methodReturnType) {
+		final TypeMirror componentType = methodReturnType.getComponentType();
+		final TypeElement object = context.getElementUtils().getTypeElement( JAVA_OBJECT );
+		return isSameType( object.asType(), componentType ) ? methodReturnType : componentType;
 	}
 
 	private TypeMirror staticQueryResultType(DeclaredType methodReturnType) {
 		final TypeElement typeElement = (TypeElement) methodReturnType.asElement();
 		final String typeName = typeElement.getQualifiedName().toString();
-		if ( LIST.equals( typeName ) || STREAM.equals( typeName ) ) {
-			final List<? extends TypeMirror> typeArguments = methodReturnType.getTypeArguments();
-			if ( typeArguments.isEmpty() ) {
-				return context.getElementUtils().getTypeElement( JAVA_OBJECT ).asType();
-			}
-			else {
-				return typeArguments.get( 0 );
-			}
+		final List<? extends TypeMirror> typeArguments = methodReturnType.getTypeArguments();
+		if ( isStaticQueryContainerType( typeName ) ) {
+			return typeArguments.isEmpty()
+					? context.getElementUtils().getTypeElement( JAVA_OBJECT ).asType()
+					: typeArguments.get( 0 );
 		}
 		else {
 			return methodReturnType;
 		}
+	}
+
+	private static boolean isStaticQueryContainerType(String typeName) {
+		return LIST.equals( typeName )
+			|| STREAM.equals( typeName )
+			|| OPTIONAL.equals( typeName )
+			|| QUERY.equals( typeName )
+			|| TYPED_QUERY.equals( typeName )
+			|| HIB_QUERY.equals( typeName )
+			|| HIB_SELECTION_QUERY.equals( typeName )
+			|| HIB_KEYED_RESULT_LIST.equals( typeName )
+			|| JD_PAGE.equals( typeName )
+			|| JD_CURSORED_PAGE.equals( typeName );
 	}
 
 	private static final class StaticQueryReturnType {
@@ -2028,27 +2192,27 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void validateFirst(ExecutableElement method) {
 		final AnnotationMirror first = getAnnotationMirror( method, JD_FIRST );
-		if ( first == null ) {
-			return;
-		}
-		if ( !hasAnnotation( method, JD_FIND, JD_QUERY ) ) {
-			message( method, first,
-					"'@First' may only be used on Jakarta Data '@Find' or '@Query' methods",
-					Diagnostic.Kind.ERROR );
-		}
-		final AnnotationValue value = getAnnotationValue( first );
-		if ( value != null && value.getValue() instanceof Integer limit && limit <= 0 ) {
-			message( method, first, value,
-					"'@First' value must be greater than 0",
-					Diagnostic.Kind.ERROR );
-		}
-		for ( VariableElement parameter : method.getParameters() ) {
-			final TypeMirror parameterType = parameter.asType();
-			if ( typeNameEquals( parameterType, JD_PAGE_REQUEST ) || typeNameEquals( parameterType, JD_LIMIT ) ) {
-				message( parameter,
-						"'@First' may not be combined with a parameter of type '"
-						+ ((TypeElement) ((DeclaredType) parameterType).asElement()).getQualifiedName() + "'",
+		if ( first != null ) {
+			if ( !hasAnnotation( method, JD_FIND, JD_QUERY ) ) {
+				message( method, first,
+						"'@First' may only be used on Jakarta Data '@Find' or '@Query' methods",
 						Diagnostic.Kind.ERROR );
+			}
+			final AnnotationValue value = getAnnotationValue( first );
+			if ( value != null && value.getValue() instanceof Integer limit && limit <= 0 ) {
+				message( method, first, value,
+						"'@First' value must be greater than 0",
+						Diagnostic.Kind.ERROR );
+			}
+			for ( VariableElement parameter : method.getParameters() ) {
+				final TypeMirror parameterType = parameter.asType();
+				if ( typeNameEquals( parameterType, JD_PAGE_REQUEST )
+						|| typeNameEquals( parameterType, JD_LIMIT ) ) {
+					message( parameter,
+							"'@First' may not be combined with a parameter of type '"
+							+ ((TypeElement) ((DeclaredType) parameterType).asElement()).getQualifiedName() + "'",
+							Diagnostic.Kind.ERROR );
+				}
 			}
 		}
 	}
@@ -3983,6 +4147,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		final List<String> paramNames = parameterNames( method );
 		final List<String> paramTypes = parameterTypes( method );
+		if ( isNative ) {
+			validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
+		}
 
 		// now check that the query has a parameter for every method parameter
 		checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString, isNative );
@@ -4033,6 +4200,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						this, method,
 						method.getSimpleName().toString(),
 						processedQuery,
+						namedRepositoryQueryName( method, mirror ),
 						returnType == null ? null : returnType.toString(),
 						returnType == null ? null : returnTypeClass( returnType ),
 						containerTypeName,
@@ -4041,6 +4209,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						paramTypes,
 						mutation,
 						isNative,
+						generatedQueryReferenceMethod( method, queryString, isNative, paramNames, paramTypes ),
 						repository,
 						sessionType[0],
 						sessionType[1],
@@ -4049,8 +4218,66 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						jakartaDataRepository,
 						fullReturnType( method ),
 						hasAnnotation( method, NULLABLE )
-				);
+					);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
+	}
+
+	private void validateNativeQueryHasNoDynamicAugmentation(
+			ExecutableElement method,
+			AnnotationMirror mirror,
+			List<String> paramTypes) {
+		if ( paramTypes.stream().anyMatch( AnnotationMetaEntity::isRestrictionLikeParam ) ) {
+			message( method, mirror,
+					"'@NativeQuery' methods may not declare Restriction or Range parameters; "
+							+ "native SQL cannot be augmented with restrictions",
+					Diagnostic.Kind.ERROR );
+		}
+		if ( hasAnnotation( method, JD_ORDER_BY, JD_ORDER_BY_LIST )
+				|| paramTypes.stream().anyMatch( AnnotationMetaEntity::isOrderingParam ) ) {
+			message( method, mirror,
+					"'@NativeQuery' methods may not declare Order or Sort parameters or '@OrderBy'; "
+							+ "native SQL cannot be augmented with ordering",
+					Diagnostic.Kind.ERROR );
+		}
+	}
+
+	private static boolean isRestrictionLikeParam(String paramType) {
+		return isRestrictionParam( paramType )
+			|| isRangeParam( paramType );
+	}
+
+	private static boolean isOrderingParam(String paramType) {
+		return isOrderParam( paramType )
+			|| isOrderArrayParameter( paramType );
+	}
+
+	private boolean generatedQueryReferenceMethod(
+			ExecutableElement method,
+			String queryString,
+			boolean isNative,
+			List<String> paramNames,
+			List<String> paramTypes) {
+		return canGenerateStaticQueryMethod( method )
+			&& repository
+			&& !isReactive()
+			&& canBindReferenceArguments( queryString, isNative, paramNames, paramTypes )
+			&& canBindReferenceArguments( queryString, isNative, staticQueryParameterNames( method ), paramTypes );
+	}
+
+	private @Nullable String namedRepositoryQueryName(ExecutableElement method, AnnotationMirror mirror) {
+		return repository && isNamedRepositoryQueryAnnotation( mirror ) ? staticQueryName( method ) : null;
+	}
+
+	private static boolean isNamedRepositoryQueryAnnotation(AnnotationMirror mirror) {
+		final String annotationName =
+				( (TypeElement) mirror.getAnnotationType().asElement() ).getQualifiedName().toString();
+		return JAKARTA_QUERY.equals( annotationName )
+			|| NATIVE_QUERY.equals( annotationName )
+			|| JD_QUERY.equals( annotationName );
+	}
+
+	private static String staticQueryName(ExecutableElement method) {
+		return method.getEnclosingElement().getSimpleName() + "." + method.getSimpleName();
 	}
 
 	private String fullReturnType(ExecutableElement method) {
@@ -5171,6 +5398,89 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& !isSpecialParam( type );
 	}
 
+	static boolean canBindReferenceArguments(
+			String query, boolean isNative, List<String> paramNames, List<String> paramTypes) {
+		final @Nullable NativeParameters nativeParameters =
+				isNative ? nativeParameters( query ) : null;
+		if ( hasNamedReferenceParameters( query, nativeParameters, paramNames, paramTypes ) ) {
+			return !hasPositionalReferenceParameters( query, nativeParameters );
+		}
+		else {
+			return positionalReferenceParametersMatch( query, nativeParameters, paramTypes );
+		}
+	}
+
+	private static boolean hasNamedReferenceParameters(
+			String query,
+			@Nullable NativeParameters nativeParameters,
+			List<String> paramNames,
+			List<String> paramTypes) {
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			if ( !isSpecialParam( paramTypes.get( i ) )
+					&& hasNamedParameter( query, nativeParameters, paramNames.get( i ) ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean hasNamedParameter(String query, @Nullable NativeParameters nativeParameters, String param) {
+		return nativeParameters == null
+				? Pattern.compile( ".*:" + param + "\\b.*", Pattern.DOTALL )
+						.matcher( query ).matches()
+				: nativeParameters.hasNamedParameter( param );
+	}
+
+	private static boolean hasPositionalReferenceParameters(String query, @Nullable NativeParameters nativeParameters) {
+		return nativeParameters == null
+				? Pattern.compile( ".*\\?\\d+\\b.*", Pattern.DOTALL )
+						.matcher( query ).matches()
+				: nativeParameters.hasPositionalParameters();
+	}
+
+	private static boolean positionalReferenceParametersMatch(
+			String query, @Nullable NativeParameters nativeParameters, List<String> paramTypes) {
+		int referencePosition = 0;
+		for ( int i = 0; i < paramTypes.size(); i++ ) {
+			if ( !isSpecialParam( paramTypes.get( i ) ) ) {
+				referencePosition++;
+			}
+			if ( hasPositionalParameter( query, nativeParameters, i + 1 )
+					&& referencePosition != i + 1 ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean hasPositionalParameter(
+			String query, @Nullable NativeParameters nativeParameters, int position) {
+		return nativeParameters == null
+				? Pattern.compile( ".*\\?" + position + "\\b.*", Pattern.DOTALL )
+						.matcher( query ).matches()
+				: nativeParameters.hasPositionalParameter( position );
+	}
+
+	static List<String> queryParameterNames(List<String> paramNames, List<String> paramTypes) {
+		final List<String> names = new ArrayList<>();
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			if ( !isSpecialParam( paramTypes.get( i ) ) ) {
+				names.add( paramNames.get( i ) );
+			}
+		}
+		return names;
+	}
+
+	static List<String> queryParameterTypes(List<String> paramTypes) {
+		final List<String> types = new ArrayList<>();
+		for ( String type : paramTypes ) {
+			if ( !isSpecialParam( type ) ) {
+				types.add( type );
+			}
+		}
+		return types;
+	}
+
 	private static boolean hasParameter(String hql, int i, String param) {
 		return Pattern.compile( ".*(:" + param + "|\\?" + i + ")\\b.*", Pattern.DOTALL )
 				.matcher( hql ).matches();
@@ -5217,6 +5527,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		private boolean hasParameter(int position, String name) {
 			return names.contains( name )
 				|| positions.contains( position )
+				|| position <= ordinalCount;
+		}
+
+		private boolean hasNamedParameter(String name) {
+			return names.contains( name );
+		}
+
+		private boolean hasPositionalParameters() {
+			return !positions.isEmpty()
+				|| ordinalCount > 0;
+		}
+
+		private boolean hasPositionalParameter(int position) {
+			return positions.contains( position )
 				|| position <= ordinalCount;
 		}
 	}

@@ -4,9 +4,6 @@
  */
 package org.hibernate.boot.query;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -52,27 +49,7 @@ public interface NamedSelectionDefinition<R>
 
 	Locking.FollowOn getFollowOnLockingStrategy();
 
-	@Override
-	default LockModeType getLockMode() {
-		return getHibernateLockMode() == null ? LockModeType.NONE : getHibernateLockMode().toJpaLockMode();
-	}
-
-	@Override
-	default PessimisticLockScope getPessimisticLockScope() {
-		return getLockScope();
-	}
-
 	Integer getFetchSize();
-
-	@Override
-	default CacheRetrieveMode getCacheRetrieveMode() {
-		return getCacheMode() == null ? null : getCacheMode().getJpaRetrieveMode();
-	}
-
-	@Override
-	default CacheStoreMode getCacheStoreMode() {
-		return getCacheMode() == null ? null : getCacheMode().getJpaStoreMode();
-	}
 
 	@Override
 	String getEntityGraphName();

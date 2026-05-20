@@ -4,11 +4,7 @@
  */
 package org.hibernate.query.specification.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -94,26 +90,6 @@ public class ExistsProjectionSpecificationImpl<T> implements SimpleProjectionSpe
 	@Override
 	public Class<Boolean> getResultType() {
 		return Boolean.class;
-	}
-
-	@Override
-	public CacheRetrieveMode getCacheRetrieveMode() {
-		return null;
-	}
-
-	@Override
-	public CacheStoreMode getCacheStoreMode() {
-		return null;
-	}
-
-	@Override
-	public LockModeType getLockMode() {
-		return null;
-	}
-
-	@Override
-	public PessimisticLockScope getPessimisticLockScope() {
-		return null;
 	}
 
 	@Override

@@ -34,6 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+import static org.hibernate.processor.ClassWriter.getFullyQualifiedClassName;
 
 /**
  * @author Max Andersen
@@ -361,7 +362,7 @@ public final class Context {
 	}
 
 	public void addMetaAuxiliary(String qualifiedName, Metamodel metamodel) {
-		metaAuxiliaries.put( qualifiedName, metamodel);
+		metaAuxiliaries.put( getFullyQualifiedClassName( metamodel ), metamodel );
 	}
 
 	public void addAccessTypeInformation(String qualifiedName, AccessTypeInformation info) {
@@ -378,11 +379,11 @@ public final class Context {
 
 	void markGenerated(Metamodel metamodel) {
 		generatedModelClasses.add( metamodel );
-		generatedClassNames.add( ClassWriter.getFullyQualifiedClassName( metamodel ));
+		generatedClassNames.add( getFullyQualifiedClassName( metamodel ) );
 	}
 
 	boolean isAlreadyGenerated(Metamodel metamodel) {
-		return generatedModelClasses.contains( metamodel );
+		return generatedClassNames.contains( getFullyQualifiedClassName( metamodel ) );
 	}
 
 	public Set<CharSequence> getElementsToRedo() {

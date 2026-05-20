@@ -23,10 +23,10 @@ class ProcessingOrderTest {
 	@Test
 	@WithClasses({Post.class, PostRepository.class, Topic.class})
 	void test() {
-		assertMetamodelClassGeneratedFor( PostRepository.class );
+		assertMetamodelClassGeneratedFor( PostRepository.class, true );
 
-		assertPresenceOfMethodInMetamodelFor( PostRepository.class, "getPostsByTopic", Topic.class );
-		final Method method = getMethodFromMetamodelFor( PostRepository.class, "getPostsByTopic", Topic.class );
+		assertPresenceOfMethodInMetamodelFor( PostRepository.class, true, "getPostsByTopic", Topic.class );
+		final Method method = getMethodFromMetamodelFor( PostRepository.class, true, "getPostsByTopic", Topic.class );
 		assertEquals( Topic.class, method.getParameterTypes()[0] );
 		if ( method.getGenericReturnType() instanceof ParameterizedType parameterizedType ) {
 			assertEquals( List.class, parameterizedType.getRawType() );

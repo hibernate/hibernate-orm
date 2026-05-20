@@ -36,10 +36,10 @@ class StatefulRepositoryTest {
 	@Test
 	@WithClasses({ StatefulBook.class, StatefulBookRepository.class })
 	void statefulRepositoryUsesStatefulSessionAndLifecycleOperations() {
-		final String repository = getMetaModelSourceAsString( StatefulBookRepository.class );
+		final String repository = getMetaModelSourceAsString( StatefulBookRepository.class, true );
 		System.out.println( repository );
 		assertMetamodelClassGeneratedFor( StatefulBook.class );
-		assertMetamodelClassGeneratedFor( StatefulBookRepository.class );
+		assertMetamodelClassGeneratedFor( StatefulBookRepository.class, true );
 
 		assertTrue( repository.contains( "protected @Nonnull Session session;" ) );
 		assertTrue( repository.contains( "public @Nonnull Session session()" ) );
@@ -63,8 +63,8 @@ class StatefulRepositoryTest {
 	@Test
 	@WithClasses({ StatefulBook.class, EntityManagerStatefulBookRepository.class })
 	void statefulRepositoryMayUseEntityManagerAccessor() {
-		final String repository = getMetaModelSourceAsString( EntityManagerStatefulBookRepository.class );
-		assertMetamodelClassGeneratedFor( EntityManagerStatefulBookRepository.class );
+		final String repository = getMetaModelSourceAsString( EntityManagerStatefulBookRepository.class, true );
+		assertMetamodelClassGeneratedFor( EntityManagerStatefulBookRepository.class, true );
 
 		assertTrue( repository.contains( "protected @Nonnull EntityManager entityManager;" ) );
 		assertTrue( repository.contains( "public @Nonnull EntityManager entityManager()" ) );
@@ -108,18 +108,18 @@ class StatefulRepositoryTest {
 			assertTrue( task.call(), errorMessages( diagnostics ) );
 		}
 
-		final String statefulRepository = getMetaModelSourceAsString( StatefulBookRepository.class );
+		final String statefulRepository = getMetaModelSourceAsString( StatefulBookRepository.class, true );
 		assertTrue( statefulRepository.contains( "private EntityManagerFactory sessionFactory;" ) );
 		assertTrue( statefulRepository.contains( "sessionFactory.unwrap(SessionFactory.class).openSession();" ) );
 		assertTrue( statefulRepository.contains( "session.close();" ) );
-		assertTrue( statefulRepository.contains( "@Inject\n\tStatefulBookRepository_()" ) );
+		assertTrue( statefulRepository.contains( "@Inject\n\t_StatefulBookRepository()" ) );
 		assertFalse( statefulRepository.contains( ".openStatelessSession();" ) );
 
-		final String statelessRepository = getMetaModelSourceAsString( StatelessBookRepository.class );
+		final String statelessRepository = getMetaModelSourceAsString( StatelessBookRepository.class, true );
 		assertTrue( statelessRepository.contains( "private EntityManagerFactory sessionFactory;" ) );
 		assertTrue( statelessRepository.contains( "sessionFactory.unwrap(SessionFactory.class).openStatelessSession();" ) );
 		assertTrue( statelessRepository.contains( "session.close();" ) );
-		assertTrue( statelessRepository.contains( "@Inject\n\tStatelessBookRepository_()" ) );
+		assertTrue( statelessRepository.contains( "@Inject\n\t_StatelessBookRepository()" ) );
 		assertFalse( statelessRepository.contains( "SessionFactory.class).openSession();" ) );
 	}
 

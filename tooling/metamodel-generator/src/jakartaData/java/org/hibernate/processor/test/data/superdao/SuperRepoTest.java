@@ -19,10 +19,10 @@ class SuperRepoTest {
 	@Test
 	@WithClasses({ Book.class, SuperRepo.class, Repo.class })
 	void testQueryMethod() {
-		System.out.println( TestUtil.getMetaModelSourceAsString( SuperRepo.class ) );
-		System.out.println( TestUtil.getMetaModelSourceAsString( Repo.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( SuperRepo.class, true ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Repo.class, true ) );
 		assertMetamodelClassGeneratedFor( Book.class );
-		assertMetamodelClassGeneratedFor( SuperRepo.class );
-		assertMetamodelClassGeneratedFor( Repo.class );
+		assertMetamodelClassGeneratedFor( SuperRepo.class, true );
+		assertMetamodelClassGeneratedFor( Repo.class, true );
 	}
 }

@@ -19,10 +19,10 @@ class DataTest {
 	@WithClasses({MyEntity.class, MyConstrainedRepository.class})
 	void test() {
 		System.out.println( getMetaModelSourceAsString( MyEntity.class ) );
-		final String repository = getMetaModelSourceAsString( MyConstrainedRepository.class );
+		final String repository = getMetaModelSourceAsString( MyConstrainedRepository.class, true );
 		System.out.println( repository );
 		assertMetamodelClassGeneratedFor( MyEntity.class );
-		assertMetamodelClassGeneratedFor( MyConstrainedRepository.class );
+		assertMetamodelClassGeneratedFor( MyConstrainedRepository.class, true );
 
 		assertTrue( repository.contains( "_builder.like(_entity.get(MyEntity_.name), name)" ) );
 		assertTrue( repository.contains( "_builder.notLike(_entity.get(MyEntity_.name), name)" ) );

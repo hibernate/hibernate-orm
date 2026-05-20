@@ -20,8 +20,8 @@ class DaoTest2 {
 	@Test
 	@WithClasses({ Book.class, Dao2.class })
 	void testDao() {
-		System.out.println( TestUtil.getMetaModelSourceAsString( Dao2.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Dao2.class, true ) );
 		assertMetamodelClassGeneratedFor( Book.class );
-		assertMetamodelClassGeneratedFor( Dao2.class );
+		assertMetamodelClassGeneratedFor( Dao2.class, true );
 	}
 }

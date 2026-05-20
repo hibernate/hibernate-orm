@@ -119,6 +119,7 @@ import java.util.function.Supplier;
 import static java.lang.Character.isWhitespace;
 import static java.util.Collections.addAll;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.PrimitiveHelper.boxedType;
 import static org.hibernate.internal.util.ReflectHelper.isClass;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
@@ -378,6 +379,12 @@ public class NativeQueryImpl<R>
 		resultType = null;
 		resultSetMapping = MutationResultSetMapping.INSTANCE;
 		resultMappingSuppliedToCtor = false;
+		super.applyMementoOptions( mutationMemento );
+
+		final var mementoQuerySpaces = mutationMemento.getQuerySpaces();
+		if ( mementoQuerySpaces != null ) {
+			querySpaces = makeCopy( mementoQuerySpaces );
+		}
 	}
 
 
@@ -2062,7 +2069,8 @@ public class NativeQueryImpl<R>
 					break;
 				case 1:
 					final var actualResultJavaType = resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
-					if ( actualResultJavaType != null && !resultType.isAssignableFrom( actualResultJavaType ) ) {
+					if ( actualResultJavaType != null
+							&& !boxedType( resultType ).isAssignableFrom( boxedType( actualResultJavaType ) ) ) {
 						throw buildIncompatibleException( resultType, actualResultJavaType );
 					}
 					break;

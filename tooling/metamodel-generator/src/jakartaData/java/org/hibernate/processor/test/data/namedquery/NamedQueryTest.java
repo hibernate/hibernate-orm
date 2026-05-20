@@ -24,12 +24,12 @@ class NamedQueryTest {
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
 		System.out.println( getMetaModelSourceAsString( Author.class, true ) );
 		System.out.println( getMetaModelSourceAsString( Book.class, true ) );
-		System.out.println( getMetaModelSourceAsString( BookAuthorRepository.class ) );
+		System.out.println( getMetaModelSourceAsString( BookAuthorRepository.class, true ) );
 		assertMetamodelClassGeneratedFor( Author.class, true );
 		assertMetamodelClassGeneratedFor( Book.class, true );
 		assertMetamodelClassGeneratedFor( Author.class );
 		assertMetamodelClassGeneratedFor( Book.class );
-		assertMetamodelClassGeneratedFor( BookAuthorRepository.class );
+		assertMetamodelClassGeneratedFor( BookAuthorRepository.class, true );
 		assertNoMetamodelClassGeneratedFor( BookAuthorRepository$.class );
 	}
 }

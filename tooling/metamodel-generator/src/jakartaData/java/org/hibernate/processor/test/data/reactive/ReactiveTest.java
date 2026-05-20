@@ -23,15 +23,15 @@ class ReactiveTest {
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
 		System.out.println( getMetaModelSourceAsString( Author.class, true ) );
 		System.out.println( getMetaModelSourceAsString( Book.class, true ) );
-		System.out.println( getMetaModelSourceAsString( Library.class ) );
-		System.out.println( getMetaModelSourceAsString( Library2.class ) );
+		System.out.println( getMetaModelSourceAsString( Library.class, true ) );
+		System.out.println( getMetaModelSourceAsString( Library2.class, true ) );
 		assertMetamodelClassGeneratedFor( Author.class, true );
 		assertMetamodelClassGeneratedFor( Book.class, true );
 		assertMetamodelClassGeneratedFor( Publisher.class, true );
 		assertMetamodelClassGeneratedFor( Author.class );
 		assertMetamodelClassGeneratedFor( Book.class );
 		assertMetamodelClassGeneratedFor( Publisher.class );
-		assertMetamodelClassGeneratedFor( Library.class );
-		assertMetamodelClassGeneratedFor( Library2.class );
+		assertMetamodelClassGeneratedFor( Library.class, true );
+		assertMetamodelClassGeneratedFor( Library2.class, true );
 	}
 }

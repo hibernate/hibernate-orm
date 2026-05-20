@@ -19,12 +19,12 @@ class DaoTest {
 	@Test
 	@WithClasses({ Book.class, Dao.class, Bean.class, StatefulDao.class, StatelessDao.class })
 	void testDao() {
-		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
-		System.out.println( TestUtil.getMetaModelSourceAsString( StatefulDao.class ) );
-		System.out.println( TestUtil.getMetaModelSourceAsString( StatelessDao.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class, true ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( StatefulDao.class, true ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( StatelessDao.class, true ) );
 		assertMetamodelClassGeneratedFor( Book.class );
-		assertMetamodelClassGeneratedFor( Dao.class );
-		assertMetamodelClassGeneratedFor( StatefulDao.class );
-		assertMetamodelClassGeneratedFor( StatelessDao.class );
+		assertMetamodelClassGeneratedFor( Dao.class, true );
+		assertMetamodelClassGeneratedFor( StatefulDao.class, true );
+		assertMetamodelClassGeneratedFor( StatelessDao.class, true );
 	}
 }

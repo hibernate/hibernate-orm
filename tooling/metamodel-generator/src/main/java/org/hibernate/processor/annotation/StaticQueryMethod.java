@@ -37,6 +37,7 @@ class StaticQueryMethod implements MetaAttribute {
 	private final String methodName;
 	private final String queryMethodName;
 	private final boolean statement;
+	private final boolean nativeQuery;
 	private final @Nullable String resultTypeName;
 	private final @Nullable String resultTypeClass;
 	private final List<String> paramNames;
@@ -49,6 +50,7 @@ class StaticQueryMethod implements MetaAttribute {
 			String methodName,
 			String queryMethodName,
 			boolean statement,
+			boolean nativeQuery,
 			@Nullable String resultTypeName,
 			@Nullable String resultTypeClass,
 			List<String> paramNames,
@@ -59,6 +61,7 @@ class StaticQueryMethod implements MetaAttribute {
 		this.methodName = methodName;
 		this.queryMethodName = queryMethodName;
 		this.statement = statement;
+		this.nativeQuery = nativeQuery;
 		this.resultTypeName = resultTypeName;
 		this.resultTypeClass = resultTypeClass;
 		this.paramNames = paramNames;
@@ -168,13 +171,38 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private void constructorArguments(StringBuilder declaration) {
+		constructorArguments(
+				annotationMetaEntity,
+				declaration,
+				queryName(),
+				queryMethodName,
+				statement,
+				nativeQuery,
+				resultTypeClass,
+				paramNames,
+				paramTypes,
+				queryOptions
+		);
+	}
+
+	static void constructorArguments(
+			AnnotationMetaEntity annotationMetaEntity,
+			StringBuilder declaration,
+			String queryName,
+			String annotatedMemberName,
+			boolean statement,
+			boolean nativeQuery,
+			@Nullable String resultTypeClass,
+			List<String> paramNames,
+			List<String> paramTypes,
+			@Nullable AnnotationMirror queryOptions) {
 		declaration
 				.append("\n\t\t\t")
-				.append(stringLiteral(queryName()))
+				.append(stringLiteral(queryName))
 				.append(",\n\t\t\t")
 				.append(annotationMetaEntity.importType(annotationMetaEntity.getQualifiedName()))
 				.append(".class,\n\t\t\t")
-				.append(stringLiteral(methodName));
+				.append(stringLiteral(annotatedMemberName));
 		if ( !statement ) {
 			declaration
 					.append(",\n\t\t\t")
@@ -183,15 +211,15 @@ class StaticQueryMethod implements MetaAttribute {
 		}
 		declaration
 				.append(",\n\t\t\t")
-				.append(classList())
+				.append(classList( annotationMetaEntity, paramTypes ))
 				.append(",\n\t\t\t")
-				.append(nameList())
+				.append(nameList( annotationMetaEntity, paramNames ))
 				.append(",\n\t\t\t")
-				.append(argumentList());
-		queryOptions( declaration );
+				.append(argumentList( annotationMetaEntity, paramNames ));
+		queryOptions( annotationMetaEntity, declaration, statement, nativeQuery, queryOptions );
 	}
 
-	private String classList() {
+	private static String classList(AnnotationMetaEntity annotationMetaEntity, List<String> paramTypes) {
 		final StringBuilder list = new StringBuilder()
 				.append(annotationMetaEntity.importType(LIST))
 				.append(".of(");
@@ -206,7 +234,7 @@ class StaticQueryMethod implements MetaAttribute {
 		return list.append(')').toString();
 	}
 
-	private String nameList() {
+	private static String nameList(AnnotationMetaEntity annotationMetaEntity, List<String> paramNames) {
 		final StringBuilder list = new StringBuilder()
 				.append(annotationMetaEntity.importType(LIST))
 				.append(".of(");
@@ -219,7 +247,7 @@ class StaticQueryMethod implements MetaAttribute {
 		return list.append(')').toString();
 	}
 
-	private String argumentList() {
+	private static String argumentList(AnnotationMetaEntity annotationMetaEntity, List<String> paramNames) {
 		final StringBuilder list = new StringBuilder()
 				.append(annotationMetaEntity.importType(LIST))
 				.append(".of(");
@@ -234,24 +262,28 @@ class StaticQueryMethod implements MetaAttribute {
 		return list.append(')').toString();
 	}
 
-	private void queryOptions(StringBuilder declaration) {
-		final AnnotationMirror optionsAnnotation = queryOptions;
+	private static void queryOptions(
+			AnnotationMetaEntity annotationMetaEntity,
+			StringBuilder declaration,
+			boolean statement,
+			boolean nativeQuery,
+			@Nullable AnnotationMirror optionsAnnotation) {
 		if ( optionsAnnotation != null ) {
-			final String entityGraph = statement ? null : entityGraph( optionsAnnotation );
-			final String hints = hints( optionsAnnotation );
-			final List<String> options = options( optionsAnnotation );
+			final String entityGraph = statement || nativeQuery ? null : entityGraph( optionsAnnotation );
+			final String hints = hints( annotationMetaEntity, optionsAnnotation );
+			final List<String> options = options( annotationMetaEntity, statement, optionsAnnotation );
 			if ( entityGraph != null || hints != null || !options.isEmpty() ) {
 				if ( statement ) {
 					declaration
 							.append(",\n\t\t\t")
-							.append(hints == null ? emptyMap() : hints);
+							.append(hints == null ? emptyMap( annotationMetaEntity ) : hints);
 				}
 				else {
 					declaration
 							.append(",\n\t\t\t")
 							.append(entityGraph == null ? "null" : entityGraph)
 							.append(",\n\t\t\t")
-							.append(hints == null ? emptyMap() : hints);
+							.append(hints == null ? emptyMap( annotationMetaEntity ) : hints);
 				}
 				for ( String option : options ) {
 					declaration
@@ -262,7 +294,7 @@ class StaticQueryMethod implements MetaAttribute {
 		}
 	}
 
-	private @Nullable String entityGraph(AnnotationMirror queryOptions) {
+	private static @Nullable String entityGraph(AnnotationMirror queryOptions) {
 		final AnnotationValue entityGraph = getAnnotationValue( queryOptions, "entityGraph" );
 		if ( entityGraph != null ) {
 			final String value = entityGraph.getValue().toString();
@@ -273,11 +305,11 @@ class StaticQueryMethod implements MetaAttribute {
 		return null;
 	}
 
-	private String emptyMap() {
+	private static String emptyMap(AnnotationMetaEntity annotationMetaEntity) {
 		return annotationMetaEntity.importType(MAP) + ".of()";
 	}
 
-	private @Nullable String hints(AnnotationMirror queryOptions) {
+	private static @Nullable String hints(AnnotationMetaEntity annotationMetaEntity, AnnotationMirror queryOptions) {
 		final AnnotationValue hints = getAnnotationValue( queryOptions, "hints" );
 		if ( hints != null ) {
 			@SuppressWarnings("unchecked")
@@ -306,25 +338,31 @@ class StaticQueryMethod implements MetaAttribute {
 		return null;
 	}
 
-	private String annotationString(AnnotationMirror annotation, String member) {
+	private static String annotationString(AnnotationMirror annotation, String member) {
 		final AnnotationValue value = getAnnotationValue( annotation, member );
 		return value == null ? "" : value.getValue().toString();
 	}
 
-	private List<String> options(AnnotationMirror queryOptions) {
+	private static List<String> options(
+			AnnotationMetaEntity annotationMetaEntity,
+			boolean statement,
+			AnnotationMirror queryOptions) {
 		final List<String> options = new ArrayList<>();
-		addEnumOption( options, queryOptions, "flush" );
-		addTimeoutOption( options, queryOptions );
+		addEnumOption( annotationMetaEntity, options, queryOptions, "flush" );
+		addTimeoutOption( annotationMetaEntity, options, queryOptions );
 		if ( !statement ) {
-			addEnumOption( options, queryOptions, "cacheStoreMode" );
-			addEnumOption( options, queryOptions, "cacheRetrieveMode" );
-			addEnumOption( options, queryOptions, "lockMode" );
-			addEnumOption( options, queryOptions, "lockScope" );
+			addEnumOption( annotationMetaEntity, options, queryOptions, "cacheStoreMode" );
+			addEnumOption( annotationMetaEntity, options, queryOptions, "cacheRetrieveMode" );
+			addEnumOption( annotationMetaEntity, options, queryOptions, "lockMode" );
+			addEnumOption( annotationMetaEntity, options, queryOptions, "lockScope" );
 		}
 		return options;
 	}
 
-	private void addTimeoutOption(List<String> options, AnnotationMirror queryOptions) {
+	private static void addTimeoutOption(
+			AnnotationMetaEntity annotationMetaEntity,
+			List<String> options,
+			AnnotationMirror queryOptions) {
 		final AnnotationValue timeout = getAnnotationValue( queryOptions, "timeout" );
 		if ( timeout != null ) {
 			options.add(annotationMetaEntity.importType(TIMEOUT)
@@ -332,7 +370,11 @@ class StaticQueryMethod implements MetaAttribute {
 		}
 	}
 
-	private void addEnumOption(List<String> options, AnnotationMirror queryOptions, String member) {
+	private static void addEnumOption(
+			AnnotationMetaEntity annotationMetaEntity,
+			List<String> options,
+			AnnotationMirror queryOptions,
+			String member) {
 		final AnnotationValue option = getAnnotationValue( queryOptions, member );
 		if ( option != null && option.getValue() instanceof VariableElement variable ) {
 			final TypeElement type = (TypeElement) variable.getEnclosingElement();
@@ -341,7 +383,7 @@ class StaticQueryMethod implements MetaAttribute {
 		}
 	}
 
-	private static String erasedType(String type) {
+	static String erasedType(String type) {
 		String result = type;
 		while ( result.startsWith( "@" ) ) {
 			final int index = result.lastIndexOf( ' ' );

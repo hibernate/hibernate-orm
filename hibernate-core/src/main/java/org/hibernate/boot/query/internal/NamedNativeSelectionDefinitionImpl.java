@@ -5,9 +5,12 @@
 package org.hibernate.boot.query.internal;
 
 import jakarta.persistence.Timeout;
+import jakarta.persistence.PessimisticLockScope;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
@@ -58,6 +61,10 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 			Boolean cacheable,
 			CacheMode cacheMode,
 			String cacheRegion,
+			LockMode lockMode,
+			PessimisticLockScope lockScope,
+			Timeout lockTimeout,
+			Locking.FollowOn followOnLockingStrategy,
 			Set<String> querySpaces,
 			Map<String,Object> hints) {
 		super(
@@ -73,10 +80,10 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				cacheable,
 				cacheRegion,
 				cacheMode,
-				null,
-				null,
-				null,
-				null,
+				lockMode,
+				lockScope,
+				lockTimeout,
+				followOnLockingStrategy,
 				hints
 		);
 		this.resultType = resultType;
@@ -162,6 +169,10 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				annotation.cacheable(),
 				CacheMode.resolve( annotation.cacheMode(), annotation.cacheRetrieveMode(), annotation.cacheStoreMode() ),
 				nullIfEmpty( annotation.cacheRegion() ),
+				null,
+				null,
+				null,
+				null,
 				Set.of( annotation.querySpaces() ),
 				Map.of()
 		);
@@ -197,6 +208,10 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
 				nullIfEmpty( resultSetMappingName ),
 				FlushModeTypeHelper.getFlushMode( annotation.flush() ),
+				null,
+				null,
+				null,
+				null,
 				null,
 				null,
 				null,
@@ -243,6 +258,10 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 				sqlSelect.sql(),
 				resultType,
 				resultSetMappingName,
+				null,
+				null,
+				null,
+				null,
 				null,
 				null,
 				null,

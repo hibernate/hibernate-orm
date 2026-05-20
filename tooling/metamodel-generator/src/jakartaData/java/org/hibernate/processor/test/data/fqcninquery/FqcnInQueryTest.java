@@ -18,16 +18,16 @@ class FqcnInQueryTest {
 	@Test
 	@WithClasses({MyEntity.class, MyRepository.class})
 	void test() {
-		System.out.println( getMetaModelSourceAsString( MyRepository.class ) );
+		System.out.println( getMetaModelSourceAsString( MyRepository.class, true ) );
 		System.out.println( getMetaModelSourceAsString( MyEntity.class ) );
 
-		assertMetamodelClassGeneratedFor( MyRepository.class );
+		assertMetamodelClassGeneratedFor( MyRepository.class, true );
 		assertMetamodelClassGeneratedFor( MyEntity.class );
 
 		assertPresenceOfMethodInMetamodelFor( MyEntity.class, "getName", EntityManager.class, Integer.class );
 		assertPresenceOfMethodInMetamodelFor( MyEntity.class, "getUniqueId", EntityManager.class, String.class );
 
-		assertPresenceOfMethodInMetamodelFor( MyRepository.class, "getName", Integer.class );
-		assertPresenceOfMethodInMetamodelFor( MyRepository.class, "getUniqueId", String.class );
+		assertPresenceOfMethodInMetamodelFor( MyRepository.class, true, "getName", Integer.class );
+		assertPresenceOfMethodInMetamodelFor( MyRepository.class, true, "getUniqueId", String.class );
 	}
 }

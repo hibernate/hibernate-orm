@@ -19,10 +19,10 @@ class KeyBasedTest {
 	@Test
 	@WithClasses({ Book.class, Dao.class, Queries.class })
 	void testQueryMethod() {
-		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class, true ) );
 		System.out.println( TestUtil.getMetaModelSourceAsString( Queries.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );
-		assertMetamodelClassGeneratedFor( Dao.class );
+		assertMetamodelClassGeneratedFor( Dao.class, true );
 		assertMetamodelClassGeneratedFor( Queries.class );
 	}
 }

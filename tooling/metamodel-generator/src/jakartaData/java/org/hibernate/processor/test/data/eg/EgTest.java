@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
@@ -23,17 +24,29 @@ class EgTest {
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
 		System.out.println( getMetaModelSourceAsString( Author.class, true ) );
 		System.out.println( getMetaModelSourceAsString( Book.class, true ) );
-		System.out.println( getMetaModelSourceAsString( Library.class ) );
+		System.out.println( getMetaModelSourceAsString( Library.class, true ) );
 		System.out.println( getMetaModelSourceAsString( Bookshop.class ) );
-		System.out.println( getMetaModelSourceAsString( Publishers.class ) );
+		System.out.println( getMetaModelSourceAsString( Bookshop.class, true ) );
+		System.out.println( getMetaModelSourceAsString( Publishers.class, true ) );
 		assertMetamodelClassGeneratedFor( Author.class, true );
 		assertMetamodelClassGeneratedFor( Book.class, true );
 		assertMetamodelClassGeneratedFor( Publisher.class, true );
 		assertMetamodelClassGeneratedFor( Author.class );
 		assertMetamodelClassGeneratedFor( Book.class );
 		assertMetamodelClassGeneratedFor( Publisher.class );
-		assertMetamodelClassGeneratedFor( Library.class );
+		assertMetamodelClassGeneratedFor( Library.class, true );
 		assertMetamodelClassGeneratedFor( Bookshop.class );
-		assertMetamodelClassGeneratedFor( Publishers.class );
+		assertMetamodelClassGeneratedFor( Bookshop.class, true );
+		assertMetamodelClassGeneratedFor( Publishers.class, true );
+		assertTrue( getMetaModelSourceAsString( Bookshop.class )
+				.contains( "TypedQueryReference<Book> booksBy(String authorName)" ) );
+	}
+
+	@Test
+	@WithClasses(
+			value = { Publisher.class, Author.class, Book.class },
+			sources = "org.hibernate.processor.test.data.eg.BookshopWithDefault"
+	)
+	void defaultMethodCanUseSuffixQueryMetamodel() {
 	}
 }

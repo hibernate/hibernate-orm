@@ -24,8 +24,8 @@ class InnerRepositoryTest {
 	@Test
 	@WithClasses({Thing.class, ThingRepo.class})
 	void test() {
-		System.out.println( getMetaModelSourceAsString( ThingRepo.class ) );
-		assertMetamodelClassGeneratedFor( ThingRepo.class );
+		System.out.println( getMetaModelSourceAsString( ThingRepo.class, true ) );
+		assertMetamodelClassGeneratedFor( ThingRepo.class, true );
 	}
 
 	@Entity

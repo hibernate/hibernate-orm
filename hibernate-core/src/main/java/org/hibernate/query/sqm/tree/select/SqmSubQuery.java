@@ -774,7 +774,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public Class<? extends T> getJavaType() {
+	public Class<T> getJavaType() {
 		return getResultType();
 	}
 

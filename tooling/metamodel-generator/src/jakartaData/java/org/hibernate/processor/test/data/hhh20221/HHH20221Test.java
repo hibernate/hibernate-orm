@@ -19,11 +19,11 @@ class HHH20221Test {
 	@Test
 	@WithClasses({ HHH20221Entity.class, HHH20221Repository.class })
 	void test() throws Exception {
-		System.out.println( getMetaModelSourceAsString( HHH20221Repository.class ) );
-		assertMetamodelClassGeneratedFor( HHH20221Repository.class );
+		System.out.println( getMetaModelSourceAsString( HHH20221Repository.class, true ) );
+		assertMetamodelClassGeneratedFor( HHH20221Repository.class, true );
 		assertEquals(
 				TypedQuery.class,
-				getMetamodelClassFor( HHH20221Repository.class )
+				getMetamodelClassFor( HHH20221Repository.class, true )
 						.getDeclaredMethod( "findByIdOrdered", Long.class )
 						.getReturnType()
 		);

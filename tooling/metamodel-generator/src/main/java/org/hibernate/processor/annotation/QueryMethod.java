@@ -12,10 +12,16 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
+import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 import static org.hibernate.processor.util.Constants.BOOLEAN;
+import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
 import static org.hibernate.processor.util.Constants.QUERY;
+import static org.hibernate.processor.util.Constants.STATIC_STATEMENT_REFERENCE;
+import static org.hibernate.processor.util.Constants.STATIC_TYPED_QUERY_REFERENCE;
 import static org.hibernate.processor.util.Constants.VOID;
+import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
+import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 
 /**
  * @author Gavin King
@@ -23,17 +29,20 @@ import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFrom
  */
 public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
+	private final @Nullable String namedQueryName;
 	private final @Nullable String returnTypeClass;
 	private final @Nullable String containerType;
 	private final @Nullable String resultSetMapping;
 	private final boolean isUpdate;
 	private final boolean isNative;
+	private final boolean generatedQueryReferenceMethod;
 
 	QueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
 			ExecutableElement method,
 			String methodName,
 			String queryString,
+			@Nullable String namedQueryName,
 			@Nullable
 			String returnTypeName,
 			@Nullable
@@ -46,6 +55,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			List<String> paramTypes,
 			boolean isUpdate,
 			boolean isNative,
+			boolean generatedQueryReferenceMethod,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
@@ -64,11 +74,13 @@ public class QueryMethod extends AbstractQueryMethod {
 				fullReturnType,
 				nullable );
 		this.queryString = queryString;
+		this.namedQueryName = namedQueryName;
 		this.returnTypeClass = returnTypeClass;
 		this.containerType = containerType;
 		this.resultSetMapping = resultSetMapping;
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;
+		this.generatedQueryReferenceMethod = generatedQueryReferenceMethod;
 	}
 
 	@Override
@@ -110,8 +122,12 @@ public class QueryMethod extends AbstractQueryMethod {
 		chainSession( declaration );
 		inTry( declaration );
 		createQuery( declaration, true );
-		setParameters( declaration, paramTypes );
-		QueryOptionsSupport.setQueryOptions( this, declaration, isUpdate, isNative );
+		if ( !bindsParametersFromReference() ) {
+			setParameters( declaration, paramTypes );
+		}
+		if ( !useNamedQuery() && !bindsParametersFromReference() ) {
+			QueryOptionsSupport.setQueryOptions( this, declaration, isUpdate, isNative );
+		}
 		declaration.append( ";\n" );
 		results( declaration, paramTypes, containerType );
 		castResult( declaration );
@@ -163,6 +179,28 @@ public class QueryMethod extends AbstractQueryMethod {
 						.append(".getCriteriaBuilder()))");
 			}
 		}
+		else if ( useQueryReferenceCreateQuery() ) {
+			localSession( declaration );
+			declaration
+					.append( isUpdate ? ".createStatement(" : ".createQuery(" );
+			createQueryReference( declaration );
+			declaration.append(")");
+		}
+		else if ( useNamedQuery() ) {
+			localSession( declaration );
+			declaration
+					.append('.')
+					.append(createNamedQueryMethod())
+					.append("(")
+					.append(stringLiteral(castNonNull(namedQueryName)));
+			if ( returnTypeClass != null && !isUpdate ) {
+				declaration
+						.append(", ")
+						.append(annotationMetaEntity.importType(returnTypeClass))
+						.append(".class");
+			}
+			declaration.append(")");
+		}
 		else {
 			localSession( declaration );
 			declaration
@@ -187,22 +225,157 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	void createSpecification(StringBuilder declaration) {
-		if ( returnTypeClass != null && isUsingSpecification() ) {
+		final String targetType = specificationTargetType();
+		if ( targetType != null && isUsingSpecification() ) {
 			declaration
 					.append( "\tvar _spec = " )
-					.append( annotationMetaEntity.importType( specificationType() ) )
-					.append( ".create(" )
-					.append( annotationMetaEntity.importType( returnTypeClass ) )
-					.append( ".class, " )
-					.append( getConstantName() )
-					.append( ");\n" );
+					.append( annotationMetaEntity.importType( specificationType() ) );
+			if ( isUpdate && namedQueryName != null ) {
+				declaration
+						.append( ".<" )
+						.append( annotationMetaEntity.importType( targetType ) )
+						.append( ">create(" );
+			}
+			else {
+				declaration.append( ".create(" );
+			}
+			if ( namedQueryName == null ) {
+				declaration
+						.append( annotationMetaEntity.importType( targetType ) )
+						.append( ".class, " )
+						.append( getConstantName() );
+			}
+			else {
+				createQueryReference( declaration );
+			}
+			declaration.append( ");\n" );
 		}
 	}
 
 	@Override
-	boolean isUsingSpecification() {
-		return returnTypeClass != null
+	final boolean isUsingSpecification() {
+		return specificationTargetType() != null
 			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
+	}
+
+	private boolean bindsParametersFromReference() {
+		return namedQueryName != null
+			&& ( useSpecificationCreateQuery() || useQueryReferenceCreateQuery() );
+	}
+
+	private boolean useQueryReferenceCreateQuery() {
+		return namedQueryName != null
+			&& !isUsingSpecification()
+			&& useGeneratedQueryReferenceMethod();
+	}
+
+	private boolean useNamedQuery() {
+		return namedQueryName != null
+			&& !isUsingSpecification()
+			&& !useQueryReferenceCreateQuery();
+	}
+
+	private @Nullable String specificationTargetType() {
+		if ( isUpdate ) {
+			final String restrictionTargetType = restrictionTargetType();
+			return restrictionTargetType == null ? returnTypeClass : restrictionTargetType;
+		}
+		else {
+			return returnTypeClass;
+		}
+	}
+
+	private @Nullable String restrictionTargetType() {
+		for ( String paramType : paramTypes ) {
+			if ( isRestrictionParam( paramType ) ) {
+				final String targetType = restrictionTargetType( paramType );
+				if ( targetType != null ) {
+					return targetType;
+				}
+			}
+		}
+		return null;
+	}
+
+	private static @Nullable String restrictionTargetType(String paramType) {
+		final int restrictionIndex = paramType.indexOf( "Restriction<" );
+		if ( restrictionIndex < 0 ) {
+			return null;
+		}
+		final String superBound = "? super ";
+		int start = restrictionIndex + "Restriction<".length();
+		if ( paramType.startsWith( superBound, start ) ) {
+			start += superBound.length();
+		}
+		final int end = paramType.indexOf( '>', start );
+		return end > start ? paramType.substring( start, end ) : null;
+	}
+
+	private void createQueryReference(StringBuilder declaration) {
+		if ( useGeneratedQueryReferenceMethod() ) {
+			declaration
+					.append( annotationMetaEntity.importType(
+							annotationMetaEntity.getQueryMetamodelFullyQualifiedName() ) )
+					.append( '.' )
+					.append( methodName )
+					.append( '(' );
+			appendQueryReferenceArguments( declaration );
+			declaration.append( ')' );
+		}
+		else {
+			createInlineQueryReference( declaration );
+		}
+	}
+
+	private boolean useGeneratedQueryReferenceMethod() {
+		return generatedQueryReferenceMethod;
+	}
+
+	private void appendQueryReferenceArguments(StringBuilder declaration) {
+		final List<String> names = queryParameterNames();
+		for ( int i = 0; i < names.size(); i++ ) {
+			if ( i > 0 ) {
+				declaration.append( ", " );
+			}
+			declaration.append( parameterName( names.get( i ) ) );
+		}
+	}
+
+	private void createInlineQueryReference(StringBuilder declaration) {
+		if ( isUpdate ) {
+			declaration
+					.append( "new " )
+					.append( annotationMetaEntity.importType( STATIC_STATEMENT_REFERENCE ) )
+					.append( "(" );
+		}
+		else {
+			declaration
+					.append( "new " )
+					.append( annotationMetaEntity.importType( STATIC_TYPED_QUERY_REFERENCE ) )
+					.append( "<>(" );
+		}
+		StaticQueryMethod.constructorArguments(
+				annotationMetaEntity,
+				declaration,
+				castNonNull( namedQueryName ),
+				methodName,
+				isUpdate,
+				isNative,
+				returnTypeClass,
+				queryParameterNames(),
+				queryParameterTypes(),
+				getAnnotationMirror( method, QUERY_OPTIONS )
+		);
+		declaration
+				.append( "\n\t)" );
+	}
+
+	private List<String> queryParameterNames() {
+		return AnnotationMetaEntity.queryParameterNames( paramNames, paramTypes );
+	}
+
+	private List<String> queryParameterTypes() {
+		return AnnotationMetaEntity.queryParameterTypes( paramTypes );
 	}
 
 	private String createQueryMethod() {
@@ -215,6 +388,14 @@ public class QueryMethod extends AbstractQueryMethod {
 		else {
 			return isUpdate ? "createMutationQuery" : "createSelectionQuery";
 		}
+	}
+
+	private String createNamedQueryMethod() {
+		return isUpdate
+			&& !isUsingEntityManager()
+			&& !isReactive()
+				? "createNamedMutationQuery"
+				: "createNamedQuery";
 	}
 
 	private void castResult(StringBuilder declaration) {

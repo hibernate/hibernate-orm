@@ -19,9 +19,9 @@ class EmbeddedIdTest {
 	@Test
 	@WithClasses({ Thing.class, ThingRepo.class })
 	void test() {
-		System.out.println( getMetaModelSourceAsString( ThingRepo.class ) );
+		System.out.println( getMetaModelSourceAsString( ThingRepo.class, true ) );
 		assertMetamodelClassGeneratedFor( Thing.class, true );
 		assertMetamodelClassGeneratedFor( Thing.class );
-		assertMetamodelClassGeneratedFor( ThingRepo.class );
+		assertMetamodelClassGeneratedFor( ThingRepo.class, true );
 	}
 }

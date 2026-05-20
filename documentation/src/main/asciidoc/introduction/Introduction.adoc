@@ -779,7 +779,7 @@ public List<Book> findBooks(String titlePattern, int pageNumber) {
 }
 ----
 
-Alternatively, if CDI isn't available, we may directly instantiate the generated repository implementation class using `new Queries_(entityManager)`.
+Alternatively, if CDI isn't available, we may directly instantiate the generated repository implementation class using `new _Queries(entityManager)`.
 
 [TIP]
 ====

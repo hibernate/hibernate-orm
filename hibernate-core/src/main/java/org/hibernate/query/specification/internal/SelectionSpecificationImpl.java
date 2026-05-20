@@ -4,15 +4,13 @@
  */
 package org.hibernate.query.specification.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
@@ -22,11 +20,15 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.internal.SelectionQueryImpl;
+import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.named.NamedSelectionMemento;
+import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.spi.JpaTypedQueryReference;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -34,16 +36,19 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.AbstractSqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.query.sqm.internal.SqmUtil.validateCriteriaQuery;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
@@ -57,29 +62,40 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	private final Class<T> resultType;
 	private final String hql;
 	private final CriteriaQuery<T> criteriaQuery;
-	private final List<BiConsumer<AbstractSqmSelectQuery<T>, SqmRoot<T>>> specifications = new ArrayList<>();
+	private final TypedQueryReference<? super T> typedQueryReference;
+	private final List<BiConsumer<AbstractSqmSelectQuery<T>, SqmRoot<? extends T>>> specifications = new ArrayList<>();
 
 	public SelectionSpecificationImpl(Class<T> resultType) {
 		this.resultType = resultType;
 		this.hql = null;
 		this.criteriaQuery = null;
+		this.typedQueryReference = null;
 	}
 
 	public SelectionSpecificationImpl(String hql, Class<T> resultType) {
 		this.resultType = resultType;
 		this.hql = hql;
 		this.criteriaQuery = null;
+		this.typedQueryReference = null;
 	}
 
 	public SelectionSpecificationImpl(CriteriaQuery<T> criteriaQuery) {
 		this.resultType = criteriaQuery.getResultType();
 		this.hql = null;
 		this.criteriaQuery = criteriaQuery;
+		this.typedQueryReference = null;
+	}
+
+	public SelectionSpecificationImpl(TypedQueryReference<? super T> typedQueryReference, Class<T> resultType) {
+		this.resultType = resultType;
+		this.hql = null;
+		this.criteriaQuery = null;
+		this.typedQueryReference = typedQueryReference;
 	}
 
 	@Override
 	public String getName() {
-		return null;
+		return typedQueryReference == null ? null : typedQueryReference.getName();
 	}
 
 	@Override
@@ -89,7 +105,27 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 
 	@Override
 	public Map<String,Object> getHints() {
-		return Collections.emptyMap();
+		return typedQueryReference == null ? emptyMap() : typedQueryReference.getHints();
+	}
+
+	@Override
+	public List<Class<?>> getParameterTypes() {
+		return typedQueryReference == null ? null : typedQueryReference.getParameterTypes();
+	}
+
+	@Override
+	public List<String> getParameterNames() {
+		return typedQueryReference == null ? null : typedQueryReference.getParameterNames();
+	}
+
+	@Override
+	public List<Object> getArguments() {
+		return typedQueryReference == null ? null : typedQueryReference.getArguments();
+	}
+
+	@Override
+	public Set<TypedQuery.Option> getOptions() {
+		return typedQueryReference == null ? emptySet() : typedQueryReference.getOptions();
 	}
 
 	@Override
@@ -97,7 +133,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return this;
 	}
 
-	public List<BiConsumer<AbstractSqmSelectQuery<T>, SqmRoot<T>>> getSpecifications() {
+	public List<BiConsumer<AbstractSqmSelectQuery<T>, SqmRoot<? extends T>>> getSpecifications() {
 		return specifications;
 	}
 
@@ -129,9 +165,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 
 	@Override
 	public SelectionSpecification<T> sort(Order<? super T> order) {
-		specifications.add( (sqmStatement, root) -> {
-			addOrder( order, sqmStatement );
-		} );
+		specifications.add( (sqmStatement, root) -> addOrder( order, sqmStatement ) );
 		return this;
 	}
 
@@ -172,33 +206,81 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return createQuery( (SharedSessionContract) session );
 	}
 
-	public SelectionQuery<T> createQuery(SharedSessionContract session) {
+	public SelectionQueryImplementor<T> createQuery(SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
-		final var sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
-		return new SelectionQueryImpl<>( sqmStatement, false, resultType, sessionImpl );
+		final var buildResult = build( sessionImpl.getFactory().getQueryEngine() );
+		final var query = createSelectionQuery( buildResult, sessionImpl );
+		if ( typedQueryReference != null ) {
+			bindReferenceArguments( query, typedQueryReference );
+			setHintsAndOptions( query ); // arguably unnecessary
+		}
+		return query;
 	}
 
-	private SqmSelectStatement<T> build(QueryEngine queryEngine) {
+	private @NonNull SelectionQueryImplementor<T> createSelectionQuery
+			(SqmBuildResult<T> buildResult, SharedSessionContractImplementor session) {
+		return buildResult.sqmMemento == null
+				? new SelectionQueryImpl<>( buildResult.sqmStatement, false, resultType, session )
+				: new SelectionQueryImpl<>( buildResult.sqmMemento, buildResult.sqmStatement, resultType, session );
+	}
+
+	private void setHintsAndOptions(SelectionQueryImplementor<T> query) {
+		final var hints = typedQueryReference.getHints();
+		if ( hints != null ) {
+			hints.forEach( query::setHint );
+		}
+
+		final String entityGraphName = typedQueryReference.getEntityGraphName();
+		if ( isNotEmpty( entityGraphName ) ) {
+			query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraphName );
+		}
+
+		typedQueryReference.getOptions().forEach( query::addOption );
+	}
+
+	private record SqmBuildResult<T>(
+			SqmSelectStatement<T> sqmStatement,
+			NamedSqmQueryMemento<T> sqmMemento) {
+	}
+
+	private SqmBuildResult<T> build(QueryEngine queryEngine) {
 		final SqmSelectStatement<T> sqmStatement;
-		final SqmRoot<T> sqmRoot;
+		final SqmRoot<? extends T> sqmRoot;
+		final NamedSqmQueryMemento<T> sqmMemento;
 		if ( hql != null ) {
 			sqmStatement = resolveSqmTree( hql, resultType, queryEngine );
 			sqmRoot = extractRoot( sqmStatement, resultType, hql );
+			sqmMemento = null;
 		}
 		else if ( criteriaQuery != null ) {
 			sqmStatement = ((SqmSelectStatement<T>) criteriaQuery).copy( simpleContext() );
 			sqmRoot = extractRoot( sqmStatement, resultType, "criteria query" );
+			sqmMemento = null;
+		}
+		else if ( typedQueryReference != null ) {
+			if ( typedQueryReference instanceof SelectionSpecification<?> selectionSpecification ) {
+				//noinspection unchecked
+				sqmStatement = (SqmSelectStatement<T>)
+						selectionSpecification.buildCriteria( queryEngine.getCriteriaBuilder() );
+				sqmRoot = extractRoot( sqmStatement, resultType, "query reference" );
+				sqmMemento = null;
+			}
+			else {
+				sqmMemento = resolveSqmSelectionMemento( typedQueryReference, queryEngine );
+				sqmStatement = resolveSqmTree( sqmMemento, resultType, queryEngine );
+				sqmRoot = extractRoot( sqmStatement, resultType, sqmMemento.getHqlString() );
+			}
 		}
 		else {
-			var builder = queryEngine.getCriteriaBuilder();
-			var query = builder.createQuery( resultType );
+			var query = queryEngine.getCriteriaBuilder().createQuery( resultType );
 			var root = query.from( resultType );
 			query.select( root );
 			sqmRoot = root;
 			sqmStatement = query;
+			sqmMemento = null;
 		}
 		specifications.forEach( consumer -> consumer.accept( sqmStatement, sqmRoot ) );
-		return sqmStatement;
+		return new SqmBuildResult<>( sqmStatement, sqmMemento );
 	}
 
 	@Override
@@ -209,13 +291,13 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	@Override
 	public CriteriaQuery<T> buildCriteria(CriteriaBuilder builder) {
 		final var nodeBuilder = (NodeBuilder) builder;
-		return build( nodeBuilder.getQueryEngine() );
+		return build( nodeBuilder.getQueryEngine() ).sqmStatement;
 	}
 
 	@Override
 	public SelectionSpecification<T> validate(CriteriaBuilder builder) {
 		final var nodeBuilder = (NodeBuilder) builder;
-		final var statement = build( nodeBuilder.getQueryEngine() );
+		final var statement = build( nodeBuilder.getQueryEngine() ).sqmStatement;
 		final var queryPart = statement.getQueryPart();
 		// For criteria queries, we have to validate the fetch structure here
 		queryPart.validateQueryStructureAndFetchOwners();
@@ -232,24 +314,67 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		final var hqlInterpretation =
 				queryEngine.getInterpretationCache()
 						.resolveHqlInterpretation( hql, resultType, queryEngine.getHqlTranslator() );
-
-		if ( !SqmUtil.isSelect( hqlInterpretation.getSqmStatement() ) ) {
+		if ( SqmUtil.isSelect( hqlInterpretation.getSqmStatement() ) ) {
+			hqlInterpretation.validateResultType( resultType );
+			// NOTE: this copy is to isolate the actual AST tree from the
+			// one stored in the interpretation cache
+			return (SqmSelectStatement<T>)
+					hqlInterpretation.getSqmStatement()
+							.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
+		}
+		else {
 			throw new IllegalSelectQueryException( "Expecting a selection query, but found '" + hql + "'", hql );
 		}
-		hqlInterpretation.validateResultType( resultType );
+	}
 
-		// NOTE: this copy is to isolate the actual AST tree from the
-		// one stored in the interpretation cache
-		return (SqmSelectStatement<T>)
-				hqlInterpretation.getSqmStatement()
-						.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
+	/**
+	 * Used during construction to resolve an incoming named query reference
+	 * and produce the corresponding SQM tree.
+	 */
+	private static <T> SqmSelectStatement<T> resolveSqmTree(
+			NamedSqmQueryMemento<?> sqmMemento,
+			Class<T> resultType,
+			QueryEngine queryEngine) {
+		final var sqmStatement = sqmMemento.getSqmStatement();
+		if ( sqmStatement == null ) {
+			return resolveSqmTree( sqmMemento.getHqlString(), resultType, queryEngine );
+		}
+		else if ( SqmUtil.isSelect( sqmStatement ) ) {
+			//noinspection unchecked
+			return (SqmSelectStatement<T>) sqmStatement.copy( simpleContext() );
+		}
+		else {
+			throw new IllegalSelectQueryException(
+					"Expecting a selection query, but found '" + sqmMemento.getHqlString() + "'",
+					sqmMemento.getHqlString()
+			);
+		}
+	}
+
+	private static <T> NamedSqmQueryMemento<T> resolveSqmSelectionMemento(
+			TypedQueryReference<? super T> typedQueryReference,
+			QueryEngine queryEngine) {
+		final NamedQueryMemento<T> namedMemento =
+				queryEngine.getNamedObjectRepository()
+						//FIXME: unchecked cast
+						.getQueryMementoByName( typedQueryReference.getName(), false );
+		if ( namedMemento instanceof NamedSelectionMemento<T>
+				&& namedMemento instanceof NamedSqmQueryMemento<T> sqmMemento ) {
+			return sqmMemento;
+		}
+		else {
+			throw new IllegalSelectQueryException(
+					"SelectionSpecification only supports HQL or criteria query references: "
+							+ typedQueryReference.getName()
+			);
+		}
 	}
 
 	/**
 	 * Used during construction. Mainly used to group extracting and
 	 * validating the root.
 	 */
-	private SqmRoot<T> extractRoot(SqmSelectStatement<T> sqmStatement, Class<T> resultType, String hql) {
+	private SqmRoot<? extends T> extractRoot(SqmSelectStatement<T> sqmStatement, Class<T> resultType, String hql) {
 		final var sqmRoots = sqmStatement.getQuerySpec().getRoots();
 		if ( sqmRoots.isEmpty() ) {
 			throw new QueryException( "Query did not define any roots", hql );
@@ -259,15 +384,12 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		}
 
 		final var sqmRoot = sqmRoots.iterator().next();
-		validateRoot( sqmRoot, resultType, hql );
+		return validateRoot( sqmRoot, resultType, hql );
 		// for later, to support select lists
 		//validateResultType( sqmStatement, sqmRoot, resultType, hql );
-
-		//noinspection unchecked
-		return (SqmRoot<T>) sqmRoot;
 	}
 
-	private void validateRoot(SqmRoot<?> sqmRoot, Class<T> resultType, String hql) {
+	private SqmRoot<? extends T> validateRoot(SqmRoot<?> sqmRoot, Class<T> resultType, String hql) {
 		final var javaType = sqmRoot.getJavaType();
 		if ( javaType != null
 				&& !Map.class.isAssignableFrom( javaType )
@@ -282,95 +404,82 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 					hql
 			);
 		}
-	}
-
-	/**
-	 * For future, allowing explicit select list.
-	 */
-	private void validateResultType(
-			SqmSelectStatement<T> sqmStatement,
-			SqmRoot<?> sqmRoot,
-			Class<T> resultType,
-			String hql) {
-		if ( resultType == null || Object.class.equals( resultType ) || resultType.isArray() ) {
-			// Nothing to validate in these cases
-			return;
-		}
-
-		final Class<?> rootJavaType = sqmRoot.getJavaType();
-		assert rootJavaType != null;
-
-		if ( Map.class.isAssignableFrom( rootJavaType ) ) {
-			if ( Map.class.isAssignableFrom( resultType ) ) {
-				// dynamic model and Map was requested, totally fine
-				return;
-			}
-		}
-
-		final var sqmSelectClause = sqmStatement.getQuerySpec().getSelectClause();
-		final var sqmSelections = sqmSelectClause.getSelections();
-		if ( isEmpty( sqmSelections ) ) {
-			// implicit select clause, verify that resultType matches the root type
-			if ( resultType.isAssignableFrom( rootJavaType ) ) {
-				// it does, we are fine
-				return;
-			}
-		}
-		else if ( sqmSelections.size() > 1 ) {
-			// we have to assume we can.
-			// the Query will ultimately complain if not, but this is the most we can do here
-			return;
-		}
 		else {
-			assert sqmSelections.size() == 1;
-			final JavaType<?> nodeJavaType = sqmSelections.get( 0 ).getNodeJavaType();
-			if ( nodeJavaType == null ) {
-				// again, we have to assume we can
-				return;
-			}
-			else if ( resultType.isAssignableFrom( nodeJavaType.getJavaTypeClass() ) ) {
-				// it matches the selection type, we are fine
-				return;
-			}
+			@SuppressWarnings("unchecked") // Safe, we just checked
+			final var castRoot = (SqmRoot<T>) sqmRoot;
+			return castRoot;
 		}
-
-		throw new QueryException(
-				String.format(
-						Locale.ROOT,
-						"Specified result-type [%s] is not valid for this SelectionSpecification",
-						resultType.getName()
-				),
-				hql
-		);
 	}
 
-	@Override
-	public CacheRetrieveMode getCacheRetrieveMode() {
-		return null;
-	}
-
-	@Override
-	public CacheStoreMode getCacheStoreMode() {
-		return null;
-	}
-
-	@Override
-	public LockModeType getLockMode() {
-		return null;
-	}
-
-	@Override
-	public PessimisticLockScope getPessimisticLockScope() {
-		return null;
-	}
+//	/**
+//	 * For future, allowing explicit select list.
+//	 */
+//	private void validateResultType(
+//			SqmSelectStatement<T> sqmStatement,
+//			SqmRoot<?> sqmRoot,
+//			Class<T> resultType,
+//			String hql) {
+//		if ( resultType == null || Object.class.equals( resultType ) || resultType.isArray() ) {
+//			// Nothing to validate in these cases
+//			return;
+//		}
+//
+//		final var rootJavaType = sqmRoot.getJavaType();
+//		assert rootJavaType != null;
+//
+//		if ( Map.class.isAssignableFrom( rootJavaType ) ) {
+//			if ( Map.class.isAssignableFrom( resultType ) ) {
+//				// dynamic model and Map was requested, totally fine
+//				return;
+//			}
+//		}
+//
+//		final var sqmSelectClause = sqmStatement.getQuerySpec().getSelectClause();
+//		final var sqmSelections = sqmSelectClause.getSelections();
+//		if ( isEmpty( sqmSelections ) ) {
+//			// implicit select clause, verify that resultType matches the root type
+//			if ( resultType.isAssignableFrom( rootJavaType ) ) {
+//				// it does, we are fine
+//				return;
+//			}
+//		}
+//		else if ( sqmSelections.size() > 1 ) {
+//			// we have to assume we can.
+//			// the Query will ultimately complain if not, but this is the most we can do here
+//			return;
+//		}
+//		else {
+//			assert sqmSelections.size() == 1;
+//			final var nodeJavaType = sqmSelections.get( 0 ).getNodeJavaType();
+//			if ( nodeJavaType == null ) {
+//				// again, we have to assume we can
+//				return;
+//			}
+//			else if ( resultType.isAssignableFrom( nodeJavaType.getJavaTypeClass() ) ) {
+//				// it matches the selection type, we are fine
+//				return;
+//			}
+//		}
+//
+//		throw new QueryException(
+//				String.format(
+//						Locale.ROOT,
+//						"Specified result-type [%s] is not valid for this SelectionSpecification",
+//						resultType.getName()
+//				),
+//				hql
+//		);
+//	}
 
 	@Override
 	public Timeout getTimeout() {
-		return null;
+		return typedQueryReference instanceof JpaTypedQueryReference<?> jpaTypedQueryReference
+				? jpaTypedQueryReference.getTimeout()
+				: null;
 	}
 
 	@Override
 	public String getEntityGraphName() {
-		return "";
+		return typedQueryReference == null ? "" : typedQueryReference.getEntityGraphName();
 	}
 }

@@ -606,7 +606,7 @@ long pages = results / MAX_RESULTS + (results % MAX_RESULTS == 0 ? 0 : 1);
 List<Book> books = query.setMaxResults(MAX_RESULTS).getResultList();
 ----
 
-.Methods for query limits, pagination, and ordering
+.Methods for query limits and pagination
 [%breakable,cols="30,~,^15"]
 |===
 | Method name | Purpose | JPA-standard

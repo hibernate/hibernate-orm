@@ -81,6 +81,8 @@ public class DomainModelCategorizationCollector {
 			}
 		}
 
+		getGlobalRegistrations().collectFetchProfiles( jaxbRoot.getFetchProfiles() );
+
 		getGlobalRegistrations().collectIdGenerators( jaxbRoot );
 
 		getGlobalRegistrations().collectQueryReferences( jaxbRoot, xmlDocumentContext );

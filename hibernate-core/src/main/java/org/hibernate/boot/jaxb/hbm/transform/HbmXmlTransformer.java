@@ -1634,35 +1634,37 @@ public class HbmXmlTransformer {
 		);
 		jaxbManyToOne.setCascade( convertCascadeType( hbmNode.getCascade() ) );
 
-		if ( isNotEmpty( hbmNode.getPropertyRef() ) ) {
-			jaxbManyToOne.setPropertyRef( new JaxbPropertyRefImpl() );
-			jaxbManyToOne.getPropertyRef().setName( hbmNode.getPropertyRef() );
-		}
-
 		final var manyToOneProperty = propertyInfo.bootModelProperty();
 		final var manyToOne = (ManyToOne) manyToOneProperty.getValue();
-		transferColumnsAndFormulas(
-				manyToOne,
-				new ColumnAndFormulaTarget() {
-					@Override
-					public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
-						return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
-					}
+		if ( isNotEmpty( hbmNode.getPropertyRef() ) ) {
+			final JaxbPropertyRefImpl propertyRef = new JaxbPropertyRefImpl();
+			propertyRef.setName( hbmNode.getPropertyRef() );
+			jaxbManyToOne.setPropertyRef( propertyRef );
+		}
+		else {
+			transferColumnsAndFormulas(
+					manyToOne,
+					new ColumnAndFormulaTarget() {
+						@Override
+						public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
+							return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
+						}
 
-					@Override
-					public void addColumn(TargetColumnAdapter column) {
-						jaxbManyToOne.getJoinColumnOrJoinFormula()
-								.add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
-					}
+						@Override
+						public void addColumn(TargetColumnAdapter column) {
+							jaxbManyToOne.getJoinColumnOrJoinFormula()
+									.add( ((TargetColumnAdapterJaxbJoinColumn) column).getTargetColumn() );
+						}
 
-					@Override
-					public void addFormula(String formula) {
-						jaxbManyToOne.getJoinColumnOrJoinFormula().add( formula );
-					}
-				},
-				new ColumnDefaultsProperty( manyToOneProperty ),
-				propertyInfo.tableName()
-		);
+						@Override
+						public void addFormula(String formula) {
+							jaxbManyToOne.getJoinColumnOrJoinFormula().add( formula );
+						}
+					},
+					new ColumnDefaultsProperty( manyToOneProperty ),
+					propertyInfo.tableName()
+			);
+		}
 
 		jaxbManyToOne.setForeignKey( transformForeignKey( hbmNode.getForeignKey() ) );
 

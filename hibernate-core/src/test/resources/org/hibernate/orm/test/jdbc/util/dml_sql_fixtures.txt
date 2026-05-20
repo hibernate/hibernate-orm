@@ -34,83 +34,83 @@ FIRST 5 ROWS WITH TIES;
 === EXPECTED ===
 -- Non-indented single line comment
 WITH recent_customer_activity AS (
-	SELECT
-		"o".`customer_id`,
-		COUNT(*) AS order_count,
-		MAX(o.created_at) AS last_order_date,
-		SUM(o.total_amount) AS total_spent
-	FROM orders o
-	WHERE o.created_at >= CURRENT_DATE - INTERVAL '12 months'
-	GROUP BY o.customer_id
-	HAVING SUM(o.total_amount) > 1000
+    SELECT
+        "o".`customer_id`,
+        COUNT(*) AS order_count,
+        MAX(o.created_at) AS last_order_date,
+        SUM(o.total_amount) AS total_spent
+    FROM orders o
+    WHERE o.created_at >= CURRENT_DATE - INTERVAL '12 months'
+    GROUP BY o.customer_id
+    HAVING SUM(o.total_amount) > 1000
 ),
 /* Non-indented multi-line
 comment */
 product_performance AS (
-	SELECT
-		oi.product_id,
-		/* Indented multi-line
-		comment */
-		TRIM(BOTH '' FROM [oi].description),
-		AVG(oi.unit_price) AS avg_price,
-		SUM(oi.quantity) AS total_units_sold
-	FROM order_items oi
-	GROUP BY oi.product_id
-	HAVING SUM(oi.quantity) > 10
+    SELECT
+        oi.product_id,
+        /* Indented multi-line
+        comment */
+        TRIM(BOTH '' FROM [oi].description),
+        AVG(oi.unit_price) AS avg_price,
+        SUM(oi.quantity) AS total_units_sold
+    FROM order_items oi
+    GROUP BY oi.product_id
+    HAVING SUM(oi.quantity) > 10
 )
 SELECT
-	c.customer_id,
-	UPPER(c.full_name) AS customer_name,
-	c.region,
-	rca.order_count,
-	rca.total_spent,
-	latest_order.order_id,
-	latest_order.created_at AS latest_order_date,
-	pp.avg_price,
-	pp.total_units_sold,
-	ROUND(rca.total_spent / NULLIF(rca.order_count, 0), 2) AS avg_order_value,
-	COUNT(DISTINCT s.shipment_id) AS shipment_count
+    c.customer_id,
+    UPPER(c.full_name) AS customer_name,
+    c.region,
+    rca.order_count,
+    rca.total_spent,
+    latest_order.order_id,
+    latest_order.created_at AS latest_order_date,
+    pp.avg_price,
+    pp.total_units_sold,
+    ROUND(rca.total_spent / NULLIF(rca.order_count, 0), 2) AS avg_order_value,
+    COUNT(DISTINCT s.shipment_id) AS shipment_count
 FROM customers c
 JOIN recent_customer_activity rca
-	ON rca.customer_id = c.customer_id
+    ON rca.customer_id = c.customer_id
 LEFT JOIN orders o
-	ON o.customer_id = c.customer_id
-	AND o.status = 'COMPLETED'
+    ON o.customer_id = c.customer_id
+    AND o.status = 'COMPLETED'
 LEFT JOIN shipments s
-	ON s.order_id = o.order_id
-	AND s.shipped_at IS NOT NULL
+    ON s.order_id = o.order_id
+    AND s.shipped_at IS NOT NULL
 LEFT JOIN LATERAL (
-	SELECT o2.order_id, o2.created_at
-	FROM orders o2
-	WHERE o2.customer_id = c.customer_id
-		AND o2.status IN ('COMPLETED', 'SHIPPED')
-	ORDER BY o2.created_at DESC
-	FETCH FIRST 1 ROW ONLY
+    SELECT o2.order_id, o2.created_at
+    FROM orders o2
+    WHERE o2.customer_id = c.customer_id
+        AND o2.status IN ('COMPLETED', 'SHIPPED')
+    ORDER BY o2.created_at DESC
+    FETCH FIRST 1 ROW ONLY
 ) latest_order
-	ON TRUE
+    ON TRUE
 JOIN order_items oi
-	ON oi.order_id = o.order_id
+    ON oi.order_id = o.order_id
 JOIN product_performance pp
-	ON pp.product_id = oi.product_id
-	AND pp.avg_price > 20
+    ON pp.product_id = oi.product_id
+    AND pp.avg_price > 20
 WHERE c.is_active = TRUE
-	-- Indented single line comment
-	AND EXISTS (
-		SELECT 1
-		FROM customer_tags ct
-		WHERE ct.customer_id = c.customer_id
-			AND ct.tag_name = 'VIP'
-	)
+    -- Indented single line comment
+    AND EXISTS (
+        SELECT 1
+        FROM customer_tags ct
+        WHERE ct.customer_id = c.customer_id
+            AND ct.tag_name = 'VIP'
+    )
 GROUP BY
-	c.customer_id,
-	c.full_name,
-	c.region,
-	rca.order_count,
-	rca.total_spent,
-	latest_order.order_id,
-	latest_order.created_at,
-	pp.avg_price,
-	pp.total_units_sold
+    c.customer_id,
+    c.full_name,
+    c.region,
+    rca.order_count,
+    rca.total_spent,
+    latest_order.order_id,
+    latest_order.created_at,
+    pp.avg_price,
+    pp.total_units_sold
 HAVING COUNT(DISTINCT s.shipment_id) >= 2
 ORDER BY rca.total_spent DESC, latest_order.created_at DESC
 OFFSET 10 ROWS
@@ -126,9 +126,9 @@ insert into empl (id,name,email,salary) values (1,'alice','alice@ibm.com',75);
 
 === EXPECTED ===
 INSERT INTO empl
-	(id, name, email, salary)
+    (id, name, email, salary)
 VALUES
-	(1, 'alice', 'alice@ibm.com', 75);
+    (1, 'alice', 'alice@ibm.com', 75);
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -140,7 +140,7 @@ insert into empl values (1,'alice','alice@ibm.com',75);
 === EXPECTED ===
 INSERT INTO empl
 VALUES
-	(1, 'alice', 'alice@ibm.com', 75);
+    (1, 'alice', 'alice@ibm.com', 75);
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -152,10 +152,10 @@ on conflict (email) do nothing;
 
 === EXPECTED ===
 INSERT INTO empl
-	(id, name, email, salary)
+    (id, name, email, salary)
 VALUES
-	(1, 'alice', 'alice@ibm.com', 75),
-	(2, 'lewis', 'lewis@ibm.com', 100)
+    (1, 'alice', 'alice@ibm.com', 75),
+    (2, 'lewis', 'lewis@ibm.com', 100)
 ON CONFLICT (email)
 DO NOTHING;
 
@@ -169,9 +169,9 @@ on conflict on constraint user_pk do nothing;
 
 === EXPECTED ===
 INSERT INTO empl
-	(id, name, email, salary)
+    (id, name, email, salary)
 VALUES
-	(1, 'alice', 'alice@ibm.com', 75)
+    (1, 'alice', 'alice@ibm.com', 75)
 ON CONFLICT ON CONSTRAINT user_pk
 DO NOTHING;
 
@@ -184,7 +184,7 @@ insert into empl_arch (id,name,salary) select (id,name,salary) from empl where a
 
 === EXPECTED ===
 INSERT INTO empl_arch
-	(id, name, salary)
+    (id, name, salary)
 SELECT (id, name, salary)
 FROM empl
 WHERE active = 'true';
@@ -199,9 +199,9 @@ on conflict (email) do update set name = excluded.name returning *;
 
 === EXPECTED ===
 INSERT INTO empl
-	(id, name, email, salary)
+    (id, name, email, salary)
 VALUES
-	(1, 'alice', 'alice@ibm.com', 75)
+    (1, 'alice', 'alice@ibm.com', 75)
 ON CONFLICT (email)
 DO UPDATE
 SET name = excluded.name
@@ -217,9 +217,9 @@ on duplicate key update name = values(name),salary=values(salary);
 
 === EXPECTED ===
 INSERT INTO empl
-	(id, name, email, salary)
+    (id, name, email, salary)
 VALUES
-	(1, 'alice', 'alice@ibm.com', 75)
+    (1, 'alice', 'alice@ibm.com', 75)
 ON DUPLICATE KEY
 UPDATE name = VALUES(name), salary = VALUES(salary);
 
@@ -233,10 +233,10 @@ update empl set salary=salary * 1.10, updated_at='2026-01-01',valid_until='2026-
 === EXPECTED ===
 UPDATE empl
 SET
-	salary = salary * 1.10,
-	updated_at = '2026-01-01',
-	valid_until = '2026-12-31',
-	bonus_perc = bonus_perc * 1.10
+    salary = salary * 1.10,
+    updated_at = '2026-01-01',
+    valid_until = '2026-12-31',
+    bonus_perc = bonus_perc * 1.10
 WHERE dept_id = 3;
 
 @@@@ FIXTURE @@@@
@@ -262,9 +262,9 @@ update empl set dept_id = (select id from dept where name='engineering') where r
 === EXPECTED ===
 UPDATE empl
 SET dept_id = (
-	SELECT id
-	FROM dept
-	WHERE name = 'engineering'
+    SELECT id
+    FROM dept
+    WHERE name = 'engineering'
 )
 WHERE role = 'developer';
 
@@ -278,10 +278,10 @@ update orders set status = case when shipped_at is not null then 'SHIPPED' else 
 === EXPECTED ===
 UPDATE orders
 SET status =
-	CASE
-		WHEN shipped_at IS NOT NULL THEN 'SHIPPED'
-		ELSE 'PENDING'
-	END;
+    CASE
+        WHEN shipped_at IS NOT NULL THEN 'SHIPPED'
+        ELSE 'PENDING'
+    END;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -295,14 +295,14 @@ when not matched then insert (id, email) values (cu.id, cu.email);
 MERGE INTO customers c
 USING customer_updates cu
 ON
-	(c.id = cu.id)
+    (c.id = cu.id)
 WHEN MATCHED THEN
-	UPDATE
-	SET c.email = cu.email
+    UPDATE
+    SET c.email = cu.email
 WHEN NOT MATCHED THEN
-	INSERT (id, email)
-	VALUES
-		(cu.id, cu.email);
+    INSERT (id, email)
+    VALUES
+        (cu.id, cu.email);
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -324,9 +324,9 @@ delete from empl where dept_id in (select id from depts where closed = true);
 === EXPECTED ===
 DELETE FROM empl
 WHERE dept_id IN (
-	SELECT id
-	FROM depts
-	WHERE closed = TRUE
+    SELECT id
+    FROM depts
+    WHERE closed = TRUE
 );
 
 @@@@ FIXTURE @@@@
@@ -340,7 +340,7 @@ delete from employees e using departments d where e.department_id = d.id and d.c
 DELETE FROM employees e
 USING departments d
 WHERE e.department_id = d.id
-	AND d.closed = TRUE;
+    AND d.closed = TRUE;
 
 @@@@ FIXTURE @@@@
 === ID ===

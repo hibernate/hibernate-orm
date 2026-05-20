@@ -25,6 +25,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbDatabaseObjectImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableInstantiatorRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbFetchProfileImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterDefImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJavaTypeRegistrationImpl;
@@ -42,6 +43,7 @@ import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotat
 import org.hibernate.boot.models.spi.CollectionTypeRegistration;
 import org.hibernate.boot.models.spi.CompositeUserTypeRegistration;
 import org.hibernate.boot.models.spi.ConversionRegistration;
+import org.hibernate.boot.models.spi.FetchProfileRegistration;
 import org.hibernate.boot.models.spi.ConverterRegistration;
 import org.hibernate.boot.models.spi.DatabaseObjectRegistration;
 import org.hibernate.boot.models.spi.DialectScopeRegistration;
@@ -122,6 +124,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	private List<CollectionTypeRegistration> collectionTypeRegistrations;
 	private List<EmbeddableInstantiatorRegistration> embeddableInstantiatorRegistrations;
 	private Map<String, FilterDefRegistration> filterDefRegistrations;
+	private List<FetchProfileRegistration> fetchProfileRegistrations;
 	private Map<String,String> importedRenameMap;
 
 	private Map<String, SequenceGeneratorRegistration> sequenceGeneratorRegistrations;
@@ -190,6 +193,11 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	@Override
 	public Map<String, FilterDefRegistration> getFilterDefRegistrations() {
 		return filterDefRegistrations == null ? emptyMap() : filterDefRegistrations;
+	}
+
+	@Override
+	public List<FetchProfileRegistration> getFetchProfileRegistrations() {
+		return fetchProfileRegistrations == null ? emptyList() : fetchProfileRegistrations;
 	}
 
 	@Override
@@ -597,6 +605,31 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 			// legacy code simply allows the collision overwriting the previous
 			// todo (jpa32) : re-enable this, especially if the conditions differ
 			//throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
+		}
+	}
+
+	public void collectFetchProfiles( List<JaxbFetchProfileImpl> jaxbFetchProfiles) {
+		if ( jaxbFetchProfiles.isEmpty() ) {
+			return;
+		}
+
+		if ( fetchProfileRegistrations == null ) {
+			fetchProfileRegistrations = new ArrayList<>();
+		}
+
+		for ( var jaxbFetchProfile : jaxbFetchProfiles ) {
+			final List<FetchProfileRegistration.FetchOverride> fetchOverrides = new ArrayList<>();
+			for ( var jaxbFetch : jaxbFetchProfile.getFetch() ) {
+				final String entityName = jaxbFetch.getEntity();
+				fetchOverrides.add( new FetchProfileRegistration.FetchOverride(
+						entityName,
+						jaxbFetch.getAssociation(),
+						jaxbFetch.getStyle()
+				) );
+			}
+			fetchProfileRegistrations.add(
+					new FetchProfileRegistration( jaxbFetchProfile.getName(), fetchOverrides )
+			);
 		}
 	}
 

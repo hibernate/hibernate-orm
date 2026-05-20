@@ -19,12 +19,14 @@ import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -45,6 +47,68 @@ public class HbmTransformationJaxbTests {
 	public void hbmTransformationTest(ServiceRegistryScope scope) {
 		scope.withService( ClassLoaderService.class, (cls) -> {
 			verifyHbm( "xml/jaxb/mapping/basic/hbm.xml", cls, scope );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20451" )
+	public void mapKeyManyToManyTransformationTest(ServiceRegistryScope scope) {
+		scope.withService( ClassLoaderService.class, (cls) -> {
+			try ( final InputStream inputStream = cls.locateResourceStream( "xml/jaxb/mapping/ternary/hbm.xml" ) ) {
+				withStaxEventReader( inputStream, cls, (staxEventReader) -> {
+					final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
+
+					try {
+						final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
+						final JaxbHbmHibernateMapping hbmMapping = JaxbHelper.VALIDATING.jaxb(
+								reader,
+								MappingXsdSupport.hbmXml.getSchema(),
+								jaxbCtx
+						);
+						assertThat( hbmMapping ).isNotNull();
+						assertThat( hbmMapping.getClazz() ).hasSize( 2 );
+
+						final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
+								.addHbmXmlBinding( new Binding<>(
+										hbmMapping,
+										new Origin( SourceType.RESOURCE, "xml/jaxb/mapping/ternary/hbm.xml" )
+								) )
+								.buildMetadata();
+						final List<Binding<JaxbEntityMappingsImpl>> transformedBindingList = HbmXmlTransformer.transform(
+								singletonList( new Binding<>(
+										hbmMapping,
+										new Origin( SourceType.RESOURCE, "xml/jaxb/mapping/ternary/hbm.xml" )
+								) ),
+								metadata,
+								UnsupportedFeatureHandling.ERROR
+						);
+						final JaxbEntityMappingsImpl transformed = transformedBindingList.get( 0 ).getRoot();
+
+						assertThat( transformed ).isNotNull();
+						assertThat( transformed.getEntities() ).hasSize( 2 );
+
+						final JaxbEntityImpl mapKeyManyToManyEntity = transformed.getEntities().stream()
+								.filter( e -> "MapKeyManyToManyEntity".equals( e.getClazz() ) )
+								.findFirst()
+								.orElseThrow();
+
+						assertThat( mapKeyManyToManyEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+
+						final JaxbManyToManyImpl managersAttr = mapKeyManyToManyEntity.getAttributes()
+								.getManyToManyAttributes()
+								.get( 0 );
+						assertThat( managersAttr.getName() ).isEqualTo( "managers" );
+						assertThat( managersAttr.getMapKeyJoinColumns() ).hasSize( 1 );
+						assertThat( managersAttr.getMapKeyJoinColumns().get( 0 ).getName() ).isEqualTo( "siteId" );
+					}
+					catch (JAXBException e) {
+						throw new RuntimeException( "Error during JAXB processing", e );
+					}
+				} );
+			}
+			catch (IOException e) {
+				throw new RuntimeException( "Error accessing mapping file", e );
+			}
 		} );
 	}
 

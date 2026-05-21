@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 @JiraKey(value = "HHH-14597")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/orphan/elementcollection/student.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/orphan/elementcollection/student.orm.xml"
 )
 @SessionFactory
 public class ElementCollectionOrphanTest {

@@ -620,7 +620,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
-	public <T> EntityGraph<T> getEntityGraph(Class<T> entityClass, String name) {
+	public <T> RootGraph<T> getEntityGraph(Class<T> entityClass, String name) {
 		final var entityGraph = getEntityGraph( name );
 		final var type = getFactory().getJpaMetamodel().managedType( entityClass );
 		final var graphedType = entityGraph.getGraphedType();
@@ -630,7 +630,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			);
 		}
 		@SuppressWarnings("unchecked") // this cast is sound, because we just checked
-		final var graph = (EntityGraph<T>) entityGraph;
+		final var graph = (RootGraph<T>) entityGraph;
 		return graph;
 	}
 

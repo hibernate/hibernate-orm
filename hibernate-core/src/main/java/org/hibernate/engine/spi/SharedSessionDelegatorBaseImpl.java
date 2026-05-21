@@ -215,7 +215,7 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public <T> EntityGraph<T> getEntityGraph(Class<T> entityClass, String name) {
+	public <T> RootGraph<T> getEntityGraph(Class<T> entityClass, String name) {
 		return delegate().getEntityGraph( entityClass, name );
 	}
 

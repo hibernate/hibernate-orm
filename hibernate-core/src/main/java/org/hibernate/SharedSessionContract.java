@@ -828,15 +828,11 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @param graphName the name of the graph
 	 *
-	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
-	 * unchecked typecast before use. It's cleaner to obtain a graph using
-	 * {@link #createEntityGraph(Class, String)} instead.
-	 *
-	 * @see SessionFactory#getNamedEntityGraphs(Class)
-	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 * @deprecated Use {@link #getEntityGraph(String)} instead.
 	 *
 	 * @since 6.3
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	RootGraph<?> createEntityGraph(String graphName);
 
 	/**
@@ -848,16 +844,14 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @param rootType the root entity class of the graph
 	 * @param graphName the name of the predefined named entity graph
-	 *
-	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
-	 *
 	 * @throws IllegalArgumentException if the graph with the given
 	 *         name does not have the given entity type as its root
 	 *
-	 * @see jakarta.persistence.EntityManager#createEntityGraph(String)
+	 * @deprecated Use {@link #getEntityGraph(Class, String)} instead.
 	 *
 	 * @since 6.3
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
 
 	/**
@@ -870,8 +864,9 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
 	 * unchecked typecast before use. It's cleaner to obtain a graph using
-	 * the static metamodel for the class which defines the graph, or by
-	 * calling {@link SessionFactory#getNamedEntityGraphs(Class)} instead.
+	 * the static metamodel for the class which defines the graph, by
+	 * calling {@link #getEntityGraph(Class, String)}, or by calling
+	 * {@link SessionFactory#getNamedEntityGraphs(Class)}.
 	 *
 	 * @see jakarta.persistence.EntityManager#getEntityGraph(String)
 	 * @see SessionFactory#getNamedEntityGraphs(Class)
@@ -880,6 +875,25 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @since 6.3
 	 */
 	RootGraph<?> getEntityGraph(String graphName);
+
+	/**
+	 * Obtain a mutable copy of a predefined
+	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}
+	 * whose root type is exactly the given entity type.
+	 *
+	 * @param rootType the root entity class of the graph
+	 * @param graphName the name of the predefined named entity graph
+	 * @throws IllegalArgumentException if there is no predefined graph
+	 *         with the given name, or if the graph with the given name
+	 *         does not have the given entity type as its root
+	 *
+	 * @see jakarta.persistence.EntityManager#getEntityGraph(Class,String)
+	 * @see SessionFactory#getNamedEntityGraphs(Class)
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 *
+	 * @since 8.0
+	 */
+	<T> RootGraph<T> getEntityGraph(Class<T> rootType, String graphName);
 
 	/**
 	 * Retrieve all named {@link EntityGraph}s with the given root entity type.

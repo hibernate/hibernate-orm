@@ -583,7 +583,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> EntityGraph<T> getEntityGraph(Class<T> entityClass, String name) {
+	public <T> RootGraph<T> getEntityGraph(Class<T> entityClass, String name) {
 		//noinspection resource
 		return delegate().getEntityGraph( entityClass, name );
 	}

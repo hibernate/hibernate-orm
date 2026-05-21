@@ -1249,28 +1249,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @param rootType The root entity of the graph
 	///
+	/// @see #get(EntityGraph, Object, FindOption...)
 	/// @see #find(EntityGraph, Object, FindOption...)
-	/// @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
+	/// @see #createQuery(String, EntityGraph)
+	/// @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
 	/// @see org.hibernate.graph.EntityGraphs#createGraph(jakarta.persistence.metamodel.EntityType)
 	@Override
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
-
-	/// Create a new mutable instance of [EntityGraph], based on
-	/// a predefined [named entity graph][jakarta.persistence.NamedEntityGraph],
-	/// allowing customization of the graph, or return `null` if there is no
-	/// predefined graph with the given name.
-	///
-	/// @param graphName The name of the predefined named entity graph
-	///
-	/// @apiNote This method returns `RootGraph<?>`, requiring an
-	/// unchecked typecast before use. It's cleaner to obtain a graph using
-	/// [#createEntityGraph(Class,String)] instead.
-	///
-	/// @see #find(EntityGraph, Object, FindOption...)
-	/// @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
-	/// @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
-	@Override
-	RootGraph<?> createEntityGraph(String graphName);
 
 	/// Obtain a mutable copy of a predefined
 	/// [named entity graph][jakarta.persistence.NamedEntityGraph].
@@ -1281,14 +1266,61 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @apiNote This method returns `RootGraph<?>`, requiring an
 	/// unchecked typecast before use. It's cleaner to obtain a graph using
-	/// the static metamodel for the class which defines the graph, or by
-	/// calling [SessionFactory#getNamedEntityGraphs(Class)] instead.
+	/// the static metamodel for the class which defines the graph, by
+	/// calling {@link #getEntityGraph(Class, String)}, or by calling
+	/// [SessionFactory#getNamedEntityGraphs(Class)].
 	///
+	/// @see #get(EntityGraph, Object, FindOption...)
 	/// @see #find(EntityGraph, Object, FindOption...)
-	/// @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
+	/// @see #createQuery(String, EntityGraph)
+	/// @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
 	/// @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
 	@Override
 	RootGraph<?> getEntityGraph(String graphName);
+
+	/// Obtain a mutable copy of a predefined
+	/// [named entity graph][jakarta.persistence.NamedEntityGraph]
+	/// whose root type is exactly the given entity type.
+	///
+	/// @param rootType the root entity class of the graph
+	/// @param graphName The name of the predefined named entity graph
+	/// @throws IllegalArgumentException if there is no predefined graph
+	///         with the given name, or if the graph with the given name
+	/// 	    does not have the given entity type as its root
+	///
+	/// @see #get(EntityGraph, Object, FindOption...)
+	/// @see #find(EntityGraph, Object, FindOption...)
+	/// @see #createQuery(String, EntityGraph)
+	/// @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
+	/// @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
+	/// @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	///
+	/// @since 8.0
+	@Override
+	<T> RootGraph<T> getEntityGraph(Class<T> rootType, String graphName);
+
+	/// Create a new mutable instance of [EntityGraph], based on
+	/// a predefined [named entity graph][jakarta.persistence.NamedEntityGraph],
+	/// allowing customization of the graph, or return `null` if there is no
+	/// predefined graph with the given name.
+	///
+	/// @param graphName The name of the predefined named entity graph
+	///
+	/// @deprecated Use [#getEntityGraph(String)] instead.
+	@Override @Deprecated
+	RootGraph<?> createEntityGraph(String graphName);
+
+	/// Create a new mutable instance of [EntityGraph], based on
+	/// a predefined [named entity graph][jakarta.persistence.NamedEntityGraph]
+	/// whose root type is exactly the given entity type, allowing customization
+	/// of the graph, or return `null` if there is no predefined graph with the
+	/// given name.
+	///
+	/// @param graphName The name of the predefined named entity graph
+	///
+	/// @deprecated Use [#getEntityGraph(Class, String)] instead.
+	@Override @Deprecated
+	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
 
 	/// Retrieve all named [EntityGraph]s with the given root entity type.
 	///
@@ -1340,6 +1372,5 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// move to using [jakarta.persistence.sql.ResultSetMapping].
 	@Deprecated @SuppressWarnings("rawtypes")
 	NativeQuery getNamedNativeQuery(String name);
-
 
 }

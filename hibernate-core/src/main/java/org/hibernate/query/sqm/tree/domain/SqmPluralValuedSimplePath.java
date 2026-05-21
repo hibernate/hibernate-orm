@@ -43,12 +43,14 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * @author Steve Ebersole
  */
 public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> implements SqmPluralPath<C,Object> {
+	private final boolean mapAttributeAccess;
+
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
-		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
+		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder, false );
 	}
 
 	public SqmPluralValuedSimplePath(
@@ -57,10 +59,21 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 			SqmPath<?> lhs,
 			@Nullable String explicitAlias,
 			NodeBuilder nodeBuilder) {
+		this( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder, false );
+	}
+
+	public SqmPluralValuedSimplePath(
+			NavigablePath navigablePath,
+			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
+			SqmPath<?> lhs,
+			@Nullable String explicitAlias,
+			NodeBuilder nodeBuilder,
+			boolean mapAttributeAccess) {
 		// We need to do an unchecked cast here: PluralPersistentAttribute implements path source with
 		//  the element type, but paths generated from it must be collection-typed.
 		//noinspection unchecked
 		super( navigablePath, (SqmPathSource<C>) referencedNavigable, lhs, explicitAlias, nodeBuilder );
+		this.mapAttributeAccess = mapAttributeAccess;
 	}
 
 	@Override
@@ -78,11 +91,16 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 						(SqmPluralPersistentAttribute<?,C,?>) getModel(),
 						lhsCopy,
 						getExplicitAlias(),
-						nodeBuilder()
+						nodeBuilder(),
+						mapAttributeAccess
 				)
 		);
 		copyTo( path, context );
 		return path;
+	}
+
+	public boolean isMapAttributeAccess() {
+		return mapAttributeAccess;
 	}
 
 	public PluralPersistentAttribute<?, C, ?> getPluralAttribute() {

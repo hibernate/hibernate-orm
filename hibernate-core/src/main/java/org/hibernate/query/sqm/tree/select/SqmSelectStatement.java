@@ -15,7 +15,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaExpression;
@@ -45,7 +44,6 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
-import static org.hibernate.query.sqm.tree.expression.Compatibility.areAssignmentCompatible;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
@@ -328,23 +326,14 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			checkSelectionIsJpaCompliant( selection );
 		}
-		getQuerySpec().setSelection( (JpaSelection<T>) adjustSelectionForResultType( selection ) );
+		getQuerySpec().setSelection( (JpaSelection<T>) adjustSelection( selection ) );
 		return this;
 	}
 
-	private Selection<? extends T> adjustSelectionForResultType(Selection<? extends T> selection) {
+	private Selection<? extends T> adjustSelection(Selection<? extends T> selection) {
 		if ( selection instanceof SqmPluralValuedSimplePath<?> pluralPath
-				&& pluralPath.getPluralAttribute() instanceof MapPersistentAttribute<?, ?, ?> mapAttribute ) {
-			final var resultType = getResultType();
-			final var selectionType = pluralPath.getJavaType();
-			final var elementType = mapAttribute.getElementType().getJavaType();
-			if ( resultType != null
-					&& selectionType != null
-					&& elementType != null
-					&& !areAssignmentCompatible( resultType, selectionType )
-					&& areAssignmentCompatible( resultType, elementType ) ) {
-				return pluralPath.get( CollectionPart.Nature.ELEMENT.getName() );
-			}
+				&& pluralPath.isMapAttributeAccess() ) {
+			return pluralPath.get( CollectionPart.Nature.ELEMENT.getName() );
 		}
 		return selection;
 	}

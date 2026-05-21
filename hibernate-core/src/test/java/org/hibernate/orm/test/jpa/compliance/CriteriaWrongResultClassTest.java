@@ -59,13 +59,14 @@ public class CriteriaWrongResultClassTest {
 
 	@Test
 	@JiraKey("HHH-20434")
-	public void getMapAttributeTest(EntityManagerFactoryScope scope) {
+	public void getMapAttributeReturnsMapValuesTest(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
 					final var criteriaBuilder = entityManager.getCriteriaBuilder();
 					final var query = criteriaBuilder.createQuery( Person.class );
 					final var department = query.from( Department.class );
 					query.where( criteriaBuilder.equal( department.get( Department_.id ), 1 ) );
+					assertThat( department.get( Department_.people ).getJavaType() ).isEqualTo( Map.class );
 					query.select( department.get( Department_.people ) );
 					final List<Person> people = entityManager.createQuery( query ).getResultList();
 					assertThat( people )

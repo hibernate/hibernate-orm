@@ -18,8 +18,8 @@ import org.junit.jupiter.api.Test;
 @JiraKey(value = "HHH-565")
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/orphan/User.hbm.xml",
-				"org/hibernate/orm/test/orphan/Mail.hbm.xml"
+				"org/hibernate/orm/test/orphan/User.orm.xml",
+				"org/hibernate/orm/test/orphan/Mail.orm.xml"
 		}
 )
 @SessionFactory

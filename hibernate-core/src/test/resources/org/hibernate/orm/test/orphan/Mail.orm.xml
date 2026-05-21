@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                 https://www.hibernate.org/xsd/orm/mapping/mapping-8.0.xsd"
+                 version="8.0">
+    <package>org.hibernate.orm.test.orphan</package>
+    <entity class="Mail" metadata-complete="true">
+        <table name="t_mail"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value generator="native"/>
+            </id>
+            <basic name="alias" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="`alias`" unique="false" nullable="true" length="20"/>
+            </basic>
+            <many-to-one name="user" target-entity="User" fetch="LAZY" fetch-mode="SELECT" optional="true" not-found="EXCEPTION">
+                <property-ref name="userid"/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

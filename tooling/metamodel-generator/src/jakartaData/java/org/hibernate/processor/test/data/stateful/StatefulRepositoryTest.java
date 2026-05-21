@@ -112,14 +112,14 @@ class StatefulRepositoryTest {
 		assertTrue( statefulRepository.contains( "private EntityManagerFactory sessionFactory;" ) );
 		assertTrue( statefulRepository.contains( "sessionFactory.unwrap(SessionFactory.class).openSession();" ) );
 		assertTrue( statefulRepository.contains( "session.close();" ) );
-		assertTrue( statefulRepository.contains( "@Inject\n\t_StatefulBookRepository()" ) );
+		assertTrue( statefulRepository.contains( "@Inject" + System.lineSeparator() + "\t_StatefulBookRepository()" ) );
 		assertFalse( statefulRepository.contains( ".openStatelessSession();" ) );
 
 		final String statelessRepository = getMetaModelSourceAsString( StatelessBookRepository.class, true );
 		assertTrue( statelessRepository.contains( "private EntityManagerFactory sessionFactory;" ) );
 		assertTrue( statelessRepository.contains( "sessionFactory.unwrap(SessionFactory.class).openStatelessSession();" ) );
 		assertTrue( statelessRepository.contains( "session.close();" ) );
-		assertTrue( statelessRepository.contains( "@Inject\n\t_StatelessBookRepository()" ) );
+		assertTrue( statelessRepository.contains( "@Inject" + System.lineSeparator() + "\t_StatelessBookRepository()" ) );
 		assertFalse( statelessRepository.contains( "SessionFactory.class).openSession();" ) );
 	}
 

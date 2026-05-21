@@ -2466,6 +2466,9 @@ public class HbmXmlTransformer {
 				? manyToMany.getClazz()
 				: manyToMany.getEntityName() );
 
+		target.setOrphanRemoval( isOrphanRemoval( hbmCollection.getCascade() ) );
+		target.setCascade( convertCascadeType( hbmCollection.getCascade() ) );
+
 		if ( manyToMany.getNotFound() == JaxbHbmNotFoundEnum.IGNORE ) {
 			target.setNotFound( NotFoundAction.IGNORE );
 		}

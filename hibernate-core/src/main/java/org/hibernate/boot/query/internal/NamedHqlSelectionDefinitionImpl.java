@@ -203,7 +203,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 				location == null ? null : location.getName(),
 				annotation.query(),
 				annotation.resultClass() == void.class ? null : annotation.resultClass(),
-				null,
+				annotation.entityGraph(),
 				FlushModeTypeHelper.getFlushMode( annotation.flush() ),
 				null,
 				null,

@@ -43,8 +43,8 @@ public abstract class AbstractSqmQuery<R>
 		super( session );
 	}
 
-	public AbstractSqmQuery(AbstractSqmQuery<R> original) {
-		super( original.session );
+	public AbstractSqmQuery(AbstractSqmQuery<?> original) {
+		super( original.session, original.queryOptions.makeCopy() );
 	}
 
 	protected void applyMementoOptions(NamedSqmQueryMemento<?> memento) {

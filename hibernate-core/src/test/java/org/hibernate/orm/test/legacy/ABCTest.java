@@ -150,7 +150,7 @@ public class ABCTest {
 
 		scope.inTransaction(
 				session -> {
-					List<C1> bs = session.createQuery( "from B" ).ofType( C1.class ).getResultList();
+					List<C1> bs = session.createQuery( "from B" ).getResultList();
 					for ( C1 b : bs ) {
 						session.remove( b );
 						session.remove( b.getD() );

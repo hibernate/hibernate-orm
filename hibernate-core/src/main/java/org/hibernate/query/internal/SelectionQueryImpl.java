@@ -41,7 +41,6 @@ import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.named.NamedSqmQueryMemento;
@@ -292,6 +291,32 @@ public class SelectionQueryImpl<R>
 		}
 	}
 
+	/// Used by JPA 4 fluent narrowing operations.
+	private <X> SelectionQueryImpl(
+			SelectionQueryImpl<?> original,
+			Class<X> providedResultType,
+			RootGraphImplementor<?> providedResultGraph,
+			GraphSemantic graphSemantic) {
+		super( original );
+
+		hql = original.hql;
+		queryStringCacheKey = original.queryStringCacheKey;
+		sqm = (SqmSelectStatement<R>) original.sqm;
+		parameterMetadata = original.parameterMetadata;
+		domainParameterXref = original.domainParameterXref.copy();
+		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+		original.getQueryParameterBindings().visitBindings( this::setBindValues );
+
+		validateQuery( (Class<R>) providedResultType, sqm, hql );
+
+		this.providedResultType = (Class<R>) providedResultType;
+		actualResultType = determineResultType( sqm, providedResultType );
+		tupleMetadata = buildTupleMetadata( sqm, providedResultType, getQueryOptions().getTupleTransformer() );
+		if ( providedResultGraph != null ) {
+			queryOptions.applyGraph( providedResultGraph, graphSemantic );
+		}
+	}
+
 	@Override
 	public String getQueryString() {
 		return hql;
@@ -323,20 +348,22 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
-		// todo (jpa4) : type validation
-		return (SelectionQueryImplementor<X>) this;
+		return new SelectionQueryImpl<>( this, type, null, null );
 	}
 
 	@Override
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
-		// todo (jpa4) : type validation
-		return (SelectionQueryImplementor<X>) this;
+		return asSelectionQuery( entityGraph, GraphSemantic.LOAD );
 	}
 
 	@Override
-	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
-		// todo (jpa4) : type validation
-		return (SelectionQueryImplementor<X>) this;
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+		return new SelectionQueryImpl<>(
+				this,
+				entityGraph.getGraphedType().getJavaType(),
+				(RootGraphImplementor<X>) entityGraph,
+				graphSemantic
+		);
 	}
 
 	@Override
@@ -346,13 +373,12 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	public <X> SelectionQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph) {
-		return (SelectionQueryImplementor<X>) asSelectionQuery( entityGraph, GraphSemantic.LOAD );
+		return asSelectionQuery( entityGraph, GraphSemantic.LOAD );
 	}
 
 	@Override
 	public <R> SelectionQueryImplementor<R> withResultSetMapping(ResultSetMapping<R> mapping) {
-		// todo (jpa4) : type validation
-		return (SelectionQueryImplementor<R>) this;
+		throw new IllegalStateException( "Result set mappings can only be used with native SQL queries" );
 	}
 
 
@@ -1342,6 +1368,10 @@ public class SelectionQueryImpl<R>
 
 	private <T> void setBindValues(QueryParameter<?> parameter, QueryParameterBinding<T> binding) {
 		final var parameterBinding = parameterBindings.getBinding( binding.getQueryParameter() );
+		parameterBinding.setType( binding.getType() );
+		if ( !binding.isBound() ) {
+			return;
+		}
 		final var explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
 		if ( explicitTemporalPrecision != null ) {
 			if ( binding.isMultiValued() ) {

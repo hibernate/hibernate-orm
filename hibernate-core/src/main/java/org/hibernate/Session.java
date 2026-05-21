@@ -1272,12 +1272,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	RootGraph<?> createEntityGraph(String graphName);
 
-	/// Obtain an immutable reference to a predefined
-	/// [named entity graph][jakarta.persistence.NamedEntityGraph]
-	/// or return `null` if there is no predefined graph with the given
-	/// name.
+	/// Obtain a mutable copy of a predefined
+	/// [named entity graph][jakarta.persistence.NamedEntityGraph].
 	///
 	/// @param graphName The name of the predefined named entity graph
+	/// @throws IllegalArgumentException if there is no predefined graph
+	///         with the given name
 	///
 	/// @apiNote This method returns `RootGraph<?>`, requiring an
 	/// unchecked typecast before use. It's cleaner to obtain a graph using

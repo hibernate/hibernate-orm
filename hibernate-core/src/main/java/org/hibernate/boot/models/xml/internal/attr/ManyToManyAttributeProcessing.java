@@ -4,9 +4,16 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
+import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
@@ -53,6 +60,8 @@ public class ManyToManyAttributeProcessing {
 
 		XmlAnnotationHelper.applyCascading( jaxbManyToMany.getCascade(), manyToManyAnn, xmlDocumentContext );
 
+		applyOrphanRemoval( jaxbManyToMany, xmlDocumentContext, memberDetails );
+
 		applyAccess( accessType, memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbManyToMany, memberDetails, xmlDocumentContext );
 		applyFetching( jaxbManyToMany, memberDetails, manyToManyAnn, xmlDocumentContext );
@@ -75,6 +84,22 @@ public class ManyToManyAttributeProcessing {
 		XmlAnnotationHelper.applyNotFound( jaxbManyToMany, memberDetails, xmlDocumentContext );
 
 		return memberDetails;
+	}
+
+	private static void applyOrphanRemoval(JaxbManyToManyImpl jaxbManyToMany, XmlDocumentContext xmlDocumentContext, MutableMemberDetails memberDetails) {
+		if ( jaxbManyToMany.isOrphanRemoval() != null && jaxbManyToMany.isOrphanRemoval() ) {
+			final CascadeAnnotation cascadeAnn = (CascadeAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.CASCADE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			final List<CascadeType> cascadeTypes = cascadeAnn.value() != null
+					? new ArrayList<>( Arrays.asList( cascadeAnn.value() ) )
+					: new ArrayList<>();
+			if ( !cascadeTypes.contains( CascadeType.DELETE_ORPHAN ) ) {
+				cascadeTypes.add( CascadeType.DELETE_ORPHAN );
+			}
+			cascadeAnn.value( cascadeTypes.toArray( CascadeType[]::new ) );
+		}
 	}
 
 	private static void applyTarget(

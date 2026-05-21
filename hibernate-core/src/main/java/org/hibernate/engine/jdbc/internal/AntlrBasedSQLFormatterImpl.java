@@ -4,9 +4,10 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
@@ -20,9 +21,9 @@ import org.jboss.logging.Logger;
  *
  * @author Hibernate Team
  */
-public class TokenBasedSQLFormatterImpl implements Formatter {
+public class AntlrBasedSQLFormatterImpl implements Formatter {
 
-	private static final Logger log = Logger.getLogger( TokenBasedSQLFormatterImpl.class );
+	private static final Logger log = Logger.getLogger( AntlrBasedSQLFormatterImpl.class );
 
 	private static final String INDENT = "    ";
 	private static final String LINE_SEPARATOR = System.lineSeparator();
@@ -50,7 +51,7 @@ public class TokenBasedSQLFormatterImpl implements Formatter {
 		private int position = 0;
 		private int baseIndent = 0; // Base indent level for current context
 		private boolean atLineStart = true;
-		private final Stack<Context> contextStack = new Stack<>();
+		private final Deque<Context> contextStack = new ArrayDeque<>();
 		private boolean inMergeWhenThenBlock = false; // Tracks if we're in a MERGE WHEN THEN block
 
 		// Context types
@@ -120,6 +121,7 @@ public class TokenBasedSQLFormatterImpl implements Formatter {
 					SqlFormatterLexer.INSERT,
 					SqlFormatterLexer.DELETE,
 					SqlFormatterLexer.MERGE,
+					SqlFormatterLexer.USING,	// USING in MERGE statement - newline at MERGE context level
 					SqlFormatterLexer.RETURNING:
 					newLine(true);
 					baseIndent = currentContext().indent;
@@ -137,12 +139,6 @@ public class TokenBasedSQLFormatterImpl implements Formatter {
 					SqlFormatterLexer.NOTHING,
 					SqlFormatterLexer.CONSTRAINT:
 					space();
-					writeToken(token);
-					break;
-				case SqlFormatterLexer.USING:
-					// USING in MERGE statement - newline at MERGE context level
-					newLine(true);
-					baseIndent = currentContext().indent;
 					writeToken(token);
 					break;
 				case SqlFormatterLexer.VALUES:
@@ -409,7 +405,7 @@ public class TokenBasedSQLFormatterImpl implements Formatter {
 			}
 
 			// Multi-line comments: put on own line and carry over indentation to continuation lines
-			if (commentText.contains("\n")) {
+			if (commentText.contains(LINE_SEPARATOR)) {
 				// Ensure comment starts on its own line with proper indentation
 				newLine(true);
 
@@ -420,7 +416,7 @@ public class TokenBasedSQLFormatterImpl implements Formatter {
 				}
 
 				// Split comment into lines and re-indent continuation lines to match first line
-				String[] lines = commentText.split("\n", -1);
+				String[] lines = commentText.split(LINE_SEPARATOR, -1);
 				for (int i = 0; i < lines.length; i++) {
 					if (i == 0) {
 						// First line - write as-is
@@ -428,7 +424,7 @@ public class TokenBasedSQLFormatterImpl implements Formatter {
 					}
 					else {
 						// Continuation lines - add newline, apply same indentation as first line, strip leading whitespace from content
-						output.append("\n");
+						output.append(LINE_SEPARATOR);
 						indent(baseIndent);
 						// Strip leading whitespace from continuation line
 						output.append(lines[i].stripLeading());
@@ -694,13 +690,8 @@ public class TokenBasedSQLFormatterImpl implements Formatter {
 				contextStack.push(new Context(ContextType.MAIN, currentContext().indent + 1));
 				inMergeWhenThenBlock = true;
 			}
-			else if (inContext(ContextType.CASE_EXPR)) {
-				// CASE WHEN ... THEN
-				space();
-				writeToken(token);
-			}
 			else {
-				// Other contexts
+				// CASE WHEN ... THEN or other contexts
 				space();
 				writeToken(token);
 			}
@@ -848,6 +839,7 @@ public class TokenBasedSQLFormatterImpl implements Formatter {
 				int prevType = prev.getType();
 				// These keywords need space before (: clause keywords, operators, etc.
 				if (prevType == SqlFormatterLexer.SELECT || prevType == SqlFormatterLexer.LATERAL ||
+					prevType == SqlFormatterLexer.FROM || prevType == SqlFormatterLexer.JOIN ||
 					prevType == SqlFormatterLexer.EXISTS || prevType == SqlFormatterLexer.IN ||
 					prevType == SqlFormatterLexer.ALL || prevType == SqlFormatterLexer.ANY ||
 					prevType == SqlFormatterLexer.CONFLICT || prevType == SqlFormatterLexer.ON ||

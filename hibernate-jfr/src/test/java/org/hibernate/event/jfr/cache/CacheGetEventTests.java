@@ -22,9 +22,9 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jdk.jfr.consumer.RecordedEvent;
-import org.moditect.jfrunit.EnableEvent;
-import org.moditect.jfrunit.JfrEventTest;
-import org.moditect.jfrunit.JfrEvents;
+import org.hibernate.event.jfr.testing.EnableEvent;
+import org.hibernate.event.jfr.testing.JfrEventTest;
+import org.hibernate.event.jfr.testing.JfrEvents;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

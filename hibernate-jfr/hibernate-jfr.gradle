@@ -14,5 +14,4 @@ dependencies {
     implementation project( ':hibernate-core' )
 
     testImplementation project( ':hibernate-testing' )
-    testImplementation libs.test.jfrUnit
 }

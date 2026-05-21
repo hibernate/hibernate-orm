@@ -387,8 +387,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <Y> SqmPath<Y> get(SingularAttribute<? super T, Y> jpaAttribute) {
+		//noinspection unchecked
 		return (SqmPath<Y>) resolvePath( (PersistentAttribute<?, ?>) jpaAttribute );
 	}
 
@@ -401,7 +401,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@Override
 	public <K, V, M extends Map<K, V>> SqmPluralPath<M,V> get(MapAttribute<? super T, K, V> attribute) {
 		final var mapAttribute = (SqmMapPersistentAttribute<? super T, K, V>) attribute;
-		final SqmPath<Map<K, V>> path = resolvePath(
+		final var path = resolvePath(
 				mapAttribute,
 				ReusablePathKey.mapAttributeAccess( mapAttribute.getName() ),
 				intermediatePathSource -> new SqmPluralValuedSimplePath<>(
@@ -413,6 +413,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 						true
 				)
 		);
+		//noinspection unchecked
 		return (SqmPluralPath<M, V>) path;
 	}
 

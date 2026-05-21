@@ -335,7 +335,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 				&& pluralPath.isMapAttributeAccess() ) {
 			return pluralPath.get( CollectionPart.Nature.ELEMENT.getName() );
 		}
-		return selection;
+		else {
+			return selection;
+		}
 	}
 
 	@Override @Deprecated
@@ -586,7 +588,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		}
 		//TODO: do some deeper analysis for unions (simplify their select lists)
 		aliasSelections( queryPart );
-		@SuppressWarnings("unchecked") final SqmSubQuery<?> subquery =
+		@SuppressWarnings("unchecked")
+		final SqmSubQuery<?> subquery =
 				new SqmSubQuery<>( copy, (SqmQueryPart<Object>) queryPart, Object.class, nodeBuilder() );
 		final SqmSelectStatement<Boolean> query = nodeBuilder().createQuery( Boolean.class );
 		query.select( nodeBuilder().exists( subquery ) );

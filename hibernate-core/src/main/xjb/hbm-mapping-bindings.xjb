@@ -3,7 +3,7 @@
 <jaxb:bindings xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
 			   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 			   xmlns:xs="http://www.w3.org/2001/XMLSchema"
-			   xmlns:inheritance="http://jvnet.org/basicjaxb/xjc/inheritance"
+			   xmlns:inheritance="urn:jvnet.org:basicjaxb:xjc:inheritance"
 			   jaxb:extensionBindingPrefixes="inheritance"
 			   version="3.0">
 

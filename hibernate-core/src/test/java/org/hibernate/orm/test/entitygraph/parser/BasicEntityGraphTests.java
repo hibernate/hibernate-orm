@@ -24,7 +24,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -86,24 +85,12 @@ public class BasicEntityGraphTests {
 
 					assertThat( graphRoot.getName(), is( "immutable" ) );
 					assertThat( graphRoot.getAttributeNodes(), hasSize( 2 ) );
-					try {
-						graphRoot.addAttributeNodes( "parent" );
-						fail( "Should have failed" );
-					}
-					catch (IllegalStateException ignore) {
-						// expected outcome
-					}
+					graphRoot.addAttributeNodes( "parent" );
 
 					for ( AttributeNode<?> attrNode : graphRoot.getAttributeNodes() ) {
 						assertThat( attrNode.getSubgraphs().entrySet(), hasSize( 1 ) );
 						Subgraph<?> subgraph = attrNode.getSubgraphs().values().iterator().next();
-						try {
-							graphRoot.addAttributeNodes( "parent" );
-							fail( "Should have failed" );
-						}
-						catch (IllegalStateException ignore) {
-							// expected outcome
-						}
+						graphRoot.addAttributeNodes( "parent" );
 					}
 				}
 		);

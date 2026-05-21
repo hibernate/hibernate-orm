@@ -621,8 +621,17 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public <T> EntityGraph<T> getEntityGraph(Class<T> entityClass, String name) {
-		//noinspection unchecked
-		return (EntityGraph<T>) factory.getNamedEntityGraphs( entityClass ).get( name );
+		final var entityGraph = getEntityGraph( name );
+		final var type = getFactory().getJpaMetamodel().managedType( entityClass );
+		final var graphedType = entityGraph.getGraphedType();
+		if ( !Objects.equals( graphedType.getTypeName(), type.getTypeName() ) ) {
+			throw new IllegalArgumentException(
+					"Named entity graph '" + name + "' is for type '" + graphedType.getTypeName() + "'"
+			);
+		}
+		@SuppressWarnings("unchecked") // this cast is sound, because we just checked
+		final var graph = (EntityGraph<T>) entityGraph;
+		return graph;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2204,7 +2213,9 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		if ( named == null ) {
 			throw new IllegalArgumentException( "No EntityGraph with given name '" + graphName + "'" );
 		}
-		return named;
+		//TODO: we're using the deprecated operation
+		//      here to preserve the graph name
+		return named.makeRootGraph( graphName, true );
 	}
 
 	@Override

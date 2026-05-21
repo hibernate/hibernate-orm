@@ -861,7 +861,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
 
 	/**
-	 * Obtain an immutable reference to a predefined
+	 * Obtain a mutable copy of a predefined
 	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}.
 	 *
 	 * @param graphName the name of the predefined named entity graph

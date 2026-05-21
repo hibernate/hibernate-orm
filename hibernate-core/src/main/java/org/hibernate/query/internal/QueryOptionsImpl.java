@@ -77,14 +77,16 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		this.flushMode = original.flushMode;
 		this.timeout = original.timeout;
 		this.comment = original.comment;
-		this.databaseHints = new ArrayList<>( original.databaseHints );
+		this.databaseHints = copy( original.databaseHints );
 		this.fetchSize = original.fetchSize;
 		this.readOnlyEnabled = original.readOnlyEnabled;
 		this.resultCachingEnabled = original.resultCachingEnabled;
 		this.cacheRetrieveMode = original.cacheRetrieveMode;
 		this.cacheStoreMode = original.cacheStoreMode;
 		this.resultCacheRegionName = original.resultCacheRegionName;
+		this.refreshSession = original.refreshSession;
 		this.queryPlanCachingEnabled = original.queryPlanCachingEnabled;
+		this.limitInMemoryEnabled = original.limitInMemoryEnabled;
 		this.limit = original.limit.makeCopy();
 		this.lockOptions = original.lockOptions.makeCopy();
 		this.tupleTransformer = original.tupleTransformer;
@@ -100,6 +102,10 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 			return null;
 		}
 		return new HashSet<>( original );
+	}
+
+	private <E> List<E> copy(List<E> original) {
+		return original == null ? null : new ArrayList<>( original );
 	}
 
 	@Override

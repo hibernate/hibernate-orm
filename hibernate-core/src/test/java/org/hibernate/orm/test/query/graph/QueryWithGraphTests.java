@@ -5,8 +5,10 @@
 package org.hibernate.orm.test.query.graph;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
@@ -24,6 +26,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 /**
  * @author Steve Ebersole
@@ -62,11 +65,87 @@ public class QueryWithGraphTests {
 		} );
 	}
 
+	@Test
+	void namedQueryAppliesEntityGraph(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var results = session.createNamedQuery( "Publisher.findAllWithGraph", Publisher.class ).list();
+			assertThat( results ).hasSize( 1 );
+			assertThat( Hibernate.isInitialized( results.get( 0 ).books ) ).isTrue();
+		} );
+	}
+
+	@Test
+	void getEntityGraphReturnsMutableCopy(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final EntityGraph<Publisher> entityGraph = session.getEntityGraph( Publisher.class, "pub-base" );
+			assertThat( entityGraph.getName() ).isEqualTo( "pub-base" );
+			assertThat( entityGraph.hasAttributeNode( "books" ) ).isFalse();
+
+			entityGraph.addAttributeNode( "books" );
+			assertThat( entityGraph.hasAttributeNode( "books" ) ).isTrue();
+
+			final EntityGraph<Publisher> entityGraphAgain = session.getEntityGraph( Publisher.class, "pub-base" );
+			assertThat( entityGraphAgain.getName() ).isEqualTo( "pub-base" );
+			assertThat( entityGraphAgain.hasAttributeNode( "books" ) ).isFalse();
+		} );
+	}
+
+	@Test
+	void withEntityGraphAppliesEntityGraph(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final EntityGraph<Publisher> entityGraph = session.getEntityGraph( Publisher.class, "pub-with-books" );
+			final var query = session.createQuery( "from Publisher", Publisher.class );
+			final var graphedQuery = query.withEntityGraph( entityGraph );
+			assertThat( graphedQuery ).isNotSameAs( query );
+
+			final var plainResults = query.getResultList();
+			assertThat( plainResults ).hasSize( 1 );
+			assertThat( Hibernate.isInitialized( plainResults.get( 0 ).books ) ).isFalse();
+		} );
+		factoryScope.inTransaction( (session) -> {
+			final EntityGraph<Publisher> entityGraph = session.getEntityGraph( Publisher.class, "pub-with-books" );
+			var results = session.createQuery( "from Publisher", Publisher.class )
+					.withEntityGraph( entityGraph )
+					.getResultList();
+			assertThat( results ).hasSize( 1 );
+			assertThat( Hibernate.isInitialized( results.get( 0 ).books ) ).isTrue();
+		} );
+	}
+
+	@Test
+	void ofTypeReturnsCloneWithCopiedParameters(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final var query = session.createQuery( "select p.name from Publisher p where p.id = :id" );
+			query.setParameter( "id", 1 );
+
+			final var typedQuery = query.ofType( String.class );
+			assertThat( typedQuery ).isNotSameAs( query );
+			assertThat( typedQuery.getSingleResult() ).isEqualTo( "Me" );
+		} );
+	}
+
+	@Test
+	void resultSetMappingIsRejectedForJpaQuery(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> assertThatIllegalStateException()
+				.isThrownBy( () -> session.createQuery( "from Publisher" )
+						.withResultSetMapping( jakarta.persistence.sql.ResultSetMapping.entity( Publisher.class ) ) ) );
+	}
+
 	@Entity(name="Publisher")
 	@Table(name="Publisher")
+	@NamedQuery(
+			name = "Publisher.findAllWithGraph",
+			query = "from Publisher",
+			resultClass = Publisher.class,
+			entityGraph = "pub-with-books"
+	)
 	@NamedEntityGraph(
 			name = "pub-with-books",
 			graph = "id, name, books"
+	)
+	@NamedEntityGraph(
+			name = "pub-base",
+			graph = "id, name"
 	)
 	public static class Publisher {
 		@Id

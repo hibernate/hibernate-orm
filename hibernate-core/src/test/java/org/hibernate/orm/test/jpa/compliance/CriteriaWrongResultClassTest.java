@@ -4,47 +4,73 @@
  */
 package org.hibernate.orm.test.jpa.compliance;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.From;
+
+import org.hibernate.orm.test.jpa.compliance.CriteriaWrongResultClassTest_.Department_;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.JpaComplianceSettings.JPA_QUERY_COMPLIANCE;
 
 @Jpa(
 		annotatedClasses = {
 				CriteriaWrongResultClassTest.Department.class,
 				CriteriaWrongResultClassTest.Person.class
 		},
-		properties = @Setting(name = AvailableSettings.JPA_QUERY_COMPLIANCE, value = "true")
+		properties = @Setting(name = JPA_QUERY_COMPLIANCE, value = "true")
 )
 public class CriteriaWrongResultClassTest {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					final Department department = new Department( 1, "Hibernate" );
+					final Person gavin = new Person( 1, "Gavin King", "gavin" );
+					final Person steve = new Person( 2, "Steve Ebersole", "steve" );
+					department.addPerson( gavin );
+					department.addPerson( steve );
+
+					entityManager.persist( gavin );
+					entityManager.persist( steve );
+					entityManager.persist( department );
+				}
+		);
+	}
+
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
+	}
+
 	@Test
+	@JiraKey("HHH-20434")
 	public void getMapAttributeTest(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {
-					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-
-					final CriteriaQuery query = criteriaBuilder.createQuery( Expression.class );
-					final From<Department, Department> department = query.from( Department.class );
-					query.where( criteriaBuilder.equal( department.get( "id" ), 1 ) );
-					query.select( department.get( "people" ) );
-					List<Person> people = entityManager.createQuery( query ).getResultList();
+					final var criteriaBuilder = entityManager.getCriteriaBuilder();
+					final var query = criteriaBuilder.createQuery( Person.class );
+					final var department = query.from( Department.class );
+					query.where( criteriaBuilder.equal( department.get( Department_.id ), 1 ) );
+					query.select( department.get( Department_.people ) );
+					final List<Person> people = entityManager.createQuery( query ).getResultList();
+					assertThat( people )
+							.extracting( Person::getName )
+							.containsExactlyInAnyOrder( "Gavin King", "Steve Ebersole" );
 				}
 		);
 	}

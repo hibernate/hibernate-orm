@@ -14,6 +14,8 @@ import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaExpression;
@@ -26,6 +28,7 @@ import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -42,6 +45,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
+import static org.hibernate.query.sqm.tree.expression.Compatibility.areAssignmentCompatible;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
@@ -324,8 +328,25 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			checkSelectionIsJpaCompliant( selection );
 		}
-		getQuerySpec().setSelection( (JpaSelection<T>) selection );
+		getQuerySpec().setSelection( (JpaSelection<T>) adjustSelectionForResultType( selection ) );
 		return this;
+	}
+
+	private Selection<? extends T> adjustSelectionForResultType(Selection<? extends T> selection) {
+		if ( selection instanceof SqmPluralValuedSimplePath<?> pluralPath
+				&& pluralPath.getPluralAttribute() instanceof MapPersistentAttribute<?, ?, ?> mapAttribute ) {
+			final var resultType = getResultType();
+			final var selectionType = pluralPath.getJavaType();
+			final var elementType = mapAttribute.getElementType().getJavaType();
+			if ( resultType != null
+					&& selectionType != null
+					&& elementType != null
+					&& !areAssignmentCompatible( resultType, selectionType )
+					&& areAssignmentCompatible( resultType, elementType ) ) {
+				return pluralPath.get( CollectionPart.Nature.ELEMENT.getName() );
+			}
+		}
+		return selection;
 	}
 
 	@Override @Deprecated

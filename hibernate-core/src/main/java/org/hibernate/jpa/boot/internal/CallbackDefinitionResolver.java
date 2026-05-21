@@ -11,6 +11,7 @@ import jakarta.persistence.ExcludeSuperclassListeners;
 import jakarta.persistence.MappedSuperclass;
 import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.spi.LifecycleEventHandler;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
@@ -29,6 +30,8 @@ import java.util.List;
 
 import static org.hibernate.boot.models.spi.LifecycleEventHandler.listenersForTarget;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.qualifier;
 
 /// Resolves JPA callback definitions
 ///
@@ -42,6 +45,7 @@ public final class CallbackDefinitionResolver {
 
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
+		final List<LifecycleEventHandler> orderedPackageListeners = new ArrayList<>();
 		final List<LifecycleEventHandler> orderedListeners = new ArrayList<>();
 		final List<LifecycleEventHandler> orderedDefaultListeners = new ArrayList<>();
 
@@ -76,6 +80,8 @@ public final class CallbackDefinitionResolver {
 		}
 		while ( currentClazz != null );
 
+		applyPackageListeners( entityClass, orderedPackageListeners, modelsContext );
+
 		//handle default listeners
 		if ( !stopDefaultListeners ) {
 			final var globalListenerRegistrations = new ArrayList<>(
@@ -95,6 +101,13 @@ public final class CallbackDefinitionResolver {
 					resolveListenerCallback( listenerRegistration, entityClass, callbackType );
 			if ( callbackDefinition != null ) {
 				callbackDefinitions.add( 0, callbackDefinition ); // listeners first
+			}
+		}
+		for ( var listenerRegistration : orderedPackageListeners ) {
+			final var callbackDefinition =
+					resolveListenerCallback( listenerRegistration, entityClass, callbackType );
+			if ( callbackDefinition != null ) {
+				callbackDefinitions.add( 0, callbackDefinition );
 			}
 		}
 		for ( var listenerRegistration : orderedDefaultListeners ) {
@@ -199,6 +212,26 @@ public final class CallbackDefinitionResolver {
 							listOfListeners
 					);
 				}
+			}
+		}
+	}
+
+	private static void applyPackageListeners(
+			ClassDetails entityClass,
+			List<LifecycleEventHandler> listOfListeners,
+			ModelsContext sourceModelContext) {
+		final String packageName = qualifier( entityClass.getName() );
+		if ( !isEmpty( packageName ) ) {
+			try {
+				applyListeners(
+						sourceModelContext.getClassDetailsRegistry()
+								.resolveClassDetails( packageName + ".package-info" ),
+						entityClass,
+						listOfListeners,
+						sourceModelContext
+				);
+			}
+			catch (ClassLoadingException ignore) {
 			}
 		}
 	}

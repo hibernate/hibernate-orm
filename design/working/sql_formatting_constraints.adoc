@@ -1,7 +1,8 @@
 = SQL Formatting Constraints
 
-*Extracted from:* `TokenBasedFormatterTest.testComplexQuery()` +
-*Date:* 2026-05-08
+*Extracted from:* `AntlrBasedSQLFormatterTest.testComplexQuery()` +
+*Initial Date:* 2026-05-08 +
+*Last Updated:* 2026-05-21
 
 '''
 
@@ -38,13 +39,13 @@
 
 === 2.1 Indentation Character
 
-* *Use TAB character (`\t`), NOT spaces*
-* Each indentation level = ONE tab character
+* *Use 4 SPACE characters, NOT tabs*
+* Each indentation level = 4 spaces (defined as `INDENT = "    "` in implementation)
 
 === 2.2 Indentation is Relative to Containing Context
 
 * Not absolute levels (0, 1, 2)
-* Each nesting level adds +1 tab from its parent context
+* Each nesting level adds +1 indent level (4 spaces) from its parent context
 * No maximum depth (could be 27 levels in complex queries)
 
 === 2.3 Indentation Levels (relative)
@@ -762,6 +763,17 @@ TRUNCATE TABLE table_name RESTART IDENTITY CASCADE;
 ** New Section 11.7: TRUNCATE formatting rules covering:
 *** Simple TRUNCATE TABLE
 *** TRUNCATE with RESTART IDENTITY CASCADE options (all inline)
+* Major refactoring and indentation change (2026-05-20):
+** *BREAKING CHANGE*: Section 2.1: Switched from TAB characters to 4 SPACE characters for indentation
+** Implementation: Changed `INDENT = "\t"` to `INDENT = "    "` (4 spaces)
+** All test fixtures updated to use 4-space indentation instead of tabs
+** File renames: `AntlrBasedFormatterImpl` → `AntlrBasedSQLFormatterImpl`, `AntlrBasedFormatterTest` → `AntlrBasedSQLFormatterTest`
+** Code cleanup and refactoring throughout formatter implementation
+* Additional corrections and new test (2026-05-21):
+** Added new test fixture: `select_from_subselect` - SELECT from derived table/subquery
+** Minor corrections to formatter implementation
+** Use System.lineSeparator() to append a line separator, instead of hardcoding '\n'
+** Replaced Stack with Deque implementation
 
 '''
 

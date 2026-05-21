@@ -186,7 +186,7 @@ public class DomainModelCategorizationCollector {
 	}
 
 	private static boolean hasIdClass(ClassDetails classDetails) {
-		return classDetails.getDirectAnnotationUsage( IdClass.class ) != null;
+		return classDetails.hasDirectAnnotationUsage( IdClass.class );
 	}
 
 	private static boolean isPackageInfo(ClassDetails classDetails) {

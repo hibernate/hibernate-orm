@@ -188,17 +188,6 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public final @Nullable SqmPersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
-		final var attribute = findDeclaredAttribute( name );
-		if ( attribute != null ) {
-			return attribute;
-		}
-		else {
-			return supertype != null ? supertype.findAttributeInSuperTypes( name ) : null;
-		}
-	}
-
-	@Override
 	public @Nullable SqmPersistentAttribute<?, ?> findSubTypesAttribute(String name) {
 		final var attribute = findDeclaredAttribute( name );
 		if ( attribute != null ) {

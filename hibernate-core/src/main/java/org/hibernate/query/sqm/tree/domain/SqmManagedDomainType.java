@@ -21,11 +21,6 @@ public interface SqmManagedDomainType<J> extends ManagedDomainType<J>, SqmDomain
 	@Override
 	@Nullable SqmPersistentAttribute<? super J, ?> findAttribute(String name);
 
-	@Override @Deprecated(since = "7.0", forRemoval = true)
-	default @Nullable SqmPersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
-		return findAttribute( name );
-	}
-
 	@Override
 	@Nullable SqmPersistentAttribute<?, ?> findSubTypesAttribute(String name);
 

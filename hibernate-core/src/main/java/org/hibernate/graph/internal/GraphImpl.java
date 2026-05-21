@@ -208,7 +208,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	private PersistentAttribute<? super J, ?> findAttributeInSupertypes(String attributeName) {
-		final var attribute = managedType.findAttributeInSuperTypes( attributeName );
+		final var attribute = managedType.findAttribute( attributeName );
 		return attribute instanceof SqmPathSource<?> sqmPathSource && sqmPathSource.isGeneric()
 				? managedType.findConcreteGenericAttribute( attributeName )
 				: attribute;

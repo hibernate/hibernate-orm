@@ -7,7 +7,6 @@ package org.hibernate.graph.internal;
 import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 
@@ -46,21 +45,11 @@ public class RootGraphImpl<J> extends GraphImpl<J> implements RootGraphImplement
 
 	@Override
 	public RootGraphImplementor<J> makeCopy(boolean mutable) {
-		return new RootGraphImpl<>( null, this, mutable );
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	public SubGraphImplementor<J> makeSubGraph(boolean mutable) {
-		return new SubGraphImpl<>( this, mutable );
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	public RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) {
-		return !mutable && !isMutable() ? this : super.makeRootGraph( name, mutable );
+		return makeCopy( mutable, null );
 	}
 
 	@Override
-	public RootGraphImplementor<J> makeImmutableCopy(String name) {
-		return makeRootGraph( name, false );
+	public RootGraphImplementor<J> makeCopy(boolean mutable, String name) {
+		return !mutable && !isMutable() ? this : new RootGraphImpl<>( name, this, mutable );
 	}
 }

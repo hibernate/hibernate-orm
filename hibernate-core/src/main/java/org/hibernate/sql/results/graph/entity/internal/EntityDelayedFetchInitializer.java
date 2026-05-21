@@ -301,7 +301,7 @@ public class EntityDelayedFetchInitializer
 	private boolean isLazyByGraph(RowProcessingState rowProcessingState) {
 		final var appliedGraph = rowProcessingState.getQueryOptions().getAppliedGraph();
 		if ( appliedGraph != null && appliedGraph.getSemantic() == GraphSemantic.FETCH ) {
-			final var attributeNode = appliedGraph.getGraph().findAttributeNode( navigablePath.getLocalName() );
+			final var attributeNode = appliedGraph.getGraph().getAttributeNode( navigablePath.getLocalName() );
 			return attributeNode == null
 				|| attributeNode.getAttributeDescriptor() != getInitializedPart().asAttributeMapping();
 		}

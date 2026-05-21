@@ -21,18 +21,7 @@ public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<
 	@Override
 	RootGraphImplementor<J> makeCopy(boolean mutable);
 
-	@Override @Deprecated(forRemoval = true)
-	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable);
+	@Override
+	RootGraphImplementor<J> makeCopy(boolean mutable, String name);
 
-	@Override @Deprecated(forRemoval = true)
-	SubGraphImplementor<J> makeSubGraph(boolean mutable);
-
-	/**
-	 * Make an immutable copy of this entity graph, using the given name.
-	 *
-	 * @param name The name to apply to the immutable copy
-	 *
-	 * @return The immutable copy
-	 */
-	RootGraphImplementor<J> makeImmutableCopy(String name);
 }

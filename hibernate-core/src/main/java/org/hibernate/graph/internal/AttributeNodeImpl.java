@@ -197,58 +197,6 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		}
 	}
 
-	@Override @Deprecated
-	public SubGraphImplementor<E> makeSubGraph() {
-		verifyMutability();
-		if ( valueSubgraph == null ) {
-			valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
-		}
-		return valueSubgraph;
-	}
-
-	@Override @Deprecated
-	public <S> SubGraphImplementor<S> makeSubGraph(Class<S> subtype) {
-		final var managedType = asManagedType( valueGraphType );
-		if ( !managedType.getJavaType().isAssignableFrom( subtype ) ) {
-			throw new IllegalArgumentException( "Not a subtype: " + subtype.getName() );
-		}
-		@SuppressWarnings("unchecked")
-		final var castSuptype = (Class<? extends E>) subtype;
-		final var result = makeSubGraph().addTreatedSubgraph( castSuptype );
-		//noinspection unchecked
-		return (SubGraphImplementor<S>) result;
-	}
-
-	@Override @Deprecated
-	public SubGraphImplementor<K> makeKeySubGraph() {
-		verifyMutability();
-		checkMap();
-		if ( keySubgraph == null ) {
-			keySubgraph = new SubGraphImpl<>( asManagedType( keyGraphType ), true );
-		}
-		return keySubgraph;
-	}
-
-	@Override @Deprecated
-	public <S> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype) {
-		checkMap();
-		final var type = asManagedType( keyGraphType );
-		if ( !type.getJavaType().isAssignableFrom( subtype ) ) {
-			throw new IllegalArgumentException( "Not a key subtype: " + subtype.getName() );
-		}
-		@SuppressWarnings("unchecked")
-		final var castType = (Class<? extends K>) subtype;
-		final var result = makeKeySubGraph().addTreatedSubgraph( castType );
-		//noinspection unchecked
-		return (SubGraphImplementor<S>) result;
-	}
-
-	private void checkMap() {
-		if ( keyGraphType == null ) {
-			throw new CannotContainSubGraphException( "Attribute '" + description() + "' is not a Map" );
-		}
-	}
-
 	protected <T> ManagedDomainType<T> asManagedType(DomainType<T> domainType) {
 		if ( domainType instanceof ManagedDomainType<T> managedDomainType ) {
 			return managedDomainType;

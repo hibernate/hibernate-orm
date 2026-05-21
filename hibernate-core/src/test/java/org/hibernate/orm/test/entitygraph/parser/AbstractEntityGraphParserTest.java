@@ -156,7 +156,7 @@ public abstract class AbstractEntityGraphParserTest extends AbstractEntityGraphT
 				entityManager -> {
 					RootGraphImplementor<GraphParsingTestEntity> graph = ((SessionImplementor) entityManager)
 							.createEntityGraph( GraphParsingTestEntity.class );
-					final SubGraphImplementor<GraphParsingTestSubEntity> subGraph = graph.addSubGraph(
+					final SubGraphImplementor<GraphParsingTestSubEntity> subGraph = graph.addSubgraph(
 							"linkToOne",
 							GraphParsingTestSubEntity.class
 					);

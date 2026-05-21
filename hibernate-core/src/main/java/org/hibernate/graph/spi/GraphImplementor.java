@@ -15,7 +15,6 @@ import org.hibernate.Internal;
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.Graph;
 import org.hibernate.graph.SubGraph;
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 
@@ -40,19 +39,19 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	 *
 	 * @see jakarta.persistence.Graph#removeAttributeNode
 	 */
-	<T> AttributeNodeImplementor<T,?,?> findNode(String name);
+	AttributeNodeImplementor<?,?,?> findNode(String name);
 
 	/**
 	 * Retrieve an already existing node, if one, from the graph excluding all other checks.
 	 * Used in implementing {@linkplain #findNode(String)}
 	 */
-	<T> AttributeNodeImplementor<T,?,?> getExistingNode(PersistentAttribute<?, ? extends T> attribute);
+	AttributeNodeImplementor<?,?,?> getExistingNode(PersistentAttribute<?, ?> attribute);
 
 	/**
 	 * Retrieve an already existing node, if one, from the graph excluding all other checks.
 	 * Used in implementing {@linkplain #findNode(String)}
 	 */
-	<T> AttributeNodeImplementor<T,?,?> getExistingNode(String attributeName);
+	AttributeNodeImplementor<?,?,?> getExistingNode(String attributeName);
 
 	@Override
 	GraphImplementor<J> makeCopy(boolean mutable);
@@ -61,14 +60,6 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
 	@Internal
 	void mergeInternal(GraphImplementor<J> graph);
-
-	@Override
-	@Deprecated(forRemoval = true)
-	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable);
-
-	@Override
-	@Deprecated(forRemoval = true)
-	SubGraphImplementor<J> makeSubGraph(boolean mutable);
 
 	@Override
 	List<? extends AttributeNodeImplementor<?,?,?>> getAttributeNodeList();
@@ -83,17 +74,7 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	@Override
 	<Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(Attribute<? super J, Y> attribute);
 
-	@Override
-	<AJ> AttributeNodeImplementor<AJ,?,?> findAttributeNode(String attributeName);
-
-	@Override
-	<AJ> AttributeNodeImplementor<AJ,?,?> findAttributeNode(PersistentAttribute<? super J, AJ> attribute);
-
-	<AJ> AttributeNodeImplementor<AJ,?,?> findOrCreateAttributeNode(String name);
-
-	<AJ> AttributeNodeImplementor<AJ,?,?> findOrCreateAttributeNode(PersistentAttribute<? super J, AJ> attribute);
-
-	<AJ> AttributeNodeImplementor<AJ,?,?> addAttributeNode(PersistentAttribute<? super J, AJ> attribute);
+	AttributeNodeImplementor<?,?,?> findOrCreateAttributeNode(String name);
 
 	@Override
 	<Y> AttributeNodeImplementor<Y,?,?> addAttributeNode(Attribute<? super J, Y> attribute);
@@ -105,27 +86,6 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
 	@Override
 	<X> SubGraphImplementor<X> addSubgraph(String attributeName);
-
-	@Override
-	<AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName);
-
-	@Override
-	<AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName, Class<AJ> subType);
-
-	@Override
-	<AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute);
-
-	@Override
-	<AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subtype);
-
-	@Override
-	<AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName);
-
-	@Override
-	<AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName, Class<AJ> subtype);
-
-	@Override
-	<AJ> SubGraphImplementor<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, Class<AJ> subtype);
 
 	@Override
 	<X> SubGraphImplementor<X> addSubgraph(String attributeName, Class<X> type);

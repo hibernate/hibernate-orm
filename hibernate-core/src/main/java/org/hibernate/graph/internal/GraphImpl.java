@@ -9,14 +9,11 @@ import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import org.hibernate.AssertionFailure;
-import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -100,43 +97,31 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public <AJ> AttributeNodeImplementor<AJ,?,?> findAttributeNode(String attributeName) {
-		final AttributeNodeImplementor<AJ,?,?> node = findNode( attributeName );
+	public <Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(String attributeName) {
+		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+		final var node = (AttributeNodeImplementor<Y,?,?>) findNode( attributeName );
 		return node == null || node.isRemoved() ? null : node;
 	}
 
 	@Override
-	public <Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(String attributeName) {
-		return findAttributeNode( attributeName );
-	}
-
-	@Override
-	public <AJ> AttributeNodeImplementor<AJ,?,?> findAttributeNode(PersistentAttribute<? super J, AJ> attribute) {
-		return getActiveNode( attribute );
-	}
-
-	@Override
 	public <Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(Attribute<? super J, Y> attribute) {
-		return getActiveNode( (PersistentAttribute<?, ? extends Y>) attribute );
+		return getActiveNode( (PersistentAttribute<?, Y>) attribute );
 	}
 
 	@Override
 	public <AJ> AttributeNodeImplementor<AJ,?,?> addAttributeNode(String attributeName) {
-		final AttributeNodeImplementor<AJ, ?, ?> node = findOrCreateAttributeNode( attributeName );
+		final var node = findOrCreateAttributeNode( attributeName );
 		node.markRemoved( false );
-		return node;
-	}
-
-	@Override
-	public <AJ> AttributeNodeImplementor<AJ,?,?> addAttributeNode(PersistentAttribute<? super J, AJ> attribute) {
-		final AttributeNodeImplementor<AJ, ?, ?> node = findOrCreateAttributeNode( attribute );
-		node.markRemoved( false );
-		return node;
+		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+		final var castNode = (AttributeNodeImplementor<AJ, ?, ?>) node;
+		return castNode;
 	}
 
 	@Override
 	public <Y> AttributeNodeImplementor<Y,?,?> addAttributeNode(Attribute<? super J, Y> attribute) {
-		return addAttributeNode( (PersistentAttribute<? super J, Y>) attribute  );
+		final var node = findOrCreateAttributeNode( (PersistentAttribute<? super J, Y>) attribute );
+		node.markRemoved( false );
+		return node;
 	}
 
 	@Override
@@ -168,17 +153,15 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	@Override
 	public void removeAttributeNodes(Attribute.PersistentAttributeType nodeType) {
 		verifyMutability();
-		for ( Attribute<? super J, ?> typeAttribute : managedType.getAttributes() ) {
-			if ( typeAttribute.getPersistentAttributeType() != nodeType ) {
-				continue;
+		for ( var typeAttribute : managedType.getAttributes() ) {
+			if ( typeAttribute.getPersistentAttributeType() == nodeType ) {
+				findOrCreateAttributeNode( (PersistentAttribute<? super J, ?>) typeAttribute )
+						.markRemoved( true );
 			}
-
-			findOrCreateAttributeNode( (PersistentAttribute<? super J, ?>) typeAttribute ).markRemoved( true );
 		}
 	}
 
-	@Override
-	public <AJ> AttributeNodeImplementor<AJ,?,?> findOrCreateAttributeNode(PersistentAttribute<? super J, AJ> attribute) {
+	private <T> AttributeNodeImplementor<T,?,?> findOrCreateAttributeNode(PersistentAttribute<? super J, T> attribute) {
 		verifyMutability();
 		final var node = getNodeForPut( attribute );
 		if ( node == null ) {
@@ -193,7 +176,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 	private <C,E> AttributeNodeImplementor<C,E,?> findOrCreateAttributeNode(PluralPersistentAttribute<? super J, C, E> attribute) {
 		verifyMutability();
-		final var node = getNodeForPut( attribute );
+		final var node = getPluralNodeForPut( attribute );
 		if ( node == null ) {
 			final var newAttrNode = AttributeNodeImpl.create( attribute, isMutable() );
 			attributeNodes.put( attribute, newAttrNode );
@@ -206,7 +189,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 	private <K,V> AttributeNodeImplementor<Map<K,V>,V,K> findOrCreateAttributeNode(MapPersistentAttribute<? super J, K, V> attribute) {
 		verifyMutability();
-		final var node = getNodeForPut( attribute );
+		final var node = getMapNodeForPut( attribute );
 		if ( node == null ) {
 			final var newAttrNode = AttributeNodeImpl.create( attribute, isMutable() );
 			attributeNodes.put( attribute, newAttrNode );
@@ -218,10 +201,9 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public <AJ> AttributeNodeImplementor<AJ,?,?> findOrCreateAttributeNode(String attributeName) {
+	public AttributeNodeImplementor<?,?,?> findOrCreateAttributeNode(String attributeName) {
 		final var attribute = getAttribute( attributeName );
-		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
-		final var persistentAttribute = (PersistentAttribute<? super J, AJ>) attribute;
+		final var persistentAttribute = (PersistentAttribute<? super J, ?>) attribute;
 		return findOrCreateAttributeNode( persistentAttribute );
 	}
 
@@ -240,9 +222,8 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public <T> AttributeNodeImplementor<T,?,?> findNode(String attributeName) {
-		//noinspection unchecked
-		final var attribute = (PersistentAttribute<? super J,T>) findAttributeInSupertypes( attributeName );
+	public AttributeNodeImplementor<?,?,?> findNode(String attributeName) {
+		final var attribute = findAttributeInSupertypes( attributeName );
 		if ( attribute != null ) {
 			final var node = getExistingNode( attribute );
 			if ( node != null ) {
@@ -252,7 +233,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 		if ( treatedSubgraphs != null ) {
 			for ( var subgraph : treatedSubgraphs.values() ) {
-				final AttributeNodeImplementor<T,?,?> subgraphNode = subgraph.getExistingNode( attributeName );
+				final var subgraphNode = subgraph.getExistingNode( attributeName );
 				if ( subgraphNode != null ) {
 					return subgraphNode;
 				}
@@ -263,46 +244,43 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> AttributeNodeImplementor<T,?,?> getExistingNode(PersistentAttribute<?, ? extends T> attribute) {
-		if ( attributeNodes == null ) {
-			return null;
-		}
-		return (AttributeNodeImplementor<T,?,?>) attributeNodes.get( attribute );
+	public AttributeNodeImplementor<?,?,?> getExistingNode(PersistentAttribute<?, ?> attribute) {
+		return attributeNodes == null ? null : attributeNodes.get( attribute );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> AttributeNodeImplementor<T,?,?> getExistingNode(String attributeName) {
-		if ( attributeNodes == null ) {
-			return null;
-		}
-		return (AttributeNodeImplementor<T,?,?>) attributeNodes.get( managedType.getAttribute( attributeName ) );
+	public AttributeNodeImplementor<?,?,?> getExistingNode(String attributeName) {
+		return attributeNodes == null ? null : attributeNodes.get( managedType.getAttribute( attributeName ) );
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T> AttributeNodeImplementor<T,?,?> getActiveNode(PersistentAttribute<?, ? extends T> attribute) {
+	private <T> AttributeNodeImplementor<T,?,?> getActiveNode(PersistentAttribute<?, T> attribute) {
 		if ( attributeNodes == null ) {
 			return null;
 		}
-		final AttributeNodeImplementor<?, ?, ?> node = attributeNodes.get( attribute );
+		final var node = attributeNodes.get( attribute );
 		if ( node == null || node.isRemoved() ) {
 			return null;
 		}
-		return (AttributeNodeImplementor<T,?,?>) node;
+		@SuppressWarnings("unchecked")
+		final var castNode = (AttributeNodeImplementor<T, ?, ?>) node;
+		return castNode;
 	}
 
-	@SuppressWarnings("unchecked")
 	private <T, E> AttributeNodeImplementor<T,E,?> getActiveNode(PluralPersistentAttribute<?, T, E> attribute) {
-		return (AttributeNodeImplementor<T, E, ?>) getActiveNode( (PersistentAttribute<?,? extends T>) attribute );
+		final var node = getActiveNode( (PersistentAttribute<?, ? extends T>) attribute );
+		@SuppressWarnings("unchecked")
+		final var castNode = (AttributeNodeImplementor<T, E, ?>) node;
+		return castNode;
 	}
 
-	@SuppressWarnings("unchecked")
 	private <K, V> AttributeNodeImplementor<Map<K,V>, V, K> getActiveNode(MapPersistentAttribute<?, K, V> attribute) {
-		return (AttributeNodeImplementor<Map<K, V>, V, K>) getActiveNode( (PersistentAttribute<?,? extends V>) attribute );
+		final var node = getActiveNode( (PersistentAttribute<?, Map<K,V>>) attribute );
+		@SuppressWarnings("unchecked")
+		final var castNode = (AttributeNodeImplementor<Map<K, V>, V, K>) node;
+		return castNode;
 	}
 
-	private <AJ> AttributeNodeImplementor<AJ,?,?> getNodeForPut(PersistentAttribute<?, AJ> attribute) {
+	private <T,AJ> AttributeNodeImplementor<AJ,?,?> getNodeForPut(PersistentAttribute<T, AJ> attribute) {
 		if ( attributeNodes == null ) {
 			attributeNodes = new HashMap<>();
 			return null;
@@ -312,7 +290,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 		}
 	}
 
-	private <C, E> AttributeNodeImplementor<C,E,?> getNodeForPut(PluralPersistentAttribute<?, C, E> attribute) {
+	private <C, E> AttributeNodeImplementor<C,E,?> getPluralNodeForPut(PluralPersistentAttribute<?, C, E> attribute) {
 		if ( attributeNodes == null ) {
 			attributeNodes = new HashMap<>();
 			return null;
@@ -322,7 +300,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 		}
 	}
 
-	private <V, K> AttributeNodeImplementor<Map<K,V>, V, K> getNodeForPut(MapPersistentAttribute<?, K, V> attribute) {
+	private <V, K> AttributeNodeImplementor<Map<K,V>, V, K> getMapNodeForPut(MapPersistentAttribute<?, K, V> attribute) {
 		if ( attributeNodes == null ) {
 			attributeNodes = new HashMap<>();
 			return null;
@@ -344,19 +322,6 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 		}
 		else {
 			return getTreatedSubgraph( javaType );
-		}
-	}
-
-
-
-	@Override @Deprecated(forRemoval = true)
-	public RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) {
-		if ( getGraphedType() instanceof EntityDomainType ) {
-			return new RootGraphImpl<>( name, this, mutable);
-		}
-		else {
-			throw new CannotBecomeEntityGraphException( "Graph cannot be a root graph because '"
-														+ getGraphedType() + "' is not an entity type" );
 		}
 	}
 
@@ -412,9 +377,12 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 
 
-	@Override @SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+	@Override
 	public <X> SubGraphImplementor<X> addSubgraph(String attributeName) {
-		return (SubGraphImplementor<X>) findOrCreateAttributeNode( attributeName ).addValueSubgraph();
+		final var valueSubgraph = findOrCreateAttributeNode( attributeName ).addValueSubgraph();
+		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+		final var castSubgraph = (SubGraphImplementor<X>) valueSubgraph;
+		return castSubgraph;
 	}
 
 	@Override
@@ -424,27 +392,8 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 	@Override
 	public <X> SubGraphImplementor<X> addSubgraph(Attribute<? super J, X> attribute) {
-		return findOrCreateAttributeNode( (PersistentAttribute<? super J, X>) attribute ).addSingularSubgraph();
-	}
-
-	@Override
-	public <AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName)  {
-		return addSubgraph( attributeName );
-	}
-
-	@Override
-	public <AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName, Class<AJ> subtype) {
-		return addSubGraph( attributeName ).addTreatedSubgraph( subtype );
-	}
-
-	@Override
-	public <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute) {
-		return addSubgraph( attribute );
-	}
-
-	@Override
-	public <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subtype) {
-		return addTreatedSubgraph( attribute, subtype );
+		return findOrCreateAttributeNode( (PersistentAttribute<? super J, X>) attribute )
+				.addSingularSubgraph();
 	}
 
 	@Override
@@ -452,9 +401,12 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 		return addSubgraph( attribute ).addTreatedSubgraph( type );
 	}
 
-	@Override @SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+	@Override
 	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName) {
-		return (SubGraphImplementor<X>) findOrCreateAttributeNode( attributeName ).addElementSubgraph();
+		final var elementSubgraph = findOrCreateAttributeNode( attributeName ).addElementSubgraph();
+		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+		final var castSubgraph = (SubGraphImplementor<X>) elementSubgraph;
+		return castSubgraph;
 	}
 
 	@Override
@@ -464,7 +416,8 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 	@Override
 	public <E> SubGraphImplementor<E> addElementSubgraph(PluralAttribute<? super J, ?, E> attribute) {
-		return findOrCreateAttributeNode( (PluralPersistentAttribute<? super J, ?, E>) attribute ).addElementSubgraph();
+		return findOrCreateAttributeNode( (PluralPersistentAttribute<? super J, ?, E>) attribute )
+				.addElementSubgraph();
 	}
 
 	@Override
@@ -478,9 +431,11 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	@SuppressWarnings("unchecked") // The API is unsafe by nature
 	public <X> SubGraphImplementor<X> addKeySubgraph(String attributeName) {
-		return (SubGraphImplementor<X>) findOrCreateAttributeNode( attributeName ).addKeySubgraph();
+		final var keySubgraph = findOrCreateAttributeNode( attributeName ).addKeySubgraph();
+		@SuppressWarnings("unchecked") // The API is unsafe by nature
+		final var castSubgraph = (SubGraphImplementor<X>) keySubgraph;
+		return castSubgraph;
 	}
 
 	@Override
@@ -489,23 +444,9 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName) {
-		return addKeySubgraph( attributeName );
-	}
-
-	@Override
-	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName, Class<AJ> subtype) {
-		return addKeySubGraph( attributeName ).addTreatedSubgraph( subtype );
-	}
-
-	@Override
 	public <K> SubGraphImplementor<K> addMapKeySubgraph(MapAttribute<? super J, K, ?> attribute) {
-		return findOrCreateAttributeNode( (MapPersistentAttribute<? super J, K, ?>) attribute ).addKeySubgraph();
-	}
-
-	@Override
-	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, Class<AJ> subtype) {
-		return addTreatedMapKeySubgraph( attribute, subtype );
+		return findOrCreateAttributeNode( (MapPersistentAttribute<? super J, K, ?>) attribute )
+				.addKeySubgraph();
 	}
 
 	@Override

@@ -2215,7 +2215,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 		//TODO: we're using the deprecated operation
 		//      here to preserve the graph name
-		return named.makeRootGraph( graphName, true );
+		return named.makeCopy(true, graphName );
 	}
 
 	@Override

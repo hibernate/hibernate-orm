@@ -61,18 +61,6 @@ public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, Gra
 	 */
 	SubGraphImplementor<K> addKeySubgraph();
 
-	@Override @Deprecated
-	SubGraphImplementor<?> makeSubGraph();
-
-	@Override @Deprecated
-	SubGraphImplementor<?> makeKeySubGraph();
-
-	@Override @Deprecated
-	<S> SubGraphImplementor<S> makeSubGraph(Class<S> subtype);
-
-	@Override @Deprecated
-	<S> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype);
-
 	void merge(AttributeNodeImplementor<J,E,K> other);
 
 	@Override

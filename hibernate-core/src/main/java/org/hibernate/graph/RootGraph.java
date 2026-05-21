@@ -24,12 +24,22 @@ import jakarta.persistence.metamodel.EntityType;
  */
 public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 
+	/**
+	 * Make a copy of this root graph, with the given mutability.
+	 * <p>
+	 * If this graph is immutable, and the argument is {@code false},
+	 * simply return this instance.
+	 */
 	@Override
 	RootGraph<J> makeCopy(boolean mutable);
 
-	@Override @Deprecated(forRemoval = true)
-	RootGraph<J> makeRootGraph(String name, boolean mutable);
+	/**
+	 * Make a copy of this graph node, with the given mutability
+	 * and the given name.
+	 * <p>
+	 * If this graph is immutable, and the argument is {@code false},
+	 * simply return this instance.
+	 */
+	RootGraph<J> makeCopy(boolean mutable, String name);
 
-	@Override @Deprecated(forRemoval = true)
-	SubGraph<J> makeSubGraph(boolean mutable);
 }

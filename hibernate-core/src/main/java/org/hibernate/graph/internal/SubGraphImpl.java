@@ -27,8 +27,4 @@ public class SubGraphImpl<J> extends GraphImpl<J> implements SubGraphImplementor
 		return !mutable && !isMutable() ? this : new SubGraphImpl<>( this, mutable );
 	}
 
-	@Override @Deprecated(forRemoval = true)
-	public SubGraphImplementor<J> makeSubGraph(boolean mutable) {
-		return makeCopy( mutable );
-	}
 }

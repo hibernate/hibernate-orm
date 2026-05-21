@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                 https://www.hibernate.org/xsd/orm/mapping/mapping-8.0.xsd"
+                 version="8.0">
+    <entity class="org.hibernate.orm.test.orphan.elementcollection.Student" metadata-complete="true">
+        <table name="STUDENT"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+            </id>
+            <basic name="firstName" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="FIRSTNAME" unique="false" nullable="true"/>
+            </basic>
+            <basic name="lastName" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="LASTNAME" unique="false" nullable="true"/>
+            </basic>
+            <element-collection name="enrolledClasses" target-class="org.hibernate.orm.test.orphan.elementcollection.StudentEnrolledClass" fetch="LAZY" fetch-mode="SUBSELECT" classification="SET">
+                <target>org.hibernate.orm.test.orphan.elementcollection.StudentEnrolledClass</target>
+                <collection-table name="STUDENT_CLASS">
+                    <join-column name="STUDENT_ID" />
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.orphan.elementcollection.EnrollableClass" metadata-complete="true">
+        <table name="EnrollableClass"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+            </id>
+            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="NAME" unique="false" nullable="true"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.orphan.elementcollection.EnrolledClassSeat" metadata-complete="true">
+        <table name="EnrolledClassSeat"/>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+            </id>
+            <basic name="row" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="SEAT_ROW" unique="false" nullable="true"/>
+            </basic>
+            <basic name="column" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="SEAT_COLUMN" unique="false" nullable="true"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <embeddable class="org.hibernate.orm.test.orphan.elementcollection.StudentEnrolledClass" name="org.hibernate.orm.test.orphan.elementcollection.StudentEnrolledClass">
+        <attributes>
+            <basic name="classStartTime" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="STARTTIME" unique="false" nullable="true" table="STUDENT_CLASS"/>
+            </basic>
+            <many-to-one name="enrolledClass" target-entity="org.hibernate.orm.test.orphan.elementcollection.EnrollableClass" fetch="EAGER" fetch-mode="SELECT" optional="false" not-found="EXCEPTION">
+                <join-column name="ENROLLED_CLASS_ID" table="STUDENT_CLASS"/>
+                <cascade/>
+            </many-to-one>
+            <many-to-one name="seat" target-entity="org.hibernate.orm.test.orphan.elementcollection.EnrolledClassSeat" fetch="EAGER" fetch-mode="SELECT" optional="false" not-found="EXCEPTION">
+                <join-column name="ENROLLED_CLASS_SEAT_ID" table="STUDENT_CLASS"/>
+                <cascade>
+                    <cascade-all/>
+                    <cascade-remove/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </embeddable>
+</entity-mappings>

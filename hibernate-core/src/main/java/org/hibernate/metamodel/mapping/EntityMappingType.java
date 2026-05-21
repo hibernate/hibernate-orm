@@ -107,7 +107,7 @@ public interface EntityMappingType
 	/**
 	 * Access to the Jakarta Persistence style callbacks for this entity.
 	 */
-	default EntityCallbacks getEntityCallbacks() {
+	default EntityCallbacks<Object> getEntityCallbacks() {
 		return getEntityPersister().getEntityCallbacks();
 	}
 

@@ -14,5 +14,5 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 /// @author Steve Ebersole
 public interface CallbackDefinition extends Serializable {
 	/// Create the corresponding runtime callback.
-	Callback createCallback(ManagedBeanRegistry beanRegistry);
+	Callback<Object> createCallback(ManagedBeanRegistry beanRegistry);
 }

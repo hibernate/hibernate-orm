@@ -18,13 +18,19 @@ import org.hibernate.persister.entity.EntityPersister;
 public class PostDeleteEventListenerStandardImpl implements PostDeleteEventListener {
 	@Override
 	public void onPostDelete(PostDeleteEvent event) {
-		Object entity = event.getEntity();
-		event.getSession().runEntityLifecycleCallback(
-				() -> event.getPersister().getEntityCallbacks().postRemove( entity ) );
+		final Object entity = event.getEntity();
+		final var callbacks = event.getPersister().getEntityCallbacks();
+		event.getSession()
+				.runEntityLifecycleCallback( () -> {
+					callbacks.postRemove( entity );
+					callbacks.postDelete( entity );
+				} );
 	}
 
 	@Override
 	public boolean requiresPostCommitHandling(EntityPersister persister) {
-		return persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.POST_REMOVE );
+		final var callbacks = persister.getEntityCallbacks();
+		return callbacks.hasRegisteredCallbacks( CallbackType.POST_REMOVE )
+			|| callbacks.hasRegisteredCallbacks( CallbackType.POST_DELETE );
 	}
 }

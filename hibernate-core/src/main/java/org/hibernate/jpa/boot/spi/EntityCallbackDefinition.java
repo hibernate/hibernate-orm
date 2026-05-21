@@ -28,12 +28,12 @@ public class EntityCallbackDefinition implements CallbackDefinition {
 	}
 
 	public EntityCallbackDefinition(MethodDetails callbackMethod, CallbackType callbackType) {
-		this.callbackMethod = (Method) callbackMethod.toJavaMember();
+		this.callbackMethod = callbackMethod.toJavaMember();
 		this.callbackType = callbackType;
 	}
 
 	@Override
-	public Callback createCallback(ManagedBeanRegistry beanRegistry) {
+	public Callback<Object> createCallback(ManagedBeanRegistry beanRegistry) {
 		return new EntityCallback( callbackMethod, callbackType );
 	}
 }

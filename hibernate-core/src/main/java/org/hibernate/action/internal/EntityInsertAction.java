@@ -232,6 +232,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected boolean preInsert() {
+		executePreInsertCallbacks( eventSource() );
+
 		final var listenerGroup = getEventListenerGroups().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			return false;

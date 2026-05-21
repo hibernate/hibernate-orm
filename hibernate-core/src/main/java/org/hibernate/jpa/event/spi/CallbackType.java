@@ -11,11 +11,14 @@ import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PostUpsert;
 import jakarta.persistence.PreDelete;
 import jakarta.persistence.PreInsert;
+import jakarta.persistence.PreMerge;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.PreUpsert;
 
 /// Enumerates the Jakarta Persistence style lifecycle callback types.
 ///
@@ -26,6 +29,27 @@ public enum CallbackType {
 
 	/// @see PostUpdate
 	POST_UPDATE,
+
+	/// @see PreInsert
+	PRE_INSERT,
+
+	/// @see PostInsert
+	POST_INSERT,
+
+	/// @see PreUpsert
+	PRE_UPSERT,
+
+	/// @see PostUpsert
+	POST_UPSERT,
+
+	/// @see PreDelete
+	PRE_DELETE,
+
+	/// @see PostDelete
+	POST_DELETE,
+
+	/// @see PreMerge
+	PRE_MERGE,
 
 	/// @see PrePersist
 	PRE_PERSIST,
@@ -44,11 +68,17 @@ public enum CallbackType {
 
 	/// Returns the callback type for a given callback annotation.
 	public static CallbackType fromCallbackAnnotation(Class<? extends Annotation> ann) {
-		if ( PrePersist.class.equals( ann ) || PreInsert.class.equals( ann ) ) {
+		if ( PrePersist.class.equals( ann ) ) {
 			return PRE_PERSIST;
 		}
-		if ( PostPersist.class.equals( ann ) || PostInsert.class.equals( ann ) ) {
+		if ( PostPersist.class.equals( ann ) ) {
 			return POST_PERSIST;
+		}
+		if ( PreInsert.class.equals( ann ) ) {
+			return PRE_INSERT;
+		}
+		if ( PostInsert.class.equals( ann ) ) {
+			return POST_INSERT;
 		}
 		if ( PreUpdate.class.equals( ann ) ) {
 			return PRE_UPDATE;
@@ -56,11 +86,26 @@ public enum CallbackType {
 		if ( PostUpdate.class.equals( ann ) ) {
 			return POST_UPDATE;
 		}
-		if ( PreRemove.class.equals( ann ) || PreDelete.class.equals( ann ) ) {
+		if ( PreUpsert.class.equals( ann ) ) {
+			return PRE_UPSERT;
+		}
+		if ( PostUpsert.class.equals( ann ) ) {
+			return POST_UPSERT;
+		}
+		if ( PreRemove.class.equals( ann ) ) {
 			return PRE_REMOVE;
 		}
-		if ( PostRemove.class.equals( ann ) || PostDelete.class.equals( ann ) ) {
+		if ( PostRemove.class.equals( ann ) ) {
 			return POST_REMOVE;
+		}
+		if ( PreDelete.class.equals( ann ) ) {
+			return PRE_DELETE;
+		}
+		if ( PostDelete.class.equals( ann ) ) {
+			return POST_DELETE;
+		}
+		if ( PreMerge.class.equals( ann ) ) {
+			return PRE_MERGE;
 		}
 		if ( PostLoad.class.equals( ann ) ) {
 			return POST_LOAD;
@@ -74,9 +119,16 @@ public enum CallbackType {
 			case PRE_PERSIST -> PrePersist.class;
 			case PRE_UPDATE -> PreUpdate.class;
 			case PRE_REMOVE -> PreRemove.class;
+			case PRE_INSERT -> PreInsert.class;
+			case PRE_DELETE -> PreDelete.class;
+			case PRE_MERGE -> PreMerge.class;
+			case PRE_UPSERT -> PreUpsert.class;
 			case POST_PERSIST -> PostPersist.class;
 			case POST_UPDATE -> PostUpdate.class;
 			case POST_REMOVE -> PostRemove.class;
+			case POST_INSERT -> PostInsert.class;
+			case POST_DELETE -> PostDelete.class;
+			case POST_UPSERT -> PostUpsert.class;
 			case POST_LOAD -> PostLoad.class;
 		};
 	}

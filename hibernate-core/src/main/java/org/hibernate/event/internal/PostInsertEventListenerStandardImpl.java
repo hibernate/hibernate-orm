@@ -16,13 +16,19 @@ import org.hibernate.persister.entity.EntityPersister;
 public class PostInsertEventListenerStandardImpl implements PostInsertEventListener {
 	@Override
 	public void onPostInsert(PostInsertEvent event) {
-		Object entity = event.getEntity();
-		event.getSession().runEntityLifecycleCallback(
-				() -> event.getPersister().getEntityCallbacks().postCreate( entity ) );
+		final Object entity = event.getEntity();
+		final var callbacks = event.getPersister().getEntityCallbacks();
+		event.getSession()
+				.runEntityLifecycleCallback( () -> {
+					callbacks.postCreate( entity );
+					callbacks.postInsert( entity );
+				} );
 	}
 
 	@Override
 	public boolean requiresPostCommitHandling(EntityPersister persister) {
-		return persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.POST_PERSIST );
+		final var callbacks = persister.getEntityCallbacks();
+		return callbacks.hasRegisteredCallbacks( CallbackType.POST_PERSIST )
+			|| callbacks.hasRegisteredCallbacks( CallbackType.POST_INSERT );
 	}
 }

@@ -6,17 +6,17 @@ package org.hibernate.event.jpa.internal;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.event.jpa.spi.EntityCallbacks;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /// Builds Jakarta Persistence callbacks for an entity
 ///
 /// @author Steve Ebersole
 public class EntityCallbacksFactory {
-	public static EntityCallbacks buildCallbacks(
+	public static EntityCallbacks<Object> buildCallbacks(
 			PersistentClass persistentClass,
 			SessionFactoryOptions options,
 			ServiceRegistry serviceRegistry) {
@@ -25,10 +25,10 @@ public class EntityCallbacksFactory {
 		}
 
 		final var beanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
-		final var callbacksCollector = new EntityCallbacksImpl.Builder();
+		final var callbacksCollector = new EntityCallbacksImpl.Builder<>();
 
-		if ( CollectionHelper.isNotEmpty( persistentClass.getCallbackDefinitions() ) ) {
-			for ( CallbackDefinition definition : persistentClass.getCallbackDefinitions() ) {
+		if ( isNotEmpty( persistentClass.getCallbackDefinitions() ) ) {
+			for ( var definition : persistentClass.getCallbackDefinitions() ) {
 				callbacksCollector.registerCallback( definition.createCallback( beanRegistry ) );
 			}
 		}

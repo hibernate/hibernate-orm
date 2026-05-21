@@ -15,6 +15,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.NotIndexedCollectionException;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -43,12 +44,14 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * @author Steve Ebersole
  */
 public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> implements SqmPluralPath<C,Object> {
+	private final boolean mapAttributeAccess;
+
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
-		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
+		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder, false );
 	}
 
 	public SqmPluralValuedSimplePath(
@@ -57,10 +60,21 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 			SqmPath<?> lhs,
 			@Nullable String explicitAlias,
 			NodeBuilder nodeBuilder) {
+		this( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder, false );
+	}
+
+	public SqmPluralValuedSimplePath(
+			NavigablePath navigablePath,
+			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
+			SqmPath<?> lhs,
+			@Nullable String explicitAlias,
+			NodeBuilder nodeBuilder,
+			boolean mapAttributeAccess) {
 		// We need to do an unchecked cast here: PluralPersistentAttribute implements path source with
 		//  the element type, but paths generated from it must be collection-typed.
 		//noinspection unchecked
 		super( navigablePath, (SqmPathSource<C>) referencedNavigable, lhs, explicitAlias, nodeBuilder );
+		this.mapAttributeAccess = mapAttributeAccess;
 	}
 
 	@Override
@@ -70,7 +84,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 			return existing;
 		}
 
-		final SqmPath<?> lhsCopy = getLhs().copy( context );
+		final var lhsCopy = getLhs().copy( context );
 		final var path = context.registerCopy(
 				this,
 				new SqmPluralValuedSimplePath<>(
@@ -78,11 +92,16 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 						(SqmPluralPersistentAttribute<?,C,?>) getModel(),
 						lhsCopy,
 						getExplicitAlias(),
-						nodeBuilder()
+						nodeBuilder(),
+						mapAttributeAccess
 				)
 		);
 		copyTo( path, context );
 		return path;
+	}
+
+	public boolean isMapAttributeAccess() {
+		return mapAttributeAccess;
 	}
 
 	public PluralPersistentAttribute<?, C, ?> getPluralAttribute() {
@@ -105,7 +124,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		// this is a reference to a collection outside the from clause
-		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
+		final var nature = CollectionPart.Nature.fromNameExact( name );
 		if ( nature == null ) {
 			throw new PathException( "Plural path '" + getNavigablePath()
 					+ "' refers to a collection and so element attribute '" + name
@@ -123,61 +142,75 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 			SqmCreationState creationState) {
 		final var pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
-		final NavigablePath navigablePath =
+		final var navigablePath =
 				getParentNavigablePath()
 						.append( getNavigablePath().getLocalName(), alias )
 						.append( CollectionPart.Nature.ELEMENT.getName() );
-		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );
+		final var indexedPath = pathRegistry.findFromByPath( navigablePath );
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		final SqmFrom<?, ?> path = pathRegistry.findFromByPath( castNonNull( navigablePath.getParent() ) );
-		final SqmAttributeJoin<Object, ?> join;
+		else {
+			final var path = pathRegistry.findFromByPath( castNonNull( navigablePath.getParent() ) );
+			final var join = join( selector, path, pathRegistry, alias );
+			final var result = new SqmIndexedCollectionAccessPath<>( navigablePath, join, selector );
+			pathRegistry.register( result );
+			return result;
+		}
+	}
+
+	private @NonNull SqmAttributeJoin<?, ?> join(
+			SqmExpression<?> selector,
+			@Nullable SqmFrom<?, ?> path,
+			SqmPathRegistry pathRegistry,
+			String alias) {
 		if ( path == null ) {
-			final SqmPathSource<C> referencedPathSource = getReferencedPathSource();
-			final SqmFrom<?, Object> parent = pathRegistry.resolveFrom( getLhs() );
-			final SqmExpression<?> index;
-			if ( referencedPathSource instanceof ListPersistentAttribute<?, ?> ) {
-				join = new SqmListJoin<>(
-						parent,
-						(SqmListPersistentAttribute<Object, ?>) referencedPathSource,
-						alias,
-						SqmJoinType.INNER,
-						false,
-						parent.nodeBuilder()
-				);
-				index = ( (SqmListJoin<?, ?>) join ).index();
-			}
-			else if ( referencedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
-				join = new SqmMapJoin<>(
-						parent,
-						(SqmMapPersistentAttribute<Object, ?, ?>) referencedPathSource,
-						alias,
-						SqmJoinType.INNER,
-						false,
-						parent.nodeBuilder()
-				);
-				index = ( (SqmMapJoin<?, ?, ?>) join ).key();
-			}
-			else {
-				throw new NotIndexedCollectionException( "Index operator applied to path '" + getNavigablePath()
-						+ "' which is not a list or map" );
-			}
-			join.setJoinPredicate( creationState.getCreationContext().getNodeBuilder().equal( index, selector ) );
-			parent.addSqmJoin( join );
+			final SqmFrom<?, ?> parent = pathRegistry.resolveFrom( getLhs() );
+			final var join = joinAttribute( parent, alias, selector );
 			pathRegistry.register( join );
+			return join;
 		}
 		else {
-			//noinspection unchecked
-			join = (SqmAttributeJoin<Object, ?>) path;
+			return (SqmAttributeJoin<?, ?>) path;
 		}
-		final SqmIndexedCollectionAccessPath<Object> result = new SqmIndexedCollectionAccessPath<>(
-				navigablePath,
-				join,
-				selector
-		);
-		pathRegistry.register( result );
-		return result;
+	}
+
+	private <P> @NonNull SqmAttributeJoin<?, ?> joinAttribute(
+			SqmFrom<?, P> parent,
+			String alias,
+			SqmExpression<?> selector) {
+		final SqmExpression<?> index;
+		final SqmAttributeJoin<P, ?> join;
+		final var referencedPathSource = getReferencedPathSource();
+		if ( referencedPathSource instanceof ListPersistentAttribute<?, ?> ) {
+			join = new SqmListJoin<>(
+					parent,
+					(SqmListPersistentAttribute<P, ?>) referencedPathSource,
+					alias,
+					SqmJoinType.INNER,
+					false,
+					nodeBuilder()
+			);
+			index = ( (SqmListJoin<?, ?>) join).index();
+		}
+		else if ( referencedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
+			join = new SqmMapJoin<>(
+					parent,
+					(SqmMapPersistentAttribute<P, ?, ?>) referencedPathSource,
+					alias,
+					SqmJoinType.INNER,
+					false,
+					nodeBuilder()
+			);
+			index = ( (SqmMapJoin<?, ?, ?>) join).key();
+		}
+		else {
+			throw new NotIndexedCollectionException( "Index operator applied to path '" + getNavigablePath()
+					+ "' which is not a list or map" );
+		}
+		join.setJoinPredicate( nodeBuilder().equal( index, selector ) );
+		parent.addSqmJoin( join );
+		return join;
 	}
 
 	@Override

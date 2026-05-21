@@ -14,6 +14,7 @@ import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaExpression;
@@ -26,6 +27,7 @@ import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -324,8 +326,18 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			checkSelectionIsJpaCompliant( selection );
 		}
-		getQuerySpec().setSelection( (JpaSelection<T>) selection );
+		getQuerySpec().setSelection( (JpaSelection<T>) adjustSelection( selection ) );
 		return this;
+	}
+
+	private Selection<? extends T> adjustSelection(Selection<? extends T> selection) {
+		if ( selection instanceof SqmPluralValuedSimplePath<?> pluralPath
+				&& pluralPath.isMapAttributeAccess() ) {
+			return pluralPath.get( CollectionPart.Nature.ELEMENT.getName() );
+		}
+		else {
+			return selection;
+		}
 	}
 
 	@Override @Deprecated
@@ -576,7 +588,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		}
 		//TODO: do some deeper analysis for unions (simplify their select lists)
 		aliasSelections( queryPart );
-		@SuppressWarnings("unchecked") final SqmSubQuery<?> subquery =
+		@SuppressWarnings("unchecked")
+		final SqmSubQuery<?> subquery =
 				new SqmSubQuery<>( copy, (SqmQueryPart<Object>) queryPart, Object.class, nodeBuilder() );
 		final SqmSelectStatement<Boolean> query = nodeBuilder().createQuery( Boolean.class );
 		query.select( nodeBuilder().exists( subquery ) );

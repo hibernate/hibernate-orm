@@ -27,6 +27,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.PathHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -60,7 +61,22 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	 * E.g., given {@code p.mate.mate} the {@code SqmRoot} identified by {@code p} would
 	 * have a reusable path for the {@code p.mate} path.
 	 */
-	private Map<String, SqmPath<?>> reusablePaths;
+	private Map<ReusablePathKey, SqmPath<?>> reusablePaths;
+
+	private record ReusablePathKey(String name, ReusablePathAccess access) {
+		private static ReusablePathKey normal(String name) {
+			return new ReusablePathKey( name, ReusablePathAccess.NORMAL );
+		}
+
+		private static ReusablePathKey mapAttributeAccess(String name) {
+			return new ReusablePathKey( name, ReusablePathAccess.MAP_ATTRIBUTE );
+		}
+	}
+
+	private enum ReusablePathAccess {
+		NORMAL,
+		MAP_ATTRIBUTE
+	}
 
 	protected AbstractSqmPath(
 			NavigablePath navigablePath,
@@ -144,7 +160,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			reusablePaths = new HashMap<>();
 		}
 		final String relativeName = path.getNavigablePath().getLocalName();
-		final var previous = reusablePaths.put( relativeName, path );
+		final var previous = reusablePaths.put( ReusablePathKey.normal( relativeName ), path );
 		if ( previous != null && previous != path ) {
 			throw new IllegalStateException( "Implicit join path registration unexpectedly overrode previous registration - " + relativeName );
 		}
@@ -152,7 +168,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public @Nullable SqmPath<?> getReusablePath(String name) {
-		return reusablePaths == null ? null : reusablePaths.get( name );
+		return reusablePaths == null ? null : reusablePaths.get( ReusablePathKey.normal( name ) );
 	}
 
 	@Override
@@ -238,21 +254,34 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	protected <X> SqmPath<X> resolvePath(String attributeName, SqmPathSource<X> pathSource) {
+		return resolvePath( pathSource, ReusablePathKey.normal( attributeName ),
+				intermediatePathSource -> pathSource.createSqmPath( this, intermediatePathSource ) );
+	}
+
+	private <X> SqmPath<X> resolvePath(
+			SqmPathSource<?> pathSource,
+			ReusablePathKey reusablePathKey,
+			PathCreator<X> pathCreator) {
 		final var intermediatePathSource =
 				getResolvedModel()
 						.getIntermediatePathSource( pathSource );
 		if ( reusablePaths == null ) {
 			reusablePaths = new HashMap<>();
-			final var path = pathSource.createSqmPath( this, intermediatePathSource );
-			reusablePaths.put( attributeName, path );
+			final var path = pathCreator.create( intermediatePathSource );
+			reusablePaths.put( reusablePathKey, path );
 			return path;
 		}
 		else {
 			//noinspection unchecked
 			return (SqmPath<X>)
-					reusablePaths.computeIfAbsent( attributeName,
-							name -> pathSource.createSqmPath( this, intermediatePathSource ) );
+					reusablePaths.computeIfAbsent( reusablePathKey,
+							name -> pathCreator.create( intermediatePathSource ) );
 		}
+	}
+
+	@FunctionalInterface
+	private interface PathCreator<X> {
+		SqmPath<X> create(@Nullable SqmPathSource<?> intermediatePathSource);
 	}
 
 	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(ManagedDomainType<S> treatTarget) {
@@ -358,8 +387,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <Y> SqmPath<Y> get(SingularAttribute<? super T, Y> jpaAttribute) {
+		//noinspection unchecked
 		return (SqmPath<Y>) resolvePath( (PersistentAttribute<?, ?>) jpaAttribute );
 	}
 
@@ -371,8 +400,21 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public <K, V, M extends Map<K, V>> SqmPluralPath<M,V> get(MapAttribute<? super T, K, V> attribute) {
+		final var mapAttribute = (SqmMapPersistentAttribute<? super T, K, V>) attribute;
+		final var path = resolvePath(
+				mapAttribute,
+				ReusablePathKey.mapAttributeAccess( mapAttribute.getName() ),
+				intermediatePathSource -> new SqmPluralValuedSimplePath<>(
+						PathHelper.append( this, mapAttribute, intermediatePathSource ),
+						mapAttribute,
+						this,
+						null,
+						nodeBuilder(),
+						true
+				)
+		);
 		//noinspection unchecked
-		return (SqmPluralPath<M, V>) resolvePath( (PersistentAttribute<T, M>) attribute );
+		return (SqmPluralPath<M, V>) path;
 	}
 
 	@Override

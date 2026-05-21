@@ -19,6 +19,7 @@ import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -46,6 +47,67 @@ public class HbmTransformationJaxbTests {
 		scope.withService( ClassLoaderService.class, (cls) -> {
 			verifyHbm( "xml/jaxb/mapping/basic/hbm.xml", cls, scope );
 		} );
+	}
+
+	@Test
+	public void testManyToManyOrphanRemovalHbmTransformation(ServiceRegistryScope scope) {
+		scope.withService( ClassLoaderService.class, (cls) -> {
+			verifyManyToManyOrphanRemoval(
+					"xml/jaxb/mapping/manytomany/UserGroup.hbm.xml",
+					cls,
+					scope
+			);
+		} );
+	}
+
+	private void verifyManyToManyOrphanRemoval(String resourceName, ClassLoaderService cls, ServiceRegistryScope scope) {
+		try ( final InputStream inputStream = cls.locateResourceStream( resourceName ) ) {
+			withStaxEventReader( inputStream, cls, (staxEventReader) -> {
+				final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
+
+				try {
+					final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
+					final JaxbHbmHibernateMapping hbmMapping = JaxbHelper.VALIDATING.jaxb( reader, MappingXsdSupport.hbmXml.getSchema(), jaxbCtx );
+					assertThat( hbmMapping ).isNotNull();
+
+					final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() ).addHbmXmlBinding( new Binding<>(
+							hbmMapping,
+							new Origin( SourceType.RESOURCE, resourceName )
+					) ).buildMetadata();
+					final List<Binding<JaxbEntityMappingsImpl>> transformedBindingList = HbmXmlTransformer.transform(
+							singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
+							metadata,
+							UnsupportedFeatureHandling.ERROR
+					);
+					final JaxbEntityMappingsImpl transformed = transformedBindingList.get( 0 ).getRoot();
+
+					assertThat( transformed ).isNotNull();
+					assertThat( transformed.getEntities() ).hasSize( 2 );
+
+					final JaxbEntityImpl userEntity = transformed.getEntities().stream()
+							.filter( e -> "User".equals( e.getClazz() ) )
+							.findFirst()
+							.orElseThrow();
+
+					assertThat( userEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+					final JaxbManyToManyImpl manyToMany = userEntity.getAttributes().getManyToManyAttributes().get( 0 );
+
+					assertThat( manyToMany.getCascade() ).isNotNull();
+					assertThat( manyToMany.getCascade().getCascadeAll() ).isNotNull();
+
+					assertThat( manyToMany.isOrphanRemoval() ).isTrue();
+
+					assertThat( manyToMany.getMapKeyType() ).isNotNull();
+					assertThat( manyToMany.getMapKeyType().getValue() ).isEqualTo( "Integer" );
+				}
+				catch (JAXBException e) {
+					throw new RuntimeException( "Error during JAXB processing", e );
+				}
+			} );
+		}
+		catch (IOException e) {
+			throw new RuntimeException( "Error accessing mapping file", e );
+		}
 	}
 
 	private void verifyHbm(String resourceName, ClassLoaderService cls, ServiceRegistryScope scope) {

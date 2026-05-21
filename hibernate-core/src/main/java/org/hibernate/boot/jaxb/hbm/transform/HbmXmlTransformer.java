@@ -2050,15 +2050,26 @@ public class HbmXmlTransformer {
 	}
 
 	private String resolveMapKeyType(JaxbHbmMapKeyBasicType mapKey) {
+		final String typeName;
 		if ( isNotEmpty( mapKey.getTypeAttribute() ) ) {
-			return mapKey.getTypeAttribute();
+			typeName = mapKey.getTypeAttribute();
 		}
 		else if ( mapKey.getType() != null ) {
-			return nullIfEmpty( mapKey.getType().getName() );
+			typeName = nullIfEmpty( mapKey.getType().getName() );
 		}
 		else {
 			return null;
 		}
+		return typeName != null ? normalizeTypeName( typeName ) : null;
+	}
+
+	private static String normalizeTypeName(String typeName) {
+		return switch ( typeName.toLowerCase( Locale.ROOT ) ) {
+			case "integer" -> Integer.class.getSimpleName();
+			case "character" -> Character.class.getSimpleName();
+			case "string" -> String.class.getSimpleName();
+			default -> typeName;
+		};
 	}
 
 	private Boolean invert(Boolean value) {

@@ -4,7 +4,7 @@
  */
 
 /**
- * Tests for Hibernate's JFR events.  Well the events are roduced on Java 11, the JfrUnit
- * framewqork used in testing only works on JDK 16+.
+ * Tests for Hibernate's JFR events, using a custom JUnit 5 extension
+ * backed by JDK built-in JFR APIs ({@code jdk.jfr.Recording}).
  */
 package org.hibernate.event.jfr;

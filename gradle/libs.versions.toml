@@ -63,7 +63,6 @@ shrinkwrap = "1.2.6"
 shrinkwrapDescriptors = "2.0.0"
 weld = "6.0.4.Final"
 wildFlyTxnClient = "3.0.5.Final"
-jfrUnit = "1.0.0.Alpha2"
 hibernateValidator = "9.1.0.Final"
 jaxen = "1.1"
 dom4j = "2.2.0"
@@ -203,7 +202,6 @@ test-jbossJta = { group = "org.jboss.narayana.jta", name = "narayana-jta", versi
 test-jbossTxSpi = { group = "org.jboss", name = "jboss-transaction-spi", version.ref = "jbossTxSpi" }
 test-wildFlyTxnClient = { group = "org.wildfly.transaction", name = "wildfly-transaction-client", version.ref = "wildFlyTxnClient" }
 test-weld = { group = "org.jboss.weld.se", name = "weld-se-shaded", version.ref = "weld" }
-test-jfrUnit = { group = "org.moditect.jfrunit", name = "jfrunit-core", version.ref = "jfrUnit" }
 test-jaxen = { group = "jaxen", name = "jaxen", version.ref = "jaxen" }
 test-dom4j = { group = "org.dom4j", name = "dom4j", version.ref = "dom4j" }
 test-javaxMoney = { group = "javax.money", name = "money-api", version.ref = "javaxMoney" }

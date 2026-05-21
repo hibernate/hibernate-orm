@@ -78,14 +78,6 @@ public interface ManagedDomainType<J> extends DomainType<J>, ManagedType<J> {
 
 	@Nullable PersistentAttribute<?, ?> findSubTypesAttribute(String name);
 
-	/**
-	 * @deprecated Use {@link #findAttribute(String)}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default @Nullable PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
-		return findAttribute( name );
-	}
-
 	@Nullable SingularPersistentAttribute<? super J,?> findSingularAttribute(String name);
 	@Nullable PluralPersistentAttribute<? super J, ?,?> findPluralAttribute(String name);
 	@Nullable PersistentAttribute<? super J, ?> findConcreteGenericAttribute(String name);

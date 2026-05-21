@@ -96,6 +96,7 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.loader.ast.spi.SingleUniqueKeyEntityLoader;
 import org.hibernate.mapping.Any;
+import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -854,10 +855,12 @@ public abstract class AbstractEntityPersister
 		var containingClass = persistentClass;
 		while ( containingClass.getSuperclass() != null ) {
 			final var superclass = containingClass.getSuperclass();
-			if ( !Objects.equals( persistentClass.getWhere(), superclass.getWhere() ) ) {
+			if ( Objects.equals( persistentClass.getWhere(), superclass.getWhere() ) ) {
+				containingClass = superclass;
+			}
+			else {
 				break;
 			}
-			containingClass = superclass;
 		}
 		return containingClass;
 	}
@@ -912,25 +915,29 @@ public abstract class AbstractEntityPersister
 
 	public static Map<String, String> getEntityNameByTableNameMap(
 			PersistentClass persistentClass,
-			SqlStringGenerationContext stringGenerationContext) {
+			SqlStringGenerationContext context) {
 		final Map<String, String> entityNameByTableNameMap = new HashMap<>();
 		PersistentClass superType = persistentClass.getSuperPersistentClass();
 		while ( superType != null ) {
 			final String entityName = superType.getEntityName();
-			entityNameByTableNameMap.put( superType.getTable().getQualifiedName( stringGenerationContext ), entityName );
+			entityNameByTableNameMap.put( qualifiedTableName( context, superType ), entityName );
 			for ( var join : superType.getJoins() ) {
-				entityNameByTableNameMap.put( join.getTable().getQualifiedName( stringGenerationContext ), entityName );
+				entityNameByTableNameMap.put( qualifiedTableName( context, join ), entityName );
 			}
 			superType = superType.getSuperPersistentClass();
 		}
 		for ( var subclass : persistentClass.getSubclassClosure() ) {
 			final String entityName = subclass.getEntityName();
-			entityNameByTableNameMap.put( subclass.getTable().getQualifiedName( stringGenerationContext ), entityName );
+			entityNameByTableNameMap.put( qualifiedTableName( context, subclass ), entityName );
 			for ( var join : subclass.getJoins() ) {
-				entityNameByTableNameMap.put( join.getTable().getQualifiedName( stringGenerationContext ), entityName );
+				entityNameByTableNameMap.put( qualifiedTableName( context, join ), entityName );
 			}
 		}
 		return entityNameByTableNameMap;
+	}
+
+	private static String qualifiedTableName(SqlStringGenerationContext context, AttributeContainer container) {
+		return container.getTable().getQualifiedName( context );
 	}
 
 	/**
@@ -944,22 +951,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {
-		final BasicType<?> identifierType;
-		if ( getIdentifierType() instanceof BasicType<?> type ) {
-			identifierType = type;
-		}
-		else {
-			final ComponentType componentType = (ComponentType) getIdentifierType();
-			final CompositeNestedGeneratedValueGenerator compositeGenerator = (CompositeNestedGeneratedValueGenerator) getGenerator();
-			int position = 0;
-			for ( boolean generatedOnExecution : compositeGenerator.getGeneratedOnExecutionColumnInclusions() ) {
-				if ( generatedOnExecution ) {
-					break;
-				}
-				position++;
-			}
-			identifierType = getUnderlyingType( factory.getRuntimeMetamodels(), componentType, position );
-		}
+		final var identifierType = identifierType();
 		if ( identifierType != null ) {
 			try {
 				return dialect.getIdentityColumnSupport()
@@ -973,6 +965,24 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			return null;
+		}
+	}
+
+	private @Nullable BasicType<?> identifierType() {
+		if ( getIdentifierType() instanceof BasicType<?> type ) {
+			return type;
+		}
+		else {
+			final var componentType = (ComponentType) getIdentifierType();
+			final var compositeGenerator = (CompositeNestedGeneratedValueGenerator) getGenerator();
+			int position = 0;
+			for ( boolean generatedOnExecution : compositeGenerator.getGeneratedOnExecutionColumnInclusions() ) {
+				if ( generatedOnExecution ) {
+					break;
+				}
+				position++;
+			}
+			return getUnderlyingType( factory.getRuntimeMetamodels(), componentType, position );
 		}
 	}
 

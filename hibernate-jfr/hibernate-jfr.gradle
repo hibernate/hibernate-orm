@@ -14,5 +14,8 @@ dependencies {
     implementation project( ':hibernate-core' )
 
     testImplementation project( ':hibernate-testing' )
-    testImplementation libs.test.jfrUnit
+    testImplementation (libs.test.jfrUnit) {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation libs.test.junit4Engine
 }

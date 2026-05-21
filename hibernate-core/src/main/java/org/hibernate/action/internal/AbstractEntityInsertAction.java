@@ -15,12 +15,15 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.engine.internal.Versioning.getVersion;
 
@@ -75,6 +78,29 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public Object[] getState() {
 		return state;
+	}
+
+	public void executePreInsertCallbacks(SharedSessionContractImplementor session) {
+		final var callbacks = getPersister().getEntityCallbacks();
+		if ( callbacks.hasRegisteredCallbacks( CallbackType.PRE_INSERT )
+				&& session.callEntityLifecycleCallback( () -> callbacks.preInsert( getInstance() ) ) ) {
+			copyStateFromEntity( session );
+		}
+	}
+
+	private void copyStateFromEntity(SharedSessionContractImplementor session) {
+		final var persister = getPersister();
+		final Object[] currentState = persister.getValues( getInstance() );
+		System.arraycopy( currentState, 0, state, 0, state.length );
+		areTransientReferencesNullified = false;
+		nullifyTransientReferencesIfNotAlready();
+		TypeHelper.deepCopy(
+				state,
+				persister.getPropertyTypes(),
+				persister.getPropertyUpdateability(),
+				state,
+				session
+		);
 	}
 
 	/**

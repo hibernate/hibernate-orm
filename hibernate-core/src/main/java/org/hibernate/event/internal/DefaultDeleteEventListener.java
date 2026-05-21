@@ -288,8 +288,11 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	}
 
 	private boolean hasRegisteredRemoveCallbacks(EntityPersister persister) {
-		return persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.PRE_REMOVE )
-			|| persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.POST_REMOVE );
+		final var entityCallbacks = persister.getEntityCallbacks();
+		return entityCallbacks.hasRegisteredCallbacks( CallbackType.PRE_REMOVE )
+			|| entityCallbacks.hasRegisteredCallbacks( CallbackType.POST_REMOVE )
+			|| entityCallbacks.hasRegisteredCallbacks( CallbackType.PRE_DELETE )
+			|| entityCallbacks.hasRegisteredCallbacks( CallbackType.POST_DELETE );
 	}
 
 	/**

@@ -14,9 +14,8 @@ import java.util.function.Consumer;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("rawtypes")
-public class NoCallbacks implements EntityCallbacks {
-	public static NoCallbacks NO_CALLBACKS = new NoCallbacks();
+public class NoCallbacks implements EntityCallbacks<Object> {
+	public static final NoCallbacks NO_CALLBACKS = new NoCallbacks();
 
 	@Override
 	public boolean hasRegisteredCallbacks(CallbackType callbackType) {
@@ -34,12 +33,37 @@ public class NoCallbacks implements EntityCallbacks {
 	}
 
 	@Override
+	public boolean preMerge(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean preInsert(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean postInsert(Object entity) {
+		return false;
+	}
+
+	@Override
 	public boolean preUpdate(Object entity) {
 		return false;
 	}
 
 	@Override
 	public boolean postUpdate(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean preUpsert(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean postUpsert(Object entity) {
 		return false;
 	}
 
@@ -54,17 +78,27 @@ public class NoCallbacks implements EntityCallbacks {
 	}
 
 	@Override
+	public boolean preDelete(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean postDelete(Object entity) {
+		return false;
+	}
+
+	@Override
 	public boolean postLoad(Object entity) {
 		return false;
 	}
 
 	@Override
-	public EntityListenerRegistration addListener(CallbackType type, Consumer listener) {
+	public EntityListenerRegistration addListener(CallbackType type, Consumer<? super Object> listener) {
 		return RegistrationImpl.NO_REG;
 	}
 
 	@Override
-	public EntityListenerRegistration addListener(CallbackType type, Callback callback) {
+	public EntityListenerRegistration addListener(CallbackType type, Callback<? super Object> callback) {
 		return RegistrationImpl.NO_REG;
 	}
 

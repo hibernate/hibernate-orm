@@ -296,6 +296,8 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected boolean preInsert() {
+		executePreInsertCallbacks( eventSource() );
+
 		final var listenerGroup = getEventListenerGroups().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			// NO_VETO

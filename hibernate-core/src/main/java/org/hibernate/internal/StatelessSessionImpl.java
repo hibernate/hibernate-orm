@@ -71,6 +71,7 @@ import org.hibernate.internal.find.StatelessFindByKeyOperation;
 import org.hibernate.internal.find.StatelessFindMultipleByKeyOperation;
 import org.hibernate.internal.find.StatelessLoadAccessContext;
 import org.hibernate.internal.util.OptionsHelper;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.loader.internal.CacheLoadHelper;
@@ -78,6 +79,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.TypeHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -802,7 +804,16 @@ public class StatelessSessionImpl
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preCreate( entity ) );
+		final var callbacks = persister.getEntityCallbacks();
+		final boolean hasPrePersistCallbacks = callbacks.hasRegisteredCallbacks( CallbackType.PRE_PERSIST );
+		final boolean hasPreInsertCallbacks = callbacks.hasRegisteredCallbacks( CallbackType.PRE_INSERT );
+		if ( ( hasPrePersistCallbacks || hasPreInsertCallbacks )
+				&& callEntityLifecycleCallback( () -> {
+					final boolean prePersist = hasPrePersistCallbacks && callbacks.preCreate( entity );
+					return hasPreInsertCallbacks && callbacks.preInsert( entity ) || prePersist;
+				} ) ) {
+			copyStateFromEntity( entity, state, persister );
+		}
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_INSERT.isEmpty() ) {
 			return false;
@@ -836,6 +847,12 @@ public class StatelessSessionImpl
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+		final var callbacks = persister.getEntityCallbacks();
+		if ( callbacks.hasRegisteredCallbacks( CallbackType.PRE_UPSERT )
+				&& callEntityLifecycleCallback( () -> callbacks.preUpsert( entity ) ) ) {
+			copyStateFromEntity( entity, state, persister );
+		}
+
 		if ( eventListenerGroups.eventListenerGroup_PRE_UPSERT.isEmpty() ) {
 			return false;
 		}
@@ -849,9 +866,33 @@ public class StatelessSessionImpl
 		}
 	}
 
+	private void copyStateFromEntity(Object entity, Object[] state, EntityPersister persister) {
+		final Object[] currentState = persister.getValues( entity );
+		System.arraycopy( currentState, 0, state, 0, state.length );
+		TypeHelper.deepCopy(
+				state,
+				persister.getPropertyTypes(),
+				persister.getPropertyUpdateability(),
+				state,
+				this
+		);
+	}
+
 	// Hibernate Reactive may need to call this
 	protected boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
-		runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preRemove( entity ) );
+		final var callbacks = persister.getEntityCallbacks();
+		final boolean hasPreRemoveCallbacks = callbacks.hasRegisteredCallbacks( CallbackType.PRE_REMOVE );
+		final boolean hasPreDeleteCallbacks = callbacks.hasRegisteredCallbacks( CallbackType.PRE_DELETE );
+		if ( hasPreRemoveCallbacks || hasPreDeleteCallbacks ) {
+			runEntityLifecycleCallback( () -> {
+				if ( hasPreRemoveCallbacks ) {
+					callbacks.preRemove( entity );
+				}
+				if ( hasPreDeleteCallbacks ) {
+					callbacks.preDelete( entity );
+				}
+			} );
+		}
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_DELETE.isEmpty() ) {
 			return false;

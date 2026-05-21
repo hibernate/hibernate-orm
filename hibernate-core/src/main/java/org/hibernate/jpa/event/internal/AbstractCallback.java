@@ -10,7 +10,7 @@ import org.hibernate.jpa.event.spi.CallbackType;
 /// Base support for [Callback] implementations.
 ///
 /// @author Steve Ebersole
-abstract class AbstractCallback implements Callback {
+abstract class AbstractCallback implements Callback<Object> {
 	private final CallbackType callbackType;
 
 	AbstractCallback(CallbackType callbackType) {

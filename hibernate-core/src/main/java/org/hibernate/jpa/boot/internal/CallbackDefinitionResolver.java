@@ -24,11 +24,10 @@ import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import static org.hibernate.boot.models.spi.LifecycleEventHandler.listenersForTarget;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /// Resolves JPA callback definitions
@@ -40,7 +39,6 @@ public final class CallbackDefinitionResolver {
 			InFlightMetadataCollector metadataCollector,
 			ClassDetails entityClass,
 			CallbackType callbackType) {
-		final ModelsContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
 
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
@@ -51,15 +49,13 @@ public final class CallbackDefinitionResolver {
 		boolean stopListeners = false;
 		boolean stopDefaultListeners = false;
 
+		final var modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
 		do {
-			final LifecycleEventHandler callbackRegistration = LifecycleEventHandler.from(
-					JpaEventListenerStyle.CALLBACK,
-					currentClazz,
-					false
-			);
-			final MethodDetails callbackMethod = getCallbackMethod( callbackRegistration, callbackType );
+			final var callbackRegistration =
+					LifecycleEventHandler.from( JpaEventListenerStyle.CALLBACK, currentClazz, false );
+			final var callbackMethod = callbackRegistration.getCallbackMethod( callbackType );
 			if ( callbackMethod != null && !callbacksMethodNames.contains( callbackMethod.getName() ) ) {
-				final Method javaMethod = (Method) callbackMethod.toJavaMember();
+				final var javaMethod = callbackMethod.toJavaMember();
 				ReflectHelper.ensureAccessibility( javaMethod );
 				callbackDefinitions.add( 0, new EntityCallbackDefinition( javaMethod, callbackType ) ); //superclass first
 				callbacksMethodNames.add( 0, callbackMethod.getName() );
@@ -82,7 +78,7 @@ public final class CallbackDefinitionResolver {
 
 		//handle default listeners
 		if ( !stopDefaultListeners ) {
-			final List<LifecycleEventHandler> globalListenerRegistrations = new ArrayList<>(
+			final var globalListenerRegistrations = new ArrayList<>(
 					metadataCollector.getGlobalRegistrations().getEntityListenerRegistrations()
 			);
 			collectTargetedListenerRegistrations( metadataCollector, entityClass, globalListenerRegistrations );
@@ -94,22 +90,16 @@ public final class CallbackDefinitionResolver {
 			}
 		}
 
-		for ( LifecycleEventHandler listenerRegistration : orderedListeners ) {
-			final CallbackDefinition callbackDefinition = resolveListenerCallback(
-					listenerRegistration,
-					entityClass,
-					callbackType
-			);
+		for ( var listenerRegistration : orderedListeners ) {
+			final var callbackDefinition =
+					resolveListenerCallback( listenerRegistration, entityClass, callbackType );
 			if ( callbackDefinition != null ) {
 				callbackDefinitions.add( 0, callbackDefinition ); // listeners first
 			}
 		}
-		for ( LifecycleEventHandler listenerRegistration : orderedDefaultListeners ) {
-			final CallbackDefinition callbackDefinition = resolveListenerCallback(
-					listenerRegistration,
-					entityClass,
-					callbackType
-			);
+		for ( var listenerRegistration : orderedDefaultListeners ) {
+			final var callbackDefinition =
+					resolveListenerCallback( listenerRegistration, entityClass, callbackType );
 			if ( callbackDefinition != null ) {
 				callbackDefinitions.add( 0, callbackDefinition );
 			}
@@ -121,22 +111,22 @@ public final class CallbackDefinitionResolver {
 			LifecycleEventHandler listenerRegistration,
 			ClassDetails entityClass,
 			CallbackType callbackType) {
-		final MethodDetails callbackMethod = getCallbackMethod( listenerRegistration, callbackType );
-
+		final var callbackMethod = listenerRegistration.getCallbackMethod( callbackType );
 		if ( callbackMethod == null ) {
 			return null;
 		}
-		if ( !isCompatibleCallbackTarget( callbackMethod, entityClass ) ) {
+		else if ( !isCompatibleCallbackTarget( callbackMethod, entityClass ) ) {
 			return null;
 		}
-
-		final Method method = (Method) callbackMethod.toJavaMember();
-		ReflectHelper.ensureAccessibility( method );
-		return new ListenerCallbackDefinition(
-				listenerRegistration.getCallbackClass().toJavaClass(),
-				method,
-				callbackType
-		);
+		else {
+			final var method = callbackMethod.toJavaMember();
+			ReflectHelper.ensureAccessibility( method );
+			return new ListenerCallbackDefinition(
+					listenerRegistration.getCallbackClass().toJavaClass(),
+					method,
+					callbackType
+			);
+		}
 	}
 
 	private static boolean isCompatibleCallbackTarget(MethodDetails callbackMethod, ClassDetails entityClass) {
@@ -147,32 +137,17 @@ public final class CallbackDefinitionResolver {
 			InFlightMetadataCollector metadataCollector,
 			ClassDetails entityClass,
 			List<LifecycleEventHandler> globalListenerRegistrations) {
-		final Map<ClassDetails, List<LifecycleEventHandler>> targetedRegistrations =
-				metadataCollector.getGlobalRegistrations().getTargetedEntityListenerRegistrations();
-		if ( targetedRegistrations.isEmpty() ) {
-			return;
+		final var targetedRegistrations =
+				metadataCollector.getGlobalRegistrations()
+						.getTargetedEntityListenerRegistrations();
+		if ( !targetedRegistrations.isEmpty() ) {
+			final var entityJavaClass = entityClass.toJavaClass();
+			targetedRegistrations.forEach( (targetClass, listenerRegistrations) -> {
+				if ( targetClass.toJavaClass().isAssignableFrom( entityJavaClass ) ) {
+					globalListenerRegistrations.addAll( listenerRegistrations );
+				}
+			} );
 		}
-
-		final Class<?> entityJavaClass = entityClass.toJavaClass();
-		targetedRegistrations.forEach( (targetClass, listenerRegistrations) -> {
-			if ( targetClass.toJavaClass().isAssignableFrom( entityJavaClass ) ) {
-				globalListenerRegistrations.addAll( listenerRegistrations );
-			}
-		} );
-	}
-
-	private static MethodDetails getCallbackMethod(
-			LifecycleEventHandler listenerRegistration,
-			CallbackType callbackType) {
-		return switch ( callbackType ) {
-			case PRE_PERSIST -> listenerRegistration.getPrePersistMethod();
-			case POST_PERSIST -> listenerRegistration.getPostPersistMethod();
-			case PRE_REMOVE -> listenerRegistration.getPreRemoveMethod();
-			case POST_REMOVE -> listenerRegistration.getPostRemoveMethod();
-			case PRE_UPDATE -> listenerRegistration.getPreUpdateMethod();
-			case POST_UPDATE -> listenerRegistration.getPostUpdateMethod();
-			case POST_LOAD -> listenerRegistration.getPostLoadMethod();
-		};
 	}
 
 	private static boolean useAnnotationAnnotatedByListener;
@@ -182,7 +157,7 @@ public final class CallbackDefinitionResolver {
 		useAnnotationAnnotatedByListener = false;
 		final var target = EntityListeners.class.getAnnotation( Target.class );
 		if ( target != null ) {
-			for ( ElementType type : target.value() ) {
+			for ( var type : target.value() ) {
 				if ( type.equals( ElementType.ANNOTATION_TYPE ) ) {
 					useAnnotationAnnotatedByListener = true;
 					break;
@@ -232,12 +207,7 @@ public final class CallbackDefinitionResolver {
 			ClassDetails listenerClassDetails,
 			ClassDetails entityClass,
 			List<LifecycleEventHandler> listOfListeners) {
-		final List<LifecycleEventHandler> eventListeners = LifecycleEventHandler.listenersForTarget(
-				listenerClassDetails,
-				entityClass,
-				false
-		);
-		listOfListeners.addAll( eventListeners );
+		listOfListeners.addAll( listenersForTarget( listenerClassDetails, entityClass, false ) );
 	}
 
 	/**
@@ -248,7 +218,7 @@ public final class CallbackDefinitionResolver {
 			ClassDetails entityClass,
 			PersistentClass persistentClass,
 			InFlightMetadataCollector collector) {
-		for ( CallbackType callbackType : CallbackType.values() ) {
+		for ( var callbackType : CallbackType.values() ) {
 			persistentClass.addCallbackDefinitions( resolveEntityCallbacks( collector, entityClass, callbackType ) );
 		}
 	}

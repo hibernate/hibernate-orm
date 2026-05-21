@@ -14,9 +14,9 @@ import java.util.function.Consumer;
  */
 public class AddedCallbackImpl<E> implements Callback<E> {
 	private final CallbackType callbackType;
-	private final Consumer<E> listener;
+	private final Consumer<? super E> listener;
 
-	public AddedCallbackImpl(CallbackType callbackType, Consumer<E> listener) {
+	public AddedCallbackImpl(CallbackType callbackType, Consumer<? super E> listener) {
 		this.callbackType = callbackType;
 		this.listener = listener;
 	}

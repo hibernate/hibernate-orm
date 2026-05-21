@@ -92,6 +92,7 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
@@ -426,11 +427,31 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			Class<E> entityClass,
 			Class<? extends Annotation> callbackType,
 			Consumer<? super E> callback) {
-		//noinspection unchecked
-		return getMappingMetamodel()
-				.getEntityDescriptor( entityClass )
-				.getEntityCallbacks()
-				.addListener( CallbackType.fromCallbackAnnotation( callbackType ), callback );
+		final var type = CallbackType.fromCallbackAnnotation( callbackType );
+		final List<EntityListenerRegistration> registrations = new ArrayList<>();
+		getMappingMetamodel().forEachEntityDescriptor( persister -> {
+			final var mappedClass = persister.getMappedClass();
+			if ( mappedClass != null && entityClass.isAssignableFrom( mappedClass ) ) {
+				registrations.add( addListener( entityClass, persister, type, callback ) );
+			}
+		} );
+		if ( registrations.isEmpty() ) {
+			throw new IllegalArgumentException( "Not an entity type or supertype of an entity type: " + entityClass.getName() );
+		}
+		return registrations.size() == 1
+				? registrations.get( 0 )
+				: () -> registrations.forEach( EntityListenerRegistration::cancel );
+	}
+
+	private static <E> EntityListenerRegistration addListener(
+			Class<E> entityClass,
+			EntityPersister persister,
+			CallbackType callbackType,
+			Consumer<? super E> callback) {
+		return persister.getEntityCallbacks().addListener(
+				callbackType,
+				entity -> callback.accept( entityClass.cast( entity ) )
+		);
 	}
 
 	@Override

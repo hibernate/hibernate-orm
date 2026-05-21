@@ -279,6 +279,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 	}
 
 	protected boolean preInsert(AbstractEntityInsertAction action, SharedSessionContractImplementor session) {
+		action.executePreInsertCallbacks( session );
+
 		final var listenerGroup = session.getFactory().getEventListenerGroups().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			return false;

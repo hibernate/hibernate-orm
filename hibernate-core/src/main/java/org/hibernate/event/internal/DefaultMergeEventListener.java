@@ -23,6 +23,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AnyType;
@@ -289,6 +290,7 @@ public class DefaultMergeEventListener
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
 		super.cascadeBeforeSave( session, persister, entity, copyCache );
 
+		firePreMergeCallbacks( session, persister, entity );
 		final Object[] sourceValues = persister.getValues( entity );
 		session.runInterceptorCallback( () -> interceptor.preMerge( entity, sourceValues, propertyNames, propertyTypes ) );
 		final Object[] copiedValues = TypeHelper.replace(
@@ -452,6 +454,7 @@ public class DefaultMergeEventListener
 			final String[] propertyNames = persister.getPropertyNames();
 			final Type[] propertyTypes = persister.getPropertyTypes();
 
+			firePreMergeCallbacks( session, persister, entity );
 			final Object[] sourceValues = persister.getValues( entity );
 			final Object[] originalValues = persister.getValues( target );
 			session.runInterceptorCallback(
@@ -661,6 +664,12 @@ public class DefaultMergeEventListener
 		}
 	}
 
+	private static void firePreMergeCallbacks(EventSource session, EntityPersister persister, Object entity) {
+		final var callbacks = persister.getEntityCallbacks();
+		if ( callbacks.hasRegisteredCallbacks( CallbackType.PRE_MERGE ) ) {
+			session.runEntityLifecycleCallback( () -> callbacks.preMerge( entity ) );
+		}
+	}
 
 	@Override
 	protected CascadingAction<MergeContext> getCascadeAction() {

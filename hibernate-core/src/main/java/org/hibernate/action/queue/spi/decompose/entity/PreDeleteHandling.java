@@ -9,6 +9,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.spi.bind.PreExecutionCallback;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.PreDeleteEvent;
+import org.hibernate.jpa.event.spi.CallbackType;
 
 /// Pre-execution callback for entity delete actions.
 ///
@@ -34,6 +35,11 @@ public class PreDeleteHandling implements PreExecutionCallback {
 	}
 
 	private boolean firePreDelete(SessionImplementor session) {
+		final var callbacks = action.getPersister().getEntityCallbacks();
+		if ( callbacks.hasRegisteredCallbacks( CallbackType.PRE_DELETE ) ) {
+			session.runEntityLifecycleCallback( () -> callbacks.preDelete( action.getInstance() ) );
+		}
+
 		final var listenerGroup = session.getFactory().getEventListenerGroups().eventListenerGroup_PRE_DELETE;
 		if ( listenerGroup.isEmpty() ) {
 			return false;

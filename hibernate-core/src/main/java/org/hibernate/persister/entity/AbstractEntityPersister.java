@@ -338,7 +338,7 @@ public abstract class AbstractEntityPersister
 	private final String sqlAliasStem;
 	private final String jpaEntityName;
 
-	private final EntityCallbacks jpaCallbacks;
+	private final EntityCallbacks<Object> jpaCallbacks;
 
 	private SingleIdEntityLoader<?> singleIdLoader;
 	private MultiIdEntityLoader<?> multiIdLoader;
@@ -837,7 +837,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public EntityCallbacks getEntityCallbacks() {
+	public EntityCallbacks<Object> getEntityCallbacks() {
 		return jpaCallbacks;
 	}
 

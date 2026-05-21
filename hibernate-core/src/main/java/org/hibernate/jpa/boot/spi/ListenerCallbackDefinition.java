@@ -30,7 +30,7 @@ public class ListenerCallbackDefinition implements CallbackDefinition {
 	}
 
 	@Override
-	public Callback createCallback(ManagedBeanRegistry beanRegistry) {
+	public Callback<Object> createCallback(ManagedBeanRegistry beanRegistry) {
 		return new ListenerCallback( beanRegistry.getBean( listenerClass ), callbackMethod, callbackType );
 	}
 }

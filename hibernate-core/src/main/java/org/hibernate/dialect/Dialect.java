@@ -17,7 +17,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;

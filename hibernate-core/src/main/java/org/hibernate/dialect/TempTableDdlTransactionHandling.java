@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot;
+package org.hibernate.dialect;
 
 /**
  * Enum describing how creation and dropping of temporary tables should be done in terms of

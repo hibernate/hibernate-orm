@@ -44,8 +44,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static org.hibernate.boot.TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT;
-import static org.hibernate.boot.TempTableDdlTransactionHandling.NONE;
+import static org.hibernate.dialect.TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT;
+import static org.hibernate.dialect.TempTableDdlTransactionHandling.NONE;
 
 /**
  * @author Steve Ebersole

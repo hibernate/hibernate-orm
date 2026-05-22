@@ -5,12 +5,13 @@
 package org.hibernate.boot.models.xml.internal;
 
 import java.util.EnumSet;
+import java.util.Locale;
 
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 
 import jakarta.persistence.AccessType;
+import jakarta.persistence.CascadeType;
 
 import static org.hibernate.boot.models.xml.XmlProcessLogging.XML_PROCESS_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -145,9 +146,24 @@ public final class PersistenceUnitMetadataImpl implements PersistenceUnitMetadat
 				assert actions.length > 0;
 
 				for ( int i = 0; i < actions.length; i++ ) {
-					defaultCascadeTypes.add( CascadeType.valueOf( actions[i] ) );
+					final CascadeType cascadeType = parseCascadeType( actions[i] );
+					if ( cascadeType != null ) {
+						defaultCascadeTypes.add( cascadeType );
+					}
 				}
 			}
 		}
+	}
+
+	private static CascadeType parseCascadeType(String action) {
+		return switch ( action.toLowerCase( Locale.ROOT ) ) {
+			case "all" -> CascadeType.ALL;
+			case "persist" -> CascadeType.PERSIST;
+			case "merge" -> CascadeType.MERGE;
+			case "delete", "remove" -> CascadeType.REMOVE;
+			case "refresh" -> CascadeType.REFRESH;
+			case "evict", "detach" -> CascadeType.DETACH;
+			default -> null;
+		};
 	}
 }

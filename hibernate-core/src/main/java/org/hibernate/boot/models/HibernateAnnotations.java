@@ -128,12 +128,6 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<Cascade, CascadeAnnotation> CASCADE = new OrmAnnotationDescriptor<>(
-			Cascade.class,
-			CascadeAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
-	);
 	OrmAnnotationDescriptor<Checks, ChecksAnnotation> CHECKS = new OrmAnnotationDescriptor<>(
 			Checks.class,
 			ChecksAnnotation.class,

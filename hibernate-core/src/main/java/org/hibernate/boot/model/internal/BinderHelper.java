@@ -8,6 +8,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.CascadeType;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -15,8 +16,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
@@ -58,13 +57,11 @@ import java.util.function.Consumer;
 
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
-import static java.util.Collections.addAll;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnyBinder.resolveImplicitDiscriminatorStrategy;
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ANY_DISCRIMINATOR;
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ANY_KEY;
 import static org.hibernate.boot.model.internal.ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifier;
@@ -886,49 +883,33 @@ public class BinderHelper {
 	}
 
 	public static EnumSet<CascadeType> aggregateCascadeTypes(
-			jakarta.persistence.CascadeType[] cascadeTypes,
+			CascadeType[] cascadeTypes,
 			MemberDetails memberDetails,
 			boolean orphanRemoval,
 			MetadataBuildingContext context) {
-		final var cascadeAnnotation = memberDetails.getDirectAnnotationUsage( Cascade.class );
-		final var cascades = convertToHibernateCascadeType( cascadeTypes );
-		final var hibernateCascades = cascadeAnnotation == null ? null : cascadeAnnotation.value();
-		if ( !isEmpty( hibernateCascades ) ) {
-			addAll( cascades, hibernateCascades );
-		}
+		final var cascades = convertToJpaCascadeType( cascadeTypes );
 		if ( orphanRemoval ) {
-			cascades.add( CascadeType.DELETE_ORPHAN );
 			cascades.add( CascadeType.REMOVE );
-		}
-		if ( cascades.contains( CascadeType.REPLICATE ) ) {
-			warnAboutDeprecatedCascadeType( CascadeType.REPLICATE );
 		}
 		cascades.addAll( context.getEffectiveDefaults().getDefaultCascadeTypes() );
 		return cascades;
 	}
 
-	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] cascades) {
+	private static EnumSet<CascadeType> convertToJpaCascadeType(CascadeType[] cascades) {
 		final var cascadeTypes = EnumSet.noneOf( CascadeType.class );
 		if ( cascades != null ) {
 			for ( var cascade: cascades ) {
-				cascadeTypes.add( convertCascadeType( cascade ) );
+				cascadeTypes.add( cascade );
 			}
 		}
 		return cascadeTypes;
 	}
 
-	private static CascadeType convertCascadeType(jakarta.persistence.CascadeType cascade) {
-		return switch (cascade) {
-			case ALL -> CascadeType.ALL;
-			case PERSIST -> CascadeType.PERSIST;
-			case MERGE -> CascadeType.MERGE;
-			case REMOVE -> CascadeType.REMOVE;
-			case REFRESH -> CascadeType.REFRESH;
-			case DETACH -> CascadeType.DETACH;
-		};
+	public static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
+		return renderCascadeTypeList( cascadeTypes, false );
 	}
 
-	public static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
+	public static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes, boolean orphanRemoval) {
 		final var cascade = new StringBuilder();
 		for ( var cascadeType : cascadeTypes ) {
 			cascade.append( "," );
@@ -936,19 +917,15 @@ public class BinderHelper {
 				case ALL -> "all";
 				case PERSIST -> "persist";
 				case MERGE -> "merge";
-				case LOCK -> "lock";
 				case REFRESH -> "refresh";
 				case DETACH -> "evict";
 				case REMOVE -> "delete";
-				case DELETE_ORPHAN ->  "delete-orphan";
-				case REPLICATE ->  "replicate";
 			} );
 		}
+		if ( orphanRemoval ) {
+			cascade.append( ",delete-orphan" );
+		}
 		return cascade.isEmpty() ? "none" : cascade.substring(1);
-	}
-
-	private static void warnAboutDeprecatedCascadeType(CascadeType cascadeType) {
-		DEPRECATION_LOGGER.warnf( "CascadeType.%s is deprecated", cascadeType.name() );
 	}
 
 	static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {

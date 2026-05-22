@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -13,6 +11,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -235,20 +234,14 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
 
 		final ManyToOne manyToOneUsage = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
-		assertThat( manyToOneUsage.cascade() ).isEmpty();
-
-		final Cascade cascadeUsage = memberDetails.getDirectAnnotationUsage( Cascade.class );
-		assertThat( cascadeUsage.value() ).containsExactly( CascadeType.ALL );
+		assertThat( manyToOneUsage.cascade() ).containsExactly( CascadeType.ALL );
 	}
 
 	@Test
 	public void testCascadeSomeWithDefaultPersist() {
 		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm8.xml" );
 		final ManyToOne manyToOneUsage = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
-		assertThat( manyToOneUsage.cascade() ).isEmpty();
-
-		final Cascade cascadeUsage = memberDetails.getDirectAnnotationUsage( Cascade.class );
-		assertThat( cascadeUsage.value() ).containsOnly(
+		assertThat( manyToOneUsage.cascade() ).containsOnly(
 				CascadeType.PERSIST,
 				CascadeType.REMOVE,
 				CascadeType.REFRESH,
@@ -265,10 +258,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	public void testCascadeAllPlusMore() {
 		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm9.xml" );
 		final ManyToOne manyToOneUsage = memberDetails.getDirectAnnotationUsage( ManyToOne.class );
-		assertThat( manyToOneUsage.cascade() ).isEmpty();
-
-		final Cascade cascadeUsage = memberDetails.getDirectAnnotationUsage( Cascade.class );
-		assertThat( cascadeUsage.value() ).containsOnly(
+		assertThat( manyToOneUsage.cascade() ).containsOnly(
 				CascadeType.ALL,
 				CascadeType.PERSIST,
 				CascadeType.MERGE,

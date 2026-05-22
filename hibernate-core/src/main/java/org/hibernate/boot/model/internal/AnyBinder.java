@@ -8,7 +8,6 @@ import java.util.EnumSet;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -19,6 +18,7 @@ import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;

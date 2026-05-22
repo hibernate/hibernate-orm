@@ -20,7 +20,6 @@
                 <cascade>
                     <cascade-persist />
                     <cascade-remove />
-                    <cascade-lock />
                 </cascade>
                 <on-delete>CASCADE</on-delete>
             </one-to-many>

@@ -9,7 +9,6 @@ import java.util.EnumSet;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.LazyGroup;
@@ -25,6 +24,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
@@ -462,6 +462,7 @@ public class ToOneBinder {
 				inferredData,
 				nullIfEmpty( oneToOne.mappedBy() ),
 				trueOneToOne,
+				oneToOne.orphanRemoval(),
 				isIdentifierMapper,
 				inSecondPass,
 				propertyBinder,
@@ -479,6 +480,7 @@ public class ToOneBinder {
 			PropertyData inferredData,
 			String mappedBy,
 			boolean trueOneToOne,
+			boolean orphanRemoval,
 			boolean isIdentifierMapper,
 			boolean inSecondPass,
 			PropertyBinder propertyBinder,
@@ -493,12 +495,14 @@ public class ToOneBinder {
 					propertyHolder,
 					inferredData,
 					mappedBy,
+					orphanRemoval,
 					inSecondPass,
 					context
 			);
 		}
 		else {
 			//has a FK on the table
+			propertyBinder.setOrphanRemoval( orphanRemoval );
 			bindManyToOne(
 					cascadeStrategy,
 					joinColumns,
@@ -524,6 +528,7 @@ public class ToOneBinder {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			String mappedBy,
+			boolean orphanRemoval,
 			boolean inSecondPass,
 			MetadataBuildingContext context) {
 		//is a true one-to-one
@@ -555,6 +560,7 @@ public class ToOneBinder {
 		binder.setMemberDetails( memberDetails );
 		binder.setValue( oneToOne );
 		binder.setCascade( cascadeStrategy );
+		binder.setOrphanRemoval( orphanRemoval );
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setBuildingContext( context );
 		binder.setHolder( propertyHolder );

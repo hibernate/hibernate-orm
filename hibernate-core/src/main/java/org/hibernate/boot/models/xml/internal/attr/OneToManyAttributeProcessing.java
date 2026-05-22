@@ -53,7 +53,7 @@ public class OneToManyAttributeProcessing {
 		applyTargetEntity( jaxbOneToMany, oneToManyAnn, memberDetails, xmlDocumentContext );
 
 		CommonPluralAttributeProcessing.applyPluralAttributeStructure( jaxbOneToMany, memberDetails, xmlDocumentContext );
-		XmlAnnotationHelper.applyCascading( jaxbOneToMany.getCascade(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyCascading( jaxbOneToMany.getCascade(), oneToManyAnn, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyAttributeOverrides(
 				jaxbOneToMany.getMapKeyAttributeOverrides(),

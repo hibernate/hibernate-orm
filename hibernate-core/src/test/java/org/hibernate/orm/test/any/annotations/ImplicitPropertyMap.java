@@ -13,7 +13,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
 
 import java.util.HashMap;
@@ -53,10 +52,9 @@ public class ImplicitPropertyMap {
 		this.name = name;
 	}
 
-	@ManyToAny
+	@ManyToAny(cascade = jakarta.persistence.CascadeType.ALL)
 	@Column( name = "property_type" )
 	@AnyKeyJavaClass( Integer.class )
-	@Cascade( org.hibernate.annotations.CascadeType.ALL )
 	@JoinTable(
 			name = "map_properties",
 			joinColumns = @JoinColumn( name = "map_id" ),

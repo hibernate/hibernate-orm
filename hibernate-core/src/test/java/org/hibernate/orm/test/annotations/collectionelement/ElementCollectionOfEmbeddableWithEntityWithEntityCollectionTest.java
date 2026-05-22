@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.Event;
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.Plan;
@@ -23,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -35,7 +35,6 @@ import jakarta.persistence.Table;
 import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.hibernate.annotations.CascadeType.ALL;
 import static org.hibernate.annotations.FetchMode.SUBSELECT;
 
 @DomainModel(
@@ -132,7 +131,6 @@ public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 
 		@ElementCollection
 		@OrderColumn(name = "position")
-		@Cascade(ALL)
 		@CollectionTable(name = "transfer", joinColumns = @JoinColumn(name = "plan_id"))
 		public List<Transfer> transfers = new ArrayList<>();
 
@@ -154,9 +152,8 @@ public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 
 	@Embeddable
 	public static class Transfer {
-		@ManyToOne
+		@ManyToOne(cascade = CascadeType.ALL)
 		@JoinColumn(name = "subplan_id")
-		@Cascade(ALL)
 		public SubPlan subPlan;
 
 		public Transfer() {
@@ -179,9 +176,8 @@ public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 
 		public String name;
 
-		@ManyToMany
+		@ManyToMany(cascade = CascadeType.ALL)
 		@Fetch(SUBSELECT)
-		@Cascade(ALL)
 		public List<Event> events = new ArrayList<>();
 
 		public SubPlan() {

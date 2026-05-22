@@ -10,8 +10,6 @@ import java.util.List;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.ManyToAny;
 
 import jakarta.persistence.Column;
@@ -42,14 +40,13 @@ public class PropertyList<T extends Property> {
 		this.name = name;
 	}
 
-	@ManyToAny
+	@ManyToAny(cascade = jakarta.persistence.CascadeType.ALL)
 	@Column(name = "property_type")
 	@AnyKeyJavaClass( Integer.class )
 	@AnyDiscriminatorValue( discriminator = "C", entity = CharProperty.class )
 	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class)
 	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class)
 	@AnyDiscriminatorValue( discriminator = "L", entity = LongProperty.class)
-	@Cascade( { CascadeType.ALL })
 	@JoinTable(name = "list_properties",
 			joinColumns = @JoinColumn(name = "obj_id"),
 			inverseJoinColumns = @JoinColumn(name = "property_id")
@@ -81,7 +78,7 @@ public class PropertyList<T extends Property> {
 		this.name = name;
 	}
 
-	@Any
+	@Any(cascade = jakarta.persistence.CascadeType.ALL)
 	@Column(name = "property_type")
 	@JoinColumn(name = "property_id")
 	@AnyKeyJavaClass( Integer.class )
@@ -89,7 +86,6 @@ public class PropertyList<T extends Property> {
 	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class)
 	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class)
 	@AnyDiscriminatorValue( discriminator = "L", entity = LongProperty.class)
-	@Cascade( CascadeType.ALL )
 	public T getSomeProperty() {
 		return someProperty;
 	}

@@ -28,13 +28,13 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.Version;
+import jakarta.persistence.CascadeType;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.Audited;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Immutable;
@@ -128,6 +128,7 @@ public class PropertyBinder {
 	private boolean insertable = true;
 	private boolean updatable = true;
 	private EnumSet<CascadeType> cascadeTypes;
+	private boolean orphanRemoval;
 	private BasicValueBinder basicValueBinder;
 	private ClassDetails declaringClass;
 	private boolean declaringClassSet;
@@ -214,6 +215,10 @@ public class PropertyBinder {
 
 	public void setCascade(EnumSet<CascadeType> cascadeTypes) {
 		this.cascadeTypes = cascadeTypes;
+	}
+
+	public void setOrphanRemoval(boolean orphanRemoval) {
+		this.orphanRemoval = orphanRemoval;
 	}
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
@@ -441,7 +446,7 @@ public class PropertyBinder {
 		property.setValue( value );
 		property.setLazy( lazy );
 		property.setLazyGroup( lazyGroup );
-		property.setCascade( cascadeTypes );
+		property.setCascade( cascadeTypes, orphanRemoval );
 		property.setPropertyAccessorName( accessType.getType() );
 		property.setReturnedClassName( returnedClassName );
 		property.setGeneric( generic );

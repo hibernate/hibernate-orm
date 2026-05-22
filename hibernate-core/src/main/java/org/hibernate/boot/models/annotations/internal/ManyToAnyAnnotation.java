@@ -14,7 +14,8 @@ import jakarta.persistence.CascadeType;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class ManyToAnyAnnotation implements ManyToAny, AttributeMarker, AttributeMarker.Fetchable {
+public class ManyToAnyAnnotation
+		implements ManyToAny, AttributeMarker, AttributeMarker.Fetchable, AttributeMarker.Cascadeable {
 	private jakarta.persistence.FetchType fetch;
 	private CascadeType[] cascade;
 

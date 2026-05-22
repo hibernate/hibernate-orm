@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.annotations.xml.ejb3;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -13,6 +11,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -279,10 +278,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "one-to-one.orm8.xml" );
 		assertThat( memberDetails.hasDirectAnnotationUsage( OneToOne.class ) ).isTrue();
 		final OneToOne oneToOneUsage = memberDetails.getDirectAnnotationUsage( OneToOne.class );
-		assertThat( oneToOneUsage.cascade() ).isEmpty();
-
-		final Cascade cascadeUsage = memberDetails.getDirectAnnotationUsage( Cascade.class );
-		assertThat( cascadeUsage.value() ).containsOnly( CascadeType.ALL );
+		assertThat( oneToOneUsage.cascade() ).containsOnly( CascadeType.ALL );
 	}
 
 	@Test
@@ -290,10 +286,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "one-to-one.orm9.xml" );
 		assertThat( memberDetails.hasDirectAnnotationUsage( OneToOne.class ) ).isTrue();
 		final OneToOne oneToOneUsage = memberDetails.getDirectAnnotationUsage( OneToOne.class );
-		assertThat( oneToOneUsage.cascade() ).isEmpty();
-
-		final Cascade cascadeUsage = memberDetails.getDirectAnnotationUsage( Cascade.class );
-		assertThat( cascadeUsage.value() ).containsOnly( CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST );
+		assertThat( oneToOneUsage.cascade() ).containsOnly( CascadeType.REMOVE, CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST );
 	}
 
 	/**
@@ -306,10 +299,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "one-to-one.orm10.xml" );
 		assertThat( memberDetails.hasDirectAnnotationUsage( OneToOne.class ) ).isTrue();
 		final OneToOne oneToOneUsage = memberDetails.getDirectAnnotationUsage( OneToOne.class );
-		assertThat( oneToOneUsage.cascade() ).isEmpty();
-
-		final Cascade cascadeUsage = memberDetails.getDirectAnnotationUsage( Cascade.class );
-		assertThat( cascadeUsage.value() ).containsOnly(
+		assertThat( oneToOneUsage.cascade() ).containsOnly(
 				CascadeType.ALL,
 				CascadeType.PERSIST,
 				CascadeType.REMOVE,

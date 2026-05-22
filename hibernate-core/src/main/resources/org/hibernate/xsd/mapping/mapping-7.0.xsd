@@ -689,10 +689,6 @@
                          minOccurs="0"/>
             <xsd:element name="cascade-detach" type="orm:emptyType"
                          minOccurs="0"/>
-            <xsd:element name="cascade-replicate" type="orm:emptyType"
-                         minOccurs="0"/>
-            <xsd:element name="cascade-lock" type="orm:emptyType"
-                         minOccurs="0"/>
         </xsd:sequence>
     </xsd:complexType>
 

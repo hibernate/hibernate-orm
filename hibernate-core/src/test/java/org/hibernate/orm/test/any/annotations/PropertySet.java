@@ -10,8 +10,6 @@ import java.util.List;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.ManyToAny;
 
 import jakarta.persistence.Column;
@@ -39,12 +37,11 @@ public class PropertySet {
 		this.name = name;
 	}
 
-	@ManyToAny
+	@ManyToAny(cascade = jakarta.persistence.CascadeType.ALL)
 	@Column( name = "property_type" )
 	@AnyKeyJavaClass( Integer.class )
 	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
 	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
-	@Cascade( { CascadeType.ALL } )
 	@JoinTable(
 			name = "obj_properties",
 			joinColumns = @JoinColumn( name = "obj_id" ),
@@ -75,12 +72,11 @@ public class PropertySet {
 		this.name = name;
 	}
 
-	@Any
+	@Any(cascade = jakarta.persistence.CascadeType.ALL)
 	@Column( name = "property_type" )
 	@AnyKeyJavaClass( Integer.class )
 	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
 	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
-	@Cascade( value = { CascadeType.ALL } )
 	@JoinColumn( name = "property_id" )
 	public Property getSomeProperty() {
 		return someProperty;

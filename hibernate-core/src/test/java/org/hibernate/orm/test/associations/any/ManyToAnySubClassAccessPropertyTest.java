@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -33,7 +32,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
-import static org.hibernate.annotations.CascadeType.ALL;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(
@@ -88,9 +86,8 @@ class ManyToAnySubClassAccessPropertyTest {
 	public static class Dog extends Animal {
 
 		@Access(AccessType.PROPERTY)
-		@ManyToAny
+		@ManyToAny(cascade = jakarta.persistence.CascadeType.ALL)
 		@AnyKeyJavaClass(Integer.class)
-		@Cascade(ALL)
 		@Column(name = "ROLE_COL")
 		@JoinTable(name = "DOG_OWNER", joinColumns = @JoinColumn(name = "SOURCE"), inverseJoinColumns = @JoinColumn(name = "DEST"))
 		@Override
@@ -104,9 +101,8 @@ class ManyToAnySubClassAccessPropertyTest {
 	public static class Cat extends Animal {
 
 		@Access(AccessType.PROPERTY)
-		@ManyToAny
+		@ManyToAny(cascade = jakarta.persistence.CascadeType.ALL)
 		@AnyKeyJavaClass(Integer.class)
-		@Cascade(ALL)
 		@Column(name = "ROLE_COL")
 		@JoinTable(name = "DOG_OWNER", joinColumns = @JoinColumn(name = "SOURCE"), inverseJoinColumns = @JoinColumn(name = "DEST"))
 		@Override

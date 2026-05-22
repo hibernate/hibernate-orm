@@ -6,10 +6,10 @@ package org.hibernate.boot.models.xml.spi;
 
 import java.util.EnumSet;
 
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 import jakarta.persistence.AccessType;
+import jakarta.persistence.CascadeType;
 
 /**
  * Aggregator of information from {@code entity-mappings/persistence-unit-metadata}

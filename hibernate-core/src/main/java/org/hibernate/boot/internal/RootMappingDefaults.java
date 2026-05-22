@@ -6,12 +6,12 @@ package org.hibernate.boot.internal;
 
 import java.util.EnumSet;
 
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MappingDefaults;
 
 import jakarta.persistence.AccessType;
+import jakarta.persistence.CascadeType;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;

@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * <p>
  * All IDs are generated from identity columns.
  * <p>
- * Hibernate cascade types are used (org.hibernate.annotations.CascadeType)..
+ * Jakarta Persistence cascade types are used.
  * <p>
  * This test uses the following model:
  *

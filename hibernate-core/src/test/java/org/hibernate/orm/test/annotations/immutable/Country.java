@@ -11,7 +11,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Immutable;
 
 @Entity
@@ -42,8 +41,7 @@ public class Country implements Serializable {
 		name = string;
 	}
 
-	@OneToMany(fetch = FetchType.LAZY)
-	@Cascade(org.hibernate.annotations.CascadeType.ALL)
+	@OneToMany(fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
 	@Immutable
 	public List<State> getStates() {
 		return states;

@@ -20,8 +20,7 @@ import jakarta.persistence.OrderColumn;
 @Entity
 public class Race {
 	@Id @GeneratedValue public Integer id;
-	@OrderColumn( name="index_" ) @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@org.hibernate.annotations.Cascade( { org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
+	@OrderColumn( name="index_" ) @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
 	public List<Competitor> competitors = new ArrayList<Competitor>();
 	public String name;
 }

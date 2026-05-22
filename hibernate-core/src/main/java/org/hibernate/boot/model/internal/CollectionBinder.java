@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.Access;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.ElementCollection;
@@ -33,7 +34,6 @@ import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.CollectionId;
@@ -136,7 +136,6 @@ import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static jakarta.persistence.FetchType.DEFAULT;
 import static jakarta.persistence.FetchType.LAZY;
-import static org.hibernate.annotations.CascadeType.DELETE_ORPHAN;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
@@ -206,6 +205,7 @@ public abstract class CollectionBinder {
 	private TypeDetails collectionElementType;
 	private TypeDetails targetEntity;
 	private EnumSet<CascadeType> cascadeTypes;
+	private boolean orphanRemoval;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
 	private CacheLayout queryCacheLayout;
@@ -512,6 +512,7 @@ public abstract class CollectionBinder {
 			collectionBinder.setCascadeStrategy(
 					aggregateCascadeTypes( oneToManyAnn.cascade(), property,
 							oneToManyAnn.orphanRemoval(), context ) );
+			collectionBinder.setOrphanRemoval( oneToManyAnn.orphanRemoval() );
 			collectionBinder.setOneToMany( true );
 		}
 		else if ( elementCollectionAnn != null ) {
@@ -773,6 +774,10 @@ public abstract class CollectionBinder {
 
 	private void setCascadeStrategy(EnumSet<CascadeType> cascadeTypes) {
 		this.cascadeTypes = cascadeTypes;
+	}
+
+	private void setOrphanRemoval(boolean orphanRemoval) {
+		this.orphanRemoval = orphanRemoval;
 	}
 
 	private void setAccessType(AccessType accessType) {
@@ -1242,7 +1247,8 @@ public abstract class CollectionBinder {
 		binder.setName( propertyName );
 		binder.setValue( collection );
 		binder.setCascade( cascadeTypes );
-		if ( cascadeTypes != null && cascadeTypes.contains( DELETE_ORPHAN ) ) {
+		binder.setOrphanRemoval( orphanRemoval );
+		if ( orphanRemoval ) {
 			collection.setOrphanDelete( true );
 		}
 		binder.setLazy( collection.isLazy() );

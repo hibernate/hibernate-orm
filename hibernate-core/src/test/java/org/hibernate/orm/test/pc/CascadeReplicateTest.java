@@ -38,7 +38,6 @@ public class CascadeReplicateTest {
 
 		scope.inTransaction( entityManager -> {
 
-			//tag::pc-cascade-replicate-example[]
 			Person person = new Person();
 			person.setId( 1L );
 			person.setName( "John Doe Sr." );
@@ -49,7 +48,6 @@ public class CascadeReplicateTest {
 			person.addPhone( phone );
 
 			entityManager.unwrap( Session.class ).replicate( person, ReplicationMode.OVERWRITE );
-			//end::pc-cascade-replicate-example[]
 		} );
 	}
 }

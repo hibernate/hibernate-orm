@@ -8,29 +8,14 @@ package org.hibernate.orm.test.annotations.cascade.multicircle.nonjpa.sequence;
 public class B extends AbstractEntity {
 	private static final long serialVersionUID = 325417243L;
 
-	@jakarta.persistence.OneToMany(mappedBy = "b")
-	@org.hibernate.annotations.Cascade({
-			org.hibernate.annotations.CascadeType.PERSIST,
-			org.hibernate.annotations.CascadeType.MERGE,
-			org.hibernate.annotations.CascadeType.REFRESH
-	})
+	@jakarta.persistence.OneToMany(mappedBy = "b", cascade = {jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.REFRESH})
 	private java.util.Set<G> gCollection = new java.util.HashSet<G>();
 
 
-	@jakarta.persistence.ManyToOne(optional = false)
-	@org.hibernate.annotations.Cascade({
-			org.hibernate.annotations.CascadeType.PERSIST,
-			org.hibernate.annotations.CascadeType.MERGE,
-			org.hibernate.annotations.CascadeType.REFRESH
-	})
+	@jakarta.persistence.ManyToOne(optional = false, cascade = {jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.REFRESH})
 	private C c;
 
-	@jakarta.persistence.ManyToOne(optional = false)
-	@org.hibernate.annotations.Cascade({
-			org.hibernate.annotations.CascadeType.PERSIST,
-			org.hibernate.annotations.CascadeType.MERGE,
-			org.hibernate.annotations.CascadeType.REFRESH
-	})
+	@jakarta.persistence.ManyToOne(optional = false, cascade = {jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.REFRESH})
 	private D d;
 
 	public java.util.Set<G> getGCollection() {

@@ -74,7 +74,7 @@ public class AnyMappingAttributeProcessing {
 
 		applyDiscriminator( memberDetails, jaxbHbmAnyMapping, xmlDocumentContext );
 		applyKey( memberDetails, jaxbHbmAnyMapping, xmlDocumentContext );
-		XmlAnnotationHelper.applyCascading( jaxbHbmAnyMapping.getCascade(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyCascading( jaxbHbmAnyMapping.getCascade(), anyAnn, xmlDocumentContext );
 
 		return memberDetails;
 	}

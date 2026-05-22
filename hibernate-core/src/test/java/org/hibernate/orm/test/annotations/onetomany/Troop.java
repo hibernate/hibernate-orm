@@ -28,9 +28,8 @@ public class Troop {
 	private String name;
 	private Set<Soldier> soldiers;
 
-	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "troop", cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, orphanRemoval = true)
 	@SQLOrder("name desc")
-	@org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	public Set<Soldier> getSoldiers() {
 		return soldiers;

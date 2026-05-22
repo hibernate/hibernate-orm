@@ -10,9 +10,6 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.annotations.Cascade;
-
-
 /**
  * @author Emmanuel Bernard
  */
@@ -41,8 +38,7 @@ public class Dependent {
 	}
 
 	@Id
-	@ManyToOne( cascade = CascadeType.PERSIST )
-	@Cascade( {org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.MERGE} )
+	@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	@JoinColumn(nullable=false)
 	public Employee getEmp() {
 		return emp;

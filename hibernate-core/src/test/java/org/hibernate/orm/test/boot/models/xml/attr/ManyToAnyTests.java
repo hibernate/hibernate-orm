@@ -6,8 +6,6 @@ package org.hibernate.orm.test.boot.models.xml.attr;
 
 import java.util.List;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
@@ -21,6 +19,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -54,9 +53,7 @@ public class ManyToAnyTests {
 		final ManyToAny manyToAnyAnn = associationsField.getDirectAnnotationUsage( ManyToAny.class );
 		assertThat( manyToAnyAnn ).isNotNull();
 
-		final Cascade cascadeAnn = associationsField.getDirectAnnotationUsage( Cascade.class );
-		assertThat( cascadeAnn ).isNotNull();
-		assertThat( cascadeAnn.value() ).containsExactly( CascadeType.ALL );
+		assertThat( manyToAnyAnn.cascade() ).containsExactly( CascadeType.ALL );
 	}
 
 	@Entity(name = "Entity1")

@@ -62,7 +62,11 @@ public final class CascadeStyles {
 
 	/**
 	 * lock
+	 *
+	 * @deprecated because {@code org.hibernate.annotations.CascadeType#LOCK}
+	 *             was removed
 	 */
+	@Deprecated(since="7", forRemoval = true)
 	public static final CascadeStyle LOCK = new BaseCascadeStyle() {
 		@Override
 		public boolean doCascade(CascadingAction<?> action) {

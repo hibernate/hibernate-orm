@@ -8,7 +8,6 @@ import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -26,8 +25,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.annotations.CascadeType.ALL;
-
 /**
  * @author Marco Belladelli
  */
@@ -118,14 +115,13 @@ public class ManyToAnyMergeTest {
 		@Id
 		private Long id;
 
-		@Any
+		@Any(cascade = jakarta.persistence.CascadeType.ALL)
 		@AnyDiscriminator( DiscriminatorType.STRING )
 		@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
 		@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
 		@AnyKeyJavaClass( Long.class )
 		@Column( name = "property_type" )
 		@JoinColumn( name = "property_id" )
-		@Cascade( ALL )
 		private Property property;
 
 		public Long getId() {

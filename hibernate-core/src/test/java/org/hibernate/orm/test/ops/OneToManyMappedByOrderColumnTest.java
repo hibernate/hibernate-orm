@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -19,6 +17,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -69,8 +68,7 @@ public class OneToManyMappedByOrderColumnTest {
 		@Id
 		private Integer id;
 		@OrderColumn(name = "list_idx")
-		@OneToMany(targetEntity = Child.class, mappedBy = "parent", fetch = FetchType.EAGER)
-		@Cascade(CascadeType.REMOVE)
+		@OneToMany(targetEntity = Child.class, mappedBy = "parent", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
 		private List<Child> children = new ArrayList<>();
 
 		public Integer getId() {

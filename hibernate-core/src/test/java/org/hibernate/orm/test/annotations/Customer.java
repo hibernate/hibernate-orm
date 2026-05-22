@@ -16,10 +16,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.SortComparator;
 
-import static org.hibernate.annotations.CascadeType.ALL;
 
 
 /**
@@ -69,7 +67,6 @@ public class Customer implements Serializable {
 
 	@OneToMany(targetEntity = Discount.class,
 			cascade = CascadeType.ALL, mappedBy = "owner")
-	@Cascade({ALL})
 	public Collection<Discount> getDiscountTickets() {
 		return discountTickets;
 	}

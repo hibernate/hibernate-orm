@@ -13,8 +13,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 
 /**
  * @author Emmanuel Bernard
@@ -28,10 +26,9 @@ public class Father {
 	public void setId(Integer id) {  this.id = id; }
 	private Integer id;
 
-	@OneToMany
+	@OneToMany(cascade = { jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.MERGE })
 	@OrderColumn(name = "son_arriv")
 	@JoinColumn(name = "father_id", nullable = false)
-	@Cascade({ CascadeType.PERSIST, CascadeType.MERGE })
 	public List<Son> getOrderedSons() { return orderedSons; }
 	public void setOrderedSons(List<Son> orderedSons) {  this.orderedSons = orderedSons; }
 	private List<Son> orderedSons = new ArrayList<>( );

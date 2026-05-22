@@ -1023,12 +1023,6 @@ For this purpose, the Jakarta Persistence `jakarta.persistence.CascadeType` defi
 `REFRESH`:: cascades the entity refresh operation.
 `DETACH`:: cascades the entity detach operation.
 
-Additionally, the `CascadeType.ALL` will propagate any Hibernate-specific operation, which is defined by the `org.hibernate.annotations.CascadeType` enum:
-
-`SAVE_UPDATE`:: cascades the entity saveOrUpdate operation.
-`REPLICATE`:: cascades the entity replicate operation.
-`LOCK`:: cascades the entity lock operation.
-
 The following examples will explain some of the aforementioned cascade operations using the following entities:
 
 [source, java, indent=0]
@@ -1085,8 +1079,6 @@ That's the reason why Hibernate executed the SELECT statement which fetched both
 ==== `CascadeType.REMOVE`
 
 The `CascadeType.REMOVE` allows us to remove a child entity along with the parent one.
-Traditionally, Hibernate called this operation delete, that's why the `org.hibernate.annotations.CascadeType` provides a `DELETE` cascade option.
-However, `CascadeType.REMOVE` and `org.hibernate.annotations.CascadeType.DELETE` are identical.
 
 [[pc-cascade-remove-example]]
 .`CascadeType.REMOVE` example
@@ -1116,12 +1108,6 @@ include::{example-dir-pc}/CascadeDetachTest.java[tags=pc-cascade-detach-example]
 ----
 ====
 
-[[pc-cascade-lock]]
-==== `CascadeType.LOCK`
-
-Although unintuitively, `CascadeType.LOCK` does not propagate a lock request from a parent entity to its children.
-Such a use case requires the use of the `PessimisticLockScope.EXTENDED` value of the `jakarta.persistence.lock.scope` property.
-
 [[pc-cascade-refresh]]
 ==== `CascadeType.REFRESH`
 
@@ -1143,28 +1129,6 @@ include::{extrasdir}/pc-cascade-refresh-example.sql[]
 ====
 
 In the aforementioned example, you can see that both the `Person` and `Phone` entities are refreshed even if we only called this operation on the parent entity only.
-
-[[pc-cascade-replicate]]
-==== `CascadeType.REPLICATE`
-
-The `CascadeType.REPLICATE` is to replicate both the parent and the child entities.
-The replicate operation allows you to synchronize entities coming from different sources of data.
-
-[[pc-cascade-replicate-example]]
-.`CascadeType.REPLICATE` example
-====
-[source, java, indent=0]
-----
-include::{example-dir-pc}/CascadeReplicateTest.java[tags=pc-cascade-replicate-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/pc-cascade-replicate-example.sql[]
-----
-====
-
-As illustrated by the SQL statements being generated, both the `Person` and `Phone` entities are replicated to the underlying database rows.
 
 [[pc-cascade-on-delete]]
 ==== `@OnDelete` cascade

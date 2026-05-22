@@ -20,12 +20,7 @@ public class D extends AbstractEntity {
 	@jakarta.persistence.ManyToOne(optional = false)
 	private E e;
 
-	@jakarta.persistence.OneToMany(mappedBy = "d")
-	@org.hibernate.annotations.Cascade({
-			org.hibernate.annotations.CascadeType.PERSIST,
-			org.hibernate.annotations.CascadeType.MERGE,
-			org.hibernate.annotations.CascadeType.REFRESH
-	})
+	@jakarta.persistence.OneToMany(mappedBy = "d", cascade = {jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.REFRESH})
 	private java.util.Set<F> fCollection = new java.util.HashSet<F>();
 
 	public java.util.Set<B> getBCollection() {

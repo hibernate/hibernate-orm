@@ -7,8 +7,6 @@ package org.hibernate.orm.test.jpa.orphan.onetomany;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -21,6 +19,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -138,8 +137,7 @@ public class PersistAndQueryingInSameTransactionTest {
 		@Id
 		private String id;
 
-		@Cascade(CascadeType.ALL)
-		@OneToMany(orphanRemoval = true, mappedBy = "parent")
+		@OneToMany(orphanRemoval = true, mappedBy = "parent", cascade = CascadeType.ALL)
 		private final List<Child> children = new ArrayList<>();
 
 		public Parent() {

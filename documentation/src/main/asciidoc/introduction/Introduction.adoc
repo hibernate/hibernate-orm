@@ -110,7 +110,6 @@ For example:
 |===
 | Hibernate | JPA
 
-| `org.hibernate.annotations.CascadeType` | `javax.persistence.CascadeType`
 | `org.hibernate.FlushMode` | `javax.persistence.FlushModeType`
 | `org.hibernate.annotations.FetchMode` | `javax.persistence.FetchType`
 | `org.hibernate.query.Query` | `javax.persistence.Query`

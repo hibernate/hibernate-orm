@@ -2661,7 +2661,6 @@
         <xsd:annotation>
             <xsd:documentation>
                 See `@jakarta.persistence.CascadeType`
-                See `@org.hibernate.annotations.Cascade`
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
@@ -2671,10 +2670,6 @@
             <xsd:element name="cascade-remove" type="orm:emptyType" minOccurs="0"/>
             <xsd:element name="cascade-refresh" type="orm:emptyType" minOccurs="0"/>
             <xsd:element name="cascade-detach" type="orm:emptyType" minOccurs="0"/>
-            <xsd:element name="cascade-delete" type="orm:emptyType" minOccurs="0"/>
-            <xsd:element name="cascade-save-update" type="orm:emptyType" minOccurs="0"/>
-            <xsd:element name="cascade-replicate" type="orm:emptyType" minOccurs="0"/>
-            <xsd:element name="cascade-lock" type="orm:emptyType" minOccurs="0"/>
         </xsd:sequence>
     </xsd:complexType>
 

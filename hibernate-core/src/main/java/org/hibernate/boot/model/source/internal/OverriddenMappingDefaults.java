@@ -6,11 +6,12 @@ package org.hibernate.boot.model.source.internal;
 
 import java.util.EnumSet;
 
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.CollectionClassification;
+
+import jakarta.persistence.CascadeType;
 
 /**
  * Represents a "nested level" in the mapping defaults stack.

@@ -56,7 +56,7 @@ public class OneToOneAttributeProcessing {
 
 		applyMappedBy( memberDetails, jaxbOneToOne, oneToOneAnn, xmlDocumentContext );
 		applyTarget( memberDetails, jaxbOneToOne, oneToOneAnn, xmlDocumentContext );
-		applyCascading( jaxbOneToOne.getCascade(), memberDetails, xmlDocumentContext );
+		applyCascading( jaxbOneToOne.getCascade(), oneToOneAnn, xmlDocumentContext );
 
 		TableProcessing.transformJoinTable( jaxbOneToOne.getJoinTable(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyJoinColumnsOrFormulas( jaxbOneToOne.getJoinColumnOrJoinFormula(), memberDetails, xmlDocumentContext );

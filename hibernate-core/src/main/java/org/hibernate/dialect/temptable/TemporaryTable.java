@@ -37,7 +37,6 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -151,38 +150,6 @@ public class TemporaryTable implements Exportable, Contributable {
 		else {
 			this.columnsForExport = columns;
 		}
-	}
-
-	@Deprecated(forRemoval = true, since = "7.1")
-	public static TemporaryTable createIdTable(
-			EntityMappingType entityDescriptor,
-			Function<String, String> temporaryTableNameAdjuster,
-			Dialect dialect,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return createIdTable(
-				runtimeModelCreationContext.getBootModel()
-						.getEntityBinding( entityDescriptor.getEntityName() ),
-				temporaryTableNameAdjuster,
-				dialect.getSupportedTemporaryTableKind(),
-				dialect,
-				runtimeModelCreationContext
-		);
-	}
-
-	@Deprecated(forRemoval = true, since = "7.1")
-	public static TemporaryTable createEntityTable(
-			EntityMappingType entityDescriptor,
-			Function<String, String> temporaryTableNameAdjuster,
-			Dialect dialect,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return createIdTable(
-				runtimeModelCreationContext.getBootModel()
-						.getEntityBinding( entityDescriptor.getEntityName() ),
-				temporaryTableNameAdjuster,
-				dialect.getSupportedTemporaryTableKind(),
-				dialect,
-				runtimeModelCreationContext
-		);
 	}
 
 	public static TemporaryTable createIdTable(

@@ -24,8 +24,8 @@ import org.junit.jupiter.api.Test;
 
 
 import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Steve Ebersole
@@ -279,16 +279,21 @@ public class AttributeNodeRemovalTests {
 		assertThat( entityGraph.getAttributeNode( "forum" ) ).isNull();
 		assertThat( entityGraph.findNode( "author" ) ).isNotNull();
 		assertThat( entityGraph.findNode( "author" ).isRemoved() ).isFalse();
+		assertThat( entityGraph.findNode( "author" ).getOptions() )
+				.containsExactlyInAnyOrder( EAGER );
 		assertThat( entityGraph.findNode( "forum" ) ).isNull();
 
 		// assertions based on the removed "author" node
 		entityGraph.removeAttributeNode( "author" );
-		assertThat( entityGraph.getAttributeNodes() ).isEmpty();
-		assertThat( entityGraph.getAttributeNodeList() ).isEmpty();
-		assertThat( entityGraph.getNodes() ).isEmpty();
-		assertThat( entityGraph.getAttributeNode( "author" ) ).isNull();
+		assertThat( entityGraph.getAttributeNodes() ).isNotEmpty();
+		assertThat( entityGraph.getAttributeNodeList() ).isNotEmpty();
+		assertThat( entityGraph.getNodes() ).isNotEmpty();
+		assertThat( entityGraph.getAttributeNode( "author" ) ).isNotNull();
 		assertThat( entityGraph.getAttributeNode( "forum" ) ).isNull();
-		assertThat( entityGraph.findNode( "author" ) ).isNull();
+		assertThat( entityGraph.findNode( "author" ) ).isNotNull();
+		assertThat( entityGraph.findNode( "author" ).isRemoved() ).isTrue();
+		assertThat( entityGraph.findNode( "author" ).getOptions() )
+				.containsExactlyInAnyOrder( LAZY );
 		assertThat( entityGraph.findNode( "forum" ) ).isNull();
 	}
 
@@ -343,15 +348,18 @@ public class AttributeNodeRemovalTests {
 
 		entityGraph.removeAttributeNode( "author" );
 		assertThat( entityGraph.getAttributeNodes() ).hasSize( 1 );
-		assertThat( entityGraph.findNode( "author" ).getOptions() ).containsExactlyInAnyOrder( FetchType.LAZY );
+		assertThat( entityGraph.findNode( "author" ).getOptions() )
+				.containsExactlyInAnyOrder( LAZY );
 
 		entityGraph.addAttributeNode( "author" );
 		assertThat( entityGraph.getAttributeNodes() ).hasSize( 1 );
-		assertThat( entityGraph.findNode( "author" ).getOptions() ).containsExactlyInAnyOrder( EAGER );
+		assertThat( entityGraph.findNode( "author" ).getOptions() )
+				.containsExactlyInAnyOrder( EAGER );
 
 		entityGraph.removeAttributeNode( "author" );
-		assertThat( entityGraph.getAttributeNodes() ).isEmpty();
-		assertNull( entityGraph.findNode( "author" ) );
+		assertThat( entityGraph.getAttributeNodes() ).hasSize( 1 );
+		assertThat( entityGraph.findNode( "author" ).getOptions() )
+				.containsExactlyInAnyOrder( LAZY );
 	}
 
 	@Test
@@ -363,10 +371,11 @@ public class AttributeNodeRemovalTests {
 		assertThat( author.getOptions() ).containsExactlyInAnyOrder( EAGER );
 		assertThat( author.getSubGraphs() ).isNotEmpty();
 
-		// this removal "cancels" the previous addition, leaving no node behind
 		entityGraph.removeAttributeNode( "author" );
-		assertThat( entityGraph.getAttributeNodes() ).isEmpty();
-		assertNull( entityGraph.findNode( "author" ) );
+		assertThat( entityGraph.getAttributeNodes() ).isNotEmpty();
+		author = entityGraph.findNode( "author" );
+		assertThat( author.getOptions() ).containsExactlyInAnyOrder( LAZY );
+		assertThat( author.getSubGraphs() ).isEmpty();
 	}
 
 	@Entity(name="Person")

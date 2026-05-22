@@ -7,7 +7,6 @@ package org.hibernate.graph.internal;
 import jakarta.persistence.AttributeNode;
 import jakarta.persistence.FetchOption;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Subgraph;
 import jakarta.persistence.metamodel.Attribute;
 import org.hibernate.AssertionFailure;
 import org.hibernate.graph.CannotContainSubGraphException;
@@ -78,13 +77,13 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	}
 
 	@Override
-	public Subgraph<J> addSubgraph() {
-		throw new AssertionFailure( "Not yet implemented" );
+	public final SubGraphImplementor<J> addSubgraph() {
+		return addSingularSubgraph();
 	}
 
 	@Override
-	public <S extends J> Subgraph<S> addTreatedSubgraph(Class<S> type) {
-		throw new AssertionFailure( "Not yet implemented" );
+	public final <S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> type) {
+		return addSingularSubgraph().addTreatedSubgraph( type );
 	}
 
 	@Override

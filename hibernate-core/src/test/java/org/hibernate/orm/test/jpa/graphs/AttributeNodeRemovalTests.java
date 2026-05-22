@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Subgraph;
 import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.graph.GraphSemantic;
@@ -376,6 +377,21 @@ public class AttributeNodeRemovalTests {
 		author = entityGraph.findNode( "author" );
 		assertThat( author.getOptions() ).containsExactlyInAnyOrder( LAZY );
 		assertThat( author.getSubGraphs() ).isEmpty();
+	}
+
+	@Test
+	void testAttributeNodeAddSubgraphCancelsRemoval(SessionFactoryScope factoryScope) {
+		final RootGraphImplementor<Post> entityGraph = factoryScope.getSessionFactory().createEntityGraph( Post.class );
+
+		entityGraph.removeAttributeNode( "author" );
+		jakarta.persistence.AttributeNode<Person> authorNode = entityGraph.getAttributeNode( "author" );
+		assertThat( authorNode.getOptions() ).containsExactlyInAnyOrder( LAZY );
+
+		Subgraph<Person> authorSubgraph = authorNode.addSubgraph();
+		authorSubgraph.addAttributeNode( "name" );
+
+		assertThat( authorNode.getOptions() ).containsExactlyInAnyOrder( EAGER );
+		assertThat( authorNode.getSubgraphs() ).containsKey( Person.class );
 	}
 
 	@Entity(name="Person")

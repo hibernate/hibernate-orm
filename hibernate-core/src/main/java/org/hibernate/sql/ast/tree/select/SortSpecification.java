@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ast.tree.select;
 
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;

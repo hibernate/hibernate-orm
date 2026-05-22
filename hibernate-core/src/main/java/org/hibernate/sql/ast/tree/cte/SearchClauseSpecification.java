@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ast.tree.cte;
 
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 
 import jakarta.persistence.criteria.Nulls;

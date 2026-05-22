@@ -31,6 +31,7 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.StaticSchemaAnnotationHelper.getColumnAnnotation;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -79,9 +80,10 @@ class ColumnsBuilder {
 		columns = null;
 		joinColumns = buildExplicitJoinColumns( property, inferredData );
 
-		if ( property.hasDirectAnnotationUsage( Column.class ) ) {
+		final Column columnAnnotation = getColumnAnnotation( property, buildingContext );
+		if ( columnAnnotation != null ) {
 			columns = buildColumnFromAnnotation(
-					property.getDirectAnnotationUsage( Column.class ),
+					columnAnnotation,
 					property.getDirectAnnotationUsage( FractionalSeconds.class ),
 					nullability,
 					propertyHolder,
@@ -222,12 +224,12 @@ class ColumnsBuilder {
 	}
 
 	private JoinColumn[] getJoinColumnAnnotations(MemberDetails property) {
-		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		final var joinColumns = property.getRepeatedAnnotationUsages( JpaAnnotations.JOIN_COLUMN, modelsContext );
+		final var joinColumns = StaticSchemaAnnotationHelper.getJoinColumnAnnotations( property, buildingContext );
 		if ( isNotEmpty( joinColumns ) ) {
 			return joinColumns;
 		}
 		else if ( property.hasDirectAnnotationUsage( MapsId.class ) ) {
+			final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 			// inelegant solution to HHH-16463, let the PrimaryKeyJoinColumn
 			// masquerade as a regular JoinColumn (when a @OneToOne maps to
 			// the primary key of the child table, it's more elegant and more

@@ -19,11 +19,12 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementHelper;
-import org.hibernate.orm.tooling.gradle.reveng.RevengTask;
 import org.hibernate.orm.tooling.gradle.reveng.GenerateCfgTask;
 import org.hibernate.orm.tooling.gradle.reveng.GenerateDaoTask;
 import org.hibernate.orm.tooling.gradle.reveng.GenerateHbmTask;
 import org.hibernate.orm.tooling.gradle.reveng.GenerateJavaTask;
+import org.hibernate.orm.tooling.gradle.reveng.GenerateSchemaAnnotationsTask;
+import org.hibernate.orm.tooling.gradle.reveng.RevengTask;
 import org.hibernate.orm.tooling.gradle.reveng.RunSqlTask;
 
 /**
@@ -126,5 +127,6 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 				task.doFirst( w -> task.initialize( ormDsl.getReveng() ) );
 			} );
 		}
+		project.getTasks().register( "generateSchemaAnnotations", GenerateSchemaAnnotationsTask.class );
 	}
 }

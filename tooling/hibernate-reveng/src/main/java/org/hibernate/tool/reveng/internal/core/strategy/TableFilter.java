@@ -57,6 +57,9 @@ public class TableFilter {
 		}
 
 		boolean match(String matchEnum) {
+			if ( matchEnum == null ) {
+				return mode == ANY;
+			}
 			switch (mode) {
 			case ANY: return true;
 			case EQUALS: return this.value.equals(matchEnum);
@@ -91,15 +94,15 @@ public class TableFilter {
 	}
 
 	public void setMatchCatalog(String matchCatalog) {
-		this.catalogMatcher = new Matcher(matchCatalog);
+		this.catalogMatcher = new Matcher(matchCatalog == null ? ".*" : matchCatalog);
 	}
 
 	public void setMatchSchema(String matchSchema) {
-		this.schemaMatcher = new Matcher(matchSchema);
+		this.schemaMatcher = new Matcher(matchSchema == null ? ".*" : matchSchema);
 	}
 
 	public void setMatchName(String matchName) {
-		this.nameMatcher = new Matcher(matchName);
+		this.nameMatcher = new Matcher(matchName == null ? ".*" : matchName);
 	}
 
 	/**

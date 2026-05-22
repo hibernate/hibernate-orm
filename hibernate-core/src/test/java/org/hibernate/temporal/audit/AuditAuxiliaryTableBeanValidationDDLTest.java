@@ -16,6 +16,7 @@ import jakarta.validation.constraints.NotNull;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.mapping.PersistentClass;
@@ -39,7 +40,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ServiceRegistry(settings = {
 		@Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 				value = "org.hibernate.temporal.audit.AuditAuxiliaryTableBeanValidationDDLTest$TxIdSupplier"),
-		@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "DDL")
+		@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "DDL"),
+		@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "")
 })
 class AuditAuxiliaryTableBeanValidationDDLTest {
 	@Test

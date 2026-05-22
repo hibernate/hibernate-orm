@@ -59,7 +59,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.jpa.internal.EntityCallbacksFactory;
 import org.hibernate.event.jpa.spi.EntityCallbacks;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
@@ -2365,11 +2364,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
-		lock( id, version, object, lockMode, (SharedSessionContractImplementor) session );
-	}
-
-	@Override
 	public void lock(
 			Object id,
 			Object version,
@@ -2379,11 +2373,6 @@ public abstract class AbstractEntityPersister
 					throws HibernateException {
 		getLocker( lockOptions.getLockMode(), lockOptions.getScope() )
 				.lock( id, version, object, lockOptions.getTimeout(), session );
-	}
-
-	@Override
-	public void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
-		lock( id, version, object, lockOptions, (SharedSessionContractImplementor) session );
 	}
 
 	@Override
@@ -4156,11 +4145,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
-		return multiLoad( ids, (SharedSessionContractImplementor) session, loadOptions );
-	}
-
-	@Override
 	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 		return multiIdLoader.load( ids, loadOptions, session );
 	}
@@ -4330,11 +4314,6 @@ public abstract class AbstractEntityPersister
 
 	private Dialect getDialect() {
 		return factory.getJdbcServices().getDialect();
-	}
-
-	@Override
-	public EntityMetamodel getEntityMetamodel() {
-		return this;
 	}
 
 	@Override
@@ -5037,15 +5016,6 @@ public abstract class AbstractEntityPersister
 		return multiNaturalIdLoader;
 	}
 
-	@Override
-	public Object loadEntityIdByNaturalId(
-			Object[] naturalIdValues,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
-		verifyHasNaturalId();
-		return getNaturalIdLoader().resolveNaturalIdToId( naturalIdValues, session );
-	}
-
 	public static int getTableId(String tableName, String[] tables) {
 		for ( int j = 0; j < tables.length; j++ ) {
 			if ( tableName.equalsIgnoreCase( tables[j] ) ) {
@@ -5058,11 +5028,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityRepresentationStrategy getRepresentationStrategy() {
 		return representationStrategy;
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
-		return getBytecodeEnhancementMetadata();
 	}
 
 	@Override

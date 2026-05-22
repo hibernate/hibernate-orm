@@ -14,7 +14,6 @@ import org.hibernate.metamodel.mapping.internal.UnifiedAnyDiscriminatorConverter
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
@@ -84,11 +83,6 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	@Override
 	public SessionFactoryImplementor getFactory() {
 		return factory;
-	}
-
-	@Override
-	public EntityMetamodel getEntityMetamodel() {
-		throw new UnsupportedOperationException("operation not supported");
 	}
 
 	@Override

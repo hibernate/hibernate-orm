@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
@@ -56,7 +55,6 @@ import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.VersionJavaType;
@@ -209,14 +207,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy();
 
-	/**
-	 * Retrieve the underlying entity metamodel instance.
-	 *
-	 *@return The metamodel
-	 */
-	@Deprecated(since = "7.2", forRemoval = true)
-	EntityMetamodel getEntityMetamodel();
-
 	boolean isPolymorphic();
 
 	boolean isDynamicUpdate();
@@ -287,21 +277,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return The query spaces.
 	 */
 	Serializable[] getQuerySpaces();
-
-	/**
-	 * The table names this entity needs to be synchronized against.
-	 * <p>
-	 * Much like {@link #getPropertySpaces()}, except that here we include subclass
-	 * entity spaces.
-	 *
-	 * @return The synchronization spaces.
-	 *
-	 * @deprecated No longer called
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default String[] getSynchronizationSpaces() {
-		return (String[]) getQuerySpaces();
-	}
 
 	/**
 	 * Returns an array of objects that identify spaces in which properties of
@@ -626,17 +601,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	/**
-	 * Load the id for the entity based on the natural id.
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7.2")
-	Object loadEntityIdByNaturalId(
-			Object[] naturalIdValues,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session);
-
-	/**
 	 * Load an instance of the persistent class.
 	 */
 	Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session);
@@ -649,22 +613,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	default Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session, Boolean readOnly)
 			throws HibernateException {
 		return load( id, optionalObject, lockOptions, session );
-	}
-
-	/**
-	 * Performs a load of multiple entities (of this type) by identifier simultaneously.
-	 *
-	 * @param ids The identifiers to load
-	 * @param session The originating Session
-	 * @param loadOptions The options for loading
-	 *
-	 * @return The loaded, matching entities
-	 *
-	 * @deprecated Use {@link #multiLoad(Object[], SharedSessionContractImplementor, MultiIdLoadOptions)}
-	 */
-	@Deprecated(since = "7")
-	default List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
-		return multiLoad( ids, (SharedSessionContractImplementor) session, loadOptions );
 	}
 
 	/**
@@ -688,28 +636,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Do a version check (optional operation)
-	 *
-	 * @deprecated Use {@link #lock(Object, Object, Object, LockMode, SharedSessionContractImplementor)}
-	 */
-	@Deprecated(since = "7")
-	default void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
-		lock( id, version, object, lockMode, (SharedSessionContractImplementor) session );
-	}
-
-	/**
-	 * Do a version check (optional operation)
 	 */
 	void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session);
-
-	/**
-	 * Do a version check (optional operation)
-	 *
-	 * @deprecated Use {@link #lock(Object, Object, Object, LockOptions, SharedSessionContractImplementor)}
-	 */
-	@Deprecated(since = "7")
-	default void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
-		lock( id, version, object, lockOptions, (SharedSessionContractImplementor) session );
-	}
 
 	/**
 	 * Do a version check (optional operation)
@@ -1323,17 +1251,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		getIdentifierMapping().addToCacheKey( cacheKey, getIdentifier( value, session ), session );
 	}
 
-	/**
-	 * @deprecated Use {@link #getBytecodeEnhancementMetadata()}
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	default BytecodeEnhancementMetadata getInstrumentationMetadata() {
-		throw new UnsupportedOperationException();
-	}
-
-	default BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
-		return getInstrumentationMetadata();
-	}
+	BytecodeEnhancementMetadata getBytecodeEnhancementMetadata();
 
 	FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 

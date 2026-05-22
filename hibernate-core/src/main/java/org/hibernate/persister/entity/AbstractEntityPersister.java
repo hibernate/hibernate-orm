@@ -47,13 +47,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
-import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -334,7 +331,6 @@ public abstract class AbstractEntityPersister
 
 	private final NavigableRole navigableRole;
 	private final SessionFactoryImplementor factory;
-	private final EntityEntryFactory entityEntryFactory;
 
 	private final String sqlAliasStem;
 	private final String jpaEntityName;
@@ -533,11 +529,6 @@ public abstract class AbstractEntityPersister
 			canReadFromCache = false;
 			isLazyPropertiesCacheable = true;
 		}
-
-		entityEntryFactory =
-				isMutable()
-						? MutableEntityEntryFactory.INSTANCE
-						: ImmutableEntityEntryFactory.INSTANCE;
 
 		// Handle any filters applied to the class level
 		if ( isNotEmpty( persistentClass.getFilters() ) ) {
@@ -5097,11 +5088,6 @@ public abstract class AbstractEntityPersister
 				// placeholder handling (`{h-catalog}`, `{h-schema}`, `{h-domain}`)
 				new ExplicitSqlStringGenerationContext( table.getCatalog(), table.getSchema(), factory )
 		);
-	}
-
-	@Override
-	public EntityEntryFactory getEntityEntryFactory() {
-		return entityEntryFactory;
 	}
 
 	/**

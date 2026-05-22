@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.engine.spi;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.internal.MutableEntityEntryFactory;
+import org.hibernate.engine.internal.EntityEntryImpl;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -108,7 +108,7 @@ public class EntityEntryTest {
 	}
 
 	private EntityEntry createEntityEntry() {
-		return MutableEntityEntryFactory.INSTANCE.createEntityEntry(
+		return new EntityEntryImpl(
 				Status.MANAGED,
 				new Object[] {},
 				1L,

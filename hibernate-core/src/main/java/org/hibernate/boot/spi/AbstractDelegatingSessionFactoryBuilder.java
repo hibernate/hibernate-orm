@@ -153,12 +153,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyDelayedEntityLoaderCreations(boolean delay) {
-		delegate.applyDelayedEntityLoaderCreations( delay );
-		return getThis();
-	}
-
-	@Override
 	public T applyDefaultBatchFetchSize(int size) {
 		delegate.applyDefaultBatchFetchSize( size );
 		return getThis();

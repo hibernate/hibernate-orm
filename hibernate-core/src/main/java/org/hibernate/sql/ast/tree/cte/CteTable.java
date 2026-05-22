@@ -67,59 +67,6 @@ public class CteTable {
 		return new CteTable( name, tableGroupProducer, cteColumns );
 	}
 
-	@Deprecated(forRemoval = true, since = "7.1")
-	public static CteTable createIdTable(String cteName, EntityMappingType entityDescriptor) {
-		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
-		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		final String idName =
-				identifierMapping instanceof SingleAttributeIdentifierMapping
-						? identifierMapping.getAttributeName()
-						: "id";
-		forEachCteColumn( idName, identifierMapping, columns::add );
-		return new CteTable( cteName, columns );
-	}
-
-	@Deprecated(forRemoval = true, since = "7.1")
-	public static CteTable createEntityTable(String cteName, EntityMappingType entityDescriptor) {
-		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
-		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		final String idName;
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			idName = identifierMapping.getAttributeName();
-		}
-		else {
-			idName = "id";
-		}
-		forEachCteColumn( idName, identifierMapping, columns::add );
-
-		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		if ( discriminatorMapping != null && discriminatorMapping.hasPhysicalColumn() && !discriminatorMapping.isFormula() ) {
-			forEachCteColumn( "class", discriminatorMapping, columns::add );
-		}
-
-		// Collect all columns for all entity subtype attributes
-		entityDescriptor.visitSubTypeAttributeMappings(
-				attribute -> {
-					if ( !( attribute instanceof PluralAttributeMapping ) ) {
-						forEachCteColumn( attribute.getAttributeName(), attribute, columns::add );
-					}
-				}
-		);
-		// We add a special row number column that we can use to identify and join rows
-		columns.add(
-				new CteColumn(
-						ENTITY_ROW_NUMBER_COLUMN,
-						entityDescriptor.getEntityPersister()
-								.getFactory()
-								.getTypeConfiguration()
-								.getBasicTypeForJavaType( Integer.class )
-				)
-		);
-		return new CteTable( cteName, columns );
-	}
-
 	public static CteTable createIdTable(String cteName, PersistentClass persistentClass) {
 		final Property identifierProperty = persistentClass.getIdentifierProperty();
 		final String idName;

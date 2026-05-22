@@ -26,7 +26,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			NamedTableReference targetTable,
 			List<Assignment> assignments,
 			Predicate restriction) {
-		this( null, targetTable, new FromClause(), assignments, restriction, Collections.emptyList() );
+		this( null, targetTable, null, new FromClause(), assignments, restriction, Collections.emptyList() );
 	}
 
 	public UpdateStatement(
@@ -34,7 +34,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			List<Assignment> assignments,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this( null, targetTable, new FromClause(), assignments, restriction, returningColumns );
+		this( null, targetTable, null, new FromClause(), assignments, restriction, returningColumns );
 	}
 
 	public UpdateStatement(
@@ -42,7 +42,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			FromClause fromClause,
 			List<Assignment> assignments,
 			Predicate restriction) {
-		this( null, targetTable, fromClause, assignments, restriction, Collections.emptyList() );
+		this( null, targetTable, null, fromClause, assignments, restriction, Collections.emptyList() );
 	}
 
 	public UpdateStatement(
@@ -51,18 +51,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			List<Assignment> assignments,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this( null, targetTable, fromClause, assignments, restriction, returningColumns );
-	}
-
-	@Deprecated(forRemoval = true, since = "7.3")
-	public UpdateStatement(
-			CteContainer cteContainer,
-			NamedTableReference targetTable,
-			FromClause fromClause,
-			List<Assignment> assignments,
-			Predicate restriction,
-			List<ColumnReference> returningColumns) {
-		this( cteContainer, targetTable, null, fromClause, assignments, restriction, returningColumns );
+		this( null, targetTable, null, fromClause, assignments, restriction, returningColumns );
 	}
 
 	public UpdateStatement(

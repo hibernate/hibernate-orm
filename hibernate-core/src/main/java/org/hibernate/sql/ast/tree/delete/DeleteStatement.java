@@ -24,18 +24,18 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 	public static final String DEFAULT_ALIAS = "to_delete_";
 
 	public DeleteStatement(NamedTableReference targetTable, Predicate restriction) {
-		this( null, targetTable, new FromClause(), restriction, Collections.emptyList() );
+		this( null, targetTable, null, new FromClause(), restriction, Collections.emptyList() );
 	}
 
 	public DeleteStatement(
 			NamedTableReference targetTable,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this( null, targetTable, new FromClause(), restriction, returningColumns );
+		this( null, targetTable, null, new FromClause(), restriction, returningColumns );
 	}
 
 	public DeleteStatement(NamedTableReference targetTable, FromClause fromClause, Predicate restriction) {
-		this( null, targetTable, fromClause, restriction, Collections.emptyList() );
+		this( null, targetTable, null, fromClause, restriction, Collections.emptyList() );
 	}
 
 	public DeleteStatement(
@@ -43,17 +43,7 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this( null, targetTable, fromClause, restriction, returningColumns );
-	}
-
-	@Deprecated(forRemoval = true, since = "7.3")
-	public DeleteStatement(
-			CteContainer cteContainer,
-			NamedTableReference targetTable,
-			FromClause fromClause,
-			Predicate restriction,
-			List<ColumnReference> returningColumns) {
-		this( cteContainer, targetTable, null, fromClause, restriction, returningColumns );
+		this( null, targetTable, null, fromClause, restriction, returningColumns );
 	}
 
 	public DeleteStatement(

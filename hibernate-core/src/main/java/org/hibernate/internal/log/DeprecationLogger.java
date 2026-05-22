@@ -202,13 +202,6 @@ public interface DeprecationLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(
-			id = 90000034,
-			value = "Refreshing/locking detached entities is no longer allowed."
-	)
-	void deprecatedRefreshLockDetachedEntity();
-
-	@LogMessage(level = WARN)
-	@Message(
 			id = 90000035,
 			value = "Callback method annotated '@%s' declared by embeddable class '%s'"
 					+ " relies on an undocumented and unsupported capability"

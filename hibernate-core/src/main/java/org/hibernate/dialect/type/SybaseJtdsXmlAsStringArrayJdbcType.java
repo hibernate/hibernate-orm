@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.dialect.type;
 
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -13,7 +13,7 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlAsStringArrayJdbcType;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
@@ -22,17 +22,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Specialized type mapping for {@code JSON} that binds UTF-16LE bytes,
+ * Specialized type mapping for {@code XML} that binds UTF-16LE bytes,
  * because the jTDS driver can't handle Unicode characters and doesn't support nationalized methods.
  * For extraction, the {@code getString} method works fine though.
  */
-public class SybaseJtdsJsonAsStringArrayJdbcType extends JsonAsStringArrayJdbcType {
+public class SybaseJtdsXmlAsStringArrayJdbcType extends XmlAsStringArrayJdbcType {
 
-	public SybaseJtdsJsonAsStringArrayJdbcType(JdbcType elementJdbcType) {
+	public SybaseJtdsXmlAsStringArrayJdbcType(JdbcType elementJdbcType) {
 		super( elementJdbcType, SqlTypes.NCLOB );
 	}
 
-	public SybaseJtdsJsonAsStringArrayJdbcType(JdbcType elementJdbcType, int ddlTypeCode) {
+	public SybaseJtdsXmlAsStringArrayJdbcType(JdbcType elementJdbcType, int ddlTypeCode) {
 		super( elementJdbcType, ddlTypeCode );
 	}
 
@@ -48,13 +48,13 @@ public class SybaseJtdsJsonAsStringArrayJdbcType extends JsonAsStringArrayJdbcTy
 		// but that requires the correct jdbc type code to be available, which we ensure this way
 		if ( needsLob( indicators ) ) {
 			return indicators.isNationalized()
-					? new SybaseJtdsJsonAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.NCLOB )
-					: new SybaseJtdsJsonAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.CLOB );
+					? new SybaseJtdsXmlAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.NCLOB )
+					: new SybaseJtdsXmlAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.CLOB );
 		}
 		else {
 			return indicators.isNationalized()
-					? new SybaseJtdsJsonAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.LONG32NVARCHAR )
-					: new SybaseJtdsJsonAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.LONG32VARCHAR );
+					? new SybaseJtdsXmlAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.LONG32NVARCHAR )
+					: new SybaseJtdsXmlAsStringArrayJdbcType( getElementJdbcType(), SqlTypes.LONG32VARCHAR );
 		}
 	}
 
@@ -65,14 +65,14 @@ public class SybaseJtdsJsonAsStringArrayJdbcType extends JsonAsStringArrayJdbcTy
 		}
 		return new BasicBinder<>( javaType, this ) {
 
-			private SybaseJtdsJsonAsStringArrayJdbcType getJsonAsStringArrayJdbcType() {
-				return (SybaseJtdsJsonAsStringArrayJdbcType) getJdbcType();
+			private SybaseJtdsXmlAsStringArrayJdbcType getXmlAsStringArrayJdbcType() {
+				return (SybaseJtdsXmlAsStringArrayJdbcType) getJdbcType();
 			}
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final SybaseJtdsJsonAsStringArrayJdbcType jdbcType = getJsonAsStringArrayJdbcType();
+				final SybaseJtdsXmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				final String xml = jdbcType.toString( value, getJavaType(), options );
 				st.setBytes( index, xml.getBytes( StandardCharsets.UTF_16LE ) );
 			}
@@ -80,7 +80,7 @@ public class SybaseJtdsJsonAsStringArrayJdbcType extends JsonAsStringArrayJdbcTy
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final SybaseJtdsJsonAsStringArrayJdbcType jdbcType = getJsonAsStringArrayJdbcType();
+				final SybaseJtdsXmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				final String xml = jdbcType.toString( value, getJavaType(), options );
 				st.setBytes( name, xml.getBytes( StandardCharsets.UTF_16LE ) );
 			}
@@ -105,28 +105,28 @@ public class SybaseJtdsJsonAsStringArrayJdbcType extends JsonAsStringArrayJdbcTy
 		}
 		return new BasicExtractor<>( javaType, this ) {
 
-			private SybaseJtdsJsonAsStringArrayJdbcType getJsonAsStringArrayJdbcType() {
-				return (SybaseJtdsJsonAsStringArrayJdbcType) getJdbcType();
+			private SybaseJtdsXmlAsStringArrayJdbcType getXmlAsStringArrayJdbcType() {
+				return (SybaseJtdsXmlAsStringArrayJdbcType) getJdbcType();
 			}
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				final String value = rs.getString( paramIndex );
-				return getJsonAsStringArrayJdbcType().fromString( value, getJavaType(), options );
+				return getXmlAsStringArrayJdbcType().fromString( value, getJavaType(), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 					throws SQLException {
 				final String value = statement.getString( index );
-				return getJsonAsStringArrayJdbcType().fromString( value, getJavaType(), options );
+				return getXmlAsStringArrayJdbcType().fromString( value, getJavaType(), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
 				final String value = statement.getString( name );
-				return getJsonAsStringArrayJdbcType().fromString( value, getJavaType(), options );
+				return getXmlAsStringArrayJdbcType().fromString( value, getJavaType(), options );
 			}
 
 		};

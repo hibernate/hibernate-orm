@@ -2,9 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.dialect.type;
 
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -13,10 +14,10 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Factory for {@link SybaseJtdsXmlAsStringArrayJdbcType}.
+ * Factory for {@link SybaseJtdsJsonAsStringArrayJdbcType}.
  */
-public class SybaseJtdsXmlAsStringArrayJdbcTypeConstructor implements JdbcTypeConstructor {
-	public static final SybaseJtdsXmlAsStringArrayJdbcTypeConstructor INSTANCE = new SybaseJtdsXmlAsStringArrayJdbcTypeConstructor();
+public class SybaseJtdsJsonAsStringArrayJdbcTypeConstructor implements JdbcTypeConstructor {
+	public static final SybaseJtdsJsonAsStringArrayJdbcTypeConstructor INSTANCE = new SybaseJtdsJsonAsStringArrayJdbcTypeConstructor();
 
 	public JdbcType resolveType(
 			TypeConfiguration typeConfiguration,
@@ -31,11 +32,11 @@ public class SybaseJtdsXmlAsStringArrayJdbcTypeConstructor implements JdbcTypeCo
 			Dialect dialect,
 			JdbcType elementType,
 			ColumnTypeInformation columnTypeInformation) {
-		return new SybaseJtdsXmlAsStringArrayJdbcType( elementType, SqlTypes.NCLOB );
+		return new SybaseJtdsJsonAsStringArrayJdbcType( elementType, SqlTypes.NCLOB );
 	}
 
 	@Override
 	public int getDefaultSqlTypeCode() {
-		return SqlTypes.XML_ARRAY;
+		return SqlTypes.JSON_ARRAY;
 	}
 }

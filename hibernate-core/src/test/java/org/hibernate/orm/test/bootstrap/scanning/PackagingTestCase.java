@@ -4,14 +4,6 @@
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.hibernate.orm.test.jpa.Cat;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
@@ -37,12 +29,7 @@ import org.hibernate.orm.test.jpa.pack.externaljar.Scooter;
 import org.hibernate.orm.test.jpa.pack.spacepar.Bug;
 import org.hibernate.orm.test.jpa.pack.various.Airplane;
 import org.hibernate.orm.test.jpa.pack.various.Seat;
-
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -50,7 +37,22 @@ import org.jboss.shrinkwrap.api.exporter.ExplodedExporter;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 /**
@@ -58,10 +60,10 @@ import static org.junit.Assert.fail;
  * @author Brett Meyer
  */
 public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest {
-	protected static ClassLoader originalClassLoader;
-	private static Thread thread;
+	protected final static ClassLoader originalClassLoader;
+	private final static Thread thread;
 
-	protected static ClassLoader bundleClassLoader;
+	protected final static ClassLoader bundleClassLoader;
 	protected static File packageTargetDir;
 
 	static {
@@ -103,14 +105,29 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 			bundleClassLoader = new URLClassLoader( new URL[] { testPackagesDir.toURL() }, originalClassLoader );
 		}
 		catch ( MalformedURLException e ) {
-			fail( "Unable to build custom class loader" );
+			throw new AssertionError( "Unable to build custom class loader" );
 		}
 		packageTargetDir = new File( baseDir, "target/packages" );
 		packageTargetDir.mkdirs();
 	}
 
+	// Ensure no JAR files are being cached to avoid file deletion issues on Windows
+	private static boolean jarDefaultUseCaches;
+
+	@BeforeAll
+	public static void setup() {
+		jarDefaultUseCaches = URLConnection.getDefaultUseCaches( "jar" );
+		URLConnection.setDefaultUseCaches( "jar", false );
+	}
+
+	@AfterAll
+	public static void cleanup() {
+		URLConnection.setDefaultUseCaches( "jar", jarDefaultUseCaches );
+	}
+
 	@BeforeEach
 	public void prepareTCCL() {
+		assertSame( thread, Thread.currentThread() );
 		// add the bundle class loader in order for ShrinkWrap to build the test package
 		thread.setContextClassLoader( bundleClassLoader );
 	}
@@ -120,7 +137,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		// reset the classloader
 		final ClassLoader contextClassLoader = thread.getContextClassLoader();
 		if ( contextClassLoader instanceof URLClassLoader urlClassLoader
-			&& urlClassLoader != bundleClassLoader ) {
+		     && urlClassLoader != bundleClassLoader ) {
 			try {
 				urlClassLoader.close();
 			}
@@ -446,9 +463,9 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
 		archive.addAsResource( includeFile );
 
-			File testPackage = new File( packageTargetDir, fileName );
-			archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
-			return testPackage;
+		File testPackage = new File( packageTargetDir, fileName );
+		archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
+		return testPackage;
 	}
 
 }

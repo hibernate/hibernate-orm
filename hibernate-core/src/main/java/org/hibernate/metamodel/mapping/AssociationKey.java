@@ -17,8 +17,4 @@ import java.util.List;
  * @author Andrea Boriero
  */
 public record AssociationKey(String table, List<String> columns) {
-	@Deprecated(since = "7")
-	public String getTable() {
-		return table;
-	}
 }

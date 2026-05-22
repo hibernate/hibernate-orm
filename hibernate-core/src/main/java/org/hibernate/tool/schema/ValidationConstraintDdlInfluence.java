@@ -40,8 +40,9 @@ public enum ValidationConstraintDdlInfluence {
 	public static ValidationConstraintDdlInfluence resolve(ServiceRegistry serviceRegistry, Set<ValidationMode> validationModes) {
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final var settings = configurationService.getSettings();
-		if ( settings.containsKey( SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS ) ) {
-			return resolveSettingValue( settings );
+		final var resolvedValue = resolveSettingValue( settings );
+		if ( resolvedValue != null ) {
+			return resolvedValue;
 		}
 		// legacy: treat deprecated ValidationMode.DDL as REQUIRED
 		for ( var mode : validationModes ) {
@@ -58,8 +59,8 @@ public enum ValidationConstraintDdlInfluence {
 
 	private static ValidationConstraintDdlInfluence resolveSettingValue(Map<String, Object> configurationValues) {
 		final Object setting = configurationValues.get( SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS );
-		if ( setting == null ) {
-			return AUTO;
+		if ( setting == null || (setting instanceof String str && str.isBlank()) ) {
+			return null;
 		}
 
 		if ( setting instanceof ValidationConstraintDdlInfluence type ) {

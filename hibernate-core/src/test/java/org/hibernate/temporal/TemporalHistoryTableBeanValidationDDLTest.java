@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 
 import org.hibernate.annotations.Temporal;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.mapping.Column;
@@ -35,7 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 @ServiceRegistry(settings = {
 		@Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
-		@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "DDL")
+		@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "DDL"),
+		@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "")
 })
 class TemporalHistoryTableBeanValidationDDLTest {
 	@BeforeAll

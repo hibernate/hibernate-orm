@@ -20,10 +20,10 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -73,43 +73,48 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 	@Override
 	public List<AttributeNodeImplementor<?,?,?>> getAttributeNodeList() {
-		if ( attributeNodes == null ) {
-			return emptyList();
-		}
-		else {
-			// we need to filter out removed nodes
-			return attributeNodes.values().stream().filter( (node) -> !node.isRemoved() ).toList();
-		}
+		return attributeNodes == null ? emptyList() : new ArrayList<>( attributeNodes.values() );
 	}
 
 	@Override
 	public Map<PersistentAttribute<? super J, ?>, AttributeNodeImplementor<?,?,?>> getNodes() {
-		if ( attributeNodes == null ) {
-			return emptyMap();
-		}
-		else {
-			return attributeNodes
-					.entrySet()
-					.stream()
-					.filter( (entry) -> !entry.getValue().isRemoved() )
-					.collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
-		}
+		return attributeNodes == null ? emptyMap() : new HashMap<>( attributeNodes );
 	}
 
 	@Override
 	public <Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(String attributeName) {
-		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
-		final var node = (AttributeNodeImplementor<Y,?,?>) findNode( attributeName );
-		return node == null || node.isRemoved() ? null : node;
+		final var attribute = findAttributeInSupertypes( attributeName );
+		if ( attribute == null ) {
+			throw new IllegalArgumentException( "Unknown attribute: " + attributeName );
+		}
+		if ( attributeNodes == null ) {
+			return null;
+		}
+		else {
+			final var node = attributeNodes.get( attribute );
+			@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+			final var castNode = (AttributeNodeImplementor<Y, ?, ?>) node;
+			return castNode;
+		}
 	}
 
 	@Override
 	public <Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(Attribute<? super J, Y> attribute) {
-		return getActiveNode( (PersistentAttribute<?, Y>) attribute );
+		if ( attributeNodes == null ) {
+			return null;
+		}
+		else {
+			final var node = attributeNodes.get( (PersistentAttribute<? super J, ?>) attribute );
+			@SuppressWarnings("unchecked")
+			final var castNode = (AttributeNodeImplementor<Y, ?, ?>) node;
+			return castNode;
+		}
 	}
 
 	@Override
 	public <AJ> AttributeNodeImplementor<AJ,?,?> addAttributeNode(String attributeName) {
+		// current JPA Javadoc has an error: add can't simply cancel
+		// an existing removal, since this method has to return a node
 		final var node = findOrCreateAttributeNode( attributeName );
 		node.markRemoved( false );
 		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
@@ -119,6 +124,8 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 	@Override
 	public <Y> AttributeNodeImplementor<Y,?,?> addAttributeNode(Attribute<? super J, Y> attribute) {
+		// current JPA Javadoc has an error: add can't simply cancel
+		// an existing removal, since this method has to return a node
 		final var node = findOrCreateAttributeNode( (PersistentAttribute<? super J, Y>) attribute );
 		node.markRemoved( false );
 		return node;
@@ -141,13 +148,22 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	@Override
 	public void removeAttributeNode(String attributeName) {
 		verifyMutability();
-		removeAttributeNode( managedType.findAttribute( attributeName ) );
+		final var node = findNode( attributeName );
+		if ( node == null ) {
+			// register a removal, overriding any default options
+			findOrCreateAttributeNode( attributeName ).markRemoved( true );
+		}
+		else if ( !node.isRemoved() ) {
+			// remove the added node, cancelling its effect
+			attributeNodes.remove( node.getAttributeDescriptor() );
+		}
+		// otherwise, a removal was already registered; leave it alone
 	}
 
 	@Override
 	public void removeAttributeNode(Attribute<? super J, ?> attribute) {
 		verifyMutability();
-		findOrCreateAttributeNode( (PersistentAttribute<? super J, ?>) attribute ).markRemoved( true );
+		removeAttributeNode( attribute.getName() );
 	}
 
 	@Override
@@ -155,8 +171,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 		verifyMutability();
 		for ( var typeAttribute : managedType.getAttributes() ) {
 			if ( typeAttribute.getPersistentAttributeType() == nodeType ) {
-				findOrCreateAttributeNode( (PersistentAttribute<? super J, ?>) typeAttribute )
-						.markRemoved( true );
+				removeAttributeNode( typeAttribute.getName() );
 			}
 		}
 	}
@@ -166,6 +181,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 		final var node = getNodeForPut( attribute );
 		if ( node == null ) {
 			final var newAttrNode = AttributeNodeImpl.create( attribute, isMutable() );
+			newAttrNode.markRemoved( false );
 			attributeNodes.put( attribute, newAttrNode );
 			return newAttrNode;
 		}

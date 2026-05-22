@@ -51,55 +51,61 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	public TraversalResult traverse(FetchParent fetchParent, Fetchable fetchable, boolean exploreKeySubgraph) {
 		assert !(fetchable instanceof CollectionPart);
 		if ( fetchable instanceof NonAggregatedIdentifierMapping ) {
-			return new TraversalResult( currentGraphContext, new FetchStrategy( FetchTiming.IMMEDIATE, true ) );
+			return new TraversalResult( currentGraphContext,
+					new FetchStrategy( FetchTiming.IMMEDIATE, true ) );
 		}
+		else {
+			final var previousContextRoot = currentGraphContext;
+			final var attributeNode = appliesTo( fetchParent )
+					? currentGraphContext.findNode( fetchable.getFetchableName() )
+					: null;
+			currentGraphContext = null;
+			return new TraversalResult( previousContextRoot,
+					handleFetchType( fetchable, exploreKeySubgraph, attributeNode ) );
+		}
+	}
 
-		final GraphImplementor<?> previousContextRoot = currentGraphContext;
-		final AttributeNodeImplementor<?,?,?> attributeNode = appliesTo( fetchParent )
-				? currentGraphContext.findNode( fetchable.getFetchableName() )
-				: null;
-
-		currentGraphContext = null;
-		final FetchStrategy fetchStrategy;
-		if ( attributeNode != null ) {
-			if ( attributeNode.isRemoved() ) {
-				fetchStrategy = graphSemantic == GraphSemantic.LOAD
-						? new FetchStrategy( FetchTiming.DELAYED, false )
-						: null;
-			}
-			else {
-				fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
-				final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
-				final Class<?> subgraphMapKey;
-				if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
-					if ( exploreKeySubgraph ) {
-						subgraphMap = attributeNode.getKeySubGraphs();
-						subgraphMapKey = getEntityCollectionPartJavaClass(
-								pluralAttributeMapping.getIndexDescriptor() );
+	private FetchStrategy handleFetchType
+			(Fetchable fetchable, boolean exploreKeySubgraph, AttributeNodeImplementor<?, ?, ?> attributeNode) {
+		final var fetchType = attributeNode == null ? null : attributeNode.getFetchType();
+		if ( fetchType != null ) {
+			switch ( fetchType ) {
+				case EAGER:
+					final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
+					final Class<?> subgraphMapKey;
+					if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+						if ( exploreKeySubgraph ) {
+							subgraphMap = attributeNode.getKeySubGraphs();
+							subgraphMapKey = getEntityCollectionPartJavaClass(
+									pluralAttributeMapping.getIndexDescriptor() );
+						}
+						else {
+							subgraphMap = attributeNode.getSubGraphs();
+							subgraphMapKey = getEntityCollectionPartJavaClass(
+									pluralAttributeMapping.getElementDescriptor() );
+						}
 					}
 					else {
+						assert !exploreKeySubgraph;
 						subgraphMap = attributeNode.getSubGraphs();
-						subgraphMapKey = getEntityCollectionPartJavaClass(
-								pluralAttributeMapping.getElementDescriptor() );
+						subgraphMapKey = fetchable.getJavaType().getJavaTypeClass();
 					}
-				}
-				else {
-					assert !exploreKeySubgraph;
-					subgraphMap = attributeNode.getSubGraphs();
-					subgraphMapKey = fetchable.getJavaType().getJavaTypeClass();
-				}
-				if ( subgraphMap != null && subgraphMapKey != null ) {
-					currentGraphContext = subgraphMap.get( subgraphMapKey );
-				}
+					if ( subgraphMap != null && subgraphMapKey != null ) {
+						currentGraphContext = subgraphMap.get( subgraphMapKey );
+					}
+					return new FetchStrategy( FetchTiming.IMMEDIATE, true );
+				case LAZY:
+					return new FetchStrategy( FetchTiming.DELAYED, false );
+				default:
+					return null;
 			}
 		}
 		else if ( graphSemantic == GraphSemantic.FETCH ) {
-			fetchStrategy = new FetchStrategy( FetchTiming.DELAYED, false );
+			return new FetchStrategy( FetchTiming.DELAYED, false );
 		}
 		else {
-			fetchStrategy = null;
+			return null;
 		}
-		return new TraversalResult( previousContextRoot, fetchStrategy );
 	}
 
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {

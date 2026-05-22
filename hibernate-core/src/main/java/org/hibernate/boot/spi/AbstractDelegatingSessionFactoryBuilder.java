@@ -15,7 +15,6 @@ import org.hibernate.StatementObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -150,12 +149,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyLazyInitializationOutsideTransaction(boolean enabled) {
 		delegate.applyLazyInitializationOutsideTransaction( enabled );
-		return getThis();
-	}
-
-	@Override @Deprecated
-	public T applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
-		delegate.applyTempTableDdlTransactionHandling( handling );
 		return getThis();
 	}
 
@@ -353,12 +346,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 		return getThis();
 	}
 
-	@Override @Deprecated
-	public T enableReleaseResourcesOnCloseEnabled(boolean enable) {
-		delegate.enableReleaseResourcesOnCloseEnabled( enable );
-		return getThis();
-	}
-
 	@Override
 	public T enableJpaQueryCompliance(boolean enabled) {
 		delegate.enableJpaQueryCompliance( enabled );
@@ -374,12 +361,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T enableJpaTransactionCompliance(boolean enabled) {
 		delegate.enableJpaTransactionCompliance( enabled );
-		return getThis();
-	}
-
-	@Override
-	public T enableJpaCascadeCompliance(boolean enabled) {
-		delegate.enableJpaCascadeCompliance( enabled );
 		return getThis();
 	}
 

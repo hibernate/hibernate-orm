@@ -273,17 +273,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
 
 	/**
-	 * Specifies how temporary tables should be created or dropped with respect
-	 * to transaction handling.
-	 *
-	 * @see TempTableDdlTransactionHandling
-	 *
-	 * @deprecated This has no effect and will be removed.
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
-
-	/**
 	 * Should entity {@linkplain org.hibernate.loader.ast.spi.Loader loaders} be
 	 * generated immediately? Or should the creation be delayed until first need?
 	 *
@@ -721,18 +710,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 
 	/**
-	 * Should resources held by an {@link jakarta.persistence.EntityManager} be
-	 * released immediately on close?
-	 * <p>
-	 * The other option is to release them as part of an after transaction callback.
-	 *
-	 * @deprecated since {@value org.hibernate.cfg.AvailableSettings#DISCARD_PC_ON_CLOSE}
-	 *             is deprecated
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable);
-
-	/**
 	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JPA_QUERY_COMPLIANCE
@@ -752,14 +729,6 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#JPA_TRANSACTION_COMPLIANCE
 	 */
 	SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled);
-
-	/**
-	 * @deprecated No longer has any effect.
-	 *
-	 * @see JpaCompliance#isJpaCascadeComplianceEnabled()
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled);
 
 	/**
 	 * @see JpaCompliance#isJpaClosedComplianceEnabled()

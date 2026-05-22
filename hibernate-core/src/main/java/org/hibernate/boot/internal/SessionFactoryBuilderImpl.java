@@ -15,7 +15,6 @@ import org.hibernate.StatementObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
@@ -200,12 +199,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled) {
 		optionsBuilder.allowLazyInitializationOutsideTransaction( enabled );
-		return this;
-	}
-
-	@Override @Deprecated
-	public SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
-		optionsBuilder.applyTempTableDdlTransactionHandling( handling );
 		return this;
 	}
 
@@ -407,12 +400,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-	@Override @Deprecated
-	public SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable) {
-		optionsBuilder.enableReleaseResourcesOnClose( enable );
-		return this;
-	}
-
 	@Override
 	public SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled) {
 		optionsBuilder.enableJpaQueryCompliance( enabled );
@@ -428,12 +415,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
 		optionsBuilder.enableJpaTransactionCompliance( enabled );
-		return this;
-	}
-
-	@Override @Deprecated
-	public SessionFactoryBuilder enableJpaCascadeCompliance(boolean enabled) {
-		optionsBuilder.enableJpaCascadeCompliance( enabled );
 		return this;
 	}
 

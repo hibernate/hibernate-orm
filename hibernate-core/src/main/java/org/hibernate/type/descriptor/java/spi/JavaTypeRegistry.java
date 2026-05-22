@@ -132,7 +132,6 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		return resolvedType;
 	}
 
-	@Deprecated(since = "7.2", forRemoval = true) // Can be private
 	private JavaType<?> resolveDescriptor(String javaTypeName, Supplier<? extends JavaType<?>> creator) {
 		final var cached = descriptorsByTypeName.get( javaTypeName );
 		if ( cached != null ) {
@@ -256,47 +255,6 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 							RegistryHelper.INSTANCE.determineMutabilityPlan( javaType, typeConfiguration );
 					return instantiate.apply(
 							javaType,
-							determinedPlan != null
-									? determinedPlan
-									: MutableMutabilityPlan.instance()
-					);
-				}
-		);
-	}
-
-	// CAN BE REMOVED:
-
-	@Deprecated(since = "7.2", forRemoval = true) // no longer used
-	public JavaType<?> resolveManagedTypeDescriptor(Type javaType) {
-		return resolveManagedTypeDescriptor( javaType, JavaTypeBasicAdaptor::new );
-	}
-
-	@Deprecated(since = "7.2", forRemoval = true) // no longer used
-	public JavaType<?> resolveEntityTypeDescriptor(Type javaType) {
-		return resolveManagedTypeDescriptor( javaType, EntityJavaType::new );
-	}
-
-	@Deprecated(since = "7.2", forRemoval = true) // no longer used
-	@SuppressWarnings("unchecked")
-	private <J> JavaType<?> resolveManagedTypeDescriptor(
-			Type javaType,
-			BiFunction<Class<J>, MutabilityPlan<J>, JavaType<J>> instantiate) {
-		return resolveDescriptor(
-				javaType.getTypeName(),
-				() -> {
-					final Class<J> javaTypeClass;
-					if ( javaType instanceof Class<?> ) {
-						javaTypeClass = (Class<J>) javaType;
-					}
-					else {
-						final var parameterizedType = (ParameterizedType) javaType;
-						javaTypeClass = (Class<J>) parameterizedType.getRawType();
-					}
-
-					final var determinedPlan =
-							RegistryHelper.INSTANCE.determineMutabilityPlan( javaTypeClass, typeConfiguration );
-					return instantiate.apply(
-							javaTypeClass,
 							determinedPlan != null
 									? determinedPlan
 									: MutableMutabilityPlan.instance()

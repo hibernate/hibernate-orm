@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.sqm;
+package org.hibernate.dialect.type;
 
 /**
  * The different types of intervals that SQL defines.
@@ -13,7 +13,6 @@ package org.hibernate.query.sqm;
  *
  * @author Christian Beikov
  */
-@Deprecated(since="7", forRemoval = true)
 public enum IntervalType {
 	/**
 	 * A second based interval.

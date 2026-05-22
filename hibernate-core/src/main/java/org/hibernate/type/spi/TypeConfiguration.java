@@ -56,7 +56,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
-import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.dialect.type.IntervalType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;

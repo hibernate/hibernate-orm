@@ -68,7 +68,7 @@ import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.dialect.type.IntervalType;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;

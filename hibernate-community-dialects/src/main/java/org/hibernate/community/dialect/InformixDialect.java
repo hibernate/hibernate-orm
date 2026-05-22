@@ -43,7 +43,7 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.dialect.type.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.type.BasicType;

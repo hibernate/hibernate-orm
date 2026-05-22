@@ -61,7 +61,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.dialect.type.IntervalType;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;

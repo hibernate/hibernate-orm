@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
+import jakarta.persistence.EntityExistsException;
+
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -22,6 +24,9 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 
 import static java.util.Objects.requireNonNull;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
@@ -29,7 +34,8 @@ import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOG
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
- * Standard implementation of {@link Batch}
+ * Standard implementation of
+ * {@link org.hibernate.engine.jdbc.batch.spi.Batch}.
  *
  * @author Steve Ebersole
  */
@@ -280,7 +286,7 @@ public class BatchImpl implements GroupedBatch {
 					}
 					catch (SQLException e) {
 						abortBatch( e );
-						throw sqlExceptionHelper.convert( e, "could not execute batch", sql );
+						throw convertBatchException( sqlExceptionHelper.convert( e, "could not execute batch", sql ) );
 					}
 					catch (RuntimeException re) {
 						abortBatch( re );
@@ -295,6 +301,16 @@ public class BatchImpl implements GroupedBatch {
 			clearStaleStateMappers( batchPosition );
 			batchPosition = 0;
 		}
+	}
+
+	private RuntimeException convertBatchException(RuntimeException exception) {
+		return jdbcCoordinator.getJdbcSessionOwner() instanceof SharedSessionContractImplementor session
+			&& session.getFactory().getSessionFactoryOptions().isJpaBootstrap()
+			&& key instanceof EntityInsertBatchKey
+			&& exception instanceof ConstraintViolationException cve
+			&& cve.getKind() == ConstraintKind.UNIQUE
+				? new EntityExistsException( cve )
+				: exception;
 	}
 
 	private void clearStaleStateMappers(int batchCount) {

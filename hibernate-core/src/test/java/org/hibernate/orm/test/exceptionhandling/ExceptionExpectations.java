@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.exceptionhandling;
 
 import java.sql.SQLException;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
@@ -29,6 +30,12 @@ public interface ExceptionExpectations {
 			@Override
 			public void onConstraintViolationOnSaveAndSaveOrUpdate(RuntimeException e) {
 				assertThat( e, instanceOf( PersistenceException.class ) );
+			}
+
+			@Override
+			public void onConstraintViolationOnEntityInsert(RuntimeException e) {
+				assertThat( e, instanceOf( EntityExistsException.class ) );
+				assertThat( e.getCause(), instanceOf( ConstraintViolationException.class ) );
 			}
 
 			@Override
@@ -274,6 +281,10 @@ public interface ExceptionExpectations {
 	}
 
 	void onConstraintViolationOnSaveAndSaveOrUpdate(RuntimeException e);
+
+	default void onConstraintViolationOnEntityInsert(RuntimeException e) {
+		onConstraintViolationOnPersistAndMergeAndFlush( e );
+	}
 
 	void onConstraintViolationOnPersistAndMergeAndFlush(RuntimeException e);
 

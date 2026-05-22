@@ -5,6 +5,7 @@
 package org.hibernate.action.internal;
 
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -116,9 +117,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				success = true;
 			}
 			catch (ConstraintViolationException cve) {
-				throw cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
-						? new EntityExistsException( cve )
-						: cve;
+				throw convertException( cve, session );
 			}
 			finally {
 				eventMonitor.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, session );
@@ -167,6 +166,13 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		}
 
 		markExecuted();
+	}
+
+	private static PersistenceException convertException(ConstraintViolationException cve, EventSource session) {
+		return session.getFactory().getSessionFactoryOptions().isJpaBootstrap()
+			&& cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
+				? new EntityExistsException( cve )
+				: cve;
 	}
 
 	@Override

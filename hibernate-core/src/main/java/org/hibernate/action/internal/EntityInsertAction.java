@@ -5,6 +5,7 @@
 package org.hibernate.action.internal;
 
 import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.PersistenceException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -112,9 +113,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 				success = true;
 			}
 			catch (ConstraintViolationException cve) {
-				throw cve.getKind() == ConstraintKind.UNIQUE
-						? new EntityExistsException( cve )
-						: cve;
+				throw convertException( cve, session );
 			}
 			finally {
 				eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, session );
@@ -139,6 +138,13 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 
 		markExecuted();
+	}
+
+	private static PersistenceException convertException(ConstraintViolationException cve, EventSource session) {
+		return session.getFactory().getSessionFactoryOptions().isJpaBootstrap()
+			&& cve.getKind() == ConstraintKind.UNIQUE
+				? new EntityExistsException( cve )
+				: cve;
 	}
 
 	private void handleGeneratedProperties(

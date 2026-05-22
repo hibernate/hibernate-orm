@@ -459,16 +459,17 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	public void testClasspathResources() throws Exception {
 		File externalJar = buildExternalJar2();
 		File testPackage = buildExplicitPar2();
-		final URLClassLoader urlClassLoader = new URLClassLoader( new URL[] {externalJar.toURL(), testPackage.toURL()} );
+		try (final URLClassLoader urlClassLoader = new URLClassLoader( new URL[] {externalJar.toURL(), testPackage.toURL()} )) {
+			final Enumeration<URL> gotten = urlClassLoader.getResources( "META-INF/orm.xml" );
+			while ( gotten.hasMoreElements() ) {
+				System.out.println( "Got META-INF/orm.xml: " + gotten.nextElement() );
+			}
 
-		final Enumeration<URL> gotten = urlClassLoader.getResources( "META-INF/orm.xml" );
-		while ( gotten.hasMoreElements() ) {
-			System.out.println( "Got META-INF/orm.xml: " + gotten.nextElement() );
-		}
-
-		final Enumeration<URL> gottenTccl = Thread.currentThread().getContextClassLoader().getResources( "META-INF/orm.xml" );
-		while ( gottenTccl.hasMoreElements() ) {
-			System.out.println( "Got META-INF/orm.xml (tccl): " + gottenTccl.nextElement() );
+			final Enumeration<URL> gottenTccl = Thread.currentThread().getContextClassLoader()
+					.getResources( "META-INF/orm.xml" );
+			while ( gottenTccl.hasMoreElements() ) {
+				System.out.println( "Got META-INF/orm.xml (tccl): " + gottenTccl.nextElement() );
+			}
 		}
 	}
 

@@ -7,15 +7,12 @@ package org.hibernate.resource.jdbc.spi;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import static java.lang.reflect.InvocationHandler.invokeDefault;
-import static java.lang.reflect.Proxy.newProxyInstance;
 
 /**
  * Contract for something that controls a {@link JdbcSessionContext}.
@@ -118,20 +115,4 @@ public interface JdbcSessionOwner {
 	 */
 	EventMonitor getEventMonitor();
 
-	/**
-	 * Obtain a reference to the {@link EventMonitor}
-	 * dressed up as an instance of {@link EventManager}.
-	 *
-	 * @since 6.4
-	 *
-	 * @deprecated Use {@link #getEventMonitor()}.
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default EventManager getEventManager() {
-		final EventMonitor eventMonitor = getEventMonitor();
-		return (EventManager)
-				newProxyInstance( EventManager.class.getClassLoader(), new Class[]{ EventManager.class },
-						(instance, method, arguments)
-								-> invokeDefault( eventMonitor, method, arguments) );
-	}
 }

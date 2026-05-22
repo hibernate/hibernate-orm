@@ -31,6 +31,7 @@ dependencies {
 	testImplementation libs.jdbc.h2gis
 
     testRuntimeOnly libs.test.jaxen
+	testRuntimeOnly libs.test.xerces
 	testRuntimeOnly libs.byteBuddy
 }
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.persistence.EntityExistsException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -12,6 +13,7 @@ import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -112,6 +114,11 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 								? null
 								: generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
 				success = true;
+			}
+			catch (ConstraintViolationException cve) {
+				throw cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
+						? new EntityExistsException( cve )
+						: cve;
 			}
 			finally {
 				eventMonitor.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, session );

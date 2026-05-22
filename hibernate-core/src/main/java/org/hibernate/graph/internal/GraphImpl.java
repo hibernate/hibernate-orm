@@ -148,16 +148,10 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	@Override
 	public void removeAttributeNode(String attributeName) {
 		verifyMutability();
-		final var node = findNode( attributeName );
-		if ( node == null ) {
-			// register a removal, overriding any default options
-			findOrCreateAttributeNode( attributeName ).markRemoved( true );
-		}
-		else if ( !node.isRemoved() ) {
-			// remove the added node, cancelling its effect
-			attributeNodes.remove( node.getAttributeDescriptor() );
-		}
-		// otherwise, a removal was already registered; leave it alone
+		// current JPA Javadoc has an error: remove can't simply cancel
+		// an existing removal, since for a load graph we might need to
+		// suppress eager fetching
+		findOrCreateAttributeNode( attributeName ).markRemoved( true );
 	}
 
 	@Override

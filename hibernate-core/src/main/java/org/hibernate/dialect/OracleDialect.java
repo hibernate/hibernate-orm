@@ -1155,22 +1155,26 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		return getVersion().isSameOrAfter( 23 );
+		return getVersion().isSameOrAfter( 23 ) ||
+			(getVersion().getDatabaseMajorVersion() != 21 && getVersion().isSameOrAfter( 19, 28 ));
 	}
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return getVersion().isSameOrAfter( 23 );
+		return getVersion().isSameOrAfter( 23 ) ||
+			(getVersion().getDatabaseMajorVersion() != 21 && getVersion().isSameOrAfter( 19, 28 ));
 	}
 
 	@Override
 	public boolean supportsIfExistsBeforeIndexName() {
-		return getVersion().isSameOrAfter( 23 );
+		return getVersion().isSameOrAfter( 23 ) ||
+			(getVersion().getDatabaseMajorVersion() != 21 && getVersion().isSameOrAfter( 19, 28 ));
 	}
 
 	@Override
 	public boolean supportsIfExistsBeforeTypeName() {
-		return getVersion().isSameOrAfter( 23 );
+		return getVersion().isSameOrAfter( 23 ) ||
+			(getVersion().getDatabaseMajorVersion() != 21 && getVersion().isSameOrAfter( 19, 28 ));
 	}
 
 	@Override

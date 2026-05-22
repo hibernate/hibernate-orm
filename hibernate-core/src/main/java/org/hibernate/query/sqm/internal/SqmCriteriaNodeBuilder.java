@@ -113,7 +113,6 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.expression.*;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
-import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -1037,35 +1036,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( Tuple.class ),
 				this
 		);
-	}
-
-	@Override @Deprecated(since = "7", forRemoval = true)
-	public <R> SqmTuple<R> tuple(Class<R> tupleType, SqmExpression<?>... expressions) {
-		return tuple( tupleType, asList( expressions ) );
-	}
-
-	@Override @Deprecated(since = "7", forRemoval = true)
-	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, SqmExpression<?>... expressions) {
-		return tuple( tupleType, asList( expressions ) );
-	}
-
-	@Override @Deprecated(since = "7", forRemoval = true)
-	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<? extends SqmExpression<?>> expressions) {
-		@SuppressWarnings("unchecked")
-		final var expressibleType =
-				tupleType == null || tupleType == Object[].class
-						? (SqmDomainType<R>) getTypeConfiguration().resolveTupleType( expressions )
-						: (SqmEmbeddableDomainType<R>) getDomainModel().embeddable( tupleType );
-		return tuple( expressibleType, expressions );
-	}
-
-	@Override @Deprecated(since = "7", forRemoval = true)
-	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, List<? extends SqmExpression<?>> sqmExpressions) {
-		if ( tupleType == null ) {
-			//noinspection unchecked
-			tupleType = (SqmDomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
-		}
-		return new SqmTuple<>( new ArrayList<>( sqmExpressions ), (SqmBindableType<R>) tupleType, this );
 	}
 
 	@Override

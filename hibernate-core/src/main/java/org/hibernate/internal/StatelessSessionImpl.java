@@ -106,6 +106,9 @@ import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.engine.transaction.internal.jta.JtaStatusHelper.isRollback;
 import static org.hibernate.event.internal.DefaultInitializeCollectionEventListener.handlePotentiallyEmptyCollection;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.internal.Proxies.hasProxyFactory;
+import static org.hibernate.internal.Proxies.narrowOrCreateProxy;
+import static org.hibernate.internal.Proxies.obtainProxyFromFactory;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpa.HibernateHints.HINT_JDBC_BATCH_SIZE;
@@ -1108,7 +1111,7 @@ public class StatelessSessionImpl
 
 	@Override
 	public Object get(String entityName, Object key, FindOption... findOptions) {
-		var result = find( entityName, key, findOptions );
+		final var result = find( entityName, key, findOptions );
 		if ( result == null ) {
 			throw notFound( entityName, key );
 		}
@@ -1122,7 +1125,7 @@ public class StatelessSessionImpl
 
 	@Override
 	public <T> T get(EntityGraph<T> entityGraph, Object id) {
-		var result = find( entityGraph, id );
+		final var result = find( entityGraph, id );
 		if ( result == null ) {
 			final var graph = (RootGraphImplementor<T>) entityGraph;
 			throw notFound( graph.getGraphedType().getTypeName(), id );
@@ -1132,7 +1135,7 @@ public class StatelessSessionImpl
 
 	@Override
 	public <T> T get(EntityGraph<T> entityGraph, Object id, LockMode lockMode) {
-		var result = find( entityGraph, id, lockMode );
+		final var result = find( entityGraph, id, lockMode );
 		if ( result == null ) {
 			final var graph = (RootGraphImplementor<T>) entityGraph;
 			throw notFound( graph.getGraphedType().getTypeName(), id );
@@ -1168,7 +1171,7 @@ public class StatelessSessionImpl
 	public <T> List<T> findMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
 		checkOpen();
 		try {
-			var operation = new StatelessFindMultipleByKeyOperation<T>(
+			final var operation = new StatelessFindMultipleByKeyOperation<T>(
 					requireEntityPersisterForLoad( entityClass.getName() ),
 					this,
 					null,
@@ -1193,7 +1196,7 @@ public class StatelessSessionImpl
 		try {
 			final var graph = (RootGraphImplementor<T>) entityGraph;
 			final var type = graph.getGraphedType();
-			var operation = new StatelessFindMultipleByKeyOperation<T>(
+			final var operation = new StatelessFindMultipleByKeyOperation<T>(
 					switch ( type.getRepresentationMode() ) {
 						case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
 						case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
@@ -1219,7 +1222,7 @@ public class StatelessSessionImpl
 	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids, LockMode lockMode) {
 		checkOpen();
 		try {
-			var operation = new StatelessFindMultipleByKeyOperation<T>(
+			final var operation = new StatelessFindMultipleByKeyOperation<T>(
 					requireEntityPersisterForLoad( entityClass.getName() ),
 					this,
 					null,
@@ -1248,7 +1251,7 @@ public class StatelessSessionImpl
 		checkOpen();
 		try {
 			final var rootGraph = (RootGraphImplementor<T>) entityGraph;
-			var operation = new StatelessFindMultipleByKeyOperation<T>(
+			final var operation = new StatelessFindMultipleByKeyOperation<T>(
 					requireEntityPersisterForLoad( rootGraph.getGraphedType().getTypeName() ),
 					this,
 					null,
@@ -1270,7 +1273,7 @@ public class StatelessSessionImpl
 	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids) {
 		checkOpen();
 		try {
-			var operation = new StatelessFindMultipleByKeyOperation<T>(
+			final var operation = new StatelessFindMultipleByKeyOperation<T>(
 					requireEntityPersisterForLoad( entityClass.getName() ),
 					this,
 					null,
@@ -1489,27 +1492,8 @@ public class StatelessSessionImpl
 				// If the entity defines a HibernateProxy factory,
 				// see if there is an existing proxy associated with
 				// the persistence context - and if so, use it
-				if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
-					final Object proxy = holder == null ? null : holder.getProxy();
-
-					if ( proxy != null ) {
-						SESSION_LOGGER.entityProxyFoundInSessionCache();
-						if ( SESSION_LOGGER.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {
-							SESSION_LOGGER.ignoringNoProxyToHonorLaziness();
-						}
-
-						return persistenceContext.narrowProxy( proxy, persister, entityKey, null );
-					}
-
-					// Specialized handling for entities with subclasses with
-					// a HibernateProxy factory.
-					if ( persister.hasSubclasses() ) {
-						// Entities with subclasses that define a ProxyFactory
-						// can create a HibernateProxy.
-						SESSION_LOGGER.creatingHibernateProxyToHonorLaziness();
-						return createProxy( entityKey );
-					}
-					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
+				if ( hasProxyFactory( persister ) ) {
+					return obtainProxyFromFactory( holder, entityKey, persistenceContext );
 				}
 				else if ( !persister.hasSubclasses() ) {
 					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );
@@ -1517,13 +1501,8 @@ public class StatelessSessionImpl
 				// If we get here, then the entity class has subclasses and there
 				// is no HibernateProxy factory. The entity will be loaded below.
 			}
-			else {
-				if ( persister.hasProxy() ) {
-					final Object existingProxy = holder == null ? null : holder.getProxy();
-					return existingProxy != null
-							? persistenceContext.narrowProxy( existingProxy, persister, entityKey, null )
-							: createProxy( entityKey );
-				}
+			else if ( persister.hasProxy() ) {
+				return narrowOrCreateProxy( holder, entityKey, persistenceContext );
 			}
 		}
 
@@ -1542,12 +1521,6 @@ public class StatelessSessionImpl
 		finally {
 			persistenceContext.afterLoad();
 		}
-	}
-
-	private Object createProxy(EntityKey entityKey) {
-		final Object proxy = entityKey.getPersister().createProxy( entityKey.getIdentifier(), this );
-		getPersistenceContext().addProxy( entityKey, proxy );
-		return proxy;
 	}
 
 	@Override
@@ -1671,29 +1644,26 @@ public class StatelessSessionImpl
 
 	@Override
 	public void propagateFlush() {
-		if ( isClosed() ) {
-			return;
+		if ( !isClosed() ) {
+			SESSION_LOGGER.automaticallyFlushingChildSession();
+			getJdbcCoordinator().executeBatch();
 		}
-		SESSION_LOGGER.automaticallyFlushingChildSession();
-		getJdbcCoordinator().executeBatch();
 	}
 
 	@Override
 	protected void propagateClose() {
-		if ( isClosed() ) {
-			return;
+		if ( !isClosed() ) {
+			SESSION_LOGGER.automaticallyClosingChildSession();
+			close();
 		}
-		SESSION_LOGGER.automaticallyClosingChildSession();
-		close();
 	}
 
 	@Override
 	public String bestGuessEntityName(Object object) {
 		final var lazyInitializer = extractLazyInitializer( object );
-		if ( lazyInitializer != null ) {
-			object = lazyInitializer.getImplementation();
-		}
-		return guessEntityName( object );
+		return guessEntityName( lazyInitializer == null
+				? object
+				: lazyInitializer.getImplementation() );
 	}
 
 	@Override

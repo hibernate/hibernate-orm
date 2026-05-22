@@ -426,7 +426,7 @@ public class SessionImpl
 	public boolean isOpen() {
 		checkSessionReentrancy();
 		checkSessionFactoryOpen();
-		checkTransactionSynchStatus();
+		checkTransactionSyncStatus();
 		try {
 			return !isClosed();
 		}
@@ -499,7 +499,7 @@ public class SessionImpl
 	@Override
 	public LockMode getCurrentLockMode(Object object) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		checkTransactionSyncStatus();
 		if ( object == null ) {
 			throw new NullPointerException( "null object passed to getCurrentLockMode()" );
 		}
@@ -652,7 +652,7 @@ public class SessionImpl
 		Throwable originalException = null;
 		try {
 			checkNotReadOnly();
-			checkTransactionSynchStatus();
+			checkTransactionSyncStatus();
 			checkNoUnresolvedActionsBeforeOperation();
 
 			eventListenerGroups.eventListenerGroup_PERSIST
@@ -761,7 +761,7 @@ public class SessionImpl
 	private Object fireMerge(final MergeEvent mergeEvent) {
 		try {
 			checkNotReadOnly();
-			checkTransactionSynchStatus();
+			checkTransactionSyncStatus();
 			checkNoUnresolvedActionsBeforeOperation();
 			eventListenerGroups.eventListenerGroup_MERGE
 					.fireEventOnEachListener( mergeEvent,
@@ -1563,7 +1563,7 @@ public class SessionImpl
 	@Override
 	public Object getIdentifier(Object object) {
 		checkOpen();
-		checkTransactionSynchStatus();
+		checkTransactionSyncStatus();
 		if ( object == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}

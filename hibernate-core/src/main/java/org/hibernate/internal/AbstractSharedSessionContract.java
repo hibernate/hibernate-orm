@@ -81,7 +81,6 @@ import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.find.FindByKeyOperation;
 import org.hibernate.internal.find.Helper;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutorVisitable;
@@ -160,6 +159,7 @@ import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
@@ -182,7 +182,8 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  *
  * @author Steve Ebersole
  */
-abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor, ExtensionIntegrationContext {
+abstract class AbstractSharedSessionContract
+		implements SharedSessionContractImplementor, ExtensionIntegrationContext {
 
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
@@ -360,7 +361,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		setCacheMode( fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
 	}
 
-	protected Map<String, Object> properties() {
+	protected final Map<String, Object> properties() {
 		return properties;
 	}
 
@@ -497,12 +498,10 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		final var graph = (RootGraphImplementor<T>) entityGraph;
 		final var type = graph.getGraphedType();
-
-		final EntityPersister entityDescriptor = switch ( type.getRepresentationMode() ) {
+		final var entityDescriptor = switch ( type.getRepresentationMode() ) {
 			case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
 			case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
 		};
-
 		//noinspection unchecked
 		return (T) byKey( entityDescriptor, GraphSemantic.LOAD, graph, findOptions ).performFind( key );
 	}
@@ -510,13 +509,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	@Override
 	public Object find(String entityName, Object key, FindOption... findOptions) {
 		checkOpen();
-		var entityDescriptor = requireEntityPersisterForLoad( entityName );
+		final var entityDescriptor = requireEntityPersisterForLoad( entityName );
 		return byKey( entityDescriptor, findOptions ).performFind( key );
 	}
 
 	@Override
 	public <T> T get(Class<T> entityClass, Object id) {
-		var result = find( entityClass, id );
+		final var result = find( entityClass, id );
 		if ( result == null ) {
 			throw notFound( entityClass.getName(), id );
 		}
@@ -525,7 +524,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public <T> T get(Class<T> entityClass, Object key, FindOption... findOptions) {
-		var result = find( entityClass, key, findOptions );
+		final var result = find( entityClass, key, findOptions );
 		if ( result == null ) {
 			throw notFound( entityClass.getName(), key );
 		}
@@ -534,7 +533,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public <T> T get(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
-		var result = find( entityGraph, key, findOptions );
+		final var result = find( entityGraph, key, findOptions );
 		if ( result == null ) {
 			final var graph = (RootGraphImplementor<T>) entityGraph;
 			throw notFound( graph.getGraphedType().getTypeName(), key );
@@ -544,7 +543,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public Object get(String entityName, Object key, FindOption... findOptions) {
-		var result = find( entityName, key, findOptions );
+		final var result = find( entityName, key, findOptions );
 		if ( result == null ) {
 			throw notFound( entityName, key );
 		}
@@ -553,14 +552,14 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public <T> List<T> getMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
-		var results = findMultiple( entityClass, keys, findOptions );
+		final var results = findMultiple( entityClass, keys, findOptions );
 		Helper.verifyGetMultipleResults( results, entityClass.getName(), keys, findOptions );
 		return results;
 	}
 
 	@Override
 	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
-		var results = findMultiple( entityGraph, keys, findOptions );
+		final var results = findMultiple( entityGraph, keys, findOptions );
 		Helper.verifyGetMultipleResults( results, ( (RootGraph<T>) entityGraph ).getGraphedType().getTypeName(), keys );
 		return results;
 	}
@@ -611,7 +610,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			query.setComment( "dynamic native SQL query" );
 		}
 		if ( resultSetMapping instanceof EntityMapping<?> entityMapping ) {
-			var lockMode = LockMode.fromJpaLockMode( entityMapping.lockMode() );
+			final var lockMode = LockMode.fromJpaLockMode( entityMapping.lockMode() );
 			if ( lockMode.greaterThan( LockMode.READ ) ) {
 				query.setHibernateLockMode( lockMode );
 			}
@@ -621,13 +620,15 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public <T> RootGraph<T> getEntityGraph(Class<T> entityClass, String name) {
-		final var entityGraph = getEntityGraph( name );
+		return castEntityGraph( entityClass, name, getEntityGraph( name ) );
+	}
+
+	private <T> RootGraph<T> castEntityGraph(Class<T> entityClass, String name, RootGraph<?> entityGraph) {
 		final var type = getFactory().getJpaMetamodel().managedType( entityClass );
 		final var graphedType = entityGraph.getGraphedType();
 		if ( !Objects.equals( graphedType.getTypeName(), type.getTypeName() ) ) {
-			throw new IllegalArgumentException(
-					"Named entity graph '" + name + "' is for type '" + graphedType.getTypeName() + "'"
-			);
+			throw new IllegalArgumentException( "Named entity graph '" + name
+					+ "' is for type '" + graphedType.getTypeName() + "'" );
 		}
 		@SuppressWarnings("unchecked") // this cast is sound, because we just checked
 		final var graph = (RootGraph<T>) entityGraph;
@@ -750,14 +751,14 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	void afterTransactionBeginEvents() {
 		final var transaction = getTransactionIfAccessible();
-		runInterceptorCallback( () -> getInterceptor().afterTransactionBegin( transaction ) );
+		runInterceptorCallback( () -> interceptor.afterTransactionBegin( transaction ) );
 	}
 
 	void beforeTransactionCompletionEvents() {
 		SESSION_LOGGER.beforeTransactionCompletion();
 		try {
 			final var transaction = getTransactionIfAccessible();
-			runInterceptorCallback( () -> getInterceptor().beforeTransactionCompletion( transaction ) );
+			runInterceptorCallback( () -> interceptor.beforeTransactionCompletion( transaction ) );
 		}
 		catch (Throwable t) {
 			SESSION_LOGGER.exceptionInBeforeTransactionCompletionInterceptor( t );
@@ -775,7 +776,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		try {
 			final var transaction = getTransactionIfAccessible();
-			runInterceptorCallback( () -> getInterceptor().afterTransactionCompletion( transaction ) );
+			runInterceptorCallback( () -> interceptor.afterTransactionCompletion( transaction ) );
 		}
 		catch (Throwable t) {
 			SESSION_LOGGER.exceptionInAfterTransactionCompletionInterceptor( t );
@@ -987,7 +988,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	protected void checksBeforeQueryCreation() {
 		checkOpen();
-		checkTransactionSynchStatus();
+		checkTransactionSyncStatus();
 	}
 
 	@Override
@@ -1000,11 +1001,10 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public Timeout getDefaultTimeout() {
-		var timeoutInMilliseconds = getHintedQueryTimeout();
-		if ( timeoutInMilliseconds == null ) {
-			return null;
-		}
-		return Timeouts.interpretMilliSeconds( timeoutInMilliseconds );
+		final var timeoutInMilliseconds = getHintedQueryTimeout();
+		return timeoutInMilliseconds != null
+				? Timeouts.interpretMilliSeconds( timeoutInMilliseconds )
+				: null;
 	}
 
 	protected Integer getHintedQueryTimeout() {
@@ -1017,11 +1017,10 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public Timeout getDefaultLockTimeout() {
-		var timeoutInMilliseconds = getHintedLockTimeout();
-		if ( timeoutInMilliseconds == null ) {
-			return null;
-		}
-		return Timeouts.interpretMilliSeconds( timeoutInMilliseconds );
+		final var timeoutInMilliseconds = getHintedLockTimeout();
+		return timeoutInMilliseconds != null
+				? Timeouts.interpretMilliSeconds( timeoutInMilliseconds )
+				: null;
 	}
 
 	protected Integer getHintedLockTimeout() {
@@ -1035,9 +1034,9 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	protected Object getSessionProperty(String propertyName) {
-		return properties() == null
+		return properties == null
 				? getDefaultProperties().get( propertyName )
-				: properties().get( propertyName );
+				: properties.get( propertyName );
 	}
 
 	protected Map<String, Object> getDefaultProperties() {
@@ -1179,7 +1178,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		return transaction;
 	}
 
-	protected void checkTransactionSynchStatus() {
+	protected void checkTransactionSyncStatus() {
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 	}
@@ -1695,7 +1694,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		checksBeforeQueryCreation();
 		return buildNativeQuery(
 				sqlString,
-				StringHelper.isNotEmpty( resultSetMappingName )
+				isNotEmpty( resultSetMappingName )
 					? getResultSetMappingMemento( resultSetMappingName )
 					: null,
 				resultClass
@@ -1747,7 +1746,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	public NativeQueryImplementor<?> createNativeQuery(String sqlString) {
 		checksBeforeQueryCreation();
 		try {
-			var query = new NativeQueryImpl<>( sqlString, this );
+			final var query = new NativeQueryImpl<>( sqlString, this );
 			applyQuerySettingsAndHints( query );
 			return query;
 		}
@@ -1765,7 +1764,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		checksBeforeQueryCreation();
 		return buildNativeQuery(
 				sqlString,
-				StringHelper.isNotEmpty( resultSetMappingName )
+				isNotEmpty( resultSetMappingName )
 						? getResultSetMappingMemento( resultSetMappingName )
 						: null,
 				null
@@ -2175,31 +2174,20 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
-@Override
+	@Override
 	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		checkOpen();
 		return new RootGraphImpl<>( null, getFactory().getJpaMetamodel().entity( rootType ) );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
-		final RootGraph<?> entityGraph = createEntityGraph( graphName );
-		if ( entityGraph == null ) {
-			return null;
-		}
-		final var type = getFactory().getJpaMetamodel().managedType( rootType );
-		final var graphedType = entityGraph.getGraphedType();
-		if ( !Objects.equals( graphedType.getTypeName(), type.getTypeName() ) ) {
-			throw new IllegalArgumentException( "Named entity graph '" + graphName
-												+ "' is for type '" + graphedType.getTypeName() + "'");
-		}
-		@SuppressWarnings("unchecked") // this cast is sound, because we just checked
-		final var graph = (RootGraph<T>) entityGraph;
-		return graph;
+		final var entityGraph = createEntityGraph( graphName );
+		return entityGraph == null ? null : castEntityGraph( rootType, graphName, entityGraph );
 	}
 
 
-	@Override
+	@Override @Deprecated
 	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		checkOpen();
 		final var named = getFactory().findEntityGraphByName( graphName );

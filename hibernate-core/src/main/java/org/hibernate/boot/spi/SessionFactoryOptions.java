@@ -30,7 +30,6 @@ import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -232,20 +231,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#ENABLE_LAZY_LOAD_NO_TRANS
 	 */
 	boolean isInitializeLazyStateOutsideTransactionsEnabled();
-
-	/**
-	 * This is unused and will be removed.
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
-
-	/**
-	 * @see org.hibernate.cfg.AvailableSettings#DELAY_ENTITY_LOADER_CREATIONS
-	 *
-	 * @deprecated This is no longer used
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	boolean isDelayBatchFetchLoaderCreationsEnabled();
 
 	/**
 	 * The default batch size for batch fetching in new sessions.
@@ -503,15 +488,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.TransactionSettings#ALLOW_UPDATE_OUTSIDE_TRANSACTION
 	 */
 	boolean isAllowOutOfTransactionUpdateOperations();
-
-	/**
-	 * @see org.hibernate.cfg.AvailableSettings#DISCARD_PC_ON_CLOSE
-	 *
-	 * @deprecated since {@value org.hibernate.cfg.AvailableSettings#DISCARD_PC_ON_CLOSE}
-	 *             is deprecated
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	boolean isReleaseResourcesOnCloseEnabled();
 
 	/**
 	 * The timezone to use when interacting with JDBC.

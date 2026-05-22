@@ -273,14 +273,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled);
 
 	/**
-	 * Should entity {@linkplain org.hibernate.loader.ast.spi.Loader loaders} be
-	 * generated immediately? Or should the creation be delayed until first need?
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#DELAY_ENTITY_LOADER_CREATIONS
-	 */
-	SessionFactoryBuilder applyDelayedEntityLoaderCreations(boolean delay);
-
-	/**
 	 * Specifies a default batch fetch size for all entities and collections which
 	 * do not otherwise specify a batch fetch size.
 	 *

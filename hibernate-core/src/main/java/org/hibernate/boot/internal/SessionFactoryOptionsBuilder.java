@@ -43,7 +43,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
@@ -265,13 +264,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final FlushMode initialSessionFlushMode;
 	private final LockOptions defaultLockOptions;
 
-	// deprecated stuff
-	@Deprecated
-	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
-	@Deprecated(forRemoval = true)
-	private boolean delayBatchFetchLoaderCreations;
-	@Deprecated(forRemoval = true)
-	private final boolean releaseResourcesOnCloseEnabled;
 	@Deprecated(forRemoval = true)
 	private final GraphParserMode graphParserMode;
 
@@ -389,9 +381,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		tenantSchemaMapper = MultiTenancy.getTenantSchemaMapper( settings, serviceRegistry );
 		tenantCredentialsMapper = MultiTenancy.getTenantCredentialsMapper( settings, serviceRegistry );
 
-		delayBatchFetchLoaderCreations =
-				configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
-
 		defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, settings, -1 );
 		subselectFetchEnabled = getBoolean( USE_SUBSELECT_FETCH, settings );
 		maximumFetchDepth = getInteger( MAX_FETCH_DEPTH, settings );
@@ -487,9 +476,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		final var meta = jdbcServices.getExtractedMetaDataSupport();
 
-		// deprecated
-		tempTableDdlTransactionHandling = getTempTableDdlTransactionHandling( meta );
-
 		jdbcBatchSize = disallowBatchUpdates( dialect, meta ) ? 0
 				: getInt( STATEMENT_BATCH_SIZE, settings, 1 );
 
@@ -510,11 +496,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, settings );
 
 		allowOutOfTransactionUpdateOperations = getBoolean( ALLOW_UPDATE_OUTSIDE_TRANSACTION, settings );
-
-		releaseResourcesOnCloseEnabled = getBoolean( DISCARD_PC_ON_CLOSE, settings );
-		if ( releaseResourcesOnCloseEnabled ) {
-			DEPRECATION_LOGGER.deprecatedSetting( DISCARD_PC_ON_CLOSE );
-		}
 
 		jdbcTimeZone = getJdbcTimeZone( settings.get( JDBC_TIME_ZONE ) );
 
@@ -596,18 +577,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 		catch (Exception e) {
 			throw new RuntimeException( "Unable to instantiate StatementObserver - " + setting, e );
-		}
-	}
-
-	@Deprecated(forRemoval = true)
-	private static TempTableDdlTransactionHandling getTempTableDdlTransactionHandling(ExtractedDatabaseMetaData meta) {
-		if ( meta.doesDataDefinitionCauseTransactionCommit() ) {
-			return meta.supportsDataDefinitionInTransaction()
-					? TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT
-					: TempTableDdlTransactionHandling.ISOLATE;
-		}
-		else {
-			return TempTableDdlTransactionHandling.NONE;
 		}
 	}
 
@@ -1029,12 +998,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return allowOutOfTransactionUpdateOperations;
 	}
 
-
-	@Override @Deprecated(forRemoval = true)
-	public boolean isReleaseResourcesOnCloseEnabled() {
-		return releaseResourcesOnCloseEnabled;
-	}
-
 	@Override
 	public Object getBeanManagerReference() {
 		return beanManagerReference;
@@ -1220,17 +1183,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public AuditStrategy getAuditStrategy() {
 		return auditStrategy;
-	}
-
-	@Override @Deprecated
-	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
-		return tempTableDdlTransactionHandling;
-	}
-
-	@Override
-	@Deprecated(forRemoval = true)
-	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
-		return delayBatchFetchLoaderCreations;
 	}
 
 	@Override
@@ -1695,15 +1647,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyAuditStrategy(AuditStrategy strategy) {
 		this.auditStrategy = strategy;
-	}
-
-	@Deprecated(forRemoval = true)
-	public void applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
-		this.tempTableDdlTransactionHandling = handling;
-	}
-
-	public void applyDelayedEntityLoaderCreations(boolean delay) {
-		this.delayBatchFetchLoaderCreations = delay;
 	}
 
 	public void applyDefaultBatchFetchSize(int size) {

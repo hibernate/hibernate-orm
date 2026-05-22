@@ -271,7 +271,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Deprecated(forRemoval = true)
 	private boolean delayBatchFetchLoaderCreations;
 	@Deprecated(forRemoval = true)
-	private boolean releaseResourcesOnCloseEnabled;
+	private final boolean releaseResourcesOnCloseEnabled;
 	@Deprecated(forRemoval = true)
 	private final GraphParserMode graphParserMode;
 
@@ -1826,11 +1826,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void allowOutOfTransactionUpdateOperations(boolean allow) {
 		this.allowOutOfTransactionUpdateOperations = allow;
-	}
-
-	@Deprecated(since = "7.0", forRemoval = true)
-	public void enableReleaseResourcesOnClose(boolean enable) {
-		this.releaseResourcesOnCloseEnabled = enable;
 	}
 
 	public void enableJpaQueryCompliance(boolean enabled) {

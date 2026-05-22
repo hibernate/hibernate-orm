@@ -2588,10 +2588,14 @@ public class HbmXmlTransformer {
 
 		final var hbmGenerator = source.getGenerator();
 		if ( hbmGenerator != null && !"assigned".equals( hbmGenerator.getClazz() ) ) {
+			final var generatorName = source.getName() + "-id-generator";
 			final var jaxbGeneratedValue = new JaxbGeneratedValueImpl();
+			jaxbGeneratedValue.setGenerator( generatorName );
 			target.setGeneratedValue( jaxbGeneratedValue );
 
 			final var generator = new JaxbGenericIdGeneratorImpl();
+			generator.setName( generatorName );
+
 			target.setGenericGenerator( generator );
 			generator.setClazz( hbmGenerator.getClazz() );
 

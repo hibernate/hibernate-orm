@@ -599,11 +599,6 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
-		return false;
-	}
-
-	@Override
 	public Integer getMaximumFetchDepth() {
 		return null;
 	}

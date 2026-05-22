@@ -28,7 +28,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -184,16 +183,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isInitializeLazyStateOutsideTransactionsEnabled();
 	}
 
-	@Override @Deprecated
-	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
-		return delegate.getTempTableDdlTransactionHandling();
-	}
-
-	@Override
-	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
-		return delegate.isDelayBatchFetchLoaderCreationsEnabled();
-	}
-
 	@Override
 	public int getDefaultBatchFetchSize() {
 		return delegate.getDefaultBatchFetchSize();
@@ -262,11 +251,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isAllowOutOfTransactionUpdateOperations() {
 		return delegate.isAllowOutOfTransactionUpdateOperations();
-	}
-
-	@Override @Deprecated
-	public boolean isReleaseResourcesOnCloseEnabled() {
-		return delegate.isReleaseResourcesOnCloseEnabled();
 	}
 
 	@Override

@@ -99,17 +99,6 @@ public interface AvailableSettings
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
 	/**
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDelayedEntityLoaderCreations(boolean)
-	 *
-	 * @deprecated This setting no longer has any effect.
-	 *
-	 * @since 5.3
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String DELAY_ENTITY_LOADER_CREATIONS = "hibernate.loader.delay_entity_loader_creations";
-
-	/**
 	 * Specifies how Hibernate should behave when multiple representations of the same
 	 * persistent entity instance, that is, multiple detached objects with the same
 	 * persistent identity, are encountered while cascading a
@@ -146,20 +135,6 @@ public interface AvailableSettings
 	 */
 	@SuppressWarnings("JavaDoc")
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
-
-	/**
-	 * When enabled, specifies that all transactional resources should be immediately
-	 * released when {@link org.hibernate.Session#close()} is called.
-	 *
-	 * @settingDefault {@code false} (not released), as per the JPA specification.
-	 *
-	 * @apiNote The legacy name of this setting is extremely misleading;
-	 *          it has little to do with persistence contexts.
-	 * @deprecated This is no longer useful and will be removed.
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	String DISCARD_PC_ON_CLOSE = "hibernate.discard_pc_on_close";
 
 	/**
 	 * When enabled, specifies that the generated identifier of an entity is unset

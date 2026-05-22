@@ -353,8 +353,7 @@ public class SessionImpl
 				// Original HEM close behavior
 				checkSessionFactoryOpen();
 				checkOpenOrWaitingForAutoClose();
-				if ( getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled()
-						|| !isTransactionInProgressAndNotMarkedForRollback() ) {
+				if ( !isTransactionInProgressAndNotMarkedForRollback() ) {
 					super.close();
 				}
 				else {

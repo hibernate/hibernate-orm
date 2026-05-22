@@ -2,9 +2,8 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.dialect.type;
 
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -12,21 +11,21 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.Types;
 
-public class SybaseJtdsLongNVarcharJdbcType extends SybaseJtdsNVarcharJdbcType {
+public class SybaseJtdsNCharJdbcType extends SybaseJtdsNVarcharJdbcType {
 
-	public static final SybaseJtdsLongNVarcharJdbcType JTDS_INSTANCE = new SybaseJtdsLongNVarcharJdbcType();
+	public static final SybaseJtdsNCharJdbcType JTDS_INSTANCE = new SybaseJtdsNCharJdbcType();
 
-	public SybaseJtdsLongNVarcharJdbcType() {
+	public SybaseJtdsNCharJdbcType() {
 	}
 
 	@Override
 	public int getJdbcTypeCode() {
-		return Types.LONGNVARCHAR;
+		return Types.NCHAR;
 	}
 
 	@Override
 	public String toString() {
-		return "SybaseJtdsLongNVarcharJdbcType";
+		return "SybaseJtdsNCharJdbcType";
 	}
 
 	@Override
@@ -42,11 +41,8 @@ public class SybaseJtdsLongNVarcharJdbcType extends SybaseJtdsNVarcharJdbcType {
 		if ( indicators.isLob() ) {
 			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
 		}
-		else if ( shouldUseMaterializedLob( indicators ) ) {
-			jdbcTypeCode = indicators.isNationalized() ? SqlTypes.MATERIALIZED_NCLOB : SqlTypes.MATERIALIZED_CLOB;
-		}
 		else {
-			jdbcTypeCode = indicators.isNationalized() ? Types.LONGNVARCHAR : Types.LONGVARCHAR;
+			jdbcTypeCode = indicators.isNationalized() ? Types.NCHAR : Types.CHAR;
 		}
 
 		return jdbcTypeRegistry.getDescriptor( indicators.resolveJdbcTypeCode( jdbcTypeCode ) );

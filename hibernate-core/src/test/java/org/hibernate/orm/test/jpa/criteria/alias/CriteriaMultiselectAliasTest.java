@@ -14,7 +14,6 @@ import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.transform.Transformers;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +60,7 @@ public class CriteriaMultiselectAliasTest {
 
 			List<BookDto> dtos = entityManager.createQuery( query )
 					.unwrap( Query.class )
-					.setTupleTransformer( Transformers.aliasToBean( BookDto.class ) )
+					.setTupleTransformer( CriteriaMultiselectAliasTest::bookDtoTransformer )
 					.getResultList();
 			assertEquals( 1, dtos.size() );
 			BookDto dto = dtos.get( 0 );
@@ -89,7 +88,7 @@ public class CriteriaMultiselectAliasTest {
 			List<BookDto> dtos = entityManager.createQuery( query )
 					.setParameter( "name", bookName() )
 					.unwrap( Query.class )
-					.setTupleTransformer( Transformers.beanTransformer( BookDto.class ) )
+					.setTupleTransformer( CriteriaMultiselectAliasTest::bookDtoTransformer )
 					.getResultList();
 			assertEquals( 1, dtos.size() );
 			BookDto dto = dtos.get( 0 );
@@ -146,6 +145,13 @@ public class CriteriaMultiselectAliasTest {
 		public void setTitle(String title) {
 			this.title = title;
 		}
+	}
+
+	private static BookDto bookDtoTransformer(Object[] tuple, String[] aliases) {
+		BookDto dto = new BookDto();
+		dto.setId( (Integer) tuple[0] );
+		dto.setTitle( (String) tuple[1] );
+		return dto;
 	}
 
 	protected String bookName() {

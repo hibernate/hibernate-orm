@@ -37,7 +37,6 @@ import org.hibernate.orm.test.sql.hand.TextHolder;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -323,7 +322,7 @@ public class NativeSQLQueriesTest {
 					assertTrue( result.contains( "JBoss" ) );
 
 					result = session.createNamedQuery( "orgNamesOnly", String.class )
-							.setTupleTransformer(Transformers.mapTransformer())
+							.setTupleTransformer(NativeSQLQueriesTest::mapTransformer)
 							.list();
 					Map m = (Map) result.get(0);
 					assertEquals( 2, result.size() );
@@ -411,7 +410,7 @@ public class NativeSQLQueriesTest {
 		scope.inTransaction(
 				session -> {
 					var sqlQuery = session.createNamedQuery("EmploymentAndPerson", Object[].class)
-							.setTupleTransformer(Transformers.mapTransformer());
+							.setTupleTransformer(NativeSQLQueriesTest::mapTransformer);
 					List list = sqlQuery.list();
 					assertEquals(1,list.size() );
 					Object res = list.get(0);
@@ -424,7 +423,7 @@ public class NativeSQLQueriesTest {
 		scope.inTransaction(
 				session -> {
 					var sqlQuery = session.createNamedQuery( "organizationreturnproperty", Organization.class )
-							.setTupleTransformer(Transformers.mapTransformer());
+							.setTupleTransformer(NativeSQLQueriesTest::mapTransformer);
 					List list = sqlQuery.list();
 					assertEquals( 2,list.size() );
 					Map m = (Map) list.get(0);
@@ -565,7 +564,7 @@ public class NativeSQLQueriesTest {
 
 					List list = session.createNativeQuery( getEmploymentSQL() )
 							.addEntity( Employment.class.getName() )
-							.setTupleTransformer(Transformers.mapTransformer())
+							.setTupleTransformer(NativeSQLQueriesTest::mapTransformer)
 							.list();
 					assertEquals( 1,list.size() );
 					Map m = (Map) list.get(0);
@@ -931,12 +930,30 @@ public class NativeSQLQueriesTest {
 		scope.inTransaction(
 				session -> {
 					HashMap result = (HashMap) session.createNativeQuery( "select * from PERSON", Object[].class )
-							.setTupleTransformer(Transformers.beanTransformer( HashMap.class ))
+							.setTupleTransformer((TupleTransformer<HashMap>) (tuple, aliases) -> {
+								HashMap<String, Object> map = new HashMap<>();
+								for ( int i = 0; i < tuple.length; i++ ) {
+									if ( aliases[i] != null ) {
+										map.put( aliases[i], tuple[i] );
+									}
+								}
+								return map;
+							})
 							.uniqueResult();
 					assertEquals( "Gavin", result.get( "NAME" ) == null ? result.get( "name" ) : result.get( "NAME" ) );
 					session.remove( gavin );
 				}
 		);
+	}
+
+	private static Map<String, Object> mapTransformer(Object[] tuple, String[] aliases) {
+		Map<String, Object> map = new HashMap<>( tuple.length );
+		for ( int i = 0; i < tuple.length; i++ ) {
+			if ( aliases[i] != null ) {
+				map.put( aliases[i], tuple[i] );
+			}
+		}
+		return map;
 	}
 
 	private String buildLongString(int size, char baseChar) {

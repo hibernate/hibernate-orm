@@ -361,9 +361,9 @@ include::{example-dir-query}/HQLTest.java[tags=hql-api-basic-usage-example]
 [[hql-api-result-transformers]]
 ==== Query result transformers
 
-A program may hook into the process of building the query results by providing a `org.hibernate.transform.ResultListTransformer` or `org.hibernate.transform.TupleTransformer`.
+A program may hook into the process of building the query results by providing a `org.hibernate.query.ResultListTransformer` or `org.hibernate.query.TupleTransformer`.
 
-See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/transform/ResultListTransformer.html[Javadocs] along with the built-in implementations for additional details.
+See the https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/TupleTransformer.html[TupleTransformer] and https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/query/ResultListTransformer.html[ResultListTransformer] Javadocs for additional details.
 
 //[[hql-api-parameters]]
 //==== Binding arguments to parameters

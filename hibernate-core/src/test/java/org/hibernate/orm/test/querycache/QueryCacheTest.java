@@ -7,6 +7,7 @@ package org.hibernate.orm.test.querycache;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -23,7 +24,6 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
@@ -445,7 +445,7 @@ public class QueryCacheTest {
 				session -> {
 					List result = session.createQuery( queryString, String.class )
 							.setCacheable( true )
-							.setTupleTransformer( Transformers.mapTransformer() )
+							.setTupleTransformer( QueryCacheTest::mapTransformer )
 							.list();
 					assertEquals( 1, result.size() );
 					Map m = (Map) result.get( 0 );
@@ -466,7 +466,7 @@ public class QueryCacheTest {
 				session -> {
 					List result = session.createQuery( queryString, String.class )
 							.setCacheable( true )
-							.setTupleTransformer( Transformers.mapTransformer() )
+							.setTupleTransformer( QueryCacheTest::mapTransformer )
 							.list();
 					assertEquals( 1, result.size() );
 					Map m = (Map) result.get( 0 );
@@ -825,5 +825,15 @@ public class QueryCacheTest {
 			}
 			return super.getConnection();
 		}
+	}
+
+	private static Map<String, Object> mapTransformer(Object[] tuple, String[] aliases) {
+		Map<String, Object> map = new HashMap<>( tuple.length );
+		for ( int i = 0; i < tuple.length; i++ ) {
+			if ( aliases[i] != null ) {
+				map.put( aliases[i], tuple[i] );
+			}
+		}
+		return map;
 	}
 }

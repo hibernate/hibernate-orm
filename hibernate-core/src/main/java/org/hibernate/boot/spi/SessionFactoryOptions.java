@@ -49,8 +49,6 @@ import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.criteria.Nulls;
 
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
-
 /**
  * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
  *
@@ -108,15 +106,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * bootstrapping; {@code false} indicates it was built through native bootstrapping.
 	 */
 	boolean isJpaBootstrap();
-
-	/**
-	 * @deprecated with no replacement.
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default boolean isAllowRefreshDetachedEntity() {
-		DEPRECATION_LOGGER.deprecatedRefreshLockDetachedEntity();
-		return false;
-	}
 
 	/**
 	 * The name to be used for the {@code SessionFactory}. This is used during in-VM serialization;

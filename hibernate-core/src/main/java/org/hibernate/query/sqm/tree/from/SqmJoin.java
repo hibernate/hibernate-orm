@@ -109,9 +109,8 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	@Override
 	SqmJoin<L, R> on(BooleanExpression... restrictions);
 
-	@Override
 	default <X> JpaEntityJoin<R, X> join(Class<X> entityJavaType, SqmJoinType joinType) {
-		return SqmFrom.super.join( entityJavaType, joinType );
+		return join( entityJavaType, joinType.getCorrespondingJpaJoinType() );
 	}
 
 	@Override
@@ -124,28 +123,13 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	<X> JpaEntityJoin<R, X> join(EntityDomainType<X> entity);
 
 	@Override
-	<X> JpaEntityJoin<R, X> join(EntityDomainType<X> entity, SqmJoinType joinType);
-
-	@Override
 	<X> JpaDerivedJoin<X> join(Subquery<X> subquery);
-
-	@Override
-	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType);
 
 	@Override
 	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery);
 
 	@Override
-	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, SqmJoinType joinType);
-
-	@Override
-	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral);
-
-	@Override
 	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte);
-
-	@Override
-	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType);
 
 	@Override
 	<X> JpaCrossJoin<X> crossJoin(Class<X> entityJavaType);

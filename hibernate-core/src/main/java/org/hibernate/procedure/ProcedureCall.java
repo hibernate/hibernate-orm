@@ -365,12 +365,4 @@ public interface ProcedureCall
 
 	@Override
 	ProcedureCall setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
-
-	/**
-	 * The hint key indicating the return {@linkplain java.sql.Types JDBC type code} of a function.
-	 *
-	 * @deprecated Use {@link org.hibernate.jpa.HibernateHints#HINT_CALLABLE_FUNCTION_RETURN_TYPE}.
-	 */
-	@Deprecated(since="7", forRemoval = true)
-	String FUNCTION_RETURN_TYPE_HINT = org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION_RETURN_TYPE;
 }

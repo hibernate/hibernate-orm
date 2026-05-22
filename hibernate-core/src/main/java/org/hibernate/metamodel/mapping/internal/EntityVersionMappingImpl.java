@@ -57,35 +57,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	private final VersionValue unsavedValueStrategy;
 
-	@Deprecated(forRemoval = true, since = "7.2")
-	public EntityVersionMappingImpl(
-			RootClass bootEntityDescriptor,
-			Supplier<?> templateInstanceAccess,
-			String attributeName,
-			String columnTableExpression,
-			String columnExpression,
-			Long length,
-			Integer precision,
-			Integer scale,
-			Integer temporalPrecision,
-			BasicType<?> versionBasicType,
-			EntityMappingType declaringType) {
-		this(
-				bootEntityDescriptor,
-				templateInstanceAccess,
-					attributeName,
-					columnTableExpression,
-					columnExpression,
-					length,
-					null,
-					precision,
-				scale,
-				temporalPrecision,
-				versionBasicType,
-				declaringType
-		);
-	}
-
 	public EntityVersionMappingImpl(
 			RootClass bootEntityDescriptor,
 			Supplier<?> templateInstanceAccess,

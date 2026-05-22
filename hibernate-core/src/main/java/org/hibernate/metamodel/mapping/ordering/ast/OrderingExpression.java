@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.mapping.ordering.ast;
 
 import jakarta.persistence.criteria.Nulls;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.sql.FakeSqmToSqlAstConverter;
@@ -27,21 +26,6 @@ public interface OrderingExpression extends Node {
 	SqlAstNode resolve(QuerySpec ast, TableGroup tableGroup, String modelPartName, SqlAstCreationState creationState);
 
 	String toDescriptiveText();
-
-	/**
-	 * Apply the SQL AST sort-specifications associated with this ordering-expression
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default void apply(
-			QuerySpec ast,
-			TableGroup tableGroup,
-			String collation,
-			String modelPartName,
-			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
-			SqlAstCreationState creationState) {
-		apply( ast, tableGroup, collation, modelPartName, sortOrder, nullPrecedence.getJpaValue(), creationState );
-	}
 
 	/**
 	 * Apply the SQL AST sort-specifications associated with this ordering-expression

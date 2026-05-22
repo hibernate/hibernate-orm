@@ -72,37 +72,6 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	@Deprecated(forRemoval = true, since = "7.2")
-	public BasicEntityIdentifierMappingImpl(
-			EntityPersister entityPersister,
-			Supplier<?> instanceCreator,
-			String attributeName,
-			String rootTable,
-			String pkColumnName,
-			Long length,
-			Integer precision,
-			Integer scale,
-			boolean insertable,
-			boolean updateable,
-			BasicType<?> idType,
-			MappingModelCreationProcess creationProcess) {
-		this(
-				entityPersister,
-				instanceCreator,
-					attributeName,
-					rootTable,
-					pkColumnName,
-					length,
-					null,
-					precision,
-				scale,
-				insertable,
-				updateable,
-				idType,
-				creationProcess
-		);
-	}
-
 	public BasicEntityIdentifierMappingImpl(
 			EntityPersister entityPersister,
 			Supplier<?> instanceCreator,

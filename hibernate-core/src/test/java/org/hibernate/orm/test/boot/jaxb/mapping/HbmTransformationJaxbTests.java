@@ -20,8 +20,10 @@ import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -70,123 +72,48 @@ public class HbmTransformationJaxbTests {
 	@Test
 	@JiraKey( "HHH-20451" )
 	public void mapKeyManyToManyTransformationTest(ServiceRegistryScope scope) {
-		scope.withService( ClassLoaderService.class, (cls) -> {
-			try ( final InputStream inputStream = cls.locateResourceStream( "xml/jaxb/mapping/ternary/hbm.xml" ) ) {
-				withStaxEventReader( inputStream, cls, (staxEventReader) -> {
-					final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
+		transformAndVerify( "xml/jaxb/mapping/ternary/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
 
-					try {
-						final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
-						final JaxbHbmHibernateMapping hbmMapping = JaxbHelper.VALIDATING.jaxb(
-								reader,
-								MappingXsdSupport.hbmXml.getSchema(),
-								jaxbCtx
-						);
-						assertThat( hbmMapping ).isNotNull();
-						assertThat( hbmMapping.getClazz() ).hasSize( 2 );
+			final JaxbEntityImpl mapKeyManyToManyEntity = transformed.getEntities().stream()
+					.filter( e -> "MapKeyManyToManyEntity".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
 
-						final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-								.addHbmXmlBinding( new Binding<>(
-										hbmMapping,
-										new Origin( SourceType.RESOURCE, "xml/jaxb/mapping/ternary/hbm.xml" )
-								) )
-								.buildMetadata();
-						final List<Binding<JaxbEntityMappingsImpl>> transformedBindingList = HbmXmlTransformer.transform(
-								singletonList( new Binding<>(
-										hbmMapping,
-										new Origin( SourceType.RESOURCE, "xml/jaxb/mapping/ternary/hbm.xml" )
-								) ),
-								metadata,
-								UnsupportedFeatureHandling.ERROR
-						);
-						final JaxbEntityMappingsImpl transformed = transformedBindingList.get( 0 ).getRoot();
+			assertThat( mapKeyManyToManyEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
 
-						assertThat( transformed ).isNotNull();
-						assertThat( transformed.getEntities() ).hasSize( 2 );
-
-						final JaxbEntityImpl mapKeyManyToManyEntity = transformed.getEntities().stream()
-								.filter( e -> "MapKeyManyToManyEntity".equals( e.getClazz() ) )
-								.findFirst()
-								.orElseThrow();
-
-						assertThat( mapKeyManyToManyEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
-
-						final JaxbManyToManyImpl managersAttr = mapKeyManyToManyEntity.getAttributes()
-								.getManyToManyAttributes()
-								.get( 0 );
-						assertThat( managersAttr.getName() ).isEqualTo( "managers" );
-						assertThat( managersAttr.getMapKeyJoinColumns() ).hasSize( 1 );
-						assertThat( managersAttr.getMapKeyJoinColumns().get( 0 ).getName() ).isEqualTo( "siteId" );
-					}
-					catch (JAXBException e) {
-						throw new RuntimeException( "Error during JAXB processing", e );
-					}
-				} );
-			}
-			catch (IOException e) {
-				throw new RuntimeException( "Error accessing mapping file", e );
-			}
+			final JaxbManyToManyImpl managersAttr = mapKeyManyToManyEntity.getAttributes()
+					.getManyToManyAttributes()
+					.get( 0 );
+			assertThat( managersAttr.getName() ).isEqualTo( "managers" );
+			assertThat( managersAttr.getMapKeyJoinColumns() ).hasSize( 1 );
+			assertThat( managersAttr.getMapKeyJoinColumns().get( 0 ).getName() ).isEqualTo( "siteId" );
 		} );
 	}
 
 	@Test
 	public void manyToOnePropertyRefTransformationTest(ServiceRegistryScope scope) {
-		scope.withService( ClassLoaderService.class, (cls) -> {
-			verifyManyToOnePropertyRef( "xml/jaxb/mapping/many-to-one-property-ref/hbm.xml", cls, scope );
+		transformAndVerify( "xml/jaxb/mapping/many-to-one-property-ref/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl sourceEntity = transformed.getEntities().stream()
+					.filter( e -> "PropertyRefSourceEntity".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( sourceEntity.getAttributes().getManyToOneAttributes() ).hasSize( 1 );
+
+			final JaxbManyToOneImpl manyToOne = sourceEntity.getAttributes().getManyToOneAttributes().get( 0 );
+			assertThat( manyToOne.getName() ).isEqualTo( "target" );
+			assertThat( manyToOne.getTargetEntity() ).isEqualTo( "PropertyRefTargetEntity" );
+			assertThat( manyToOne.getPropertyRef() ).isNotNull();
+			assertThat( manyToOne.getPropertyRef().getName() ).isEqualTo( "name" );
+			assertThat( manyToOne.getJoinColumnOrJoinFormula() ).isEmpty();
 		} );
 	}
 
-	private void verifyManyToOnePropertyRef(String resourceName, ClassLoaderService cls, ServiceRegistryScope scope) {
-		try ( final InputStream inputStream = cls.locateResourceStream( resourceName ) ) {
-			withStaxEventReader( inputStream, cls, (staxEventReader) -> {
-				final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
-
-				try {
-					final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
-					final JaxbHbmHibernateMapping hbmMapping = JaxbHelper.VALIDATING.jaxb( reader, MappingXsdSupport.hbmXml.getSchema(), jaxbCtx );
-					assertThat( hbmMapping ).isNotNull();
-					assertThat( hbmMapping.getClazz() ).hasSize( 2 );
-
-					final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() ).addHbmXmlBinding( new Binding<>(
-							hbmMapping,
-							new Origin( SourceType.RESOURCE, resourceName )
-					) ).buildMetadata();
-					final List<Binding<JaxbEntityMappingsImpl>> transformedBindingList = HbmXmlTransformer.transform(
-							singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
-							metadata,
-							UnsupportedFeatureHandling.ERROR
-					);
-					final JaxbEntityMappingsImpl transformed = transformedBindingList.get( 0 ).getRoot();
-
-					assertThat( transformed ).isNotNull();
-					assertThat( transformed.getEntities() ).hasSize( 2 );
-
-					final JaxbEntityImpl sourceEntity = transformed.getEntities().stream()
-							.filter( e -> "PropertyRefSourceEntity".equals( e.getClazz() ) )
-							.findFirst()
-							.orElseThrow();
-
-					assertThat( sourceEntity.getAttributes().getManyToOneAttributes() ).hasSize( 1 );
-
-					final JaxbManyToOneImpl manyToOne = sourceEntity.getAttributes().getManyToOneAttributes().get( 0 );
-					assertThat( manyToOne.getName() ).isEqualTo( "target" );
-					assertThat( manyToOne.getTargetEntity() ).isEqualTo( "PropertyRefTargetEntity" );
-					assertThat( manyToOne.getPropertyRef() ).isNotNull();
-					assertThat( manyToOne.getPropertyRef().getName() ).isEqualTo( "name" );
-					assertThat( manyToOne.getJoinColumnOrJoinFormula() ).isEmpty();
-				}
-				catch (JAXBException e) {
-					throw new RuntimeException( "Error during JAXB processing", e );
-				}
-			} );
-		}
-		catch (IOException e) {
-			throw new RuntimeException( "Error accessing mapping file", e );
-		}
-	}
-
 	@Test
-	public void testManyToManyUniqueHbmTransformation(ServiceRegistryScope scope) {
+	public void testManyToManyOrphanRemovalHbmTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/manytomany/UserGroup.hbm.xml", scope, (transformed) -> {
 			assertThat( transformed.getEntities() ).hasSize( 2 );
 
@@ -237,6 +164,26 @@ public class HbmTransformationJaxbTests {
 
 			assertThat( groupEntity.getTable() ).isNotNull();
 			assertThat( groupEntity.getTable().getName() ).isEqualTo( "`Group`" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20484" )
+	public void testNativeIdGeneratorTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/basic/nativeId.hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			assertThat( entity.getAttributes().getIdAttributes() ).hasSize( 1 );
+			final JaxbIdImpl id = entity.getAttributes().getIdAttributes().get( 0 );
+
+			assertThat( id.getName() ).isEqualTo( "id" );
+			assertThat( id.getGeneratedValue() ).isNotNull();
+			assertThat( id.getGenericGenerator() ).isNotNull();
+			assertThat( id.getGenericGenerator().getClazz() ).isEqualTo( "native" );
+			assertThat( id.getGenericGenerator().getName() ).isNotNull();
+			assertThat( id.getGenericGenerator().getName() )
+					.isEqualTo( id.getGeneratedValue().getGenerator() );
 		} );
 	}
 

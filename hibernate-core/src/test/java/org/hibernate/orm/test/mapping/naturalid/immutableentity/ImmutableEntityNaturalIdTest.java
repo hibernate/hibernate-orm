@@ -83,7 +83,8 @@ public class ImmutableEntityNaturalIdTest {
 	public void testNaturalIdMapping(SessionFactoryScope scope) {
 		final EntityMappingType buildingMapping = scope.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( Building.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( Building.class );
 
 		final NaturalIdMapping naturalIdMapping = buildingMapping.getNaturalIdMapping();
 		assertThat( naturalIdMapping, notNullValue() );

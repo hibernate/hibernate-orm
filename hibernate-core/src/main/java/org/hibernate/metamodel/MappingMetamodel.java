@@ -6,7 +6,6 @@ package org.hibernate.metamodel;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -49,9 +48,6 @@ public interface MappingMetamodel extends Metamodel {
 	 * Visit all entity mapping descriptors defined in the model
 	 */
 	void forEachEntityDescriptor(Consumer<EntityPersister> action);
-
-	@Deprecated(forRemoval = true, since = "7")
-	Stream<EntityPersister> streamEntityDescriptors();
 
 	/**
 	 * Get an entity mapping descriptor based on its Hibernate entity-name
@@ -106,19 +102,6 @@ public interface MappingMetamodel extends Metamodel {
 
 	boolean isEntityClass(Class<?> entityJavaType);
 
-	/**
-	 * Locate an entity mapping descriptor by Class.  The passed Class might
-	 * refer to either the entity Class directly, or it might name a proxy
-	 * interface for the entity.  This method accounts for both, preferring the
-	 * direct entity name.
-	 *
-	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(forRemoval = true, since = "7")
-	EntityPersister locateEntityDescriptor(Class<?> byClass);
-
 	String getImportedName(String name);
 
 
@@ -129,9 +112,6 @@ public interface MappingMetamodel extends Metamodel {
 	 * Visit the mapping descriptors for all collections defined in the model
 	 */
 	void forEachCollectionDescriptor(Consumer<CollectionPersister> action);
-
-	@Deprecated(forRemoval = true, since = "7")
-	Stream<CollectionPersister> streamCollectionDescriptors();
 
 	/**
 	 * Get a collection mapping descriptor based on its role

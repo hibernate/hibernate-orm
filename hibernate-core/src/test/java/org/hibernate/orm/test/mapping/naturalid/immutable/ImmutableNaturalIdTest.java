@@ -52,7 +52,7 @@ public class ImmutableNaturalIdTest {
 	@JiraKey( value = "HHH-10360")
 	public void verifyMetamodel(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );
+		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
 
 		final AttributeMapping userNameMapping = entityMappingType.findAttributeMapping( "userName" );
 		assertFalse( userNameMapping.getAttributeMetadata().isNullable() );

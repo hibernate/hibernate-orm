@@ -5,8 +5,6 @@
 package org.hibernate.metamodel;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 
 /**
@@ -33,38 +31,4 @@ public interface RuntimeMetamodels {
 	 */
 	MappingMetamodel getMappingMetamodel();
 
-
-	// some convenience methods...
-
-	/**
-	 * @deprecated Only called from tests
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default EntityMappingType getEntityMappingType(String entityName) {
-		return getMappingMetamodel().getEntityDescriptor( entityName );
-	}
-
-	/**
-	 * @deprecated Only called from tests
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default EntityMappingType getEntityMappingType(Class<?> entityType) {
-		return getMappingMetamodel().getEntityDescriptor( entityType );
-	}
-
-	/**
-	 * @deprecated No longer called
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default PluralAttributeMapping getPluralAttributeMapping(String role) {
-		return getMappingMetamodel().findCollectionDescriptor( role ).getAttributeMapping();
-	}
-
-	/**
-	 * @deprecated No longer called
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default String getImportedName(String name) {
-		return getMappingMetamodel().getImportedName( name );
-	}
 }

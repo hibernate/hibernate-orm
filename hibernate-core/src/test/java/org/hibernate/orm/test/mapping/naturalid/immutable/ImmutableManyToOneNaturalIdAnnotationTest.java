@@ -35,7 +35,7 @@ public class ImmutableManyToOneNaturalIdAnnotationTest {
 		// the natural ID, so they should be nullable by annotation-specific default
 
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
-		final EntityMappingType childMapping = runtimeMetamodels.getEntityMappingType( Child.class.getName() );
+		final EntityMappingType childMapping = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( Child.class.getName() );
 
 		final EntityPersister persister = childMapping.getEntityPersister();
 		final int nameIndex = persister.getPropertyIndex( "name" );

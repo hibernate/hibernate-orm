@@ -38,7 +38,8 @@ public abstract class AbstractReadWriteTests {
 	public void test(SessionFactoryScope scope) {
 		final EntityMappingType entityMapping = scope.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( ReadWriteEntity.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( ReadWriteEntity.class );
 		final BasicAttributeMapping attribute = (BasicAttributeMapping) entityMapping.findAttributeMapping( "value" );
 		attribute.forEachSelectable(
 				(i, selectable) -> {

@@ -40,7 +40,7 @@ public class InheritedNaturalIdTest {
 	@JiraKey( value = "HHH-10360")
 	public void verifyMappingModel(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityMappingType userMapping = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );
+		final EntityMappingType userMapping = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
 
 		final SingularAttributeMapping uidMapping = ((SimpleNaturalIdMapping) userMapping.getNaturalIdMapping()).getAttribute();
 		assertThat( uidMapping.getAttributeName(), is ("uid" ) );

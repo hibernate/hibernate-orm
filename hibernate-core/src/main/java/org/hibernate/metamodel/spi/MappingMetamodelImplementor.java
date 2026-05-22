@@ -4,13 +4,12 @@
  */
 package org.hibernate.metamodel.spi;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 
 /**
@@ -40,9 +39,9 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 	 * @return All the entity names
 	 */
 	default String[] getAllEntityNames() {
-		return streamEntityDescriptors()
-				.map( EntityPersister::getEntityName )
-				.toArray( String[]::new );
+		final var entityNames = new ArrayList<String>();
+		forEachEntityDescriptor( entityPersister -> entityNames.add( entityPersister.getEntityName() ) );
+		return entityNames.toArray( String[]::new );
 	}
 
 	/**
@@ -51,8 +50,8 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 	 * @return All the entity names
 	 */
 	default String[] getAllCollectionRoles() {
-		return streamCollectionDescriptors()
-				.map( CollectionPersister::getRole )
-				.toArray( String[]::new );
+		final var collectionRoles = new ArrayList<String>();
+		forEachCollectionDescriptor( collectionPersister -> collectionRoles.add( collectionPersister.getRole() ) );
+		return collectionRoles.toArray( String[]::new );
 	}
 }

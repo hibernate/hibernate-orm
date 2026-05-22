@@ -81,6 +81,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -439,10 +440,18 @@ public class DefaultCatalogAndSchemaTest
 		// so many methods that allow retrieving the entity persister or entity metamodel from the entity class no longer work,
 		// because these methods generally assume the native entity name is the FQCN.
 		// Thus we use custom code.
-		AbstractEntityPersister persister = (AbstractEntityPersister) sessionFactory.getRuntimeMetamodels().getMappingMetamodel().streamEntityDescriptors()
-				.filter( p -> p.getMappedClass().equals( entityClass ) )
-				.findFirst()
-				.orElseThrow( () -> new IllegalStateException( "Cannot find persister for " + entityClass ) );
+		final var persisterReference = new AtomicReference<AbstractEntityPersister>();
+		sessionFactory.getRuntimeMetamodels().getMappingMetamodel().forEachEntityDescriptor(
+				p -> {
+					if ( p.getMappedClass().equals( entityClass ) ) {
+						persisterReference.set( (AbstractEntityPersister) p );
+					}
+				}
+		);
+		final var persister = persisterReference.get();
+		if ( persister == null ) {
+			throw new IllegalStateException( "Cannot find persister for " + entityClass );
+		}
 		String jpaEntityName = sessionFactory.getJpaMetamodel().getEntities()
 				.stream()
 				.filter( p -> p.getJavaType().equals( entityClass ) )

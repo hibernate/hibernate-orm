@@ -85,7 +85,8 @@ public class LoadPlanBuilderTest {
 	@Test
 	public void testCascadeBasedBuild(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityPersister entityDescriptor = (EntityPersister) sessionFactory.getRuntimeMetamodels().getEntityMappingType( Message.class );
+		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel()
+				.getEntityDescriptor( Message.class );
 
 		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 

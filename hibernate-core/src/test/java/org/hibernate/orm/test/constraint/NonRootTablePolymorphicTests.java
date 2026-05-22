@@ -173,19 +173,24 @@ public class NonRootTablePolymorphicTests {
 	public void verifyRuntimeModel(SessionFactoryScope scope) {
 		final EntityMappingType rootEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( Root.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( Root.class );
 		final EntityMappingType subEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( Sub.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( Sub.class );
 		final EntityMappingType leafEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( Leaf.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( Leaf.class );
 		final EntityMappingType childEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( SubChild.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( SubChild.class );
 		final EntityMappingType parentEntity = scope.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( SubParent.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( SubParent.class );
 
 
 		// check Sub#child fk

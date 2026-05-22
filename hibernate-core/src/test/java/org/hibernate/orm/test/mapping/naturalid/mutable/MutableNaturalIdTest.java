@@ -51,7 +51,7 @@ public class MutableNaturalIdTest {
 	@JiraKey( value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getEntityMappingType( User.class );
+		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
 		final EntityPersister persister = entityMappingType.getEntityPersister();
 
 		// nullability is not specified, so it should be non-nullable by hbm-specific default

@@ -356,7 +356,8 @@ public class NativeQueryResultBuilderTests {
 	public void verifyModel(SessionFactoryScope scope) {
 		final EntityMappingType entityDescriptor = scope.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( EntityOfBasics.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( EntityOfBasics.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory()
 				.getTypeConfiguration()
 				.getJdbcTypeRegistry();

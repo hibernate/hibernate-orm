@@ -27,7 +27,8 @@ public abstract class AbstractCompositeIdAndNaturalIdTest {
 	@JiraKey(value = "HHH-10360")
 	public void testNaturalIdNullability(SessionFactoryScope scope) {
 		final EntityMappingType accountMapping = scope.getSessionFactory().getRuntimeMetamodels()
-				.getEntityMappingType( Account.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( Account.class );
 		final SingularAttributeMapping shortCodeMapping = ((SimpleNaturalIdMapping) accountMapping.getNaturalIdMapping()).getAttribute();
 		final AttributeMetadata shortCodeMetadata = shortCodeMapping.getAttributeMetadata();
 		assertThat( shortCodeMetadata.isNullable(), is( false ) );

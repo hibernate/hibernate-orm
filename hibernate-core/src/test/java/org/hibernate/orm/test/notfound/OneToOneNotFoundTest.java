@@ -105,7 +105,7 @@ public class OneToOneNotFoundTest {
 
 		// Check the Show side
 		scope.inTransaction( (session) -> {
-			final EntityMappingType showMapping = runtimeMetamodels.getEntityMappingType( Show.class );
+			final EntityMappingType showMapping = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( Show.class );
 			final Object[] databaseSnapshot = showMapping.getEntityPersister().getDatabaseSnapshot( 1, session );
 
 			// `Show#description` is the only state-array-contributor for Show
@@ -116,7 +116,7 @@ public class OneToOneNotFoundTest {
 
 		// Check the ShowDescription side
 		scope.inTransaction( (session) -> {
-			final EntityMappingType descriptionMapping = runtimeMetamodels.getEntityMappingType( ShowDescription.class );
+			final EntityMappingType descriptionMapping = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( ShowDescription.class );
 			final Object[] databaseSnapshot = descriptionMapping.getEntityPersister().getDatabaseSnapshot( 2, session );
 
 			assertThat( databaseSnapshot ).describedAs( "`ShowDescription` database snapshot" ).isNull();

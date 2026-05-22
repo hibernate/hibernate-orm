@@ -29,10 +29,11 @@ public class NaturalIdCacheKeyCreationTests {
 	@Test
 	public void testSimpleKeyCreation(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final EntityPersister entityDescriptor = (EntityPersister) session
+			final EntityPersister entityDescriptor = session
 					.getFactory()
 					.getRuntimeMetamodels()
-					.getEntityMappingType( TheEntity.class );
+					.getMappingMetamodel()
+					.getEntityDescriptor( TheEntity.class );
 
 			SimpleCacheKeysFactory.INSTANCE.createEntityKey( 1, entityDescriptor, session.getSessionFactory(), null );
 			SimpleCacheKeysFactory.INSTANCE.createNaturalIdKey( "Steve", entityDescriptor, session );
@@ -43,10 +44,11 @@ public class NaturalIdCacheKeyCreationTests {
 	@Test
 	public void testDefaultKeyCreation(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final EntityPersister entityDescriptor = (EntityPersister) session
+			final EntityPersister entityDescriptor = session
 					.getFactory()
 					.getRuntimeMetamodels()
-					.getEntityMappingType( TheEntity.class );
+					.getMappingMetamodel()
+					.getEntityDescriptor( TheEntity.class );
 
 			DefaultCacheKeysFactory.INSTANCE.createEntityKey( 1, entityDescriptor, session.getSessionFactory(), null );
 			DefaultCacheKeysFactory.INSTANCE.createNaturalIdKey( "Steve", entityDescriptor, session );

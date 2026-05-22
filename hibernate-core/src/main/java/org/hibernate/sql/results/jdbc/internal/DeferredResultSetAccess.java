@@ -162,20 +162,6 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		};
 	}
 
-
-	/**
-	 * For Hibernate Reactive
-	 *
-	 * @deprecated Was only used for follow-on locking, which is now handled differently;
-	 * see {@linkplain FollowOnLockingAction}
-	 */
-	@Deprecated(since = "7.2", forRemoval = true)
-	protected void registerAfterLoadAction(ExecutionContext executionContext, LockOptions lockOptionsToUse) {
-		executionContext.getCallback()
-				.registerAfterLoadAction( (entity, persister, session) ->
-						session.lock( persister.getEntityName(), entity, lockOptionsToUse ) );
-	}
-
 	public LimitHandler getLimitHandler() {
 		return limitHandler;
 	}

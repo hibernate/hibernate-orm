@@ -39,6 +39,8 @@ import org.hibernate.dialect.type.OracleJdbcHelper;
 import org.hibernate.dialect.type.OracleJsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.OracleJsonJdbcType;
 import org.hibernate.dialect.type.OracleOrdinalEnumJdbcType;
+import org.hibernate.dialect.type.OracleOsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.OracleOsonJdbcType;
 import org.hibernate.dialect.type.OracleReflectionStructJdbcType;
 import org.hibernate.dialect.type.OracleUserDefinedTypeExporter;
 import org.hibernate.dialect.type.OracleXmlArrayJdbcTypeConstructor;

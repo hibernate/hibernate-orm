@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.dialect.type;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import oracle.jdbc.provider.oson.OsonFactory;
@@ -16,7 +16,7 @@ import java.io.OutputStream;
 
 import static org.hibernate.type.format.jackson.JacksonIntegration.isJacksonOsonExtensionAvailable;
 
-public class OracleOsonJacksonHelper {
+class OracleOsonJacksonHelper {
 
 	public static final @Nullable Class<? extends Closeable> READER_CLASS = loadOrNull( "com.fasterxml.jackson.core.JsonParser" );
 	public static final @Nullable Class<? extends Closeable> WRITER_CLASS = loadOrNull( "com.fasterxml.jackson.core.JsonGenerator" );

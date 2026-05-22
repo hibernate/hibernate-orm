@@ -7,7 +7,7 @@ package org.hibernate.testing.bytecode.enhancement;
 import java.lang.reflect.Field;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.internal.MutableEntityEntryFactory;
+import org.hibernate.engine.internal.EntityEntryImpl;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.Status;
@@ -57,7 +57,7 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 	}
 
 	public static EntityEntry makeEntityEntry() {
-		return MutableEntityEntryFactory.INSTANCE.createEntityEntry(
+		return new EntityEntryImpl(
 				Status.MANAGED,
 				null,
 				null,

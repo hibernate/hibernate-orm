@@ -1450,11 +1450,6 @@ public class StatelessSessionImpl
 		}
 	}
 
-	@Override @Deprecated
-	public Object instantiate(String entityName, Object id) {
-		return instantiate( requireEntityPersister( entityName ), id );
-	}
-
 	@Override
 	public Object instantiate(EntityPersister persister, Object id) {
 		checkOpen();

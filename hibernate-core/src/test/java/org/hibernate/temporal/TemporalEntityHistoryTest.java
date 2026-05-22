@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.hibernate.testing.orm.junit.DialectContext.awaitTimestampTick;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -69,9 +70,9 @@ class TemporalEntityHistoryTest {
 					entity.excluded = 2L;
 				}
 		);
-		Thread.sleep( 250 );
+		awaitTimestampTick();
 		var instant = Instant.now();
-		Thread.sleep( 250 );
+		awaitTimestampTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity4 entity = session.find( TemporalEntity4.class, 1L );
@@ -155,9 +156,9 @@ class TemporalEntityHistoryTest {
 				assertEquals( 0, friends );
 			} );
 		}
-		Thread.sleep( 250 );
+		awaitTimestampTick();
 		var nextInstant = Instant.now();
-		Thread.sleep( 250 );
+		awaitTimestampTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity4 entity = session.find( TemporalEntity4.class, 1L );
@@ -221,9 +222,9 @@ class TemporalEntityHistoryTest {
 					session.insert( entity );
 				}
 		);
-		Thread.sleep( 250 );
+		awaitTimestampTick();
 		var instant = Instant.now();
-		Thread.sleep( 250 );
+		awaitTimestampTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity4 entity = session.get( TemporalEntity4.class, 2L );
@@ -286,8 +287,9 @@ class TemporalEntityHistoryTest {
 			entity.list.add( "N" );
 			s.persist( entity );
 		} );
+		awaitTimestampTick();
 		var instant = Instant.now();
-		Thread.sleep( 250 );
+		awaitTimestampTick();
 		scope.inTransaction( s -> {
 			TemporalEntity4 entity = s.find( TemporalEntity4.class, 3L);
 			assertEquals( Set.of("x", "y", "z"), entity.strings );
@@ -297,6 +299,7 @@ class TemporalEntityHistoryTest {
 			entity.map.put( "c", "C" );
 			entity.list.add( "K" );
 		} );
+		awaitTimestampTick();
 		scope.inTransaction( s -> {
 			TemporalEntity4 entity = s.find( TemporalEntity4.class, 3L);
 			assertEquals( Set.of("w", "x", "y", "z"), entity.strings );
@@ -307,6 +310,7 @@ class TemporalEntityHistoryTest {
 			entity.list.remove( "N" );
 			entity.list.add( 0, "P" );
 		} );
+		awaitTimestampTick();
 		scope.inTransaction( s -> {
 			TemporalEntity4 entity = s.find( TemporalEntity4.class, 3L);
 			assertEquals( Set.of("w", "y", "z"), entity.strings );
@@ -319,6 +323,7 @@ class TemporalEntityHistoryTest {
 			entity.list.set( 2, "L" );
 			entity.list.set( 0, "Q" );
 		} );
+		awaitTimestampTick();
 		scope.inTransaction( s -> {
 			TemporalEntity4 entity = s.find( TemporalEntity4.class, 3L);
 			assertEquals( Set.of("v", "w", "y"), entity.strings );
@@ -328,6 +333,7 @@ class TemporalEntityHistoryTest {
 			entity.map = null;
 			entity.list = null;
 		} );
+		awaitTimestampTick();
 		scope.inTransaction( s -> {
 			TemporalEntity4 entity = s.find(TemporalEntity4.class, 3L);
 			assertEquals( Set.of(), entity.strings );

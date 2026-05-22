@@ -519,6 +519,21 @@ public class EntityGraphTest {
 	}
 
 	@Test
+	public void testAttributeNodeTreatedSubgraph(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			EntityGraph<AnimalOwner> graph = em.createEntityGraph( AnimalOwner.class );
+			jakarta.persistence.AttributeNode<Animal> animalNode = graph.addAttributeNode( "animal" );
+
+			Subgraph<Dog> dogSubgraph = animalNode.addTreatedSubgraph( Dog.class );
+			dogSubgraph.addAttributeNode( "kennel" );
+
+			assertTrue( animalNode.getOptions().contains( FetchType.EAGER ) );
+			assertTrue( animalNode.getSubgraphs().containsKey( Animal.class ) );
+			assertTrue( animalNode.getSubgraphs().containsKey( Dog.class ) );
+		} );
+	}
+
+	@Test
 	public void testElementSubgraph(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			em.getTransaction().begin();

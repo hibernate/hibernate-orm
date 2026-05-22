@@ -29,6 +29,12 @@ public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, Gra
 	@Override
 	AttributeNodeImplementor<J, E, K> makeCopy(boolean mutable);
 
+	@Override
+	SubGraphImplementor<J> addSubgraph();
+
+	@Override
+	<S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> type);
+
 	/**
 	 * Mark the attribute as removed or not.
 	 * We allow passing the boolean to allow for later unmarking it for removal, e.g.

@@ -64,62 +64,6 @@ public class BasicAttributeMapping
 
 	private final JavaType domainTypeDescriptor;
 
-	@Deprecated(forRemoval = true, since = "7.2")
-	public BasicAttributeMapping(
-			String attributeName,
-			NavigableRole navigableRole,
-			int stateArrayPosition,
-			int fetchableIndex,
-			AttributeMetadata attributeMetadata,
-			FetchTiming mappedFetchTiming,
-			FetchStyle mappedFetchStyle,
-			String tableExpression,
-			String mappedColumnExpression,
-			SelectablePath selectablePath,
-			boolean isFormula,
-			@Nullable String customReadExpression,
-			@Nullable String customWriteExpression,
-			@Nullable Long length,
-			@Nullable Integer precision,
-			@Nullable Integer scale,
-			@Nullable Integer temporalPrecision,
-			boolean isLob,
-			boolean nullable,
-			boolean insertable,
-			boolean updateable,
-			boolean partitioned,
-			JdbcMapping jdbcMapping,
-			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
-		this(
-				attributeName,
-				navigableRole,
-				stateArrayPosition,
-				fetchableIndex,
-				attributeMetadata,
-				mappedFetchTiming,
-				mappedFetchStyle,
-				tableExpression,
-				mappedColumnExpression,
-				selectablePath,
-				isFormula,
-				customReadExpression,
-				customWriteExpression,
-				length,
-				null,
-				precision,
-				scale,
-				temporalPrecision,
-				isLob,
-				nullable,
-				insertable,
-				updateable,
-				partitioned,
-				jdbcMapping,
-				declaringType,
-				propertyAccess );
-	}
-
 	public BasicAttributeMapping(
 			String attributeName,
 			NavigableRole navigableRole,

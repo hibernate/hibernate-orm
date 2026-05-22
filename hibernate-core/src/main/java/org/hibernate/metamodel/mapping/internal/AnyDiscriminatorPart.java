@@ -69,47 +69,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	private final BasicType<?> underlyingJdbcMapping;
 	private final DiscriminatorConverter<?,?> valueConverter;
 
-	@Deprecated(forRemoval = true, since = "7.2")
-	public AnyDiscriminatorPart(
-			NavigableRole partRole,
-			DiscriminatedAssociationModelPart declaringType,
-			String table,
-			String column,
-			SelectablePath selectablePath,
-			String customReadExpression,
-			String customWriteExpression,
-			Long length,
-			Integer precision,
-			Integer scale,
-			boolean insertable,
-			boolean updateable,
-			boolean partitioned,
-			BasicType<?> underlyingJdbcMapping,
-			Map<DiscriminatorValue, String> valueToEntityNameMap,
-			ImplicitDiscriminatorStrategy implicitValueStrategy,
-			MappingMetamodelImplementor mappingMetamodel) {
-		this(
-				partRole,
-				declaringType,
-				table,
-					column,
-					selectablePath,
-					customReadExpression,
-					customWriteExpression,
-					length,
-					null,
-					precision,
-				scale,
-				insertable,
-				updateable,
-				partitioned,
-				underlyingJdbcMapping,
-				valueToEntityNameMap,
-				implicitValueStrategy,
-				mappingMetamodel
-		);
-	}
-
 	public AnyDiscriminatorPart(
 			NavigableRole partRole,
 			DiscriminatedAssociationModelPart declaringType,

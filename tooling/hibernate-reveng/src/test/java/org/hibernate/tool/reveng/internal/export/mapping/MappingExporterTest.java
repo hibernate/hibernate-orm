@@ -111,9 +111,7 @@ public class MappingExporterTest {
 		File file = new File(this.tempDir, "foo.bar");
 		Files.writeString(file.toPath(), "foobar");
 		final MappingBinder mappingBinder = new TestMappingBinder(file, "barfoo");
-		Field mappingBinderField = MappingExporter.class.getDeclaredField("mappingBinder");
-		mappingBinderField.setAccessible(true);
-		mappingBinderField.set(mappingExporter, mappingBinder);
+		mappingExporter = new MappingExporter(mappingBinder);
 		assertNotEquals("barfoo", Files.readString(file.toPath()));
 		Object object = bindMappingMethod.invoke(mappingExporter, new HbmXmlOrigin(file));
 		assertInstanceOf(Binding.class, object);
@@ -134,10 +132,9 @@ public class MappingExporterTest {
 		File file = new File(this.tempDir, "foo.bar");
 		Files.writeString(file.toPath(), "foobar");
 		hbmXmlFiles.add(file);
+		final MappingBinder mappingBinder = new TestMappingBinder(file, "barfoo");
+		mappingExporter = new MappingExporter(mappingBinder);
 		hbmFilesField.set(mappingExporter, new UnmodifiableList<>(hbmXmlFiles));
-		Field mappingBinderField = MappingExporter.class.getDeclaredField("mappingBinder");
-		mappingBinderField.setAccessible(true);
-		mappingBinderField.set(mappingExporter, new TestMappingBinder(file, "barfoo"));
 		Object object = getHbmMappingsMethod.invoke(mappingExporter);
 		assertInstanceOf(List.class, object);
 		assertEquals(1, ((List<?>)object).size());
@@ -155,9 +152,7 @@ public class MappingExporterTest {
 		assertNotNull(createMarshallerMethod);
 		createMarshallerMethod.setAccessible(true);
 		final MappingBinder mappingBinder = new TestMappingBinder(new File("foo"), "foobar");
-		Field mappingBinderField = MappingExporter.class.getDeclaredField("mappingBinder");
-		mappingBinderField.setAccessible(true);
-		mappingBinderField.set(mappingExporter, mappingBinder);
+		mappingExporter = new MappingExporter(mappingBinder);
 		assertSame(
 				DUMMY_MARSHALLER,
 				createMarshallerMethod.invoke(mappingExporter));
@@ -171,9 +166,7 @@ public class MappingExporterTest {
 				File.class);
 		assertNotNull(marshallMethod);
 		marshallMethod.setAccessible(true);
-		Field marshallerField = MappingExporter.class.getDeclaredField("marshaller");
-		marshallerField.setAccessible(true);
-		marshallerField.set(mappingExporter, DUMMY_MARSHALLER);
+		mappingExporter = new MappingExporter(DUMMY_MARSHALLER);
 		File hbmFile = new File(this.tempDir, "foo.hbm.xml");
 		File mappingFile = new File(this.tempDir, "foo.mapping.xml");
 		Files.writeString(mappingFile.toPath(), "<foo><bar>foobar</bar></foo>");

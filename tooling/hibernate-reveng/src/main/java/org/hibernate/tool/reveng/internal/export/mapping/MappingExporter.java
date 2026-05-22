@@ -49,6 +49,18 @@ public class MappingExporter implements Exporter {
 		marshaller = createMarshaller();
 	}
 
+	// For tests
+	public MappingExporter(MappingBinder mappingBinder) {
+		this.mappingBinder = mappingBinder;
+		this.marshaller = createMarshaller();
+	}
+
+	// For tests
+	public MappingExporter(Marshaller marshaller) {
+		mappingBinder = createMappingBinder();
+		this.marshaller = marshaller;
+	}
+
 	public void setHbmFiles(List<File> fileList) {
 		hbmXmlFiles = new UnmodifiableList<>( fileList );
 	}

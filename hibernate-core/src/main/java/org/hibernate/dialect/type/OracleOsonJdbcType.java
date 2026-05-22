@@ -2,13 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.dialect.type;
 
 import oracle.jdbc.OracleType;
 import oracle.jdbc.driver.DatabaseError;
 import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonFactory;
-import org.hibernate.dialect.type.OracleJsonJdbcType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.ValueBinder;

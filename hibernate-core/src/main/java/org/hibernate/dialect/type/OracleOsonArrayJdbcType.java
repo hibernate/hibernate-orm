@@ -2,13 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.dialect.type;
 
 import oracle.jdbc.OracleType;
 import oracle.jdbc.driver.DatabaseError;
 import oracle.sql.json.OracleJsonDatum;
 
-import org.hibernate.dialect.type.OracleJsonArrayJdbcType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -31,7 +30,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import static org.hibernate.dialect.OracleOsonJdbcType.OSON_JSON_FACTORY;
+import static org.hibernate.dialect.type.OracleOsonJdbcType.OSON_JSON_FACTORY;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**

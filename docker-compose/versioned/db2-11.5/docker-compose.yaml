@@ -21,7 +21,7 @@ services:
       HADR_ENABLED: "false"
     shm_size: 2g
     healthcheck:
-      test: ["CMD-SHELL", "su - orm_test -c 'source ~/sqllib/db2profile && db2 connect to orm_test && db2 connect reset'"]
+      test: ["CMD-SHELL", "su - orm_test -c 'source ~/sqllib/db2profile && db2 connect to orm_test'"]
       interval: 30s
       timeout: 10s
       retries: 20

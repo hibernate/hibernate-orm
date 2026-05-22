@@ -119,19 +119,6 @@ public interface JdbcType extends Serializable {
 		);
 	}
 
-	/**
-	 * @deprecated Due to the unchecked cast to a generic type.
-	 *             Use {@link #getRecommendedJavaType}.
-	 */
-	@Deprecated(forRemoval = true, since = "7.2")
-	@SuppressWarnings("unchecked")
-	default <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
-			Integer precision,
-			Integer scale,
-			TypeConfiguration typeConfiguration) {
-		return (JavaType<T>) getRecommendedJavaType( precision, scale, typeConfiguration );
-	}
-
 		/**
 		 * Obtain a {@linkplain JdbcLiteralFormatter formatter} object capable of rendering
 		 * values of the given {@linkplain JavaType Java type} as SQL literals of the type
@@ -199,28 +186,6 @@ public interface JdbcType extends Serializable {
 
 	/**
 	 * Wraps the write expression to be able to write values with this JdbcType's ValueBinder.
-	 * @since 6.2
-	 * @deprecated Use {@link #wrapWriteExpression(String, Size, Dialect)}
-	 */
-	@Deprecated(forRemoval = true, since = "7.2")
-	default String wrapWriteExpression(String writeExpression, Dialect dialect) {
-		final var wrapped = new StringBuilder( writeExpression.length() );
-		appendWriteExpression( writeExpression, new StringBuilderSqlAppender( wrapped ), dialect );
-		return wrapped.toString();
-	}
-
-	/**
-	 * Append the write expression wrapped in a way to be able to write values with this JdbcType's ValueBinder.
-	 * @since 6.2
-	 * @deprecated Use {@link #appendWriteExpression(String, Size, SqlAppender, Dialect)} instead
-	 */
-	@Deprecated(forRemoval = true, since = "7.2")
-	default void appendWriteExpression(String writeExpression, SqlAppender appender, Dialect dialect) {
-		appender.append( writeExpression );
-	}
-
-	/**
-	 * Wraps the write expression to be able to write values with this JdbcType's ValueBinder.
 	 * @since 7.2
 	 */
 	@Incubating
@@ -236,7 +201,7 @@ public interface JdbcType extends Serializable {
 	 */
 	@Incubating
 	default void appendWriteExpression(String writeExpression, @Nullable Size size, SqlAppender appender, Dialect dialect) {
-		appendWriteExpression( writeExpression, appender, dialect );
+		appender.appendSql( writeExpression );
 	}
 
 	/**

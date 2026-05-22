@@ -253,16 +253,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	/**
-	 * Obtain the {@link JpaCompliance} setting.
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	public JpaCompliance getJpaCompliance() {
-		return scope.getJpaCompliance();
-	}
-
-	/**
 	 * Workaround for an issue faced in {@link org.hibernate.type.EntityType#getReturnedClass()}.
 	 */
 	@Internal
@@ -830,8 +820,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 										getCurrentBaseSqlTypeIndicators() ) ) );
 	}
 
-	@Deprecated(since = "7.2", forRemoval = true) // Can be private
-	public <J> BasicType<J> standardBasicTypeForJavaType(
+	private <J> BasicType<J> standardBasicTypeForJavaType(
 			Class<J> javaClass,
 			Function<JavaType<J>, BasicType<J>> creator) {
 		if ( javaClass == null ) {
@@ -851,8 +840,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 	}
 
-	@Deprecated(since = "7.2", forRemoval = true) // Due to weird signature and unchecked cast
-	public <J> BasicType<?> standardBasicTypeForJavaType(
+	private <J> BasicType<?> standardBasicTypeForJavaType(
 			Type javaType,
 			Function<JavaType<J>, BasicType<J>> creator) {
 		if ( javaType == null ) {

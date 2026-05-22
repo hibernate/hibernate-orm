@@ -143,7 +143,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		// reset the classloader
 		final ClassLoader contextClassLoader = thread.getContextClassLoader();
 		if ( contextClassLoader instanceof URLClassLoader urlClassLoader
-		     && urlClassLoader != bundleClassLoader ) {
+			&& urlClassLoader != bundleClassLoader ) {
 			try {
 				urlClassLoader.close();
 			}

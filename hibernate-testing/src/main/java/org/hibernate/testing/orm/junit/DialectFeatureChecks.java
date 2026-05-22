@@ -9,7 +9,6 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
-import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
@@ -1988,11 +1987,6 @@ abstract public class DialectFeatureChecks {
 		@Override
 		public Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType) {
 			return null;
-		}
-
-		@Override
-		public void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation) {
-
 		}
 
 		@Override

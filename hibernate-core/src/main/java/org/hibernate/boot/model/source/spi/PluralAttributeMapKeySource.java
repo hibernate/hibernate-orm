@@ -20,9 +20,5 @@ public interface PluralAttributeMapKeySource extends PluralAttributeIndexSource 
 		ANY
 	}
 
-	/**
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
 	Nature getMapKeyNature();
 }

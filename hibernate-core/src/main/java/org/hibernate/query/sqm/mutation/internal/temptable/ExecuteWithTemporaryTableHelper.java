@@ -279,18 +279,6 @@ public final class ExecuteWithTemporaryTableHelper {
 		}
 	}
 
-	@Deprecated(forRemoval = true, since = "7.1")
-	public static void performBeforeTemporaryTableUseActions(
-			TemporaryTable temporaryTable,
-			ExecutionContext executionContext) {
-		performBeforeTemporaryTableUseActions(
-				temporaryTable,
-				executionContext.getSession().getDialect()
-						.getTemporaryTableBeforeUseAction(),
-				executionContext
-		);
-	}
-
 	public static boolean performBeforeTemporaryTableUseActions(
 			TemporaryTable temporaryTable,
 			TemporaryTableStrategy temporaryTableStrategy,

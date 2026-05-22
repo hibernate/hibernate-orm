@@ -27,6 +27,7 @@ import org.hibernate.SessionCheckMode;
 import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.hibernate.Timeouts.WAIT_FOREVER;
+import static org.hibernate.internal.find.Helper.checkTransactionNeededForLock;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 
 /// Base support for loading multiple entities (of a type) by key (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL]).
@@ -169,6 +171,11 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 				throw new IllegalArgumentException( "Null key" );
 			}
 		}
+	}
+
+	protected void checkFindRequirements(List<?> keys, SharedSessionContractImplementor session) {
+		checkKeys( keys );
+		checkTransactionNeededForLock( session, getLockMode() );
 	}
 
 	private void setCacheMode(CacheMode cacheMode) {

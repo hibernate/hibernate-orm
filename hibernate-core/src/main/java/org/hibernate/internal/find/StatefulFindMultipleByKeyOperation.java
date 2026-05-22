@@ -54,7 +54,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 			List<?> keys,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph) {
-		checkKeys( keys );
+		checkFindRequirements( keys, loadAccessContext.getSession() );
 
 		// todo (natural-id-class) : these impls are temporary
 		//		longer term, move the logic here as much of it can be shared

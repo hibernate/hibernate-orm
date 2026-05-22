@@ -241,12 +241,12 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 		return lockFollowOn;
 	}
 
-	protected boolean needsTransaction(LockMode lockMode) {
-		return lockMode != null && lockMode.greaterThan( LockMode.NONE );
-	}
-
 	protected LockOptions makeLockOptions() {
 		return Helper.makeLockOptions( getLockMode(), getLockScope(), getLockTimeout(), getLockFollowOn() );
+	}
+
+	protected void checkTransactionNeededForLock() {
+		Helper.checkTransactionNeededForLock( getEntityHandler(), getLockMode() );
 	}
 
 	protected void logIgnoringEntityNotFound(Object key) {

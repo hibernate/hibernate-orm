@@ -8,6 +8,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.TransactionRequiredException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
@@ -15,12 +16,12 @@ import org.hibernate.OrderingMode;
 import org.hibernate.Timeouts;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.CoercionException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * @author Steve Ebersole
@@ -29,35 +30,27 @@ public class Helper {
 	public static final FindOption[] NO_OPTIONS = new FindOption[0];
 
 	public static Object coerceId(EntityPersister entityPersister, Object id, SessionFactoryImplementor factory) {
+		final var identifierMapping = entityPersister.getIdentifierMapping();
 		if ( isLoadByIdComplianceEnabled( factory ) ) {
-			final var identifierMapping = entityPersister.getIdentifierMapping();
-			if ( !identifierMapping.getJavaType().isInstance( id ) ) {
+			final var javaType = identifierMapping.getJavaType();
+			if ( !javaType.isInstance( id ) ) {
 				// per expectation of EntityHandler#find / EntityHandler#get
-				throw new IllegalArgumentException( String.format( Locale.ROOT,
-						"Given value (%s) did not match expected identifier type for entity (%s) : %s",
-						id,
-						entityPersister.getEntityName(),
-						identifierMapping.getJavaType().getTypeName()
-				) );
+				throw new IllegalArgumentException(
+						"Given value '%s' did not match expected identifier type '%s' of entity '%s'"
+								.formatted( id, javaType.getTypeName(), entityPersister.getEntityName() ) );
 			}
 			return id;
 		}
 		else {
 			try {
-				final var identifierMapping = entityPersister.getIdentifierMapping();
 				return identifierMapping.isVirtual()
 						? id // special case for a class with an @IdClass
 						: identifierMapping.getJavaType().coerce( id );
 			}
 			catch ( Exception e ) {
 				throw new IllegalArgumentException(
-						String.format(
-								Locale.ROOT,
-								"Argument `%s` could not be converted to the identifier type of entity `%s` : %s",
-								id,
-								entityPersister.getEntityName(),
-								e.getMessage()
-						),
+						"Argument '%s' could not be converted to the identifier type of entity '%s': %s"
+								.formatted( id, entityPersister.getEntityName(), e.getMessage() ),
 						e
 				);
 			}
@@ -82,7 +75,11 @@ public class Helper {
 		return factory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
 	}
 
-	public static LockOptions makeLockOptions(LockMode lockMode, PessimisticLockScope lockScope, Timeout lockTimeout, Locking.FollowOn lockFollowOn) {
+	public static LockOptions makeLockOptions(
+			LockMode lockMode,
+			PessimisticLockScope lockScope,
+			Timeout lockTimeout,
+			Locking.FollowOn lockFollowOn) {
 		if ( lockMode == null || lockMode == LockMode.NONE ) {
 			return LockOptions.NONE;
 		}
@@ -97,6 +94,16 @@ public class Helper {
 		return lockOptions;
 	}
 
+	public static void checkTransactionNeededForLock(
+			SharedSessionContractImplementor session,
+			LockMode lockMode) {
+		if ( lockMode != null
+				&& lockMode.greaterThan( LockMode.NONE )
+				&& !session.isTransactionInProgress() ) {
+			throw new TransactionRequiredException( "Transaction required for lock mode " + lockMode );
+		}
+	}
+
 	public static <T> void verifyGetMultipleResults(
 			List<T> results,
 			String entityName,
@@ -104,17 +111,14 @@ public class Helper {
 			FindOption... findOptions) {
 		// how detailed we can get with the error message depends on whether
 		// results are ordered or unordered, defined by the OrderingMode option
-		final OrderingMode orderingMode = determineOrderingMode( findOptions );
+		final var orderingMode = determineOrderingMode( findOptions );
 
 		if ( orderingMode == OrderingMode.UNORDERED ) {
 			for ( int i = 0; i < results.size(); i++ ) {
 				if ( results.get( i ) == null ) {
 					throw new EntityNotFoundException(
-							String.format(
-									Locale.ROOT,
-									"One or more ids could not be found - `%s`",
-									entityName
-							)
+							"No entity of type '%s' existed for one or more of the given ids"
+									.formatted( entityName )
 					);
 				}
 			}
@@ -131,27 +135,21 @@ public class Helper {
 			}
 			if ( missingKeys != null ) {
 				throw new EntityNotFoundException(
-						String.format(
-								Locale.ROOT,
-								"No entity of type `%s` existed for keys `%s`",
-								entityName,
-								missingKeys
-						)
+						"No entity of type '%s' existed for the ids %s"
+								.formatted( entityName, missingKeys )
 				);
 			}
 		}
 	}
 
 	private static OrderingMode determineOrderingMode(FindOption[] findOptions) {
-		var mode = OrderingMode.ORDERED;
 		if ( findOptions != null ) {
-			for ( FindOption findOption : findOptions ) {
+			for ( var findOption : findOptions ) {
 				if ( findOption instanceof OrderingMode requestedMode ) {
-					mode = requestedMode;
-					break;
+					return requestedMode;
 				}
 			}
 		}
-		return mode;
+		return OrderingMode.ORDERED;
 	}
 }

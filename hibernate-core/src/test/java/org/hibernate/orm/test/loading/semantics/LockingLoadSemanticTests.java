@@ -5,16 +5,21 @@
 package org.hibernate.orm.test.loading.semantics;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityHandler;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.TransactionRequiredException;
 import org.hibernate.testing.orm.domain.library.Book;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests the semantics of the loading with locks using get/find methods.
@@ -25,6 +30,8 @@ import static org.assertj.core.api.Assertions.fail;
  * @author Steve Ebersole
  */
 public class LockingLoadSemanticTests extends Base {
+	private static final List<Integer> MULTIPLE_IDS = List.of( 1, 2 );
+
 	@Test
 	void testTransactionalLoadingStateful(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
@@ -87,6 +94,22 @@ public class LockingLoadSemanticTests extends Base {
 			}
 			catch (TransactionRequiredException expected) {}
 		} );
+	}
+
+	@Test
+	void testNonTransactionalMultipleLoadingStateful(SessionFactoryScope factoryScope) {
+		var graph = factoryScope.getSessionFactory().createEntityGraph( Book.class );
+
+		factoryScope.inSession( (session) -> assertNonTransactionalMultipleLoadingRequiresTransaction( session, graph ) );
+	}
+
+	@Test
+	void testNonTransactionalMultipleLoadingStateless(SessionFactoryScope factoryScope) {
+		var graph = factoryScope.getSessionFactory().createEntityGraph( Book.class );
+
+		factoryScope.inStatelessSession(
+				(session) -> assertNonTransactionalMultipleLoadingRequiresTransaction( session, graph )
+		);
 	}
 
 	@Test
@@ -193,5 +216,22 @@ public class LockingLoadSemanticTests extends Base {
 			}
 			catch (IllegalArgumentException expected) {}
 		} );
+	}
+
+	private static void assertTransactionRequired(Executable executable) {
+		assertThrows( TransactionRequiredException.class, executable );
+	}
+
+	private static void assertNonTransactionalMultipleLoadingRequiresTransaction(
+			EntityHandler entityHandler,
+			EntityGraph<Book> graph) {
+		assertTransactionRequired(
+				() -> entityHandler.findMultiple( Book.class, MULTIPLE_IDS, LockModeType.PESSIMISTIC_READ )
+		);
+		assertTransactionRequired(
+				() -> entityHandler.getMultiple( Book.class, MULTIPLE_IDS, LockModeType.PESSIMISTIC_READ )
+		);
+		assertTransactionRequired( () -> entityHandler.findMultiple( graph, MULTIPLE_IDS, LockModeType.PESSIMISTIC_READ ) );
+		assertTransactionRequired( () -> entityHandler.getMultiple( graph, MULTIPLE_IDS, LockModeType.PESSIMISTIC_READ ) );
 	}
 }

@@ -636,11 +636,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return delegate.guessEntityName( entity );
 	}
 
-	@Override @Deprecated
-	public Object instantiate(String entityName, Object id) throws HibernateException {
-		return delegate.instantiate( entityName, id );
-	}
-
 	@Override
 	public Object instantiate(EntityPersister persister, Object id) throws HibernateException {
 		return delegate.instantiate( persister, id );

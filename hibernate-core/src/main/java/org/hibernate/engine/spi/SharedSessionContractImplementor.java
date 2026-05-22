@@ -396,7 +396,7 @@ public interface SharedSessionContractImplementor
 	 * This method is only called when lazily initializing a proxy.
 	 * Do not return the proxy.
 	 */
-	Object immediateLoad(String entityName, Object id) throws HibernateException;
+	Object immediateLoad(String entityName, Object id);
 
 
 	/**
@@ -405,13 +405,13 @@ public interface SharedSessionContractImplementor
 	 * @param entityName optional entity name
 	 * @param object the entity instance
 	 */
-	EntityPersister getEntityPersister(@Nullable String entityName, Object object) throws HibernateException;
+	EntityPersister getEntityPersister(@Nullable String entityName, Object object);
 
 	/**
 	 * Get the entity instance associated with the given {@link EntityKey},
 	 * calling the {@link Interceptor} if necessary.
 	 */
-	Object getEntityUsingInterceptor(EntityKey key) throws HibernateException;
+	Object getEntityUsingInterceptor(EntityKey key);
 
 	/**
 	 * Return the identifier of the persistent object, or null if it is
@@ -442,25 +442,13 @@ public interface SharedSessionContractImplementor
 	 * which is not involved in an association, using only the
 	 * {@link org.hibernate.EntityNameResolver}.
 	 */
-	String guessEntityName(Object entity) throws HibernateException;
-
-	/**
-	 * Instantiate the entity class, initializing with the given identifier.
-	 *
-	 * @deprecated No longer used, replaced by {@link #instantiate(EntityPersister, Object)}
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	Object instantiate(String entityName, Object id) throws HibernateException;
+	String guessEntityName(Object entity);
 
 	/**
 	 * Instantiate the entity class of the given {@link EntityPersister},
 	 * initializing the new instance with the given identifier.
-	 * <p>
-	 * This is more efficient than {@link #instantiate(String, Object)},
-	 * but not always interchangeable, since a single persister might be
-	 * responsible for multiple types.
 	 */
-	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
+	Object instantiate(EntityPersister persister, Object id);
 
 	/**
 	 * Are entities and proxies loaded by this session read-only by default?

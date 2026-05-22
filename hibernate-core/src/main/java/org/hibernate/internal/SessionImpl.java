@@ -1502,11 +1502,6 @@ public class SessionImpl
 		fireFlush();
 	}
 
-	@Override @Deprecated
-	public Object instantiate(String entityName, Object id) {
-		return instantiate( requireEntityPersister( entityName ), id );
-	}
-
 	/**
 	 * give the interceptor an opportunity to override the default instantiation
 	 */

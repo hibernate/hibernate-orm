@@ -17,8 +17,6 @@ import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
-import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
-import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
@@ -67,15 +65,6 @@ public interface MetadataBuildingOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#WRAPPER_ARRAY_HANDLING
 	 */
 	WrapperArrayHandling getWrapperArrayHandling();
-
-	/**
-	 * @deprecated no longer called
-	 */
-	@Deprecated(since="7.0", forRemoval = true)
-	default ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
-		// for now always return the standard one
-		return ManagedTypeRepresentationResolverStandard.INSTANCE;
-	}
 
 	default CollectionSemanticsResolver getPersistentCollectionRepresentationResolver() {
 		// for now always return the standard one

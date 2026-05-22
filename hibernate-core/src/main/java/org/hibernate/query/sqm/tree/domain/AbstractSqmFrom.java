@@ -25,8 +25,10 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaFunctionJoin;
+import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
@@ -349,7 +351,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return join;
 	}
 
-	@Override
 	public <X> SqmEntityJoin<T, X> join(Class<X> targetEntityClass, SqmJoinType joinType) {
 		return join( nodeBuilder().getJpaMetamodel().entity( targetEntityClass ), joinType );
 	}
@@ -359,8 +360,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return join( targetEntityDescriptor, SqmJoinType.INNER );
 	}
 
-	@Override
-	public <X> SqmEntityJoin<T, X> join(EntityDomainType<X> targetEntityDescriptor, SqmJoinType joinType) {
+	private <X> SqmEntityJoin<T, X> join(EntityDomainType<X> targetEntityDescriptor, SqmJoinType joinType) {
 		//noinspection unchecked
 		final var root = (SqmRoot<T>) findRoot();
 		final var sqmEntityJoin = new SqmEntityJoin<>(
@@ -448,6 +448,36 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		final var subPathSource = (SqmPathSource<Y>)
 				getReferencedPathSource().getSubPathSource( attributeName );
 		return buildJoin( subPathSource, SqmJoinType.from( jt ), false );
+	}
+
+	@Override
+	public <X> JpaEntityJoin<T, X> join(Class<X> entityJavaType, org.hibernate.query.common.JoinType joinType) {
+		return join( entityJavaType, SqmJoinType.from( joinType ) );
+	}
+
+	@Override
+	public <X> JpaEntityJoin<T, X> join(EntityDomainType<X> entity, org.hibernate.query.common.JoinType joinType) {
+		return join( entity, SqmJoinType.from( joinType ) );
+	}
+
+	@Override
+	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType) {
+		return join( subquery, SqmJoinType.from( joinType ) );
+	}
+
+	@Override
+	public <X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType) {
+		return joinLateral( subquery, SqmJoinType.from( joinType) );
+	}
+
+	@Override
+	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType, boolean lateral) {
+		return join( subquery, SqmJoinType.from( joinType ), lateral );
+	}
+
+	@Override
+	public <X> JpaJoin<?, X> join(JpaCteCriteria<X> cte, org.hibernate.query.common.JoinType joinType) {
+		return join( cte, SqmJoinType.from( joinType ) );
 	}
 
 	@Override
@@ -601,7 +631,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return join( subquery, SqmJoinType.INNER, false, generateAlias() );
 	}
 
-	@Override
 	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType) {
 		return join( subquery, joinType, false, generateAlias() );
 	}
@@ -611,12 +640,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return join( subquery, SqmJoinType.INNER, true, generateAlias() );
 	}
 
-	@Override
 	public <X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, SqmJoinType joinType) {
 		return join( subquery, joinType, true, generateAlias() );
 	}
 
-	@Override
 	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral) {
 		return join( subquery, joinType, lateral, generateAlias() );
 	}
@@ -636,7 +663,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return join( cte, SqmJoinType.INNER, generateAlias() );
 	}
 
-	@Override
 	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType) {
 		return join( cte, joinType, generateAlias() );
 	}

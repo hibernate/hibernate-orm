@@ -36,19 +36,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	@Override
 	<Y> JpaEntityJoin<T, Y> join(Class<Y> entityClass, JoinType joinType);
 
-	/**
-	 * @deprecated This method is a layer-breaker, leaking the SQM type
-	 *             {@link SqmJoinType} onto an API. It will be removed.
-	 *             Use {@link #join(Class, org.hibernate.query.common.JoinType)}
-	 */
-	@Deprecated(since="7", forRemoval = true)
-	default <X> JpaEntityJoin<T, X> join(Class<X> entityJavaType, SqmJoinType joinType) {
-		return join( entityJavaType, joinType.getCorrespondingJpaJoinType() );
-	}
-
-	default <X> JpaEntityJoin<T, X> join(Class<X> entityJavaType, org.hibernate.query.common.JoinType joinType) {
-		return join( entityJavaType, SqmJoinType.from(joinType) );
-	}
+	<X> JpaEntityJoin<T, X> join(Class<X> entityJavaType, org.hibernate.query.common.JoinType joinType);
 
 	@Override
 	<Y> JpaJoin<T, Y> join(EntityType<Y> entity);
@@ -58,59 +46,19 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 
 	<X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity);
 
-	/**
-	 * @deprecated This method is a layer-breaker, leaking the SQM type
-	 *             {@link SqmJoinType} onto an API. It will be removed.
-	 *             Use {@link #join(EntityDomainType, org.hibernate.query.common.JoinType)}
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	<X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity, SqmJoinType joinType);
-
-	default <X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity, org.hibernate.query.common.JoinType joinType) {
-		return join( entity, SqmJoinType.from(joinType) );
-	}
+	<X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity, org.hibernate.query.common.JoinType joinType);
 
 	@Incubating
 	<X> JpaDerivedJoin<X> join(Subquery<X> subquery);
 
-	/**
-	 * @deprecated This method is a layer-breaker, leaking the SQM type
-	 *             {@link SqmJoinType} onto an API. It will be removed.
-	 *             Use {@link #join(Subquery, org.hibernate.query.common.JoinType)}
-	 */
-	@Incubating @Deprecated(since = "7", forRemoval = true)
-	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType);
-
-	default <X> JpaDerivedJoin<X> join(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType) {
-		return join( subquery, SqmJoinType.from(joinType) );
-	}
+	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType);
 
 	@Incubating
 	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery);
 
-	/**
-	 * @deprecated This method is a layer-breaker, leaking the SQM type
-	 *             {@link SqmJoinType} onto an API. It will be removed.
-	 *             Use {@link #joinLateral(Subquery, org.hibernate.query.common.JoinType)}
-	 */
-	@Incubating @Deprecated(since = "7", forRemoval = true)
-	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, SqmJoinType joinType);
+	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType);
 
-	default <X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType) {
-		return joinLateral( subquery, SqmJoinType.from(joinType) );
-	}
-
-	/**
-	 * @deprecated This method is a layer-breaker, leaking the SQM type
-	 *             {@link SqmJoinType} onto an API. It will be removed.
-	 *             Use {@link #join(Subquery, org.hibernate.query.common.JoinType, boolean)}
-	 */
-	@Incubating @Deprecated(since = "7", forRemoval = true)
-	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral);
-
-	default <X> JpaDerivedJoin<X> join(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType, boolean lateral) {
-		return join( subquery, SqmJoinType.from(joinType), lateral );
-	}
+	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType, boolean lateral);
 
 	/**
 	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link SqmJoinType#INNER}.
@@ -239,17 +187,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	@Incubating
 	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte);
 
-	/**
-	 * @deprecated This method is a layer-breaker, leaking the SQM type
-	 *             {@link SqmJoinType} onto an API. It will be removed.
-	 *             Use {@link #join(JpaCteCriteria, org.hibernate.query.common.JoinType)}
-	 */
-	@Incubating @Deprecated(since = "7", forRemoval = true)
-	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType);
-
-	default <X> JpaJoin<?, X> join(JpaCteCriteria<X> cte, org.hibernate.query.common.JoinType joinType) {
-		return join( cte, SqmJoinType.from(joinType) );
-	}
+	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte, org.hibernate.query.common.JoinType joinType);
 
 	@Incubating
 	<X> JpaCrossJoin<X> crossJoin(Class<X> entityJavaType);

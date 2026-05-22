@@ -145,12 +145,12 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 
 	@Override
 	public <X> SqmEntityJoin<R, X> join(Class<X> targetEntityClass) {
-		return super.join( targetEntityClass, joinType );
+		return join( targetEntityClass, joinType.getCorrespondingJpaJoinType() );
 	}
 
 	@Override
 	public <X> SqmEntityJoin<R, X> join(Class<X> targetEntityClass, SqmJoinType joinType) {
-		return super.join( targetEntityClass, joinType );
+		return join( targetEntityClass, joinType.getCorrespondingJpaJoinType() );
 	}
 
 	// No need for equals/hashCode or isCompatible/cacheHashCode, because the base implementation using NavigablePath

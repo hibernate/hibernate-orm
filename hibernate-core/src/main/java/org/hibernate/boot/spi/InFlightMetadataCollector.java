@@ -360,8 +360,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void registerUserType(Class<?> embeddableType, Class<? extends UserType<?>> userType);
 	Class<? extends UserType<?>> findRegisteredUserType(Class<?> basicType);
 
-	@Deprecated(since = "7.2", forRemoval = true) // let's not leak annotation types onto this SPI
-	void addCollectionTypeRegistration(org.hibernate.annotations.CollectionTypeRegistration registrationAnnotation);
 	void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor);
 	CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification);
 

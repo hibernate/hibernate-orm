@@ -11,7 +11,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.Imported;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -110,7 +109,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.boot.model.internal.AnnotationBinder.extractParameters;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbeddable;
 import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
 import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
@@ -507,13 +505,6 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
-
-	@Override @Deprecated(forRemoval = true)
-	public void addCollectionTypeRegistration(CollectionTypeRegistration registration) {
-		addCollectionTypeRegistration( registration.classification(),
-				new CollectionTypeRegistrationDescriptor( registration.type(),
-						extractParameters( registration.parameters() ) ) );
-	}
 
 	@Override
 	public void addCollectionTypeRegistration(

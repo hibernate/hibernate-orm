@@ -74,7 +74,7 @@ public class ManyToOneAttributeProcessing {
 		applyNotFound( jaxbManyToOne, memberDetails, xmlDocumentContext );
 		applyOnDelete( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
 		applyTarget( memberDetails, jaxbManyToOne, manyToOneAnn, xmlDocumentContext );
-		XmlAnnotationHelper.applyCascading( jaxbManyToOne.getCascade(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyCascading( jaxbManyToOne.getCascade(), manyToOneAnn, xmlDocumentContext );
 
 		return memberDetails;
 	}

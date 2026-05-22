@@ -7,6 +7,7 @@ package org.hibernate.boot.models.xml.internal;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -18,7 +19,6 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SecondaryRow;
@@ -76,7 +76,6 @@ import org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnno
 import org.hibernate.boot.models.annotations.internal.AssociationOverridesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AttributeOverrideJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AttributeOverridesJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CheckConstraintJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionClassificationXmlAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
@@ -126,6 +125,7 @@ import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
 import org.hibernate.boot.models.annotations.internal.TemporalJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
+import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
 import org.hibernate.boot.models.spi.LifecycleEventHandler;
@@ -431,14 +431,12 @@ public class XmlAnnotationHelper {
 
 	public static void applyCascading(
 			JaxbCascadeTypeImpl jaxbCascadeType,
-			MutableMemberDetails memberDetails,
+			AttributeMarker.Cascadeable cascadeable,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( jaxbCascadeType == null ) {
 			return;
 		}
 
-		// We always use Hibernate specific `org.hibernate.annotations.CascadeType`
-		// since it is a superset of `jakarta.persistence.CascadeType`
 		final List<CascadeType> cascadeTypes = new ArrayList<>( xmlDocumentContext.getEffectiveDefaults().getDefaultCascadeTypes() );
 		if ( jaxbCascadeType.getCascadeAll() != null ) {
 			cascadeTypes.add( CascadeType.ALL );
@@ -458,20 +456,9 @@ public class XmlAnnotationHelper {
 		if ( jaxbCascadeType.getCascadeDetach() != null ) {
 			cascadeTypes.add( CascadeType.DETACH );
 		}
-		if ( jaxbCascadeType.getCascadeReplicate() != null ) {
-			//noinspection deprecation
-			cascadeTypes.add( CascadeType.REPLICATE );
-		}
-		if ( jaxbCascadeType.getCascadeLock() != null ) {
-			cascadeTypes.add( CascadeType.LOCK );
-		}
 
 		if ( !cascadeTypes.isEmpty() ) {
-			final CascadeAnnotation cascadeAnn = (CascadeAnnotation) memberDetails.applyAnnotationUsage(
-					HibernateAnnotations.CASCADE,
-					xmlDocumentContext.getModelBuildingContext()
-			);
-			cascadeAnn.value( cascadeTypes.toArray(CascadeType[]::new) );
+			cascadeable.cascade( cascadeTypes.toArray(CascadeType[]::new) );
 		}
 	}
 

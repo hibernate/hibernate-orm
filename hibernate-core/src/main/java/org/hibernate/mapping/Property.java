@@ -7,7 +7,6 @@ package org.hibernate.mapping;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -38,6 +37,8 @@ import java.io.Serializable;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.StringTokenizer;
+
+import jakarta.persistence.CascadeType;
 
 import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
 import static org.hibernate.cfg.MappingSettings.WRAPPER_ARRAY_HANDLING;
@@ -238,6 +239,10 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setCascade(EnumSet<CascadeType> cascadeTypes) {
 		cascade = cascadeTypes == null ? null : renderCascadeTypeList( cascadeTypes );
+	}
+
+	public void setCascade(EnumSet<CascadeType> cascadeTypes, boolean orphanRemoval) {
+		cascade = cascadeTypes == null ? null : renderCascadeTypeList( cascadeTypes, orphanRemoval );
 	}
 
 	public void setName(String name) {

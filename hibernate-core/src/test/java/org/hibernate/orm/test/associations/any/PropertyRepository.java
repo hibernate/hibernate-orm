@@ -17,10 +17,8 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
 
-import static org.hibernate.annotations.CascadeType.ALL;
 
 //tag::associations-many-to-any-example[]
 @Entity
@@ -30,13 +28,12 @@ public class PropertyRepository {
 	@Id
 	private Long id;
 
-	@ManyToAny
+	@ManyToAny(cascade = jakarta.persistence.CascadeType.ALL)
 	@AnyDiscriminator(DiscriminatorType.STRING)
 	@Column(name = "property_type")
 	@AnyKeyJavaClass(Long.class)
 	@AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
 	@AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
-	@Cascade(ALL)
 	@JoinTable(name = "repository_properties",
 			joinColumns = @JoinColumn(name = "repository_id"),
 			inverseJoinColumns = @JoinColumn(name = "property_id")

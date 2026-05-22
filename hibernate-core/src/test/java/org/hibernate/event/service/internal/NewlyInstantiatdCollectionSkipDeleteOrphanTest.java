@@ -28,8 +28,6 @@ import jakarta.persistence.Version;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Transaction;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.DynamicUpdate;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -323,11 +321,6 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 				jakarta.persistence.CascadeType.REFRESH,
 				jakarta.persistence.CascadeType.REMOVE
 		}, orphanRemoval = true)
-		@Cascade({
-				CascadeType.REMOVE,
-				org.hibernate.annotations.CascadeType.LOCK,
-				org.hibernate.annotations.CascadeType.REPLICATE
-		})
 		protected Set<VersionedMappingUnversionedParent> getVersionedMappings() {
 			if ( versionedMappings == null ) {
 				versionedMappings = new HashSet<>();
@@ -434,11 +427,6 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 				jakarta.persistence.CascadeType.REFRESH,
 				jakarta.persistence.CascadeType.REMOVE
 		}, orphanRemoval = true)
-		@Cascade({
-				CascadeType.REMOVE,
-				org.hibernate.annotations.CascadeType.LOCK,
-				org.hibernate.annotations.CascadeType.REPLICATE
-		})
 		protected Set<VersionedMappingVersionedParent> getChildren() {
 			if ( children == null ) {
 				children = new HashSet<>();

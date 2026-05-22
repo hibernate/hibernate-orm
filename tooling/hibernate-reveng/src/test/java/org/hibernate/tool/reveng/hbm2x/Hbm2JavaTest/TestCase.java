@@ -388,9 +388,9 @@ public class TestCase {
 	@Test
 	public void testImportOfSameName() {
 		ImportContext ic = new ImportContextImpl("foobar");
-		assertEquals("CascadeType", ic.importType("jakarta.persistence.CascadeType"));
-		assertEquals("org.hibernate.annotations.CascadeType", ic.importType("org.hibernate.annotations.CascadeType"));
-		assertFalse(ic.generateImports().contains("hibernate"), "The hibernate annotation should not be imported to avoid name clashes");
+		assertEquals("AccessType", ic.importType("jakarta.persistence.AccessType"));
+		assertEquals("org.hibernate.cache.spi.access.AccessType", ic.importType("org.hibernate.cache.spi.access.AccessType"));
+		assertFalse(ic.generateImports().contains("cache.spi.access.AccessType"), "The second type should not be imported to avoid name clashes");
 	}
 
 	@Test

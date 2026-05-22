@@ -431,7 +431,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				case "merge" -> types.add(importType("jakarta.persistence.CascadeType") + ".MERGE");
 				case "delete" -> types.add(importType("jakarta.persistence.CascadeType") + ".REMOVE");
 				case "refresh" -> types.add(importType("jakarta.persistence.CascadeType") + ".REFRESH");
+				case "evict" -> types.add(importType("jakarta.persistence.CascadeType") + ".DETACH");
 				case "all" -> types.add(importType("jakarta.persistence.CascadeType") + ".ALL");
+				case "all-delete-orphan" -> types.add(importType("jakarta.persistence.CascadeType") + ".ALL");
 			}
 		}
 		return types.toArray(new String[0]);
@@ -441,7 +443,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		return AnnotationBuilder.createAnnotation(importType("jakarta.persistence.ManyToOne"))
 					.addAttribute("cascade", getCascadeTypes(property))
 					.addAttribute("fetch", getFetchType(property))
-					.getResult() + getHibernateCascadeTypeAnnotation(property);
+					.getResult();
 	}
 
 	public boolean isSharedPkBasedOneToOne(OneToOne oneToOne){
@@ -470,13 +472,15 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		AnnotationBuilder ab = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.OneToOne") )
 				.addAttribute( "cascade", getCascadeTypes(property))
 				.addAttribute( "fetch", getFetchType(property));
+		if ( hasOrphanRemoval( property ) ) {
+			ab.addAttribute( "orphanRemoval", "true" );
+		}
 
 		if ( oneToOne.getForeignKeyType().equals(ForeignKeyDirection.TO_PARENT) ){
 			ab.addQuotedAttribute("mappedBy", getOneToOneMappedBy(md, oneToOne));
 		}
 
 		StringBuilder buffer = new StringBuilder(ab.getResult());
-		buffer.append(getHibernateCascadeTypeAnnotation(property));
 
 		if ( pkIsAlsoFk && oneToOne.getForeignKeyType().equals(ForeignKeyDirection.FROM_PARENT) ){
 			AnnotationBuilder ab1 = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.PrimaryKeyJoinColumn") );
@@ -486,47 +490,15 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		return buffer.toString();
 	}
 
-	public String getHibernateCascadeTypeAnnotation(Property property) {
+	private boolean hasOrphanRemoval(Property property) {
 		StringTokenizer st =  new StringTokenizer( property.getCascade(), ", ", false );
-		String cascadeType = null;
-		StringBuilder cascade = new StringBuilder();
 		while ( st.hasMoreElements() ) {
 			String element = ( (String) st.nextElement() ).toLowerCase();
-			switch (element) {
-				case "all-delete-orphan" -> {
-					if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
-					cascade.append(cascadeType).append(".ALL").append(", ")
-							.append(cascadeType).append(".DELETE_ORPHAN").append(", ");
-				}
-				case "delete-orphan" -> {
-					if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
-					cascade.append(cascadeType).append(".DELETE_ORPHAN").append(", ");
-				}
-				case "save-update" -> {
-					if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
-					cascade.append(cascadeType).append(".MERGE").append(", ");
-				}
-				case "replicate" -> {
-					if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
-					cascade.append(cascadeType).append(".REPLICATE").append(", ");
-				}
-				case "lock" -> {
-					if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
-					cascade.append(cascadeType).append(".LOCK").append(", ");
-				}
-				case "evict" -> {
-					if (cascadeType == null) cascadeType = importType("org.hibernate.annotations.CascadeType");
-					cascade.append(cascadeType).append(".EVICT").append(", ");
-				}
+			if ( "all-delete-orphan".equals( element ) || "delete-orphan".equals( element ) ) {
+				return true;
 			}
 		}
-		if ( cascade.length() >= 2 ) {
-			String hibernateCascade = importType("org.hibernate.annotations.Cascade");
-			cascade.insert(0, "@" + hibernateCascade + "( {");
-			cascade.setLength( cascade.length() - 2 );
-			cascade.append("} )");
-		}
-		return cascade.toString();
+		return false;
 	}
 
 	public String getFetchType(Property property) {
@@ -564,6 +536,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				AnnotationBuilder ab = AnnotationBuilder.createAnnotation( importType( "jakarta.persistence.OneToMany") );
 				ab.addAttribute( "cascade", getCascadeTypes( property ) );
 				ab.addAttribute( "fetch", getFetchType (property) );
+				if ( hasOrphanRemoval( property ) ) {
+					ab.addAttribute( "orphanRemoval", "true" );
+				}
 				if ( collection.isInverse() ) {
 					mappedBy = getOneToManyMappedBy( md, collection );
 					ab.addQuotedAttribute( "mappedBy", mappedBy );
@@ -624,8 +599,6 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				}
 
 			}
-			String hibernateCascade = getHibernateCascadeTypeAnnotation( property );
-			if (!hibernateCascade.isEmpty()) annotation.append("\n    ").append(hibernateCascade);
 		}
 		return annotation.toString();
 	}

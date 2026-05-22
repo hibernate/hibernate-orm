@@ -10,8 +10,6 @@ import java.util.List;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
@@ -26,6 +24,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -58,7 +57,8 @@ public class AnyTests {
 
 		final FieldDetails associationField = entity3ClassDetails.findFieldByName( "association" );
 		assertThat( associationField ).isNotNull();
-		assertThat( associationField.getDirectAnnotationUsage( Any.class ) ).isNotNull();
+		final Any anyAnn = associationField.getDirectAnnotationUsage( Any.class );
+		assertThat( anyAnn ).isNotNull();
 
 		final AnyDiscriminator discrimAnn = associationField.getDirectAnnotationUsage( AnyDiscriminator.class );
 		assertThat( discrimAnn ).isNotNull();
@@ -80,9 +80,7 @@ public class AnyTests {
 		assertThat( keyColumn ).isNotNull();
 		assertThat( keyColumn.name() ).isEqualTo( "association_fk" );
 
-		final Cascade cascadeAnn = associationField.getDirectAnnotationUsage( Cascade.class );
-		assertThat( cascadeAnn ).isNotNull();
-		assertThat( cascadeAnn.value() ).containsExactly( CascadeType.ALL );
+		assertThat( anyAnn.cascade() ).containsExactly( CascadeType.ALL );
 	}
 
 	@Entity(name="Entity1")

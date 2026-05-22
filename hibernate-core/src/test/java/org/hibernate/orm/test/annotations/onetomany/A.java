@@ -14,8 +14,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.validation.constraints.NotNull;
 
-import org.hibernate.annotations.Cascade;
-
 /**
  * @author Peter Kotula
  */
@@ -30,7 +28,6 @@ public class A {
 	String name;
 
 	@OneToMany( cascade = CascadeType.ALL)
-	@Cascade(org.hibernate.annotations.CascadeType.ALL)
 	@OrderBy("name")
 	java.util.List<B> bs = new ArrayList<>();
 

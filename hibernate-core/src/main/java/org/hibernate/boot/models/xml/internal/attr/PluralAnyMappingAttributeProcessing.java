@@ -55,7 +55,7 @@ public class PluralAnyMappingAttributeProcessing {
 		applyDiscriminator( memberDetails, jaxbHbmManyToAny, xmlDocumentContext );
 		applyKey( memberDetails, jaxbHbmManyToAny, xmlDocumentContext );
 
-		XmlAnnotationHelper.applyCascading( jaxbHbmManyToAny.getCascade(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyCascading( jaxbHbmManyToAny.getCascade(), manyToAnyAnn, xmlDocumentContext );
 
 		applyPluralAttributeStructure( jaxbHbmManyToAny, memberDetails, xmlDocumentContext );
 		TableProcessing.transformJoinTable( jaxbHbmManyToAny.getJoinTable(), memberDetails, xmlDocumentContext );

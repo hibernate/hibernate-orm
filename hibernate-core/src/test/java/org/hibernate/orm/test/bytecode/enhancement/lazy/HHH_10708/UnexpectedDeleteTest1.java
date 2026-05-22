@@ -6,8 +6,6 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -86,8 +84,7 @@ public class UnexpectedDeleteTest1 {
 		@GeneratedValue
 		Long id;
 
-		@OneToMany( orphanRemoval = true, mappedBy = "foo", targetEntity = Bar.class )
-		@Cascade( CascadeType.ALL )
+		@OneToMany( orphanRemoval = true, mappedBy = "foo", targetEntity = Bar.class, cascade = jakarta.persistence.CascadeType.ALL )
 		Set<Bar> bars = new HashSet<>();
 	}
 }

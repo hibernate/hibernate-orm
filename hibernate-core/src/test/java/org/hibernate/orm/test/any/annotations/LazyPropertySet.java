@@ -9,8 +9,6 @@ import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorType;
@@ -59,13 +57,12 @@ public class LazyPropertySet {
 		this.name = name;
 	}
 
-	@Any( fetch = FetchType.LAZY )
+	@Any( fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL )
 	@Column( name = "property_type" )
 	@AnyDiscriminator( DiscriminatorType.STRING )
 	@AnyKeyJavaClass( Integer.class )
 	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class)
 	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class)
-	@Cascade( value = { CascadeType.ALL } )
 	@JoinColumn( name = "property_id" )
 	public Property getSomeProperty() {
 		return someProperty;
@@ -76,13 +73,13 @@ public class LazyPropertySet {
 	}
 
 	@ManyToAny(
-			fetch = FetchType.LAZY )
+			fetch = FetchType.LAZY,
+			cascade = jakarta.persistence.CascadeType.ALL )
 	@Column( name = "property_type" )
 	@AnyDiscriminator( DiscriminatorType.STRING )
 	@AnyKeyJavaClass( Integer.class )
 	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
 	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
-	@Cascade( { org.hibernate.annotations.CascadeType.ALL } )
 	@JoinTable( name = "lazy_obj_properties", joinColumns = @JoinColumn( name = "obj_id" ),
 			inverseJoinColumns = @JoinColumn( name = "property_id" ) )
 	public List<Property> getGeneralProperties() {

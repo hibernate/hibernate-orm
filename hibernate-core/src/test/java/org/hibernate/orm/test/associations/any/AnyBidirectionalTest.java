@@ -8,8 +8,6 @@ import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -170,14 +168,13 @@ public class AnyBidirectionalTest {
 		@Id
 		private Long id;
 
-		@Any
+		@Any(cascade = jakarta.persistence.CascadeType.ALL)
 		@AnyKeyJavaClass( Long.class )
 		@AnyDiscriminator( DiscriminatorType.STRING )
 		@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
 		@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
 		@Column( name = "property_type" )
 		@JoinColumn( name = "property_id" )
-		@Cascade( CascadeType.ALL )
 		private Property property;
 
 		public PropertyHolder() {

@@ -9,7 +9,6 @@ import java.util.Map;
 
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
 
 import jakarta.persistence.Column;
@@ -55,12 +54,11 @@ public class PropertyMap {
 		this.name = name;
 	}
 
-	@ManyToAny
+	@ManyToAny(cascade = jakarta.persistence.CascadeType.ALL)
 	@Column( name = "property_type" )
 	@AnyKeyJavaClass( Integer.class )
 	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
 	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
-	@Cascade( org.hibernate.annotations.CascadeType.ALL )
 	@JoinTable(
 			name = "map_properties",
 			joinColumns = @JoinColumn( name = "map_id" ),

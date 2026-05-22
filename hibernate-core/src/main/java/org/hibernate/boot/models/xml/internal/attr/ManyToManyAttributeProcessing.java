@@ -51,7 +51,7 @@ public class ManyToManyAttributeProcessing {
 
 		applyTarget( jaxbManyToMany, xmlDocumentContext, memberDetails );
 
-		XmlAnnotationHelper.applyCascading( jaxbManyToMany.getCascade(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyCascading( jaxbManyToMany.getCascade(), manyToManyAnn, xmlDocumentContext );
 
 		applyAccess( accessType, memberDetails, xmlDocumentContext );
 		applyAttributeAccessor( jaxbManyToMany, memberDetails, xmlDocumentContext );

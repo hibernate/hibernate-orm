@@ -97,8 +97,8 @@ public class CascadingActions {
 	/**
 	 * @see org.hibernate.Session#lock(Object, LockMode)
 	 *
-	 * @deprecated because {@link org.hibernate.annotations.CascadeType#LOCK}
-	 *             is deprecated
+	 * @deprecated because {@code org.hibernate.annotations.CascadeType#LOCK}
+	 *             was removed
 	 */
 	@Deprecated(since="7", forRemoval = true)
 	public static final CascadingAction<LockOptions> LOCK = new BaseCascadingAction<>() {

@@ -6,7 +6,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -146,7 +145,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
+import jakarta.persistence.CascadeType;
+
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
 import static org.hibernate.boot.model.internal.GeneratorBinder.makeIdGenerator;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.model.source.internal.hbm.Helper.reflectedPropertyClass;
@@ -2230,23 +2232,7 @@ public class ModelBinder {
 	}
 
 	private String toCascadeString(EnumSet<CascadeType> defaultCascadeTypes) {
-		if ( isEmpty( defaultCascadeTypes ) ) {
-			return "none";
-		}
-		else {
-			boolean firstPass = true;
-			final var buffer = new StringBuilder();
-			for ( var cascadeType : defaultCascadeTypes ) {
-				if ( firstPass ) {
-					firstPass = false;
-				}
-				else {
-					buffer.append( ", " );
-				}
-				buffer.append( cascadeType.name().toLowerCase( Locale.ROOT ) );
-			}
-			return buffer.toString();
-		}
+		return isEmpty( defaultCascadeTypes ) ? "none" : renderCascadeTypeList( defaultCascadeTypes );
 	}
 
 	private static void handleGenerationTiming(

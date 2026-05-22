@@ -563,8 +563,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void load(Object object, Object id);
 
 	/// Persist the state of the given detached instance, reusing the current
-	/// identifier value.  This operation cascades to associated instances if
-	/// the association is mapped with [org.hibernate.annotations.CascadeType#REPLICATE].
+	/// identifier value.
 	///
 	/// @param object a detached instance of a persistent class
 	/// @param replicationMode the replication mode to use
@@ -574,8 +573,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void replicate(Object object, ReplicationMode replicationMode);
 
 	/// Persist the state of the given detached instance, reusing the current
-	/// identifier value.  This operation cascades to associated instances if
-	/// the association is mapped with [org.hibernate.annotations.CascadeType#REPLICATE].
+	/// identifier value.
 	///
 	/// @param entityName the entity name
 	/// @param object a detached instance of a persistent class
@@ -673,9 +671,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// If the requested lock mode is already held on the given entity, this
 	/// operation has no effect.
 	///
-	/// This operation cascades to associated instances if the association is
-	/// mapped with [org.hibernate.annotations.CascadeType#LOCK].
-	///
 	/// The modes [LockMode#WRITE] and [LockMode#UPGRADE_SKIPLOCKED]
 	/// are not legal arguments to `lock()`.
 	///
@@ -702,9 +697,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// If the requested lock mode is already held on the given entity, this
 	/// operation has no effect.
-	///
-	/// This operation cascades to associated instances if the association is
-	/// mapped with [org.hibernate.annotations.CascadeType#LOCK].
 	///
 	/// The modes [LockMode#WRITE] and [LockMode#UPGRADE_SKIPLOCKED]
 	/// are not legal arguments to `lock()`.
@@ -852,9 +844,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/// Obtain a lock on the given managed instance associated with this session,
 	/// using the given [lock options][LockOptions].
-	///
-	/// This operation cascades to associated instances if the association is
-	/// mapped with [org.hibernate.annotations.CascadeType#LOCK].
 	///
 	/// @param object a persistent instance associated with this session
 	/// @param lockOptions the lock options

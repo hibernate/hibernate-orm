@@ -10,8 +10,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -21,6 +19,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -74,8 +73,7 @@ public class OneToManyMappedByCascadeDeleteTest {
 
 		@Id
 		private Integer id;
-		@OneToMany(targetEntity = Child.class, mappedBy = "parent", fetch = FetchType.LAZY)
-		@Cascade(CascadeType.REMOVE)
+		@OneToMany(targetEntity = Child.class, mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
 		private List<Child> children = new ArrayList<>();
 
 		public Integer getId() {

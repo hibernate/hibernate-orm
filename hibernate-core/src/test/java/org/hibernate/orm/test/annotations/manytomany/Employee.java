@@ -16,7 +16,6 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToMany;
 
-import org.hibernate.annotations.Cascade;
 
 /**
  * Employee in an Employer-Employee relationship
@@ -76,8 +75,6 @@ public class Employee implements Serializable {
 			cascade = {CascadeType.PERSIST, CascadeType.MERGE},
 			mappedBy = "employees"
 	)
-	@Cascade({org.hibernate.annotations.CascadeType.MERGE,
-			org.hibernate.annotations.CascadeType.PERSIST})
 	public Collection<Employer> getEmployers() {
 		return employers;
 	}

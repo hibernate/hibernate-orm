@@ -9,8 +9,6 @@ import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -155,7 +153,7 @@ public class AnyOnExistingColumnsTest {
 		@Column( name = "property_type" )
 		private String propertyType;
 
-		@Any
+		@Any(cascade = jakarta.persistence.CascadeType.ALL)
 		@AnyKeyJavaClass( Long.class )
 		@AnyDiscriminator( DiscriminatorType.STRING )
 		@AnyDiscriminatorValues( {
@@ -164,7 +162,6 @@ public class AnyOnExistingColumnsTest {
 		} )
 		@Column( name = "property_type", updatable = false, insertable = false )
 		@JoinColumn( name = "id", updatable = false, insertable = false )
-		@Cascade( CascadeType.ALL )
 		private Property property;
 
 		public PropertyHolder() {

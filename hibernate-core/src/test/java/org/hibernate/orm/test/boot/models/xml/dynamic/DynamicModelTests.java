@@ -7,8 +7,6 @@ package org.hibernate.orm.test.boot.models.xml.dynamic;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -31,6 +29,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CheckConstraint;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.ElementCollection;
@@ -173,7 +172,7 @@ public class DynamicModelTests {
 		assertThat( checkConstraints ).hasSize( 1 );
 		assertThat( checkConstraints[0].name() ).isEqualTo( "employee_id_nn" );
 		assertThat( checkConstraints[0].constraint() ).isEqualTo( "employee_id is not null" );
-		assertThat( oneToMany.getDirectAnnotationUsage( Cascade.class ).value() )
-				.contains( CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.LOCK );
+		assertThat( oneToManyAnn.cascade() )
+				.contains( CascadeType.PERSIST, CascadeType.REMOVE );
 	}
 }

@@ -16,12 +16,7 @@ public class EntityC extends AbstractEntity {
 	@jakarta.persistence.OneToMany(mappedBy = "c")
 	private Set<EntityB> bCollection = new java.util.HashSet<EntityB>();
 
-	@jakarta.persistence.OneToMany(mappedBy = "c")
-	@org.hibernate.annotations.Cascade({
-			org.hibernate.annotations.CascadeType.PERSIST,
-			org.hibernate.annotations.CascadeType.MERGE,
-			org.hibernate.annotations.CascadeType.REFRESH
-	})
+	@jakarta.persistence.OneToMany(mappedBy = "c", cascade = {jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.REFRESH})
 
 	private Set<EntityD> dCollection = new java.util.HashSet<EntityD>();
 

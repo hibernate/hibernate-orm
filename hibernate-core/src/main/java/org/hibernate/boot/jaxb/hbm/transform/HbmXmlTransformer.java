@@ -3266,17 +3266,8 @@ public class HbmXmlTransformer {
 				if (hbmCascade.contains( "refresh" ) ) {
 					cascadeType.setCascadeRefresh( new JaxbEmptyTypeImpl() );
 				}
-				if (hbmCascade.contains( "save-update" ) ) {
-					cascadeType.setCascadeMerge( new JaxbEmptyTypeImpl() );
-				}
 				if (hbmCascade.contains( "evict" ) || hbmCascade.contains( "detach" ) ) {
 					cascadeType.setCascadeDetach( new JaxbEmptyTypeImpl() );
-				}
-				if (hbmCascade.contains( "replicate" ) ) {
-					cascadeType.setCascadeReplicate( new JaxbEmptyTypeImpl() );
-				}
-				if (hbmCascade.contains( "lock" ) ) {
-					cascadeType.setCascadeLock( new JaxbEmptyTypeImpl() );
 				}
 				if (hbmCascade.contains( "delete" ) ) {
 					cascadeType.setCascadeRemove( new JaxbEmptyTypeImpl() );

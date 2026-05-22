@@ -17,6 +17,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
+import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
@@ -32,7 +33,6 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
@@ -166,8 +166,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder() {
-		return delegate.getBaselineSessionEventsListenerBuilder();
+	public SessionEventListener[] buildSessionEventListeners() {
+		return delegate.buildSessionEventListeners();
 	}
 
 	@Override

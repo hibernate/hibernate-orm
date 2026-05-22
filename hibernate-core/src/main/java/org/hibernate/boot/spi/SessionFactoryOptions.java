@@ -37,7 +37,6 @@ import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.QueryEngineOptions;
@@ -190,23 +189,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	SessionFactoryObserver[] getSessionFactoryObservers();
 
 	/**
-	 * @deprecated This operation is a layer-breaker, exposing an
-	 *             internal type. It will be removed. Use
-	 *             {@link #buildSessionEventListeners()} instead.
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder();
-
-	/**
 	 * Build an array of baseline {@link SessionEventListener}s.
 	 *
 	 * @since 7.0
 	 *
 	 * @see org.hibernate.SessionBuilder#eventListeners(SessionEventListener...)
 	 */
-	default SessionEventListener[] buildSessionEventListeners() {
-		return getBaselineSessionEventsListenerBuilder().buildBaseline();
-	}
+	SessionEventListener[] buildSessionEventListeners();
 
 	/**
 	 * Should generated identifiers be reset after entity removal?

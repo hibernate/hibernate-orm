@@ -65,7 +65,8 @@ weld = "6.0.4.Final"
 wildFlyTxnClient = "3.0.5.Final"
 jfrUnit = "1.0.0.Alpha2"
 hibernateValidator = "9.1.0.Final"
-jaxen = "1.1"
+jaxen = "2.0.3"
+xerces = "2.12.2"
 dom4j = "2.2.0"
 javaxMoney = "1.1"
 moneta = "1.4.5"
@@ -205,6 +206,7 @@ test-wildFlyTxnClient = { group = "org.wildfly.transaction", name = "wildfly-tra
 test-weld = { group = "org.jboss.weld.se", name = "weld-se-shaded", version.ref = "weld" }
 test-jfrUnit = { group = "org.moditect.jfrunit", name = "jfrunit-core", version.ref = "jfrUnit" }
 test-jaxen = { group = "jaxen", name = "jaxen", version.ref = "jaxen" }
+test-xerces = { group = "xerces", name = "xercesImpl", version.ref = "xerces" }
 test-dom4j = { group = "org.dom4j", name = "dom4j", version.ref = "dom4j" }
 test-javaxMoney = { group = "javax.money", name = "money-api", version.ref = "javaxMoney" }
 test-moneta = { group = "org.javamoney.moneta", name = "moneta-core", version.ref = "moneta" }

@@ -122,6 +122,54 @@ Another impact is that `@NamedQuery` and `@NamedNativeQuery` (as well as Hiberna
 * `@NamedNativeStatement` - A `MutationQuery` defined using native SQL
 
 
+[[transform-removal]]
+=== Removal of `org.hibernate.transform` package
+
+The entire `org.hibernate.transform` package, which was deprecated since 6.0,
+has been deleted. This includes `Transformers`, `AliasToBeanResultTransformer`,
+`AliasToBeanConstructorResultTransformer`, `AliasToEntityMapResultTransformer`,
+and `ToListResultTransformer`.
+
+Use `org.hibernate.query.TupleTransformer` (a `@FunctionalInterface`) as a direct replacement.
+Since it is a functional interface, lambdas can be used inline:
+
+[source,java]
+----
+// Before (removed):
+query.setTupleTransformer( Transformers.mapTransformer() );
+
+// After:
+query.setTupleTransformer( (tuple, aliases) -> {
+    Map<String, Object> map = new HashMap<>( tuple.length );
+    for ( int i = 0; i < tuple.length; i++ ) {
+        if ( aliases[i] != null ) {
+            map.put( aliases[i], tuple[i] );
+        }
+    }
+    return map;
+} );
+----
+
+For bean-based result transformation (formerly `Transformers.beanTransformer()`),
+use HQL/JPQL dynamic instantiation (`select new MyDto(...)`) or a
+`@jakarta.persistence.ConstructorResult` mapping instead.
+A `TupleTransformer` lambda also works well for simple DTO projections:
+
+[source,java]
+----
+// Before (removed):
+query.setTupleTransformer( Transformers.beanTransformer( MyDto.class ) );
+
+// After:
+query.setTupleTransformer( (tuple, aliases) -> {
+    MyDto dto = new MyDto();
+    dto.setId( (Integer) tuple[0] );
+    dto.setName( (String) tuple[1] );
+    return dto;
+} );
+----
+
+
 [[timeout]]
 === Query and Transaction Timeouts
 

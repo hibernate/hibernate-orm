@@ -56,7 +56,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.transform.Transformers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -3514,7 +3513,7 @@ public class ASTParserLoadingTest {
 				session -> {
 					List list = session.createQuery(
 									"select new Animal(an.description, an.bodyWeight) as animal from Animal an order by an.description", Animal.class )
-							.setTupleTransformer( Transformers.mapTransformer() )
+							.setTupleTransformer( ASTParserLoadingTest::mapTransformer )
 							.list();
 					assertThat( list.size() ).isEqualTo( 2 );
 					Map<String, Animal> m1 = (Map<String, Animal>) list.get( 0 );
@@ -3537,7 +3536,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery( query, Object[].class )
-							.setTupleTransformer( Transformers.beanTransformer( Animal.class ) ).list();
+							.setTupleTransformer( ASTParserLoadingTest::animalTransformer ).list();
 
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).as( "Incorrect return type" ).isInstanceOf( Animal.class );
@@ -3552,7 +3551,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults sr = session.createQuery( query, Object[].class )
-							.setTupleTransformer( Transformers.beanTransformer( Animal.class ) ).scroll()) {
+							.setTupleTransformer( ASTParserLoadingTest::animalTransformer ).scroll()) {
 						assertThat( sr.next() ).as( "Incorrect result size" ).isTrue();
 						assertThat( sr.get() ).as( "Incorrect return type" ).isInstanceOf( Animal.class );
 						assertThat( session.contains( sr.get() ) ).isFalse();
@@ -3586,7 +3585,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery( query, Animal.class )
-							.setTupleTransformer( Transformers.mapTransformer() ).list();
+							.setTupleTransformer( ASTParserLoadingTest::mapTransformer ).list();
 					assertThat( results.size() ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).isInstanceOf( Map.class );
 					Map map = ((Map) results.get( 0 ));
@@ -3605,7 +3604,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults sr = session.createQuery( query, Animal.class )
-							.setTupleTransformer( Transformers.mapTransformer() ).scroll()) {
+							.setTupleTransformer( ASTParserLoadingTest::mapTransformer ).scroll()) {
 						assertThat( sr.next() ).as( "Incorrect result size" ).isTrue();
 						assertThat( sr.get() ).isInstanceOf( Map.class );
 					}
@@ -3741,6 +3740,23 @@ public class ASTParserLoadingTest {
 		public void prepare(Query query) {
 		}
 	};
+
+	private static Animal animalTransformer(Object[] tuple, String[] aliases) {
+		Animal a = new Animal();
+		a.setDescription( (String) tuple[0] );
+		a.setBodyWeight( (float) tuple[1] );
+		return a;
+	}
+
+	private static Map<String, Object> mapTransformer(Object[] tuple, String[] aliases) {
+		Map<String, Object> map = new HashMap<>( tuple.length );
+		for ( int i = 0; i < tuple.length; i++ ) {
+			if ( aliases[i] != null ) {
+				map.put( aliases[i], tuple[i] );
+			}
+		}
+		return map;
+	}
 
 	private class SyntaxChecker {
 		private final String hql;

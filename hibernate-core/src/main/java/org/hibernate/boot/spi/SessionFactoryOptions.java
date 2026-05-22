@@ -30,7 +30,6 @@ import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCache;
@@ -406,14 +405,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.CacheSettings#AUTO_EVICT_COLLECTION_CACHE
 	 */
 	boolean isAutoEvictCollectionCache();
-
-	/**
-	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO
-	 *
-	 * @deprecated This is unused and will be removed.
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	SchemaAutoTooling getSchemaAutoTooling();
 
 	/**
 	 * The default JDBC statement batch size for new sessions.

@@ -22,8 +22,7 @@
  *                 // supply a configuration
  *                 .configure("org/hibernate/example/hibernate.cfg.xml")
  *                 // set a configuration property
- *                 .applySetting(AvailableSettings.HBM2DDL_AUTO,
- *                               SchemaAutoTooling.CREATE_DROP.externalForm())
+ *                 .applySetting(AvailableSettings.HBM2DDL_AUTO, "create-drop")
  *                 .build();
  * MetadataBuilder metadataBuilder =
  *         new MetadataSources(standardRegistry)

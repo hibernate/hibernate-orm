@@ -9,6 +9,7 @@ import org.hibernate.cache.internal.NaturalIdCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.junit.jupiter.api.Test;
@@ -34,12 +35,14 @@ public class NaturalIdCacheKeyTest {
 		final SessionImplementor sessionImplementor = mock( SessionImplementor.class );
 
 		final RuntimeMetamodelsImplementor runtimeMetamodels = mock( RuntimeMetamodelsImplementor.class );
+		final MappingMetamodelImplementor mappingMetamodel = mock( MappingMetamodelImplementor.class );
 		final EntityPersister entityPersister = mock( EntityPersister.class );
 		final NaturalIdMapping naturalIdMapping = mock( NaturalIdMapping.class );
 
 		when( sessionImplementor.getFactory() ).thenReturn( sessionFactoryImplementor );
 		when( sessionFactoryImplementor.getRuntimeMetamodels()).thenReturn( runtimeMetamodels );
-		when( runtimeMetamodels.getEntityMappingType( anyString() ) ).thenReturn( entityPersister );
+		when( runtimeMetamodels.getMappingMetamodel() ).thenReturn( mappingMetamodel );
+		when( mappingMetamodel.getEntityDescriptor( anyString() ) ).thenReturn( entityPersister );
 		when( entityPersister.getRootEntityName() ).thenReturn( "EntityName" );
 		when( entityPersister.getNaturalIdMapping() ).thenReturn( naturalIdMapping );
 		when( naturalIdMapping.disassemble( any(), eq( sessionImplementor ) ) ).thenAnswer( invocation -> invocation.getArguments()[0] );

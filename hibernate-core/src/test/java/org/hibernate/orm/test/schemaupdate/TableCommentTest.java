@@ -103,7 +103,8 @@ public class TableCommentTest {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final EntityMappingType entityMappingType = sessionFactory
 				.getRuntimeMetamodels()
-				.getEntityMappingType( TableWithComment.class );
+				.getMappingMetamodel()
+				.getEntityDescriptor( TableWithComment.class );
 
 		return ( (AbstractEntityPersister) entityMappingType ).getTableName();
 	}

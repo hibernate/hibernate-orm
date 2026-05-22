@@ -60,7 +60,7 @@ public class EmbeddableDefaultAccessTests {
 	@Test
 	public void verifyRuntimeModel(SessionFactoryScope scope) {
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
-		final EntityMappingType personDescriptor = runtimeMetamodels.getEntityMappingType( Person2.class );
+		final EntityMappingType personDescriptor = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( Person2.class );
 
 		// Person defines FIELD access, while Name uses PROPERTY
 		//		- if we find the property annotations, the attribute names will be

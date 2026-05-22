@@ -50,8 +50,8 @@ public class AttributeOrderingTests {
 		// Also check the mapping model *and* the persister model - these need to be in-sync as far as ordering
 
 		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
-		verifyRuntimeEntityMapping( runtimeMetamodels.getEntityMappingType( TheEntity.class ) );
-		verifyRuntimeEntityMapping( runtimeMetamodels.getEntityMappingType( "TheEntityHbm" ) );
+		verifyRuntimeEntityMapping( runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( TheEntity.class ) );
+		verifyRuntimeEntityMapping( runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( "TheEntityHbm" ) );
 
 	}
 

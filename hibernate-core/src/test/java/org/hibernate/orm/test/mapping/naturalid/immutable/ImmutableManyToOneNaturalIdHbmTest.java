@@ -67,7 +67,7 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 	public void checkingMapping(SessionFactoryScope scope) {
 
 		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
-		final EntityMappingType childMapping = runtimeMetamodels.getEntityMappingType( Child.class.getName() );
+		final EntityMappingType childMapping = runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( Child.class.getName() );
 
 		final EntityPersister persister = childMapping.getEntityPersister();
 		final int nameIndex = persister.getPropertyIndex( "name" );

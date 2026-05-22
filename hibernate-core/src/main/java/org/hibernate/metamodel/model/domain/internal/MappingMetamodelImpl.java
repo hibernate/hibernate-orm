@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -13,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.EntityNameResolver;
@@ -342,11 +340,6 @@ public class MappingMetamodelImpl
 		}
 	}
 
-	@Override @Deprecated(forRemoval=true) @SuppressWarnings( "removal" )
-	public Stream<EntityPersister> streamEntityDescriptors() {
-		return Arrays.stream( entityPersisterMap.values() );
-	}
-
 	@Override
 	public EntityPersister getEntityDescriptor(String entityName) {
 		final var entityPersister = entityPersisterMap.get( entityName );
@@ -388,11 +381,6 @@ public class MappingMetamodelImpl
 	@Override
 	public EntityPersister getEntityDescriptor(Class<?> entityJavaType) {
 		return getEntityPersister( entityJavaType );
-	}
-
-	@Override @Deprecated(forRemoval = true) @SuppressWarnings( "removal" )
-	public EntityPersister locateEntityDescriptor(Class<?> byClass) {
-		return getEntityPersister( byClass );
 	}
 
 	private EntityPersister getEntityPersister(Class<?> byClass) {
@@ -540,11 +528,6 @@ public class MappingMetamodelImpl
 	@Override
 	public void forEachCollectionDescriptor(Consumer<CollectionPersister> action) {
 		collectionPersisterMap.values().forEach( action );
-	}
-
-	@Override @Deprecated(forRemoval=true) @SuppressWarnings( "removal" )
-	public Stream<CollectionPersister> streamCollectionDescriptors() {
-		return collectionPersisterMap.values().stream();
 	}
 
 	@Override

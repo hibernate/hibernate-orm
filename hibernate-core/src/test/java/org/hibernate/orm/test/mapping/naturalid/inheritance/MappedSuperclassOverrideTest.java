@@ -26,7 +26,8 @@ public class MappedSuperclassOverrideTest {
 	public void testModel(SessionFactoryScope scope) {
 		final EntityPersister entityPersister = scope.getSessionFactory()
 				.getRuntimeMetamodels()
-				.getEntityMappingType( MyEntity.class )
+				.getMappingMetamodel()
+				.getEntityDescriptor( MyEntity.class )
 				.getEntityPersister();
 
 		// defining a natural-id on a sub-entity is not allowed, only on the root.

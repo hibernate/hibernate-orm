@@ -45,7 +45,10 @@ public class NullableNaturalIdTest {
 		// NOTE: for each entity we check against both the runtime mapping API and the legacy persister API
 
 		{
-			final EntityMappingType entityMappingType = scope.getSessionFactory().getRuntimeMetamodels().getEntityMappingType( A.class );
+			final EntityMappingType entityMappingType = scope.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( A.class );
 			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
 			final EntityPersister persister = entityMappingType.getEntityPersister();
 
@@ -63,7 +66,10 @@ public class NullableNaturalIdTest {
 		}
 
 		{
-			final EntityMappingType entityMappingType = scope.getSessionFactory().getRuntimeMetamodels().getEntityMappingType( B.class );
+			final EntityMappingType entityMappingType = scope.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( B.class );
 			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
 			final EntityPersister persister = entityMappingType.getEntityPersister();
 
@@ -83,7 +89,10 @@ public class NullableNaturalIdTest {
 		}
 
 		{
-			final EntityMappingType entityMappingType = scope.getSessionFactory().getRuntimeMetamodels().getEntityMappingType( C.class );
+			final EntityMappingType entityMappingType = scope.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( C.class );
 			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
 			final EntityPersister persister = entityMappingType.getEntityPersister();
 
@@ -96,7 +105,10 @@ public class NullableNaturalIdTest {
 		}
 
 		{
-			final EntityMappingType entityMappingType = scope.getSessionFactory().getRuntimeMetamodels().getEntityMappingType( D.class );
+			final EntityMappingType entityMappingType = scope.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( D.class );
 			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
 			final EntityPersister persister = entityMappingType.getEntityPersister();
 
@@ -118,7 +130,10 @@ public class NullableNaturalIdTest {
 		{
 			// User is mapped using hbm.xml; properties are explicitly mapped to be nullable
 
-			final EntityMappingType entityMappingType = scope.getSessionFactory().getRuntimeMetamodels().getEntityMappingType( User.class );
+			final EntityMappingType entityMappingType = scope.getSessionFactory()
+					.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( User.class );
 			final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
 			final EntityPersister persister = entityMappingType.getEntityPersister();
 

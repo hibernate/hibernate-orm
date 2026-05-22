@@ -106,4 +106,22 @@ public final class DialectContext {
 		}
 		return dialect;
 	}
+
+	public static void awaitTimestampTick() {
+		final Dialect dialect = getDialect();
+		final long sleepMillis = switch ( dialect.getDefaultTimestampPrecision() ) {
+			case 0 -> 1_000;
+			case 1 -> 100;
+			case 2 -> 10;
+			// Instead of waiting 1 millisecond, let's wait 3 to not run into issues with e.g. Sybase,
+			// which has a resolution of 1/300th of a second for timestamps
+			default -> 3;
+		};
+		try {
+			Thread.sleep( sleepMillis );
+		}
+		catch (InterruptedException e) {
+			// Ignore
+		}
+	}
 }

@@ -7,6 +7,7 @@ package org.hibernate.internal;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityAgent;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.LockModeType;
@@ -62,6 +63,7 @@ import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpsertEvent;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -386,6 +388,11 @@ public class StatelessSessionImpl
 					persister.getInsertCoordinator().insert( entity, id, state, this );
 					success = true;
 				}
+				catch (ConstraintViolationException cve) {
+					throw cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
+							? new EntityExistsException( cve )
+							: cve;
+				}
 				finally {
 					eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );
 				}
@@ -434,6 +441,11 @@ public class StatelessSessionImpl
 				try {
 					persister.getInsertCoordinator().insert( entity, id, state, this );
 					success = true;
+				}
+				catch (ConstraintViolationException cve) {
+					throw cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
+							? new EntityExistsException( cve )
+							: cve;
 				}
 				finally {
 					eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );

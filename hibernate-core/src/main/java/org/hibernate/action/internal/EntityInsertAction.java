@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.persistence.EntityExistsException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -18,6 +19,8 @@ import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
@@ -107,6 +110,11 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			try {
 				generatedValues = persister.getInsertCoordinator().insert( instance, id, getState(), session );
 				success = true;
+			}
+			catch (ConstraintViolationException cve) {
+				throw cve.getKind() == ConstraintKind.UNIQUE
+						? new EntityExistsException( cve )
+						: cve;
 			}
 			finally {
 				eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, session );

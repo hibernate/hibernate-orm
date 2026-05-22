@@ -8,7 +8,6 @@ import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventActionWithParameter;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
-import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.build.AllowReflection;
 
@@ -340,7 +339,6 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 		// we did not find any match, add it
 		checkAgainstBaseInterface( listener );
-		performInjections( listener );
 		additionHandler.accept( listener );
 	}
 
@@ -352,13 +350,6 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 
 	private void prepareListener(T listener) {
 		checkAgainstBaseInterface( listener );
-		performInjections( listener );
-	}
-
-	private void performInjections(T listener) {
-		if ( listener instanceof JpaBootstrapSensitive sensitive ) {
-			sensitive.wasJpaBootstrap( isJpaBootstrap );
-		}
 	}
 
 	private void checkAgainstBaseInterface(T listener) {

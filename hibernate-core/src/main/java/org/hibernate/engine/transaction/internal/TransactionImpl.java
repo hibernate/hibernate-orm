@@ -7,9 +7,9 @@ package org.hibernate.engine.transaction.internal;
 import jakarta.transaction.Synchronization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
@@ -20,7 +20,7 @@ import static org.hibernate.resource.transaction.spi.TransactionCoordinator.Tran
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-public class TransactionImpl implements TransactionImplementor {
+public class TransactionImpl implements Transaction {
 
 	private final TransactionCoordinator transactionCoordinator;
 	private final boolean jpaCompliance;

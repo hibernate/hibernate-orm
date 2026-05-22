@@ -20,6 +20,7 @@ import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -85,6 +86,25 @@ public class HbmTransformationJaxbTests {
 
 			assertThat( manyToMany.getMapKeyType() ).isNotNull();
 			assertThat( manyToMany.getMapKeyType().getValue() ).isEqualTo( "Integer" );
+		} );
+	}
+
+	@Test
+	public void testNativeIdGeneratorTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/basic/nativeId.hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			assertThat( entity.getAttributes().getIdAttributes() ).hasSize( 1 );
+			final JaxbIdImpl id = entity.getAttributes().getIdAttributes().get( 0 );
+
+			assertThat( id.getName() ).isEqualTo( "id" );
+			assertThat( id.getGeneratedValue() ).isNotNull();
+			assertThat( id.getGenericGenerator() ).isNotNull();
+			assertThat( id.getGenericGenerator().getClazz() ).isEqualTo( "native" );
+			assertThat( id.getGenericGenerator().getName() ).isNotNull();
+			assertThat( id.getGenericGenerator().getName() )
+					.isEqualTo( id.getGeneratedValue().getGenerator() );
 		} );
 	}
 

@@ -17,7 +17,6 @@ import org.hibernate.boot.jaxb.internal.JarFileEntryXmlSource;
 import org.hibernate.boot.jaxb.internal.UrlXmlSource;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -42,7 +41,6 @@ import static java.util.Collections.addAll;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
  * Entry point for working with sources of O/R mapping metadata, either
@@ -123,29 +121,6 @@ public class MetadataSources implements Serializable {
 			xmlMappingBinderAccess = new XmlMappingBinderAccess( serviceRegistry );
 		}
 		return xmlMappingBinderAccess;
-	}
-
-	/**
-	 * @deprecated Prefer {@linkplain #getMappingXmlBindings()} and/or {@linkplain #getHbmXmlBindings()}
-	 */
-	@Deprecated(since = "7.0")
-	public List<? extends Binding<? extends JaxbBindableMappingDescriptor>> getXmlBindings() {
-		if ( mappingXmlBindings == null && hbmXmlBindings == null ) {
-			return emptyList();
-		}
-		else if ( hbmXmlBindings == null ) {
-			return mappingXmlBindings;
-		}
-		else if ( mappingXmlBindings == null ) {
-			return hbmXmlBindings;
-		}
-		else {
-			final ArrayList<Binding<? extends JaxbBindableMappingDescriptor>> combined =
-					arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
-			combined.addAll( mappingXmlBindings );
-			combined.addAll( hbmXmlBindings );
-			return combined;
-		}
 	}
 
 	public List<Binding<JaxbEntityMappingsImpl>> getMappingXmlBindings() {

@@ -62,7 +62,8 @@ public class ManagedResourcesImpl implements ManagedResources {
 			);
 		}
 		else {
-			impl.mappingFileBindings.addAll( sources.getXmlBindings() );
+			impl.mappingFileBindings.addAll( sources.getMappingXmlBindings() );
+			impl.mappingFileBindings.addAll( sources.getHbmXmlBindings() );
 		}
 	}
 

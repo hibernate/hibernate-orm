@@ -52,7 +52,7 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 			List<?> keys,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph) {
-		checkKeys( keys );
+		checkFindRequirements( keys, loadAccessContext.getStatelessSession() );
 
 		return getKeyType() == KeyType.NATURAL
 				? findByNaturalIds( keys, graphSemantic, rootGraph )

@@ -5,7 +5,6 @@
 package org.hibernate.internal.find;
 
 import jakarta.persistence.FindOption;
-import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
@@ -27,11 +26,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.function.Supplier;
 
 import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
+import static org.hibernate.internal.find.Helper.checkTransactionNeededForLock;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /// Support for loading a single entity by key (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL])
@@ -70,16 +69,7 @@ public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T>
 
 	@Override
 	public T performFind(Object key) {
-		if ( needsTransaction( getLockMode() ) ) {
-			if ( !loadAccessContext.getSession().isTransactionInProgress() ) {
-				throw new TransactionRequiredException( String.format( Locale.ROOT,
-						"Transaction required to load entity (%s#%s) with lock-mode (%s)",
-						getEntityDescriptor().getEntityName(),
-						key,
-						getLockMode()
-				) );
-			}
-		}
+		checkTransactionNeededForLock();
 
 		return withExceptionHandling( key, makeLockOptions(), () -> {
 			if ( getKeyType() == KeyType.NATURAL ) {

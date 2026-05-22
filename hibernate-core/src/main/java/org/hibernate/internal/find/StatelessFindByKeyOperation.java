@@ -5,7 +5,6 @@
 package org.hibernate.internal.find;
 
 import jakarta.persistence.FindOption;
-import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
@@ -24,11 +23,11 @@ import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.function.Supplier;
 
 import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
+import static org.hibernate.internal.find.Helper.checkTransactionNeededForLock;
 
 /**
  * @author Steve Ebersole
@@ -60,16 +59,7 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 
 	@Override
 	public T performFind(Object key) {
-		if ( needsTransaction( getLockMode() ) ) {
-			if ( !loadAccessContext.getStatelessSession().isTransactionInProgress() ) {
-				throw new TransactionRequiredException( String.format( Locale.ROOT,
-						"Transaction required to load entity (%s#%s) with lock-mode (%s)",
-						getEntityDescriptor().getEntityName(),
-						key,
-						getLockMode()
-				) );
-			}
-		}
+		checkTransactionNeededForLock();
 
 		return withExceptionHandling( key, makeLockOptions(), () -> {
 			if ( getKeyType() == KeyType.NATURAL ) {

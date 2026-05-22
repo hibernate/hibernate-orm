@@ -4,14 +4,17 @@
  */
 package org.hibernate.action.queue.internal.exec;
 
+import jakarta.persistence.EntityExistsException;
+
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
-import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
@@ -87,16 +90,16 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 			FlushOperation flushOperation,
 			Consumer<Object> newlyManagedEntityConsumer,
 			Consumer<FlushOperation> fixupOperationConsumer) {
-		if ( flushOperation.getKind() == org.hibernate.action.queue.spi.MutationKind.NO_OP && batchKey != null ) {
+		final boolean operationIsNoop = flushOperation.getKind() == MutationKind.NO_OP;
+		if ( operationIsNoop && batchKey != null ) {
 			executeBatch();
 		}
-		if ( flushOperation.getKind() != org.hibernate.action.queue.spi.MutationKind.NO_OP
-				&& !flushOperation.isExecutionSkipped()
-				&& flushOperation.getBindPlan().getGeneratedValuesCollector() == null
-				&& flushOperation.getJdbcOperation() instanceof PreparableMutationOperation ) {
-			return;
+		if ( operationIsNoop
+				|| flushOperation.isExecutionSkipped()
+				|| flushOperation.getBindPlan().getGeneratedValuesCollector() != null
+				|| !(flushOperation.getJdbcOperation() instanceof PreparableMutationOperation) ) {
+			super.afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
 		}
-		super.afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
 	}
 
 	private void newBatch(StatementShapeKey operationShapeKey, PreparableMutationOperation preparable) {
@@ -116,11 +119,16 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 
 		batchOperations[currentBatchIndex] = flushOperation;
 
-		final OperationResultChecker resultChecker = flushOperation.getOperationResultChecker();
-		batch.addToBatch(
-				valueBindings::beforeStatement,
-				resultChecker == null ? null : resultChecker::checkResult
-		);
+		final var resultChecker = flushOperation.getOperationResultChecker();
+		try {
+			batch.addToBatch(
+					valueBindings::beforeStatement,
+					resultChecker == null ? null : resultChecker::checkResult
+			);
+		}
+		catch (ConstraintViolationException cve) {
+			throw convertBatchException( cve, currentBatchIndex + 1 );
+		}
 		currentBatchIndex++;
 
 		if ( currentBatchIndex == batchSize ) {
@@ -149,7 +157,12 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	private void executeBatch() {
 		final int batchCount = currentBatchIndex;
 		try {
-			batch.execute();
+			try {
+				batch.execute();
+			}
+			catch (ConstraintViolationException cve) {
+				throw convertBatchException( cve, batchCount );
+			}
 			runPostBatchCallbacks( batchCount );
 		}
 		finally {
@@ -160,6 +173,26 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 			reusableValueBindingsOperation = null;
 			reusableValueBindings = null;
 		}
+	}
+
+	private RuntimeException convertBatchException(ConstraintViolationException cve, int batchCount) {
+		return session.getFactory().getSessionFactoryOptions().isJpaBootstrap()
+			&& cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
+			&& hasEntityInsert( batchCount )
+				? new EntityExistsException( cve )
+				: cve;
+	}
+
+	private boolean hasEntityInsert(int batchCount) {
+		for ( int i = 0; i < batchCount; i++ ) {
+			final var operation = batchOperations[i];
+			if ( operation != null
+					&& operation.getKind() == MutationKind.INSERT
+					&& operation.getBindPlan().getEntityInstance() != null ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void runPostBatchCallbacks(int batchCount) {

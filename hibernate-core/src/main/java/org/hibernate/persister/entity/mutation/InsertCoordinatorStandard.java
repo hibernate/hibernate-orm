@@ -7,7 +7,7 @@ package org.hibernate.persister.entity.mutation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.batch.internal.EntityInsertBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -52,7 +52,7 @@ import static org.hibernate.generator.EventType.INSERT;
 @Internal
 public class InsertCoordinatorStandard extends AbstractMutationCoordinator implements InsertCoordinator {
 	private final MutationOperationGroup staticInsertGroup;
-	private final BasicBatchKey batchKey;
+	private final BatchKey batchKey;
 
 	public InsertCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
@@ -61,7 +61,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				entityPersister.isIdentifierAssignedByInsert() || entityPersister.hasInsertGeneratedProperties()
 						// disable batching in case of insert-generated identifier or properties
 						? null
-						: new BasicBatchKey( entityPersister.getEntityName() + "#INSERT" );
+						: new EntityInsertBatchKey( entityPersister.getEntityName() + "#INSERT" );
 
 		staticInsertGroup =
 				entityPersister.isDynamicInsert()
@@ -628,7 +628,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	 * @deprecated Use {@link #getBatchKey()}
 	 */
 	@Deprecated
-	public BasicBatchKey getInsertBatchKey() {
+	public BatchKey getInsertBatchKey() {
 		return batchKey;
 	}
 }

@@ -4,16 +4,19 @@
  */
 package org.hibernate.action.queue.internal.exec;
 
+import jakarta.persistence.EntityExistsException;
+
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.internal.cyclebreak.FixupSynthesizer;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
@@ -84,7 +87,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 					executeWithGeneratedValues( flushOperation );
 				}
 				else {
-					final MutationOperation jdbcOperation = flushOperation.getJdbcOperation();
+					final var jdbcOperation = flushOperation.getJdbcOperation();
 					if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
 						executePreparable( preparable, flushOperation );
 					}
@@ -107,7 +110,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		if ( preExecutionCallback == null ) {
 			return true;
 		}
-		final boolean execute = preExecutionCallback.beforeExecution( (org.hibernate.engine.spi.SessionImplementor) session );
+		final boolean execute = preExecutionCallback.beforeExecution( (SessionImplementor) session );
 		flushOperation.setExecutionSkipped( !execute );
 		return execute;
 	}
@@ -117,7 +120,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			Consumer<Object> newlyManagedEntityConsumer,
 			Consumer<FlushOperation> fixupOperationConsumer) {
 		if ( flushOperation.getPostExecutionCallback() != null ) {
-			flushOperation.getPostExecutionCallback().handle( (org.hibernate.engine.spi.SessionImplementor) session );
+			flushOperation.getPostExecutionCallback().handle( (SessionImplementor) session );
 		}
 
 		if ( newlyManagedEntityConsumer != null ) {
@@ -166,25 +169,20 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		var bindPlan = flushOperation.getBindPlan();
 		var generatedValuesCollector = bindPlan.getGeneratedValuesCollector();
 
-		final GeneratedValuesMutationDelegate generatedValuesDelegate;
-		var mutationTarget = flushOperation.getJdbcOperation().getMutationTarget();
-		if ( mutationTarget instanceof EntityPersister entityPersister ) {
-			generatedValuesDelegate = flushOperation.getKind() == MutationKind.INSERT
-					? entityPersister.getInsertDelegate()
-					: entityPersister.getUpdateDelegate();
-		}
-		else {
-			generatedValuesDelegate = null;
-		}
-
+		final var generatedValuesDelegate = generatedValuesDelegate( flushOperation );
 		if ( generatedValuesDelegate != null
 				&& generatedValuesCollector.containsGeneratedValues( flushOperation.getMutatingTableDescriptor() ) ) {
-			final var generatedValues = generatedValuesDelegate.performGraphMutation(
-					flushOperation,
-					bindPlan.getEntityInstance(),
-					session
-			);
-			generatedValuesCollector.apply( generatedValues );
+			try {
+				final var generatedValues = generatedValuesDelegate.performGraphMutation(
+						flushOperation,
+						bindPlan.getEntityInstance(),
+						session
+				);
+				generatedValuesCollector.apply( generatedValues );
+			}
+			catch (ConstraintViolationException cve) {
+				throw convertException( cve, flushOperation );
+			}
 		}
 		else {
 			// fallback to direct statement execution (no batching)
@@ -195,6 +193,18 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
 				executeSelfExecuting( selfExecuting, flushOperation );
 			}
+		}
+	}
+
+	private static GeneratedValuesMutationDelegate generatedValuesDelegate(FlushOperation flushOperation) {
+		var mutationTarget = flushOperation.getJdbcOperation().getMutationTarget();
+		if ( mutationTarget instanceof EntityPersister entityPersister ) {
+			return flushOperation.getKind() == MutationKind.INSERT
+					? entityPersister.getInsertDelegate()
+					: entityPersister.getUpdateDelegate();
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -220,13 +230,28 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( stmnt );
 		}
+		catch (ConstraintViolationException cve) {
+			throw convertException( cve, flushOperation );
+		}
 		catch (SQLException sqle) {
-			throw session.getJdbcServices()
-					.getSqlExceptionHelper()
-					.convert( sqle, "Unable to execute non-batched mutation - " + preparable.getSqlString() );
+			throw convertException(
+					session.getJdbcServices()
+							.getSqlExceptionHelper()
+							.convert( sqle, "Unable to execute non-batched mutation - " + preparable.getSqlString() ),
+					flushOperation
+			);
 		}
 	}
 
+	private RuntimeException convertException(RuntimeException exception, FlushOperation flushOperation) {
+		return exception instanceof ConstraintViolationException cve
+			&& session.getFactory().getSessionFactoryOptions().isJpaBootstrap()
+			&& cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
+			&& flushOperation.getKind() == MutationKind.INSERT
+			&& flushOperation.getBindPlan().getEntityInstance() != null
+				? new EntityExistsException( cve )
+				: exception;
+	}
 
 	protected void executeSelfExecuting(SelfExecutingUpdateOperation selfExecuting, FlushOperation flushOperation) {
 		final var graphBindings = new JdbcValueBindings(
@@ -250,11 +275,16 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 				)
 		);
 
-		selfExecuting.performMutation(
-				jdbcValueBindings,
-				flushOperation.getBindPlan().getValuesAnalysis(),
-				session
-		);
+		try {
+			selfExecuting.performMutation(
+					jdbcValueBindings,
+					flushOperation.getBindPlan().getValuesAnalysis(),
+					session
+			);
+		}
+		catch (ConstraintViolationException cve) {
+			throw convertException( cve, flushOperation );
+		}
 	}
 
 	@Override

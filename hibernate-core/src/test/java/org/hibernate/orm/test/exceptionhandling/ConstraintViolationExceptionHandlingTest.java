@@ -47,7 +47,7 @@ public class ConstraintViolationExceptionHandlingTest extends BaseExceptionHandl
 				fail( "should have thrown an exception" );
 			}
 			catch (RuntimeException expected) {
-				exceptionExpectations.onConstraintViolationOnSaveAndSaveOrUpdate( expected );
+				exceptionExpectations.onConstraintViolationOnEntityInsert( expected );
 			}
 		} );
 	}
@@ -67,7 +67,7 @@ public class ConstraintViolationExceptionHandlingTest extends BaseExceptionHandl
 				fail( "should have thrown an exception" );
 			}
 			catch (RuntimeException expected) {
-				exceptionExpectations.onConstraintViolationOnPersistAndMergeAndFlush( expected );
+				exceptionExpectations.onConstraintViolationOnEntityInsert( expected );
 			}
 		} );
 	}
@@ -87,7 +87,7 @@ public class ConstraintViolationExceptionHandlingTest extends BaseExceptionHandl
 				fail( "should have thrown an exception" );
 			}
 			catch (RuntimeException expected) {
-				exceptionExpectations.onConstraintViolationOnPersistAndMergeAndFlush( expected );
+				exceptionExpectations.onConstraintViolationOnEntityInsert( expected );
 			}
 		} );
 	}

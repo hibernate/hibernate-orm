@@ -389,9 +389,7 @@ public class StatelessSessionImpl
 					success = true;
 				}
 				catch (ConstraintViolationException cve) {
-					throw cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
-							? new EntityExistsException( cve )
-							: cve;
+					throw convertException( cve );
 				}
 				finally {
 					eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );
@@ -418,6 +416,9 @@ public class StatelessSessionImpl
 					id = generatedId;
 					success = true;
 				}
+				catch (ConstraintViolationException cve) {
+					throw convertException( cve );
+				}
 				finally {
 					eventMonitor.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, this );
 				}
@@ -443,9 +444,7 @@ public class StatelessSessionImpl
 					success = true;
 				}
 				catch (ConstraintViolationException cve) {
-					throw cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
-							? new EntityExistsException( cve )
-							: cve;
+					throw convertException( cve );
 				}
 				finally {
 					eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );
@@ -459,6 +458,13 @@ public class StatelessSessionImpl
 			statistics.insertEntity( persister.getEntityName() );
 		}
 		return id;
+	}
+
+	private PersistenceException convertException(ConstraintViolationException cve) {
+		return getSessionFactoryOptions().isJpaBootstrap()
+			&& cve.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE
+				? new EntityExistsException( cve )
+				: cve;
 	}
 
 	private void recreateCollections(Object entity, Object id, EntityPersister persister) {

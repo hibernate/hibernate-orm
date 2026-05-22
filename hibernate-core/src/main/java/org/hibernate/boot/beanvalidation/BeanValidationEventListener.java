@@ -13,6 +13,9 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.spi.MergeContext;
+import org.hibernate.event.spi.MergeEvent;
+import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
@@ -44,7 +47,7 @@ import static org.hibernate.metamodel.RepresentationMode.POJO;
 public class BeanValidationEventListener
 		implements SessionFactoryObserver,
 				PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener,
-				PreCollectionUpdateEventListener {
+				PreCollectionUpdateEventListener, MergeEventListener {
 
 	private final HibernateTraversableResolver traversableResolver;
 	private final Validator validator;
@@ -72,7 +75,15 @@ public class BeanValidationEventListener
 						traversableResolver.addPersister( entityPersister, sessionFactory ) );
 	}
 
+	@Override
 	public boolean onPreInsert(PreInsertEvent event) {
+		if ( !event.getSession().isStateless() ) {
+			validate(
+					event.getEntity(),
+					event.getPersister(),
+					GroupsPerOperation.Operation.PERSIST
+			);
+		}
 		validate(
 				event.getEntity(),
 				event.getPersister(),
@@ -81,6 +92,7 @@ public class BeanValidationEventListener
 		return false;
 	}
 
+	@Override
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
 				event.getEntity(),
@@ -90,7 +102,15 @@ public class BeanValidationEventListener
 		return false;
 	}
 
+	@Override
 	public boolean onPreDelete(PreDeleteEvent event) {
+		if ( !event.getSession().isStateless() ) {
+			validate(
+					event.getEntity(),
+					event.getPersister(),
+					GroupsPerOperation.Operation.REMOVE
+			);
+		}
 		validate(
 				event.getEntity(),
 				event.getPersister(),
@@ -110,6 +130,23 @@ public class BeanValidationEventListener
 	}
 
 	@Override
+	public void onMerge(MergeEvent event) {
+		validateMerge( event );
+	}
+
+	@Override
+	public void onMerge(MergeEvent event, MergeContext copiedAlready) {
+		validateMerge( event );
+	}
+
+	private void validateMerge(MergeEvent event) {
+		final var entity = event.getOriginal();
+		final var session = event.getSession();
+		final var persister = session.getEntityPersister( event.getEntityName(), entity );
+		validate( entity, persister, GroupsPerOperation.Operation.MERGE );
+	}
+
+	@Override
 	public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
 		validate(
 				event.getAffectedOwnerOrNull(),
@@ -119,8 +156,7 @@ public class BeanValidationEventListener
 	}
 
 	private <T> void validate(T object, EntityPersister persister, GroupsPerOperation.Operation operation) {
-		if ( object != null
-				&& persister.getRepresentationStrategy().getMode() == POJO ) {
+		if ( object != null && persister.getRepresentationStrategy().getMode() == POJO ) {
 			final var groups = groupsPerOperation.get( operation );
 			if ( groups.length > 0 ) {
 				final var constraintViolations = validator.validate( object, groups );

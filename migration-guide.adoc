@@ -31,6 +31,31 @@ One specific requirement change that is important to call out is the move to fro
 
 See https://hibernate.atlassian.net/browse/HHH-20028[this issue] for more details.
 
+
+[[validation-lifecycle]]
+==== Jakarta Validation lifecycle event changes
+
+Jakarta Persistence 4.0 redefines which lifecycle events trigger automatic bean validation.
+Previously, validation was tied to `pre-persist` and `pre-update` events.
+Now, validation is organized into EntityManager-level events (`pre-persist`, `pre-merge`, `pre-remove`)
+and DB-level events (`pre-insert`, `pre-update`, `pre-upsert`, `pre-delete`),
+each with its own configuration property.
+
+By default, only `pre-insert`, `pre-update`, and `pre-upsert` trigger validation with the `jakarta.validation.groups.Default` group.
+All other events (`pre-persist`, `pre-merge`, `pre-remove`, `pre-delete`) have empty groups and do not validate unless explicitly configured.
+
+The following new configuration properties are available:
+
+- `jakarta.persistence.validation.group.pre-merge`
+- `jakarta.persistence.validation.group.pre-insert`
+- `jakarta.persistence.validation.group.pre-upsert`
+- `jakarta.persistence.validation.group.pre-delete`
+
+*Breaking change*: the property `jakarta.persistence.validation.group.pre-persist` previously was enabled by default.
+It is now responsible for the validation at the `pre-persist` lifecycle event and is empty by default.
+Applications that relied on `pre-persist` to configure insert-time validation groups should switch to `pre-insert`,
+especially if the application plans to rely on usage of a stateless session.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // New Features
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

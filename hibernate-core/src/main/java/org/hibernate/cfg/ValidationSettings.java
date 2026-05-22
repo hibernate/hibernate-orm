@@ -31,28 +31,60 @@ public interface ValidationSettings {
 	String JAKARTA_VALIDATION_FACTORY = "jakarta.persistence.validation.factory";
 
 	/**
-	 * Used to coordinate with bean validators.
-	 * <p>
-	 * See JPA 2 section 8.2.1.9
+	 * Target groups for validation at {@link jakarta.persistence.PrePersist}.
+	 *
+	 * @see jakarta.persistence.Persistence.ValidationProperties#VALIDATION_GROUP_PRE_PERSIST
 	 */
 	@SuppressWarnings("unused")
 	String JAKARTA_PERSIST_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-persist";
 
 	/**
-	 * Used to coordinate with bean validators.
-	 * <p>
-	 * See JPA 2 section 8.2.1.9
+	 * Target groups for validation at {@link jakarta.persistence.PreMerge}.
+	 *
+	 * @see jakarta.persistence.Persistence.ValidationProperties#VALIDATION_GROUP_PRE_MERGE
+	 */
+	@SuppressWarnings("unused")
+	String JAKARTA_MERGE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-merge";
+
+	/**
+	 * Target groups for validation at {@link jakarta.persistence.PreRemove}.
+	 *
+	 * @see jakarta.persistence.Persistence.ValidationProperties#VALIDATION_GROUP_PRE_REMOVE
+	 */
+	@SuppressWarnings("unused")
+	String JAKARTA_REMOVE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-remove";
+
+	/**
+	 * Target groups for validation at {@link jakarta.persistence.PreInsert}.
+	 *
+	 * @see jakarta.persistence.Persistence.ValidationProperties#VALIDATION_GROUP_PRE_INSERT
+	 */
+	@SuppressWarnings("unused")
+	String JAKARTA_INSERT_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-insert";
+
+	/**
+	 * Target groups for validation at {@link jakarta.persistence.PreUpdate}.
+	 *
+	 * @see jakarta.persistence.Persistence.ValidationProperties#VALIDATION_GROUP_PRE_UPDATE
 	 */
 	@SuppressWarnings("unused")
 	String JAKARTA_UPDATE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-update";
 
 	/**
-	 * Used to coordinate with bean validators.
-	 * <p>
-	 * See JPA 2 section 8.2.1.9
+	 * Target groups for validation at {@link jakarta.persistence.PreUpsert}.
+	 *
+	 * @see jakarta.persistence.Persistence.ValidationProperties#VALIDATION_GROUP_PRE_UPSERT
 	 */
 	@SuppressWarnings("unused")
-	String JAKARTA_REMOVE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-remove";
+	String JAKARTA_UPSERT_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-upsert";
+
+	/**
+	 * Target groups for validation at {@link jakarta.persistence.PreDelete}.
+	 *
+	 * @see jakarta.persistence.Persistence.ValidationProperties#VALIDATION_GROUP_PRE_DELETE
+	 */
+	@SuppressWarnings("unused")
+	String JAKARTA_DELETE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-delete";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @ServiceRegistry(settings = {
 		@Setting(name = ValidationSettings.JAKARTA_PERSIST_VALIDATION_GROUP, value = ""),
+		@Setting(name = ValidationSettings.JAKARTA_INSERT_VALIDATION_GROUP, value = ""),
 		@Setting(name = ValidationSettings.JAKARTA_UPDATE_VALIDATION_GROUP, value = ""),
 		@Setting(name = ValidationSettings.JAKARTA_REMOVE_VALIDATION_GROUP,
 				value = "jakarta.validation.groups.Default, org.hibernate.orm.test.annotations.beanvalidation.Strict"),

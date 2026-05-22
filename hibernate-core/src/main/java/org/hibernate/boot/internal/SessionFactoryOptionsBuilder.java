@@ -61,7 +61,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
+import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -129,6 +129,7 @@ import static org.hibernate.type.format.jaxb.JaxbIntegration.getJaxbXmlFormatMap
  * @author Steve Ebersole
  */
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
+	private static final SessionEventListener[] EMPTY_SESSION_EVENT_LISTENERS = new SessionEventListener[0];
 
 	private final String uuid = generateLocalObjectUuid();
 	private final StandardServiceRegistry serviceRegistry;
@@ -161,6 +162,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private StatementObserver statementObserver;
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	private StatementInspector statementInspector;
+	private final Class<? extends SessionEventListener> autoSessionEventListener;
 	private final List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
 
 	// persistence behavior
@@ -268,8 +270,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Deprecated
 	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
 	@Deprecated(forRemoval = true)
-	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;
-	@Deprecated(forRemoval = true)
 	private SchemaAutoTooling schemaAutoTooling;
 	@Deprecated(forRemoval = true)
 	private boolean delayBatchFetchLoaderCreations;
@@ -363,8 +363,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				);
 
 
-		baselineSessionEventsListenerBuilder =
-				new BaselineSessionEventsListenerBuilder( getAutoSessionEventsListener( settings, strategySelector ) );
+		autoSessionEventListener = getAutoSessionEventsListener( settings, strategySelector );
 
 		customEntityDirtinessStrategy =
 				strategySelector.resolveDefaultableStrategy(
@@ -1180,8 +1179,33 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder() {
-		return baselineSessionEventsListenerBuilder;
+	public SessionEventListener[] buildSessionEventListeners() {
+		if ( StatisticalLoggingSessionEventListener.isLoggingEnabled() ) {
+			return autoSessionEventListener == null
+					? new SessionEventListener[] { statsListener() }
+					: new SessionEventListener[] { statsListener(), instantiateAutoSessionEventListener() };
+		}
+		else {
+			return autoSessionEventListener == null
+					? EMPTY_SESSION_EVENT_LISTENERS
+					: new SessionEventListener[] { instantiateAutoSessionEventListener() };
+		}
+	}
+
+	private SessionEventListener instantiateAutoSessionEventListener() {
+		try {
+			return autoSessionEventListener.getConstructor().newInstance();
+		}
+		catch (Exception e) {
+			throw new HibernateException(
+					"Unable to instantiate specified auto SessionEventListener: " + autoSessionEventListener.getName(),
+					e
+			);
+		}
+	}
+
+	private static SessionEventListener statsListener() {
+		return new StatisticalLoggingSessionEventListener();
 	}
 
 	@Override

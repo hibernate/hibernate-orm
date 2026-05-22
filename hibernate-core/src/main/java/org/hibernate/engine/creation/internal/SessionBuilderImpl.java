@@ -39,9 +39,9 @@ public abstract class SessionBuilderImpl
 	private int defaultBatchFetchSize;
 	private boolean subselectFetchEnabled;
 
-	// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
-	// (Need a fresh build for each Session as the listener instances can't be reused across sessions)
-	// Only initialize of the builder is overriding the default.
+	// Lazy: defaults are built only when overriding the factory-level listeners.
+	// Need a fresh build for each Session as the listener instances can't be
+	// reused across sessions.
 	private List<SessionEventListener> listeners;
 
 	public SessionBuilderImpl(SessionFactoryImplementor sessionFactory) {

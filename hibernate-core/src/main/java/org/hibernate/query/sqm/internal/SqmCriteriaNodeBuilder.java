@@ -143,6 +143,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -179,6 +180,7 @@ import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.classInstantiation;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.listInstantiation;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.mapInstantiation;
+import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.createConvertedParameterType;
 
 /**
  * Acts as a JPA {@link jakarta.persistence.criteria.CriteriaBuilder} by
@@ -196,6 +198,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
 	private final transient ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	private final transient BindingContext bindingContext;
+	private final transient ServiceRegistry serviceRegistry;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<Long> longType;
@@ -209,7 +212,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			String uuid, String name,
 			QueryEngine queryEngine,
 			QueryEngineOptions options,
-			BindingContext bindingContext) {
+			BindingContext bindingContext,
+			ServiceRegistry serviceRegistry) {
 		this.queryEngine = queryEngine;
 		this.uuid = uuid;
 		this.name = name;
@@ -217,6 +221,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		this.criteriaValueHandlingMode = options.getCriteriaValueHandlingMode();
 		this.immutableEntityUpdateQueryHandlingMode = options.getImmutableEntityUpdateQueryHandlingMode();
 		this.bindingContext = bindingContext;
+		this.serviceRegistry = serviceRegistry;
 		this.extensions = loadExtensions();
 	}
 
@@ -1849,7 +1854,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <T> ParameterExpression<T> convertedParameter(Class<? extends AttributeConverter<T, ?>> converter) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		return new JpaCriteriaParameter<>(
+				null,
+				createConvertedParameterType( converter, serviceRegistry, getTypeConfiguration() ),
+				false,
+				this
+		);
 	}
 
 	@Override

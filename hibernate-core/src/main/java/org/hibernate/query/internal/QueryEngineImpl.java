@@ -84,14 +84,15 @@ public class QueryEngineImpl implements QueryEngine {
 		// here we have something nasty: we need to pass a reference to the current object to
 		// create the NodeBuilder, but then we need the NodeBuilder to create the HqlTranslator
 		// and that's only because we're using the NodeBuilder as the SqmCreationContext
-		nodeBuilder = createCriteriaBuilder( context, this, options, options.getUuid(), name );
+		nodeBuilder = createCriteriaBuilder( context, this, options, serviceRegistry, options.getUuid(), name );
 		hqlTranslator = resolveHqlTranslator( options, dialect, nodeBuilder );
 	}
 
 	private static SqmCriteriaNodeBuilder createCriteriaBuilder(
 			BindingContext context, QueryEngine engine, QueryEngineOptions options,
+			ServiceRegistryImplementor serviceRegistry,
 			String uuid, String name) {
-		return new SqmCriteriaNodeBuilder( uuid, name, engine, options, context );
+		return new SqmCriteriaNodeBuilder( uuid, name, engine, options, context, serviceRegistry );
 	}
 
 	private static HqlTranslator resolveHqlTranslator(

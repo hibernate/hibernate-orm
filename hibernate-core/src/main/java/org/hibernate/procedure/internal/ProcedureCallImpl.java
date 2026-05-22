@@ -82,6 +82,7 @@ import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
 import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
 import static org.hibernate.query.results.spi.ResultSetMapping.resolveResultSetMapping;
+import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.createConvertedParameterType;
 
 /**
  * Standard implementation of {@link ProcedureCall}
@@ -782,12 +783,36 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(int position, Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		final var convertedType = createConvertedParameterType(
+				converter,
+				getSession().getFactory().getServiceRegistry(),
+				getNodeBuilder().getTypeConfiguration()
+		);
+		final var parameter = new ProcedureParameterImpl<>(
+				position,
+				mode,
+				getExpressibleJavaType( convertedType ),
+				convertedType
+		);
+		registerParameter( parameter );
+		return parameter;
 	}
 
 	@Override
 	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(String parameterName, Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		final var convertedType = createConvertedParameterType(
+				converter,
+				getSession().getFactory().getServiceRegistry(),
+				getNodeBuilder().getTypeConfiguration()
+		);
+		final var parameter = new ProcedureParameterImpl<>(
+				parameterName,
+				mode,
+				getExpressibleJavaType( convertedType ),
+				convertedType
+		);
+		registerParameter( parameter );
+		return parameter;
 	}
 
 	private <T> Class<T> getExpressibleJavaType(Type<T> parameterType) {

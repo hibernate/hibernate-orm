@@ -50,8 +50,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.type.BindableType;
-import org.hibernate.type.descriptor.converter.internal.ConverterHelper;
-import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -105,6 +103,7 @@ import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 import static org.hibernate.query.internal.QueryArguments.areInstances;
 import static org.hibernate.query.internal.QueryArguments.isInstance;
+import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.createConvertedParameterType;
 
 /**
  * @author Steve Ebersole
@@ -1104,45 +1103,54 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
-		//noinspection unchecked,rawtypes
-		final JpaAttributeConverter<P,Object> converter = ConverterHelper.createJpaAttributeConverter(
-				(Class) converterClass,
-				session.getFactory().getServiceRegistry(),
-				session.getFactory().getTypeConfiguration()
-		);
-
-		var bindValue = converter.getConverterBean().getBeanInstance().convertToDatabaseColumn( value );
-
-		var bindValueJavaType = converter.getRelationalJavaType();
-		var bindValueClass = bindValueJavaType.getJavaTypeClass();
-		var bindValueModelType = getParamType( bindValueClass );
-
-		//noinspection unchecked,rawtypes
-		locateBinding( name ).setBindValue( bindValue, (BindableType) bindValueModelType );
-
+	public <P> CommonQueryContractImplementor setConvertedParameter(
+			String name, P value,
+			Class<? extends AttributeConverter<P, ?>> converterClass) {
+		setConvertedParameter( locateBinding( name ), value, converterClass );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
-		//noinspection unchecked,rawtypes
-		final JpaAttributeConverter<P,Object> converter = ConverterHelper.createJpaAttributeConverter(
-				(Class) converterClass,
-				session.getFactory().getServiceRegistry(),
-				session.getFactory().getTypeConfiguration()
-		);
-
-		var bindValue = converter.getConverterBean().getBeanInstance().convertToDatabaseColumn( value );
-
-		var bindValueJavaType = converter.getRelationalJavaType();
-		var bindValueClass = bindValueJavaType.getJavaTypeClass();
-		var bindValueModelType = getParamType( bindValueClass );
-
-		//noinspection unchecked,rawtypes
-		locateBinding( position ).setBindValue( bindValue, (BindableType) bindValueModelType );
-
+	public <P> CommonQueryContractImplementor setConvertedParameter(
+			int position, P value,
+			Class<? extends AttributeConverter<P, ?>> converterClass) {
+		setConvertedParameter( locateBinding( position ), value, converterClass );
 		return this;
+	}
+
+	private <P> void setConvertedParameter(
+			QueryParameterBinding<?> binding, P value,
+			Class<? extends AttributeConverter<P, ?>> converterClass) {
+		final var factory = session.getFactory();
+		final var convertedType = createConvertedParameterType(
+				converterClass,
+				factory.getServiceRegistry(),
+				factory.getTypeConfiguration()
+		);
+		final var converter = convertedType.getValueConverter();
+		final var bindType = binding.getBindType();
+		final var relationalJavaType = converter.getRelationalJavaType().getJavaTypeClass();
+		if ( bindType != null
+				&& !isAssignableTo( bindType, converter.getDomainJavaType().getJavaTypeClass() )
+				&& isAssignableTo( bindType, relationalJavaType ) ) {
+			// The parameter is already typed as the converter's relational type.
+			// Bind the converted value directly to keep type validation aligned.
+			//noinspection unchecked,rawtypes
+			binding.setBindValue(
+					converter.toRelationalValue( value ),
+					(BindableType) getParamType( relationalJavaType )
+			);
+		}
+		else {
+			binding.setBindValue( value, convertedType );
+		}
+	}
+
+	private static boolean isAssignableTo(BindableType<?> bindType, Class<?> valueType) {
+		final var bindJavaType = bindType.getJavaType();
+		return bindJavaType == null
+			|| bindJavaType == Object.class
+			|| bindJavaType.isAssignableFrom( valueType );
 	}
 
 	@Override

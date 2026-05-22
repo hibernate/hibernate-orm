@@ -245,7 +245,7 @@ public abstract class MockSessionFactory
 		functionFactory.windowFunctions();
 		typeConfiguration.scope((SessionFactoryImplementor) this);
 
-		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this);
+		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this, serviceRegistry);
 
 		sqlTranslationEngine = new SqlTranslationEngineImpl(this, typeConfiguration, emptyMap() );
 	}

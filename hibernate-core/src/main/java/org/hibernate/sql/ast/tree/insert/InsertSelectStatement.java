@@ -34,25 +34,12 @@ public class InsertSelectStatement extends AbstractMutationStatement implements 
 	private List<Values> valuesList = new ArrayList<>();
 	private ConflictClause conflictClause;
 
-	@Deprecated(forRemoval = true, since = "7.3")
-	public InsertSelectStatement(NamedTableReference targetTable) {
-		this( null, targetTable, Collections.emptyList() );
-	}
-
 	public InsertSelectStatement(NamedTableReference targetTable, MutationTarget<?,?> mutationTarget) {
 		this( null, targetTable, mutationTarget, Collections.emptyList() );
 	}
 
 	public InsertSelectStatement(NamedTableReference targetTable, List<ColumnReference> returningColumns) {
-		this( null, targetTable, returningColumns );
-	}
-
-	@Deprecated(forRemoval = true, since = "7.3")
-	public InsertSelectStatement(
-			CteContainer cteContainer,
-			NamedTableReference targetTable,
-			List<ColumnReference> returningColumns) {
-		this( cteContainer, targetTable, null, returningColumns );
+		this( null, targetTable, null, returningColumns );
 	}
 
 	public InsertSelectStatement(

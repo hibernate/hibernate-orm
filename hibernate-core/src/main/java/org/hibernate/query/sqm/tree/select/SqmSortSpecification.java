@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
@@ -47,17 +46,6 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
 		this.ignoreCase = ignoreCase;
-	}
-
-	/**
-	 * @deprecated Use {@link SqmSortSpecification#SqmSortSpecification(SqmExpression, SortDirection, Nulls)} instead
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	public SqmSortSpecification(
-			@SuppressWarnings("rawtypes") SqmExpression sortExpression,
-			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
-		this( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
 	}
 
 	@SuppressWarnings("rawtypes")

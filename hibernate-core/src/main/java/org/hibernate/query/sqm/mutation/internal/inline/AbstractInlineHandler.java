@@ -14,8 +14,8 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.internal.CacheableSqmInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
-import org.hibernate.query.sqm.mutation.internal.Handler;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandler;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -30,7 +30,7 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
  * @author Vlad Mihalcea
  * @author Steve Ebersole
  */
-public abstract class AbstractInlineHandler implements Handler {
+public abstract class AbstractInlineHandler implements MultiTableHandler {
 	private final MatchingIdRestrictionProducer matchingIdsPredicateProducer;
 	private final EntityPersister entityDescriptor;
 	private final DomainParameterXref domainParameterXref;

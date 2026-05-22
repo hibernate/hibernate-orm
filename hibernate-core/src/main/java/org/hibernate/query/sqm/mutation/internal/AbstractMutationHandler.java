@@ -6,12 +6,13 @@ package org.hibernate.query.sqm.mutation.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.sqm.mutation.spi.MultiTableHandler;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractMutationHandler implements Handler {
+public abstract class AbstractMutationHandler implements MultiTableHandler {
 	private final SqmDmlStatement<?> sqmDmlStatement;
 
 	private final SessionFactoryImplementor sessionFactory;

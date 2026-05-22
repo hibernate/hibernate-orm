@@ -23,14 +23,6 @@ public class SearchClauseSpecification {
 		this.nullPrecedence = nullPrecedence;
 	}
 
-	/**
-	 * @deprecated Use {@link SearchClauseSpecification#SearchClauseSpecification(CteColumn,SortDirection,Nulls)} instead
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	public SearchClauseSpecification(CteColumn cteColumn, SortDirection sortOrder, NullPrecedence nullPrecedence) {
-		this( cteColumn, sortOrder, nullPrecedence.getJpaValue() );
-	}
-
 	public CteColumn getCteColumn() {
 		return cteColumn;
 	}

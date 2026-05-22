@@ -1170,11 +1170,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public FetchProfile getFetchProfile(String name) {
-		return sqlTranslationEngine.getFetchProfile( name );
-	}
-
-	@Override
 	public boolean containsFetchProfileDefinition(String name) {
 		return sqlTranslationEngine.containsFetchProfileDefinition( name );
 	}
@@ -1182,11 +1177,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public Set<String> getDefinedFetchProfileNames() {
 		return sqlTranslationEngine.getDefinedFetchProfileNames();
-	}
-
-	@Override @Deprecated
-	public Generator getGenerator(String rootEntityName) {
-		return null;
 	}
 
 	private boolean canAccessTransactionManager() {

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.boot.jaxb.mapping;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.function.Consumer;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 
@@ -21,7 +22,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -47,8 +47,23 @@ import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
 public class HbmTransformationJaxbTests {
 	@Test
 	public void hbmTransformationTest(ServiceRegistryScope scope) {
-		scope.withService( ClassLoaderService.class, (cls) -> {
-			verifyHbm( "xml/jaxb/mapping/basic/hbm.xml", cls, scope );
+		transformAndVerify( "xml/jaxb/mapping/basic/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+			assertThat( transformed.getPackage() ).isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping" );
+
+			final JaxbEntityImpl ormEntity = transformed.getEntities().get( 0 );
+			assertThat( ormEntity.getName() ).isNull();
+			assertThat( ormEntity.getClazz() ).isEqualTo( "SimpleEntity" );
+
+			assertThat( ormEntity.getAttributes().getIdAttributes() ).hasSize( 1 );
+			assertThat( ormEntity.getAttributes().getBasicAttributes() ).hasSize( 1 );
+			assertThat( ormEntity.getAttributes().getEmbeddedAttributes() ).isEmpty();
+			assertThat( ormEntity.getAttributes().getOneToOneAttributes() ).isEmpty();
+			assertThat( ormEntity.getAttributes().getManyToOneAttributes() ).isEmpty();
+			assertThat( ormEntity.getAttributes().getAnyMappingAttributes() ).isEmpty();
+			assertThat( ormEntity.getAttributes().getOneToManyAttributes() ).isEmpty();
+			assertThat( ormEntity.getAttributes().getManyToManyAttributes() ).isEmpty();
+			assertThat( ormEntity.getAttributes().getPluralAnyMappingAttributes() ).isEmpty();
 		} );
 	}
 
@@ -171,47 +186,18 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
-	public void testManyToManyOrphanRemovalHbmTransformation(ServiceRegistryScope scope) {
-		scope.withService( ClassLoaderService.class, (cls) -> {
-			verifyManyToManyOrphanRemoval(
-					"xml/jaxb/mapping/manytomany/UserGroup.hbm.xml",
-					cls,
-					scope
-			);
-		} );
-	}
-	private void verifyManyToManyOrphanRemoval(String resourceName, ClassLoaderService cls, ServiceRegistryScope scope) {
-		try ( final InputStream inputStream = cls.locateResourceStream( resourceName ) ) {
-			withStaxEventReader( inputStream, cls, (staxEventReader) -> {
-				final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
+	public void testManyToManyUniqueHbmTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/manytomany/UserGroup.hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
 
-				try {
-					final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
-					final JaxbHbmHibernateMapping hbmMapping = JaxbHelper.VALIDATING.jaxb( reader, MappingXsdSupport.hbmXml.getSchema(), jaxbCtx );
-					assertThat( hbmMapping ).isNotNull();
+			final JaxbEntityImpl userEntity = transformed.getEntities().stream()
+					.filter( e -> "User".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
 
-					final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() ).addHbmXmlBinding( new Binding<>(
-							hbmMapping,
-							new Origin( SourceType.RESOURCE, resourceName )
-					) ).buildMetadata();
-					final List<Binding<JaxbEntityMappingsImpl>> transformedBindingList = HbmXmlTransformer.transform(
-							singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
-							metadata,
-							UnsupportedFeatureHandling.ERROR
-					);
-					final JaxbEntityMappingsImpl transformed = transformedBindingList.get( 0 ).getRoot();
-
-					assertThat( transformed ).isNotNull();
-					assertThat( transformed.getEntities() ).hasSize( 2 );
-
-					final JaxbEntityImpl userEntity = transformed.getEntities().stream()
-							.filter( e -> "User".equals( e.getClazz() ) )
-							.findFirst()
-							.orElseThrow();
-
-					assertThat( userEntity.getAttributes().getManyToManyAttributes() ).isEmpty();
-					assertThat( userEntity.getAttributes().getOneToManyAttributes() ).hasSize( 1 );
-					final JaxbOneToManyImpl oneToMany = userEntity.getAttributes().getOneToManyAttributes().get( 0 );
+			assertThat( userEntity.getAttributes().getManyToManyAttributes() ).isEmpty();
+			assertThat( userEntity.getAttributes().getOneToManyAttributes() ).hasSize( 1 );
+			final JaxbOneToManyImpl oneToMany = userEntity.getAttributes().getOneToManyAttributes().get( 0 );
 
 					assertThat( oneToMany.getJoinTable() ).isNotNull();
 					assertThat( oneToMany.getJoinTable().getName() ).isEqualTo( "UserGroup" );
@@ -220,72 +206,84 @@ public class HbmTransformationJaxbTests {
 					assertThat( oneToMany.getJoinTable().getInverseJoinColumn() ).hasSize( 1 );
 					assertThat( oneToMany.getJoinTable().getInverseJoinColumn().get( 0 ).getName() ).isEqualTo( "groupName" );
 
-					assertThat( oneToMany.getCascade() ).isNotNull();
-					assertThat( oneToMany.getCascade().getCascadeAll() ).isNotNull();
+			assertThat( oneToMany.getCascade() ).isNotNull();
+			assertThat( oneToMany.getCascade().getCascadeAll() ).isNotNull();
 
-					assertThat( oneToMany.isOrphanRemoval() ).isTrue();
+			assertThat( oneToMany.isOrphanRemoval() ).isTrue();
 
-					assertThat( oneToMany.getMapKeyType() ).isNotNull();
-					assertThat( oneToMany.getMapKeyType().getValue() ).isEqualTo( "Integer" );
-				}
-				catch (JAXBException e) {
-					throw new RuntimeException( "Error during JAXB processing", e );
-				}
-			} );
-		}
-		catch (IOException e) {
-			throw new RuntimeException( "Error accessing mapping file", e );
-		}
+			assertThat( oneToMany.getMapKeyType() ).isNotNull();
+			assertThat( oneToMany.getMapKeyType().getValue() ).isEqualTo( "Integer" );
+		} );
 	}
 
-	private void verifyHbm(String resourceName, ClassLoaderService cls, ServiceRegistryScope scope) {
-		try ( final InputStream inputStream = cls.locateResourceStream( resourceName ) ) {
-			withStaxEventReader( inputStream, cls, (staxEventReader) -> {
-				final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
+	@Test
+	@JiraKey( "HHH-20483" )
+	public void testQuotedTableName(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/manytomany/UserGroup.hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
 
-				try {
-					final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
-					final JaxbHbmHibernateMapping hbmMapping = JaxbHelper.VALIDATING.jaxb( reader, MappingXsdSupport.hbmXml.getSchema(), jaxbCtx );
-					assertThat( hbmMapping ).isNotNull();
-					assertThat( hbmMapping.getClazz() ).hasSize( 1 );
+			final JaxbEntityImpl userEntity = transformed.getEntities().stream()
+					.filter( e -> "User".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
 
-					final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( scope.getRegistry() ).addHbmXmlBinding( new Binding<>(
-							hbmMapping,
-							new Origin( SourceType.RESOURCE, resourceName )
-					) ).buildMetadata();
-					final List<Binding<JaxbEntityMappingsImpl>> transformedBindingList = HbmXmlTransformer.transform(
-							singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
-							metadata,
-							UnsupportedFeatureHandling.ERROR
-					);
-					final JaxbEntityMappingsImpl transformed = transformedBindingList.get( 0 ).getRoot();
+			assertThat( userEntity.getTable() ).isNotNull();
+			assertThat( userEntity.getTable().getName() ).isEqualTo( "`User`" );
 
-					assertThat( transformed ).isNotNull();
-					assertThat( transformed.getEntities() ).hasSize( 1 );
-					assertThat( transformed.getPackage() ).isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping" );
+			final JaxbEntityImpl groupEntity = transformed.getEntities().stream()
+					.filter( e -> "Group".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
 
-					final JaxbEntityImpl ormEntity = transformed.getEntities().get( 0 );
-					assertThat( ormEntity.getName() ).isNull();
-					assertThat( ormEntity.getClazz() ).isEqualTo( "SimpleEntity" );
-
-					assertThat( ormEntity.getAttributes().getIdAttributes() ).hasSize( 1 );
-					assertThat( ormEntity.getAttributes().getBasicAttributes() ).hasSize( 1 );
-					assertThat( ormEntity.getAttributes().getEmbeddedAttributes() ).isEmpty();
-					assertThat( ormEntity.getAttributes().getOneToOneAttributes() ).isEmpty();
-					assertThat( ormEntity.getAttributes().getManyToOneAttributes() ).isEmpty();
-					assertThat( ormEntity.getAttributes().getAnyMappingAttributes() ).isEmpty();
-					assertThat( ormEntity.getAttributes().getOneToManyAttributes() ).isEmpty();
-					assertThat( ormEntity.getAttributes().getManyToManyAttributes() ).isEmpty();
-					assertThat( ormEntity.getAttributes().getPluralAnyMappingAttributes() ).isEmpty();
-				}
-				catch (JAXBException e) {
-					throw new RuntimeException( "Error during JAXB processing", e );
-				}
-			} );
-		}
-		catch (IOException e) {
-			throw new RuntimeException( "Error accessing mapping file", e );
-		}
+			assertThat( groupEntity.getTable() ).isNotNull();
+			assertThat( groupEntity.getTable().getName() ).isEqualTo( "`Group`" );
+		} );
 	}
 
+	private void transformAndVerify(
+			String resourceName,
+			ServiceRegistryScope scope,
+			Consumer<JaxbEntityMappingsImpl> assertions) {
+		scope.withService( ClassLoaderService.class, (cls) -> {
+			try (final InputStream inputStream = cls.locateResourceStream( resourceName )) {
+				withStaxEventReader( inputStream, cls, (staxEventReader) -> {
+					final XMLEventReader reader = new HbmEventReader( staxEventReader, XMLEventFactory.newInstance() );
+					try {
+						final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
+						final JaxbHbmHibernateMapping hbmMapping = JaxbHelper.VALIDATING.jaxb(
+								reader,
+								MappingXsdSupport.hbmXml.getSchema(),
+								jaxbCtx
+						);
+						assertThat( hbmMapping ).isNotNull();
+
+						final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources(
+								scope.getRegistry()
+						).addHbmXmlBinding( new Binding<>(
+								hbmMapping,
+								new Origin( SourceType.RESOURCE, resourceName )
+						) ).buildMetadata();
+						final List<Binding<JaxbEntityMappingsImpl>> transformedBindingList = HbmXmlTransformer.transform(
+								singletonList( new Binding<>(
+										hbmMapping,
+										new Origin( SourceType.RESOURCE, resourceName )
+								) ),
+								metadata,
+								UnsupportedFeatureHandling.ERROR
+						);
+						final JaxbEntityMappingsImpl transformed = transformedBindingList.get( 0 ).getRoot();
+						assertThat( transformed ).isNotNull();
+
+						assertions.accept( transformed );
+					}
+					catch (JAXBException e) {
+						throw new RuntimeException( "Error during JAXB processing", e );
+					}
+				} );
+			}
+			catch (IOException e) {
+				throw new RuntimeException( "Error accessing mapping file", e );
+			}
+		} );
+	}
 }

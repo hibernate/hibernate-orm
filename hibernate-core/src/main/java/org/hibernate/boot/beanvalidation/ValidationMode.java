@@ -33,11 +33,6 @@ public enum ValidationMode {
 		};
 	}
 
-	@Deprecated(since = "7.2", forRemoval = true)
-	public static Set<ValidationMode> getModes(Object modeProperty) {
-		return parseValidationModes( modeProperty );
-	}
-
 	public static Set<ValidationMode> parseValidationModes(Object modeProperty) {
 		final Set<ValidationMode> modes = setOfSize( 3 );
 		if ( modeProperty == null ) {

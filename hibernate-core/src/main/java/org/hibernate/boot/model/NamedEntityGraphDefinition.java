@@ -20,14 +20,4 @@ public record NamedEntityGraphDefinition
 	public NamedEntityGraphDefinition {
 		Objects.requireNonNull( name, "Named entity graph name cannot be null" );
 	}
-
-	@Deprecated(since = "7.0", forRemoval = true)
-	public String getRegisteredName() {
-		return name;
-	}
-
-	@Deprecated(since = "7.0", forRemoval = true)
-	public String getEntityName() {
-		return entityName;
-	}
 }

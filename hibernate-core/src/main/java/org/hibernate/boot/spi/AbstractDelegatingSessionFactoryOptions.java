@@ -28,7 +28,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -313,11 +312,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isAutoEvictCollectionCache() {
 		return delegate.isAutoEvictCollectionCache();
-	}
-
-	@Override @Deprecated
-	public SchemaAutoTooling getSchemaAutoTooling() {
-		return delegate.getSchemaAutoTooling();
 	}
 
 	@Override

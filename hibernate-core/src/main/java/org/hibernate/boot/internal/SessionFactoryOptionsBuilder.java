@@ -43,7 +43,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -270,8 +269,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Deprecated
 	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
 	@Deprecated(forRemoval = true)
-	private SchemaAutoTooling schemaAutoTooling;
-	@Deprecated(forRemoval = true)
 	private boolean delayBatchFetchLoaderCreations;
 	@Deprecated(forRemoval = true)
 	private boolean releaseResourcesOnCloseEnabled;
@@ -486,14 +483,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			structuredCacheEntriesEnabled = false;
 			directReferenceCacheEntriesEnabled = false;
 			autoEvictCollectionCache = false;
-		}
-
-		// deprecated, delete this:
-		try {
-			schemaAutoTooling = SchemaAutoTooling.interpret( (String) settings.get( HBM2DDL_AUTO ) );
-		}
-		catch (Exception e) {
-			// ignore, since this member is deprecated and ignored
 		}
 
 		final var meta = jdbcServices.getExtractedMetaDataSupport();
@@ -1347,12 +1336,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isAutoEvictCollectionCache() {
 		return autoEvictCollectionCache;
-	}
-
-	@Override
-	@Deprecated
-	public SchemaAutoTooling getSchemaAutoTooling() {
-		return schemaAutoTooling;
 	}
 
 	@Override

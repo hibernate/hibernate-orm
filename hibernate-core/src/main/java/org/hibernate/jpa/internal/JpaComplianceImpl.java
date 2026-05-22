@@ -32,11 +32,6 @@ public record JpaComplianceImpl(
 	}
 
 	@Override
-	public boolean isJpaCascadeComplianceEnabled() {
-		return cascadeCompliance;
-	}
-
-	@Override
 	public boolean isJpaClosedComplianceEnabled() {
 		return closedCompliance;
 	}

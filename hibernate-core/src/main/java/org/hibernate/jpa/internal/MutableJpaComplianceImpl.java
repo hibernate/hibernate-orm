@@ -96,10 +96,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 		return transactionCompliance;
 	}
 
-	public boolean isJpaCascadeComplianceEnabled() {
-		return true;
-	}
-
 	@Override
 	public boolean isJpaClosedComplianceEnabled() {
 		return closedCompliance;
@@ -132,10 +128,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutators
-
-	@Override
-	public void setCascadeCompliance(boolean cascadeCompliance) {
-	}
 
 	@Override
 	public void setOrderByMappingCompliance(boolean orderByMappingCompliance) {

@@ -1580,5 +1580,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Deprecated(since = "7.0", forRemoval = true)
 	ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode();
 
+	@Deprecated(since = "8.0", forRemoval = true)
 	boolean allowImmutableEntityUpdate();
 }

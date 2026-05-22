@@ -48,7 +48,7 @@ import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.common.FrameMode;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.internal.NullPrecedenceHelper;
+import org.hibernate.query.internal.NullsHelper;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -2583,7 +2583,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 					}
 					final boolean renderNullPrecedence = nullPrecedence != null
-							&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
+							&& !NullsHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
 					if ( sortOrder == SortDirection.DESCENDING ) {
 						appendSql( " desc" );
 					}
@@ -4449,7 +4449,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 		}
 		final boolean renderNullPrecedence = nullPrecedence != null
-				&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
+				&& !NullsHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
 		final boolean supportsNullPrecedence = renderNullPrecedence && dialect.supportsNullPrecedence();
 		if ( renderNullPrecedence && !supportsNullPrecedence ) {
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );

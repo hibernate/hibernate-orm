@@ -71,10 +71,9 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.internal.NullPrecedenceHelper;
+import org.hibernate.query.internal.NullsHelper;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -603,11 +602,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		if ( defaultNullPrecedence instanceof Nulls jpaValue ) {
 			return jpaValue;
 		}
-		else if ( defaultNullPrecedence instanceof NullPrecedence hibernateValue ) {
-			return hibernateValue.getJpaValue();
-		}
 		else if ( defaultNullPrecedence instanceof String string ) {
-			return NullPrecedenceHelper.parse( string );
+			return NullsHelper.parse( string );
 		}
 		else if ( defaultNullPrecedence != null ) {
 			throw new IllegalArgumentException( "Configuration property " + DEFAULT_NULL_ORDERING

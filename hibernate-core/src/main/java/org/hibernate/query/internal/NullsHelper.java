@@ -12,7 +12,7 @@ import jakarta.persistence.criteria.Nulls;
 /**
  * @author Steve Ebersole
  */
-public class NullPrecedenceHelper {
+public class NullsHelper {
 
 	/**
 	 * Is this null precedence the default for the given sort order and null ordering.
@@ -39,12 +39,12 @@ public class NullPrecedenceHelper {
 	}
 
 	/**
-	 * Interprets a string representation of a NullPrecedence, returning {@code null} by default.  For
+	 * Interprets a string representation of {@link Nulls}, returning {@code null} by default.  For
 	 * alternative default handling, see {@link #parse(String, Nulls)}
 	 *
 	 * @param name The String representation to interpret
 	 *
-	 * @return The recognized NullPrecedence, or {@code null}
+	 * @return The recognized {@link Nulls}, or {@code null}
 	 */
 	public static Nulls parse(String name) {
 		for ( var value : Nulls.values() ) {
@@ -56,18 +56,18 @@ public class NullPrecedenceHelper {
 	}
 
 	/**
-	 * Interprets a string representation of a NullPrecedence, returning the specified default if not recognized.
+	 * Interprets a string representation of {@link Nulls}, returning the specified default if not recognized.
 	 *
 	 * @param name The String representation to interpret
 	 * @param defaultValue The default value to use
 	 *
-	 * @return The recognized NullPrecedence, or {@code defaultValue}.
+	 * @return The recognized {@link Nulls}, or {@code defaultValue}.
 	 */
 	public static Nulls parse(String name, Nulls defaultValue) {
 		final var value = parse( name );
 		return value != null ? value : defaultValue;
 	}
 
-	private NullPrecedenceHelper() {
+	private NullsHelper() {
 	}
 }

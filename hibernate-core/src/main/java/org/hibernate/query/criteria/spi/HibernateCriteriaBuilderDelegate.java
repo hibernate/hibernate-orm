@@ -32,7 +32,6 @@ import jakarta.persistence.criteria.TemporalExpression;
 import jakarta.persistence.criteria.TextExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.*;
 import org.hibernate.query.common.TemporalUnit;
@@ -1421,16 +1420,6 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <M extends Map<?, ?>> JpaExpression<Integer> mapSize(M map) {
 		return criteriaBuilder.mapSize( map );
-	}
-
-	@Override @Deprecated
-	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
-		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence );
-	}
-
-	@Override @Deprecated
-	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase) {
-		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 	}
 
 	@Override

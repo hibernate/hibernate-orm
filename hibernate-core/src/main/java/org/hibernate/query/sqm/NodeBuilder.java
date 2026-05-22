@@ -25,7 +25,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCastTarget;
@@ -1553,22 +1552,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
 			boolean ignoreCase);
-
-	@Override @Deprecated
-	default SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
-		return (SqmSortSpecification)
-				HibernateCriteriaBuilder.super.sort( sortExpression, sortOrder, nullPrecedence );
-	}
-
-	@Override @Deprecated
-	default SqmSortSpecification sort(
-			JpaExpression<?> sortExpression,
-			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
-			boolean ignoreCase) {
-		return (SqmSortSpecification)
-				HibernateCriteriaBuilder.super.sort( sortExpression, sortOrder, nullPrecedence, ignoreCase );
-	}
 
 	@Override
 	SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder);

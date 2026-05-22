@@ -23,7 +23,6 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
@@ -45,7 +44,6 @@ import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
 import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.generator.Generator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -152,25 +150,6 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * Get the EventEngine associated with this SessionFactory
 	 */
 	EventEngine getEventEngine();
-
-	/**
-	 * Retrieve a {@linkplain FetchProfile fetch profile} by name.
-	 *
-	 * @param name The name of the profile to retrieve.
-	 * @return The profile definition
-	 *
-	 * @deprecated Use {@link SqlTranslationEngine#getFetchProfile(String)}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	FetchProfile getFetchProfile(String name);
-
-	/**
-	 * Get the identifier generator for the hierarchy
-	 *
-	 * @deprecated Only used in one place, will be removed
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	Generator getGenerator(String rootEntityName);
 
 	/**
 	 * Obtain the {@link EntityNotFoundDelegate}

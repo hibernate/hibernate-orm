@@ -35,12 +35,10 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
-import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -235,11 +233,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getDefinedFetchProfileNames();
 	}
 
-	@Override @Deprecated
-	public Generator getGenerator(String rootEntityName) {
-		return delegate.getGenerator( rootEntityName );
-	}
-
 	@Override
 	public Map<String, Object> getProperties() {
 		return delegate.getProperties();
@@ -316,11 +309,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return delegate.getEntityNotFoundDelegate();
-	}
-
-	@Override
-	public FetchProfile getFetchProfile(String name) {
-		return delegate.getFetchProfile( name );
 	}
 
 	@Override

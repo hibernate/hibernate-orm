@@ -108,6 +108,6 @@ public abstract class BaseSqmUnitTest
 
 	@Override
 	public FetchProfile getFetchProfile(String name) {
-		return sessionFactory().getFetchProfile( name );
+		return sessionFactory().getSqlTranslationEngine().getFetchProfile( name );
 	}
 }

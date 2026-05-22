@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.hibernate.testing.orm.junit.DialectContext.awaitTimestampTick;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,8 +61,9 @@ class TemporalEntityPartitionedTest {
 					session.persist( child );
 				}
 		);
+		awaitTimestampTick();
 		var instant = Instant.now();
-		awaitOracleClockTick();
+		awaitTimestampTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -75,7 +77,7 @@ class TemporalEntityPartitionedTest {
 					entity.children.get(0).friends.add( friend );
 				}
 		);
-		awaitOracleClockTick();
+		awaitTimestampTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -142,8 +144,9 @@ class TemporalEntityPartitionedTest {
 				assertEquals( 0, friends );
 			} );
 		}
+		awaitTimestampTick();
 		var nextInstant = Instant.now();
-		awaitOracleClockTick();
+		awaitTimestampTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -152,7 +155,7 @@ class TemporalEntityPartitionedTest {
 					entity.children.get(0).friends.clear();
 				}
 		);
-		awaitOracleClockTick();
+		awaitTimestampTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -184,7 +187,7 @@ class TemporalEntityPartitionedTest {
 					session.remove( entity );
 				}
 		);
-		awaitOracleClockTick();
+		awaitTimestampTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -208,8 +211,9 @@ class TemporalEntityPartitionedTest {
 					session.insert( entity );
 				}
 		);
+		awaitTimestampTick();
 		var instant = Instant.now();
-		awaitOracleClockTick();
+		awaitTimestampTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity3 entity = session.get( TemporalEntity3.class, 2L );
@@ -217,7 +221,7 @@ class TemporalEntityPartitionedTest {
 					session.update( entity );
 				}
 		);
-		awaitOracleClockTick();
+		awaitTimestampTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity3 entity = session.get( TemporalEntity3.class, 2L );
@@ -244,7 +248,7 @@ class TemporalEntityPartitionedTest {
 					session.delete( entity );
 				}
 		);
-		awaitOracleClockTick();
+		awaitTimestampTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity3 entity = session.get( TemporalEntity3.class, 2L );
@@ -257,13 +261,6 @@ class TemporalEntityPartitionedTest {
 				assertEquals( "hello", entity.text );
 			} );
 		}
-	}
-
-	private static void awaitOracleClockTick() throws InterruptedException {
-		// Since the nanosecond resolution clock on the database might be slightly off compared to the JVM clock,
-		// wait some time after doing an insert/update to allow a following "as of period for system_time current_timestamp"
-		// query to actually see the changes
-		Thread.sleep( 100 );
 	}
 
 	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")

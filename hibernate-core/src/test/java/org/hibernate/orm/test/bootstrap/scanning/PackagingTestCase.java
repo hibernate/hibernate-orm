@@ -118,6 +118,16 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 	@AfterEach
 	public void resetTCCL() {
 		// reset the classloader
+		final ClassLoader contextClassLoader = thread.getContextClassLoader();
+		if ( contextClassLoader instanceof URLClassLoader urlClassLoader
+			&& urlClassLoader != bundleClassLoader ) {
+			try {
+				urlClassLoader.close();
+			}
+			catch (IOException e) {
+				// Ignore
+			}
+		}
 		thread.setContextClassLoader( originalClassLoader );
 	}
 

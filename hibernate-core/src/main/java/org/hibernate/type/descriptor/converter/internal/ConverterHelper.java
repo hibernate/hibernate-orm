@@ -5,12 +5,15 @@
 package org.hibernate.type.descriptor.converter.internal;
 
 import jakarta.persistence.AttributeConverter;
+import org.hibernate.HibernateException;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 
@@ -61,5 +64,33 @@ public class ConverterHelper {
 			TypeConfiguration typeConfiguration) {
 		var converterBean = serviceRegistry.requireService( ManagedBeanRegistry.class ).getBean( converterClass );
 		return createJpaAttributeConverter( converterBean, typeConfiguration.getJavaTypeRegistry() );
+	}
+
+	public static <X> BasicType<X> createConvertedParameterType(
+			Class<? extends AttributeConverter<X,?>> converterClass,
+			ServiceRegistry serviceRegistry,
+			TypeConfiguration typeConfiguration) {
+		//noinspection unchecked,rawtypes
+		final JpaAttributeConverter<X,Object> converter =
+				createJpaAttributeConverter( (Class) converterClass, serviceRegistry, typeConfiguration );
+		final var relationalJavaType = converter.getRelationalJavaType();
+		final var relationalType =
+				typeConfiguration.standardBasicTypeForJavaType( relationalJavaType.getJavaTypeClass() );
+		if ( relationalType == null ) {
+			throw new HibernateException(
+					"Unable to determine JDBC type for converted parameter relational type: "
+							+ relationalJavaType.getTypeName()
+			);
+		}
+		return new ConvertedBasicTypeImpl<>(
+				"converted-parameter::" + converter.getConverterJavaType().getTypeName(),
+				String.format(
+						"BasicType adapter for converted query parameter AttributeConverter<%s,%s>",
+						converter.getDomainJavaType().getTypeName(),
+						relationalJavaType.getTypeName()
+				),
+				relationalType.getJdbcType(),
+				converter
+		);
 	}
 }

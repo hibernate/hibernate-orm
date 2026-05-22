@@ -55,7 +55,6 @@ import org.hibernate.query.sqm.tree.expression.SqmJsonTableFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
-import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
 import org.hibernate.query.sqm.tree.expression.SqmXmlTableFunction;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -105,29 +104,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	default NodeBuilder getNodeBuilder() {
 		return this;
 	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Obsolete operations marked for removal
-
-	@Deprecated(since = "7", forRemoval = true)
-	<R> SqmTuple<R> tuple(
-			Class<R> tupleType,
-			SqmExpression<?>... expressions);
-
-	@Deprecated(since = "7", forRemoval = true)
-	<R> SqmTuple<R> tuple(
-			Class<R> tupleType,
-			List<? extends SqmExpression<?>> expressions);
-
-	@Deprecated(since = "7", forRemoval = true)
-	<R> SqmTuple<R> tuple(
-			SqmExpressible<R> tupleType,
-			SqmExpression<?>... expressions);
-
-	@Deprecated(since = "7", forRemoval = true)
-	<R> SqmTuple<R> tuple(
-			SqmExpressible<R> tupleType,
-			List<? extends SqmExpression<?>> expressions);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for array types

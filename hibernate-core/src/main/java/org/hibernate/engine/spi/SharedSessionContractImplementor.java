@@ -722,7 +722,7 @@ public interface SharedSessionContractImplementor
 	@Override
 	<T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType);
 
-	@Override
+	@Override @Deprecated
 	RootGraphImplementor<?> createEntityGraph(String graphName);
 
 	@Override

@@ -43,7 +43,9 @@ public interface BytecodeEnhancementMetadata {
 	 * @apiNote The `addEmptyEntry` parameter is used to avoid creation of `EntityEntry` instances when we
 	 * do not need them. - mainly from StatelessSession
 	 */
-	PersistentAttributeInterceptable createEnhancedProxy(EntityKey keyToLoad, boolean addEmptyEntry, SharedSessionContractImplementor session);
+	PersistentAttributeInterceptable createEnhancedProxy(
+			EntityKey keyToLoad, boolean addEmptyEntry,
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Build and inject an interceptor instance into the enhanced entity.
@@ -59,7 +61,8 @@ public interface BytecodeEnhancementMetadata {
 	LazyAttributeLoadingInterceptor injectInterceptor(
 			Object entity,
 			Object identifier,
-			SharedSessionContractImplementor session) throws NotInstrumentedException;
+			SharedSessionContractImplementor session)
+				throws NotInstrumentedException;
 
 	void injectInterceptor(
 			Object entity,
@@ -80,9 +83,11 @@ public interface BytecodeEnhancementMetadata {
 	 *
 	 * @throws NotInstrumentedException Thrown if {@link #isEnhancedForLazyLoading()} returns {@code false}
 	 */
-	@Nullable LazyAttributeLoadingInterceptor extractInterceptor(Object entity) throws NotInstrumentedException;
+	@Nullable LazyAttributeLoadingInterceptor extractInterceptor(Object entity)
+			throws NotInstrumentedException;
 
-	@Nullable BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity) throws NotInstrumentedException;
+	@Nullable BytecodeLazyAttributeInterceptor extractLazyInterceptor(Object entity)
+			throws NotInstrumentedException;
 
 	boolean hasUnFetchedAttributes(Object entity);
 

@@ -23,11 +23,11 @@ import jakarta.persistence.Inheritance;
 public abstract class Named {
 
 	@Id
-	private final String name;
+	private String name;
 
 	@Column
 	@Audited
-	private final String type;
+	private String type;
 
 	@Column
 	@Audited

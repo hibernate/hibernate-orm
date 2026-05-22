@@ -341,9 +341,10 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.STARTING_TYPE_DISCOVERY));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.ENDING_TYPE_DISCOVERY));
 		logMessages.clear();
-		List<File> sourceSet = new ArrayList<File>();
+		@SuppressWarnings("unchecked")
+		List<File> sourceSet = (List<File>) sourceSetField.get(enhanceMojo);
+		sourceSet.clear();
 		sourceSet.add(barClassFile);
-		sourceSetField.set(enhanceMojo, sourceSet);
 		discoverTypesMethod.invoke(enhanceMojo);
 		assertTrue(hasRun.contains(true));
 		// verify the log messages
@@ -501,9 +502,10 @@ public class HibernateEnhancerMojoTest {
 					}
 				});
 		enhancerField.set(enhanceMojo, enhancer);
-		List<File> sourceSet = new ArrayList<File>();
+		@SuppressWarnings("unchecked")
+		List<File> sourceSet = (List<File>) sourceSetField.get(enhanceMojo);
+		sourceSet.clear();
 		sourceSet.add(barClassFile);
-		sourceSetField.set(enhanceMojo, sourceSet);
 		long lastModified = barClassFile.lastModified();
 		assertFalse(hasRun.contains(true));
 		assertNotEquals("foobar", new String(Files.readAllBytes(barClassFile.toPath())));
@@ -562,10 +564,11 @@ public class HibernateEnhancerMojoTest {
 		compiler.run(null, null, null, options);
 		String barBytesString = new String(Files.readAllBytes(barClassFile.toPath()));
 		String fooBytesString = new String(Files.readAllBytes(fooClassFile.toPath()));
-		List<File> sourceSet = new ArrayList<File>();
+		@SuppressWarnings("unchecked")
+		List<File> sourceSet = (List<File>) sourceSetField.get(enhanceMojo);
+		sourceSet.clear();
 		sourceSet.add(barClassFile);
 		sourceSet.add(fooClassFile);
-		sourceSetField.set(enhanceMojo, sourceSet);
 		assertTrue(logMessages.isEmpty());
 		executeMethod.invoke(enhanceMojo);
 		assertNotEquals(barBytesString, new String(Files.readAllBytes(barClassFile.toPath())));

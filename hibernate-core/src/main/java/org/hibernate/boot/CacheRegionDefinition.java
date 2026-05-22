@@ -17,35 +17,9 @@ package org.hibernate.boot;
 public record CacheRegionDefinition(CacheRegionType regionType,
 									String role, String usage, String region,
 									boolean cacheLazy) {
-
 	public enum CacheRegionType {
 		ENTITY,
 		COLLECTION,
 		QUERY
-	}
-
-	@Deprecated(since = "7")
-	public CacheRegionType getRegionType() {
-		return regionType;
-	}
-
-	@Deprecated(since = "7")
-	public String getRole() {
-		return role;
-	}
-
-	@Deprecated(since = "7")
-	public String getUsage() {
-		return usage;
-	}
-
-	@Deprecated(since = "7")
-	public String getRegion() {
-		return region;
-	}
-
-	@Deprecated(since = "7")
-	public boolean isCacheLazy() {
-		return cacheLazy;
 	}
 }

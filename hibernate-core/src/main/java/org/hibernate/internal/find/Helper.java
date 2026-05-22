@@ -33,7 +33,7 @@ public class Helper {
 		final var identifierMapping = entityPersister.getIdentifierMapping();
 		if ( isLoadByIdComplianceEnabled( factory ) ) {
 			final var javaType = identifierMapping.getJavaType();
-			if ( !javaType.isInstance( id ) ) {
+			if ( !identifierMapping.isVirtual() && !javaType.isInstance( id ) ) {
 				// per expectation of EntityHandler#find / EntityHandler#get
 				throw new IllegalArgumentException(
 						"Given value '%s' did not match expected identifier type '%s' of entity '%s'"

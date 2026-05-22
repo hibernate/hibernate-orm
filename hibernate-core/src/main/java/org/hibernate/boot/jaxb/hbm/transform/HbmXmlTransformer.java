@@ -661,7 +661,7 @@ public class HbmXmlTransformer {
 		else {
 			final var jaxbTable = new JaxbTableImpl();
 			jaxbEntity.setTable( jaxbTable );
-			jaxbTable.setName( table.getName() );
+			jaxbTable.setName( table.getQuotedName() );
 			jaxbTable.setComment( table.getComment() );
 			transferBaseTableInfo( table, jaxbTable );
 		}

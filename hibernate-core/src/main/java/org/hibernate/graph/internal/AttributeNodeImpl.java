@@ -6,6 +6,7 @@ package org.hibernate.graph.internal;
 
 import jakarta.persistence.AttributeNode;
 import jakarta.persistence.FetchOption;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Subgraph;
 import jakarta.persistence.metamodel.Attribute;
 import org.hibernate.AssertionFailure;
@@ -68,7 +69,11 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 
 	@Override
 	public AttributeNodeImplementor<J, E, K> markRemoved(boolean removed) {
-		this.removed = removed;
+		verifyMutability();
+		setFetchType( removed ? FetchType.LAZY : FetchType.EAGER );
+		if ( removed ) {
+			clearSubgraphs();
+		}
 		return this;
 	}
 
@@ -84,13 +89,24 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 
 	@Override
 	public AttributeNode<J> addOption(FetchOption option) {
-		options.add(option);
+		verifyMutability();
+		replaceOption( option );
 		return this;
 	}
 
 	@Override
 	public Set<FetchOption> getOptions() {
-		return options;
+		return new HashSet<>( options );
+	}
+
+	@Override
+	public FetchType getFetchType() {
+		for ( var option : options ) {
+			if ( option instanceof FetchType fetchType ) {
+				return fetchType;
+			}
+		}
+		return null;
 	}
 
 	static <J> AttributeNodeImpl<J,?,?> create(
@@ -144,6 +160,8 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		attribute = that.attribute;
 		valueGraphType = that.valueGraphType;
 		keyGraphType = that.keyGraphType;
+		removed = that.removed;
+		options.addAll( that.options );
 		valueSubgraph = that.valueSubgraph == null ? null : that.valueSubgraph.makeCopy( mutable );
 		keySubgraph = that.keySubgraph == null ? null : that.keySubgraph.makeCopy( mutable );
 	}
@@ -161,6 +179,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	@Override
 	public SubGraphImplementor<E> addValueSubgraph() {
 		verifyMutability();
+		setFetchType( FetchType.EAGER );
 		// this one is intentionally lenient and disfavored
 		if ( valueSubgraph == null ) {
 			valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
@@ -221,6 +240,9 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	public void merge(AttributeNodeImplementor<J, E, K> that) {
 		assert that.isMutable() == isMutable();
 		assert that.getAttributeDescriptor() == attribute;
+		for ( var option : that.getOptions() ) {
+			replaceOption( option );
+		}
 		final var otherValueSubgraph = that.getValueSubgraph();
 		if ( otherValueSubgraph != null ) {
 			if ( valueSubgraph == null ) {
@@ -279,6 +301,28 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		return keySubgraph;
 	}
 
+	private void clearSubgraphs() {
+		valueSubgraph = null;
+		keySubgraph = null;
+	}
+
+	protected final void setFetchType(FetchType fetchType) {
+		options.removeIf( FetchType.class::isInstance );
+		options.add( fetchType );
+		removed = fetchType == FetchType.LAZY;
+	}
+
+	private void replaceOption(FetchOption option) {
+		options.removeIf( existing -> existing.getClass() == option.getClass() );
+		options.add( option );
+		if ( option instanceof FetchType fetchType ) {
+			removed = fetchType == FetchType.LAZY;
+			if ( removed ) {
+				clearSubgraphs();
+			}
+		}
+	}
+
 	static final class SingularAttributeNodeImpl<J> extends AttributeNodeImpl<J, J, Void> {
 		private SingularAttributeNodeImpl(
 				SingularPersistentAttribute<?,J> attribute,
@@ -295,6 +339,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		public SubGraphImplementor<J> addSingularSubgraph() {
 			checkToOne();
 			verifyMutability();
+			setFetchType( FetchType.EAGER );
 			if ( valueSubgraph == null ) {
 				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
 			}
@@ -323,6 +368,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		public SubGraphImplementor<E> addElementSubgraph() {
 			checkToMany();
 			verifyMutability();
+			setFetchType( FetchType.EAGER );
 			if ( valueSubgraph == null ) {
 				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
 			}
@@ -352,6 +398,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		@Override
 		public SubGraphImplementor<K> addKeySubgraph() {
 			verifyMutability();
+			setFetchType( FetchType.EAGER );
 			if ( keySubgraph == null ) {
 				keySubgraph = new SubGraphImpl<>( asManagedType( keyGraphType ), true );
 			}
@@ -362,6 +409,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		public SubGraphImplementor<V> addElementSubgraph() {
 			checkToMany();
 			verifyMutability();
+			setFetchType( FetchType.EAGER );
 			if ( valueSubgraph == null ) {
 				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
 			}

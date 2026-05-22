@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.query.spi.QueryOptions;
 
@@ -24,12 +25,14 @@ public class AppliedGraphs {
 
 	private static boolean containsCollectionFetches(GraphImplementor<?> graph) {
 		for ( var node : graph.getNodes().values() ) {
-			if ( node.getAttributeDescriptor().isCollection() ) {
-				return true;
-			}
-			for ( var subgraph : node.getSubGraphs().values() ) {
-				if ( containsCollectionFetches( subgraph ) ) {
+			if ( node.getFetchType() == FetchType.EAGER ) {
+				if ( node.getAttributeDescriptor().isCollection() ) {
 					return true;
+				}
+				for ( var subgraph : node.getSubGraphs().values() ) {
+					if ( containsCollectionFetches( subgraph ) ) {
+						return true;
+					}
 				}
 			}
 		}

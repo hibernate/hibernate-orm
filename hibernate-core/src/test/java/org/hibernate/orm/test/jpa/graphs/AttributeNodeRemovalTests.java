@@ -22,7 +22,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+
+import static jakarta.persistence.FetchType.EAGER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Steve Ebersole
@@ -76,6 +79,17 @@ public class AttributeNodeRemovalTests {
 
 		factoryScope.inTransaction( (session) -> {
 			var entityGraph = session.createEntityGraph( Post.class );
+			var post = session.find( entityGraph, 1, GraphSemantic.LOAD );
+
+			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isTrue();
+
+			assertThat( Hibernate.isPropertyInitialized( post, "forum" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getForum() ) ).isFalse();
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			var entityGraph = session.createEntityGraph( Post.class );
 			var post = session.find( entityGraph, 1, GraphSemantic.FETCH );
 
 			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
@@ -92,6 +106,18 @@ public class AttributeNodeRemovalTests {
 			var entityGraph = session.createEntityGraph( Post.class );
 			entityGraph.addAttributeNodes( "forum" );
 			var post = session.find( entityGraph, 1 );
+
+			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isTrue();
+
+			assertThat( Hibernate.isPropertyInitialized( post, "forum" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getForum() ) ).isTrue();
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			var entityGraph = session.createEntityGraph( Post.class );
+			entityGraph.addAttributeNodes( "forum" );
+			var post = session.find( entityGraph, 1, GraphSemantic.LOAD );
 
 			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
 			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isTrue();
@@ -130,6 +156,18 @@ public class AttributeNodeRemovalTests {
 		factoryScope.inTransaction( (session) -> {
 			var entityGraph = session.createEntityGraph( Post.class );
 			entityGraph.removeAttributeNode( "forum" );
+			var post = session.find( entityGraph, 1, GraphSemantic.LOAD );
+
+			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isTrue();
+
+			assertThat( Hibernate.isPropertyInitialized( post, "forum" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getForum() ) ).isFalse();
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			var entityGraph = session.createEntityGraph( Post.class );
+			entityGraph.removeAttributeNode( "forum" );
 			var post = session.find( entityGraph, 1, GraphSemantic.FETCH );
 
 			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
@@ -146,6 +184,18 @@ public class AttributeNodeRemovalTests {
 			var entityGraph = session.createEntityGraph( Post.class );
 			entityGraph.addAttributeNode( "author" );
 			var post = session.find( entityGraph, 1 );
+
+			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isTrue();
+
+			assertThat( Hibernate.isPropertyInitialized( post, "forum" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getForum() ) ).isFalse();
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			var entityGraph = session.createEntityGraph( Post.class );
+			entityGraph.addAttributeNode( "author" );
+			var post = session.find( entityGraph, 1, GraphSemantic.LOAD );
 
 			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
 			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isTrue();
@@ -184,11 +234,23 @@ public class AttributeNodeRemovalTests {
 		factoryScope.inTransaction( (session) -> {
 			var entityGraph = session.createEntityGraph( Post.class );
 			entityGraph.removeAttributeNode( "author" );
+			var post = session.find( entityGraph, 1, GraphSemantic.LOAD );
+
+			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isFalse();
+
+			assertThat( Hibernate.isPropertyInitialized( post, "forum" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getForum() ) ).isFalse();
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			var entityGraph = session.createEntityGraph( Post.class );
+			entityGraph.removeAttributeNode( "author" );
 			var post = session.find( entityGraph, 1, GraphSemantic.FETCH );
 
-			// here we should fall back to mapped fetch strategy
+			// here we should NOT fall back to mapped fetch strategy (default to LAZY)
 			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
-			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isFalse();
 
 			assertThat( Hibernate.isPropertyInitialized( post, "forum" ) ).isTrue();
 			assertThat( Hibernate.isInitialized( post.getForum() ) ).isFalse();
@@ -226,9 +288,85 @@ public class AttributeNodeRemovalTests {
 		assertThat( entityGraph.getNodes() ).isEmpty();
 		assertThat( entityGraph.getAttributeNode( "author" ) ).isNull();
 		assertThat( entityGraph.getAttributeNode( "forum" ) ).isNull();
-		assertThat( entityGraph.findNode( "author" ) ).isNotNull();
-		assertThat( entityGraph.findNode( "author" ).isRemoved() ).isTrue();
+		assertThat( entityGraph.findNode( "author" ) ).isNull();
 		assertThat( entityGraph.findNode( "forum" ) ).isNull();
+	}
+
+	@Test
+	void testFetchTypeOptions(SessionFactoryScope factoryScope) {
+		final RootGraphImplementor<Post> entityGraph = factoryScope.getSessionFactory().createEntityGraph( Post.class );
+
+		final var authorNode = entityGraph.addAttributeNode( "author" );
+		assertThat( authorNode.getOptions() ).containsExactlyInAnyOrder( EAGER );
+
+		authorNode.getOptions().clear();
+		assertThat( authorNode.getOptions() ).containsExactlyInAnyOrder( EAGER );
+
+		authorNode.addOption( FetchType.LAZY );
+		assertThat( authorNode.getOptions() ).containsExactlyInAnyOrder( FetchType.LAZY );
+		assertThat( entityGraph.getAttributeNode( "author" ) ).isNotNull();
+		assertThat( entityGraph.findNode( "author" ).isRemoved() ).isTrue();
+
+		authorNode.addOption( EAGER );
+		assertThat( authorNode.getOptions() ).containsExactlyInAnyOrder( EAGER );
+		assertThat( entityGraph.getAttributeNode( "author" ) ).isSameAs( authorNode );
+
+		authorNode.addOption( FetchType.DEFAULT );
+		assertThat( authorNode.getOptions() ).containsExactlyInAnyOrder( FetchType.DEFAULT );
+		assertThat( entityGraph.findNode( "author" ).isRemoved() ).isFalse();
+	}
+
+	@Test
+	void testLazyFetchTypeOption(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var entityGraph = session.createEntityGraph( Post.class );
+			entityGraph.addAttributeNode( "author" ).addOption( FetchType.LAZY );
+			var post = session.find( entityGraph, 1 );
+
+			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isFalse();
+		} );
+
+		factoryScope.inTransaction( (session) -> {
+			var entityGraph = session.createEntityGraph( Post.class );
+			entityGraph.addAttributeNode( "author" ).addOption( FetchType.LAZY );
+			var post = session.find( entityGraph, 1, GraphSemantic.FETCH );
+
+			assertThat( Hibernate.isPropertyInitialized( post, "author" ) ).isTrue();
+			assertThat( Hibernate.isInitialized( post.getAuthor() ) ).isFalse();
+		} );
+	}
+
+	@Test
+	void testAddRemoveOptionsCancel(SessionFactoryScope factoryScope) {
+		final RootGraphImplementor<Post> entityGraph = factoryScope.getSessionFactory().createEntityGraph( Post.class );
+
+		entityGraph.removeAttributeNode( "author" );
+		assertThat( entityGraph.getAttributeNodes() ).hasSize( 1 );
+		assertThat( entityGraph.findNode( "author" ).getOptions() ).containsExactlyInAnyOrder( FetchType.LAZY );
+
+		entityGraph.addAttributeNode( "author" );
+		assertThat( entityGraph.getAttributeNodes() ).hasSize( 1 );
+		assertThat( entityGraph.findNode( "author" ).getOptions() ).containsExactlyInAnyOrder( EAGER );
+
+		entityGraph.removeAttributeNode( "author" );
+		assertThat( entityGraph.getAttributeNodes() ).isEmpty();
+		assertNull( entityGraph.findNode( "author" ) );
+	}
+
+	@Test
+	void testRemoveAttributeNodeClearsSubgraph(SessionFactoryScope factoryScope) {
+		final RootGraphImplementor<Post> entityGraph = factoryScope.getSessionFactory().createEntityGraph( Post.class );
+
+		entityGraph.addSubgraph( "author" ).addAttributeNode( "name" );
+		var author = entityGraph.findNode( "author" );
+		assertThat( author.getOptions() ).containsExactlyInAnyOrder( EAGER );
+		assertThat( author.getSubGraphs() ).isNotEmpty();
+
+		// this removal "cancels" the previous addition, leaving no node behind
+		entityGraph.removeAttributeNode( "author" );
+		assertThat( entityGraph.getAttributeNodes() ).isEmpty();
+		assertNull( entityGraph.findNode( "author" ) );
 	}
 
 	@Entity(name="Person")
@@ -298,7 +436,7 @@ public class AttributeNodeRemovalTests {
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name="forum_fk")
 		private Forum forum;
-		@ManyToOne(fetch = FetchType.EAGER)
+		@ManyToOne(fetch = EAGER)
 		@JoinColumn(name="author_fk")
 		private Person author;
 

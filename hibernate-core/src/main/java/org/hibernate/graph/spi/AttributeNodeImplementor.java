@@ -4,6 +4,7 @@
  */
 package org.hibernate.graph.spi;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.graph.AttributeNode;
 
 import java.util.Map;
@@ -36,6 +37,12 @@ public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, Gra
 	 * @return {@code this} for chaining.
 	 */
 	AttributeNodeImplementor<J, E, K> markRemoved(boolean removed);
+
+	/**
+	 * The {@link FetchType} option applied to this node, or {@code null}
+	 * if this node neither adds nor removes the attribute.
+	 */
+	FetchType getFetchType();
 
 	/**
 	 * Create a value subgraph, without knowing whether it represents a singular value or

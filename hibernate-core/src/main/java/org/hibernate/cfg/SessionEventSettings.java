@@ -64,11 +64,4 @@ public interface SessionEventSettings {
 	 */
 	String SESSION_SCOPED_INTERCEPTOR = "hibernate.session_factory.session_scoped_interceptor";
 
-	/**
-	 * @deprecated This setting is now ignored. Enable the log category
-	 *             {@code org.hibernate.session.metrics} to automatically
-	 *             collect and log session-level metrics.
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	String LOG_SESSION_METRICS = "hibernate.session.events.log";
 }

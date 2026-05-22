@@ -57,12 +57,6 @@ public interface JpaCompliance {
 	boolean isJpaClosedComplianceEnabled();
 
 	/**
-	 * @deprecated No longer has any effect.
-	 */
-	@Deprecated(since = "7.0")
-	boolean isJpaCascadeComplianceEnabled();
-
-	/**
 	 * JPA spec says that an {@link jakarta.persistence.EntityNotFoundException}
 	 * should be thrown when accessing an entity proxy which does not have
 	 * an associated table row in the database.

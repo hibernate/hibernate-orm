@@ -330,12 +330,6 @@ public interface JavaType<T> extends Serializable {
 		return false;
 	}
 
-	@FunctionalInterface
-	@Deprecated(forRemoval = true, since = "7.2")
-	interface CoercionContext {
-		TypeConfiguration getTypeConfiguration();
-	}
-
 	/**
 	 * Coerce the given value to this type, if possible.
 	 * <p>

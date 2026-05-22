@@ -45,7 +45,6 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Set;
@@ -84,8 +83,7 @@ import java.util.function.Supplier;
  * @author Steve Ebersole
  */
 public interface SharedSessionContractImplementor
-		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions,
-					JavaType.CoercionContext {
+		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions {
 
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.

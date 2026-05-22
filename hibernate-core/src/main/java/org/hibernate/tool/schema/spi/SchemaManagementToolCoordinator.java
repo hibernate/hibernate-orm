@@ -785,20 +785,5 @@ public class SchemaManagementToolCoordinator {
 			}
 			return interpret( contributors, configuration );
 		}
-
-		@Deprecated(since = "7.2", forRemoval = true)
-		public String getContributor() {
-			return contributor;
-		}
-
-		@Deprecated(since = "7.2", forRemoval = true)
-		public Action getDatabaseAction() {
-			return databaseAction;
-		}
-
-		@Deprecated(since = "7.2", forRemoval = true)
-		public Action getScriptAction() {
-			return scriptAction;
-		}
 	}
 }

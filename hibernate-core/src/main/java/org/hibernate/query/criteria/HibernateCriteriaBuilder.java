@@ -22,7 +22,6 @@ import java.util.Set;
 import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.common.TemporalUnit;
@@ -1121,26 +1120,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence);
 
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence, boolean ignoreCase);
-
-	/**
-	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls)} instead
-	 */
-	@Deprecated(since = "7")
-	default JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
-		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
-	}
-
-	/**
-	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls, boolean)} instead
-	 */
-	@Deprecated(since = "7")
-	default JpaOrder sort(
-			JpaExpression<?> sortExpression,
-			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
-			boolean ignoreCase) {
-		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue(), ignoreCase );
-	}
 
 	@Override
 	JpaOrder asc(Expression<?> x);

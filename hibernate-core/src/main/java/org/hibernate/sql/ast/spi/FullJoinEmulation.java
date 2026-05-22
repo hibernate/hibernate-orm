@@ -36,7 +36,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
-import static org.hibernate.query.internal.NullPrecedenceHelper.isDefaultOrdering;
+import static org.hibernate.query.internal.NullsHelper.isDefaultOrdering;
 import static org.hibernate.query.sqm.SetOperator.EXCEPT_ALL;
 import static org.hibernate.query.sqm.SetOperator.UNION_ALL;
 import static org.hibernate.sql.ast.SqlAstJoinType.INNER;

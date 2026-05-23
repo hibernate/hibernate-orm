@@ -50,7 +50,6 @@ import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedStatelessSessionBuilderImpl;
 import org.hibernate.engine.extension.spi.Extension;
-import org.hibernate.engine.extension.spi.ExtensionIntegration;
 import org.hibernate.engine.extension.spi.ExtensionIntegrationContext;
 import org.hibernate.engine.extension.spi.ExtensionIntegrationService;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
@@ -308,7 +307,7 @@ abstract class AbstractSharedSessionContract
 		}
 
 		extensions = new HashMap<>();
-		for ( ExtensionIntegration<?> integration : factory.getServiceRegistry()
+		for ( var integration : factory.getServiceRegistry()
 				.requireService( ExtensionIntegrationService.class )
 				.extensionIntegrations() ) {
 			extensions.put( integration.getExtensionType(), integration.createExtension( this ) );

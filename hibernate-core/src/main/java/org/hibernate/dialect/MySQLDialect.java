@@ -100,7 +100,6 @@ import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
 import static org.hibernate.cfg.SchemaToolingSettings.STORAGE_ENGINE;
-import static org.hibernate.dialect.MySQLServerConfiguration.getBytesPerCharacter;
 import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_LOCKING_SUPPORT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
@@ -232,13 +231,9 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		this( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
+		this( createVersion( info, MINIMUM_VERSION ),
+				MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
-	}
-
-	@Deprecated(since="6.6")
-	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
-		return createVersion( info, MINIMUM_VERSION );
 	}
 
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
@@ -476,26 +471,6 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public AggregateSupport getAggregateSupport() {
 		return MySQLAggregateSupport.forMySQL( this );
-	}
-
-	/**
-	 * @deprecated No longer called; will be removed.
-	 */
-	@Deprecated(since="6.4", forRemoval = true)
-	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
-		if ( databaseMetaData != null ) {
-			try (var statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet rs = statement.executeQuery( "SELECT @@character_set_database" );
-				if ( rs.next() ) {
-					final String characterSet = rs.getString( 1 );
-					return getBytesPerCharacter( characterSet );
-				}
-			}
-			catch (SQLException ex) {
-				// Ignore
-			}
-		}
-		return 4;
 	}
 
 	private static int maxVarbinaryLength(DatabaseVersion version) {

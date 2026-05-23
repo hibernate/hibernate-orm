@@ -427,7 +427,7 @@ public class SQLFunctionsInterSystemsTest {
 //			i++;
 //		}
 					assertThat( q.list() ).hasSize( 2 );
-					q = s.createQuery( "select all s, s.other from Simple s where s = :s" );
+					q = s.createQuery( "select all s, s.other from Simple s where s = :s", Simple.class );
 					q.setParameter( "s", simple );
 					assertThat( q.list() ).hasSize( 1 );
 

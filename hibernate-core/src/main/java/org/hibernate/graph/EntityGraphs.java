@@ -18,6 +18,7 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.SelectionQuery;
 
 import java.util.Arrays;
@@ -207,7 +208,9 @@ public final class EntityGraphs {
 	 */
 	@Deprecated(since = "7.0")
 	public static @SuppressWarnings("rawtypes") List executeList(Query query, EntityGraph<?> graph, GraphSemantic semantic) {
-		return query.unwrap( org.hibernate.query.Query.class ).asSelectionQuery( graph, semantic ).getResultList();
+		return query.unwrap( MutationOrSelectionQuery.class )
+				.asSelectionQuery( graph, semantic )
+				.getResultList();
 	}
 
 	/**
@@ -226,8 +229,9 @@ public final class EntityGraphs {
 	 */
 	@Deprecated(since = "7.0")
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, GraphSemantic semantic) {
-		org.hibernate.query.SelectionQuery<R> unwrapped = query.unwrap( org.hibernate.query.SelectionQuery.class );
-		return unwrapped.asSelectionQuery( graph, semantic ).getResultList();
+		return query.unwrap( MutationOrSelectionQuery.class )
+				.asSelectionQuery( graph, semantic )
+				.getResultList();
 	}
 
 	/**

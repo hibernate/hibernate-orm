@@ -53,7 +53,7 @@ public class NativeQueryAsNamedTests {
 			session.getSessionFactory().addNamedQuery( "the_select", nativeQuery );
 
 			// and execute it as a named query
-			final Query<String> namedQuery = session.createNamedQuery( "the_select" );
+			final var namedQuery = session.createNamedQuery( "the_select" );
 			bindParameters( namedQuery, session );
 			namedQuery.list();
 		} );

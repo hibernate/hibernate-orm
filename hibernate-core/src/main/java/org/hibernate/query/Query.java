@@ -7,18 +7,15 @@ package org.hibernate.query;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
-import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
-import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -30,7 +27,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.query.spi.QueryOptions;
 
 import java.time.Instant;
@@ -41,6 +37,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
+import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushModeFromFlushModeType;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -99,7 +98,7 @@ import java.util.stream.Stream;
  * @author Steve Ebersole
  */
 @Incubating
-public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
+public interface Query<T> extends CommonQueryContract {
 
 	/**
 	 * The {@code Query<T>} as a string, or {@code null} in the case of a criteria query.
@@ -108,29 +107,11 @@ public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Casts
-
-	@Override
-	SelectionQuery<T> asSelectionQuery();
-
-	@Override
-	<R> SelectionQuery<R> ofType(Class<R> resultType);
-
-	@Override
-	<R> SelectionQuery<R> withEntityGraph(EntityGraph<R> graph);
-
-	@Override
-	<R> SelectionQuery<R> withResultSetMapping(ResultSetMapping<R> mapping);
-
-	@Override
-	MutationQuery asStatement();
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
 
 	@Override
-	Query setQueryFlushMode(QueryFlushMode queryFlushMode);
+	Query<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	/**
 	 * {@inheritDoc}
@@ -556,44 +537,41 @@ public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
 	@Deprecated(since = "8.0", forRemoval = true)
 	Query<T> setCacheRegion(String cacheRegion);
 
-	/**
-	 * @deprecated Use {@linkplain SelectionQuery} instead as second-level cache
-	 * interaction is only relevant for queries which return results.
-	 */
-	@Deprecated(since = "8.0")
+
 	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as second-level cache
 	 * interaction is only relevant for queries which return results.
 	 */
-	@Override @Deprecated(since = "8.0")
+	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as applying result limits
 	 * is only relevant for queries which return results.
 	 */
-	@Deprecated(since = "8.0")
 	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setMaxResults(int maxResults);
 
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as applying result limits
 	 * is only relevant for queries which return results.
 	 */
-	@Deprecated(since = "8.0")
 	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setFirstResult(int startPosition);
-
 
 	/***
 	 * @deprecated Use {@linkplain SelectionQuery} instead as locking
 	 * are only relevant for queries which return results.
 	 */
 	@Override
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setLockMode(LockModeType lockMode);
 
 	/**
@@ -719,7 +697,7 @@ public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Override
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	default List<T> getResultList() {
 		return list();
 	}
@@ -775,7 +753,7 @@ public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Override
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	default Stream<T> getResultStream() {
 		return stream();
 	}
@@ -825,7 +803,7 @@ public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Override
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	T getSingleResult();
 
 	/**
@@ -863,10 +841,8 @@ public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
 	 * @deprecated Use {@linkplain MutationQuery} instead for queries which mutate data.
 	 */
 	@Override
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	int executeUpdate();
-
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -882,11 +858,10 @@ public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
 	 */
 	@Override @Deprecated(since = "7")
 	default FlushModeType getFlushMode() {
-		final QueryFlushMode queryFlushMode = getQueryFlushMode();
-		if ( queryFlushMode == null ) {
-			return FlushModeType.AUTO;
-		}
-		return FlushModeTypeHelper.getFlushModeType( queryFlushMode );
+		final var queryFlushMode = getQueryFlushMode();
+		return queryFlushMode == null
+				? FlushModeType.AUTO
+				: getFlushModeType( queryFlushMode );
 	}
 
 	/**
@@ -906,7 +881,7 @@ public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
 	 */
 	@Override @Deprecated(since = "7")
 	default Query<T> setFlushMode(FlushModeType flushMode) {
-		setQueryFlushMode( FlushModeTypeHelper.queryFlushModeFromFlushModeType( flushMode ) );
+		setQueryFlushMode( queryFlushModeFromFlushModeType( flushMode ) );
 		return this;
 	}
 

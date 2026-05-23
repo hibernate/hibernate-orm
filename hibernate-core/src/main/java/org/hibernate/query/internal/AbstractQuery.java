@@ -7,7 +7,6 @@ package org.hibernate.query.internal;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
@@ -25,22 +24,17 @@ import org.hibernate.Locking;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.graph.GraphSemantic;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
-import org.hibernate.query.IllegalMutationQueryException;
-import org.hibernate.query.IllegalSelectQueryException;
+import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.spi.MutableQueryOptions;
-import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -106,6 +100,10 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 			return type.cast( this );
 		}
 
+		if ( type == MutationOrSelectionQuery.class ) {
+			return type.cast( MutationOrSelectionQueryImpl.from( this ) );
+		}
+
 		final X unwrappedDelegate = unwrapDelegates( type );
 		if ( unwrappedDelegate != null ) {
 			return unwrappedDelegate;
@@ -113,57 +111,6 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 		throw new PersistenceException( "Unrecognized unwrap type [" + type.getName() + "]" );
 	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Casts
-
-	@Override
-	public SelectionQueryImplementor<T> asSelectionQuery() {
-		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
-	}
-
-	@Override
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
-		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
-	}
-
-	@Override
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
-		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
-	}
-
-	@Override
-	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
-		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
-	}
-
-	public <X> SelectionQueryImplementor<X> ofType(Class<X> type) {
-		try {
-			return asSelectionQuery( type );
-		}
-		catch (IllegalSelectQueryException e) {
-			final var wrapped = new IllegalStateException( e.getMessage() );
-			wrapped.addSuppressed( wrapped );
-			throw wrapped;
-		}
-	}
-
-	public <X> SelectionQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph) {
-		try {
-			return asSelectionQuery( entityGraph );
-		}
-		catch (IllegalSelectQueryException e) {
-			final var wrapped = new IllegalStateException( e.getMessage() );
-			wrapped.addSuppressed( wrapped );
-			throw wrapped;
-		}
-	}
-
-	@Override
-	public MutationQueryImplementor<T> asMutationQuery() {
-		throw new IllegalMutationQueryException( "Not a mutation query", getQueryString() );
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
@@ -492,6 +439,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	public <X> QueryImplementor<X> setTupleTransformer(TupleTransformer<X> transformer) {
 		verifySelectionOption( "Result transformation" );
 		getQueryOptions().setTupleTransformer( transformer );
+		//noinspection unchecked
 		return (QueryImplementor<X>) this;
 	}
 
@@ -702,43 +650,43 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 		return this;
 	}
 
-	@Override @Deprecated(since = "7")
+	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setParameter(int position, Instant value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated(since = "7")
+	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated(since = "7")
+	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated(since = "7")
+	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setParameter(String name, Calendar value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated(since = "7")
+	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated(since = "7")
+	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setParameter(int position, Calendar value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated(since = "7")
+	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;

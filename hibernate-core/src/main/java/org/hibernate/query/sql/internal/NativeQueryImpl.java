@@ -43,7 +43,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
@@ -52,6 +51,7 @@ import org.hibernate.query.Page;
 import org.hibernate.query.PathException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
@@ -63,11 +63,8 @@ import org.hibernate.query.named.internal.NativeSelectionMementoImpl;
 import org.hibernate.query.results.internal.Builders;
 import org.hibernate.query.results.internal.ResultSetMappingImpl;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard;
-import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityCalculated;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderInstantiation;
-import org.hibernate.query.results.internal.implicit.ImplicitModelPartResultBuilderEntity;
-import org.hibernate.query.results.internal.implicit.ImplicitResultClassBuilder;
 import org.hibernate.query.results.internal.jpa.JpaMappingHelper;
 import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.spi.ResultSetMapping;
@@ -241,11 +238,11 @@ public class NativeQueryImpl<R>
 						//		- SharedSessionContract#createNamedQuery(String, String)
 						//		- SharedSessionContract#createNamedQuery(String, String, Class)
 						// Use specified explicit name
-						return buildResultSetMapping( specifiedResultSetMappingName, false, session );
+						return resolveResultSetMapping( specifiedResultSetMappingName, false, session.getFactory() );
 					}
 					else {
 						final String mappingIdentifier = specifiedResultType.getName();
-						return buildResultSetMapping( mappingIdentifier, false, session );
+						return resolveResultSetMapping( mappingIdentifier, false, session.getFactory() );
 					}
 				},
 				(resultSetMapping, querySpaceConsumer, context) -> {
@@ -260,6 +257,11 @@ public class NativeQueryImpl<R>
 				specifiedResultType,
 				session
 		);
+	}
+
+	@Override
+	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}
 
 	@FunctionalInterface
@@ -344,20 +346,13 @@ public class NativeQueryImpl<R>
 		}
 	}
 
-	private static ResultSetMapping buildResultSetMapping(
-			String registeredName,
-			boolean isDynamic,
-			SharedSessionContractImplementor session) {
-		return resolveResultSetMapping( registeredName, isDynamic, session.getFactory() );
-	}
-
 	/**
 	 * Used to construct a native mutation query from a memento.
 	 *
 	 * @see org.hibernate.SharedSessionContract#createNamedStatement(String)
 	 */
 	public NativeQueryImpl(
-			NativeMutationMementoImpl<R> mutationMemento,
+			NativeMutationMementoImpl<?> mutationMemento,
 			SharedSessionContractImplementor session) {
 		super( session );
 
@@ -381,7 +376,6 @@ public class NativeQueryImpl<R>
 			querySpaces = makeCopy( mementoQuerySpaces );
 		}
 	}
-
 
 	/**
 	 * @see jakarta.persistence.EntityHandler#createNativeQuery(String, jakarta.persistence.sql.ResultSetMapping)
@@ -509,20 +503,20 @@ public class NativeQueryImpl<R>
 				getHints()
 		);
 	}
-
-	private Class<R> extractResultClass(ResultSetMapping resultSetMapping) {
-		final List<ResultBuilder> resultBuilders = resultSetMapping.getResultBuilders();
-		if ( resultBuilders.size() == 1 ) {
-			final ResultBuilder resultBuilder = resultBuilders.get( 0 );
-			if ( resultBuilder instanceof ImplicitResultClassBuilder
-				|| resultBuilder instanceof ImplicitModelPartResultBuilderEntity
-				|| resultBuilder instanceof DynamicResultBuilderEntityCalculated ) {
-				//noinspection unchecked
-				return (Class<R>) resultBuilder.getJavaType();
-			}
-		}
-		return null;
-	}
+//
+//	private Class<R> extractResultClass(ResultSetMapping resultSetMapping) {
+//		final List<ResultBuilder> resultBuilders = resultSetMapping.getResultBuilders();
+//		if ( resultBuilders.size() == 1 ) {
+//			final ResultBuilder resultBuilder = resultBuilders.get( 0 );
+//			if ( resultBuilder instanceof ImplicitResultClassBuilder
+//				|| resultBuilder instanceof ImplicitModelPartResultBuilderEntity
+//				|| resultBuilder instanceof DynamicResultBuilderEntityCalculated ) {
+//				//noinspection unchecked
+//				return (Class<R>) resultBuilder.getJavaType();
+//			}
+//		}
+//		return null;
+//	}
 
 	@Override
 	public NativeQueryImplementor<R> asSelectionQuery() {
@@ -543,31 +537,9 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <X> NativeQueryImplementor<X> ofType(Class<X> type) {
-		return asSelectionQuery( type );
-	}
-
-	@Override
 	public NativeQueryImplementor<R> asMutationQuery() {
 		errorIfNotSelectForSure();
 		return this;
-	}
-
-	/**
-	 * The Jakarta Persistence defined form of {@link #asMutationQuery()}
-	 *
-	 * @see jakarta.persistence.StatementOrTypedQuery#asStatement
-	 */
-	@Override
-	public NativeQueryImplementor<R> asStatement() {
-		try {
-			return asMutationQuery();
-		}
-		catch (IllegalMutationQueryException e) {
-			final IllegalArgumentException wrapped = new IllegalArgumentException( e.getMessage() );
-			wrapped.addSuppressed( e );
-			throw wrapped;
-		}
 	}
 
 	private ParameterInterpretation resolveParameterInterpretation(
@@ -674,10 +646,6 @@ public class NativeQueryImpl<R>
 		}
 	}
 
-	private boolean isSelectForSure() {
-		return isSelectQuery() == Boolean.FALSE;
-	}
-
 	private void errorIfSelectForSure() {
 		if ( isSelectQuery() == Boolean.TRUE ) {
 			// we unequivocally know it IS a select query
@@ -751,13 +719,15 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> setPage(Page page) {
-		queryOptions.getLimit().setFirstRow( page.getFirstResult() );
-		queryOptions.getLimit().setMaxRows( page.getMaxResults() );
+		final var limit = queryOptions.getLimit();
+		limit.setFirstRow( page.getFirstResult() );
+		limit.setMaxRows( page.getMaxResults() );
 		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+		//noinspection removal
 		queryOptions.getLockOptions().setFollowOnStrategy( followOnStrategy );
 		return this;
 	}
@@ -773,13 +743,23 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <X> NativeQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph) {
-		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	public Statement asStatement() {
+		return asMutationQuery();
 	}
 
 	@Override
-	public <R> SelectionQueryImplementor<R> withResultSetMapping(jakarta.persistence.sql.ResultSetMapping<R> mapping) {
-		throw new HibernateException( "Not implemented yet" );
+	public <T> TypedQuery<T> ofType(Class<T> resultType) {
+		return asSelectionQuery( resultType );
+	}
+
+	@Override
+	public <T> TypedQuery<T> withEntityGraph(EntityGraph<T> graph) {
+		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
+	}
+
+	@Override
+	public <T> SelectionQueryImplementor<T> withResultSetMapping(jakarta.persistence.sql.ResultSetMapping<T> mapping) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
 	@Override
@@ -906,9 +886,9 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	protected boolean requiresTxn(LockMode lockMode) {
+	protected boolean requiresTransaction() {
 		return isNotSelectForSure()
-				|| lockMode != null && lockMode.greaterThan( LockMode.READ );
+			|| super.requiresTransaction();
 	}
 
 	@Override
@@ -1144,7 +1124,7 @@ public class NativeQueryImpl<R>
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public int execute() {
 		return executeUpdate();
 	}
@@ -1617,14 +1597,13 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
@@ -1648,19 +1627,19 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
@@ -1690,13 +1669,13 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public NativeQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;

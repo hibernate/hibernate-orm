@@ -13,6 +13,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Statement;
+import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
@@ -106,7 +107,8 @@ import java.util.Set;
  * @see SynchronizeableQuery
  * @see org.hibernate.SharedSessionContract
  */
-public interface NativeQuery<T> extends SelectionQuery<T>, MutationQuery, SynchronizeableQuery {
+public interface NativeQuery<T>
+		extends SelectionQuery<T>, MutationQuery, SynchronizeableQuery, StatementOrTypedQuery {
 
 	@Override
 	NativeQuery<T> addOption(TypedQuery.Option option);
@@ -115,7 +117,7 @@ public interface NativeQuery<T> extends SelectionQuery<T>, MutationQuery, Synchr
 	NativeQuery<T> addOption(Statement.Option option);
 
 	@Override
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	Set getOptions();
 
 
@@ -150,10 +152,10 @@ public interface NativeQuery<T> extends SelectionQuery<T>, MutationQuery, Synchr
 	@Override
 	SelectionQuery<T> setCacheMode(CacheMode cacheMode);
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	SelectionQuery<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	SelectionQuery<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	@Override

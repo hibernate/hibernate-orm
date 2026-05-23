@@ -51,6 +51,7 @@ import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
+import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -107,7 +108,6 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
 /// Implementation of `SelectionQuery` based on a [SqmSelectStatement] SQM AST.
 ///
 /// @author Steve Ebersole
-@SuppressWarnings("unchecked")
 public class SelectionQueryImpl<R>
 		extends AbstractSqmQuery<R>
 		implements SelectionQueryImplementor<R>, SqmStatementAccess<R>, InterpretationsKeySource {
@@ -115,7 +115,7 @@ public class SelectionQueryImpl<R>
 	private final Object queryStringCacheKey;
 	private final SqmSelectStatement<R> sqm;
 	private final Class<R> providedResultType;
-	private final Class<?> actualResultType;
+	private final Class<R> actualResultType;
 	private final TupleMetadata tupleMetadata;
 
 	private final ParameterMetadataImplementor parameterMetadata;
@@ -226,7 +226,7 @@ public class SelectionQueryImpl<R>
 				: ParameterMetadataImpl.EMPTY;
 		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
-		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
+		// Parameters might be created through HibernateCriteriaBuilder.value, which we need to bind here
 		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 
 		validateQuery( providedResultType, sqm, hql );
@@ -277,7 +277,7 @@ public class SelectionQueryImpl<R>
 		parameterBindings = parameterMetadata.createBindings( original.getSession().getSessionFactory() );
 		original.getQueryParameterBindings().visitBindings( this::setBindValues );
 
-		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
+		// Parameters might be created through HibernateCriteriaBuilder.value, which we need to bind here
 		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 
 		//noinspection unchecked
@@ -292,6 +292,7 @@ public class SelectionQueryImpl<R>
 	}
 
 	/// Used by JPA 4 fluent narrowing operations.
+	@SuppressWarnings("unchecked")
 	private <X> SelectionQueryImpl(
 			SelectionQueryImpl<?> original,
 			Class<X> providedResultType,
@@ -334,7 +335,7 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	public Class<R> getResultType() {
-		return (Class<R>) actualResultType;
+		return actualResultType;
 	}
 
 
@@ -367,17 +368,7 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public <X> SelectionQueryImplementor<X> ofType(Class<X> type) {
-		return asSelectionQuery( type );
-	}
-
-	@Override
-	public <X> SelectionQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph) {
-		return asSelectionQuery( entityGraph, GraphSemantic.LOAD );
-	}
-
-	@Override
-	public <R> SelectionQueryImplementor<R> withResultSetMapping(ResultSetMapping<R> mapping) {
+	public <S> SelectionQueryImplementor<S> withResultSetMapping(ResultSetMapping<S> mapping) {
 		throw new IllegalStateException( "Result set mappings can only be used with native SQL queries" );
 	}
 
@@ -439,52 +430,61 @@ public class SelectionQueryImpl<R>
 	@Override
 	public LockModeType getLockMode() {
 		session.checkOpen( false );
+		//noinspection removal
 		return queryOptions.getLockOptions().getLockMode().toJpaLockMode();
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setLockMode(LockModeType lockMode) {
 		session.checkOpen( false );
+		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( LockMode.fromJpaLockMode( lockMode ) );
 		return this;
 	}
 
 	@Override
 	public LockMode getHibernateLockMode() {
+		//noinspection removal
 		return queryOptions.getLockOptions().getLockMode();
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setHibernateLockMode(LockMode lockMode) {
+		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( lockMode );
 		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setLockTimeout(Timeout lockTimeout) {
+		//noinspection removal
 		queryOptions.getLockOptions().setTimeout( lockTimeout );
 		return this;
 	}
 
 	@Override
 	public PessimisticLockScope getLockScope() {
+		//noinspection removal
 		return queryOptions.getLockOptions().getLockScope();
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		//noinspection removal
 		queryOptions.getLockOptions().setLockScope( lockScope );
 		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setFollowOnLockingStrategy(Locking.FollowOn strategy) {
+		//noinspection removal
 		queryOptions.getLockOptions().setFollowOnStrategy( strategy );
 		return this;
 	}
 
 	@Override
 	public SelectionQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+		//noinspection removal
 		queryOptions.getLockOptions().setFollowOnStrategy( followOnStrategy );
 		return this;
 	}
@@ -576,13 +576,12 @@ public class SelectionQueryImpl<R>
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <T> SelectionQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
-		// todo (jpa4) : not the best option.  similar to notes on `ofType()`.
+		// todo (jpa4) : not the best option.
 		queryOptions.setTupleTransformer( transformer );
-		//noinspection rawtypes
-		return (SelectionQueryImplementor) this;
+		//noinspection unchecked
+		return (SelectionQueryImplementor<T>) this;
 	}
 
 	@Override
@@ -1018,11 +1017,12 @@ public class SelectionQueryImpl<R>
 		return (EntityGraph<? super R>) getQueryOptions().getAppliedGraph().getGraph();
 	}
 
+	@SuppressWarnings("removal")
 	public SqmSelectionMemento<R> toSelectionMemento(String name) {
 		// todo (jpa4) : simply pass QueryOptions to the memento constructors?
+		final var lockOptions = queryOptions.getLockOptions();
 		if ( CRITERIA_HQL_STRING.equals( hql ) ) {
-			//noinspection rawtypes
-			return new CriteriaSelectionMementoImpl(
+			return new CriteriaSelectionMementoImpl<>(
 					name,
 					actualResultType,
 					getEntityGraph() == null ? null : getEntityGraph().getName(),
@@ -1034,10 +1034,10 @@ public class SelectionQueryImpl<R>
 					queryOptions.getCacheMode(),
 					queryOptions.getFlushMode(),
 					queryOptions.isReadOnly(),
-					queryOptions.getLockOptions().getLockMode(),
-					queryOptions.getLockOptions().getScope(),
-					queryOptions.getLockOptions().getTimeout(),
-					queryOptions.getLockOptions().getFollowOnStrategy(),
+					lockOptions.getLockMode(),
+					lockOptions.getScope(),
+					lockOptions.getTimeout(),
+					lockOptions.getFollowOnStrategy(),
 					queryOptions.getTimeout(),
 					queryOptions.getFetchSize(),
 					queryOptions.getComment(),
@@ -1046,8 +1046,7 @@ public class SelectionQueryImpl<R>
 			);
 		}
 		else {
-			//noinspection rawtypes
-			return new HqlSelectionMementoImpl(
+			return new HqlSelectionMementoImpl<>(
 					name,
 					hql,
 					actualResultType,
@@ -1062,10 +1061,10 @@ public class SelectionQueryImpl<R>
 					queryOptions.isResultCachingEnabled(),
 					queryOptions.getCacheMode(),
 					queryOptions.getResultCacheRegionName(),
-					queryOptions.getLockOptions().getLockMode(),
-					queryOptions.getLockOptions().getScope(),
-					queryOptions.getLockOptions().getTimeout(),
-					queryOptions.getLockOptions().getFollowOnStrategy(),
+					lockOptions.getLockMode(),
+					lockOptions.getScope(),
+					lockOptions.getTimeout(),
+					lockOptions.getFollowOnStrategy(),
 					Map.of(),
 					Map.of()
 
@@ -1458,5 +1457,10 @@ public class SelectionQueryImpl<R>
 	public SelectionQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
+	}
+
+	@Override
+	public MutationQueryImplementor<R> asMutationQuery() {
+		throw new IllegalMutationQueryException( "Not a mutation query", getQueryString() );
 	}
 }

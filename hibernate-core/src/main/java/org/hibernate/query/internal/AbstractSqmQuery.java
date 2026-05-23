@@ -47,6 +47,7 @@ public abstract class AbstractSqmQuery<R>
 		super( original.session, original.queryOptions.makeCopy() );
 	}
 
+	@SuppressWarnings("removal")
 	protected void applyMementoOptions(NamedSqmQueryMemento<?> memento) {
 		super.applyMementoOptions( memento );
 

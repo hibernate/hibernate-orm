@@ -39,7 +39,9 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import jakarta.persistence.QueryFlushMode;
+import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.MutationQueryImplementor;
@@ -257,17 +259,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <X> SelectionQueryImplementor<X> ofType(Class<X> type) {
-		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
-	}
-
-	@Override
-	public <X> SelectionQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph) {
-		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
-	}
-
-	@Override
-	public <R> SelectionQueryImplementor<R> withResultSetMapping(jakarta.persistence.sql.ResultSetMapping<R> mapping) {
+	public <X> SelectionQueryImplementor<X> withResultSetMapping(jakarta.persistence.sql.ResultSetMapping<X> mapping) {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
 	}
 
@@ -275,12 +267,6 @@ public class ProcedureCallImpl<R>
 	public MutationQueryImplementor<R> asMutationQuery() {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as MutationQuery" );
 	}
-
-	@Override
-	public MutationQueryImplementor<R> asStatement() {
-		throw new IllegalArgumentException( "ProcedureCall cannot be treated as MutationQuery" );
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
@@ -357,6 +343,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Deprecated @SuppressWarnings("removal")
 	public LockModeType getLockMode() {
 		// the JPA spec requires IllegalStateException here, even
 		// though it's logically an UnsupportedOperationException
@@ -402,7 +389,7 @@ public class ProcedureCallImpl<R>
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings("resource")
 	protected void applyCallableFunctionTypeHint(String hintName, Object value) {
 		if ( value instanceof Integer code ) {
 			markAsFunctionCall( code );
@@ -605,11 +592,12 @@ public class ProcedureCallImpl<R>
 		}
 
 		assert !resultSetMappings.isEmpty();
-		if ( resultSetMappings.get(0).getNumberOfResultBuilders() == 0 ) {
+		final var firstResultSetMapping = resultSetMappings.get( 0 );
+		if ( firstResultSetMapping.getNumberOfResultBuilders() == 0 ) {
 			final var expressible = resolveExpressible( typeReference );
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
-			resultSetMappings.get(0).addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
+			firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
 		}
 		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<?>) outputableType );
 		return this;
@@ -617,10 +605,11 @@ public class ProcedureCallImpl<R>
 
 	private void markAsFunctionCall(BasicType<?> basicType) {
 		assert !resultSetMappings.isEmpty();
-		if ( resultSetMappings.get(0).getNumberOfResultBuilders() == 0 ) {
+		final var firstResultSetMapping = resultSetMappings.get( 0 );
+		if ( firstResultSetMapping.getNumberOfResultBuilders() == 0 ) {
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
-			resultSetMappings.get(0).addResultBuilder( new ScalarDomainResultBuilder<>( basicType.getExpressibleJavaType() ) );
+			firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType.getExpressibleJavaType() ) );
 		}
 		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<?>) basicType );
 	}
@@ -832,9 +821,9 @@ public class ProcedureCallImpl<R>
 			String name,
 			Type<T> typeReference,
 			ParameterMode mode) {
-		final var expressible = resolveExpressible( typeReference );
 		final var parameter =
-				new ProcedureParameterImpl<>( name, mode, typeReference.getJavaType(), expressible );
+				new ProcedureParameterImpl<>( name, mode, typeReference.getJavaType(),
+						resolveExpressible( typeReference ) );
 		registerParameter( parameter );
 		return parameter;
 	}
@@ -1202,20 +1191,19 @@ public class ProcedureCallImpl<R>
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	protected List<R> doList() {
-		return (List<R>) reallyDoList( (output) -> output.asResultSetOutput().getResultList() );
+	protected List<?> doList() {
+		return reallyDoList( output -> output.asResultSetOutput().getResultList() );
 	}
 
 	@Override
 	public <R1> List<R1> getResultList(Class<R1> type) {
-		return reallyDoList( (output) -> output.asResultSetOutput( type ).getResultList() );
+		return reallyDoList( output -> output.asResultSetOutput( type ).getResultList() );
 	}
 
 	@Override
 	public <R1> List<R1> getResultList(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
-		return reallyDoList( (output) -> output.asResultSetOutput( resultSetMapping ).getResultList() );
+		return reallyDoList( output -> output.asResultSetOutput( resultSetMapping ).getResultList() );
 	}
 
 	@Override
@@ -1223,12 +1211,12 @@ public class ProcedureCallImpl<R>
 		throw new UnsupportedOperationException( "Cannot scroll a ProcedureCall" );
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public Stream<R> getResultStream() {
 		return stream();
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public Stream<R> stream() {
 		return getResultList().stream();
 	}
@@ -1371,7 +1359,7 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public ProcedureCallImplementor<R> setParameter(
 			Parameter<Calendar> parameter,
 			Calendar value,
@@ -1380,33 +1368,38 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public ProcedureCallImplementor<R> setParameter(Parameter<Date> parameter, Date value, TemporalType temporalPrecision) {
 		super.setParameter( parameter, value, temporalPrecision );
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalPrecision) {
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalPrecision) {
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalPrecision) {
 		super.setParameter( position, value, temporalPrecision );
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalPrecision) {
 		super.setParameter( position, value, temporalPrecision );
 		return this;
+	}
+
+	@Override
+	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}
 }

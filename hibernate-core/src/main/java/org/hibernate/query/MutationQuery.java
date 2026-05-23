@@ -9,7 +9,6 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Statement;
-import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.criteria.CriteriaStatement;
@@ -61,7 +60,7 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 @Incubating
-public interface MutationQuery extends CommonQueryContract, Statement, StatementOrTypedQuery {
+public interface MutationQuery extends CommonQueryContract, Statement {
 	/**
 	 * The HQL or native-SQL string, or {@code null} in the case of a criteria query.
 	 */
@@ -85,7 +84,7 @@ public interface MutationQuery extends CommonQueryContract, Statement, Statement
 	Class<?> getTargetType();
 
 	/**
-	 * Execute an insert, update, or delete statement, and return the
+	 * Execute an insert, update, or delete statement and return the
 	 * number of affected entities.
 	 * <p>
 	 * For use with instances of {@code MutationQuery} created using
@@ -103,7 +102,7 @@ public interface MutationQuery extends CommonQueryContract, Statement, Statement
 	 *
 	 * @see jakarta.persistence.Query#executeUpdate()
 	 */
-	@Override
+	@Override @SuppressWarnings("removal")
 	int executeUpdate();
 
 

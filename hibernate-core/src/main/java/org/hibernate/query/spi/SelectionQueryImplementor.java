@@ -12,7 +12,6 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
-import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
@@ -42,7 +41,7 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 public interface SelectionQueryImplementor<R>
-		extends SelectionQuery<R>, QueryImplementor<R>, TypedQueryReferenceProducer, StatementOrTypedQuery {
+		extends SelectionQuery<R>, QueryImplementor<R>, TypedQueryReferenceProducer {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
@@ -58,9 +57,11 @@ public interface SelectionQueryImplementor<R>
 	// Options
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> entityGraph);
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	@Override
@@ -88,6 +89,7 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setComment(String comment);
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setFetchSize(int fetchSize);
 
 	@Override
@@ -103,6 +105,7 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setPage(Page page);
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setCacheMode(CacheMode cacheMode);
 
 	@Override
@@ -112,12 +115,14 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setCacheable(boolean cacheable);
 
 	@Override
 	SelectionQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable);
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setCacheRegion(String cacheRegion);
 
 	@Override
@@ -188,7 +193,7 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setProperties(Object bean);
 
 	@Override
-	SelectionQueryImplementor<R> setProperties(Map bean);
+	SelectionQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	@Override
 	<P> SelectionQueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
@@ -197,7 +202,7 @@ public interface SelectionQueryImplementor<R>
 	<P> SelectionQueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	SelectionQueryImplementor<R> setParameterList(String name, Collection values);
+	SelectionQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SelectionQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
@@ -215,7 +220,7 @@ public interface SelectionQueryImplementor<R>
 	<P> SelectionQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type);
 
 	@Override
-	SelectionQueryImplementor<R> setParameterList(int position, Collection values);
+	SelectionQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SelectionQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
@@ -250,28 +255,28 @@ public interface SelectionQueryImplementor<R>
 	@Override
 	<P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
-	@Override
+	@Override @Deprecated
 	SelectionQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 
@@ -279,16 +284,12 @@ public interface SelectionQueryImplementor<R>
 	// MutationQuery Handling
 
 	@Override
-	default MutationQueryImplementor asMutationQuery() {
+	default MutationQueryImplementor<R> asMutationQuery() {
 		throw new IllegalMutationQueryException( "SelectionQuery cannot be treated as a MutationQuery", getQueryString() );
 	}
 
 	@Override
-	default MutationQueryImplementor asStatement() {
-		throw new IllegalStateException( "SelectionQuery cannot be treated as a MutationQuery - " + getQueryString() );
-	}
-
-	@Override
+	@Deprecated @SuppressWarnings("removal")
 	default int executeUpdate() {
 		// per JPA, again, needs to be IllegalStateException
 		throw new IllegalStateException( "SelectionQuery cannot be treated as a MutationQuery - " + getQueryString() );

@@ -5,7 +5,6 @@
 package org.hibernate.query;
 
 import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
@@ -15,7 +14,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.graph.GraphSemantic;
 
 import java.time.Instant;
 import java.util.Calendar;
@@ -225,54 +223,6 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 */
 	CommonQueryContract setHint(String hintName, Object value);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Casts
-
-	/**
-	 * Casts this query as a {@code SelectionQuery}.
-	 *
-	 * @throws IllegalSelectQueryException If the query is not a select query.
-	 */
-	SelectionQuery<?> asSelectionQuery();
-
-	/**
-	 * Casts this query as a {@code SelectionQuery} with the given result type.
-	 *
-	 * @throws IllegalSelectQueryException If the query is not a select query.
-	 * @throws IllegalArgumentException If the given {@code type} is not compatible with the query's defined result type.
-	 */
-	<R> SelectionQuery<R> asSelectionQuery(Class<R> type);
-
-	/**
-	 * Casts this query as a {@code SelectionQuery} with the given result graph.
-	 *
-	 * @throws IllegalSelectQueryException If the query is not a selection query.
-	 * @throws IllegalArgumentException Is the given graph result type is not compatible with the {@code Query} type parameter.
-	 */
-	<X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph);
-
-	/**
-	 * Overload of {@linkplain #asSelectionQuery(EntityGraph)} allowing a specific semantic
-	 * (load/fetch) for the graph.
-	 *
-	 * @param entityGraph The entity graph.
-	 * @param graphSemantic The load/fetch semantic.
-	 * @return The cast/converted query.
-	 *
-	 * @see SharedSessionContract#createSelectionQuery(String, EntityGraph)
-	 * @see SharedSessionContract#createQuery(String, EntityGraph)
-	 * @see #asSelectionQuery(Class)
-	 */
-	<X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic);
-
-	/**
-	 * Casts this query as a mutation query.
-	 *
-	 * @throws IllegalMutationQueryException If the query is not a mutation query.
-	 */
-	MutationQuery asMutationQuery();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

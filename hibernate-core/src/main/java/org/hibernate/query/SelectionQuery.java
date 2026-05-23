@@ -13,7 +13,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
-import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
@@ -79,7 +78,7 @@ import java.util.stream.Stream;
  *                 .setMaxResults(50)
  *                 .getResultList();
  * </pre>
- * A query which is expected to return exactly one on result should be executed
+ * A query which is expected to return exactly one result should be executed
  * via {@link #getSingleResult()}, or, if it might not return a result,
  * {@link #getSingleResultOrNull()}:
  * <pre>
@@ -124,7 +123,7 @@ import java.util.stream.Stream;
  * @author Steve Ebersole
  */
 @Incubating
-public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrTypedQuery {
+public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	/**
 	 * The type of things returned from the query.
 	 */
@@ -160,6 +159,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 *
 	 * @apiNote Synonym for {@link #list()}
 	 */
+	@SuppressWarnings("deprecation")
 	default List<R> getResultList() {
 		return list();
 	}
@@ -193,6 +193,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 *
 	 * @apiNote Synonym for {@link #stream()}
 	 */
+	@SuppressWarnings("deprecation")
 	default Stream<R> getResultStream() {
 		return stream();
 	}
@@ -214,6 +215,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 *
 	 * @since 5.2
 	 */
+	@SuppressWarnings("deprecation")
 	default Stream<R> stream() {
 		return list().stream();
 	}
@@ -249,6 +251,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 *
 	 * @since 6.0
 	 */
+	@SuppressWarnings("removal")
 	R getSingleResultOrNull();
 
 	/**
@@ -327,8 +330,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 * @since 6.3
 	 *
 	 * @see org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)
-	 * @see Query#asSelectionQuery(EntityGraph)
-	 * @see Query#asSelectionQuery(EntityGraph,GraphSemantic)
+	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph)
+	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph,GraphSemantic)
 	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
 	 *
 	 * @deprecated Prefer passing the entity-graph while creating the query -
@@ -368,7 +371,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 */
 	SelectionQuery<R> disableFetchProfile(String profileName);
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
 
 	@Override
@@ -400,6 +403,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 * @see java.sql.Statement#setFetchSize(int)
 	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_FETCH_SIZE
 	 */
+	@SuppressWarnings("removal")
 	Integer getFetchSize();
 
 	/**
@@ -412,13 +416,14 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 * @see #getFetchSize()
 	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_FETCH_SIZE
 	 */
+	@SuppressWarnings("removal")
 	SelectionQuery<R> setFetchSize(int fetchSize);
 
 	/**
 	 * Should entities and proxies loaded by this Query be put in read-only
 	 * mode? If the read-only/modifiable setting was not initialized, then
-	 * the default read-only/modifiable setting for the persistence context i
-	 * s returned instead.
+	 * the default read-only/modifiable setting for the persistence context
+	 * is returned instead.
 	 *
 	 * @see #setReadOnly(boolean)
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
@@ -444,7 +449,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 * and proxies that are loaded into the session, use
 	 * {@link Session#setDefaultReadOnly(boolean)}.
 	 * <p>
-	 * Read-only entities are not dirty-checked and snapshots of persistent
+	 * Read-only entities are not dirty-checked, and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
 	 * <p>
@@ -497,12 +502,13 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 * caches as the query result set is processed. For caching of the actual
 	 * query results, use {@link #isCacheable()} and {@link #getCacheRegion()}.
 	 * <p>
-	 * In order for this setting to have any affect, second-level caching
-	 * must be enabled and the entities and collections must be eligible
+	 * In order for this setting to have any effect, second-level caching
+	 * must be enabled, and the entities and collections must be eligible
 	 * for storage in the second-level cache.
 	 *
 	 * @see Session#getCacheMode()
 	 */
+	@SuppressWarnings("removal")
 	CacheMode getCacheMode();
 
 	/**
@@ -510,6 +516,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 *
 	 * @since 6.2
 	 */
+	@SuppressWarnings("removal")
 	CacheStoreMode getCacheStoreMode();
 
 	/**
@@ -517,6 +524,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 *
 	 * @since 6.2
 	 */
+	@SuppressWarnings("removal")
 	CacheRetrieveMode getCacheRetrieveMode();
 
 	/**
@@ -528,6 +536,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 * @see #getCacheMode()
 	 * @see Session#setCacheMode(CacheMode)
 	 */
+	@SuppressWarnings("removal")
 	SelectionQuery<R> setCacheMode(CacheMode cacheMode);
 
 	/**
@@ -545,7 +554,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	/**
-	 * Should the results of the query be stored in the second level cache?
+	 * Should the results of the query be stored in the second-level cache?
 	 * <p>
 	 * This is different to second level caching of any returned entities and
 	 * collections, which is controlled by {@link #getCacheMode()}.
@@ -556,13 +565,15 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 * is controlled by the configuration setting
 	 * {@value org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE}.
 	 */
+	@SuppressWarnings("removal")
 	boolean isCacheable();
 
 	/**
-	 * Enable/disable second level query (result) caching for this query.
+	 * Enable/disable second-level query (result) caching for this query.
 	 *
 	 * @see #isCacheable
 	 */
+	@SuppressWarnings("removal")
 	SelectionQuery<R> setCacheable(boolean cacheable);
 
 	/**
@@ -583,6 +594,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 * {@link #isCacheable()} for more information). {@code null} indicates
 	 * that the default region should be used.
 	 */
+	@SuppressWarnings("removal")
 	String getCacheRegion();
 
 	/**
@@ -592,6 +604,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 *
 	 * @see #getCacheRegion()
 	 */
+	@SuppressWarnings("removal")
 	SelectionQuery<R> setCacheRegion(String cacheRegion);
 
 	/**
@@ -599,7 +612,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 	 *
 	 * @see #getHibernateLockMode()
 	 */
-	@Override
+	@Override @SuppressWarnings("removal")
 	LockModeType getLockMode();
 
 	/**
@@ -773,5 +786,4 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrT
 
 	@Override @Deprecated
 	SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
-
 }

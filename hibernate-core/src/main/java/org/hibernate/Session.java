@@ -1340,6 +1340,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * {@inheritDoc}
 	 */
 	@Override @Deprecated @SuppressWarnings("rawtypes")
+	Query createQuery(String queryString);
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createNamedQuery(String name);
 
 	/**

@@ -72,7 +72,6 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.spi.MutationQueryImplementor;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -657,7 +656,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return createMutationQuery( criteriaStatement );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Query<?> createQuery(String queryString) {
 		//noinspection resource
 		return queryDelegate().createQuery( queryString );
@@ -731,8 +730,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( typedQueryReference );
 	}
 
-	@Override
-	public @SuppressWarnings("rawtypes") QueryImplementor createNamedQuery(String name) {
+	@Override @Deprecated
+	public @SuppressWarnings("rawtypes") Query createNamedQuery(String name) {
 		//noinspection resource
 		return queryDelegate().createNamedQuery( name );
 	}

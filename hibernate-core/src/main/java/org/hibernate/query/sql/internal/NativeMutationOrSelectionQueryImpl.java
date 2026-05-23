@@ -27,6 +27,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.named.NamedNativeQueryMemento;
 import org.hibernate.query.named.internal.NativeMutationMementoImpl;
 import org.hibernate.query.named.internal.NativeSelectionMementoImpl;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -46,22 +47,28 @@ public class NativeMutationOrSelectionQueryImpl
 		extends NativeQueryImpl<Object>
 		implements MutationOrSelectionQuery {
 
-	public NativeMutationOrSelectionQueryImpl(
+	public static MutationOrSelectionQuery from(NamedNativeQueryMemento<?> memento, SharedSessionContractImplementor session) {
+		if ( memento instanceof NativeSelectionMementoImpl<?> selectionMemento ) {
+			return new NativeMutationOrSelectionQueryImpl( selectionMemento, session );
+		}
+		else if ( memento instanceof NativeMutationMementoImpl<?> mutationMemento ) {
+			return new NativeMutationOrSelectionQueryImpl( mutationMemento, session );
+		}
+		else {
+			throw new IllegalArgumentException( "Unknown memento type: " + memento.getClass() );
+		}
+	}
+
+	private NativeMutationOrSelectionQueryImpl(
 			NativeSelectionMementoImpl<?> selectionMemento,
 			SharedSessionContractImplementor session) {
 		super( selectionMemento, null, null, session );
 	}
 
-	public NativeMutationOrSelectionQueryImpl(
+	private NativeMutationOrSelectionQueryImpl(
 			NativeMutationMementoImpl<?> mutationMemento,
 			SharedSessionContractImplementor session) {
 		super( mutationMemento, session );
-	}
-
-	@Override @Deprecated
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	public List getResultList() {
-		return super.getResultList();
 	}
 
 	@Override @Deprecated
@@ -75,7 +82,7 @@ public class NativeMutationOrSelectionQueryImpl
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings({"rawtypes", "unchecked", "deprecation"})
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	public Stream getResultStream() {
 		return super.getResultStream();
 	}

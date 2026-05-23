@@ -1089,11 +1089,12 @@ public class ProcedureCallImpl<R>
 		}
 	}
 
-	@Override
-	protected int doExecuteUpdate() {
-		// The expectation is that there is just one Output, of type UpdateCountOutput
+	@Override @SuppressWarnings("removal")
+	public int executeUpdate() {
 		try {
 			execute();
+			// The expectation is that there is just one Output,
+			// of type UpdateCountOutput
 			return getUpdateCount();
 		}
 		finally {
@@ -1167,7 +1168,7 @@ public class ProcedureCallImpl<R>
 		}
 	}
 
-	protected <X> List<X> reallyDoList(Function<Output,List<X>> supplier) {
+	protected <X> List<X> results(Function<Output,List<X>> supplier) {
 		if ( getMaxResults() == 0 ) {
 			// EARLY EXIT!!!
 			return emptyList();
@@ -1192,22 +1193,24 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	protected List<?> doList() {
-		return reallyDoList( output -> output.asResultSetOutput().getResultList() );
+	public List<R> getResultList() {
+		final var results = results( output -> output.asResultSetOutput().getResultList() );
+		//noinspection unchecked
+		return (List<R>) results;
 	}
 
 	@Override
 	public <R1> List<R1> getResultList(Class<R1> type) {
-		return reallyDoList( output -> output.asResultSetOutput( type ).getResultList() );
+		return results( output -> output.asResultSetOutput( type ).getResultList() );
 	}
 
 	@Override
 	public <R1> List<R1> getResultList(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
-		return reallyDoList( output -> output.asResultSetOutput( resultSetMapping ).getResultList() );
+		return results( output -> output.asResultSetOutput( resultSetMapping ).getResultList() );
 	}
 
 	@Override
-	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
+	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
 		throw new UnsupportedOperationException( "Cannot scroll a ProcedureCall" );
 	}
 

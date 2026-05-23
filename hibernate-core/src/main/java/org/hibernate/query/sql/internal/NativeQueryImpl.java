@@ -934,7 +934,11 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	protected List<R> doList() {
+	public List<R> getResultList() {
+		return executeQuery( this::doList );
+	}
+
+	private List<R> doList() {
 		return resolveSelectQueryPlan().performList( this );
 	}
 
@@ -947,6 +951,29 @@ public class NativeQueryImpl<R>
 			}
 		};
 		return createCountQueryPlan().executeQuery( context, SingleResultConsumer.instance() );
+	}
+
+	@Override
+	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+		return executeQuery( scrollMode, this::doScroll );
+	}
+
+	private ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
+		return resolveSelectQueryPlan().performScroll( scrollMode, this );
+	}
+
+	@Override
+	public int execute() {
+		return executeMutation( this::doExecute );
+	}
+
+	private int doExecute() {
+		return resolveNonSelectQueryPlan().executeUpdate( this );
+	}
+
+	@Override @SuppressWarnings("removal")
+	public int executeUpdate() {
+		return execute();
 	}
 
 	@Override
@@ -1094,10 +1121,10 @@ public class NativeQueryImpl<R>
 		);
 	}
 
-	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping resultSetMapping, int parameterStartPosition) {
+	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping mapping, int parameterStartPosition) {
 		return new SelectInterpretationsKey(
 				getQueryString(),
-				resultSetMapping,
+				mapping,
 				getSynchronizedQuerySpaces(),
 				parameterStartPosition
 		);
@@ -1117,20 +1144,6 @@ public class NativeQueryImpl<R>
 
 	private boolean hasLimit(Limit limit) {
 		return limit != null && !limit.isEmpty();
-	}
-
-	@Override
-	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		return resolveSelectQueryPlan().performScroll( scrollMode, this );
-	}
-
-	@Override @SuppressWarnings("deprecation")
-	public int execute() {
-		return executeUpdate();
-	}
-
-	protected int doExecuteUpdate() {
-		return resolveNonSelectQueryPlan().executeUpdate( this );
 	}
 
 	private BasicTypeRegistry getBasicTypeRegistry() {

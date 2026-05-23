@@ -217,19 +217,23 @@ public class MutationQueryImpl<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
 
-	@Override @SuppressWarnings("deprecation")
+	@Override
 	public int execute() {
-		return executeUpdate();
+		return executeMutation( this::doExecute );
 	}
 
-	@Override
-	protected int doExecuteUpdate() {
+	private int doExecute() {
 		try {
 			return resolveNonSelectQueryPlan().executeUpdate( this );
 		}
 		finally {
 			domainParameterXref.clearExpansions();
 		}
+	}
+
+	@Override @SuppressWarnings("removal")
+	public int executeUpdate() {
+		return execute();
 	}
 
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
@@ -382,16 +386,16 @@ public class MutationQueryImpl<T>
 			&& entityDescriptor.getSqmMultiTableMutationStrategy() == null;
 	}
 
-	@Override
-	protected List<?> doList() {
-		final var msg = "Attempting to get a result list from a mutation query";
-		throw new IllegalStateException( msg, new IllegalSelectQueryException( msg, hql ) );
+	@Override @SuppressWarnings("deprecation")
+	public List<T> getResultList() {
+		final var message = "Attempting to get a result list from a mutation query";
+		throw new IllegalStateException( message, new IllegalSelectQueryException( message, hql ) );
 	}
 
-	@Override
-	protected ScrollableResultsImplementor<T> doScroll(ScrollMode scrollMode) {
-		final var msg = "Attempting to scroll list from a mutation query";
-		throw new IllegalStateException( msg, new IllegalSelectQueryException( msg, hql ) );
+	@Override @SuppressWarnings("deprecation")
+	public ScrollableResultsImplementor<T> scroll(ScrollMode scrollMode) {
+		final var message = "Attempting to scroll list from a mutation query";
+		throw new IllegalStateException( message, new IllegalSelectQueryException( message, hql ) );
 	}
 
 

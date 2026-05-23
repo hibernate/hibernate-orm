@@ -873,7 +873,13 @@ public class SelectionQueryImpl<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
 
-	protected List<R> doList() {
+
+	@Override
+	public List<R> getResultList() {
+		return executeQuery( this::doList );
+	}
+
+	private List<R> doList() {
 		final var statement = getSqmStatement();
 		final var queryOptions = getQueryOptions();
 		final boolean containsCollectionFetches =
@@ -899,7 +905,12 @@ public class SelectionQueryImpl<R>
 				: applyLimitInMemory ? this.handleDistinct( true, statement, list ) : list;
 	}
 
-	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
+	@Override
+	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+		return executeQuery( scrollMode, this::doScroll );
+	}
+
+	private ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
 		final var statement = getSqmStatement();
 		final var queryOptions = getQueryOptions();
 		final boolean containsCollectionFetches =
@@ -907,10 +918,8 @@ public class SelectionQueryImpl<R>
 						|| containsCollectionFetches( queryOptions );
 		final boolean hasLimit = hasLimit( statement, queryOptions );
 		return resolveQueryPlan()
-				.performScroll(
-						scrollMode,
-						scrollExecutionContext( statement, hasLimit, containsCollectionFetches )
-				);
+				.performScroll( scrollMode,
+						scrollExecutionContext( statement, hasLimit, containsCollectionFetches ) );
 	}
 
 	@Override
@@ -921,7 +930,7 @@ public class SelectionQueryImpl<R>
 				return QueryOptions.NONE;
 			}
 		};
-		final ConcreteSqmSelectQueryPlan<Long> queryPlan = buildConcreteQueryPlan(
+		final var queryPlan = buildConcreteQueryPlan(
 				getSqmStatement().createCountQuery(),
 				Long.class,
 				null,
@@ -979,9 +988,10 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	protected int doExecuteUpdate() {
-		final var msg = "Attempting to get a execute-update a selection query";
-		throw new IllegalStateException( msg, new IllegalMutationQueryException( msg, hql ) );
+	@SuppressWarnings({"deprecation", "removal"})
+	public int executeUpdate() {
+		final var message = "Attempting to get a execute-update a selection query";
+		throw new IllegalStateException( message, new IllegalMutationQueryException( message, hql ) );
 	}
 
 

@@ -81,7 +81,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.find.FindByKeyOperation;
 import org.hibernate.internal.find.Helper;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutorVisitable;
@@ -109,8 +108,6 @@ import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.NamedSqmQueryMemento;
-import org.hibernate.query.named.internal.NativeMutationMementoImpl;
-import org.hibernate.query.named.internal.NativeSelectionMementoImpl;
 import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.specification.internal.MutationSpecificationImpl;
 import org.hibernate.query.specification.internal.SelectionSpecificationImpl;
@@ -1528,10 +1525,10 @@ abstract class AbstractSharedSessionContract
 	@Override
 	public MutationQuery createMutationQuery(String hql) {
 		checksBeforeQueryCreation();
-		return getMutationQuery( hql, interpretHql( hql, null ) );
+		return buildHqlMutationQuery( hql, interpretHql( hql ) );
 	}
 
-	private <T> MutationQueryImplementor<T> getMutationQuery(String hql, HqlInterpretation<T> interpretation) {
+	private <T> MutationQueryImplementor<T> buildHqlMutationQuery(String hql, HqlInterpretation<T> interpretation) {
 		if ( interpretation.getSqmStatement() instanceof SqmDmlStatement<T> mutationAst ) {
 			return buildHqlMutationQuery( hql, interpretation, mutationAst.getTarget().getJavaType() );
 		}
@@ -1572,14 +1569,12 @@ abstract class AbstractSharedSessionContract
 		// JPA form
 		checksBeforeQueryCreation();
 		try {
-			final var interpretation = interpretHql( hql, null );
-			if ( interpretation.getSqmStatement() instanceof SqmSelectStatement<?> ) {
-				DeprecationLogger.DEPRECATION_LOGGER.debugf( "Session#createQuery(String queryString) used to create SelectionQuery" );
-				return MutationOrSelectionQueryImpl.from( buildHqlSelectionQuery( hql, interpretation, null, null ) );
-			}
-			else {
-				return MutationOrSelectionQueryImpl.from( getMutationQuery( hql, interpretation ) );
-			}
+			final var interpretation = interpretHql( hql );
+			final var delegate =
+					interpretation.getSqmStatement() instanceof SqmSelectStatement<?>
+							? buildHqlSelectionQuery( hql, interpretation, null, null )
+							: buildHqlMutationQuery( hql, interpretation );
+			return MutationOrSelectionQueryImpl.from( delegate );
 		}
 		catch (IllegalQueryOperationException illegalQueryType) {
 			markForRollbackOnly();
@@ -1812,6 +1807,10 @@ abstract class AbstractSharedSessionContract
 		return getMappingMetamodel().getCollectionDescriptor( roleName );
 	}
 
+	protected HqlInterpretation<?> interpretHql(String hql) {
+		return interpretHql( hql, null );
+	}
+
 	protected <R> HqlInterpretation<R> interpretHql(String hql, Class<R> resultType) {
 		return getFactory().getQueryEngine().interpretHql( hql, resultType );
 	}
@@ -1962,8 +1961,8 @@ abstract class AbstractSharedSessionContract
 		}
 	}
 
-	protected <T> NativeQueryImplementor<T> createNativeQueryImplementor(NamedNativeQueryMemento<T> memento) {
-		final var query = memento.toQuery(this );
+	protected MutationOrSelectionQuery createNativeMutationOrSelectionQueryImplementor(NamedNativeQueryMemento<?> memento) {
+		final var query = NativeMutationOrSelectionQueryImpl.from( memento, this );
 		if ( isEmpty( query.getComment() ) ) {
 			query.setComment( "dynamic native SQL query" );
 		}
@@ -1971,29 +1970,10 @@ abstract class AbstractSharedSessionContract
 		return query;
 	}
 
-	protected MutationOrSelectionQuery createNativeMutationOrSelectionQueryImplementor(NamedNativeQueryMemento<?> memento) {
-		final NativeQueryImplementor<?> query;
-		if ( memento instanceof NativeSelectionMementoImpl<?> selectionMemento ) {
-			query = new NativeMutationOrSelectionQueryImpl( selectionMemento, this );
-		}
-		else if ( memento instanceof NativeMutationMementoImpl<?> mutationMemento ) {
-			query = new NativeMutationOrSelectionQueryImpl( mutationMemento, this );
-		}
-		else {
-			return MutationOrSelectionQueryImpl.from( createNativeQueryImplementor( memento ) );
-		}
-		if ( isEmpty( query.getComment() ) ) {
-			query.setComment( "dynamic native SQL query" );
-		}
-		applyQuerySettingsAndHints( query );
-		return (MutationOrSelectionQuery) query;
-	}
-
 	protected <T> QueryImplementor<T> createSqmQueryImplementor(NamedSqmQueryMemento<T> memento) {
 		final var query = memento.toQuery( this );
 		if ( isEmpty( query.getComment() ) ) {
 			query.setComment( "dynamic query" );
-
 		}
 		applyQuerySettingsAndHints( query );
 		return query;

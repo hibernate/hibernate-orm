@@ -26,6 +26,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -46,9 +47,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static java.util.Optional.ofNullable;
 import static java.util.Spliterator.NONNULL;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushModeFromFlushMode;
@@ -115,59 +120,54 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
 
-	@Override
-	public List<T> list() {
-		return getResultList();
+	protected <R> R executeQuery(Supplier<? extends R> supplier) {
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
+		boolean success = false;
+		try {
+			final var result = supplier.get();
+			success = true;
+			return result;
+		}
+		catch (IllegalQueryOperationException e) {
+			throw new IllegalStateException( e );
+		}
+		catch (HibernateException he) {
+			throw getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
+		}
+		finally {
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
+		}
 	}
 
-	@Override @SuppressWarnings("deprecation")
-	public List<T> getResultList() {
-		//noinspection unchecked
-		return (List<T>) super.getResultList();
-	}
-
-	@Override
-	public ScrollableResultsImplementor<T> scroll() {
-		return scroll( getSessionFactory().getJdbcServices().getDialect().defaultScrollMode() );
-	}
-
-	@Override
-	public ScrollableResultsImplementor<T> scroll(ScrollMode scrollMode) {
+	protected ScrollableResultsImplementor<T> executeQuery(
+			ScrollMode scrollMode,
+			Function<ScrollMode,ScrollableResultsImplementor<T>> supplier) {
 		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
 		try {
-			return doScroll( scrollMode );
+			return supplier.apply( scrollMode );
 		}
 		finally {
 			afterQueryHandlingFetchProfiles( fetchProfiles );
 		}
 	}
 
-
-	protected abstract ScrollableResultsImplementor<T> doScroll(ScrollMode scrollMode);
-
-	@Override @SuppressWarnings("deprecation")
-	public Stream<T> stream() {
-		final var results = scroll( ScrollMode.FORWARD_ONLY );
-		final var spliterator = spliteratorUnknownSize( new ScrollableResultsIterator<>( results ), NONNULL );
-		return StreamSupport.stream( spliterator, false ).onClose( results::close );
-	}
-
-	@Override
-	public T uniqueResult() {
-		return uniqueElement( list() );
-	}
-
-	@Override @SuppressWarnings("removal")
-	public T getSingleResult() {
+	protected int executeMutation(IntSupplier mutation) {
+		session.checkTransactionNeededForUpdateOperation( "No active transaction for update or delete query" );
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
+		boolean success = false;
 		try {
-			final List<T> list = list();
-			if ( list.isEmpty() ) {
-				throw new NoResultException( "No result found for query [" + getQueryString() + "]" );
-			}
-			return uniqueElement( list );
+			final int result = mutation.getAsInt();
+			success = true;
+			return result;
 		}
-		catch ( HibernateException e ) {
-			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
+		catch (IllegalQueryOperationException e) {
+			throw new IllegalStateException( e );
+		}
+		catch (HibernateException e) {
+			throw getExceptionConverter().convert( e );
+		}
+		finally {
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
 		}
 	}
 
@@ -181,20 +181,70 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	public List<T> list() {
+		return getResultList();
+	}
+
+	@Override
+	@SuppressWarnings({"deprecation", "removal"})
+	public abstract List<T> getResultList();
+
+	@Override
+	public ScrollableResultsImplementor<T> scroll() {
+		return scroll( getSessionFactory().getJdbcServices().getDialect().defaultScrollMode() );
+	}
+
+	@Override
+	public abstract ScrollableResultsImplementor<T> scroll(ScrollMode scrollMode);
+
+	@Override @SuppressWarnings("deprecation")
+	public Stream<T> stream() {
+		return getResultStream();
+	}
+
+	@Override
+	@SuppressWarnings({"removal", "deprecation"})
+	public Stream<T> getResultStream() {
+		final var results = scroll( ScrollMode.FORWARD_ONLY );
+		final var spliterator = spliteratorUnknownSize( new ScrollableResultsIterator<>( results ), NONNULL );
+		return StreamSupport.stream( spliterator, false ).onClose( results::close );
+	}
+
+	@Override
+	public T uniqueResult() {
+		// note: throws different exception type
+		//       to getSingleResultOrNull()
+		return uniqueElement( getResultList() );
+	}
+
+	@Override
 	public Optional<T> uniqueResultOptional() {
-		return Optional.ofNullable( uniqueResult() );
+		return ofNullable( uniqueResult() );
+	}
+
+	@Override @SuppressWarnings("removal")
+	public T getSingleResult() {
+		try {
+			final var list = getResultList();
+			if ( list.isEmpty() ) {
+				throw new NoResultException( "No result found for query [" + getQueryString() + "]" );
+			}
+			return uniqueElement( list );
+		}
+		catch ( HibernateException e ) {
+			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
+		}
 	}
 
 	@Override @SuppressWarnings("removal")
 	public T getSingleResultOrNull() {
 		try {
-			return uniqueElement( list() );
+			return uniqueElement( getResultList() );
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e, queryOptions.getLockOptions() );
 		}
 	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
@@ -320,24 +370,24 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 		return this;
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public boolean isCacheable() {
 		return queryOptions.isResultCachingEnabled() == Boolean.TRUE;
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public Query<T> setCacheable(boolean cacheable) {
 		verifySelectionOption( "Result caching" );
 		queryOptions.setResultCachingEnabled( cacheable );
 		return this;
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public CacheMode getCacheMode() {
 		return queryOptions.getCacheMode();
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public Query<T> setCacheMode(CacheMode cacheMode) {
 		verifySelectionOption( "Result caching" );
 		queryOptions.setCacheMode( cacheMode );

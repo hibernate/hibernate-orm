@@ -10,6 +10,7 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PessimisticLockScope;
@@ -1234,26 +1235,49 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <R1> R1 getSingleResult(Class<R1> aClass) {
-		//noinspection unchecked
-		return (R1) getSingleResult();
+		try {
+			return getSingleResult( getResultList( aClass ) );
+		}
+		catch ( HibernateException e ) {
+			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
+		}
 	}
 
 	@Override
 	public <R1> R1 getSingleResult(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
-		//noinspection unchecked
-		return (R1) getSingleResult();
+		try {
+			return getSingleResult( getResultList( resultSetMapping ) );
+		}
+		catch ( HibernateException e ) {
+			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
+		}
+	}
+
+	private <R1> R1 getSingleResult(List<R1> results) {
+		if ( results.isEmpty() ) {
+			throw new NoResultException( "No result found for query [" + getQueryString() + "]" );
+		}
+		return uniqueElement( results );
 	}
 
 	@Override
 	public <R1> R1 getSingleResultOrNull(Class<R1> aClass) {
-		//noinspection unchecked
-		return (R1) getSingleResultOrNull();
+		try {
+			return uniqueElement( getResultList( aClass ) );
+		}
+		catch ( HibernateException e ) {
+			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
+		}
 	}
 
 	@Override
 	public <R1> R1 getSingleResultOrNull(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
-		//noinspection unchecked
-		return (R1) getSingleResultOrNull();
+		try {
+			return uniqueElement( getResultList( resultSetMapping ) );
+		}
+		catch ( HibernateException e ) {
+			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
+		}
 	}
 
 	@Override

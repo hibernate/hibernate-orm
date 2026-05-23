@@ -1019,20 +1019,30 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	// Deprecations
 
 	/**
-	 * @deprecated Remains deprecated from 6.0 version, but we should really think about
-	 * a specialized StatementOrTypedQuery which returns our hierarchy (SelectionQuery, etc).
-	 * For now, just treat Query that way.
+	 * Create an instance of {@link Query} for the given HQL query or statement,
+	 * without indicating the expected result type, if any, nor whether the query
+	 * is a {@linkplain TypedQuery typed query} which returns a result list, or an
+	 * update, delete, or insert {@linkplain jakarta.persistence.Statement statement}.
+	 * @deprecated Returns a raw {@link Query}. The return type of this method
+	 * will change to {@link jakarta.persistence.StatementOrTypedQuery} or some
+	 * new subtype of {@code StatementOrTypedQuery} in a future release. Use
+	 * {@link #createQuery(String, Class)} or {@link #createStatement(String)}
+	 * instead.
 	 */
 	@Deprecated(since = "6.0", forRemoval = true)
 	@Override
 	Query createQuery(String queryString);
 
 	/**
-	 * @deprecated Creation of named queries without indication of whether they are a
-	 * {@linkplain SelectionQuery selection} or {@linkplain MutationQuery mutation} is
-	 * no longer supported and will be removed in later versions.  Instead, use one of the
-	 * forms explicitly indicating the intent - e.g., {@linkplain #createNamedSelectionQuery}
-	 * or {@linkplain #createNamedMutationQuery}.
+	 * Create an instance of {@link Query} for the given named query or statement,
+	 * without indicating the expected result type, if any, nor whether the query
+	 * is a {@linkplain TypedQuery typed query} which returns a result list, or an
+	 * update, delete, or insert {@linkplain jakarta.persistence.Statement statement}.
+	 * @deprecated Returns a raw {@link Query}. The return type of this method
+	 * will change to {@link jakarta.persistence.StatementOrTypedQuery} or some
+	 * new subtype of {@code StatementOrTypedQuery} in a future release. Use
+	 * {@link #createNamedQuery(String, Class)} or
+	 * {@link #createNamedStatement(String)} instead.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
 	@Override

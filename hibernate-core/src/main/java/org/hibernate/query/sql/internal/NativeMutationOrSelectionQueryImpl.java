@@ -551,4 +551,10 @@ public class NativeMutationOrSelectionQueryImpl
 		super.setCacheable( cacheable );
 		return this;
 	}
+
+	@Override
+	public NativeMutationOrSelectionQueryImpl addQueryHint(String hint) {
+		super.addQueryHint( hint );
+		return this;
+	}
 }

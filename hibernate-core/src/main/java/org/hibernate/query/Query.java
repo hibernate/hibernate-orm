@@ -400,15 +400,15 @@ public interface Query<T> extends CommonQueryContract {
 	/**
 	 * Should entities and proxies loaded by this Query be put in read-only
 	 * mode? If the read-only/modifiable setting was not initialized, then
-	 * the default read-only/modifiable setting for the persistence context i
-	 * s returned instead.
+	 * the default read-only/modifiable setting for the persistence context
+	 * is returned instead.
+	 * <p>
+	 * The read-only/modifiable setting has no impact on entities/proxies
+	 * returned by the query that existed in the session before the query
+	 * was executed.
 	 *
 	 * @see #setReadOnly(boolean)
 	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
-	 *
-	 * The read-only/modifiable setting has no impact on entities/proxies
-	 * returned by the query that existed in the session beforeQuery the
-	 * query was executed.
 	 *
 	 * @return {@code true} if the entities and proxies loaded by the query
 	 *         will be put in read-only mode; {@code false} otherwise
@@ -663,12 +663,18 @@ public interface Query<T> extends CommonQueryContract {
 
 	/**
 	 * Set a {@link TupleTransformer}.
+	 * @deprecated Use {@linkplain SelectionQuery} instead as tuple
+	 * transformation is only relevant for queries which return results.
 	 */
+	@Deprecated(since = "8.0")
 	<X> Query<X> setTupleTransformer(TupleTransformer<X> transformer);
 
 	/**
 	 * Set a {@link ResultListTransformer}.
+	 * @deprecated Use {@linkplain SelectionQuery} instead as result list
+	 * transformation is only relevant for queries which return results.
 	 */
+	@Deprecated(since = "8.0")
 	Query<T> setResultListTransformer(ResultListTransformer<T> transformer);
 
 	/**
@@ -805,6 +811,22 @@ public interface Query<T> extends CommonQueryContract {
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	T getSingleResult();
+
+	/**
+	 * Execute the {@code Query<T>} and return the single result of the query
+	 * or {@code null} if the {@code Query<T>} returns no results, throwing
+	 * and exception if the {@code Query<T>} returns more than one result.
+	 *
+	 * @return the single result, if there is exactly one result,
+	 *         or {@code null} if there are no results to return
+	 *
+	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
+	 *
+	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
+	 */
+	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	Object getSingleResultOrNull();
 
 	/**
 	 * Execute the {@code Query<T>} and return the single result of the {@code Query<T>} as

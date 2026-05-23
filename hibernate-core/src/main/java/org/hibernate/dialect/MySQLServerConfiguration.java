@@ -7,12 +7,12 @@ package org.hibernate.dialect;
 import java.sql.SQLException;
 
 import org.hibernate.Internal;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import static org.hibernate.cfg.DialectSpecificSettings.MYSQL_BYTES_PER_CHARACTER;
 import static org.hibernate.cfg.DialectSpecificSettings.MYSQL_NO_BACKSLASH_ESCAPES;
+import static org.hibernate.cfg.SchemaToolingSettings.STORAGE_ENGINE;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 
@@ -27,12 +27,6 @@ public class MySQLServerConfiguration {
 	private final int bytesPerCharacter;
 	private final boolean noBackslashEscapesEnabled;
 	private final String storageEngine;
-
-	public MySQLServerConfiguration(int bytesPerCharacter, boolean noBackslashEscapesEnabled) {
-		this.bytesPerCharacter = bytesPerCharacter;
-		this.noBackslashEscapesEnabled = noBackslashEscapesEnabled;
-		this.storageEngine = null;
-	}
 
 	public MySQLServerConfiguration(int bytesPerCharacter, boolean noBackslashEscapesEnabled, String storageEngine) {
 		this.bytesPerCharacter = bytesPerCharacter;
@@ -93,7 +87,7 @@ public class MySQLServerConfiguration {
 		return new MySQLServerConfiguration(
 				bytesPerCharacter,
 				noBackslashEscapes,
-				ConfigurationHelper.getString( AvailableSettings.STORAGE_ENGINE, info.getConfigurationValues() ) );
+				ConfigurationHelper.getString( STORAGE_ENGINE, info.getConfigurationValues() ) );
 	}
 
 }

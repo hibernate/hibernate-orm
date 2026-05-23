@@ -99,6 +99,49 @@ public class PostgreSQLStoredProcedureTest {
 	}
 
 	@Test
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14, comment = "Stored procedure OUT parameters are only supported since version 14")
+	public void testTypedGetResultListWithRefCursor(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_person_by_id" );
+			query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
+			query.registerStoredProcedureParameter( 2, void.class, ParameterMode.REF_CURSOR );
+			query.setParameter( 1, 1L );
+
+			List<Person> persons = query.getResultList( Person.class );
+			assertEquals( 1, persons.size() );
+			assertEquals( "John Doe", persons.get( 0 ).getName() );
+		} );
+	}
+
+	@Test
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14, comment = "Stored procedure OUT parameters are only supported since version 14")
+	public void testTypedGetSingleResultWithRefCursor(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_person_by_id" );
+			query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
+			query.registerStoredProcedureParameter( 2, void.class, ParameterMode.REF_CURSOR );
+			query.setParameter( 1, 1L );
+
+			Person person = query.getSingleResult( Person.class );
+			assertEquals( "John Doe", person.getName() );
+		} );
+	}
+
+	@Test
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14, comment = "Stored procedure OUT parameters are only supported since version 14")
+	public void testTypedGetSingleResultOrNullWithRefCursor(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_person_by_id" );
+			query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
+			query.registerStoredProcedureParameter( 2, void.class, ParameterMode.REF_CURSOR );
+			query.setParameter( 1, 99L );
+
+			Person person = query.getSingleResultOrNull( Person.class );
+			assertEquals( null, person );
+		} );
+	}
+
+	@Test
 	public void testStoredProcedureWithJDBC(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
@@ -381,6 +424,19 @@ public class PostgreSQLStoredProcedureTest {
 								"LANGUAGE plpgsql;"
 				);
 				statement.executeUpdate(
+						"CREATE OR REPLACE PROCEDURE sp_person_by_id(IN p_id BIGINT, INOUT p_recordset REFCURSOR) " +
+								"    AS " +
+								"$BODY$ " +
+								"    BEGIN " +
+								"        OPEN p_recordset FOR  " +
+								"            SELECT id, name, nickName, address, createdOn, version " +
+								"            FROM Person   " +
+								"            WHERE id = p_id;  " +
+								"    END; " +
+								"$BODY$ " +
+								"LANGUAGE plpgsql"
+				);
+				statement.executeUpdate(
 						"CREATE OR REPLACE PROCEDURE sp_is_null( " +
 								"   IN param varchar(255), " +
 								"   INOUT result boolean) " +
@@ -465,6 +521,7 @@ public class PostgreSQLStoredProcedureTest {
 				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( "DROP PROCEDURE sp_count_phones(bigint, bigint)" );
 					statement.executeUpdate( "DROP PROCEDURE sp_phones(bigint, refcursor)" );
+					statement.executeUpdate( "DROP PROCEDURE sp_person_by_id(bigint, refcursor)" );
 					statement.executeUpdate( "DROP PROCEDURE singleRefCursor(refcursor)" );
 					statement.executeUpdate( "DROP PROCEDURE sp_is_null(varchar, boolean)" );
 					statement.executeUpdate( "DROP PROCEDURE sp_get_address_by_street_city(varchar,varchar,refcursor)" );

@@ -152,6 +152,9 @@ public interface MutationOrSelectionQuery
 	MutationOrSelectionQuery addOption(Statement.Option option);
 
 	@Override
+	MutationOrSelectionQuery addQueryHint(String hint);
+
+	@Override
 	MutationOrSelectionQuery setFlushMode(FlushModeType flushMode);
 
 	@Override

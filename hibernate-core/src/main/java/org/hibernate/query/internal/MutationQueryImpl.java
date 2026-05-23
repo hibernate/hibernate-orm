@@ -27,7 +27,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalSelectQueryException;
-import org.hibernate.query.Query;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.SelectionQuery;
@@ -437,11 +436,6 @@ public class MutationQueryImpl<T>
 		else {
 			throw selectionOption( "Locking" );
 		}
-	}
-
-	@Override
-	public Query<T> setLockTimeout(Timeout lockTimeout) {
-		return super.setLockTimeout( lockTimeout );
 	}
 
 	@Override

@@ -75,7 +75,7 @@ import java.util.List;
  * @see StoredProcedureQuery
  */
 public interface ProcedureCall
-		extends CommonQueryContract, SynchronizeableQuery, StoredProcedureQuery, AutoCloseable {
+		extends CommonQueryContract, SynchronizeableQuery, StoredProcedureQuery {
 
 	/**
 	 * Get the name of the stored procedure (or function) to be called.

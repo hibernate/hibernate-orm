@@ -36,7 +36,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -129,25 +128,9 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	Class<R> getResultType();
 
-	@Override
-	SelectionQuery<R> addOption(TypedQuery.Option option);
-
-	@Override
-	Set<TypedQuery.Option> getOptions();
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
-
-	/**
-	 * Execute the query and return the query results as a {@link List}.
-	 * If the query contains multiple items in the selection list, then
-	 * by default each result in the list is packaged in an array of type
-	 * {@code Object[]}.
-	 *
-	 * @return the result list
-	 */
-	List<R> list();
 
 	/**
 	 * Execute the query and return the query results as a {@link List}.
@@ -159,26 +142,22 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @apiNote Synonym for {@link #list()}
 	 */
+	@Override
 	@SuppressWarnings("deprecation")
 	default List<R> getResultList() {
 		return list();
 	}
 
 	/**
-	 * Returns scrollable access to the query results, using the
-	 * {@linkplain org.hibernate.dialect.Dialect#defaultScrollMode
-	 * default scroll mode of the SQL dialect.}
+	 * Execute the query and return the query results as a {@link List}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the list is packaged in an array of type
+	 * {@code Object[]}.
 	 *
-	 * @see #scroll(ScrollMode)
+	 * @return the result list
 	 */
-	ScrollableResults<R> scroll();
-
-	/**
-	 * Returns scrollable access to the query results. The capabilities
-	 * of the returned {@link ScrollableResults} depend on the specified
-	 * {@link ScrollMode}.
-	 */
-	ScrollableResults<R> scroll(ScrollMode scrollMode);
+	@Override
+	List<R> list();
 
 	/**
 	 * Execute the query and return the query results as a {@link Stream}.
@@ -193,6 +172,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @apiNote Synonym for {@link #stream()}
 	 */
+	@Override
 	@SuppressWarnings("deprecation")
 	default Stream<R> getResultStream() {
 		return stream();
@@ -215,20 +195,11 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 5.2
 	 */
+	@Override
 	@SuppressWarnings("deprecation")
 	default Stream<R> stream() {
 		return list().stream();
 	}
-
-	/**
-	 * Execute the query and return the single result of the query,
-	 * or {@code null} if the query returns no results.
-	 *
-	 * @return the single result or {@code null}
-	 *
-	 * @throws NonUniqueResultException if there is more than one matching result
-	 */
-	R uniqueResult();
 
 	/**
 	 * Execute the query and return the single result of the query,
@@ -239,7 +210,19 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
 	 * @throws jakarta.persistence.NoResultException if there is no result to return
 	 */
+	@Override
 	R getSingleResult();
+
+	/**
+	 * Execute the query and return the single result of the query,
+	 * or {@code null} if the query returns no results.
+	 *
+	 * @return the single result or {@code null}
+	 *
+	 * @throws NonUniqueResultException if there is more than one matching result
+	 */
+	@Override
+	R uniqueResult();
 
 	/**
 	 * Execute the query and return the single result of the query,
@@ -251,7 +234,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.0
 	 */
-	@SuppressWarnings("removal")
+	@Override
 	R getSingleResultOrNull();
 
 	/**
@@ -262,6 +245,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
+	@Override
 	Optional<R> uniqueResultOptional();
 
 	/**
@@ -274,8 +258,26 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.5
 	 */
-	@Incubating
+	@Override
 	long getResultCount();
+
+	/**
+	 * Returns scrollable access to the query results, using the
+	 * {@linkplain org.hibernate.dialect.Dialect#defaultScrollMode
+	 * default scroll mode of the SQL dialect.}
+	 *
+	 * @see #scroll(ScrollMode)
+	 */
+	@Override
+	ScrollableResults<R> scroll();
+
+	/**
+	 * Returns scrollable access to the query results. The capabilities
+	 * of the returned {@link ScrollableResults} depend on the specified
+	 * {@link ScrollMode}.
+	 */
+	@Override
+	ScrollableResults<R> scroll(ScrollMode scrollMode);
 
 	/**
 	 * Execute the query and return the results for the given
@@ -301,6 +303,9 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 
 	@Override
 	SelectionQuery<R> setHint(String hintName, Object value);
+
+	@Override
+	SelectionQuery<R> addOption(Option option);
 
 	/**
 	 * Apply an {@link EntityGraph} to the query using {@linkplain GraphSemantic#LOAD load graph} semantics.
@@ -403,6 +408,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see java.sql.Statement#setFetchSize(int)
 	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_FETCH_SIZE
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	Integer getFetchSize();
 
@@ -416,28 +422,10 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see #getFetchSize()
 	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_FETCH_SIZE
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	SelectionQuery<R> setFetchSize(int fetchSize);
 
-	/**
-	 * Should entities and proxies loaded by this Query be put in read-only
-	 * mode? If the read-only/modifiable setting was not initialized, then
-	 * the default read-only/modifiable setting for the persistence context
-	 * is returned instead.
-	 *
-	 * @see #setReadOnly(boolean)
-	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
-	 *
-	 * The read-only/modifiable setting has no impact on entities/proxies
-	 * returned by the query that existed in the session beforeQuery the
-	 * query was executed.
-	 *
-	 * @return {@code true} if the entities and proxies loaded by the query
-	 *         will be put in read-only mode; {@code false} otherwise
-	 *         (they will be modifiable)
-	 */
-	@Override
-	boolean isReadOnly();
 
 	/**
 	 * Set the read-only/modifiable mode for entities and proxies loaded
@@ -508,6 +496,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @see Session#getCacheMode()
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	CacheMode getCacheMode();
 
@@ -516,6 +505,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	CacheStoreMode getCacheStoreMode();
 
@@ -524,6 +514,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	CacheRetrieveMode getCacheRetrieveMode();
 
@@ -536,6 +527,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see #getCacheMode()
 	 * @see Session#setCacheMode(CacheMode)
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	SelectionQuery<R> setCacheMode(CacheMode cacheMode);
 
@@ -544,6 +536,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	SelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
 	/**
@@ -551,6 +544,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.2
 	 */
+	@Override
 	SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	/**
@@ -565,6 +559,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * is controlled by the configuration setting
 	 * {@value org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE}.
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	boolean isCacheable();
 
@@ -573,12 +568,14 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @see #isCacheable
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	SelectionQuery<R> setCacheable(boolean cacheable);
 
 	/**
 	 * Should the query plan of the query be stored in the query plan cache?
 	 */
+	@Override
 	boolean isQueryPlanCacheable();
 
 	/**
@@ -586,6 +583,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @see #isQueryPlanCacheable
 	 */
+	@Override
 	SelectionQuery<R> setQueryPlanCacheable(boolean queryPlanCacheable);
 
 	/**
@@ -594,6 +592,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * {@link #isCacheable()} for more information). {@code null} indicates
 	 * that the default region should be used.
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	String getCacheRegion();
 
@@ -604,6 +603,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @see #getCacheRegion()
 	 */
+	@Override
 	@SuppressWarnings("removal")
 	SelectionQuery<R> setCacheRegion(String cacheRegion);
 
@@ -628,6 +628,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @see #getLockMode()
 	 */
+	@Override
 	LockMode getHibernateLockMode();
 
 	/**
@@ -635,6 +636,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @see #setLockMode(LockModeType)
 	 */
+	@Override
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
 
 	/**
@@ -649,19 +651,23 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	/**
 	 * Specifies whether follow-on locking should be applied
 	 */
+	@Override
 	SelectionQuery<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
+
+	@Override
+	SelectionQuery<R> addQueryHint(String hint);
 
 	/**
 	 * Set a {@link TupleTransformer}.
 	 */
+	@Override
 	<X> SelectionQuery<X> setTupleTransformer(TupleTransformer<X> transformer);
 
 	/**
 	 * Set a {@link ResultListTransformer}.
 	 */
+	@Override
 	SelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
-
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -21,7 +21,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -66,43 +65,37 @@ public interface MutationQuery extends CommonQueryContract, Statement {
 	 */
 	String getMutationString();
 
-	@Override
-	default int execute() {
-		return executeUpdate();
-	}
-
-	@Override
-	MutationQuery addOption(Statement.Option option);
-
-	@Override
-	Set<Statement.Option> getOptions();
-
 	/**
 	 * The Java type of the thing being mutated, if known.
 	 */
 	@Nullable
 	Class<?> getTargetType();
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Execution
+
 	/**
 	 * Execute an insert, update, or delete statement and return the
 	 * number of affected entities.
-	 * <p>
-	 * For use with instances of {@code MutationQuery} created using
-	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(String)},
-	 * {@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)},
-	 * {@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)} or
-	 * {@link org.hibernate.SharedSessionContract#createMutationQuery(CriteriaStatement)}.
+	 *
+	 * @return the number of affected entity instances
+	 *         (may differ from the number of affected rows)
+	 */
+	@Override
+	int execute();
+
+	/**
+	 * Execute an insert, update, or delete statement and return the
+	 * number of affected entities.
 	 *
 	 * @return the number of affected entity instances
 	 *         (may differ from the number of affected rows)
 	 *
-	 * @see org.hibernate.SharedSessionContract#createMutationQuery(String)
-	 * @see org.hibernate.SharedSessionContract#createNamedMutationQuery(String)
-	 * @see org.hibernate.SharedSessionContract#createNativeMutationQuery(String)
-	 *
-	 * @see jakarta.persistence.Query#executeUpdate()
+	 * @deprecated Use {@link #execute()} instead.
 	 */
-	@Override @SuppressWarnings("removal")
+	@Override @Deprecated(since = "8")
+	@SuppressWarnings("removal")
 	int executeUpdate();
 
 
@@ -126,6 +119,12 @@ public interface MutationQuery extends CommonQueryContract, Statement {
 
 	@Override
 	MutationQuery setHint(String hintName, Object value);
+
+	@Override
+	MutationQuery addOption(Option option);
+
+	@Override
+	MutationQuery addQueryHint(String hint);
 
 	@Override
 	<P> MutationQuery setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);

@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.boot.database.metadata;
 
 import org.hibernate.engine.jdbc.env.JdbcMetadataOnBoot;
-import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
@@ -43,12 +42,6 @@ public class FormsTests {
 		check( ALLOW_METADATA_ON_BOOT, REQUIRE, REQUIRE );
 		check( ALLOW_METADATA_ON_BOOT, REQUIRE.name(), REQUIRE );
 		check( ALLOW_METADATA_ON_BOOT, REQUIRE.name().toLowerCase( Locale.ROOT ), REQUIRE );
-
-		check( JdbcEnvironmentInitiator.USE_JDBC_METADATA_DEFAULTS, TRUE, ALLOW );
-		check( JdbcEnvironmentInitiator.USE_JDBC_METADATA_DEFAULTS, true, ALLOW );
-
-		check( JdbcEnvironmentInitiator.USE_JDBC_METADATA_DEFAULTS, FALSE, DISALLOW );
-		check( JdbcEnvironmentInitiator.USE_JDBC_METADATA_DEFAULTS, false, DISALLOW );
 	}
 
 	private void check(String configName, Object setting, JdbcMetadataOnBoot expected) {

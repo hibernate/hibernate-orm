@@ -72,7 +72,6 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
-import static org.hibernate.internal.util.config.ConfigurationHelper.getBooleanWrapper;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
@@ -81,14 +80,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEnvironment> {
 
 	public static final JdbcEnvironmentInitiator INSTANCE = new JdbcEnvironmentInitiator();
-
-	/**
-	 * @deprecated This setting was never a documented feature of Hibernate,
-	 *			   is not supported, and will be removed. Use
-	 *			   {@value org.hibernate.cfg.JdbcSettings#ALLOW_METADATA_ON_BOOT}.
-	 */
-	@Deprecated(since="6", forRemoval = true)
-	public static final String USE_JDBC_METADATA_DEFAULTS = "hibernate.temp.use_jdbc_metadata_defaults";
 
 	@Override
 	public Class<JdbcEnvironment> getServiceInitiated() {
@@ -241,41 +232,31 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	 * Determine whether we can access JDBC {@linkplain DatabaseMetaData metadata} based on
 	 * the {@value JdbcSettings#ALLOW_METADATA_ON_BOOT} setting. The default is to allow access.
 	 *
-	 * @implNote Currently also looks for the deprecated {@value JdbcEnvironmentInitiator#USE_JDBC_METADATA_DEFAULTS} setting as a fallback.
-	 *
 	 * @see JdbcSettings#ALLOW_METADATA_ON_BOOT
 	 */
 	public static JdbcMetadataOnBoot jdbcMetadataAccess(Map<String, Object> configurationValues) {
 		final Object setting = configurationValues.get( ALLOW_METADATA_ON_BOOT );
-		if ( setting != null ) {
-			// might be any number of forms....
-			if ( setting instanceof JdbcMetadataOnBoot asEnum ) {
-				return asEnum;
+		if ( setting instanceof JdbcMetadataOnBoot value ) {
+			return value;
+		}
+		else if ( setting instanceof String string ) {
+			if ( string.equalsIgnoreCase( "true" ) ) {
+				return JdbcMetadataOnBoot.ALLOW;
 			}
-
-			if ( setting instanceof String asString ) {
-				if ( asString.equalsIgnoreCase( "true" ) ) {
-					return JdbcMetadataOnBoot.ALLOW;
-				}
-				if ( asString.equalsIgnoreCase( "false" ) ) {
-					return JdbcMetadataOnBoot.DISALLOW;
-				}
-				return JdbcMetadataOnBoot.valueOf( asString.toUpperCase( Locale.ROOT ) );
+			else if ( string.equalsIgnoreCase( "false" ) ) {
+				return JdbcMetadataOnBoot.DISALLOW;
 			}
-
-			if ( setting instanceof Boolean asBoolean ) {
-				return asBoolean ? JdbcMetadataOnBoot.ALLOW : JdbcMetadataOnBoot.DISALLOW;
+			else {
+				return JdbcMetadataOnBoot.valueOf( string.toUpperCase( Locale.ROOT ) );
 			}
 		}
-
-		final Boolean use = getBooleanWrapper( USE_JDBC_METADATA_DEFAULTS, configurationValues, null );
-		if ( use != null ) {
-			DEPRECATION_LOGGER.deprecatedSetting( USE_JDBC_METADATA_DEFAULTS, ALLOW_METADATA_ON_BOOT );
-			return use ? JdbcMetadataOnBoot.ALLOW : JdbcMetadataOnBoot.DISALLOW;
+		else if ( setting instanceof Boolean bool ) {
+			return bool ? JdbcMetadataOnBoot.ALLOW : JdbcMetadataOnBoot.DISALLOW;
 		}
-
-		// allow by default
-		return JdbcMetadataOnBoot.ALLOW;
+		else {
+			// allow by default
+			return JdbcMetadataOnBoot.ALLOW;
+		}
 	}
 
 	private static String getExplicitDatabaseVersion(

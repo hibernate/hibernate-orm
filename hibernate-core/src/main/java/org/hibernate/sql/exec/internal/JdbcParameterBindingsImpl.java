@@ -26,7 +26,7 @@ import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.query.sql.internal.NativeQueryImpl.determineBindValueMaxCount;
+import static org.hibernate.query.sql.internal.NativeQueryParameterListHelper.determineBindValueMaxCount;
 
 /**
  * Standard implementation of JdbcParameterBindings
@@ -99,7 +99,10 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 		}
 	}
 
-	private JdbcMapping jdbcMapping(SessionFactoryImplementor factory, QueryParameterImplementor<?> param, QueryParameterBinding<?> binding) {
+	private JdbcMapping jdbcMapping(
+			SessionFactoryImplementor factory,
+			QueryParameterImplementor<?> param,
+			QueryParameterBinding<?> binding) {
 		final var type = determineParamType( param, binding );
 		if ( type == null ) {
 			return factory.getTypeConfiguration().getBasicTypeForJavaType( Object.class );

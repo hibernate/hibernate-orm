@@ -9,13 +9,13 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Graph;
 import jakarta.persistence.Query;
+import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.Subgraph;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.GraphImplementor;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.MutationOrSelectionQuery;
@@ -123,9 +123,27 @@ public final class EntityGraphs {
 	 * @since 7.0
 	 */
 	public static <T> EntityGraph<T> merge(EntityManager entityManager, Class<T> root, Stream<? extends Graph<T>> graphs) {
-		final RootGraphImplementor<T> merged = ((SessionImplementor) entityManager).createEntityGraph( root );
+		final var merged = ((SessionImplementor) entityManager).createEntityGraph( root );
 		graphs.forEach( graph -> merged.merge( (GraphImplementor<T>) graph ) );
 		return merged;
+	}
+
+	/**
+	 * Convenience method to apply the given graph to the given query
+	 * without the need for a cast when working with JPA API.
+	 *
+	 * @param statementOrTypedQuery The JPA {@link StatementOrTypedQuery}
+	 * @param graph The JPA {@link EntityGraph} to apply
+	 * @param semantic The semantic to use when applying the graph
+	 *
+	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph, GraphSemantic)
+	 *
+	 * @since 8.0
+	 */
+	public static <R> SelectionQuery<R> applyGraph(
+			StatementOrTypedQuery statementOrTypedQuery,
+			EntityGraph<R> graph, GraphSemantic semantic) {
+		return ((MutationOrSelectionQuery) statementOrTypedQuery).asSelectionQuery( graph, semantic );
 	}
 
 	/**
@@ -136,12 +154,16 @@ public final class EntityGraphs {
 	 * @param graph The JPA {@link EntityGraph} to apply
 	 * @param semantic The semantic to use when applying the graph
 	 *
+	 * @deprecated Use {@link #applyGraph(StatementOrTypedQuery, EntityGraph, GraphSemantic)} instead.
+	 *
 	 * @see SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)
 	 *
 	 * @since 7.0
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	public static <R> void setGraph(TypedQuery<R> query, EntityGraph<R> graph, GraphSemantic semantic) {
-		((org.hibernate.query.SelectionQuery<R>) query).setEntityGraph( graph, semantic );
+		//noinspection removal
+		((SelectionQuery<R>) query).setEntityGraph( graph, semantic );
 	}
 
 	/**
@@ -151,10 +173,11 @@ public final class EntityGraphs {
 	 * @param query The JPA {@link TypedQuery}
 	 * @param graph The JPA {@link EntityGraph} to apply
 	 *
-	 * @since 7.0
+	 * @deprecated Use {@link StatementOrTypedQuery#withEntityGraph(EntityGraph)}
+	 * or {@link jakarta.persistence.EntityHandler#createQuery(String, EntityGraph)}
+	 * instead.
 	 *
-	 * @deprecated Use {@linkplain org.hibernate.engine.spi.SharedSessionContractImplementor#createQuery(String, EntityGraph)}
-	 * or {@linkplain org.hibernate.query.Query#withEntityGraph(EntityGraph)} instead.
+	 * @since 7.0
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
 	public static <R> void setLoadGraph(TypedQuery<R> query, EntityGraph<R> graph) {
@@ -168,10 +191,9 @@ public final class EntityGraphs {
 	 * @param query The JPA {@link TypedQuery}
 	 * @param graph The JPA {@link EntityGraph} to apply
 	 *
-	 * @since 7.0
+	 * @deprecated Use {@link #applyGraph(StatementOrTypedQuery, EntityGraph, GraphSemantic)} instead.
 	 *
-	 * @deprecated Use {@linkplain org.hibernate.engine.spi.SharedSessionContractImplementor#createQuery(String, EntityGraph)}
-	 * or {@linkplain org.hibernate.query.Query#withEntityGraph(EntityGraph)} instead.
+	 * @since 7.0
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
 	public static <R> void setFetchGraph(TypedQuery<R> query, EntityGraph<R> graph) {
@@ -187,11 +209,7 @@ public final class EntityGraphs {
 	 * @param subtype the treated (narrowed) type
 	 *
 	 * @since 7.0
-	 *
-	 * @deprecated Use {@linkplain org.hibernate.engine.spi.SharedSessionContractImplementor#createQuery(String, EntityGraph)}
-	 * or {@linkplain org.hibernate.query.Query#withEntityGraph(EntityGraph)} instead.
 	 */
-	@Deprecated(since = "8.0", forRemoval = true)
 	public <S> Subgraph<S> addTreatedSubgraph(Graph<? super S> graph, Class<S> subtype) {
 		return ((org.hibernate.graph.Graph<? super S>) graph).addTreatedSubgraph( subtype );
 	}

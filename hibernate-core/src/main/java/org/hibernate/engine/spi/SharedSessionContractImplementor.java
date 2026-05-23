@@ -37,7 +37,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.spi.MutationQueryImplementor;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -766,10 +765,6 @@ public interface SharedSessionContractImplementor
 
 	@Override
 	<T> SelectionQueryImplementor<T> createQuery(String queryString, EntityGraph<T> entityGraph);
-
-	@Override
-	@SuppressWarnings("rawtypes")
-	QueryImplementor createNamedQuery(String name);
 
 	@Override
 	@SuppressWarnings("rawtypes")

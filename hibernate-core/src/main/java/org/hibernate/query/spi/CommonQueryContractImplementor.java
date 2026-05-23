@@ -7,7 +7,6 @@ package org.hibernate.query.spi;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -55,22 +54,6 @@ public interface CommonQueryContractImplementor extends CommonQueryContract {
 
 	@Override
 	CommonQueryContractImplementor setHint(String hintName, Object value);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Casts
-
-	@Override
-	SelectionQueryImplementor<?> asSelectionQuery();
-
-	@Override
-	<X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type);
-
-	@Override
-	<X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph);
-
-	@Override
-	MutationQueryImplementor<?> asMutationQuery();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -21,6 +21,7 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalSelectQueryException;
+import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
@@ -280,7 +281,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * recommended.
 	 * <p>
 	 * The returned {@code Query} may be executed by calling
-	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
+	 * {@link SelectionQuery#getResultList()} or
+	 * {@link SelectionQuery#getSingleResult()}.
 	 *
 	 * @param queryString The HQL query
 	 * @param resultClass The {@link Class} object representing the
@@ -355,7 +357,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * recommended.
 	 * <p>
 	 * The returned {@code Query} may be executed by calling
-	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
+	 * {@link SelectionQuery#getResultList()} or
+	 * {@link SelectionQuery#getSingleResult()}.
 
 	 * @param hqlString The HQL {@code select} query as a string
 	 * @param resultType The {@link Class} object representing the
@@ -391,7 +394,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * be the result type.
 	 * <p>
 	 * The returned {@code Query} may be executed by calling
-	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
+	 * {@link SelectionQuery#getResultList()} or
+	 * {@link SelectionQuery#getSingleResult()}.
 
 	 * @param hqlString The HQL {@code select} query as a string
 	 * @param resultGraph An {@link EntityGraph} whose root type is the
@@ -1023,29 +1027,17 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * without indicating the expected result type, if any, nor whether the query
 	 * is a {@linkplain TypedQuery typed query} which returns a result list, or an
 	 * update, delete, or insert {@linkplain jakarta.persistence.Statement statement}.
-	 * @deprecated Returns a raw {@link Query}. The return type of this method
-	 * will change to {@link jakarta.persistence.StatementOrTypedQuery} or some
-	 * new subtype of {@code StatementOrTypedQuery} in a future release. Use
-	 * {@link #createQuery(String, Class)} or {@link #createStatement(String)}
-	 * instead.
 	 */
-	@Deprecated(since = "6.0", forRemoval = true)
 	@Override
-	Query createQuery(String queryString);
+	MutationOrSelectionQuery createQuery(String queryString);
 
 	/**
 	 * Create an instance of {@link Query} for the given named query or statement,
 	 * without indicating the expected result type, if any, nor whether the query
 	 * is a {@linkplain TypedQuery typed query} which returns a result list, or an
 	 * update, delete, or insert {@linkplain jakarta.persistence.Statement statement}.
-	 * @deprecated Returns a raw {@link Query}. The return type of this method
-	 * will change to {@link jakarta.persistence.StatementOrTypedQuery} or some
-	 * new subtype of {@code StatementOrTypedQuery} in a future release. Use
-	 * {@link #createNamedQuery(String, Class)} or
-	 * {@link #createNamedStatement(String)} instead.
 	 */
-	@Deprecated(since = "8.0", forRemoval = true)
 	@Override
-	Query createNamedQuery(String name);
+	MutationOrSelectionQuery createNamedQuery(String name);
 
 }

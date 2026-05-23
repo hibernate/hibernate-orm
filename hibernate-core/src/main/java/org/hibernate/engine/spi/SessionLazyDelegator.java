@@ -51,9 +51,9 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
@@ -386,32 +386,32 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().byId( entityClass );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> NaturalIdLoadAccess<T> byNaturalId(String entityName) {
 		return this.lazySession.get().byNaturalId( entityName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass) {
 		return this.lazySession.get().byNaturalId( entityClass );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName) {
 		return this.lazySession.get().bySimpleNaturalId( entityName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass) {
 		return this.lazySession.get().bySimpleNaturalId( entityClass );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass) {
 		return this.lazySession.get().byMultipleNaturalId( entityClass );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName) {
 		return this.lazySession.get().byMultipleNaturalId( entityName );
 	}
@@ -501,12 +501,12 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().createEntityGraph( rootType );
 	}
 
-	@Override
+	@Override @Deprecated
 	public RootGraph<?> createEntityGraph(String graphName) {
 		return this.lazySession.get().createEntityGraph( graphName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
 		return this.lazySession.get().createEntityGraph( rootType, graphName );
 	}
@@ -538,6 +538,7 @@ public class SessionLazyDelegator implements Session {
 
 	@Override
 	public <R> SelectionQuery<R> createQuery(String queryString, Class<R> resultClass) {
+		//noinspection SqlSourceToSinkFlow
 		return this.lazySession.get().createQuery( queryString, resultClass );
 	}
 
@@ -552,8 +553,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	@Deprecated
-	public Query<?> createQuery(String queryString) {
+	public MutationOrSelectionQuery createQuery(String queryString) {
+		//noinspection SqlSourceToSinkFlow
 		return this.lazySession.get().createQuery( queryString );
 	}
 
@@ -583,8 +584,7 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	@Deprecated
-	public Query createNamedQuery(String name) {
+	public MutationOrSelectionQuery createNamedQuery(String name) {
 		return this.lazySession.get().createNamedQuery( name );
 	}
 
@@ -919,12 +919,12 @@ public class SessionLazyDelegator implements Session {
 				: lazySession.get().unwrap( type );
 	}
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	public NativeQuery getNamedNativeQuery(String name) {
 		return lazySession.get().getNamedNativeQuery( name );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object getDelegate() {
 		return lazySession.get().getDelegate();
 	}

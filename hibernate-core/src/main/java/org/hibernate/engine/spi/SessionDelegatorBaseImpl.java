@@ -65,9 +65,9 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
@@ -605,12 +605,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.createEntityGraph( rootType );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		return delegate.createEntityGraph( graphName );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
 		return delegate.createEntityGraph( rootType, graphName );
 	}
@@ -656,9 +656,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return createMutationQuery( criteriaStatement );
 	}
 
-	@Override @Deprecated
-	public Query<?> createQuery(String queryString) {
-		//noinspection resource
+	@Override
+	public MutationOrSelectionQuery createQuery(String queryString) {
+		//noinspection resource,SqlSourceToSinkFlow
 		return queryDelegate().createQuery( queryString );
 	}
 
@@ -670,27 +670,30 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 
 	@Override
-	@SuppressWarnings({"rawtypes"})
+	@SuppressWarnings("rawtypes")
 	public MutationQueryImplementor createStatement(String hql) {
 		//noinspection resource
 		return (MutationQueryImplementor) queryDelegate().createStatement( hql );
 	}
 
 	@Override
-	@SuppressWarnings({"rawtypes"})
+	@SuppressWarnings("rawtypes")
 	public MutationQueryImplementor createNamedStatement(String name) {
+		//noinspection resource
 		return (MutationQueryImplementor) queryDelegate().createNamedStatement( name );
 	}
 
 	@Override
-	@SuppressWarnings({"rawtypes"})
+	@SuppressWarnings("rawtypes")
 	public MutationQueryImplementor createStatement(StatementReference statementReference) {
+		//noinspection resource
 		return (MutationQueryImplementor) queryDelegate().createStatement( statementReference );
 	}
 
 	@Override
-	@SuppressWarnings({"rawtypes"})
+	@SuppressWarnings("rawtypes")
 	public MutationQueryImplementor createNativeStatement(String sql) {
+		//noinspection resource
 		return (MutationQueryImplementor) queryDelegate().createNativeStatement( sql );
 	}
 
@@ -730,8 +733,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( typedQueryReference );
 	}
 
-	@Override @Deprecated
-	public @SuppressWarnings("rawtypes") Query createNamedQuery(String name) {
+	@Override
+	public MutationOrSelectionQuery createNamedQuery(String name) {
 		//noinspection resource
 		return queryDelegate().createNamedQuery( name );
 	}
@@ -744,11 +747,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName) {
+		//noinspection resource
 		return queryDelegate().createNamedQuery( name, resultSetMappingName );
 	}
 
 	@Override
 	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass) {
+		//noinspection resource
 		return queryDelegate().createNamedQuery( name, resultSetMappingName, resultClass );
 	}
 
@@ -764,10 +769,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createNativeQuery( sqlString );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	//note: we're doing something a bit funny here to work around
-	//      the clashing signatures declared by the supertypes
-	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
+	public <R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass) {
 		//noinspection resource
 		return queryDelegate().createNativeQuery( sqlString, resultClass );
 	}
@@ -858,8 +860,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.unwrap( cls );
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public NativeQuery getNamedNativeQuery(String name) {
+		//noinspection resource
 		return delegate().getNamedNativeQuery( name );
 	}
 
@@ -940,7 +943,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.getIdentifier( object );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public boolean contains(String entityName, Object object) {
 		return delegate.contains( entityName, object );
 	}
@@ -1075,7 +1078,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		delegate.lock( entityName, object, lockOptions );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public void lock(Object object, LockOptions lockOptions) {
 		delegate.lock( object, lockOptions );
 	}
@@ -1100,7 +1103,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		delegate.refresh( entity, options );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public void refresh(Object object, LockOptions lockOptions) {
 		delegate.refresh( object, lockOptions );
 	}
@@ -1135,7 +1138,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.get( theClass, id );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public <T> T get(Class<T> theClass, Object id, LockMode lockMode) {
 		return delegate.get( theClass, id, lockMode );
 	}
@@ -1145,17 +1148,17 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.get( entityName, key, findOptions );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		return delegate.get( entityName, id, lockMode );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public <T> T get(Class<T> entityType, Object id, LockOptions lockOptions) {
 		return delegate.get( entityType, id, lockOptions );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public Object get(String entityName, Object id, LockOptions lockOptions) {
 		return delegate.get( entityName, id, lockOptions );
 	}
@@ -1175,22 +1178,22 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.getReference( entityType, key, keyType );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public <T> IdentifierLoadAccess<T> byId(String entityName) {
 		return delegate.byId( entityName );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass) {
 		return delegate.byMultipleIds( entityClass );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName) {
 		return delegate.byMultipleIds( entityName );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public <T> IdentifierLoadAccess<T> byId(Class<T> entityClass) {
 		return delegate.byId( entityClass );
 	}
@@ -1280,7 +1283,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		delegate.disableFetchProfile( name );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public LobHelper getLobHelper() {
 		return delegate.getLobHelper();
 	}
@@ -1310,7 +1313,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		delegate.addEventListeners( listeners );
 	}
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	public org.hibernate.action.queue.spi.ActionQueue getActionQueue() {
 		return delegate.getActionQueue();
 	}
@@ -1338,11 +1341,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void forceFlush(EntityKey e) throws HibernateException {
 		delegate.forceFlush( e );
-	}
-
-	@Override
-	public SessionImplementor getSession() {
-		return this;
 	}
 
 	@Override

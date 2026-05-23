@@ -68,7 +68,7 @@ public interface NativeQueryImplementor<R>
 	@Override
 	NamedMutationMemento<?> toMutationMemento(String name);
 
-	@Override
+	@Override @SuppressWarnings({"unchecked", "rawtypes"})
 	Set getOptions();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,11 +80,6 @@ public interface NativeQueryImplementor<R>
 	}
 
 	@Override
-	default NativeQueryImplementor<R> asStatement() {
-		return (NativeQueryImplementor<R>) MutationQueryImplementor.super.asStatement();
-	}
-
-	@Override
 	NativeQueryImplementor<R> asSelectionQuery();
 
 	@Override
@@ -93,53 +88,61 @@ public interface NativeQueryImplementor<R>
 	@Override
 	<X> NativeQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph);
 
-	@Override
-	<X> NativeQueryImplementor<X> ofType(Class<X> type);
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Executions
 
 	@Override
+	@SuppressWarnings("deprecation")
 	List<R> list();
 
 	@Override
+	@SuppressWarnings("deprecation")
 	default List<R> getResultList() {
 		return SelectionQueryImplementor.super.getResultList();
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	ScrollableResultsImplementor<R> scroll();
 
 	@Override
+	@SuppressWarnings("deprecation")
 	ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode);
 
 	@Override
+	@SuppressWarnings("deprecation")
 	default Stream<R> getResultStream() {
 		return SelectionQueryImplementor.super.getResultStream();
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	default Stream<R> stream() {
 		return SelectionQueryImplementor.super.stream();
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	R uniqueResult();
 
 	@Override
+	@SuppressWarnings("deprecation")
 	Optional<R> uniqueResultOptional();
 
 	@Override
+	@SuppressWarnings("deprecation")
 	R getSingleResult();
 
 	@Override
+	@SuppressWarnings("deprecation")
 	R getSingleResultOrNull();
 
 	@Override
 	int execute();
 
 	@Override
+	@SuppressWarnings({"deprecation", "removal"})
 	int executeUpdate();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -182,25 +185,25 @@ public interface NativeQueryImplementor<R>
 	@Override
 	NativeQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable);
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	NativeQueryImplementor<R> setCacheable(boolean cacheable);
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	NativeQueryImplementor<R> setCacheMode(CacheMode cacheMode);
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	CacheMode getCacheMode();
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	CacheStoreMode getCacheStoreMode();
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	CacheRetrieveMode getCacheRetrieveMode();
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	NativeQueryImplementor<R> setCacheRegion(String cacheRegion);
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	NativeQueryImplementor<R> setFetchSize(int fetchSize);
 
 	@Override
@@ -212,25 +215,25 @@ public interface NativeQueryImplementor<R>
 	@Override
 	NativeQueryImplementor<R> setHibernateLockMode(LockMode lockMode);
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	LockModeType getLockMode();
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	NativeQueryImplementor<R> setLockMode(LockModeType lockMode);
 
 	@Override
 	NativeQueryImplementor<R> setComment(String comment);
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	int getMaxResults();
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	NativeQueryImplementor<R> setMaxResults(int maxResults);
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	int getFirstResult();
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	NativeQueryImplementor<R> setFirstResult(int startPosition);
 
 	@Override
@@ -242,13 +245,10 @@ public interface NativeQueryImplementor<R>
 	@Override
 	NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
-	@Override
-	<X> NativeQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph);
-
-	@Override
+	@Override @SuppressWarnings("removal")
 	NativeQueryImplementor<R> setEntityGraph(EntityGraph<? super R> entityGraph);
 
-	@Override
+	@Override @SuppressWarnings("removal")
 	NativeQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	@Override
@@ -260,16 +260,16 @@ public interface NativeQueryImplementor<R>
 	@Override
 	NativeQueryImplementor<R> setPage(Page page);
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	NativeQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	NativeQueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	NativeQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	NativeQueryImplementor<R> setLockScope(PessimisticLockScope lockScope);
 
 	@Override

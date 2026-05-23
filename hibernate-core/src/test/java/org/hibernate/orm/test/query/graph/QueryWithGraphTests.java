@@ -94,17 +94,17 @@ public class QueryWithGraphTests {
 	void withEntityGraphAppliesEntityGraph(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final EntityGraph<Publisher> entityGraph = session.getEntityGraph( Publisher.class, "pub-with-books" );
-			final var query = session.createQuery( "from Publisher", Publisher.class );
+			final var query = session.createQuery( "from Publisher" );
 			final var graphedQuery = query.withEntityGraph( entityGraph );
 			assertThat( graphedQuery ).isNotSameAs( query );
 
-			final var plainResults = query.getResultList();
+			final var plainResults = query.asSelectionQuery(Publisher.class).getResultList();
 			assertThat( plainResults ).hasSize( 1 );
 			assertThat( Hibernate.isInitialized( plainResults.get( 0 ).books ) ).isFalse();
 		} );
 		factoryScope.inTransaction( (session) -> {
 			final EntityGraph<Publisher> entityGraph = session.getEntityGraph( Publisher.class, "pub-with-books" );
-			var results = session.createQuery( "from Publisher", Publisher.class )
+			var results = session.createQuery( "from Publisher" )
 					.withEntityGraph( entityGraph )
 					.getResultList();
 			assertThat( results ).hasSize( 1 );

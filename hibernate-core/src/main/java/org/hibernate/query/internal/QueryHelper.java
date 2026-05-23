@@ -7,10 +7,8 @@ package org.hibernate.query.internal;
 import jakarta.persistence.TupleElement;
 import jakarta.persistence.criteria.CompoundSelection;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -23,7 +21,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
@@ -209,17 +206,6 @@ public class QueryHelper {
 			}
 			return elements;
 		}
-	}
-
-	public static ResultSetMapping resolveFromMemento(@Nullable NamedResultSetMappingMemento mappingMemento, Consumer<String> querySpaceConsumer, ResultSetMappingResolutionContext resolutionContext, SessionFactoryImplementor sessionFactory) {
-		var resultSetMappingProducer = sessionFactory.getJdbcValuesMappingProducerProvider();
-		var resultSetMapping = resultSetMappingProducer.buildResultSetMapping(
-				mappingMemento.getName(),
-				true,
-				sessionFactory
-		);
-		mappingMemento.resolve( resultSetMapping, querySpaceConsumer, resolutionContext );
-		return resultSetMapping;
 	}
 
 	public static <R> Class<R> determineResultType(Class<R> explicitType, ResultSetMapping resultSetMapping) {

@@ -71,6 +71,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.query.MutationOrSelectionQuery;
+import org.hibernate.query.internal.MutationOrSelectionQueryImpl;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
@@ -107,6 +109,8 @@ import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.NamedSqmQueryMemento;
+import org.hibernate.query.named.internal.NativeMutationMementoImpl;
+import org.hibernate.query.named.internal.NativeSelectionMementoImpl;
 import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.specification.internal.MutationSpecificationImpl;
 import org.hibernate.query.specification.internal.SelectionSpecificationImpl;
@@ -115,6 +119,7 @@ import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
+import org.hibernate.query.sql.internal.NativeMutationOrSelectionQueryImpl;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -1562,18 +1567,18 @@ abstract class AbstractSharedSessionContract
 	}
 
 
-	@Override @Deprecated @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(String hql) {
+	@Override
+	public MutationOrSelectionQuery createQuery(String hql) {
 		// JPA form
 		checksBeforeQueryCreation();
 		try {
 			final var interpretation = interpretHql( hql, null );
 			if ( interpretation.getSqmStatement() instanceof SqmSelectStatement<?> ) {
 				DeprecationLogger.DEPRECATION_LOGGER.debugf( "Session#createQuery(String queryString) used to create SelectionQuery" );
-				return buildHqlSelectionQuery( hql, interpretation, null, null  );
+				return MutationOrSelectionQueryImpl.from( buildHqlSelectionQuery( hql, interpretation, null, null ) );
 			}
 			else {
-				return getMutationQuery( hql, interpretation );
+				return MutationOrSelectionQueryImpl.from( getMutationQuery( hql, interpretation ) );
 			}
 		}
 		catch (IllegalQueryOperationException illegalQueryType) {
@@ -1880,22 +1885,13 @@ abstract class AbstractSharedSessionContract
 		}
 	}
 
-
-
-
-
-	/**
-	 * @deprecated This is a JPA-defined method, but Hibernate considers it
-	 * bad thus we deprecate it through our APIs.  Use {@linkplain #createNamedQuery(String, Class)}
-	 * instead.
-	 */
-	@Override @Deprecated
-	public QueryImplementor<?> createNamedQuery(String name) {
+	@Override
+	public MutationOrSelectionQuery createNamedQuery(String name) {
 		checksBeforeQueryCreation();
 		try {
 			return buildNamedQuery( name,
-					this::createSqmQueryImplementor,
-					this::createNativeQueryImplementor );
+					memento -> MutationOrSelectionQueryImpl.from( createSqmQueryImplementor( memento ) ),
+					this::createNativeMutationOrSelectionQueryImplementor );
 		}
 		catch (RuntimeException e) {
 			throw convertNamedQueryException( e );
@@ -1973,6 +1969,24 @@ abstract class AbstractSharedSessionContract
 		}
 		applyQuerySettingsAndHints( query );
 		return query;
+	}
+
+	protected MutationOrSelectionQuery createNativeMutationOrSelectionQueryImplementor(NamedNativeQueryMemento<?> memento) {
+		final NativeQueryImplementor<?> query;
+		if ( memento instanceof NativeSelectionMementoImpl<?> selectionMemento ) {
+			query = new NativeMutationOrSelectionQueryImpl( selectionMemento, this );
+		}
+		else if ( memento instanceof NativeMutationMementoImpl<?> mutationMemento ) {
+			query = new NativeMutationOrSelectionQueryImpl( mutationMemento, this );
+		}
+		else {
+			return MutationOrSelectionQueryImpl.from( createNativeQueryImplementor( memento ) );
+		}
+		if ( isEmpty( query.getComment() ) ) {
+			query.setComment( "dynamic native SQL query" );
+		}
+		applyQuerySettingsAndHints( query );
+		return (MutationOrSelectionQuery) query;
 	}
 
 	protected <T> QueryImplementor<T> createSqmQueryImplementor(NamedSqmQueryMemento<T> memento) {

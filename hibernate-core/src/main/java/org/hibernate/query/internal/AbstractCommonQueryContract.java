@@ -116,17 +116,17 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		this.session = session;
 		this.queryOptions = new QueryOptionsImpl();
 
-		var defaultLockOptions = session.getDefaultLockOptions();
+		final var defaultLockOptions = session.getDefaultLockOptions();
 		if ( defaultLockOptions.getLockMode().greaterThan( LockMode.READ ) ) {
 			queryOptions.getLockOptions().overlay( defaultLockOptions );
 		}
 
-		var defaultLockTimeout = session.getDefaultLockTimeout();
+		final var defaultLockTimeout = session.getDefaultLockTimeout();
 		if ( defaultLockTimeout != null ) {
 			queryOptions.getLockOptions().setTimeout( defaultLockTimeout );
 		}
 
-		var defaultTimeout = session.getDefaultTimeout();
+		final var defaultTimeout = session.getDefaultTimeout();
 		if ( defaultTimeout != null ) {
 			queryOptions.setTimeout( defaultTimeout );
 		}
@@ -407,13 +407,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			throw jpaExpected;
 		}
 		catch (Exception e) {
-			var jpaExpected = new IllegalArgumentException( String.format( ROOT,
-					"(error applying query hint `%s`) %s",
-					hintName,
-					e.getMessage()
-			) );
-			jpaExpected.addSuppressed( e );
-			throw jpaExpected;
+			throw new IllegalArgumentException(
+					"Error applying query hint '%s': %s"
+							.formatted( hintName, e.getMessage() ),
+					e
+			);
 		}
 		return this;
 	}
@@ -1153,7 +1151,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			|| bindJavaType.isAssignableFrom( valueType );
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContractImplementor setParameter(int position, Instant value, TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;
@@ -1212,37 +1210,37 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContractImplementor setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContractImplementor setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContractImplementor setParameter(String name, Calendar value, TemporalType temporalType) {
 		locateBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContractImplementor setParameter(String name, Date value, TemporalType temporalType) {
 		locateBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContractImplementor setParameter(int position, Calendar value, TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContractImplementor setParameter(int position, Date value, TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;
@@ -1488,7 +1486,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	/// hook for subtypes
 	protected abstract void prepareForExecution();
 
-	protected abstract <X> List<X> doList();
+	protected abstract List<?> doList();
 
 	protected abstract int doExecuteUpdate();
 
@@ -1502,8 +1500,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
 		final var session = getSession();
-		final var options = getQueryOptions();
-		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().getLockMode() ) );
+		session.prepareForQueryExecution( requiresTransaction() );
 		prepareForExecution();
 		prepareSessionFlushMode( session );
 		prepareSessionCacheMode( session );
@@ -1551,50 +1548,45 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void afterQuery() {
-		if ( sessionFlushMode != null
-			&& getSession() instanceof SessionImplementor statefulSession ) {
+		if ( sessionFlushMode != null && session instanceof SessionImplementor statefulSession ) {
 			statefulSession.setHibernateFlushMode( sessionFlushMode );
 			sessionFlushMode = null;
 		}
 		if ( sessionCacheMode != null ) {
-			getSession().setCacheMode( sessionCacheMode );
+			session.setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
 	}
 
 
 	protected CacheMode adjustCacheMode(CacheMode queryCacheMode) {
-		if ( queryCacheMode != null && this.session instanceof SessionImplementor session ) {
-			var sessionCacheMode = session.getCacheMode();
+		if ( queryCacheMode != null && session instanceof SessionImplementor statefulSession ) {
+			var sessionCacheMode = statefulSession.getCacheMode();
 			if ( queryCacheMode != sessionCacheMode ) {
-				session.setCacheMode( queryCacheMode );
+				statefulSession.setCacheMode( queryCacheMode );
 				return sessionCacheMode;
 			}
 		}
-
 		return null;
 	}
 
 	private FlushMode adjustFlushMode(FlushMode effectiveFlushMode) {
 		assert effectiveFlushMode != null;
-
 		// NOTE: returning null says that the FlushMode on Session was not set,
-		// and so we should not reset it after.
-
-		if ( this.session instanceof SessionImplementor session ) {
-			final var sessionFlushMode = session.getHibernateFlushMode();
+		//       and so we should not reset it after.
+		if ( session instanceof SessionImplementor statefulSession ) {
+			final var sessionFlushMode = statefulSession.getHibernateFlushMode();
 			if ( effectiveFlushMode != sessionFlushMode ) {
-				session.setHibernateFlushMode( effectiveFlushMode );
+				statefulSession.setHibernateFlushMode( effectiveFlushMode );
 				return sessionFlushMode;
 			}
 		}
-
 		// nothing to readjust by default
 		return null;
 	}
 
 
-	@Override
+	@Override @Deprecated
 	public List<?> getResultList() {
 		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
@@ -1614,12 +1606,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-
-	protected boolean requiresTxn(LockMode lockMode) {
+	protected boolean requiresTransaction() {
+		final var lockMode = getQueryOptions().getLockOptions().getLockMode();
 		return lockMode != null && lockMode.greaterThan( LockMode.READ );
 	}
 
 	@Override
+	@Deprecated @SuppressWarnings("removal")
 	public int executeUpdate() throws HibernateException {
 		//TODO: refactor copy/paste of QuerySqmImpl.executeUpdate()
 		getSession().checkTransactionNeededForUpdateOperation( "No active transaction for update or delete query" );

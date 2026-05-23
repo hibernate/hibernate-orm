@@ -7,6 +7,7 @@ package org.hibernate.query.spi;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -14,13 +15,16 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.Query;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.SelectionQuery;
 
 import java.time.Instant;
 import java.util.Calendar;
@@ -35,13 +39,19 @@ import java.util.Map;
 public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplementor {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Casts
+	// Casts (needed by MutationOrSelectionQueryImpl)
 
-	@Override
 	SelectionQueryImplementor<T> asSelectionQuery();
 
-	@Override
+	<X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type);
+
+	<X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph);
+
+	<X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic);
+
 	MutationQueryImplementor<T> asMutationQuery();
+
+	<R> SelectionQueryImplementor<R> withResultSetMapping(ResultSetMapping<R> mapping);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,7 +60,7 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 	@Override
 	QueryImplementor<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("deprecation")
 	QueryImplementor<T> setFlushMode(FlushModeType flushMode);
 
 	@Override

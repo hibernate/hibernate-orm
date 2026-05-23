@@ -5,6 +5,7 @@
 package org.hibernate.query.internal;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -29,6 +30,7 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Query;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.named.NamedMutationMemento;
 import org.hibernate.query.named.NamedQueryMemento;
@@ -216,7 +218,7 @@ public class MutationQueryImpl<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public int execute() {
 		return executeUpdate();
 	}
@@ -382,7 +384,7 @@ public class MutationQueryImpl<T>
 	}
 
 	@Override
-	protected <X> List<X> doList() {
+	protected List<?> doList() {
 		final var msg = "Attempting to get a result list from a mutation query";
 		throw new IllegalStateException( msg, new IllegalSelectQueryException( msg, hql ) );
 	}
@@ -409,14 +411,16 @@ public class MutationQueryImpl<T>
 	}
 
 	@Override
+	@Deprecated @SuppressWarnings("deprecation")
 	public LockModeType getLockMode() {
 		throw selectionOption( "Locking" );
 	}
 
 	@Override
+	@Deprecated @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setLockMode(LockModeType lockMode) {
 		if ( lockMode == LockModeType.NONE ) {
-			// this is safe according to the spec
+			// this is safe, according to the spec
 			return this;
 		}
 		else {
@@ -441,6 +445,7 @@ public class MutationQueryImpl<T>
 	}
 
 	@Override
+	@Deprecated @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setLockScope(PessimisticLockScope lockScope) {
 		return super.setLockScope( lockScope );
 	}
@@ -560,12 +565,10 @@ public class MutationQueryImpl<T>
 
 	@Override
 	protected void applyLockModeHint(String hintName, LockMode value) {
-		if ( value == LockMode.NONE ) {
-			// per spec, just ignore this
-		}
-		else {
+		if ( value != LockMode.NONE ) {
 			irrelevantHint( "Locking" );
 		}
+		// else, per spec, just ignore this
 	}
 
 	@Override
@@ -807,13 +810,13 @@ public class MutationQueryImpl<T>
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public MutationQueryImplementor<T> setParameter(Parameter param, Calendar value, TemporalType temporalType) {
+	public MutationQueryImplementor<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public MutationQueryImplementor<T> setParameter(Parameter param, Date value, TemporalType temporalType) {
+	public MutationQueryImplementor<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
@@ -868,5 +871,25 @@ public class MutationQueryImpl<T>
 
 			);
 		}
+	}
+
+	@Override
+	public SelectionQueryImplementor<T> asSelectionQuery() {
+		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
+	}
+
+	@Override
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
+		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
+	}
+
+	@Override
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
+		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
+	}
+
+	@Override
+	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}
 }

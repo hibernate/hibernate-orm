@@ -61,14 +61,14 @@ import java.util.stream.Stream;
 public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQuery {
 	private final QueryImplementor<?> delegate;
 
-	private MutationOrSelectionQueryImpl(QueryImplementor<?> delegate) {
-		this.delegate = delegate;
-	}
-
 	public static MutationOrSelectionQuery from(QueryImplementor<?> delegate) {
 		return delegate instanceof MutationOrSelectionQuery mutationOrSelectionQuery
 				? mutationOrSelectionQuery
 				: new MutationOrSelectionQueryImpl( delegate );
+	}
+
+	private MutationOrSelectionQueryImpl(QueryImplementor<?> delegate) {
+		this.delegate = delegate;
 	}
 
 	private SelectionQuery<Object> selectionQuery() {
@@ -165,12 +165,12 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override
 	public int execute() {
-		return executeUpdate();
+		return mutationQuery().execute();
 	}
 
 	@Override
 	public int executeUpdate() {
-		return mutationQuery().executeUpdate();
+		return execute();
 	}
 
 	@Override @Deprecated

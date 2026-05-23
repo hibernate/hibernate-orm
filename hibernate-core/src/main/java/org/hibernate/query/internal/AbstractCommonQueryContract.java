@@ -33,7 +33,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
-import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryArgumentException;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
@@ -112,6 +111,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	protected final SharedSessionContractImplementor session;
 	protected final MutableQueryOptions queryOptions;
 
+	@SuppressWarnings("removal")
 	public AbstractCommonQueryContract(SharedSessionContractImplementor session) {
 		this.session = session;
 		this.queryOptions = new QueryOptionsImpl();
@@ -1486,10 +1486,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	/// hook for subtypes
 	protected abstract void prepareForExecution();
 
-	protected abstract List<?> doList();
-
-	protected abstract int doExecuteUpdate();
-
 	protected HashSet<String> beforeQueryHandlingFetchProfiles() {
 		beforeQuery();
 		final var options = getQueryOptions();
@@ -1585,54 +1581,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return null;
 	}
 
-
-	@Override @Deprecated
-	public List<?> getResultList() {
-		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
-		boolean success = false;
-		try {
-			final List<?> result = doList();
-			success = true;
-			return result;
-		}
-		catch (IllegalQueryOperationException e) {
-			throw new IllegalStateException( e );
-		}
-		catch (HibernateException he) {
-			throw getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
-		}
-		finally {
-			afterQueryHandlingFetchProfiles( success, fetchProfiles );
-		}
-	}
-
 	protected boolean requiresTransaction() {
 		final var lockMode = getQueryOptions().getLockOptions().getLockMode();
 		return lockMode != null && lockMode.greaterThan( LockMode.READ );
 	}
-
-	@Override
-	@Deprecated @SuppressWarnings("removal")
-	public int executeUpdate() throws HibernateException {
-		//TODO: refactor copy/paste of QuerySqmImpl.executeUpdate()
-		getSession().checkTransactionNeededForUpdateOperation( "No active transaction for update or delete query" );
-		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
-		boolean success = false;
-		try {
-			final int result = doExecuteUpdate();
-			success = true;
-			return result;
-		}
-		catch (IllegalQueryOperationException e) {
-			throw new IllegalStateException( e );
-		}
-		catch (HibernateException e) {
-			throw getExceptionConverter().convert( e );
-		}
-		finally {
-			afterQueryHandlingFetchProfiles( success, fetchProfiles );
-		}
-	}
-
 
 }

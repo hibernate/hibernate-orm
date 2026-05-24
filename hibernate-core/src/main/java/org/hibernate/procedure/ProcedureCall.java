@@ -282,7 +282,7 @@ public interface ProcedureCall
 	 * Retrieves access to outputs of this procedure call.  Can be called multiple times, returning the same
 	 * ProcedureOutputs instance each time.
 	 * <p>
-	 * If the procedure call has not actually be executed yet, it will be executed and then the ProcedureOutputs
+	 * If the procedure call has not actually been executed yet, it will be executed and then the ProcedureOutputs
 	 * will be returned.
 	 *
 	 * @return The ProcedureOutputs representation

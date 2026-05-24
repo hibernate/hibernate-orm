@@ -188,7 +188,7 @@ public class ExplicitLockingTest {
 					.setMaxResults( 10 )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
 					.unwrap( Query.class )
-					.setFollowOnLockingStrategy( Locking.FollowOn.DISALLOW )
+					.setFollowOnStrategy( Locking.FollowOn.DISALLOW )
 					.getResultList();
 			//end::locking-follow-on-explicit-example[]
 		});

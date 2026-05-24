@@ -27,6 +27,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.named.NamedNativeQueryMemento;
 import org.hibernate.query.named.internal.NativeMutationMementoImpl;
 import org.hibernate.query.named.internal.NativeSelectionMementoImpl;
@@ -454,24 +455,28 @@ public class NativeMutationOrSelectionQueryImpl
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("deprecation")
 	public NativeMutationOrSelectionQueryImpl setEntityGraph(EntityGraph<? super Object> entityGraph) {
 		super.setEntityGraph( entityGraph );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("deprecation")
 	public NativeMutationOrSelectionQueryImpl setEntityGraph(EntityGraph<? super Object> graph, GraphSemantic semantic) {
 		super.setEntityGraph( graph, semantic );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("deprecation")
 	public NativeMutationOrSelectionQueryImpl enableFetchProfile(String profileName) {
 		super.enableFetchProfile( profileName );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("deprecation")
 	public NativeMutationOrSelectionQueryImpl disableFetchProfile(String profileName) {
 		super.disableFetchProfile( profileName );
 		return this;
@@ -576,6 +581,12 @@ public class NativeMutationOrSelectionQueryImpl
 	@Override
 	public NativeMutationOrSelectionQueryImpl addQueryHint(String hint) {
 		super.addQueryHint( hint );
+		return this;
+	}
+
+	@Override
+	public NativeMutationOrSelectionQueryImpl setResultListTransformer(ResultListTransformer<Object> transformer) {
+		super.setResultListTransformer( transformer );
 		return this;
 	}
 }

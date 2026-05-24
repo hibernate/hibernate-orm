@@ -541,7 +541,6 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 6.2
 	 */
 	@Override
-	@SuppressWarnings("removal")
 	CacheStoreMode getCacheStoreMode();
 
 	/**
@@ -552,7 +551,6 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 6.2
 	 */
 	@Override
-	@SuppressWarnings("removal")
 	CacheRetrieveMode getCacheRetrieveMode();
 
 	/**
@@ -643,7 +641,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @see #getHibernateLockMode()
 	 */
-	@Override @SuppressWarnings("removal")
+	@Override
 	LockModeType getLockMode();
 
 	/**
@@ -675,6 +673,9 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	SelectionQuery<R> setLockScope(PessimisticLockScope lockScope);
+
+	@Override
+	Timeout getLockTimeout();
 
 	@Override
 	SelectionQuery<R> setLockTimeout(Timeout lockTimeout);

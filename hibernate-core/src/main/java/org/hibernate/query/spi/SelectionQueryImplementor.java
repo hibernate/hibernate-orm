@@ -135,9 +135,6 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setHibernateLockMode(LockMode lockMode);
 
 	@Override
-	SelectionQueryImplementor<R> setFollowOnLockingStrategy(Locking.FollowOn followOnStrategy);
-
-	@Override
 	SelectionQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
 
 	@Override

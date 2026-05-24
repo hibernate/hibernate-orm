@@ -469,20 +469,17 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	@Override
 	public QueryImplementor<T> setLockScope(PessimisticLockScope lockScope) {
 		verifySelectionOption( "Locking" );
+		//noinspection removal
 		queryOptions.getLockOptions().setLockScope( lockScope );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setFollowOnLockingStrategy(Locking.FollowOn strategy) {
+	public QueryImplementor<T> setFollowOnStrategy(Locking.FollowOn strategy) {
 		verifySelectionOption( "Locking" );
+		//noinspection removal
 		queryOptions.getLockOptions().setFollowOnStrategy( strategy );
 		return this;
-	}
-
-	@Override
-	public QueryImplementor<T> setFollowOnStrategy(Locking.FollowOn strategy) {
-		return setFollowOnLockingStrategy( strategy );
 	}
 
 	@Override

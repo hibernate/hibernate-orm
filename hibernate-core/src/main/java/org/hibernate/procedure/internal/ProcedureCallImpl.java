@@ -48,6 +48,7 @@ import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -100,6 +101,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImpl<R> addOption(@Nonnull Option option) {
+		checkNotClosed();
 		OptionsHelper.applyOption( this, option );
 		return this;
 	}
@@ -107,6 +109,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public Set<Option> getOptions() {
+		checkNotClosed();
 		return OptionsHelper.getStoredProcedureOptions( getQueryOptions() );
 	}
 
@@ -284,6 +287,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setComment(@Nullable String comment) {
+		checkNotClosed();
 		super.setComment( comment );
 		return this;
 	}
@@ -291,6 +295,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
+		checkNotClosed();
 		super.setQueryFlushMode( queryFlushMode );
 		return this;
 	}
@@ -298,6 +303,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setMaxResults(int maxResult) {
+		checkNotClosed();
 		super.setMaxResults( maxResult );
 		return this;
 	}
@@ -305,6 +311,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setFirstResult(int startPosition) {
+		checkNotClosed();
 		super.setFirstResult( startPosition );
 		return this;
 	}
@@ -318,6 +325,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> addQueryHint(@Nonnull String hint) {
+		checkNotClosed();
 		super.addQueryHint( hint );
 		return this;
 	}
@@ -357,6 +365,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setTimeout(@Nullable Integer timeout) {
+		checkNotClosed();
 		if ( timeout == null ) {
 			timeout = -1;
 		}
@@ -367,6 +376,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setTimeout(int timeout) {
+		checkNotClosed();
 		super.setTimeout( timeout );
 		return this;
 	}
@@ -374,6 +384,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setTimeout(@Nullable Timeout timeout) {
+		checkNotClosed();
 		super.setTimeout( timeout );
 		return this;
 	}
@@ -390,6 +401,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setFlushMode(@Nonnull FlushModeType flushModeType) {
+		checkNotClosed();
 		super.setFlushMode( flushModeType );
 		return this;
 	}
@@ -401,6 +413,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
+		checkNotClosed();
 		super.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}
@@ -408,6 +421,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
+		checkNotClosed();
 		super.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
@@ -415,6 +429,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setHint(@Nonnull String hintName, @Nullable Object value) {
+		checkNotClosed();
 		super.setHint( hintName, value );
 		return this;
 	}
@@ -548,18 +563,21 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nullable
 	public FunctionReturnImplementor<?> getFunctionReturn() {
+		checkNotClosed();
 		return functionReturn;
 	}
 
 	@Override
 	@Nonnull
 	public ProcedureParameterImplementor<?> getParameterRegistration(@Nonnull String name) {
+		checkNotClosed();
 		return parameterMetadata.getQueryParameter( name );
 	}
 
 	@Override
 	@Nonnull
 	public List<ProcedureParameter<?>> getRegisteredParameters() {
+		checkNotClosed();
 		return unmodifiableList( parameterMetadata.getRegistrationsAsList() );
 	}
 
@@ -608,6 +626,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> markAsFunctionCall(int sqlType) {
+		checkNotClosed();
 		functionReturn = new FunctionReturnImpl<>( this, sqlType );
 		return this;
 	}
@@ -619,6 +638,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <T> FunctionReturnImplementor<T> registerResultParameter(@Nonnull Class<T> aClass) {
+		checkNotClosed();
 		//noinspection resource
 		markAsFunctionCall( aClass );
 		//noinspection unchecked
@@ -628,6 +648,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> markAsFunctionCall(@Nonnull Class<?> resultType) {
+		checkNotClosed();
 		final var basicType = getTypeConfiguration().getBasicTypeForJavaType( resultType );
 		if ( basicType == null ) {
 			throw new IllegalArgumentException( "Could not resolve a BasicType for the Java type: " + resultType.getName() );
@@ -639,6 +660,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCall markAsFunctionCall(@Nonnull Type<?> typeReference) {
+		checkNotClosed();
 		if ( !(typeReference instanceof OutputableType<?> outputableType) ) {
 			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
 		}
@@ -672,6 +694,7 @@ public class ProcedureCallImpl<R>
 			int position,
 			@Nonnull Class<?> type,
 			@Nonnull ParameterMode mode) {
+		checkNotClosed();
 		getSession().checkOpen( true );
 		try {
 			if ( AttributeConverter.class.isAssignableFrom( type ) ) {
@@ -698,6 +721,7 @@ public class ProcedureCallImpl<R>
 			String parameterName,
 			@Nonnull Class<?> type,
 			@Nonnull ParameterMode mode) {
+		checkNotClosed();
 		getSession().checkOpen( true );
 		try {
 			if ( AttributeConverter.class.isAssignableFrom( type ) ) {
@@ -752,6 +776,7 @@ public class ProcedureCallImpl<R>
 			int position,
 			@Nonnull Type<?> type,
 			@Nonnull ParameterMode mode) {
+		checkNotClosed();
 		getSession().checkOpen( true );
 
 		try {
@@ -773,6 +798,7 @@ public class ProcedureCallImpl<R>
 			String parameterName,
 			@Nonnull Type<?> type,
 			@Nonnull ParameterMode mode) {
+		checkNotClosed();
 		getSession().checkOpen( true );
 		try {
 			registerParameter( parameterName, type, mode );
@@ -821,12 +847,14 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureParameterImplementor<?> getParameterRegistration(int position) {
+		checkNotClosed();
 		return parameterMetadata.getQueryParameter( position );
 	}
 
 	@Override
 	@Nonnull
 	public <T> ProcedureParameterImplementor<T> registerParameter(@Nonnull String name, @Nonnull Class<T> javaType, @Nonnull ParameterMode mode) {
+		checkNotClosed();
 		final var parameterType = getMappingMetamodel().resolveParameterBindType( javaType );
 		final var parameter =
 				new ProcedureParameterImpl<>( name, mode, getExpressibleJavaType( parameterType ), parameterType );
@@ -837,6 +865,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(int position, @Nonnull Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
+		checkNotClosed();
 		final var convertedType = createConvertedParameterType(
 				converter,
 				getSession().getFactory().getServiceRegistry(),
@@ -855,6 +884,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(@Nonnull String parameterName, @Nonnull Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
+		checkNotClosed();
 		final var convertedType = createConvertedParameterType(
 				converter,
 				getSession().getFactory().getServiceRegistry(),
@@ -887,6 +917,7 @@ public class ProcedureCallImpl<R>
 			String name,
 			@Nonnull Type<T> typeReference,
 			@Nonnull ParameterMode mode) {
+		checkNotClosed();
 		final var parameter =
 				new ProcedureParameterImpl<>( name, mode, typeReference.getJavaType(),
 						resolveExpressible( typeReference ) );
@@ -1161,6 +1192,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public boolean execute() {
+		checkNotClosed();
 		try {
 			return getOutputs().getCurrent() instanceof ResultSetOutput;
 		}
@@ -1191,6 +1223,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public Object getOutputParameterValue(int position) {
+		checkNotClosed();
 		// According to spec, an exception thrown from this method should not mark for rollback.
 		try {
 			return getOutputs().getOutputParameterValue( position );
@@ -1205,6 +1238,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public Object getOutputParameterValue(@Nonnull String parameterName) {
+		checkNotClosed();
 		// According to spec, an exception thrown from this method should not mark for rollback.
 		try {
 			return getOutputs().getOutputParameterValue( parameterName );
@@ -1219,11 +1253,13 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> T getOutputParameterValue(@Nonnull Parameter<T> parameter) {
+		checkNotClosed();
 		return getOutputs().getOutputParameterValue( (ProcedureParameter<T>) parameter );
 	}
 
 	@Override
 	public boolean hasMoreResults() {
+		checkNotClosed();
 		final var outputs = getOutputs();
 		return outputs.goToNext()
 			&& outputs.getCurrent() instanceof ResultSetOutput;
@@ -1231,6 +1267,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public int getUpdateCount() {
+		checkNotClosed();
 		try {
 			final var output = getOutputs().getCurrent();
 			if ( output == null ) {
@@ -1282,6 +1319,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public List<R> getResultList() {
+		checkNotClosed();
 		final var results = results( output -> output.asResultSetOutput().getResultList() );
 		//noinspection unchecked
 		return (List<R>) results;
@@ -1290,12 +1328,14 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nullable
 	public <R1> List<R1> getResultList(@Nonnull Class<R1> type) {
+		checkNotClosed();
 		return results( output -> output.asResultSetOutput( type ).getResultList() );
 	}
 
 	@Override
 	@Nullable
 	public <R1> List<R1> getResultList(@Nonnull jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
+		checkNotClosed();
 		return results( output -> output.asResultSetOutput( resultSetMapping ).getResultList() );
 	}
 
@@ -1317,12 +1357,14 @@ public class ProcedureCallImpl<R>
 	@SuppressWarnings("removal")
 	@Nonnull
 	public Stream<R> stream() {
+		checkNotClosed();
 		return getResultList().stream();
 	}
 
 	@Override
 	@Nullable
 	public <R1> R1 getSingleResult(@Nonnull Class<R1> aClass) {
+		checkNotClosed();
 		try {
 			final var list = getResultList( aClass );
 			return list == null ? null : getSingleResult( list );
@@ -1335,6 +1377,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nullable
 	public <R1> R1 getSingleResult(@Nonnull jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
+		checkNotClosed();
 		try {
 			final var list = getResultList( resultSetMapping );
 			return list == null ? null : getSingleResult( list );
@@ -1354,6 +1397,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nullable
 	public <R1> R1 getSingleResultOrNull(@Nonnull Class<R1> aClass) {
+		checkNotClosed();
 		try {
 			final var list = getResultList( aClass );
 			return list == null ? null : uniqueElement( list );
@@ -1366,6 +1410,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nullable
 	public <R1> R1 getSingleResultOrNull(@Nonnull jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
+		checkNotClosed();
 		try {
 			final var list = getResultList( resultSetMapping );
 			return list == null ? null : uniqueElement( list );
@@ -1387,6 +1432,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <P> ProcedureCallImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value) {
+		checkNotClosed();
 		super.setParameter( parameter, value );
 		return this;
 	}
@@ -1394,6 +1440,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <P> ProcedureCallImplementor<R> setParameter(@Nonnull Parameter<P> parameter, @Nullable P value) {
+		checkNotClosed();
 		super.setParameter( parameter, value );
 		return this;
 	}
@@ -1401,6 +1448,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable Object value) {
+		checkNotClosed();
 		super.setParameter( name, value );
 		return this;
 	}
@@ -1408,6 +1456,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <P> ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> javaTypeClass) {
+		checkNotClosed();
 		super.setParameter( name, value, javaTypeClass );
 		return this;
 	}
@@ -1415,6 +1464,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setParameter(int position, @Nullable Object value) {
+		checkNotClosed();
 		super.setParameter( position, value );
 		return this;
 	}
@@ -1422,6 +1472,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <P> ProcedureCallImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaTypeClass) {
+		checkNotClosed();
 		super.setParameter( position, value, javaTypeClass );
 		return this;
 	}
@@ -1432,6 +1483,7 @@ public class ProcedureCallImpl<R>
 			@Nonnull QueryParameter<P> parameter,
 			@Nullable P value,
 			@Nonnull Type<P> type) {
+		checkNotClosed();
 		super.setParameter( parameter, value, type );
 		return this;
 	}
@@ -1439,6 +1491,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <P> ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type) {
+		checkNotClosed();
 		super.setParameter( name, value, type );
 		return this;
 	}
@@ -1446,6 +1499,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <P> ProcedureCallImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Type<P> type) {
+		checkNotClosed();
 		super.setParameter( position, value, type );
 		return this;
 	}
@@ -1453,6 +1507,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setProperties(@Nonnull @SuppressWarnings("rawtypes") Map map) {
+		checkNotClosed();
 		super.setProperties( map );
 		return this;
 	}
@@ -1460,6 +1515,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureCallImplementor<R> setProperties(@Nonnull Object bean) {
+		checkNotClosed();
 		super.setProperties( bean );
 		return this;
 	}
@@ -1467,6 +1523,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <P> ProcedureCallImplementor<R> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter) {
+		checkNotClosed();
 		super.setConvertedParameter( name, value, converter );
 		return this;
 	}
@@ -1474,6 +1531,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public <P> ProcedureCallImplementor<R> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter) {
+		checkNotClosed();
 		super.setConvertedParameter( position, value, converter );
 		return this;
 	}
@@ -1484,6 +1542,7 @@ public class ProcedureCallImpl<R>
 			@Nonnull Parameter<Calendar> parameter,
 			@Nullable Calendar value,
 			@Nonnull TemporalType temporalPrecision) {
+		checkNotClosed();
 		super.setParameter( parameter, value, temporalPrecision );
 		return this;
 	}
@@ -1491,6 +1550,7 @@ public class ProcedureCallImpl<R>
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	@Nonnull
 	public ProcedureCallImplementor<R> setParameter(@Nonnull Parameter<Date> parameter, @Nullable Date value, @Nonnull TemporalType temporalPrecision) {
+		checkNotClosed();
 		super.setParameter( parameter, value, temporalPrecision );
 		return this;
 	}
@@ -1498,6 +1558,7 @@ public class ProcedureCallImpl<R>
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	@Nonnull
 	public ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalPrecision) {
+		checkNotClosed();
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
@@ -1505,6 +1566,7 @@ public class ProcedureCallImpl<R>
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	@Nonnull
 	public ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalPrecision) {
+		checkNotClosed();
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
@@ -1519,6 +1581,7 @@ public class ProcedureCallImpl<R>
 	@Override @Deprecated @SuppressWarnings("deprecation")
 	@Nonnull
 	public ProcedureCallImplementor<R> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalPrecision) {
+		checkNotClosed();
 		super.setParameter( position, value, temporalPrecision );
 		return this;
 	}
@@ -1527,5 +1590,100 @@ public class ProcedureCallImpl<R>
 	@Nonnull
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
 		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
+	}
+
+	@Nonnull
+	@Override
+	public QueryParameterImplementor<?> getParameter(@Nonnull String name) {
+		checkNotClosed();
+		return super.getParameter( name );
+	}
+
+	@Nonnull
+	@Override
+	public <T> QueryParameterImplementor<T> getParameter(@Nonnull String name, @Nonnull Class<T> type) {
+		checkNotClosed();
+		return super.getParameter( name, type );
+	}
+
+	@Nonnull
+	@Override
+	public QueryParameterImplementor<?> getParameter(int position) {
+		checkNotClosed();
+		return super.getParameter( position );
+	}
+
+	@Nonnull
+	@Override
+	public <T> QueryParameterImplementor<T> getParameter(int position, @Nonnull Class<T> type) {
+		checkNotClosed();
+		return super.getParameter( position, type );
+	}
+
+	@Override
+	public boolean isBound(@Nonnull Parameter<?> param) {
+		checkNotClosed();
+		return super.isBound( param );
+	}
+
+	@Nullable
+	@Override
+	public <T> T getParameterValue(@Nonnull Parameter<T> param) {
+		checkNotClosed();
+		return super.getParameterValue( param );
+	}
+
+	@Nullable
+	@Override
+	public Object getParameterValue(@Nonnull String name) {
+		checkNotClosed();
+		return super.getParameterValue( name );
+	}
+
+	@Nullable
+	@Override
+	public Object getParameterValue(int position) {
+		checkNotClosed();
+		return super.getParameterValue( position );
+	}
+
+	@Override
+	public int getMaxResults() {
+		checkNotClosed();
+		return super.getMaxResults();
+	}
+
+	@Override
+	public int getFirstResult() {
+		checkNotClosed();
+		return super.getFirstResult();
+	}
+
+	@Nonnull
+	@Override
+	public FlushModeType getFlushMode() {
+		checkNotClosed();
+		return super.getFlushMode();
+	}
+
+	@Nonnull
+	@Override
+	public QueryFlushMode getQueryFlushMode() {
+		checkNotClosed();
+		return super.getQueryFlushMode();
+	}
+
+	@Nullable
+	@Override
+	public Integer getTimeout() {
+		checkNotClosed();
+		return super.getTimeout();
+	}
+
+	@Override
+	@Nonnull
+	public Set<Parameter<?>> getParameters() {
+		checkNotClosed();
+		return super.getParameters();
 	}
 }

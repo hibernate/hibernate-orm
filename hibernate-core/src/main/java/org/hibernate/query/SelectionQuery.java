@@ -534,6 +534,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	CacheMode getCacheMode();
 
 	/**
+	 * {@inheritDoc}
+	 *
 	 * @see #getCacheMode()
 	 *
 	 * @since 6.2
@@ -543,6 +545,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	CacheStoreMode getCacheStoreMode();
 
 	/**
+	 * {@inheritDoc}
+	 *
 	 * @see #getCacheMode()
 	 *
 	 * @since 6.2
@@ -604,12 +608,6 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	@Override
 	@SuppressWarnings("removal")
 	SelectionQuery<R> setCacheable(boolean cacheable);
-
-	/**
-	 * Should the query plan of the query be stored in the query plan cache?
-	 */
-	@Override
-	boolean isQueryPlanCacheable();
 
 	/**
 	 * Enable/disable query plan caching for this query.

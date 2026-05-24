@@ -532,7 +532,6 @@ public interface Query<T> extends CommonQueryContract {
 	@Deprecated(since = "8.0", forRemoval = true)
 	Query<T> setCacheRegion(String cacheRegion);
 
-
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
@@ -561,9 +560,9 @@ public interface Query<T> extends CommonQueryContract {
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setFirstResult(int startPosition);
 
-	/***
+	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as locking
-	 * are only relevant for queries which return results.
+	 * is only relevant for queries which return results.
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
@@ -575,8 +574,8 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @see #getLockMode()
 	 *
-	 * @deprecated Use {@linkplain SelectionQuery} instead as locking
-	 * are only relevant for queries which return results.
+	 * @deprecated Use {@linkplain SelectionQuery} instead as locking is
+	 * only relevant for queries which return results.
 	 */
 	@Deprecated(since = "8.0")
 	LockMode getHibernateLockMode();
@@ -587,8 +586,8 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @see #setLockMode(LockModeType)
 	 *
-	 * @deprecated Use {@linkplain SelectionQuery} instead as locking
-	 * are only relevant for queries which return results.
+	 * @deprecated Use {@linkplain SelectionQuery} instead as locking is
+	 * only relevant for queries which return results.
 	 */
 	@Deprecated(since = "8.0")
 	Query<T> setHibernateLockMode(LockMode lockMode);

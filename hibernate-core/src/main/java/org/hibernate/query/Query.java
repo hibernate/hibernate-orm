@@ -7,6 +7,7 @@ package org.hibernate.query;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -25,7 +26,10 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.SharedSessionContract;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.spi.QueryOptions;
 
 import java.time.Instant;
@@ -817,7 +821,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
-	Object getSingleResultOrNull();
+	T getSingleResultOrNull();
 
 	/**
 	 * Execute the {@code Query<T>} and return the single result of the {@code Query<T>} as
@@ -897,6 +901,58 @@ public interface Query<T> extends CommonQueryContract {
 		setQueryFlushMode( queryFlushModeFromFlushModeType( flushMode ) );
 		return this;
 	}
+
+	/**
+	 * Apply an {@link EntityGraph} to the query.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @since 6.3
+	 *
+	 * @see SharedSessionContract#createSelectionQuery(String, EntityGraph)
+	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph)
+	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph, GraphSemantic)
+	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
+	 *
+	 * @deprecated Prefer passing the entity-graph while creating the query -
+	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
+	Query<T> setEntityGraph(EntityGraph<? super T> graph, GraphSemantic semantic);
+
+	/**
+	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch
+	 * profile} with the given name during execution of this query. If the
+	 * requested fetch profile is already enabled, the call has no effect.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @param profileName the name of the fetch profile to be enabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	@Deprecated(since = "8.0")
+	Query<T> enableFetchProfile(String profileName);
+
+	/**
+	 * Disable the {@linkplain org.hibernate.annotations.FetchProfile fetch
+	 * profile} with the given name in this session. If the fetch profile is
+	 * not currently enabled, the call has no effect.
+	 *
+	 * @param profileName the name of the fetch profile to be disabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	@Deprecated(since = "8.0")
+	Query<T> disableFetchProfile(String profileName);
 
 	/**
 	 * Get the execution options for this {@code Query}. Many of the setters

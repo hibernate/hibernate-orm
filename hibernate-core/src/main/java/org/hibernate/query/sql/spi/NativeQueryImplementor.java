@@ -245,16 +245,17 @@ public interface NativeQueryImplementor<R>
 	@Override
 	NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
-	@Override @SuppressWarnings("removal")
+	@Override @Deprecated @SuppressWarnings("removal")
 	NativeQueryImplementor<R> setEntityGraph(EntityGraph<? super R> entityGraph);
 
-	@Override @SuppressWarnings("removal")
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	NativeQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> disableFetchProfile(String profileName);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> enableFetchProfile(String profileName);
 
 	@Override

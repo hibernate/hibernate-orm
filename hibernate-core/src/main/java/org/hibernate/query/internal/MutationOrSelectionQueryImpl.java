@@ -470,6 +470,25 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 		return this;
 	}
 
+	@Override
+	@Deprecated @SuppressWarnings("removal")
+	public MutationOrSelectionQuery setEntityGraph(EntityGraph<? super Object> graph, GraphSemantic semantic) {
+		delegate.setEntityGraph( graph, semantic );
+		return this;
+	}
+
+	@Override @Deprecated
+	public MutationOrSelectionQuery enableFetchProfile(String profileName) {
+		delegate.enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override @Deprecated
+	public MutationOrSelectionQuery disableFetchProfile(String profileName) {
+		delegate.disableFetchProfile( profileName );
+		return this;
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter metadata
 

@@ -100,7 +100,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 	@Override
 	public JdbcCallParameterRegistration toJdbcParameterRegistration(
 			int startIndex,
-			ProcedureCallImplementor procedureCall) {
+			ProcedureCallImplementor<?> procedureCall) {
 		final QueryParameterBinding<T> binding =
 				procedureCall.getParameterBindings()
 						.getBinding( this );

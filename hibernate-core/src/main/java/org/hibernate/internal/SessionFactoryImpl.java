@@ -93,6 +93,7 @@ import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
@@ -1014,6 +1015,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 		else if ( query instanceof Statement statement ) {
 			addNamedStatement( name, statement );
+		}
+		else if ( query instanceof MutationOrSelectionQuery statementOrTypedQuery ) {
+			if ( statementOrTypedQuery.isMutationQuery() ) {
+				addNamedStatement( name, statementOrTypedQuery.asMutationQuery() );
+			}
+			else {
+				addNamedQuery( name, statementOrTypedQuery.asSelectionQuery() );
+			}
 		}
 		else {
 			throw new HibernateException( String.format( ROOT,

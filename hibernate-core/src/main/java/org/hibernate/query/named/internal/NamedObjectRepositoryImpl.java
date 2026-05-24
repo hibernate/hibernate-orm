@@ -122,8 +122,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	@Override
 	public <R> TypedQueryReference<R> registerNamedQuery(String name, TypedQuery<R> query) {
 		try {
-			var refProducer = query.unwrap( TypedQueryReferenceProducer.class );
-			var ref = refProducer.toSelectionMemento( name );
+			final var refProducer = query.unwrap( TypedQueryReferenceProducer.class );
+			final var ref = refProducer.toSelectionMemento( name );
 			selectionMementos.put( name, ref );
 			//noinspection unchecked
 			return (TypedQueryReference<R>) ref;
@@ -141,8 +141,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	@Override
 	public @NonNull StatementReference registerNamedMutation(String name, Statement statement) {
 		try {
-			var refProducer = statement.unwrap( StatementReferenceProducer.class );
-			var ref = refProducer.toMutationMemento( name );
+			final var refProducer = statement.unwrap( StatementReferenceProducer.class );
+			final var ref = refProducer.toMutationMemento( name );
 			mutationMementos.put( name, ref );
 			return ref;
 		}

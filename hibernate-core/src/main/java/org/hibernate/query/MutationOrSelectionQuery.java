@@ -13,11 +13,9 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
-import jakarta.persistence.Statement;
 import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
-import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
@@ -34,7 +32,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -46,10 +43,14 @@ import java.util.stream.Stream;
  * @since 8.0
  */
 public interface MutationOrSelectionQuery
-		extends StatementOrTypedQuery, MutationQuery, SelectionQuery<Object> {
+		extends StatementOrTypedQuery, Query<Object> {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Casts
+
+	boolean isSelectionQuery();
+
+	boolean isMutationQuery();
 
 	/**
 	 * Casts this query as a {@code SelectionQuery}.
@@ -100,14 +101,11 @@ public interface MutationOrSelectionQuery
 	// Deprecated operations
 
 	@Override @Deprecated
-	int execute();
-
-	@Override @Deprecated
 	@SuppressWarnings("removal")
 	int executeUpdate();
 
 	@Override @Deprecated
-	@SuppressWarnings({"unchecked","rawtypes", "removal"})
+	@SuppressWarnings({"unchecked", "rawtypes", "removal", "deprecation"})
 	List getResultList();
 
 	@Override @Deprecated
@@ -119,7 +117,7 @@ public interface MutationOrSelectionQuery
 	Object getSingleResultOrNull();
 
 	@Override @Deprecated
-	@SuppressWarnings({"unchecked","rawtypes", "removal"})
+	@SuppressWarnings({"unchecked", "rawtypes", "removal", "deprecation"})
 	Stream getResultStream();
 
 	@Override @Deprecated
@@ -135,7 +133,7 @@ public interface MutationOrSelectionQuery
 	ScrollableResults scroll(ScrollMode scrollMode);
 
 	@Override @Deprecated
-	@SuppressWarnings({"unchecked","rawtypes"})
+	@SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
 	Stream stream();
 
 	@Override @Deprecated
@@ -145,16 +143,11 @@ public interface MutationOrSelectionQuery
 	@SuppressWarnings({"unchecked","rawtypes"})
 	Optional uniqueResultOptional();
 
-	@Override @SuppressWarnings({"unchecked","rawtypes"})
-	Set getOptions();
-
-	@Override
-	MutationOrSelectionQuery addOption(Statement.Option option);
-
 	@Override
 	MutationOrSelectionQuery addQueryHint(String hint);
 
 	@Override
+	@SuppressWarnings("deprecation")
 	MutationOrSelectionQuery setFlushMode(FlushModeType flushMode);
 
 	@Override
@@ -295,24 +288,8 @@ public interface MutationOrSelectionQuery
 	@Override
 	MutationOrSelectionQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
 
-	@Override
-	MutationOrSelectionQuery addOption(TypedQuery.Option option);
-
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery setEntityGraph(EntityGraph<? super Object> entityGraph);
-
-	@Override @Deprecated
-	@SuppressWarnings("removal")
-	MutationOrSelectionQuery setEntityGraph(EntityGraph<? super Object> graph, GraphSemantic semantic);
-
-	@Override @Deprecated
-	MutationOrSelectionQuery enableFetchProfile(String profileName);
-
-	@Override @Deprecated
-	MutationOrSelectionQuery disableFetchProfile(String profileName);
-
-	@Override @Deprecated
 	MutationOrSelectionQuery setFetchSize(int fetchSize);
 
 	@Override @Deprecated
@@ -325,9 +302,7 @@ public interface MutationOrSelectionQuery
 	MutationOrSelectionQuery setFirstResult(int startPosition);
 
 	@Override @Deprecated
-	MutationOrSelectionQuery setPage(Page page);
-
-	@Override @Deprecated
+	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setCacheMode(CacheMode cacheMode);
 
 	@Override @Deprecated
@@ -342,6 +317,7 @@ public interface MutationOrSelectionQuery
 	MutationOrSelectionQuery setQueryPlanCacheable(boolean queryPlanCacheable);
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setCacheRegion(String cacheRegion);
 
 	@Override @Deprecated @SuppressWarnings("removal")
@@ -360,5 +336,6 @@ public interface MutationOrSelectionQuery
 	MutationOrSelectionQuery setFollowOnStrategy(Locking.FollowOn followOnStrategy);
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setCacheable(boolean cacheable);
 }

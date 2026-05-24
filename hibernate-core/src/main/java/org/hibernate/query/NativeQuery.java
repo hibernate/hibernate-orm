@@ -150,28 +150,28 @@ public interface NativeQuery<T>
 	NativeQuery<T> setFlushMode(FlushModeType flushMode);
 
 	@Override
-	SelectionQuery<T> setCacheMode(CacheMode cacheMode);
+	NativeQuery<T> setCacheMode(CacheMode cacheMode);
 
 	@Override @SuppressWarnings("removal")
-	SelectionQuery<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	NativeQuery<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
 	@Override @SuppressWarnings("removal")
-	SelectionQuery<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	NativeQuery<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
-	SelectionQuery<T> setCacheable(boolean cacheable);
+	NativeQuery<T> setCacheable(boolean cacheable);
 
 	@Override
-	SelectionQuery<T> setCacheRegion(String cacheRegion);
+	NativeQuery<T> setCacheRegion(String cacheRegion);
 
 	@Override
 	NativeQuery<T> setTimeout(int timeout);
 
 	@Override
-	SelectionQuery<T> setFetchSize(int fetchSize);
+	NativeQuery<T> setFetchSize(int fetchSize);
 
 	@Override
-	SelectionQuery<T> setReadOnly(boolean readOnly);
+	NativeQuery<T> setReadOnly(boolean readOnly);
 
 	@Override
 	NativeQuery<T> setComment(String comment);
@@ -179,11 +179,11 @@ public interface NativeQuery<T>
 	@Override
 	NativeQuery<T> addQueryHint(String hint);
 
-	@Override
-	SelectionQuery<T> setMaxResults(int maxResults);
+	@Override @SuppressWarnings("removal")
+	NativeQuery<T> setMaxResults(int maxResults);
 
-	@Override
-	SelectionQuery<T> setFirstResult(int startPosition);
+	@Override @SuppressWarnings("removal")
+	NativeQuery<T> setFirstResult(int startPosition);
 
 	@Override
 	NativeQuery<T> setHint(String hintName, Object value);
@@ -221,8 +221,8 @@ public interface NativeQuery<T>
 	 *
 	 * @throws IllegalStateException as required by JPA
 	 */
-	@Override
-	SelectionQuery<T> setLockMode(LockModeType lockMode);
+	@Override @SuppressWarnings("removal")
+	NativeQuery<T> setLockMode(LockModeType lockMode);
 
 	/**
 	 * {@inheritDoc}
@@ -233,7 +233,7 @@ public interface NativeQuery<T>
 	 * actually executed.
 	 */
 	@Override
-	SelectionQuery<T> setHibernateLockMode(LockMode lockMode);
+	NativeQuery<T> setHibernateLockMode(LockMode lockMode);
 
 	/**
 	 * Apply a timeout to the corresponding database query.
@@ -251,7 +251,7 @@ public interface NativeQuery<T>
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SelectionQuery<T> setLockScope(PessimisticLockScope lockScope);
+	NativeQuery<T> setLockScope(PessimisticLockScope lockScope);
 
 	@Override
 	<X> SelectionQuery<X> setTupleTransformer(TupleTransformer<X> transformer);
@@ -378,9 +378,6 @@ public interface NativeQuery<T>
 
 	@Override
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
-
-
-
 
 
 	/**

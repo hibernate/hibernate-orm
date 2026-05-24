@@ -564,13 +564,14 @@ public class SelectionQueryImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
 		setEntityGraph( entityGraph, GraphSemantic.LOAD );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		queryOptions.applyGraph( (RootGraphImplementor<?>) graph, semantic );
 		return this;

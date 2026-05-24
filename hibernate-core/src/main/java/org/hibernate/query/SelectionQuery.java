@@ -362,7 +362,9 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @deprecated Prefer passing the entity-graph while creating the query -
 	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
 	 */
+	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
+	@SuppressWarnings("removal")
 	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	/**
@@ -380,6 +382,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @see org.hibernate.annotations.FetchProfile
 	 */
+	@Override
 	SelectionQuery<R> enableFetchProfile(String profileName);
 
 	/**
@@ -394,6 +397,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @see org.hibernate.annotations.FetchProfile
 	 */
+	@Override
 	SelectionQuery<R> disableFetchProfile(String profileName);
 
 	@Override @SuppressWarnings("deprecation")

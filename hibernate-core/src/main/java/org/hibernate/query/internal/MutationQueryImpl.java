@@ -28,6 +28,7 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalSelectQueryException;
 import jakarta.persistence.QueryFlushMode;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.hql.internal.QuerySplitter;
@@ -579,6 +580,21 @@ public class MutationQueryImpl<T>
 		irrelevantHint( "Locking" );
 	}
 
+	@Override
+	@SuppressWarnings("removal")
+	public Query<T> setEntityGraph(EntityGraph<? super T> graph, GraphSemantic semantic) {
+		throw new UnsupportedOperationException( "Entity graphs are not supported for mutation queries" );
+	}
+
+	@Override
+	public Query<T> enableFetchProfile(String profileName) {
+		throw new UnsupportedOperationException( "Fetch profiles are not supported for mutation queries" );
+	}
+
+	@Override
+	public Query<T> disableFetchProfile(String profileName) {
+		throw new UnsupportedOperationException( "Fetch profiles are not supported for mutation queries" );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter handling

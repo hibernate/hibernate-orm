@@ -56,11 +56,11 @@ public interface SelectionQueryImplementor<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
-	@Override
+	@Override @Deprecated
 	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> entityGraph);
 
-	@Override
+	@Override @Deprecated
 	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 

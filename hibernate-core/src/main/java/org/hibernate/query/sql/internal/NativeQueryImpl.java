@@ -746,13 +746,13 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public NativeQueryImplementor<R> disableFetchProfile(String profileName) {
 		queryOptions.disableFetchProfile( profileName );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public NativeQueryImplementor<R> enableFetchProfile(String profileName) {
 		if ( getSessionFactory().containsFetchProfileDefinition( profileName ) ) {
 			getQueryOptions().enableFetchProfile( profileName );
@@ -1592,12 +1592,13 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public NativeQueryImplementor<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
 		throw new UnsupportedOperationException( "EntityGraphs are not supported for native queries" );
 	}
 
-	@Override
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		throw new UnsupportedOperationException( "EntityGraphs are not supported for native queries" );
 	}

@@ -40,6 +40,7 @@ import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.IllegalSelectQueryException;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.internal.AbstractQuery;
@@ -309,6 +310,22 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImplementor<R> addQueryHint(String hint) {
 		super.addQueryHint( hint );
 		return this;
+	}
+
+	@Override
+	@SuppressWarnings("removal")
+	public Query<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
+		throw new UnsupportedOperationException( "Entity graph not supported for ProcedureCall" );
+	}
+
+	@Override
+	public Query<R> enableFetchProfile(String profileName) {
+		throw new UnsupportedOperationException( "Fetch profiles not supported for ProcedureCall" );
+	}
+
+	@Override
+	public Query<R> disableFetchProfile(String profileName) {
+		throw new UnsupportedOperationException( "Fetch profiles not supported for ProcedureCall" );
 	}
 
 	@Override

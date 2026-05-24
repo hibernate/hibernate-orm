@@ -707,13 +707,14 @@ public interface Query<T> extends CommonQueryContract {
 	 * Execute the {@code Query<T>} and return the results in a
 	 * {@linkplain ScrollableResults scrollable form}.
 	 * <p>
-	 * This overload simply calls {@link #scroll(ScrollMode)} using the
-	 * {@linkplain Dialect#defaultScrollMode() dialect default scroll mode}.
+	 * This overload simply calls {@link #scroll(ScrollMode)} using
+	 * the {@linkplain Dialect#defaultScrollMode default scroll mode}
+	 * of the SQL dialect.
 	 *
 	 * @apiNote The exact behavior of this method depends somewhat
 	 *          on the level of JDBC driver support for scrollable
 	 *          {@link java.sql.ResultSet}s, and so is not very
-	 *          portable between database.
+	 *          portable between databases.
 	 *
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
@@ -726,10 +727,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * of the returned {@link ScrollableResults} depend on the specified
 	 * {@link ScrollMode}.
 	 *
-	 * @apiNote The exact behavior of this method depends somewhat
-	 *          on the level of JDBC driver support for scrollable
-	 *          {@link java.sql.ResultSet}s, and so is not very
-	 *          portable between database.
+	 * @apiNote Not every JDBC driver supports every {@link ScrollMode}.
 	 *
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */

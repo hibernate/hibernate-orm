@@ -282,9 +282,15 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	long getResultCount();
 
 	/**
-	 * Returns scrollable access to the query results, using the
+	 * Returns {@linkplain ScrollableResults scrollable access}
+	 * to the query results, with capabilities determined by the
 	 * {@linkplain org.hibernate.dialect.Dialect#defaultScrollMode
-	 * default scroll mode of the SQL dialect.}
+	 * default scroll mode of the SQL dialect}.
+	 *
+	 * @apiNote The exact behavior of this method depends somewhat
+	 *          on the level of JDBC driver support for scrollable
+	 *          {@link java.sql.ResultSet}s, and so is not very
+	 *          portable between databases.
 	 *
 	 * @see #scroll(ScrollMode)
 	 */
@@ -292,9 +298,12 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	ScrollableResults<R> scroll();
 
 	/**
-	 * Returns scrollable access to the query results. The capabilities
-	 * of the returned {@link ScrollableResults} depend on the specified
+	 * Returns {@linkplain ScrollableResults scrollable access}
+	 * to the query results. The capabilities of the returned
+	 * {@link ScrollableResults} instance depend on the specified
 	 * {@link ScrollMode}.
+	 *
+	 * @apiNote Not every JDBC driver supports every {@link ScrollMode}.
 	 */
 	@Override
 	ScrollableResults<R> scroll(ScrollMode scrollMode);

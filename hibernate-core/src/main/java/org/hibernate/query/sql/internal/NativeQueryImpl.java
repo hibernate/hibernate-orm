@@ -46,6 +46,7 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
+import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Page;
 import org.hibernate.query.PathException;
@@ -788,17 +789,17 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public Statement asStatement() {
+	public MutationQuery asStatement() {
 		return asMutationQuery();
 	}
 
 	@Override
-	public <T> TypedQuery<T> ofType(Class<T> resultType) {
+	public <T> SelectionQuery<T> ofType(Class<T> resultType) {
 		return asSelectionQuery( resultType );
 	}
 
 	@Override
-	public <T> TypedQuery<T> withEntityGraph(EntityGraph<T> graph) {
+	public <T> SelectionQuery<T> withEntityGraph(EntityGraph<T> graph) {
 		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}
 

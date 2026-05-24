@@ -720,8 +720,8 @@ public interface SharedSessionContractImplementor
 	@Override
 	<R> SelectionQueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
 
-	default <R> SelectionQueryImplementor<R> createQuery(Class<R> resultClass, String queryString) {
-		return createQuery( queryString, resultClass );
+	default <R> SelectionQueryImplementor<R> createQuery(Class<R> resultClass, String hqlString) {
+		return createQuery( hqlString, resultClass );
 	}
 
 	@Override
@@ -764,7 +764,7 @@ public interface SharedSessionContractImplementor
 	MutationQueryImplementor<?> createMutationQuery(JpaCriteriaInsert<?> insert);
 
 	@Override
-	<T> SelectionQueryImplementor<T> createQuery(String queryString, EntityGraph<T> entityGraph);
+	<T> SelectionQueryImplementor<T> createQuery(String hqlString, EntityGraph<T> entityGraph);
 
 	@Override
 	@SuppressWarnings("rawtypes")

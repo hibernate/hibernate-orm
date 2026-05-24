@@ -17,6 +17,7 @@ import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
@@ -35,9 +36,43 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Unifies {@link StatementOrTypedQuery} with {@link MutationQuery}
- * and {@link SelectionQuery}, allowing backward compatibility with
- * older versions of Hibernate.
+ * Unifies {@link StatementOrTypedQuery} with {@link Query}, allowing backward
+ * compatibility with older versions of Hibernate and JPA which did not carefully
+ * distinguish {@linkplain SelectionQuery selection queries} from insert, update,
+ * and delete {@linkplain MutationQuery mutation statements}.
+ * <p>
+ * An instance of this interface is returned by
+ * {@link SharedSessionContract#createQuery(String)} or
+ * {@link SharedSessionContract#createNamedQuery(String)}. But in newly written
+ * code, this interface should not be used to directly execute a query or statement.
+ * Instead:
+ * <ul>
+ * <li>to obtain a {@link SelectionQuery}, call {@link #ofType(Class)},
+ *     {@link #asSelectionQuery()}, or {@link #asSelectionQuery(Class)},
+ * <li>to specify an {@linkplain EntityGraph entity graph}, call
+ *     {@link #withEntityGraph(EntityGraph)},
+ * <li>to specify a {@linkplain ResultSetMapping result set mapping}, call
+ *     {@link #withResultSetMapping(ResultSetMapping)}, or
+ * <li>to obtain a {@link MutationQuery}, call {@link #asStatement()} or
+ *     {@link #asMutationQuery()}.
+ * </ul>
+ * <p>
+ * A typical idiom is the following:
+ * <pre>
+ * List&lt;Book&gt; matchingBooks =
+ *         session.createQuery("from Book where title like :titlePattern")
+ *                 .ofType(Book.class)
+ *                 .setParameter("titlePattern", pattern)
+ *                 .setMaxResults(pageSize)
+ *                 .setCacheStoreMode(CacheStoreMode.BYPASS)
+ *                 .getResultList();
+ * </pre>
+ *
+ * @see StatementOrTypedQuery
+ * @see SelectionQuery
+ * @see MutationQuery
+ * @see SharedSessionContract#createQuery(String)
+ * @see SharedSessionContract#createNamedQuery(String)
  *
  * @author Gavin King
  * @since 8.0
@@ -96,6 +131,17 @@ public interface MutationOrSelectionQuery
 	 */
 	MutationQuery asMutationQuery();
 
+	@Override
+	<R> SelectionQuery<R> ofType(Class<R> resultType);
+
+	@Override
+	<R> SelectionQuery<R> withEntityGraph(EntityGraph<R> graph);
+
+	@Override
+	<R> SelectionQuery<R> withResultSetMapping(ResultSetMapping<R> mapping);
+
+	@Override
+	MutationQuery asStatement();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecated operations

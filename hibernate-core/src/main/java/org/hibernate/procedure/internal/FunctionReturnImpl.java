@@ -25,20 +25,29 @@ import jakarta.persistence.ParameterMode;
  */
 class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
-	private final ProcedureCallImplementor procedureCall;
+	private final ProcedureCallImplementor<?> procedureCall;
 	private final int sqlTypeCode;
+	private final OutputableType<T> ormType;
 
-	private OutputableType<T> ormType;
-
-	FunctionReturnImpl(ProcedureCallImplementor procedureCall, int sqlTypeCode) {
+	FunctionReturnImpl(ProcedureCallImplementor<?> procedureCall, int sqlTypeCode) {
 		this.procedureCall = procedureCall;
 		this.sqlTypeCode = sqlTypeCode;
+		this.ormType = resolveOrmType( procedureCall, sqlTypeCode );
 	}
 
-	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, OutputableType<T> ormType) {
+	FunctionReturnImpl(ProcedureCallImplementor<?> procedureCall, OutputableType<T> ormType) {
 		this.procedureCall = procedureCall;
 		this.sqlTypeCode = ormType.getJdbcType().getDefaultSqlTypeCode();
 		this.ormType = ormType;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> OutputableType<T> resolveOrmType(ProcedureCallImplementor<?> procedureCall, int sqlTypeCode) {
+		final var typeConfiguration = procedureCall.getSession().getFactory().getTypeConfiguration();
+		final var javaType =
+				typeConfiguration.getJdbcTypeRegistry().getDescriptor( sqlTypeCode )
+						.getRecommendedJavaType( null, null, typeConfiguration );
+		return (OutputableType<T>) typeConfiguration.standardBasicTypeForJavaType( javaType.getJavaTypeClass() );
 	}
 
 	@Override
@@ -48,30 +57,14 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 		}
 		else {
 			return new RegularJdbcCallFunctionReturnImpl(
-					getOrmType( persistenceContext ),
+					ormType,
 					new JdbcCallParameterExtractorImpl<T>(
 							procedureCall.getProcedureName(),
 							null,
 							1,
-							getOrmType( persistenceContext )
+							ormType
 					)
 			);
-		}
-	}
-
-	private OutputableType<T> getOrmType(SharedSessionContractImplementor persistenceContext) {
-		if ( ormType != null ) {
-			return ormType;
-		}
-		else {
-			final var typeConfiguration = persistenceContext.getFactory().getTypeConfiguration();
-			final var javaType =
-					typeConfiguration.getJdbcTypeRegistry().getDescriptor( getJdbcTypeCode() )
-							.getRecommendedJavaType( null, null, typeConfiguration );
-			final var basicType =
-					typeConfiguration.standardBasicTypeForJavaType( javaType.getJavaTypeClass() );
-			//noinspection unchecked
-			return (OutputableType<T>) basicType;
 		}
 	}
 
@@ -102,7 +95,7 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public Class<T> getParameterType() {
-		throw new UnsupportedOperationException();
+		return ormType.getJavaType();
 	}
 
 	@Override
@@ -122,8 +115,6 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
-		return session -> ormType != null
-				? new FunctionReturnImpl<T>( procedureCall, ormType )
-				: new FunctionReturnImpl<T>( procedureCall, sqlTypeCode );
+		return session -> new FunctionReturnImpl<>( procedureCall, ormType );
 	}
 }

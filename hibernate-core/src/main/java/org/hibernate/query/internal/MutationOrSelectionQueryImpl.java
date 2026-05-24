@@ -13,10 +13,8 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
-import jakarta.persistence.Statement;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
-import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.CacheMode;
@@ -27,13 +25,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.internal.util.OptionsHelper;
-import org.hibernate.query.IllegalSelectQueryException;
-import org.hibernate.query.KeyedPage;
-import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.MutationQuery;
-import org.hibernate.query.Page;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
@@ -71,16 +64,19 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 		this.delegate = delegate;
 	}
 
-	private SelectionQuery<Object> selectionQuery() {
-		return delegate.asSelectionQuery(Object.class);
-	}
-
-	private MutationQuery mutationQuery() {
-		return delegate.asMutationQuery();
-	}
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Casts
+
+
+	@Override
+	public boolean isMutationQuery() {
+		return delegate instanceof MutationQuery;
+	}
+
+	@Override
+	public boolean isSelectionQuery() {
+		return delegate instanceof SelectionQuery;
+	}
 
 	@Override
 	public SelectionQuery<?> asSelectionQuery() {
@@ -136,21 +132,6 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
-	public String getMutationString() {
-		return delegate.getQueryString();
-	}
-
-	@Override
-	public Class<Object> getResultType() {
-		return selectionQuery().getResultType();
-	}
-
-	@Override
-	public Class<?> getTargetType() {
-		return mutationQuery().getTargetType();
-	}
-
-	@Override
 	public SharedSessionContract getSession() {
 		return delegate.getSession();
 	}
@@ -164,13 +145,8 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	// Execution
 
 	@Override
-	public int execute() {
-		return mutationQuery().execute();
-	}
-
-	@Override
 	public int executeUpdate() {
-		return execute();
+		return delegate.asMutationQuery().execute();
 	}
 
 	@Override @Deprecated
@@ -195,7 +171,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 		return delegate.getSingleResult();
 	}
 
-	@Override @Deprecated @SuppressWarnings("removal")
+	@Override @Deprecated
 	public Object getSingleResultOrNull() {
 		return delegate.getSingleResultOrNull();
 	}
@@ -228,16 +204,6 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	@SuppressWarnings("rawtypes")
 	public ScrollableResults scroll(ScrollMode scrollMode) {
 		return delegate.scroll( scrollMode );
-	}
-
-	@Override
-	public long getResultCount() {
-		return selectionQuery().getResultCount();
-	}
-
-	@Override
-	public KeyedResultList<Object> getKeyedResultList(KeyedPage<Object> page) {
-		return selectionQuery().getKeyedResultList( page );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -322,56 +288,8 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
-	public MutationOrSelectionQuery addOption(Statement.Option option) {
-		OptionsHelper.applyOption( this, option );
-		return this;
-	}
-
-	@Override
-	public MutationOrSelectionQuery addOption(TypedQuery.Option option) {
-		OptionsHelper.applyOption( this, option );
-		return this;
-	}
-
-	@Override
-	public @SuppressWarnings("rawtypes") Set getOptions() {
-		try {
-			return selectionQuery().getOptions();
-		}
-		catch (IllegalSelectQueryException e) {
-			return mutationQuery().getOptions();
-		}
-	}
-
-	@Override @Deprecated
-	public MutationOrSelectionQuery setEntityGraph(EntityGraph<? super Object> entityGraph) {
-		//noinspection removal
-		selectionQuery().setEntityGraph( entityGraph );
-		return this;
-	}
-
-	@Override @Deprecated
-	public MutationOrSelectionQuery setEntityGraph(EntityGraph<? super Object> graph, GraphSemantic semantic) {
-		//noinspection removal
-		selectionQuery().setEntityGraph( graph, semantic );
-		return this;
-	}
-
-	@Override
-	public MutationOrSelectionQuery enableFetchProfile(String profileName) {
-		selectionQuery().enableFetchProfile( profileName );
-		return this;
-	}
-
-	@Override
-	public MutationOrSelectionQuery disableFetchProfile(String profileName) {
-		selectionQuery().disableFetchProfile( profileName );
-		return this;
-	}
-
-	@Override
+	@SuppressWarnings("removal")
 	public Integer getFetchSize() {
-		//noinspection removal
 		return delegate.getFetchSize();
 	}
 
@@ -412,12 +330,6 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	@Override @Deprecated
 	public MutationOrSelectionQuery setFirstResult(int startPosition) {
 		delegate.setFirstResult( startPosition );
-		return this;
-	}
-
-	@Override @Deprecated
-	public MutationOrSelectionQuery setPage(Page page) {
-		selectionQuery().setPage( page );
 		return this;
 	}
 
@@ -468,8 +380,8 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public boolean isCacheable() {
-		//noinspection removal
 		return delegate.isCacheable();
 	}
 
@@ -481,8 +393,8 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public String getCacheRegion() {
-		//noinspection removal
 		return delegate.getCacheRegion();
 	}
 
@@ -514,11 +426,6 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	public MutationOrSelectionQuery setHibernateLockMode(LockMode lockMode) {
 		delegate.setHibernateLockMode( lockMode );
 		return this;
-	}
-
-	@Override @Deprecated
-	public PessimisticLockScope getLockScope() {
-		return selectionQuery().getLockScope();
 	}
 
 	@Override @Deprecated

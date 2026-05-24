@@ -47,6 +47,8 @@ public class NativeMutationOrSelectionQueryImpl
 		extends NativeQueryImpl<Object>
 		implements MutationOrSelectionQuery {
 
+	private final boolean mutation;
+
 	public static MutationOrSelectionQuery from(NamedNativeQueryMemento<?> memento, SharedSessionContractImplementor session) {
 		if ( memento instanceof NativeSelectionMementoImpl<?> selectionMemento ) {
 			return new NativeMutationOrSelectionQueryImpl( selectionMemento, session );
@@ -59,16 +61,28 @@ public class NativeMutationOrSelectionQueryImpl
 		}
 	}
 
+	@Override
+	public boolean isSelectionQuery() {
+		return !mutation;
+	}
+
+	@Override
+	public boolean isMutationQuery() {
+		return mutation;
+	}
+
 	private NativeMutationOrSelectionQueryImpl(
 			NativeSelectionMementoImpl<?> selectionMemento,
 			SharedSessionContractImplementor session) {
 		super( selectionMemento, null, null, session );
+		mutation = false;
 	}
 
 	private NativeMutationOrSelectionQueryImpl(
 			NativeMutationMementoImpl<?> mutationMemento,
 			SharedSessionContractImplementor session) {
 		super( mutationMemento, session );
+		mutation = true;
 	}
 
 	@Override @Deprecated

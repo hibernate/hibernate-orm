@@ -512,6 +512,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public NativeSelectionMementoImpl<R> toSelectionMemento(String name) {
 		errorIfNotSelectForSure();
 		final QueryOptions options = getQueryOptions();
@@ -720,6 +721,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> setHibernateLockMode(LockMode lockMode) {
+		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( lockMode );
 		return this;
 	}
@@ -732,6 +734,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		//noinspection removal
 		queryOptions.getLockOptions().setLockScope( lockScope );
 		return this;
 	}
@@ -806,6 +809,7 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public PessimisticLockScope getLockScope() {
+		//noinspection removal
 		return queryOptions.getLockOptions().getLockScope();
 	}
 
@@ -1600,7 +1604,7 @@ public class NativeQueryImpl<R>
 	@Override
 	protected void collectHints(Map<String, Object> hints) {
 		super.collectHints( hints );
-
+		//noinspection removal
 		putIfNotNull( hints, HINT_NATIVE_LOCK_MODE, queryOptions.getLockOptions().getLockMode() );
 	}
 

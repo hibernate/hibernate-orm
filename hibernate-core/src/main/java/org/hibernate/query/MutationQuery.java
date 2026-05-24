@@ -15,6 +15,7 @@ import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
+import org.hibernate.SharedSessionContract;
 
 import java.time.Instant;
 import java.util.Calendar;
@@ -25,38 +26,55 @@ import java.util.Map;
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
  * an instance of this type represents an executable mutation query, that is,
- * an {@code insert}, {@code update}, or {@code delete}. It is a slimmed-down
- * version of {@link Query}, providing only methods relevant to mutation queries.
+ * an {@code insert}, {@code update}, or {@code delete}. This interface extends
+ * the JPA-defined {@link Statement} interface, adding additional operations.
  * <p>
  * A {@code MutationQuery} may be obtained from the {@link org.hibernate.Session}
  * by calling:
  * <ul>
- * <li>{@link org.hibernate.SharedSessionContract#createMutationQuery(String)}, passing the HQL as a
- *     string,
- * <li>{@link org.hibernate.SharedSessionContract#createNativeMutationQuery(String)}, passing native
- *     SQL as a string,
- * <li>{@link org.hibernate.SharedSessionContract#createMutationQuery(CriteriaStatement)},
+ * <li>{@link SharedSessionContract#createStatement(String)} or
+ *     {@link SharedSessionContract#createMutationQuery(String)}, passing the HQL
+ *     insert, update, or delete statement as a string,
+ * <li>{@link SharedSessionContract#createNativeStatement(String)} or
+ *     {@link SharedSessionContract#createNativeMutationQuery(String)}, passing
+ *     the native SQL statement as a string,
+ * <li>{@link SharedSessionContract#createStatement(CriteriaStatement)} or
+ *     {@link SharedSessionContract#createMutationQuery(CriteriaStatement)},
  *     passing a criteria update or delete object, or
- * <li>{@link org.hibernate.SharedSessionContract#createNamedMutationQuery(String)}, passing the
- *     name of a query defined using {@link jakarta.persistence.NamedQuery} or
- *     {@link jakarta.persistence.NamedNativeQuery}.
+ * <li>{@link SharedSessionContract#createNamedStatement(String)} or
+ *     {@link SharedSessionContract#createNamedMutationQuery(String)}, passing
+ *     the name of a statement declared using {@link jakarta.persistence.NamedQuery}
+ *     or {@link jakarta.persistence.NamedNativeQuery}.
  * </ul>
  * <p>
  * A {@code MutationQuery} controls how the mutation query is executed, and
  * allows arguments to be bound to its parameters.
  * <ul>
- * <li>Mutation queries must be executed using {@link #executeUpdate()}.
+ * <li>Mutation queries should be executed using {@link #execute()}, since
+ *     {@link #executeUpdate()} is now deprecated.
  * <li>The various overloads of {@link #setParameter(String, Object)} and
  *     {@link #setParameter(int, Object)} allow arguments to be bound to named
  *     and ordinal parameters defined by the query.
  * </ul>
  * <pre>
- * session.createMutationQuery("delete Draft where lastUpdated &lt; local date - ?1 year")
+ * session.createStatement("delete Draft where lastUpdated &lt; local date - ?1 year")
  *         .setParameter(1, years)
  *         .executeUpdate();
  * </pre>
  *
+ * @see jakarta.persistence.Statement
+ * @see org.hibernate.Session#createStatement(String)
+ * @see org.hibernate.Session#createMutationQuery(String)
+ * @see org.hibernate.Session#createNativeStatement(String)
+ * @see org.hibernate.Session#createNativeMutationQuery(String)
+ * @see org.hibernate.Session#createMutationQuery(CriteriaStatement)
+ * @see org.hibernate.Session#createStatement(CriteriaStatement)
+ * @see org.hibernate.Session#createNamedMutationQuery(String)
+ * @see org.hibernate.Session#createNamedStatement(String)
+ * @see MutationOrSelectionQuery#asMutationQuery()
+ *
  * @author Steve Ebersole
+ * @since 6.0
  */
 @Incubating
 public interface MutationQuery extends CommonQueryContract, Statement {

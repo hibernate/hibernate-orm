@@ -14,7 +14,6 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
-import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -45,54 +44,46 @@ import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushMode
  * Within the context of an active {@linkplain org.hibernate.Session session},
  * an instance of this type represents an executable query, either:
  * <ul>
- * <li>a {@code Query<T>} written in HQL or native SQL,
- * <li>a named {@code Query<T>} written in HQL or native SQL, or
+ * <li>a query written in HQL or native SQL,
+ * <li>a named query written in HQL or native SQL, or
  * <li>a {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria query}.
  * </ul>
  * <p>
- * The subtype {@link NativeQuery} represents a {@code Query<T>} written in native SQL.
+ * The subtype {@link NativeQuery} represents a query written in the native SQL
+ * dialect of the database.
  * <p>
- * This type simply mixes the {@link TypedQuery} interface defined by JPA with
- * {@link SelectionQuery} and {@link MutationQuery}. Unfortunately, JPA does
- * not distinguish between {@linkplain SelectionQuery<T> selection queries} and
- * {@linkplain MutationQuery mutation queries}, so we lose that distinction here.
- * However, every {@code Query} may logically be classified as one or the other.
+ * This interface fills a very similar role to {@link jakarta.persistence.Query}
+ * in JPA, acting as a bridge to client code written for older versions of the
+ * query APIs in JPA and Hibernate. Older versions did not carefully distinguish
+ * {@linkplain SelectionQuery selection queries} from insert, update, and delete
+ * {@linkplain MutationQuery mutation statements}. Every instance of {@code Query}
+ * may logically be classified as one or the other.
  * <p>
- * A {@code Query} may be obtained from the {@link org.hibernate.Session} by
- * calling:
+ * Direct use of this interface to execute a query or statement is now discouraged.
+ * Instead, {@link SelectionQuery} should be used to execute a selection query,
+ * and {@link MutationQuery} should be used to execute a mutation statement.
+ * Therefore, operations of this interface which are only relevant to selection
+ * queries, or only relevant to mutation statements, are now marked as deprecated.
  * <ul>
- * <li>{@link org.hibernate.SharedSessionContract#createQuery(String, Class)}, passing the HQL as a
- *     string,
- * <li>{@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaSelect)},
- *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery<T> criteria
- *     object}, or
- * <li>{@link org.hibernate.SharedSessionContract#createNamedQuery(String, Class)} passing the name
- *     of a {@code Query<T>} defined using {@link jakarta.persistence.NamedQuery} or
- *     {@link jakarta.persistence.NamedNativeQuery}.
- * </ul>
- * <p>
- * A {@code Query} controls how a {@code Query<T>} is executed, and allows arguments to be
- * bound to its parameters.
- * <ul>
- * <li>Selection queries are usually executed using {@link #getResultList()} or
- *     {@link #getSingleResult()}.
- * <li>The methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
- *     control limits and pagination.
+ * <li>Selection queries are usually executed using {@link #getResultList()},
+ *     {@link #getSingleResult()}, or {@link #getSingleResultOrNull()}, with
+ *     the methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
+ *     controlling limits and pagination. All these methods are marked as
+ *     deprecated, and should be called via an instance of {@link SelectionQuery}.
+ * <li>Mutation statements are usually executed using {@link #executeUpdate()},
+ *     which is marked as deprecated, or using {@link MutationQuery#execute()}.
  * <li>The various overloads of {@link #setParameter(String, Object)} and
  *     {@link #setParameter(int, Object)} allow arguments to be bound to named
  *     and ordinal parameters defined by the query.
  * </ul>
- * <p>
- * Note that this interface offers no real advantages over {@link SelectionQuery}
- * except for compatibility with the JPA-defined {@link TypedQuery} interface.
  *
- * @param <T> The {@linkplain SelectionQuery#getResultType() result type} for selection queries
- * or the {@linkplain MutationQuery#getTargetType() target type} for mutation queries.
+ * @param <T> The {@linkplain SelectionQuery#getResultType result type} for
+ *            selection queries or the {@linkplain MutationQuery#getTargetType
+ *            target type} for mutation statements.
  *
+ * @see jakarta.persistence.Query
  * @see SelectionQuery
  * @see MutationQuery
- * @see org.hibernate.procedure.ProcedureCall
- * @see jakarta.persistence.Query
  *
  * @author Gavin King
  * @author Steve Ebersole

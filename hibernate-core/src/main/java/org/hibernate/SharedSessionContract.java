@@ -310,15 +310,15 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	/// 		...
 	/// 		.list();
 	/// ```
-	default <R> SelectionQuery<R> createQuery(Class<R> resultClass, String queryString) {
-		return createQuery( queryString, resultClass );
+	default <R> SelectionQuery<R> createQuery(Class<R> resultClass, String hqlString) {
+		return createQuery( hqlString, resultClass );
 	}
 
 	/**
 	 * @see jakarta.persistence.EntityHandler#createQuery(String,EntityGraph)
 	 */
 	@Override
-	<T> SelectionQuery<T> createQuery(String s, EntityGraph<T> entityGraph);
+	<T> SelectionQuery<T> createQuery(String hqlString, EntityGraph<T> entityGraph);
 
 	/**
 	 * Create a {@link SelectionQuery} instance for the given HQL query

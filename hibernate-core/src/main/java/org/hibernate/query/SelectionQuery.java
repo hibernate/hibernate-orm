@@ -16,6 +16,8 @@ import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
 import org.hibernate.Incubating;
@@ -26,6 +28,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.graph.GraphSemantic;
 
@@ -41,27 +44,31 @@ import java.util.stream.Stream;
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
  * an instance of this type represents an executable selection query, that is,
- * a {@code select}. It is a slimmed-down version of {@link Query}, providing
- * only methods relevant to selection queries.
+ * a {@code select}. This interface extends the JPA-defined {@link TypedQuery}
+ * interface adding additional operations.
  * <p>
- * A {@code SelectionQuery} may be obtained from the {@link org.hibernate.Session}
- * by calling:
+ * A {@code SelectionQuery} may be obtained from the session by calling:
  * <ul>
- * <li>{@link org.hibernate.SharedSessionContract#createSelectionQuery(String, Class)}, passing the
- *     HQL as a string,
- * <li>{@link org.hibernate.SharedSessionContract#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)},
- *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery criteria
- *     query object}, or
- * <li>{@link org.hibernate.SharedSessionContract#createNamedSelectionQuery(String, Class)} passing
- *     the name of a query defined using {@link jakarta.persistence.NamedQuery}
- *     or {@link jakarta.persistence.NamedNativeQuery}.
+ * <li>{@link SharedSessionContract#createQuery(Class,String)} or
+ *     {@link SharedSessionContract#createSelectionQuery(String,Class)},
+ *     passing the HQL query as a string and the query result type as a
+ *     Java class object,
+ * <li>{@link SharedSessionContract#createQuery(CriteriaSelect)} or
+ *     {@link SharedSessionContract#createSelectionQuery(CriteriaSelect)},
+ *     passing a {@linkplain CriteriaQuery criteria query object},
+ *     or
+ * <li>{@link SharedSessionContract#createNamedQuery(String, Class)} or
+ *     {@link SharedSessionContract#createNamedSelectionQuery(String,Class)}
+ *     passing the name of a query declared using
+ *     {@link jakarta.persistence.NamedQuery} or
+ *     {@link jakarta.persistence.NamedNativeQuery}.
  * </ul>
  * <p>
  * A {@code SelectionQuery} controls how a query is executed, and allows arguments
  * to be bound to its parameters.
  * <ul>
- * <li>Selection queries are usually executed using {@link #getResultList()} or
- *     {@link #getSingleResult()}.
+ * <li>Selection queries are usually executed using {@link #getResultList()},
+ *     {@link #getSingleResult()}, or {@link #getSingleResultOrNull()}.
  * <li>The methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
  *     control limits and pagination.
  * <li>The various overloads of {@link #setParameter(String, Object)} and
@@ -72,7 +79,8 @@ import java.util.stream.Stream;
  * {@link #getResultList()}:
  * <pre>
  * List&lt;Book&gt; books =
- *         session.createSelectionQuery("from Book left join fetch authors where title like :title")
+ *         session.createQuery(Book.class,
+ *             "from Book left join fetch authors where title like :title")
  *                 .setParameter("title", title)
  *                 .setMaxResults(50)
  *                 .getResultList();
@@ -82,7 +90,7 @@ import java.util.stream.Stream;
  * {@link #getSingleResultOrNull()}:
  * <pre>
  * Book book =
- *         session.createSelectionQuery("from Book where isbn = ?1")
+ *         session.createQuery(Book.class, "from Book where isbn = ?1")
  *                 .setParameter(1, isbn)
  *                 .getSingleResultOrNull();
  * </pre>
@@ -119,7 +127,19 @@ import java.util.stream.Stream;
  * between page requests.
  * </ol>
  *
+ * @see jakarta.persistence.TypedQuery
+ * @see SharedSessionContract#createQuery(Class,String)
+ * @see SharedSessionContract#createQuery(String, EntityGraph)
+ * @see SharedSessionContract#createSelectionQuery(String,Class)
+ * @see SharedSessionContract#createSelectionQuery(String,EntityGraph)
+ * @see SharedSessionContract#createQuery(CriteriaSelect)
+ * @see SharedSessionContract#createSelectionQuery(CriteriaSelect)
+ * @see SharedSessionContract#createNamedQuery(String, Class)
+ * @see MutationOrSelectionQuery#asSelectionQuery()
+ * @see MutationOrSelectionQuery#asSelectionQuery(Class)
+ *
  * @author Steve Ebersole
+ * @since 6.0
  */
 @Incubating
 public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
@@ -315,11 +335,11 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.3
 	 *
-	 * @see org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)
+	 * @see SharedSessionContract#createSelectionQuery(String, EntityGraph)
 	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
 	 *
 	 * @deprecated Prefer passing the entity-graph while creating the query -
-	 * {@linkplain org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)}
+	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
 	default SelectionQuery<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
@@ -334,13 +354,13 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.3
 	 *
-	 * @see org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)
+	 * @see SharedSessionContract#createSelectionQuery(String, EntityGraph)
 	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph)
 	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph,GraphSemantic)
 	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
 	 *
 	 * @deprecated Prefer passing the entity-graph while creating the query -
-	 * {@linkplain org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)}
+	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
 	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);

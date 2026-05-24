@@ -446,12 +446,6 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setFollowOnLockingStrategy(Locking.FollowOn strategy) {
-		delegate.setFollowOnLockingStrategy( strategy );
-		return this;
-	}
-
-	@Override @Deprecated
 	public MutationOrSelectionQuery setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
 		delegate.setFollowOnStrategy( followOnStrategy );
 		return this;

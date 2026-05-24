@@ -103,9 +103,6 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 	QueryImplementor<T> setLockScope(PessimisticLockScope lockScope);
 
 	@Override
-	QueryImplementor<T> setFollowOnLockingStrategy(Locking.FollowOn strategy);
-
-	@Override
 	QueryImplementor<T> setFollowOnStrategy(Locking.FollowOn strategy);
 
 	@Override

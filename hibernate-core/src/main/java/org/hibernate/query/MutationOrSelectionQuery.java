@@ -146,53 +146,64 @@ public interface MutationOrSelectionQuery
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecated operations
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	int executeUpdate();
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings({"unchecked", "rawtypes", "removal", "deprecation"})
 	List getResultList();
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	Object getSingleResult();
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	Object getSingleResultOrNull();
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings({"unchecked", "rawtypes", "removal", "deprecation"})
 	Stream getResultStream();
 
-	@Override @Deprecated
-	@SuppressWarnings({"unchecked","rawtypes"})
+	@Override
+	@Deprecated
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	List list();
 
-	@Override @Deprecated
-	@SuppressWarnings({"unchecked","rawtypes"})
+	@Override
+	@Deprecated
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	ScrollableResults scroll();
 
-	@Override @Deprecated
-	@SuppressWarnings({"unchecked","rawtypes"})
+	@Override
+	@Deprecated
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	ScrollableResults scroll(ScrollMode scrollMode);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
 	Stream stream();
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	Object uniqueResult();
 
-	@Override @Deprecated
-	@SuppressWarnings({"unchecked","rawtypes"})
+	@Override
+	@Deprecated
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	Optional uniqueResultOptional();
 
 	@Override
 	MutationOrSelectionQuery addQueryHint(String hint);
 
-	@Override
+	@Override @Deprecated
 	@SuppressWarnings("deprecation")
 	MutationOrSelectionQuery setFlushMode(FlushModeType flushMode);
 
@@ -235,22 +246,28 @@ public interface MutationOrSelectionQuery
 	@Override
 	<P> MutationOrSelectionQuery setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setParameter(String name, Date value, TemporalType temporalType);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -265,10 +282,12 @@ public interface MutationOrSelectionQuery
 	@Override
 	<P> MutationOrSelectionQuery setParameter(Parameter<P> param, P value);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
@@ -334,54 +353,89 @@ public interface MutationOrSelectionQuery
 	@Override
 	MutationOrSelectionQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setFetchSize(int fetchSize);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setReadOnly(boolean readOnly);
 
-	@Override @Deprecated @SuppressWarnings("removal")
+	@Override
+	@Deprecated
+	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setMaxResults(int maxResults);
 
-	@Override @Deprecated @SuppressWarnings("removal")
+	@Override
+	@Deprecated
+	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setFirstResult(int startPosition);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setCacheMode(CacheMode cacheMode);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setCacheStoreMode(CacheStoreMode cacheStoreMode);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setQueryPlanCacheable(boolean queryPlanCacheable);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setCacheRegion(String cacheRegion);
 
-	@Override @Deprecated @SuppressWarnings("removal")
+	@Override
+	@Deprecated
+	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setLockMode(LockModeType lockMode);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setHibernateLockMode(LockMode lockMode);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setLockScope(PessimisticLockScope lockScope);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setLockTimeout(Timeout lockTimeout);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	MutationOrSelectionQuery setFollowOnStrategy(Locking.FollowOn followOnStrategy);
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	MutationOrSelectionQuery setCacheable(boolean cacheable);
+
+	@Override
+	@Deprecated
+	@SuppressWarnings("removal")
+	MutationOrSelectionQuery setEntityGraph(EntityGraph<? super Object> graph, GraphSemantic semantic);
+
+	@Override
+	@Deprecated
+	MutationOrSelectionQuery enableFetchProfile(String profileName);
+
+	@Override
+	@Deprecated
+	MutationOrSelectionQuery disableFetchProfile(String profileName);
+
+	@Override
+	@Deprecated
+	MutationOrSelectionQuery setResultListTransformer(ResultListTransformer<Object> transformer);
 }

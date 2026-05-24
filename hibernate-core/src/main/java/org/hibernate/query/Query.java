@@ -532,9 +532,29 @@ public interface Query<T> extends CommonQueryContract {
 	@Deprecated(since = "8.0", forRemoval = true)
 	Query<T> setCacheRegion(String cacheRegion);
 
+	/**
+	 * @deprecated Use {@linkplain SelectionQuery} instead as second-level cache
+	 * interaction is only relevant for queries which return results.
+	 */
+	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	CacheStoreMode getCacheStoreMode();
+
+	/**
+	 * @deprecated Use {@linkplain SelectionQuery} instead as second-level cache
+	 * interaction is only relevant for queries which return results.
+	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	/**
+	 * @deprecated Use {@linkplain SelectionQuery} instead as second-level cache
+	 * interaction is only relevant for queries which return results.
+	 */
+	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	CacheRetrieveMode getCacheRetrieveMode();
 
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as second-level cache
@@ -550,7 +570,24 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	int getMaxResults();
+
+	/**
+	 * @deprecated Use {@linkplain SelectionQuery} instead as applying result limits
+	 * is only relevant for queries which return results.
+	 */
+	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setMaxResults(int maxResults);
+
+
+	/**
+	 * @deprecated Use {@linkplain SelectionQuery} instead as applying result limits
+	 * is only relevant for queries which return results.
+	 */
+	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	int getFirstResult();
 
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as applying result limits
@@ -559,6 +596,14 @@ public interface Query<T> extends CommonQueryContract {
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setFirstResult(int startPosition);
+
+	/**
+	 * @deprecated Use {@linkplain SelectionQuery} instead as locking
+	 * is only relevant for queries which return results.
+	 */
+	@Override
+	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	LockModeType getLockMode();
 
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as locking
@@ -624,21 +669,6 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Deprecated(since = "8.0")
 	Query<T> setLockScope(PessimisticLockScope lockScope);
-
-	/**
-	 * Control how Hibernate should handle cases where it is determined
-	 * subsequent SQL queries would be needs to completely accomplish
-	 * locking as requested.
-	 *
-	 * @param strategy The strategy for follow-on locking.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated Use {@linkplain SelectionQuery} instead as locking is only
-	 * relevant for queries which return results.
-	 */
-	@Deprecated(since = "8.0")
-	Query<T> setFollowOnLockingStrategy(Locking.FollowOn strategy);
 
 	/**
 	 * Control how Hibernate should handle cases where it is determined
@@ -961,9 +991,9 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @return Return the encapsulation of this query's options.
 	 *
-	 * @deprecated The various {@code Query<T>} subtypes already expose all relevant options;
-	 * plus exposing QueryOptions is layer-breaking as it is an SPI contract
-	 * exposed on an API.
+	 * @deprecated The various {@code Query<T>} subtypes already expose all
+	 * relevant options; furthermore, exposing {@link QueryOptions} is
+	 * layer-breaking, as it is an SPI contract exposed via an API.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
 	QueryOptions getQueryOptions();

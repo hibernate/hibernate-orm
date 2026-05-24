@@ -740,12 +740,6 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override
-	public NativeQueryImplementor<R> setFollowOnLockingStrategy(Locking.FollowOn strategy) {
-		super.setFollowOnLockingStrategy( strategy );
-		return this;
-	}
-
 	@Override @Deprecated
 	public NativeQueryImplementor<R> disableFetchProfile(String profileName) {
 		queryOptions.disableFetchProfile( profileName );

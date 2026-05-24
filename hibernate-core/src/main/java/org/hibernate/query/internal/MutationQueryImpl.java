@@ -16,7 +16,6 @@ import jakarta.persistence.Statement;
 import jakarta.persistence.metamodel.Type;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.LockMode;
-import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -447,11 +446,6 @@ public class MutationQueryImpl<T>
 	@Deprecated @SuppressWarnings("deprecation")
 	public QueryImplementor<T> setLockScope(PessimisticLockScope lockScope) {
 		return super.setLockScope( lockScope );
-	}
-
-	@Override
-	public QueryImplementor<T> setFollowOnLockingStrategy(Locking.FollowOn strategy) {
-		return super.setFollowOnLockingStrategy( strategy );
 	}
 
 	@Override

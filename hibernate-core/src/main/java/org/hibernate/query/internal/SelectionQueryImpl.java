@@ -476,13 +476,6 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setFollowOnLockingStrategy(Locking.FollowOn strategy) {
-		//noinspection removal
-		queryOptions.getLockOptions().setFollowOnStrategy( strategy );
-		return this;
-	}
-
-	@Override
 	public SelectionQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
 		//noinspection removal
 		queryOptions.getLockOptions().setFollowOnStrategy( followOnStrategy );
@@ -988,7 +981,7 @@ public class SelectionQueryImpl<R>
 		}
 	}
 
-	@Override
+	@Override @Deprecated
 	@SuppressWarnings({"deprecation", "removal"})
 	public int executeUpdate() {
 		final var message = "Attempting to get a execute-update a selection query";

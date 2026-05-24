@@ -80,7 +80,7 @@ public class FollowOnLockingTest {
 								Employee.class
 						);
 						if ( followOnLocking ) {
-							query.setFollowOnLockingStrategy( Locking.FollowOn.FORCE );
+							query.setFollowOnStrategy( Locking.FollowOn.FORCE );
 						}
 						query.setLockMode( LockModeType.PESSIMISTIC_READ );
 						final List<Employee> employees = query.list();

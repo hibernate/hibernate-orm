@@ -144,6 +144,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		this.queryOptions = queryOptions;
 	}
 
+	@SuppressWarnings("removal")
 	protected void applyMementoOptions(NamedQueryMemento<?> memento) {
 		if ( memento.getHints() != null ) {
 			memento.getHints().forEach( this::setHint );
@@ -241,11 +242,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	@Override
 	public CommonQueryContractImplementor setLockMode(LockModeType lockMode) {
 		session.checkOpen();
+		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( LockMode.fromJpaLockMode( lockMode ) );
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public LockModeType getLockMode() {
 		return queryOptions.getLockOptions().getLockMode().toJpaLockMode();
 	}
@@ -270,6 +273,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return queryOptions.getCacheRetrieveMode();
 	}
@@ -282,6 +286,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public CacheStoreMode getCacheStoreMode() {
 		return queryOptions.getCacheStoreMode();
 	}
@@ -301,6 +306,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public int getMaxResults() {
 		return queryOptions.getLimit().getMaxRowsJpa();
 	}
@@ -313,6 +319,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public int getFirstResult() {
 		return queryOptions.getLimit().getFirstRowJpa();
 	}
@@ -331,6 +338,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return hints;
 	}
 
+	@SuppressWarnings("removal")
 	protected void collectHints(Map<String, Object> hints) {
 		if ( Timeouts.isRealTimeout( queryOptions.getTimeout() ) ) {
 			hints.put( HINT_TIMEOUT, Timeouts.getTimeoutInSeconds( queryOptions.getTimeout() ) );
@@ -550,6 +558,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				case HINT_FOLLOW_ON_STRATEGY:
 					applyFollowOnStrategyHint( value );
 					return true;
+				//noinspection deprecation
 				case HINT_FOLLOW_ON_LOCKING:
 					applyFollowOnLockingHint( getBoolean( value ) );
 					return true;
@@ -698,18 +707,22 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void applyLockModeHint(String hintName, LockMode value) {
+		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( value );
 	}
 
 	protected void applyLockTimeoutHint(String hintName, Object timeout) {
+		//noinspection removal
 		queryOptions.getLockOptions().setTimeout( Timeouts.fromJpaHint( timeout ) );
 	}
 
 	protected void applyFollowOnStrategyHint(Object value) {
+		//noinspection removal
 		queryOptions.getLockOptions().setFollowOnStrategy( Locking.FollowOn.fromHint( value ) );
 	}
 
 	protected void applyFollowOnLockingHint(Boolean followOnLocking) {
+		//noinspection deprecation
 		DEPRECATION_LOGGER.deprecatedHint( HINT_FOLLOW_ON_LOCKING, HINT_FOLLOW_ON_STRATEGY );
 		applyFollowOnStrategyHint( Locking.FollowOn.fromLegacyValue( followOnLocking ) );
 	}
@@ -1582,6 +1595,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected boolean requiresTransaction() {
+		@SuppressWarnings("removal")
 		final var lockMode = getQueryOptions().getLockOptions().getLockMode();
 		return lockMode != null && lockMode.greaterThan( LockMode.READ );
 	}

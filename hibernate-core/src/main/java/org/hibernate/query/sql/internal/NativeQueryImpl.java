@@ -227,41 +227,72 @@ public class NativeQueryImpl<R>
 		this(
 				selectionMemento,
 				() -> {
-					if ( specifiedResultType == null && specifiedResultSetMappingName == null ) {
-						// We have neither - SharedSessionContract#createNamedQuery(String) form was called.
-						// Use what's on the selection memento
-						final String registeredName = getResultSetMappingName( selectionMemento );
-						return resolveResultSetMapping( registeredName, false, session.getFactory() );
-					}
-					else if ( specifiedResultSetMappingName != null ) {
-						// One of the forms passing an explicit result-set mapping name was used -
-						//		- SharedSessionContract#createNamedQuery(String, String)
-						//		- SharedSessionContract#createNamedQuery(String, String, Class)
-						// Use specified explicit name
-						return resolveResultSetMapping( specifiedResultSetMappingName, false, session.getFactory() );
-					}
-					else {
-						final String mappingIdentifier = specifiedResultType.getName();
-						return resolveResultSetMapping( mappingIdentifier, false, session.getFactory() );
-					}
+					final String name =
+							resultSetMappingName( selectionMemento, specifiedResultType,
+									specifiedResultSetMappingName );
+					return resolveResultSetMapping( name, false, session.getFactory() );
 				},
-				(resultSetMapping, querySpaceConsumer, context) -> {
-					if ( specifiedResultSetMappingName != null ) {
-						populateResultSetMappingFromSpecifiedName( specifiedResultSetMappingName, resultSetMapping, querySpaceConsumer, context, session );
-						return true;
-					}
-					else {
-						return populateResultSetMappingFromQueryMemento( selectionMemento, resultSetMapping, querySpaceConsumer, context, session );
-					}
-				},
+				(resultSetMapping, querySpaceConsumer, context) ->
+						populateMapping(
+								selectionMemento,
+								specifiedResultSetMappingName,
+								session,
+								resultSetMapping,
+								querySpaceConsumer,
+								context
+						),
 				specifiedResultType,
 				session
 		);
 	}
 
-	@Override
-	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
-		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
+	private static <R> String resultSetMappingName(
+			NativeSelectionMementoImpl<?> selectionMemento,
+			@Nullable Class<R> specifiedResultType,
+			@Nullable String specifiedResultSetMappingName) {
+		if ( specifiedResultType == null && specifiedResultSetMappingName == null ) {
+			// We have neither - SharedSessionContract#createNamedQuery(String) form was called.
+			// Use what's on the selection memento
+			return resultSetMappingName( selectionMemento );
+		}
+		else if ( specifiedResultSetMappingName != null ) {
+			// One of the forms passing an explicit result-set mapping name was used -
+			//		- SharedSessionContract#createNamedQuery(String, String)
+			//		- SharedSessionContract#createNamedQuery(String, String, Class)
+			// Use specified explicit name
+			return specifiedResultSetMappingName;
+		}
+		else {
+			return specifiedResultType.getName();
+		}
+	}
+
+	private static boolean populateMapping(
+			NativeSelectionMementoImpl<?> selectionMemento,
+			@Nullable String specifiedResultSetMappingName,
+			SharedSessionContractImplementor session,
+			ResultSetMapping resultSetMapping,
+			Consumer<String> querySpaceConsumer,
+			ResultSetMappingResolutionContext context) {
+		if ( specifiedResultSetMappingName != null ) {
+			populateResultSetMappingFromSpecifiedName(
+					specifiedResultSetMappingName,
+					resultSetMapping,
+					querySpaceConsumer,
+					context,
+					session
+			);
+			return true;
+		}
+		else {
+			return populateResultSetMappingFromQueryMemento(
+					selectionMemento,
+					resultSetMapping,
+					querySpaceConsumer,
+					context,
+					session
+			);
+		}
 	}
 
 	@FunctionalInterface
@@ -299,12 +330,18 @@ public class NativeQueryImpl<R>
 		applyMementoOptions( selectionMemento );
 	}
 
-	private static NamedResultSetMappingMemento resultSetMappingMemento(String resultSetMappingName, SharedSessionContractImplementor session) {
+	private static NamedResultSetMappingMemento resultSetMappingMemento(
+			String resultSetMappingName, SharedSessionContractImplementor session) {
 		return session.getFactory().getQueryEngine().getNamedObjectRepository()
 				.getResultSetMappingMemento( resultSetMappingName );
 	}
 
-	private static void populateResultSetMappingFromSpecifiedName(String resultSetMappingName, ResultSetMapping resultSetMapping, Consumer<String> querySpaceConsumer, ResultSetMappingResolutionContext context, SharedSessionContractImplementor session) {
+	private static void populateResultSetMappingFromSpecifiedName(
+			String resultSetMappingName,
+			ResultSetMapping resultSetMapping,
+			Consumer<String> querySpaceConsumer,
+			ResultSetMappingResolutionContext context,
+			SharedSessionContractImplementor session) {
 		final var mappingMemento = resultSetMappingMemento( resultSetMappingName, session );
 		assert mappingMemento != null;
 		mappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );
@@ -334,7 +371,7 @@ public class NativeQueryImpl<R>
 		}
 	}
 
-	private static String getResultSetMappingName(NativeSelectionMementoImpl<?> memento) {
+	private static String resultSetMappingName(NativeSelectionMementoImpl<?> memento) {
 		if ( memento.getResultMappingName() != null ) {
 			return memento.getResultMappingName();
 		}
@@ -517,6 +554,11 @@ public class NativeQueryImpl<R>
 //		}
 //		return null;
 //	}
+
+	@Override
+	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> graph, GraphSemantic semantic) {
+		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
+	}
 
 	@Override
 	public NativeQueryImplementor<R> asSelectionQuery() {

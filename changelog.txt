@@ -1,6 +1,21 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.6.Final (May 24, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39205
+
+
+** Bug
+    * HHH-20303 Power function usage for PostgreSQLTruncRoundFunction breaks CockroachDB
+    * HHH-20300 OptionalTableUpdateWithUpsertOperation can fail on PostgreSQL 14
+    * HHH-20297 SQM parameter use in multiple type-incompatible contexts binds with wrong JdbcMapping
+    * HHH-20133 @Formula and @JoinFormula with {p.*} expansion in native queries
+    * HHH-20125 ClassCastException on merge during polymorphic embeddable replace
+    * HHH-20092 SqlTypes.JSON on SQL Server expects varchar(max) even with use_nationalized_character_data=true
+    * HHH-19214 Record as @IdClass - some tests are failing when record componets of ID class are not alphabetically sorted, but passing when sorted
+
 Changes in 7.3.5.Final (May 17, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

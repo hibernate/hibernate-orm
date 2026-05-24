@@ -165,7 +165,14 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				// No dirty fields - skip the UPDATE
 				return;
 			}
-			// Has dirty fields - must be a NULL-before-DELETE update, allow it to proceed
+			// Has dirty fields - must be a NULL-before-DELETE update, allow it to proceed.
+			// But if the entity is also being inserted in this same flush, the row was never
+			// written to the database (InsertDecomposer skips inserts for entities being deleted),
+			// so there is nothing to update.
+			if ( decompositionContext != null
+					&& decompositionContext.isBeingInsertedInCurrentFlush( entity ) ) {
+				return;
+			}
 		}
 
 		action.handleNaturalIdLocalResolutions( identifier, entityPersister, session.getPersistenceContext() );

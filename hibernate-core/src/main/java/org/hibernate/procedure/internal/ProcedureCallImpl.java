@@ -122,6 +122,7 @@ public class ProcedureCallImpl<R>
 	private Set<String> synchronizedQuerySpaces;
 
 	private OutputsImpl outputs;
+	private boolean closed;
 
 	/**
 	 * The no-returns form.
@@ -514,7 +515,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	protected void applyQueryPlanCachingHint(String hintName, Object value) {
-		throw new IllegalArgumentException( "Caching of query plans is not relevant for ProcedureCall" );
+		irrelevantHint( "Caching of query plans" );
 	}
 
 
@@ -995,10 +996,26 @@ public class ProcedureCallImpl<R>
 	@Override
 	@Nonnull
 	public ProcedureOutputs getOutputs() {
+		checkNotClosed();
 		if ( outputs == null ) {
 			outputs = buildOutputs();
 		}
 		return outputs;
+	}
+
+	@Override
+	public void close() {
+		checkNotClosed();
+		closed = true;
+		if ( outputs != null ) {
+			outputs.release();
+		}
+	}
+
+	private void checkNotClosed() {
+		if ( closed ) {
+			throw new IllegalStateException( "StoredProcedureQuery is closed" );
+		}
 	}
 
 	private OutputsImpl buildOutputs() {

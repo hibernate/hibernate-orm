@@ -11,6 +11,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
@@ -65,7 +66,9 @@ import java.util.Map;
  * Setting the {@linkplain QueryFlushMode query flush mode} does not affect the flush
  * mode of other operations performed via the parent {@linkplain Session session}.
  * This operation is usually used as follows:
- * <pre>{@code query.setQueryFlushMode(NO_FLUSH).getResultList() }</pre>
+ * <pre>
+ * query.setQueryFlushMode(NO_FLUSH).getResultList()
+ * </pre>
  * The call to {@code setQueryFlushMode(NO_FLUSH)} disables the usual automatic flush
  * operation that occurs before query execution.
  *
@@ -95,8 +98,12 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * The {@link QueryFlushMode} in effect for this query.
 	 * <p>
 	 * By default, this is {@link QueryFlushMode#DEFAULT}, and the
-	 * {@link FlushMode} of the owning {@link Session} determines whether
-	 * it is flushed.
+	 * {@link FlushMode} of the {@linkplain #getSession owning session}
+	 * determines whether the session is flushed before execution of
+	 * the query.
+	 * <p>
+	 * A {@link QueryFlushMode} only affects {@linkplain Session stateful
+	 * sessions}. A stateless session has no persistence context to flush.
 	 *
 	 * @see Session#getHibernateFlushMode()
 	 *
@@ -106,6 +113,9 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 
 	/**
 	 * Set the {@link QueryFlushMode} to use for this query.
+	 * <p>
+	 * A {@link QueryFlushMode} only affects {@linkplain Session stateful
+	 * sessions}. A stateless session has no persistence context to flush.
 	 *
 	 * @see Session#getHibernateFlushMode()
 	 *
@@ -114,13 +124,21 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	CommonQueryContract setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	/**
-	 * The {@link FlushMode} in effect for this query. By default, the query
-	 * inherits the {@code FlushMode} of the {@link Session} from which it
-	 * originates.
+	 * The {@link FlushMode} in effect for this query, taking into account
+	 * both the {@linkplain #getQueryFlushMode query flush mode} and the
+	 * {@linkplain Session#getHibernateFlushMode flush mode of the session}.
+	 * By default, the query inherits the {@code FlushMode} of the session
+	 * from which it originates.
+	 * <p>
+	 * A {@link FlushMode} only affects stateful sessions. A stateless
+	 * session has no persistence context to flush.
 	 *
 	 * @see #getQueryFlushMode()
 	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @since 8.0
 	 */
+	@Incubating
 	FlushMode getEffectiveFlushMode();
 
 	/**
@@ -159,14 +177,14 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	CommonQueryContract addQueryHint(String hint);
 
 	/**
-	 * Obtain the query timeout to be applied to the corresponding database query.
+	 * Obtain the {@linkplain java.sql.Statement#setQueryTimeout JDBC
+	 * query timeout} that will be used when executing the query.
 	 * <p>
-	 * See {@linkplain org.hibernate.Timeouts} for discussion of "magic values".
+	 * See {@linkplain org.hibernate.Timeouts} for discussion of the
+	 * "magic values" accepted here.
 	 *
-	 * @apiNote As this method is inherited from JPA, the value expected to be
-	 *          <em>in milliseconds</em>.
-	 * @implNote This value is eventually passed along to the JDBC statement via
-	 * {@link java.sql.Statement#setQueryTimeout(int)}.
+	 * @apiNote Since this method is inherited from JPA, the timeout
+	 *          is expressed in <em>milliseconds</em>.
 	 *
 	 * @see java.sql.Statement#getQueryTimeout()
 	 * @see java.sql.Statement#setQueryTimeout(int)
@@ -175,9 +193,11 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	Integer getTimeout();
 
 	/**
-	 * Apply a timeout to the corresponding database query.
+	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
+	 * query timeout} to use when executing the query.
 	 *
-	 * @apiNote As a legacy Hibernate method, this form expects a value <em>in seconds</em>.
+	 * @apiNote Since this is a legacy method of Hibernate, the timeout
+	 *          value is expressed in <em>seconds</em>.
 	 *
 	 * @see #getTimeout()
 	 * @see org.hibernate.Timeouts
@@ -186,19 +206,26 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	CommonQueryContract setTimeout(int timeout);
 
 	/**
-	 * Apply a timeout to the corresponding database query.
+	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
+	 * query timeout} to use when executing the query.
 	 *
-	 * @apiNote As this method is inherited from JPA, the value expected to be <em>in milliseconds</em>.
+	 * @apiNote Since this method is inherited from JPA, the timeout
+	 *          is expressed in <em>milliseconds</em>.
 	 *
 	 * @see #getTimeout()
 	 * @see org.hibernate.Timeouts
 	 * @see #setTimeout(Timeout)
+	 *
+	 * @since 7.0
 	 */
 	@Override
 	CommonQueryContract setTimeout(Integer timeout);
 
 	/**
-	 * Apply a timeout to the corresponding database query.
+	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
+	 * query timeout} to use when executing the query.
+	 *
+	 * @since 7.0
 	 */
 	@Override
 	CommonQueryContract setTimeout(Timeout timeout);
@@ -207,10 +234,15 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * Set a hint. Hints are a
 	 * {@linkplain jakarta.persistence.Query#setHint JPA-standard way}
 	 * to control provider-specific behavior affecting execution of the
-	 * query. Clients of native Hibernate API should make use of type-safe
-	 * operations of this interface and of its subtypes. For example,
-	 * {@link SelectionQuery#setCacheRegion} is preferred over
-	 * {@link org.hibernate.jpa.HibernateHints#HINT_CACHE_REGION}.
+	 * query. Clients of this native Hibernate API should make use of
+	 * type safe operations of this interface and of its subtypes.
+	 * For example, {@link SelectionQuery#setCacheRegion} is preferred
+	 * over {@link org.hibernate.jpa.HibernateHints#HINT_CACHE_REGION}.
+	 * <p>
+	 * Since JPA 4, {@link jakarta.persistence.TypedQuery.Option} and
+	 * {@link jakarta.persistence.Statement.Option} compete with query
+	 * hints, offering a more type safe way to accommodate vendor
+	 * extensions.
 	 * <p>
 	 * The hints understood by Hibernate are enumerated by
 	 * {@link org.hibernate.jpa.AvailableHints}.

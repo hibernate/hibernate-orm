@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 import jakarta.validation.ConstraintViolationException;
 
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -34,9 +35,10 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Vladimir Klyushnikov
  * @author Hardy Ferentschik
  */
-@ServiceRegistry(
-		settings = @Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "ddl")
-)
+@ServiceRegistry(settings = {
+		@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "REQUIRED"),
+		@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "NONE")
+})
 @DomainModel(annotatedClasses = {
 		Address.class,
 		CupHolder.class,

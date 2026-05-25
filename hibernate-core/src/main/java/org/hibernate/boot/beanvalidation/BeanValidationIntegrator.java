@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -17,6 +18,7 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.tool.schema.ValidationConstraintDdlInfluence;
 
 import static org.hibernate.boot.beanvalidation.BeanValidationLogger.BEAN_VALIDATION_LOGGER;
 
@@ -27,6 +29,10 @@ import static org.hibernate.boot.beanvalidation.BeanValidationLogger.BEAN_VALIDA
  */
 public class BeanValidationIntegrator implements Integrator {
 
+	/**
+	 * @deprecated Use {@link org.hibernate.cfg.SchemaToolingSettings#APPLY_VALIDATION_CONSTRAINTS} instead
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	public static final String APPLY_CONSTRAINTS = "hibernate.validator.apply_to_ddl";
 
 	public static final String JAKARTA_BV_CHECK_CLASS = "jakarta.validation.ConstraintViolation";
@@ -88,31 +94,24 @@ public class BeanValidationIntegrator implements Integrator {
 		final var serviceRegistry = sessionFactory.getServiceRegistry();
 		// IMPL NOTE: see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
 		final var modes = getValidationModes( serviceRegistry );
-		switch ( modes.size() ) {
-			case 0:
-				// should never happen, since getValidationModes()
-				// always returns at least one mode
-				return;
-			case 1:
-				if ( modes.contains( ValidationMode.NONE ) ) {
-					// we have nothing to do; just return
-					return;
-				}
-				break;
-			default:
-				BEAN_VALIDATION_LOGGER.multipleValidationModes( ValidationMode.loggable( modes ) );
+		ValidationConstraintDdlInfluence constraintInfluence = ValidationConstraintDdlInfluence.resolve( serviceRegistry, modes );
+		if ( constraintInfluence == ValidationConstraintDdlInfluence.DISABLED && modes.contains( ValidationMode.NONE ) ) {
+			return;
 		}
-		activate( metadata, sessionFactory, serviceRegistry, modes );
+		if ( modes.size() > 1 ) {
+			BEAN_VALIDATION_LOGGER.multipleValidationModes( ValidationMode.loggable( modes ) );
+		}
+		activate( metadata, sessionFactory, serviceRegistry, modes, constraintInfluence );
 	}
 
-	private void activate(Metadata metadata, SessionFactoryImplementor sessionFactory, ServiceRegistryImplementor serviceRegistry, Set<ValidationMode> modes) {
+	private void activate(Metadata metadata, SessionFactoryImplementor sessionFactory, ServiceRegistryImplementor serviceRegistry, Set<ValidationMode> modes, ValidationConstraintDdlInfluence constraintInfluence) {
 		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		// see if the Bean Validation API is available on the classpath
 		if ( isBeanValidationApiAvailable( classLoaderService ) ) {
 			// and if so, call out to the TypeSafeActivator
 			try {
 				final var activationContext =
-						new ActivationContextImpl( modes, metadata, sessionFactory,
+						new ActivationContextImpl( modes, constraintInfluence, metadata, sessionFactory,
 								(SessionFactoryServiceRegistry) serviceRegistry );
 				callActivateMethod( classLoaderService, activationContext );
 			}
@@ -123,7 +122,7 @@ public class BeanValidationIntegrator implements Integrator {
 		else {
 			// otherwise check the validation modes
 			// todo : in many ways this duplicates the checks done on the TypeSafeActivator when a ValidatorFactory could not be obtained
-			validateMissingBeanValidationApi( modes );
+			validateMissingBeanValidationApi( modes, constraintInfluence );
 		}
 	}
 
@@ -169,16 +168,17 @@ public class BeanValidationIntegrator implements Integrator {
 	}
 
 	/**
-	 * Used to validate the case when the Bean Validation API is not available.
+	 * Used to validate the case when the Jakarta Validation API is not available.
 	 *
 	 * @param modes The requested validation modes.
 	 */
-	private void validateMissingBeanValidationApi(Set<ValidationMode> modes) {
+	private void validateMissingBeanValidationApi(Set<ValidationMode> modes, ValidationConstraintDdlInfluence constraintInfluence) {
 		if ( modes.contains( ValidationMode.CALLBACK ) ) {
-			throw new IntegrationException( "Bean Validation API was not available, but 'callback' validation was requested" );
+			throw new IntegrationException( "Jakarta Validation API was not available, but 'callback' validation was requested" );
 		}
-		if ( modes.contains( ValidationMode.DDL ) ) {
-			throw new IntegrationException( "Bean Validation API was not available, but 'ddl' validation was requested" );
+		if ( constraintInfluence == ValidationConstraintDdlInfluence.REQUIRED ) {
+			throw new IntegrationException( "Bean Validation API was not available, but '"
+					+ SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS + "' was set to 'REQUIRED'" );
 		}
 	}
 
@@ -198,6 +198,7 @@ public class BeanValidationIntegrator implements Integrator {
 
 	private record ActivationContextImpl(
 			Set<ValidationMode> modes,
+			ValidationConstraintDdlInfluence constraintInfluence,
 			Metadata metadata,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry)
@@ -221,6 +222,11 @@ public class BeanValidationIntegrator implements Integrator {
 		@Override
 		public SessionFactoryServiceRegistry getServiceRegistry() {
 			return serviceRegistry;
+		}
+
+		@Override
+		public ValidationConstraintDdlInfluence getValidationConstraintDdlInfluence() {
+			return constraintInfluence;
 		}
 	}
 }

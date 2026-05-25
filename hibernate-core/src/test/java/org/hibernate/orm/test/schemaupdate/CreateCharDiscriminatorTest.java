@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.Table;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -24,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-16551")
-@ServiceRegistry(settings = @Setting(name="jakarta.persistence.validation.mode", value = "ddl"))
+@ServiceRegistry(settings = @Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "REQUIRED"))
 @DomainModel(annotatedClasses = CreateCharDiscriminatorTest.Parent.class)
 public class CreateCharDiscriminatorTest {
 

@@ -37,7 +37,7 @@ import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.tool.schema.ValidationConstraintDdlInfluence;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventType;
@@ -57,7 +57,8 @@ import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.PropertyDescriptor;
 
 import static java.util.Collections.disjoint;
-import static org.hibernate.boot.beanvalidation.BeanValidationIntegrator.APPLY_CONSTRAINTS;
+import static org.hibernate.cfg.SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS;
+import static org.hibernate.tool.schema.ValidationConstraintDdlInfluence.DISABLED;
 import static org.hibernate.boot.beanvalidation.BeanValidationLogger.BEAN_VALIDATION_LOGGER;
 import static org.hibernate.boot.beanvalidation.GroupsPerOperation.buildGroupsForOperation;
 import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
@@ -75,7 +76,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 class TypeSafeActivator {
-
 
 	/**
 	 * Used to validate a supplied ValidatorFactory instance as being castable to ValidatorFactory.
@@ -97,12 +97,12 @@ class TypeSafeActivator {
 			factory = getValidatorFactory( context );
 		}
 		catch (IntegrationException exception) {
-			final var validationModes = context.getValidationModes();
-			if ( validationModes.contains( ValidationMode.CALLBACK ) ) {
+			if ( context.getValidationModes().contains( ValidationMode.CALLBACK ) ) {
 				throw new IntegrationException( "Jakarta Validation provider was not available, but 'callback' validation mode was requested", exception );
 			}
-			else if ( validationModes.contains( ValidationMode.DDL ) ) {
-				throw new IntegrationException( "Jakarta Validation provider was not available, but 'ddl' validation mode was requested", exception );
+			else if ( context.getValidationConstraintDdlInfluence() == ValidationConstraintDdlInfluence.REQUIRED ) {
+				throw new IntegrationException( "Jakarta Validation provider was not available, but '"
+						+ APPLY_VALIDATION_CONSTRAINTS + "' was resolved to 'REQUIRED'", exception );
 			}
 			else {
 				if ( exception.getCause() instanceof NoProviderFoundException ) {
@@ -172,16 +172,7 @@ class TypeSafeActivator {
 	}
 
 	private static boolean isConstraintBasedValidationEnabled(ActivationContext context) {
-		if ( context.getServiceRegistry().requireService( ConfigurationService.class )
-				.getSetting( APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true ) ) {
-			final var modes = context.getValidationModes();
-			return modes.contains( ValidationMode.DDL )
-				|| modes.contains( ValidationMode.AUTO );
-		}
-		else {
-			BEAN_VALIDATION_LOGGER.skippingLegacyHVConstraints();
-			return false;
-		}
+		return context.getValidationConstraintDdlInfluence() != DISABLED;
 	}
 
 	private static void applyRelationalConstraints(ValidatorFactory factory, ActivationContext context) {

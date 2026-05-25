@@ -1147,16 +1147,21 @@ public class StatelessSessionImpl
 			@Nullable RootGraphImplementor<E> graph,
 			@Nonnull List<?> keys,
 			@Nullable FindOption... options) {
-		final var operation = new StatelessFindMultipleByKeyOperation<E>(
-				entityDescriptor,
-				this,
-				null,
-				getCacheMode(),
-				isDefaultReadOnly(),
-				getFactory(),
-				options
-		);
-		return operation.performFind( keys, graphSemantic, graph );
+		try {
+			final var operation = new StatelessFindMultipleByKeyOperation<E>(
+					entityDescriptor,
+					this,
+					null,
+					getCacheMode(),
+					isDefaultReadOnly(),
+					getFactory(),
+					options
+			);
+			return operation.performFind( keys, graphSemantic, graph );
+		}
+		finally {
+			afterOperation();
+		}
 	}
 
 	@Override
@@ -1179,6 +1184,9 @@ public class StatelessSessionImpl
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
 		}
+		finally {
+			afterOperation();
+		}
 	}
 
 	@Override
@@ -1192,6 +1200,9 @@ public class StatelessSessionImpl
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
+		}
+		finally {
+			afterOperation();
 		}
 	}
 
@@ -1212,6 +1223,9 @@ public class StatelessSessionImpl
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
 		}
+		finally {
+			afterOperation();
+		}
 	}
 
 	@Override
@@ -1225,6 +1239,9 @@ public class StatelessSessionImpl
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
+		}
+		finally {
+			afterOperation();
 		}
 	}
 
@@ -1272,6 +1289,9 @@ public class StatelessSessionImpl
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
 		}
+		finally {
+			afterOperation();
+		}
 	}
 
 	@Override
@@ -1294,6 +1314,9 @@ public class StatelessSessionImpl
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
+		}
+		finally {
+			afterOperation();
 		}
 	}
 
@@ -1631,7 +1654,12 @@ public class StatelessSessionImpl
 	//TODO: COPY/PASTE FROM SessionImpl, pull up!
 
 
+	@Override
 	public void afterOperation(boolean success) {
+		afterOperation();
+	}
+
+	private void afterOperation() {
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}

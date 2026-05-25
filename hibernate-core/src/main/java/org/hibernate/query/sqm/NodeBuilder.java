@@ -1290,13 +1290,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	<Y> SqmModifiedSubQueryExpression<Y> any(Subquery<Y> subquery);
 
 	@Override
-	<K, M extends Map<K, ?>> SqmExpression<Set<K>> keys(M map);
-
-	@Override
 	<K, L extends List<?>> SqmExpression<Set<K>> indexes(L list);
-
-	@Override
-	<V, M extends Map<?, V>> Expression<Collection<V>> values(M map);
 
 	@Override
 	<C extends Collection<?>> SqmExpression<Integer> size(Expression<C> collection);

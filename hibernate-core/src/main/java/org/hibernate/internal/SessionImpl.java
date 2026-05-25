@@ -917,16 +917,21 @@ public class SessionImpl
 			@Nullable RootGraphImplementor<E> rootGraph,
 			@Nonnull List<?> keys,
 			@Nullable FindOption... options) {
-		final var operation = new StatefulFindMultipleByKeyOperation<E>(
-				entityDescriptor,
-				this,
-				lockOptions,
-				getCacheMode(),
-				isDefaultReadOnly(),
-				getFactory(),
-				options
-		);
-		return operation.performFind( keys, graphSemantic, rootGraph );
+		try {
+			final var operation = new StatefulFindMultipleByKeyOperation<E>(
+					entityDescriptor,
+					this,
+					lockOptions,
+					getCacheMode(),
+					isDefaultReadOnly(),
+					getFactory(),
+					options
+			);
+			return operation.performFind( keys, graphSemantic, rootGraph );
+		}
+		finally {
+			afterOperation( true ); // success value doesn't matter
+		}
 	}
 
 	@Override

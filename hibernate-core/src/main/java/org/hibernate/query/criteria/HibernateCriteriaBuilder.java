@@ -768,15 +768,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<Y> JpaExpression<Y> any(Subquery<Y> subquery);
 
-	@Override
-	<K, M extends Map<K, ?>> JpaExpression<Set<K>> keys(M map);
-
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
 
 	<T> JpaExpression<T> value(@Nullable T value);
-
-	@Override
-	<V, M extends Map<?, V>> Expression<Collection<V>> values(M map);
 
 	@Override
 	<C extends Collection<?>> JpaExpression<Integer> size(Expression<C> collection);

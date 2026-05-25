@@ -2210,11 +2210,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <K, M extends Map<K, ?>> SqmExpression<Set<K>> keys(M map) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public <K, L extends List<?>> SqmExpression<Set<K>> indexes(L list) {
 		throw new UnsupportedOperationException();
 	}
@@ -2357,11 +2352,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private <T> boolean inlineValue(T value) {
 		return criteriaValueHandlingMode == ValueHandlingMode.INLINE;
 //			|| is a literal enum mapped to a PostgreSQL named 'enum' type
-	}
-
-	@Override
-	public <V, M extends Map<?, V>> Expression<Collection<V>> values(M map) {
-		return value( map.values() );
 	}
 
 	@Override

@@ -904,11 +904,6 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <K, M extends Map<K, ?>> JpaExpression<Set<K>> keys(M map) {
-		return criteriaBuilder.keys( map );
-	}
-
-	@Override
 	public <K, L extends List<?>> JpaExpression<Set<K>> indexes(L list) {
 		return criteriaBuilder.indexes( list );
 	}
@@ -916,11 +911,6 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <T> JpaExpression<T> value(@Nullable T value) {
 		return criteriaBuilder.value( value );
-	}
-
-	@Override
-	public <V, M extends Map<?, V>> Expression<Collection<V>> values(M map) {
-		return criteriaBuilder.values( map );
 	}
 
 	@Override

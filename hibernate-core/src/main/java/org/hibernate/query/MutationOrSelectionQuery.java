@@ -18,6 +18,7 @@ import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.CacheMode;
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
@@ -76,6 +77,7 @@ import java.util.stream.Stream;
  * @author Gavin King
  * @since 8.0
  */
+@Incubating
 public interface MutationOrSelectionQuery
 		extends StatementOrTypedQuery, Query<Object> {
 

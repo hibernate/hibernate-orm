@@ -286,6 +286,12 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
+	public SqmUpdateStatement<T> where(List<? extends Expression<Boolean>> restrictions) {
+		setWhere( restrictions );
+		return this;
+	}
+
+	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitUpdateStatement( this );
 	}

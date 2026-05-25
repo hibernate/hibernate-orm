@@ -27,6 +27,7 @@ import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
 import jakarta.persistence.sql.ResultSetMapping;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -91,6 +92,8 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * A wrapper class that delegates all method invocations to a delegate instance of
  * {@link SessionImplementor}. This is useful for custom implementations of that
@@ -107,6 +110,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	public SessionDelegatorBaseImpl(SessionImplementor delegate) {
 		this.delegate = delegate;
+	}
+
+	private static FindOption[] nonNullOptions(FindOption @Nullable[] options) {
+		return options == null ? new FindOption[0] : options;
+	}
+
+	private static LockOption[] nonNullOptions(LockOption @Nullable[] options) {
+		return options == null ? new LockOption[0] : options;
+	}
+
+	private static RefreshOption[] nonNullOptions(RefreshOption @Nullable[] options) {
+		return options == null ? new RefreshOption[0] : options;
 	}
 
 	/**
@@ -347,13 +362,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void lock(Object entity, LockModeType lockMode, Map<String, Object> properties) {
+	public void lock(Object entity, LockModeType lockMode, @Nullable Map<String, Object> properties) {
 		delegate.lock( entity, lockMode, properties );
 	}
 
 	@Override
-	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
-		delegate.lock( entity, lockMode, options );
+	public void lock(Object entity, LockModeType lockMode, LockOption @Nullable... options) {
+		delegate.lock( entity, lockMode, nonNullOptions( options ) );
 	}
 
 	@Override
@@ -553,27 +568,27 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object key, FindOption... findOptions) {
+	public <T> @NonNull T get(Class<T> entityClass, Object key, FindOption @Nullable... findOptions) {
 		//noinspection resource
-		return delegate().get( entityClass, key, findOptions );
+		return delegate().get( entityClass, key, nonNullOptions( findOptions ) );
 	}
 
 	@Override
-	public <T> T get(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
+	public <T> @NonNull T get(EntityGraph<T> entityGraph, Object key, FindOption @Nullable... findOptions) {
 		//noinspection resource
-		return delegate().get( entityGraph, key, findOptions );
+		return delegate().get( entityGraph, key, nonNullOptions( findOptions ) );
 	}
 
 	@Override
-	public <T> List<T> getMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
+	public <T> List<T> getMultiple(Class<T> entityClass, List<?> keys, FindOption @Nullable... findOptions) {
 		//noinspection resource
-		return delegate().getMultiple( entityClass, keys, findOptions );
+		return delegate().getMultiple( entityClass, keys, nonNullOptions( findOptions ) );
 	}
 
 	@Override
-	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
+	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption @Nullable... findOptions) {
 		//noinspection resource
-		return delegate().getMultiple( entityGraph, keys, findOptions );
+		return delegate().getMultiple( entityGraph, keys, nonNullOptions( findOptions ) );
 	}
 
 	@Override
@@ -856,8 +871,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> cls) {
-		return delegate.unwrap( cls );
+	public <T> @NonNull T unwrap(Class<T> cls) {
+		return castNonNull( delegate.unwrap( cls ) );
 	}
 
 	@Override @SuppressWarnings("rawtypes")
@@ -964,8 +979,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void setProperty(String propertyName, Object value) {
-		delegate.setProperty( propertyName, value );
+	public void setProperty(String propertyName, @Nullable Object value) {
+		((EntityManager) delegate).setProperty( propertyName, value );
 	}
 
 	@Override
@@ -994,8 +1009,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T merge(T object) {
-		return delegate.merge( object );
+	public <T> @NonNull T merge(T object) {
+		return castNonNull( delegate.merge( object ) );
 	}
 
 	@Override
@@ -1024,33 +1039,41 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-		return delegate.find( entityClass, primaryKey, properties );
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, @Nullable Map<String, Object> properties) {
+		return properties == null
+				? delegate.find( entityClass, primaryKey )
+				: delegate.find( entityClass, primaryKey, properties );
 	}
 
 	@Override
-	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
-		return delegate.find( entityClass, primaryKey, lockMode, properties );
+	public <T> @Nullable T find(
+			Class<T> entityClass,
+			Object primaryKey,
+			LockModeType lockMode,
+			@Nullable Map<String, Object> properties) {
+		return properties == null
+				? delegate.find( entityClass, primaryKey, lockMode )
+				: delegate.find( entityClass, primaryKey, lockMode, properties );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
-		return delegate.find( entityClass, primaryKey, options );
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, FindOption @Nullable... options) {
+		return delegate.find( entityClass, primaryKey, nonNullOptions( options ) );
 	}
 
 	@Override
-	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
+	public <T> @Nullable T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption @Nullable... options) {
 		return delegate.find( entityGraph, primaryKey, options );
 	}
 
 	@Override
-	public Object find(String entityName, Object primaryKey, FindOption... options) {
-		return delegate.find( entityName, primaryKey, options );
+	public Object find(String entityName, Object primaryKey, FindOption @Nullable... options) {
+		return delegate.find( entityName, primaryKey, nonNullOptions( options ) );
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityClass, Object id) {
-		return delegate.getReference( entityClass, id );
+	public <T> @NonNull T getReference(Class<T> entityClass, Object id) {
+		return castNonNull( delegate.getReference( entityClass, id ) );
 	}
 
 	@Override
@@ -1089,18 +1112,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void refresh(Object entity, Map<String, Object> properties) {
+	public void refresh(Object entity, @Nullable Map<String, Object> properties) {
 		delegate.refresh( entity, properties );
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockMode, Map<String, Object> properties) {
+	public void refresh(Object entity, LockModeType lockMode, @Nullable Map<String, Object> properties) {
 		delegate.refresh( entity, lockMode, properties );
 	}
 
 	@Override
-	public void refresh(Object entity, RefreshOption... options) {
-		delegate.refresh( entity, options );
+	public void refresh(Object entity, RefreshOption @Nullable... options) {
+		delegate.refresh( entity, nonNullOptions( options ) );
 	}
 
 	@Override @SuppressWarnings("removal")
@@ -1124,17 +1147,17 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
-		return delegate.findMultiple( entityType, ids, options );
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption @Nullable... options) {
+		return delegate.findMultiple( entityType, ids, nonNullOptions( options ) );
 	}
 
 	@Override
-	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
-		return  delegate.findMultiple( entityGraph, ids, options );
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption @Nullable... options) {
+		return delegate.findMultiple( entityGraph, ids, nonNullOptions( options ) );
 	}
 
 	@Override
-	public <T> T get(Class<T> theClass, Object id) {
+	public <T> @NonNull T get(Class<T> theClass, Object id) {
 		return delegate.get( theClass, id );
 	}
 
@@ -1144,8 +1167,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Object get(String entityName, Object key, FindOption... findOptions) {
-		return delegate.get( entityName, key, findOptions );
+	public Object get(String entityName, Object key, FindOption @Nullable... findOptions) {
+		return delegate.get( entityName, key, nonNullOptions( findOptions ) );
 	}
 
 	@Override @SuppressWarnings("removal")
@@ -1169,8 +1192,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T getReference(T object) {
-		return delegate.getReference( object );
+	public <T> @NonNull T getReference(T object) {
+		return castNonNull( delegate.getReference( object ) );
 	}
 
 	@Override

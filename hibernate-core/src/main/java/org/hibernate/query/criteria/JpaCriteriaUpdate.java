@@ -12,6 +12,8 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.List;
+
 /**
  * @author Steve Ebersole
  */
@@ -52,4 +54,7 @@ public interface JpaCriteriaUpdate<T> extends JpaManipulationCriteria<T>, Criter
 
 	@Override
 	JpaCriteriaUpdate<T> where(BooleanExpression... restrictions);
+
+	@Override
+	JpaCriteriaUpdate<T> where(List<? extends Expression<Boolean>> restrictions);
 }

@@ -7,6 +7,10 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
+
+import java.util.List;
+import java.util.Objects;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
@@ -21,8 +25,6 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.spi.NavigablePath;
-
-import java.util.Objects;
 
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 
@@ -76,6 +78,12 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 
 	@Override
 	public SqmJoin<L, R> on(BooleanExpression... restrictions) {
+		setJoinPredicate( nodeBuilder().wrap( restrictions ) );
+		return this;
+	}
+
+	@Override
+	public SqmJoin<L, R> on(List<? extends Expression<Boolean>> restrictions) {
 		setJoinPredicate( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}

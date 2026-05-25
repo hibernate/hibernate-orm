@@ -14,6 +14,9 @@ import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+
+import java.util.List;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCrossJoin;
@@ -108,6 +111,12 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 
 	@Override
 	SqmJoin<L, R> on(BooleanExpression... restrictions);
+
+	@Override
+	default SqmJoin<L, R> on(List<? extends Expression<Boolean>> restrictions) {
+		setJoinPredicate( nodeBuilder().wrap( restrictions ) );
+		return this;
+	}
 
 	default <X> JpaEntityJoin<R, X> join(Class<X> entityJavaType, SqmJoinType joinType) {
 		return join( entityJavaType, joinType.getCorrespondingJpaJoinType() );

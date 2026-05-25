@@ -5,6 +5,8 @@
 package org.hibernate.query.criteria;
 
 import jakarta.persistence.criteria.BooleanExpression;
+import java.util.List;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 
@@ -34,4 +36,7 @@ public interface JpaFunctionJoin<E> extends JpaFunctionFrom<Object, E>, JpaJoin<
 
 	@Override
 	JpaFunctionJoin<E> on(BooleanExpression... restrictions);
+
+	@Override
+	JpaFunctionJoin<E> on(List<? extends Expression<Boolean>> restrictions);
 }

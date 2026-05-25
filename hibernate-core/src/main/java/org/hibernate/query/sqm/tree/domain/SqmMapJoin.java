@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -127,6 +128,11 @@ public class SqmMapJoin<L, K, V>
 
 	@Override
 	public SqmMapJoin<L, K, V> on(BooleanExpression... restrictions) {
+		return (SqmMapJoin<L, K, V>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmMapJoin<L, K, V> on(List<? extends Expression<Boolean>> restrictions) {
 		return (SqmMapJoin<L, K, V>) super.on( restrictions );
 	}
 

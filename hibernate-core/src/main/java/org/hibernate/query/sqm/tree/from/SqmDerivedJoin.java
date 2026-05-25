@@ -28,6 +28,8 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.spi.NavigablePath;
 
+import java.util.List;
+
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 
@@ -159,6 +161,11 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 
 	@Override
 	public SqmDerivedJoin<T> on(BooleanExpression... restrictions) {
+		return (SqmDerivedJoin<T>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmDerivedJoin<T> on(List<? extends Expression<Boolean>> restrictions) {
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 

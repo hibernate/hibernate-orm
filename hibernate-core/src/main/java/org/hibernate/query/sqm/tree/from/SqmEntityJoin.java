@@ -27,6 +27,8 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.metamodel.EntityType;
 
+import java.util.List;
+
 
 /**
  * @author Steve Ebersole
@@ -149,6 +151,11 @@ public class SqmEntityJoin<L,R>
 
 	@Override
 	public SqmEntityJoin<L, R> on(BooleanExpression... restrictions) {
+		return (SqmEntityJoin<L,R>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmEntityJoin<L, R> on(List<? extends Expression<Boolean>> restrictions) {
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 

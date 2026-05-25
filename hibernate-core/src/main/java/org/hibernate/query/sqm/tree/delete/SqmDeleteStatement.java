@@ -24,6 +24,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -114,6 +115,12 @@ public class SqmDeleteStatement<T>
 
 	@Override
 	public SqmDeleteStatement<T> where(BooleanExpression... restrictions) {
+		setWhere( restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmDeleteStatement<T> where(List<? extends Expression<Boolean>> restrictions) {
 		setWhere( restrictions );
 		return this;
 	}

@@ -32,14 +32,18 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.TemporalExpression;
 import jakarta.persistence.criteria.TextExpression;
+import jakarta.persistence.TypedQueryReference;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.function.AvgFunction;
 import org.hibernate.dialect.function.SumReturnTypeResolver;
@@ -76,6 +80,8 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.criteria.spi.CriteriaBuilderExtension;
+import org.hibernate.query.specification.MutationSpecification;
+import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -444,6 +450,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		else {
 			throw new IllegalArgumentException("Not a 'delete' statement");
 		}
+	}
+
+	@Override
+	public <T> TypedQueryReference<T> augment(
+			TypedQueryReference<T> reference,
+			Consumer<CriteriaQuery<T>> augmentation) {
+		return SelectionSpecification.create( reference )
+				.augment( (builder, query, root) -> augmentation.accept( query ) )
+				.reference();
+	}
+
+	@Override
+	public StatementReference augment(
+			StatementReference reference,
+			Consumer<CriteriaStatement<?>> augmentation) {
+		return MutationSpecification.create( reference )
+				.augment( (builder, statement, root) -> augmentation.accept( (CriteriaStatement<?>) statement ) )
+				.reference();
 	}
 
 	@Override

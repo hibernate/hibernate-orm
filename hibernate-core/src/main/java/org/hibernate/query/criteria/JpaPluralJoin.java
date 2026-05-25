@@ -5,6 +5,8 @@
 package org.hibernate.query.criteria;
 
 import jakarta.persistence.criteria.BooleanExpression;
+import java.util.List;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -33,6 +35,9 @@ public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, 
 
 	@Override
 	JpaPluralJoin<O, ? extends C, E> on(BooleanExpression... restrictions);
+
+	@Override
+	JpaPluralJoin<O, ? extends C, E> on(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<S extends E> JpaTreatedJoin<O, E, S> treatAs(Class<S> treatAsType);

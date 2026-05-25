@@ -19,6 +19,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import java.util.List;
+
 /**
  * Models a join based on a mapped attribute reference.
  *
@@ -72,6 +74,11 @@ public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJ
 
 	@Override
 	default SqmJoin<O, T> on(JpaPredicate @Nullable... restrictions) {
+		return SqmJoin.super.on( restrictions );
+	}
+
+	@Override
+	default SqmJoin<O, T> on(List<? extends Expression<Boolean>> restrictions) {
 		return SqmJoin.super.on( restrictions );
 	}
 

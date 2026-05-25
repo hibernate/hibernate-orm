@@ -268,7 +268,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public FlushMode getEffectiveFlushMode() {
-		final FlushMode flushMode = queryOptions.getFlushMode();
+		final var flushMode = queryOptions.getFlushMode();
 		return flushMode == null ? getSession().getHibernateFlushMode() : flushMode;
 	}
 
@@ -762,12 +762,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public QueryFlushMode getQueryFlushMode() {
-		return FlushModeTypeHelper.getForcedFlushMode( queryOptions.getFlushMode() );
+		return FlushModeTypeHelper.getQueryFlushMode( queryOptions.getFlushMode() );
 	}
 
 	@Override
 	public CommonQueryContractImplementor setQueryFlushMode(QueryFlushMode queryFlushMode) {
-		queryOptions.setFlushMode( FlushModeTypeHelper.getFlushMode(queryFlushMode) );
+		queryOptions.setFlushMode( FlushModeTypeHelper.getFlushMode( queryFlushMode ) );
 		return this;
 	}
 

@@ -7,15 +7,18 @@ package org.hibernate.query.spi;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.MutationQuery;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
@@ -179,129 +182,139 @@ public interface MutationQueryImplementor<T>
 	// SelectionQuery stuff
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default LockModeType getLockMode() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default QueryImplementor<T> setLockMode(LockModeType lockMode) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
-	@Override @Deprecated
-	default QueryImplementor<T> setLockScope(PessimisticLockScope lockScope) {
-		// IllegalStateException is the type required by JPA
-		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
-	}
-
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default CacheStoreMode getCacheStoreMode() {
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default QueryImplementor<T> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default CacheRetrieveMode getCacheRetrieveMode() {
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default QueryImplementor<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default int getMaxResults() {
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default QueryImplementor<T> setMaxResults(int maxResults) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default int getFirstResult() {
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default QueryImplementor<T> setFirstResult(int startPosition) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override @Deprecated
-	default ScrollableResultsImplementor<T> scroll() {
+	@SuppressWarnings("removal")
+	default ScrollableResults<T> scroll() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override @Deprecated
-	default ScrollableResultsImplementor<T> scroll(ScrollMode scrollMode) {
+	@SuppressWarnings("removal")
+	default ScrollableResults<T> scroll(ScrollMode scrollMode) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	default List<T> list() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
-	@Override
-	@Deprecated @SuppressWarnings({"deprecation", "removal"})
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	default List<T> getResultList() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );	}
 
-	@Override
-	@Deprecated @SuppressWarnings({"deprecation", "removal"})
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	default Stream<T> getResultStream() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );	}
 
 
-	@Override
-	@Deprecated @SuppressWarnings("deprecation")
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	default Stream<T> stream() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	default T uniqueResult() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	default Optional<T> uniqueResultOptional() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default T getSingleResult() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
@@ -309,7 +322,8 @@ public interface MutationQueryImplementor<T>
 
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default T getSingleResultOrNull() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
@@ -317,7 +331,7 @@ public interface MutationQueryImplementor<T>
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// deprecations
+	// Deprecations
 
 
 	@Override @Deprecated
@@ -346,4 +360,27 @@ public interface MutationQueryImplementor<T>
 
 	@Override @Deprecated
 	MutationQueryImplementor<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SelectionQuery Handling
+
+	@Override
+	default SelectionQueryImplementor<T> asSelectionQuery() {
+		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
+	}
+
+	@Override
+	default <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
+		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
+	}
+
+	@Override
+	default <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
+		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
+	}
+
+	@Override
+	default <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
+	}
 }

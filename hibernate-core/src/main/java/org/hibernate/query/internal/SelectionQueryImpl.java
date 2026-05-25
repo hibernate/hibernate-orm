@@ -24,6 +24,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -56,7 +57,6 @@ import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -456,6 +456,12 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	public Timeout getLockTimeout() {
+		//noinspection removal
+		return queryOptions.getLockOptions().getTimeout();
+	}
+
+	@Override
 	public SelectionQueryImplementor<R> setLockTimeout(Timeout lockTimeout) {
 		//noinspection removal
 		queryOptions.getLockOptions().setTimeout( lockTimeout );
@@ -585,6 +591,7 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public SelectionQueryImplementor<R> enableFetchProfile(String profileName) {
 		if ( getSessionFactory().containsFetchProfileDefinition( profileName ) ) {
 			getQueryOptions().enableFetchProfile( profileName );
@@ -596,10 +603,12 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public SelectionQueryImplementor<R> disableFetchProfile(String profileName) {
 		getQueryOptions().disableFetchProfile( profileName );
 		return this;
 	}
+
 	@Override
 	public SelectionQueryImplementor<R> setComment(String comment) {
 		super.setComment( comment );
@@ -652,6 +661,7 @@ public class SelectionQueryImpl<R>
 		super.addQueryHint( hint );
 		return this;
 	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter handling
@@ -900,11 +910,11 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+	public ScrollableResults<R> scroll(ScrollMode scrollMode) {
 		return executeQuery( scrollMode, this::doScroll );
 	}
 
-	private ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
+	private ScrollableResults<R> doScroll(ScrollMode scrollMode) {
 		final var statement = getSqmStatement();
 		final var queryOptions = getQueryOptions();
 		final boolean containsCollectionFetches =

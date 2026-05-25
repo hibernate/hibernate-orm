@@ -95,12 +95,15 @@ public interface ProcedureCall
 	ProcedureCall addQueryHint(String hint);
 
 	@Override
+	@SuppressWarnings("removal")
 	ProcedureCall setMaxResults(int maxResults);
 
 	@Override
+	@SuppressWarnings("removal")
 	ProcedureCall setFirstResult(int startPosition);
 
 	@Override
+	@SuppressWarnings("removal")
 	ProcedureCall setLockMode(LockModeType lockMode);
 
 	@Override

@@ -12,7 +12,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
@@ -23,6 +22,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
@@ -35,7 +35,6 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -139,9 +138,9 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 		}
 	}
 
-	protected ScrollableResultsImplementor<T> executeQuery(
+	protected ScrollableResults<T> executeQuery(
 			ScrollMode scrollMode,
-			Function<ScrollMode,ScrollableResultsImplementor<T>> supplier) {
+			Function<ScrollMode,ScrollableResults<T>> supplier) {
 		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
 		try {
 			return supplier.apply( scrollMode );
@@ -181,29 +180,33 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public List<T> list() {
 		return getResultList();
 	}
 
 	@Override
-	@SuppressWarnings({"deprecation", "removal"})
+	@SuppressWarnings("removal")
 	public abstract List<T> getResultList();
 
 	@Override
-	public ScrollableResultsImplementor<T> scroll() {
+	@SuppressWarnings("removal")
+	public ScrollableResults<T> scroll() {
 		return scroll( getSessionFactory().getJdbcServices().getDialect().defaultScrollMode() );
 	}
 
 	@Override
-	public abstract ScrollableResultsImplementor<T> scroll(ScrollMode scrollMode);
+	@SuppressWarnings("removal")
+	public abstract ScrollableResults<T> scroll(ScrollMode scrollMode);
 
-	@Override @SuppressWarnings("deprecation")
+	@Override
+	@SuppressWarnings("removal")
 	public Stream<T> stream() {
 		return getResultStream();
 	}
 
 	@Override
-	@SuppressWarnings({"removal", "deprecation"})
+	@SuppressWarnings("removal")
 	public Stream<T> getResultStream() {
 		final var results = scroll( ScrollMode.FORWARD_ONLY );
 		final var spliterator = spliteratorUnknownSize( new ScrollableResultsIterator<>( results ), NONNULL );
@@ -211,6 +214,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public T uniqueResult() {
 		// note: throws different exception type
 		//       to getSingleResultOrNull()
@@ -218,6 +222,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public Optional<T> uniqueResultOptional() {
 		return ofNullable( uniqueResult() );
 	}
@@ -321,11 +326,13 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public Integer getFetchSize() {
 		return queryOptions.getFetchSize();
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public QueryImplementor<T> setFetchSize(int fetchSize) {
 		verifySelectionOption( "Fetch size" );
 		queryOptions.setFetchSize( fetchSize );
@@ -333,18 +340,20 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public boolean isReadOnly() {
 		return queryOptions.isReadOnly() == Boolean.TRUE;
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public Query<T> setReadOnly(boolean readOnly) {
 		verifySelectionOption( "Fetch size" );
 		queryOptions.setReadOnly( readOnly );
 		return this;
 	}
 
-	@Override @SuppressWarnings("removal")
+	@Override
 	public int getMaxResults() {
 		session.checkOpen();
 		return getQueryOptions().getLimit().getMaxRowsJpa();
@@ -357,7 +366,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 		return this;
 	}
 
-	@Override @SuppressWarnings("removal")
+	@Override
 	public int getFirstResult() {
 		session.checkOpen();
 		return getQueryOptions().getLimit().getFirstRowJpa();
@@ -395,18 +404,20 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public String getCacheRegion() {
 		return queryOptions.getResultCacheRegionName();
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public Query<T> setCacheRegion(String cacheRegion) {
 		verifySelectionOption( "Result caching" );
 		queryOptions.setResultCacheRegionName( cacheRegion );
 		return this;
 	}
 
-	@Override @SuppressWarnings("removal")
+	@Override
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		throw new IllegalStateException( "Cache retrieval not supported" );
 	}
@@ -418,7 +429,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 		return this;
 	}
 
-	@Override @SuppressWarnings("removal")
+	@Override
 	public CacheStoreMode getCacheStoreMode() {
 		throw new IllegalStateException( "Cache storage not supported" );
 	}
@@ -444,33 +455,15 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	public LockMode getHibernateLockMode() {
+		//noinspection removal
 		return queryOptions.getLockOptions().getLockMode();
 	}
 
 	@Override
 	public QueryImplementor<T> setHibernateLockMode(LockMode lockMode) {
 		verifySelectionOption( "Locking" );
-		queryOptions.getLockOptions().setLockMode( lockMode );
-		return this;
-	}
-
-	@Override
-	public Timeout getLockTimeout() {
-		return queryOptions.getLockOptions().getTimeout();
-	}
-
-	@Override
-	public Query<T> setLockTimeout(Timeout lockTimeout) {
-		verifySelectionOption( "Locking" );
-		queryOptions.getLockOptions().setTimeout( lockTimeout );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<T> setLockScope(PessimisticLockScope lockScope) {
-		verifySelectionOption( "Locking" );
 		//noinspection removal
-		queryOptions.getLockOptions().setLockScope( lockScope );
+		queryOptions.getLockOptions().setLockMode( lockMode );
 		return this;
 	}
 
@@ -483,6 +476,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public <X> QueryImplementor<X> setTupleTransformer(TupleTransformer<X> transformer) {
 		verifySelectionOption( "Result transformation" );
 		getQueryOptions().setTupleTransformer( transformer );
@@ -491,6 +485,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public QueryImplementor<T> setResultListTransformer(ResultListTransformer<T> transformer) {
 		verifySelectionOption( "Result transformation" );
 		getQueryOptions().setResultListTransformer( transformer );

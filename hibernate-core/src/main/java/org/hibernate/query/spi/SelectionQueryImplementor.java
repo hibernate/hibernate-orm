@@ -18,7 +18,6 @@ import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
-import org.hibernate.ScrollMode;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.Page;
@@ -44,16 +43,6 @@ public interface SelectionQueryImplementor<R>
 		extends SelectionQuery<R>, QueryImplementor<R>, TypedQueryReferenceProducer {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Execution
-
-	@Override
-	ScrollableResultsImplementor<R> scroll();
-
-	@Override
-	ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
 	@Override @Deprecated
@@ -65,9 +54,11 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> enableFetchProfile(String profileName);
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> disableFetchProfile(String profileName);
 
 	@Override
@@ -93,6 +84,7 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setFetchSize(int fetchSize);
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setReadOnly(boolean readOnly);
 
 	@Override
@@ -138,9 +130,11 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
 
 	@Override
+	@SuppressWarnings("removal")
 	<T> SelectionQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer);
 
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	@Override
@@ -286,7 +280,8 @@ public interface SelectionQueryImplementor<R>
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	default int executeUpdate() {
 		// per JPA, again, needs to be IllegalStateException
 		throw new IllegalStateException( "SelectionQuery cannot be treated as a MutationQuery - " + getQueryString() );

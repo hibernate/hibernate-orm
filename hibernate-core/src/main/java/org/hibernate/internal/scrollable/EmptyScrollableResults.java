@@ -4,15 +4,15 @@
  */
 package org.hibernate.internal.scrollable;
 
-import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.ScrollableResults;
 
 /**
  * @author Andrea Boriero
  */
-public class EmptyScrollableResults<R> implements ScrollableResultsImplementor<R> {
+public class EmptyScrollableResults<R> implements ScrollableResults<R> {
 
 	@SuppressWarnings("rawtypes")
-	private static final ScrollableResultsImplementor INSTANCE = new EmptyScrollableResults();
+	private static final ScrollableResults INSTANCE = new EmptyScrollableResults();
 
 	@SuppressWarnings("unchecked")
 	public static <R> EmptyScrollableResults<R> instance() {

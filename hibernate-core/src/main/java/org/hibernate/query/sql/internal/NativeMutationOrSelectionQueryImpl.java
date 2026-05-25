@@ -22,6 +22,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.MutationOrSelectionQuery;
@@ -31,7 +32,6 @@ import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.named.NamedNativeQueryMemento;
 import org.hibernate.query.named.internal.NativeMutationMementoImpl;
 import org.hibernate.query.named.internal.NativeSelectionMementoImpl;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 
 import java.time.Instant;
 import java.util.Calendar;
@@ -87,39 +87,43 @@ public class NativeMutationOrSelectionQueryImpl
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public Object getSingleResult() {
 		return super.getSingleResult();
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public Object getSingleResultOrNull() {
 		return super.getSingleResultOrNull();
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings({"rawtypes", "unchecked", "removal"})
 	public Stream getResultStream() {
 		return super.getResultStream();
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings({"rawtypes", "unchecked", "removal"})
 	public List list() {
 		return super.list();
 	}
 
 	@Override @Deprecated
-	public ScrollableResultsImplementor<Object> scroll() {
+	@SuppressWarnings("removal")
+	public ScrollableResults<Object> scroll() {
 		return super.scroll();
 	}
 
 	@Override @Deprecated
-	public ScrollableResultsImplementor<Object> scroll(ScrollMode scrollMode) {
+	@SuppressWarnings("removal")
+	public ScrollableResults<Object> scroll(ScrollMode scrollMode) {
 		return super.scroll( scrollMode );
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings({"rawtypes", "unchecked", "removal"})
 	public Stream stream() {
 		return super.stream();
 	}
@@ -462,45 +466,49 @@ public class NativeMutationOrSelectionQueryImpl
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({"deprecation", "removal"})
 	public NativeMutationOrSelectionQueryImpl setEntityGraph(EntityGraph<? super Object> graph, GraphSemantic semantic) {
 		super.setEntityGraph( graph, semantic );
 		return this;
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({"deprecation", "removal"})
 	public NativeMutationOrSelectionQueryImpl enableFetchProfile(String profileName) {
 		super.enableFetchProfile( profileName );
 		return this;
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({"deprecation", "removal"})
 	public NativeMutationOrSelectionQueryImpl disableFetchProfile(String profileName) {
 		super.disableFetchProfile( profileName );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setFetchSize(int fetchSize) {
 		super.setFetchSize( fetchSize );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setReadOnly(boolean readOnly) {
 		super.setReadOnly( readOnly );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setMaxResults(int maxResults) {
 		super.setMaxResults( maxResults );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setFirstResult(int startPosition) {
 		super.setFirstResult( startPosition );
 		return this;
@@ -513,18 +521,21 @@ public class NativeMutationOrSelectionQueryImpl
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setCacheMode(CacheMode cacheMode) {
 		super.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setCacheStoreMode(CacheStoreMode cacheStoreMode) {
 		super.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
 		super.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
@@ -537,18 +548,21 @@ public class NativeMutationOrSelectionQueryImpl
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setLockMode(LockModeType lockMode) {
 		super.setLockMode( lockMode );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setHibernateLockMode(LockMode lockMode) {
 		super.setHibernateLockMode( lockMode );
 		return this;
@@ -567,12 +581,14 @@ public class NativeMutationOrSelectionQueryImpl
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
 		super.setFollowOnStrategy( followOnStrategy );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setCacheable(boolean cacheable) {
 		super.setCacheable( cacheable );
 		return this;
@@ -585,6 +601,7 @@ public class NativeMutationOrSelectionQueryImpl
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public NativeMutationOrSelectionQueryImpl setResultListTransformer(ResultListTransformer<Object> transformer) {
 		super.setResultListTransformer( transformer );
 		return this;

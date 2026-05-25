@@ -5,6 +5,7 @@
 package org.hibernate.sql.results.spi;
 
 
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.scrollable.FetchingScrollableResultsImpl;
 import org.hibernate.internal.scrollable.ScrollableResultsImpl;
@@ -13,14 +14,13 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
 /**
  * @author Steve Ebersole
  */
-public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableResultsImplementor<R>, R> {
+public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableResults<R>, R> {
 	/**
 	 * Singleton access to the standard scrollable-results consumer instance
 	 *
@@ -36,7 +36,7 @@ public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableR
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> consume(
+	public ScrollableResults<R> consume(
 			JdbcValues jdbcValues,
 			SharedSessionContractImplementor session,
 			JdbcValuesSourceProcessingOptions processingOptions,

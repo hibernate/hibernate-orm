@@ -8,6 +8,7 @@ import jakarta.persistence.Tuple;
 import org.hibernate.AssertionFailure;
 import org.hibernate.InstantiationException;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.scrollable.EmptyScrollableResults;
@@ -17,7 +18,6 @@ import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
@@ -75,7 +75,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final DomainParameterXref domainParameterXref;
 	private final SqmInterpreter<?, ? extends ResultsConsumer<?, R>> executeQueryInterpreter;
 	private final SqmInterpreter<List<R>, Void> listInterpreter;
-	private final SqmInterpreter<ScrollableResultsImplementor<R>, ScrollMode> scrollInterpreter;
+	private final SqmInterpreter<ScrollableResults<R>, ScrollMode> scrollInterpreter;
 
 	private volatile CacheableSqmInterpretation<SelectStatement, JdbcSelect> cacheableSqmInterpretation;
 
@@ -413,7 +413,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
+	public ScrollableResults<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
 		return executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0
 				? EmptyScrollableResults.instance()
 				: withCacheableSqmInterpretation( executionContext, scrollMode, scrollInterpreter );

@@ -2174,11 +2174,11 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
 		final var entityGraph = createEntityGraph( graphName );
 		return entityGraph == null ? null : castEntityGraph( rootType, graphName, entityGraph );
 	}
-
 
 	@Override @Deprecated
 	public RootGraphImplementor<?> createEntityGraph(String graphName) {

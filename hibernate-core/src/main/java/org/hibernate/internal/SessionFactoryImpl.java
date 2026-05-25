@@ -720,12 +720,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Session createEntityManager() {
-		validateNotClosed();
-		return buildEntityManager( SYNCHRONIZED, null );
-	}
-
-	@Override
 	public Session createEntityManager(EntityManager.CreationOption... options) {
 		validateNotClosed();
 		SynchronizationType synchronizationType = SYNCHRONIZED;

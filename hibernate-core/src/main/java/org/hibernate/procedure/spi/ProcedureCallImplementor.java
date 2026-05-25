@@ -4,6 +4,8 @@
  */
 package org.hibernate.procedure.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -33,52 +35,67 @@ import java.util.Map;
  */
 public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImplementor<R>, NameableQuery {
 	@Override
+	@Nonnull
 	SharedSessionContractImplementor getSession();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
 	@Override
-	ProcedureCallImplementor<R> setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	ProcedureCallImplementor<R> setFlushMode(@Nonnull FlushModeType flushMode);
 
 	@Override
-	ProcedureCallImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	ProcedureCallImplementor<R> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	@Override
-	ProcedureCallImplementor<R> setTimeout(Integer timeout);
+	@Nonnull
+	ProcedureCallImplementor<R> setTimeout(@Nullable Integer timeout);
 	@Override
+	@Nonnull
 	ProcedureCallImplementor<R> setTimeout(int timeout);
 	@Override
-	ProcedureCallImplementor<R> setTimeout(Timeout timeout);
+	@Nonnull
+	ProcedureCallImplementor<R> setTimeout(@Nullable Timeout timeout);
 
 	@Override
-	ProcedureCallImplementor<R> setComment(String comment);
+	@Nonnull
+	ProcedureCallImplementor<R> setComment(@Nullable String comment);
 
 	@Override
-	ProcedureCallImplementor<R> addQueryHint(String hint);
+	@Nonnull
+	ProcedureCallImplementor<R> addQueryHint(@Nonnull String hint);
 
 	@Override
-	ProcedureCallImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	@Nonnull
+	ProcedureCallImplementor<R> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
-	ProcedureCallImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	@Nonnull
+	ProcedureCallImplementor<R> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	@Override
+	@Nonnull
 	ProcedureCallImplementor<R> setMaxResults(int maxResults);
 
 	@Override
+	@Nonnull
 	ProcedureCallImplementor<R> setFirstResult(int startPosition);
 
 	@Override
-	ProcedureCallImplementor<R> setLockMode(LockModeType lockMode);
+	@Nonnull
+	ProcedureCallImplementor<R> setLockMode(@Nonnull LockModeType lockMode);
 
-	ProcedureCallImplementor<R> setHint(String hintName, Object value);
+	@Nonnull
+	ProcedureCallImplementor<R> setHint(@Nonnull String hintName, @Nullable Object value);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter handling
 
 	@Override
+	@Nonnull
 	ProcedureParameterMetadataImplementor getParameterMetadata();
 
 	ParameterStrategy getParameterStrategy();
@@ -131,61 +148,79 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	ProcedureParameterImplementor<?> getParameterRegistration(String name);
 
 	@Override
-	<T> ProcedureCallImplementor<R> setParameter(Parameter<T> param, T value);
+	@Nonnull
+	<T> ProcedureCallImplementor<R> setParameter(@Nonnull Parameter<T> param, @Nullable T value);
 
 	@Override @Deprecated
-	ProcedureCallImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCallImplementor<R> setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	ProcedureCallImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCallImplementor<R> setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	ProcedureCallImplementor<R> setParameter(String name, Object value);
+	@Nonnull
+	ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable Object value);
 
 	@Override @Deprecated
-	ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	<P> ProcedureCallImplementor<R> setParameter(String name, P value, Class<P> type);
+	@Nonnull
+	<P> ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> ProcedureCallImplementor<R> setParameter(String name, P value, Type<P> type);
+	@Nonnull
+	<P> ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	ProcedureCallImplementor<R> setParameter(int position, Object value);
+	@Nonnull
+	ProcedureCallImplementor<R> setParameter(int position, @Nullable Object value);
 
 	@Override
-	<P> ProcedureCallImplementor<R> setParameter(int position, P value, Class<P> type);
+	@Nonnull
+	<P> ProcedureCallImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> ProcedureCallImplementor<R> setParameter(int position, P value, Type<P> type);
+	@Nonnull
+	<P> ProcedureCallImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override @Deprecated
-	ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCallImplementor<R> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCallImplementor<R> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	ProcedureCallImplementor<R> setProperties(Object bean);
+	@Nonnull
+	ProcedureCallImplementor<R> setProperties(@Nonnull Object bean);
 
 	@Override
-	ProcedureCallImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	ProcedureCallImplementor<R> setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 
 	@Override
-	<P> ProcedureCallImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> ProcedureCallImplementor<R> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> ProcedureCallImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> ProcedureCallImplementor<R> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
 
 	@Override
+	@Nonnull
 	List<R> getResultList();
 
 	@Override

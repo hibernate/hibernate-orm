@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -47,50 +49,64 @@ public interface SelectionQueryImplementor<R>
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> entityGraph);
+	@Nonnull
+	SelectionQueryImplementor<R> setEntityGraph(@Nonnull EntityGraph<? super R> entityGraph);
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
+	@Nonnull
+	SelectionQueryImplementor<R> setEntityGraph(@Nonnull EntityGraph<? super R> graph, @Nonnull GraphSemantic semantic);
 
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQueryImplementor<R> enableFetchProfile(String profileName);
+	@Nonnull
+	SelectionQueryImplementor<R> enableFetchProfile(@Nonnull String profileName);
 
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQueryImplementor<R> disableFetchProfile(String profileName);
+	@Nonnull
+	SelectionQueryImplementor<R> disableFetchProfile(@Nonnull String profileName);
 
 	@Override
-	SelectionQueryImplementor<R> setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	SelectionQueryImplementor<R> setFlushMode(@Nonnull FlushModeType flushMode);
 
 	@Override
-	SelectionQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	SelectionQueryImplementor<R> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	@Override
+	@Nonnull
 	SelectionQueryImplementor<R> setTimeout(int timeout);
 
 	@Override
-	SelectionQueryImplementor<R> setTimeout(Integer timeout);
+	@Nonnull
+	SelectionQueryImplementor<R> setTimeout(@Nullable Integer timeout);
 
 	@Override
-	SelectionQueryImplementor<R> setTimeout(Timeout timeout);
+	@Nonnull
+	SelectionQueryImplementor<R> setTimeout(@Nullable Timeout timeout);
 
 	@Override
-	SelectionQueryImplementor<R> setComment(String comment);
+	@Nonnull
+	SelectionQueryImplementor<R> setComment(@Nullable String comment);
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	SelectionQueryImplementor<R> setFetchSize(int fetchSize);
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	SelectionQueryImplementor<R> setReadOnly(boolean readOnly);
 
 	@Override
+	@Nonnull
 	SelectionQueryImplementor<R> setMaxResults(int maxResults);
 
 	@Override
+	@Nonnull
 	SelectionQueryImplementor<R> setFirstResult(int startPosition);
 
 	@Override
@@ -98,177 +114,230 @@ public interface SelectionQueryImplementor<R>
 
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQueryImplementor<R> setCacheMode(CacheMode cacheMode);
+	@Nonnull
+	SelectionQueryImplementor<R> setCacheMode(@Nonnull CacheMode cacheMode);
 
 	@Override
-	SelectionQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	@Nonnull
+	SelectionQueryImplementor<R> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	@Override
-	SelectionQueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	@Nonnull
+	SelectionQueryImplementor<R> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	SelectionQueryImplementor<R> setCacheable(boolean cacheable);
 
 	@Override
+	@Nonnull
 	SelectionQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable);
 
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQueryImplementor<R> setCacheRegion(String cacheRegion);
+	SelectionQueryImplementor<R> setCacheRegion(@Nullable String cacheRegion);
 
 	@Override
-	SelectionQueryImplementor<R> setLockMode(LockModeType lockMode);
+	@Nonnull
+	SelectionQueryImplementor<R> setLockMode(@Nonnull LockModeType lockMode);
 
 	@Override
 	SelectionQueryImplementor<R> setLockTimeout(Timeout lockTimeout);
 
 	@Override
-	SelectionQueryImplementor<R> setHibernateLockMode(LockMode lockMode);
+	@Nonnull
+	SelectionQueryImplementor<R> setHibernateLockMode(@Nonnull LockMode lockMode);
 
 	@Override
-	SelectionQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
+	@Nonnull
+	SelectionQueryImplementor<R> setFollowOnStrategy(@Nonnull Locking.FollowOn followOnStrategy);
 
 	@Override
 	@SuppressWarnings("removal")
-	<T> SelectionQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer);
+	@Nonnull
+	<T> SelectionQueryImplementor<T> setTupleTransformer(@Nonnull TupleTransformer<T> transformer);
 
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
+	@Nonnull
+	SelectionQueryImplementor<R> setResultListTransformer(@Nonnull ResultListTransformer<R> transformer);
 
 	@Override
-	SelectionQueryImplementor<R> setLockScope(PessimisticLockScope lockScope);
+	@Nonnull
+	SelectionQueryImplementor<R> setLockScope(@Nonnull PessimisticLockScope lockScope);
 
 	@Override
-	SelectionQueryImplementor<R> addQueryHint(String hint);
+	@Nonnull
+	SelectionQueryImplementor<R> addQueryHint(@Nonnull String hint);
 
 	@Override
-	SelectionQueryImplementor<R> setHint(String hintName, Object value);
+	@Nonnull
+	SelectionQueryImplementor<R> setHint(@Nonnull String hintName, @Nullable Object value);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter Handling
 
 	@Override
-	SelectionQueryImplementor<R> setParameter(String name, Object value);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Object value);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameter(String name, P value, Class<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameter(String name, P value, Type<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	SelectionQueryImplementor<R> setParameter(int position, Object value);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(int position, @Nullable Object value);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameter(int position, P value, Class<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameter(int position, P value, Type<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	<T> SelectionQueryImplementor<R> setParameter(QueryParameter<T> parameter, T value);
+	@Nonnull
+	<T> SelectionQueryImplementor<R> setParameter(@Nonnull QueryParameter<T> parameter, @Nullable T value);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override
-	<T> SelectionQueryImplementor<R> setParameter(Parameter<T> param, T value);
+	@Nonnull
+	<T> SelectionQueryImplementor<R> setParameter(@Nonnull Parameter<T> param, @Nullable T value);
 
 	@Override
-	SelectionQueryImplementor<R> setProperties(Object bean);
+	@Nonnull
+	SelectionQueryImplementor<R> setProperties(@Nonnull Object bean);
 
 	@Override
-	SelectionQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	SelectionQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	SelectionQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	SelectionQueryImplementor<R> setParameterList(String name, Object[] values);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull Object[] values);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	SelectionQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	SelectionQueryImplementor<R> setParameterList(int position, Object[] values);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameterList(int position, @Nonnull Object[] values);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(int position, P[] values, Type<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override @Deprecated
-	SelectionQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	SelectionQueryImplementor<R> setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

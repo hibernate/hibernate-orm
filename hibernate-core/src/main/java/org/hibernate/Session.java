@@ -4,6 +4,8 @@
  */
 package org.hibernate;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
@@ -210,7 +212,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @see #setHibernateFlushMode(FlushMode)
 	@Override
-	void setFlushMode(FlushModeType flushMode);
+	void setFlushMode(@Nonnull FlushModeType flushMode);
 
 	/// Set the current [flush mode][FlushMode] for this session.
 	///
@@ -234,6 +236,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @see #getHibernateFlushMode()
 	@Override
+	@Nonnull
 	FlushModeType getFlushMode();
 
 	/// Get the current [flush mode][FlushMode] for this session.
@@ -260,6 +263,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 6.2
 	@Override
+	@Nonnull
 	CacheStoreMode getCacheStoreMode();
 
 	/// The JPA-defined [CacheRetrieveMode].
@@ -268,6 +272,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 6.2
 	@Override
+	@Nonnull
 	CacheRetrieveMode getCacheRetrieveMode();
 
 	/// Enable or disable writes to the second-level cache.
@@ -278,7 +283,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 6.2
 	@Override
-	void setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	void setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	/// Enable or disable reads from the second-level cache.
 	///
@@ -288,7 +293,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 6.2
 	@Override
-	void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	void setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 
 	/// Get the maximum batch size for batch fetching associations by
 	/// id in this session.
@@ -338,6 +343,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @return the session factory
 	///
 	/// @see SessionFactory
+	@Nonnull
 	SessionFactory getSessionFactory();
 
 	/// Cancel the execution of the current query.
@@ -409,7 +415,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @throws TransientObjectException if the instance is transient or associated with
 	/// a different session
-	Object getIdentifier(Object object);
+	@Nullable
+	Object getIdentifier(@Nonnull Object object);
 
 	/// Determine if the given entity is associated with this session.
 	///
@@ -420,7 +427,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use [#contains(Object)] instead.
 	@Deprecated(since = "7.2", forRemoval = true)
-	boolean contains(String entityName, Object object);
+	boolean contains(@Nonnull String entityName, @Nonnull Object object);
 
 	/// Remove this instance from the session cache. Changes to the instance will
 	/// not be synchronized with the database. This operation cascades to associated
@@ -428,7 +435,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @param object the managed instance to detach
 	@Override
-	void detach(Object object);
+	void detach(@Nonnull Object object);
 
 	/// Remove this instance from the session cache. Changes to the instance will
 	/// not be synchronized with the database. This operation cascades to associated
@@ -439,7 +446,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param object the managed entity to evict
 	///
 	/// @throws IllegalArgumentException if the given object is not an entity
-	void evict(Object object);
+	void evict(@Nonnull Object object);
 
 	/// Return the persistent instance of the given entity class with the given identifier,
 	/// or null if there is no such persistent instance. If the instance is already associated
@@ -471,7 +478,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @return a fully-fetched persistent instance or null
 	@Override
-	<T> T find(Class<T> entityType, Object id);
+	@Nullable
+	<T> T find(@Nonnull Class<T> entityType, @Nonnull Object id);
 
 	/// {@inheritDoc}
 	///
@@ -483,7 +491,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param id an identifier
 	/// @param options options controlling the behavior of the operation
 	@Override
-	<T> T find(Class<T> entityType, Object id, FindOption... options);
+	@Nullable
+	<T> T find(@Nonnull Class<T> entityType, @Nonnull Object id, @Nullable FindOption... options);
 
 	/// Return the persistent instances of the given entity class with the given identifiers
 	/// as a list. The position of an instance in the returned list matches the position of its
@@ -517,7 +526,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @see FindMultipleOption
 	///
 	/// @since 7.0
-	<E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options);
+	@Nonnull
+	<E> List<E> findMultiple(@Nonnull Class<E> entityType, @Nonnull List<?> ids, @Nullable FindOption... options);
 
 	/// Return the persistent instances of the root entity of the given [EntityGraph]
 	/// with the given identifiers as a list, fetching the associations specified by the
@@ -553,14 +563,15 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @see FindMultipleOption
 	///
 	/// @since 7.0
-	<E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options);
+	@Nonnull
+	<E> List<E> findMultiple(@Nonnull EntityGraph<E> entityGraph, @Nonnull List<?> ids, @Nullable FindOption... options);
 
 	/// Read the persistent state associated with the given identifier into the given
 	/// transient instance.
 	///
 	/// @param object a transient instance of an entity class
 	/// @param id an identifier
-	void load(Object object, Object id);
+	void load(@Nonnull Object object, @Nonnull Object id);
 
 	/// Persist the state of the given detached instance, reusing the current
 	/// identifier value.
@@ -570,7 +581,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated With no real replacement. For some use cases try [StatelessSession#upsert(Object)].
 	@Deprecated( since = "6.0" )
-	void replicate(Object object, ReplicationMode replicationMode);
+	void replicate(@Nonnull Object object, @Nonnull ReplicationMode replicationMode);
 
 	/// Persist the state of the given detached instance, reusing the current
 	/// identifier value.
@@ -581,7 +592,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated With no real replacement. For some use cases try [StatelessSession#upsert(Object)].
 	@Deprecated( since = "6.0" )
-	void replicate(String entityName, Object object, ReplicationMode replicationMode) ;
+	void replicate(@Nonnull String entityName, @Nonnull Object object, @Nonnull ReplicationMode replicationMode) ;
 
 	/// Copy the state of the given object onto the persistent object with the same
 	/// identifier. If there is no persistent instance currently associated with
@@ -595,7 +606,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @return an updated persistent instance
 	@Override
-	<T> T merge(T object);
+	@Nonnull
+	<T> T merge(@Nonnull T object);
 
 	/// Copy the state of the given object onto the persistent object with the same
 	/// identifier. If there is no persistent instance currently associated with
@@ -609,7 +621,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param object a detached instance with state to be copied
 	///
 	/// @return an updated persistent instance
-	<T> T merge(String entityName, T object);
+	@Nonnull
+	<T> T merge(@Nonnull String entityName, @Nonnull T object);
 
 	/// Copy the state of the given object onto the persistent object with the same
 	/// identifier. If there is no persistent instance currently associated with
@@ -626,7 +639,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @return an updated persistent instance
 	///
 	/// @since 7.0
-	<T> T merge(T object, EntityGraph<? super T> loadGraph);
+	@Nonnull
+	<T> T merge(@Nonnull T object, @Nonnull EntityGraph<? super T> loadGraph);
 
 	/// Make a transient instance persistent and mark it for later insertion in the
 	/// database. This operation cascades to associated instances if the association
@@ -639,7 +653,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @param object a transient instance to be made persistent
 	@Override
-	void persist(Object object);
+	void persist(@Nonnull Object object);
 
 	/// Make a transient instance persistent and mark it for later insertion in the
 	/// database. This operation cascades to associated instances if the association
@@ -678,7 +692,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param lockMode the lock level
 	///
 	/// @see #lock(Object, LockModeType)
-	void lock(Object object, LockMode lockMode);
+	void lock(@Nonnull Object object, @Nonnull LockMode lockMode);
 
 	/// Obtain the specified lock level on the given managed instance associated
 	/// with this session, applying any other specified options. This operation may
@@ -705,7 +719,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param lockMode the lock level
 	///
 	/// @see #lock(Object, LockModeType, LockOption...)
-	void lock(Object object, LockMode lockMode, LockOption... lockOptions);
+	void lock(@Nonnull Object object, @Nonnull LockMode lockMode, @Nullable LockOption... lockOptions);
 
 	/// Reread the state of the given managed instance associated with this session
 	/// from the underlying database. This may be useful:
@@ -726,14 +740,14 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @param object a persistent instance associated with this session
 	@Override
-	void refresh(Object object);
+	void refresh(@Nonnull Object object);
 
 	/// {@inheritDoc}
 	///
 	/// @param object a persistent instance associated with this session
 	/// @param options options controlling the behavior of the operation
 	@Override
-	void refresh(Object object, RefreshOption... options);
+	void refresh(@Nonnull Object object, @Nullable RefreshOption... options);
 
 	/// Mark a persistence instance associated with this session for removal from
 	/// the underlying database. This operation cascades to associated instances
@@ -745,7 +759,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param object the managed persistent instance to remove, or a detached
 	///               instance unless operating in fully JPA-compliant mode
 	@Override
-	void remove(Object object);
+	void remove(@Nonnull Object object);
 
 	/// Determine the current [lock mode][LockMode] held on the given
 	/// managed instance associated with this session.
@@ -789,7 +803,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use [#find(Class,Object,FindOption...)] instead.
 	@Deprecated(since = "7.0", forRemoval = true)
-	<T> T get(Class<T> entityType, Object id, LockMode lockMode);
+	@Nonnull
+	<T> T get(@Nonnull Class<T> entityType, @Nonnull Object id, @Nonnull LockMode lockMode);
 
 	/// Return the persistent instance of the given entity class with the given identifier,
 	/// or null if there is no such persistent instance. If the instance is already associated
@@ -806,7 +821,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated The semantics of this method may change in a future release.
 	@Deprecated(since = "7.0", forRemoval = true)
-	Object get(String entityName, Object id, LockMode lockMode);
+	@Nonnull
+	Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode);
 
 	/// Return the persistent instance of the given entity class with the given identifier,
 	/// or null if there is no such persistent instance. If the instance is already associated
@@ -822,7 +838,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated This method will be removed.
 	///             Use [#find(Class,Object,FindOption...)] instead.
 	@Deprecated(since = "7.0", forRemoval = true) @SuppressWarnings("removal")
-	<T> T get(Class<T> entityType, Object id, LockOptions lockOptions);
+	@Nonnull
+	<T> T get(@Nonnull Class<T> entityType, @Nonnull Object id, @Nonnull LockOptions lockOptions);
 
 	/// Return the persistent instance of the given entity class with the given identifier,
 	/// or null if there is no such persistent instance. If the instance is already associated
@@ -840,7 +857,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///             together with [#find(EntityGraph,Object,FindOption...)]
 	///             to load [dynamic entities][org.hibernate.metamodel.RepresentationMode#MAP].
 	@Deprecated(since = "7.0", forRemoval = true) @SuppressWarnings("removal")
-	Object get(String entityName, Object id, LockOptions lockOptions);
+	@Nonnull
+	Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockOptions lockOptions);
 
 	/// Obtain a lock on the given managed instance associated with this session,
 	/// using the given [lock options][LockOptions].
@@ -853,7 +871,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated This method will be removed.
 	///             Use [#lock(Object, LockModeType, LockOption...)] instead
 	@Deprecated(since = "7.0", forRemoval = true) @SuppressWarnings("removal")
-	void lock(Object object, LockOptions lockOptions);
+	@Nonnull
+	void lock(@Nonnull Object object, @Nonnull LockOptions lockOptions);
 
 	/// Reread the state of the given managed instance from the underlying database,
 	/// obtaining the given [LockMode].
@@ -864,7 +883,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated This method will be removed.
 	///             Use [#refresh(Object, RefreshOption...)] instead
 	@Deprecated(since = "7.0", forRemoval = true) @SuppressWarnings("removal")
-	void refresh(Object object, LockOptions lockOptions);
+	@Nonnull
+	void refresh(@Nonnull Object object, @Nonnull LockOptions lockOptions);
 
 	/// Return the entity name for the given persistent entity.
 	///
@@ -874,7 +894,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param object a persistent entity associated with this session
 	///
 	/// @return the entity name
-	String getEntityName(Object object);
+	@Nonnull String getEntityName(@Nonnull Object object);
 
 	/// Return a reference to the persistent instance with the given class and identifier,
 	/// making the assumption that the instance is still persistent in the database. This
@@ -898,7 +918,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @return the persistent instance or proxy
 	@Override
-	<T> T getReference(Class<T> entityType, Object id);
+	@Nonnull
+	<T> T getReference(@Nonnull Class<T> entityType, @Nonnull Object id);
 
 	/// Return a reference to the persistent instance of the given named entity with the
 	/// given identifier, making the assumption that the instance is still persistent in
@@ -910,7 +931,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param id the identifier of a persistent instance that exists in the database
 	///
 	/// @return the persistent instance or proxy
-	Object getReference(String entityName, Object id);
+	@Nonnull
+	Object getReference(@Nonnull String entityName, @Nonnull Object id);
 
 	/// Return a reference to the persistent instance with the same identity as the given
 	/// instance, which might be detached, making the assumption that the instance is still
@@ -924,14 +946,16 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 6.0
 	@Override
-	<T> T getReference(T object);
+	@Nonnull
+	<T> T getReference(@Nonnull T object);
 
 	/// Return a reference to the persistent instance of the given `entityType` with the
 	/// given `key` using the specified `options`.
 	///
 	/// @param keyType Whether the given `key` should be treated as an [identifier][KeyType#IDENTIFIER]
 	///  or [natural-identifier][KeyType#NATURAL].
-	<T> T getReference(Class<T> entityType, Object key, KeyType keyType);
+	@Nonnull
+	<T> T getReference(@Nonnull Class<T> entityType, @Nonnull Object key, @Nonnull KeyType keyType);
 
 	/// Create an [IdentifierLoadAccess] instance to retrieve an instance of the given
 	/// entity type by its primary key.
@@ -945,8 +969,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated This method will be removed.
 	///             Use [#find(Class,Object,FindOption...)] instead.
 	///             See [FindOption].
-	@Deprecated(since = "7.1", forRemoval = true) @SuppressWarnings("removal")
-	<T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
+	@Deprecated(since = "7.1", forRemoval = true)
+	@SuppressWarnings("removal")
+	@Nonnull
+	<T> IdentifierLoadAccess<T> byId(@Nonnull Class<T> entityClass);
 
 	/// Create an [IdentifierLoadAccess] instance to retrieve an instance of the named
 	/// entity type by its primary key.
@@ -960,8 +986,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated This method will be removed.
 	///             Use [#find(String,Object,FindOption...)] instead.
 	///             See [FindOption].
-	@Deprecated(since = "7.1", forRemoval = true) @SuppressWarnings("removal")
-	<T> IdentifierLoadAccess<T> byId(String entityName);
+	@Deprecated(since = "7.1", forRemoval = true)
+	@SuppressWarnings("removal")
+	@Nonnull
+	<T> IdentifierLoadAccess<T> byId(@Nonnull String entityName);
 
 	/// Create a [MultiIdentifierLoadAccess] instance to retrieve multiple instances
 	/// of the given entity type by their primary key values, using batching.
@@ -975,8 +1003,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @see #findMultiple(Class, List, FindOption...)
 	///
 	/// @deprecated Use [#findMultiple(Class,List,FindOption...)] instead.
-	@Deprecated(since = "7.2", forRemoval = true) @SuppressWarnings("removal")
-	<T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass);
+	@Deprecated(since = "7.2", forRemoval = true)
+	@SuppressWarnings("removal")
+	@Nonnull
+	<T> MultiIdentifierLoadAccess<T> byMultipleIds(@Nonnull Class<T> entityClass);
 
 	/// Create a [MultiIdentifierLoadAccess] instance to retrieve multiple instances
 	/// of the named entity type by their primary key values, using batching.
@@ -989,8 +1019,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use [#findMultiple(EntityGraph,List,FindOption...)] instead,
 	/// 		with {@linkplain SessionFactory#createGraphForDynamicEntity(String)}.
-	@Deprecated(since = "7.2", forRemoval = true) @SuppressWarnings("removal")
-	<T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName);
+	@Deprecated(since = "7.2", forRemoval = true)
+	@SuppressWarnings("removal")
+	@Nonnull
+	<T> MultiIdentifierLoadAccess<T> byMultipleIds(@Nonnull String entityName);
 
 	/// Create a [NaturalIdLoadAccess] instance to retrieve an instance of the given
 	/// entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
@@ -1006,7 +1038,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use {@linkplain #find} with [KeyType#NATURAL] instead.
 	@Deprecated(since = "7.3")
-	<T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
+	@Nonnull
+	<T> NaturalIdLoadAccess<T> byNaturalId(@Nonnull Class<T> entityClass);
 
 	/// Create a [NaturalIdLoadAccess] instance to retrieve an instance of the named
 	/// entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
@@ -1022,7 +1055,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use {@linkplain #find} with [KeyType#NATURAL] instead.
 	@Deprecated(since = "7.3")
-	<T> NaturalIdLoadAccess<T> byNaturalId(String entityName);
+	@Nonnull
+	<T> NaturalIdLoadAccess<T> byNaturalId(@Nonnull String entityName);
 
 	/// Create a [SimpleNaturalIdLoadAccess] instance to retrieve an instance of the
 	/// given entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
@@ -1038,7 +1072,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use {@linkplain #find} with [KeyType#NATURAL] instead.
 	@Deprecated(since = "7.3")
-	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass);
+	@Nonnull
+	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(@Nonnull Class<T> entityClass);
 
 	/// Create a [SimpleNaturalIdLoadAccess] instance to retrieve an instance of the
 	/// named entity type by its {@linkplain org.hibernate.annotations.NaturalId natural id},
@@ -1054,7 +1089,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use {@linkplain #find} with [KeyType#NATURAL] instead.
 	@Deprecated(since = "7.3")
-	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName);
+	@Nonnull
+	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(@Nonnull String entityName);
 
 	/// Create a [MultiIdentifierLoadAccess] instance to retrieve multiple instances
 	/// of the given entity type by their by {@linkplain org.hibernate.annotations.NaturalId
@@ -1070,7 +1106,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated Use {@linkplain #findMultiple} with [KeyType#NATURAL] instead.
 	///
 	@Deprecated(since = "7.3")
-	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass);
+	@Nonnull
+	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(@Nonnull Class<T> entityClass);
 
 	/// Create a [MultiIdentifierLoadAccess] instance to retrieve multiple instances
 	/// of the named entity type by their by {@linkplain org.hibernate.annotations.NaturalId
@@ -1085,11 +1122,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use {@linkplain #findMultiple} with [KeyType#NATURAL] instead.
 	@Deprecated(since = "7.3")
-	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName);
+	@Nonnull
+	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(@Nonnull String entityName);
 
 	/// Get the [statistics][SessionStatistics] for this session.
 	///
 	/// @return the session statistics being collected for this session
+	@Nonnull
 	SessionStatistics getStatistics();
 
 	/// Is the specified entity or proxy read-only?
@@ -1103,7 +1142,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param entityOrProxy an entity or proxy
 	/// @return `true` if the entity or proxy is read-only,
 	///         `false` if the entity or proxy is modifiable.
-	boolean isReadOnly(Object entityOrProxy);
+	boolean isReadOnly(@Nonnull Object entityOrProxy);
 
 	/// Set an unmodified persistent object to read-only mode, or a read-only
 	/// object to modifiable mode. In read-only mode, no snapshot is maintained,
@@ -1119,7 +1158,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// To override the default read-only mode of the current session for
 	/// all entities and proxies returned by a given `Query`, use
-	/// [org.hibernate.query.Query#setReadOnly(boolean)].
+	/// [org.hibernate.query.SelectionQuery#setReadOnly(boolean)].
 	///
 	/// Every instance of an [immutable][org.hibernate.annotations.Immutable]
 	/// entity is loaded in read-only mode. An immutable entity may
@@ -1135,7 +1174,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///				   `false` if the entity or proxy should be made modifiable
 	///
 	/// @throws IllegalStateException if an immutable entity is set to modifiable
-	void setReadOnly(Object entityOrProxy, boolean readOnly);
+	void setReadOnly(@Nonnull Object entityOrProxy, boolean readOnly);
 
 	/// Is the [fetch profile][org.hibernate.annotations.FetchProfile]
 	/// with the given name enabled in this session?
@@ -1147,7 +1186,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///                                 match any known fetch profile names
 	///
 	/// @see org.hibernate.annotations.FetchProfile
-	boolean isFetchProfileEnabled(String name) throws UnknownProfileException;
+	boolean isFetchProfileEnabled(@Nonnull String name) throws UnknownProfileException;
 
 	/// Enable the [fetch profile][org.hibernate.annotations.FetchProfile]
 	/// with the given name in this session. If the requested fetch profile is
@@ -1159,7 +1198,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///                                 match any known fetch profile names
 	///
 	/// @see org.hibernate.annotations.FetchProfile
-	void enableFetchProfile(String name) throws UnknownProfileException;
+	void enableFetchProfile(@Nonnull String name) throws UnknownProfileException;
 
 	/// Disable the [fetch profile][org.hibernate.annotations.FetchProfile]
 	/// with the given name in this session. If the requested fetch profile is
@@ -1171,7 +1210,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///                                 match any known fetch profile names
 	///
 	/// @see org.hibernate.annotations.FetchProfile
-	void disableFetchProfile(String name) throws UnknownProfileException;
+	void disableFetchProfile(@Nonnull String name) throws UnknownProfileException;
 
 	/// Obtain a {@linkplain LobHelper} for instances of [java.sql.Blob]
 	/// and [java.sql.Clob].
@@ -1180,6 +1219,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use [#getLobHelper()] instead.
 	@Deprecated(since="7.0", forRemoval = true)
+	@Nonnull
 	LobHelper getLobHelper();
 
 	/// Obtain the collection of all managed entities which belong to this
@@ -1187,6 +1227,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 7.0
 	@Incubating
+	@Nonnull
 	Collection<?> getManagedEntities();
 
 	/// Obtain a collection of all managed instances of the entity type with the
@@ -1194,7 +1235,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 7.0
 	@Incubating
-	Collection<?> getManagedEntities(String entityName);
+	@Nonnull
+	Collection<?> getManagedEntities(@Nonnull String entityName);
 
 	/// Obtain a collection of all managed entities of the given type which belong
 	/// to this persistence context. This operation is not polymorphic, and does
@@ -1202,7 +1244,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 7.0
 	@Incubating
-	<E> Collection<E> getManagedEntities(Class<E> entityType);
+	@Nonnull
+	<E> Collection<E> getManagedEntities(@Nonnull Class<E> entityType);
 
 	/// Obtain a collection of all managed entities of the given type which belong
 	/// to this persistence context. This operation is not polymorphic, and does
@@ -1210,12 +1253,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 7.0
 	@Incubating
-	<E> Collection<E> getManagedEntities(EntityType<E> entityType);
+	@Nonnull
+	<E> Collection<E> getManagedEntities(@Nonnull EntityType<E> entityType);
 
 	/// Add one or more listeners to the Session
 	///
 	/// @param listeners the listener(s) to add
-	void addEventListeners(SessionEventListener... listeners);
+	void addEventListeners(@Nonnull SessionEventListener... listeners);
 
 	/// Set a hint. The hints understood by Hibernate are enumerated by
 	/// [org.hibernate.jpa.AvailableHints].
@@ -1230,7 +1274,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// interface. For example, [#enableFetchProfile(String)]
 	/// should be used in preference to the hint [org.hibernate.jpa.HibernateHints#HINT_FETCH_PROFILE].
 	@Override
-	void setProperty(String propertyName, Object value);
+	void setProperty(@Nonnull String propertyName, @Nullable Object value);
 
 	/// Create a new mutable instance of [EntityGraph], with only
 	/// a root node, allowing programmatic definition of the graph from
@@ -1244,7 +1288,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
 	/// @see org.hibernate.graph.EntityGraphs#createGraph(jakarta.persistence.metamodel.EntityType)
 	@Override
-	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
+	@Nonnull
+	<T> RootGraph<T> createEntityGraph(@Nonnull Class<T> rootType);
 
 	/// Obtain a mutable copy of a predefined
 	/// [named entity graph][jakarta.persistence.NamedEntityGraph].
@@ -1265,7 +1310,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
 	/// @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
 	@Override
-	RootGraph<?> getEntityGraph(String graphName);
+	@Nonnull
+	RootGraph<?> getEntityGraph(@Nonnull String graphName);
 
 	/// Obtain a mutable copy of a predefined
 	/// [named entity graph][jakarta.persistence.NamedEntityGraph]
@@ -1285,7 +1331,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @since 8.0
 	@Override
-	<T> RootGraph<T> getEntityGraph(Class<T> rootType, String graphName);
+	@Nonnull
+	<T> RootGraph<T> getEntityGraph(@Nonnull Class<T> rootType, @Nonnull String graphName);
 
 	/// Create a new mutable instance of [EntityGraph], based on
 	/// a predefined [named entity graph][jakarta.persistence.NamedEntityGraph],
@@ -1296,7 +1343,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use [#getEntityGraph(String)] instead.
 	@Override @Deprecated(forRemoval = true) @SuppressWarnings("removal")
-	RootGraph<?> createEntityGraph(String graphName);
+	@Nullable
+	RootGraph<?> createEntityGraph(@Nonnull String graphName);
 
 	/// Create a new mutable instance of [EntityGraph], based on
 	/// a predefined [named entity graph][jakarta.persistence.NamedEntityGraph]
@@ -1308,56 +1356,65 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use [#getEntityGraph(Class, String)] instead.
 	@Override @Deprecated(forRemoval = true) @SuppressWarnings("removal")
-	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
+	@Nullable
+	<T> RootGraph<T> createEntityGraph(@Nonnull Class<T> rootType, @Nonnull String graphName);
 
 	/// Retrieve all named [EntityGraph]s with the given root entity type.
 	///
 	/// @see jakarta.persistence.EntityManagerFactory#getNamedEntityGraphs(Class)
 	/// @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
 	@Override
-	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
+	@Nonnull
+	<T> List<EntityGraph<? super T>> getEntityGraphs(@Nonnull Class<T> entityClass);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<R> SelectionQuery<R> createQuery(String queryString, Class<R> resultClass);
+	@Nonnull
+	<R> SelectionQuery<R> createQuery(@Nonnull String queryString, @Nonnull Class<R> resultClass);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<R> SelectionQuery<R> createQuery(TypedQueryReference<R> typedQueryReference);
+	@Nonnull
+	<R> SelectionQuery<R> createQuery(@Nonnull TypedQueryReference<R> typedQueryReference);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<R> SelectionQuery<R> createNamedQuery(String name, Class<R> resultClass);
+	@Nonnull
+	<R> SelectionQuery<R> createNamedQuery(@Nonnull String name, @Nonnull Class<R> resultClass);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	MutationOrSelectionQuery createQuery(String queryString);
+	@Nonnull
+	MutationOrSelectionQuery createQuery(@Nonnull String queryString);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	MutationOrSelectionQuery createNamedQuery(String name);
+	@Nonnull
+	MutationOrSelectionQuery createNamedQuery(@Nonnull String name);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override @Deprecated(forRemoval = true) @SuppressWarnings("removal")
-	MutationQuery createQuery(CriteriaStatement<?> criteriaStatement);
+	@Nonnull
+	MutationQuery createQuery(@Nonnull CriteriaStatement<?> criteriaStatement);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	default <T> T unwrap(Class<T> type) {
+	@Nonnull
+	default <T> T unwrap(@Nonnull Class<T> type) {
 		return SharedSessionContract.super.unwrap(type);
 	}
 
@@ -1365,6 +1422,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// forms using Hibernate's legacy result-set building, though such usages
 	/// should migrate to using [jakarta.persistence.sql.ResultSetMapping].
 	@Deprecated(since = "8.0") @SuppressWarnings("rawtypes")
-	NativeQuery getNamedNativeQuery(String name);
+	@Nonnull
+	NativeQuery getNamedNativeQuery(@Nonnull String name);
 
 }

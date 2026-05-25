@@ -196,7 +196,7 @@ public class SessionLazyDelegator implements Session {
 
 	@Override
 	public Object getIdentifier(Object object) {
-		return this.lazySession.get().getIdentifier( object );
+		return castNonNull( this.lazySession.get().getIdentifier( object ) );
 	}
 
 	@Override
@@ -232,18 +232,18 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> @NonNull T merge(T object) {
+	public <T> @NonNull T merge(@NonNull T object) {
 		return castNonNull( this.lazySession.get().merge( object ) );
 	}
 
 	@Override
-	public <T> T merge(String entityName, T object) {
-		return this.lazySession.get().merge( entityName, object );
+	public <T> @NonNull T merge(String entityName, @NonNull T object) {
+		return castNonNull( this.lazySession.get().merge( entityName, object ) );
 	}
 
 	@Override
-	public <T> T merge(T object, EntityGraph<? super T> loadGraph) {
-		return this.lazySession.get().merge( object, loadGraph );
+	public <T> @NonNull T merge(@NonNull T object, EntityGraph<? super T> loadGraph) {
+		return castNonNull( this.lazySession.get().merge( object, loadGraph ) );
 	}
 
 	@Override
@@ -262,7 +262,7 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public void lock(Object object, LockMode lockMode, LockOption... lockOptions) {
+	public void lock(Object object, LockMode lockMode, LockOption @Nullable... lockOptions) {
 		this.lazySession.get().lock( object, lockMode, lockOptions );
 	}
 
@@ -332,8 +332,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T get(Class<T> entityType, Object id, LockMode lockMode) {
-		return this.lazySession.get().get( entityType, id, lockMode );
+	public <T> @NonNull T get(Class<T> entityType, Object id, LockMode lockMode) {
+		return castNonNull( this.lazySession.get().get( entityType, id, lockMode ) );
 	}
 
 	@Override
@@ -347,8 +347,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T get(Class<T> entityType, Object id, LockOptions lockOptions) {
-		return this.lazySession.get().get( entityType, id, lockOptions );
+	public <T> @NonNull T get(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return castNonNull( this.lazySession.get().get( entityType, id, lockOptions ) );
 	}
 
 	@Override
@@ -372,13 +372,13 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> @NonNull T getReference(T object) {
+	public <T> @NonNull T getReference(@NonNull T object) {
 		return castNonNull( this.lazySession.get().getReference( object ) );
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityType, Object key, KeyType keyType) {
-		return this.lazySession.get().getReference( entityType, key, keyType );
+	public <T> @NonNull T getReference(Class<T> entityType, Object key, KeyType keyType) {
+		return castNonNull( this.lazySession.get().getReference( entityType, key, keyType ) );
 	}
 
 	@Override
@@ -517,12 +517,12 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override @Deprecated
-	public RootGraph<?> createEntityGraph(String graphName) {
+	public @Nullable RootGraph<?> createEntityGraph(String graphName) {
 		return this.lazySession.get().createEntityGraph( graphName );
 	}
 
 	@Override @Deprecated
-	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
+	public <T> @Nullable RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
 		return this.lazySession.get().createEntityGraph( rootType, graphName );
 	}
 
@@ -909,7 +909,7 @@ public class SessionLazyDelegator implements Session {
 
 	@Override
 	public void setProperty(String propertyName, @Nullable Object value) {
-		((EntityManager) this.lazySession.get()).setProperty( propertyName, value );
+		this.lazySession.get().setProperty( propertyName, value );
 	}
 
 	@Override

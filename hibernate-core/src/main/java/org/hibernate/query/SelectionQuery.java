@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -164,6 +166,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	default List<R> getResultList() {
 		return list();
 	}
@@ -178,6 +181,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	List<R> list();
 
 	/**
@@ -195,6 +199,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	default Stream<R> getResultStream() {
 		return stream();
 	}
@@ -218,6 +223,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	default Stream<R> stream() {
 		return list().stream();
 	}
@@ -245,6 +251,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	R uniqueResult();
 
 	/**
@@ -259,6 +266,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	R getSingleResultOrNull();
 
 	/**
@@ -271,6 +279,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	Optional<R> uniqueResultOptional();
 
 	/**
@@ -301,6 +310,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	ScrollableResults<R> scroll();
 
 	/**
@@ -313,7 +323,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
-	ScrollableResults<R> scroll(ScrollMode scrollMode);
+	@Nonnull
+	ScrollableResults<R> scroll(@Nonnull ScrollMode scrollMode);
 
 	/**
 	 * Execute the query and return the results for the given
@@ -341,13 +352,15 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	SelectionQuery<R> setHint(String hintName, Object value);
+	@Nonnull
+	SelectionQuery<R> setHint(@Nonnull String hintName, @Nullable Object value);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	SelectionQuery<R> addOption(Option option);
+	@Nonnull
+	SelectionQuery<R> addOption(@Nonnull Option option);
 
 	/**
 	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch
@@ -366,7 +379,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQuery<R> enableFetchProfile(String profileName);
+	@Nonnull
+	SelectionQuery<R> enableFetchProfile(@Nonnull String profileName);
 
 	/**
 	 * Disable the {@linkplain org.hibernate.annotations.FetchProfile fetch
@@ -382,14 +396,16 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQuery<R> disableFetchProfile(String profileName);
+	@Nonnull
+	SelectionQuery<R> disableFetchProfile(@Nonnull String profileName);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	@SuppressWarnings("deprecation")
-	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	SelectionQuery<R> setFlushMode(@Nonnull FlushModeType flushMode);
 
 	/**
 	 * {@inheritDoc}
@@ -397,13 +413,15 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 7.0
 	 */
 	@Override
-	SelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	SelectionQuery<R> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	/**
 	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
 	 * query timeout} to use when executing the query.
 	 */
 	@Override
+	@Nonnull
 	SelectionQuery<R> setTimeout(int timeout);
 
 	/**
@@ -413,7 +431,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 7.0
 	 */
 	@Override
-	SelectionQuery<R> setTimeout(Integer timeout);
+	@Nonnull
+	SelectionQuery<R> setTimeout(@Nullable Integer timeout);
 
 	/**
 	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
@@ -422,13 +441,15 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 7.0
 	 */
 	@Override
-	SelectionQuery<R> setTimeout(Timeout timeout);
+	@Nonnull
+	SelectionQuery<R> setTimeout(@Nullable Timeout timeout);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	SelectionQuery<R> setComment(String comment);
+	@Nonnull
+	SelectionQuery<R> setComment(@Nullable String comment);
 
 	/**
 	 * Obtain the JDBC fetch size hint in effect for this query. This value is eventually passed along to the JDBC
@@ -446,6 +467,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	Integer getFetchSize();
 
 	/**
@@ -460,6 +482,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	SelectionQuery<R> setFetchSize(int fetchSize);
 
 	/**
@@ -514,6 +537,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	SelectionQuery<R> setReadOnly(boolean readOnly);
 
 	/**
@@ -526,6 +550,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Nonnull
 	SelectionQuery<R> setMaxResults(int maxResults);
 
 	/**
@@ -538,6 +563,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Nonnull
 	SelectionQuery<R> setFirstResult(int startPosition);
 
 	/**
@@ -567,6 +593,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	CacheMode getCacheMode();
 
 	/**
@@ -577,6 +604,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 6.2
 	 */
 	@Override
+	@Nonnull
 	CacheStoreMode getCacheStoreMode();
 
 	/**
@@ -587,6 +615,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 6.2
 	 */
 	@Override
+	@Nonnull
 	CacheRetrieveMode getCacheRetrieveMode();
 
 	/**
@@ -600,7 +629,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQuery<R> setCacheMode(CacheMode cacheMode);
+	@Nonnull
+	SelectionQuery<R> setCacheMode(@Nonnull CacheMode cacheMode);
 
 	/**
 	 * @see #setCacheMode(CacheMode)
@@ -608,7 +638,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 6.2
 	 */
 	@Override
-	SelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	@Nonnull
+	SelectionQuery<R> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	/**
 	 * @see #setCacheMode(CacheMode)
@@ -616,7 +647,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 6.2
 	 */
 	@Override
-	SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	@Nonnull
+	SelectionQuery<R> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 
 	/**
 	 * Should the results of the query be stored in the second-level cache?
@@ -641,6 +673,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	SelectionQuery<R> setCacheable(boolean cacheable);
 
 	/**
@@ -649,6 +682,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see #isQueryPlanCacheable
 	 */
 	@Override
+	@Nonnull
 	SelectionQuery<R> setQueryPlanCacheable(boolean queryPlanCacheable);
 
 	/**
@@ -659,6 +693,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	String getCacheRegion();
 
 	/**
@@ -670,7 +705,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQuery<R> setCacheRegion(String cacheRegion);
+	SelectionQuery<R> setCacheRegion(@Nullable String cacheRegion);
 
 	/**
 	 * {@inheritDoc}
@@ -678,6 +713,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see #getHibernateLockMode()
 	 */
 	@Override
+	@Nullable
 	LockModeType getLockMode();
 
 	/**
@@ -686,7 +722,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see #setHibernateLockMode
 	 */
 	@Override
-	SelectionQuery<R> setLockMode(LockModeType lockMode);
+	@Nonnull
+	SelectionQuery<R> setLockMode(@Nonnull LockModeType lockMode);
 
 	/**
 	 * {@inheritDoc}
@@ -694,6 +731,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see #getLockMode()
 	 */
 	@Override
+	@Nonnull
 	LockMode getHibernateLockMode();
 
 	/**
@@ -702,7 +740,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see #setLockMode(LockModeType)
 	 */
 	@Override
-	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
+	@Nonnull
+	SelectionQuery<R> setHibernateLockMode(@Nonnull LockMode lockMode);
 
 	/**
 	 * {@inheritDoc}
@@ -710,6 +749,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 8.0
 	 */
 	@Override
+	@Nullable
 	PessimisticLockScope getLockScope();
 
 	/**
@@ -718,13 +758,15 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 8.0
 	 */
 	@Override
-	SelectionQuery<R> setLockScope(PessimisticLockScope lockScope);
+	@Nonnull
+	SelectionQuery<R> setLockScope(@Nonnull PessimisticLockScope lockScope);
 
 	/**
 	 * Get the pessimistic lock timeout, if any.
 	 *
 	 * @since 8.0
 	 */
+	@Nullable
 	Timeout getLockTimeout();
 
 	/**
@@ -732,19 +774,22 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 8.0
 	 */
-	SelectionQuery<R> setLockTimeout(Timeout lockTimeout);
+	@Nonnull
+	SelectionQuery<R> setLockTimeout(@Nullable Timeout lockTimeout);
 
 	/**
 	 * Specifies whether follow-on locking should be applied
 	 */
 	@Override
-	SelectionQuery<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
+	@Nonnull
+	SelectionQuery<R> setFollowOnStrategy(@Nonnull Locking.FollowOn followOnStrategy);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	SelectionQuery<R> addQueryHint(String hint);
+	@Nonnull
+	SelectionQuery<R> addQueryHint(@Nonnull String hint);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -755,14 +800,16 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 */
 	@Override
 	@SuppressWarnings("removal")
-	<X> SelectionQuery<X> setTupleTransformer(TupleTransformer<X> transformer);
+	@Nonnull
+	<X> SelectionQuery<X> setTupleTransformer(@Nonnull TupleTransformer<X> transformer);
 
 	/**
 	 * Set a {@link ResultListTransformer}.
 	 */
 	@Override
 	@SuppressWarnings("removal")
-	SelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
+	@Nonnull
+	SelectionQuery<R> setResultListTransformer(@Nonnull ResultListTransformer<R> transformer);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -783,7 +830,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	default SelectionQuery<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
+	@Nonnull
+	default SelectionQuery<R> setEntityGraph(@Nonnull EntityGraph<? super R> entityGraph) {
 		return setEntityGraph( entityGraph, GraphSemantic.LOAD );
 	}
 
@@ -806,129 +854,170 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
 	@SuppressWarnings("removal")
-	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
+	@Nonnull
+	SelectionQuery<R> setEntityGraph(@Nonnull EntityGraph<? super R> graph, @Nonnull GraphSemantic semantic);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter Handling
 
 	@Override
-	SelectionQuery<R> setParameter(String name, Object value);
+	@Nonnull
+	SelectionQuery<R> setParameter(@Nonnull String name, @Nullable Object value);
 
 	@Override
-	<P> SelectionQuery<R> setParameter(String name, P value, Class<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> SelectionQuery<R> setParameter(String name, P value, Type<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	SelectionQuery<R> setParameter(int position, Object value);
+	@Nonnull
+	SelectionQuery<R> setParameter(int position, @Nullable Object value);
 
 	@Override
-	<P> SelectionQuery<R> setParameter(int position, P value, Class<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> SelectionQuery<R> setParameter(int position, P value, Type<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameter(int position, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	<T> SelectionQuery<R> setParameter(QueryParameter<T> parameter, T value);
+	@Nonnull
+	<T> SelectionQuery<R> setParameter(@Nonnull QueryParameter<T> parameter, @Nullable T value);
 
 	@Override
-	<P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override
-	<T> SelectionQuery<R> setParameter(Parameter<T> param, T value);
+	@Nonnull
+	<T> SelectionQuery<R> setParameter(@Nonnull Parameter<T> param, @Nullable T value);
 
 	@Override
-	SelectionQuery<R> setProperties(Object bean);
+	@Nonnull
+	SelectionQuery<R> setProperties(@Nonnull Object bean);
 
 	@Override
-	SelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	SelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 
 	@Override
-	<P> SelectionQuery<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> SelectionQuery<R> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> SelectionQuery<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> SelectionQuery<R> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	SelectionQuery<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	SelectionQuery<R> setParameterList(@Nonnull String name, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	SelectionQuery<R> setParameterList(String name, Object[] values);
+	@Nonnull
+	SelectionQuery<R> setParameterList(@Nonnull String name, @Nonnull Object[] values);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(String name, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(String name, P[] values, Type<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	SelectionQuery<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	SelectionQuery<R> setParameterList(int position, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	SelectionQuery<R> setParameterList(int position, Object[] values);
+	@Nonnull
+	SelectionQuery<R> setParameterList(int position, @Nonnull Object[] values);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(int position, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(int position, P[] values, Type<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> SelectionQuery<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override @Deprecated
-	SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
+	@Nonnull
+	SelectionQuery<R> setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType);
+	@Nonnull
+	SelectionQuery<R> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType);
+	@Nonnull
+	SelectionQuery<R> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
+	@Nonnull
+	SelectionQuery<R> setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType);
+	@Nonnull
+	SelectionQuery<R> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType);
+	@Nonnull
+	SelectionQuery<R> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	SelectionQuery<R> setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	SelectionQuery<R> setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 }

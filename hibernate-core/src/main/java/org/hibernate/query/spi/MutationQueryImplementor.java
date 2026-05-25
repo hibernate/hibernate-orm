@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -14,7 +16,6 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.graph.GraphSemantic;
@@ -41,6 +42,7 @@ import java.util.stream.Stream;
 public interface MutationQueryImplementor<T>
 		extends MutationQuery, QueryImplementor<T>, StatementReferenceProducer {
 	@Override
+	@Nullable
 	default String getMutationString() {
 		return getQueryString();
 	}
@@ -54,128 +56,168 @@ public interface MutationQueryImplementor<T>
 	}
 
 	@Override
+	@Nonnull
 	MutationQueryImplementor<T> setTimeout(int timeout);
 
 	@Override
-	MutationQueryImplementor<T> setTimeout(Integer integer);
+	@Nonnull
+	MutationQueryImplementor<T> setTimeout(@Nullable Integer integer);
 
 	@Override
-	MutationQueryImplementor<T> setTimeout(Timeout timeout);
+	@Nonnull
+	MutationQueryImplementor<T> setTimeout(@Nullable Timeout timeout);
 
 	@Override
-	MutationQueryImplementor<T> setComment(String comment);
+	@Nonnull
+	MutationQueryImplementor<T> setComment(@Nullable String comment);
 
 	@Override
-	MutationQueryImplementor<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	MutationQueryImplementor<T> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	@Override
-	MutationQueryImplementor<T> addQueryHint(String hint);
+	@Nonnull
+	MutationQueryImplementor<T> addQueryHint(@Nonnull String hint);
 
 	@Override
-	MutationQueryImplementor<T> setHint(String hintName, Object value);
+	@Nonnull
+	MutationQueryImplementor<T> setHint(@Nonnull String hintName, @Nullable Object value);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameters
 
 	@Override
+	@Nonnull
 	ParameterMetadataImplementor getParameterMetadata();
 
 	@Override
-	MutationQueryImplementor<T> setParameter(String name, Object value);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(@Nonnull String name, @Nullable Object value);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameter(String name, P value, Class<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameter(String name, P value, Type<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	MutationQueryImplementor<T> setParameter(int position, Object value);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(int position, @Nullable Object value);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameter(int position, P value, Class<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameter(int position, P value, Type<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameter(QueryParameter<P> parameter, P value);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameter(Parameter<P> param, P value);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameter(@Nonnull Parameter<P> param, @Nullable P value);
 
 	@Override
-	MutationQueryImplementor<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	MutationQueryImplementor<T> setParameterList(@Nonnull String name, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(String name, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	MutationQueryImplementor<T> setParameterList(String name, Object[] values);
+	@Nonnull
+	MutationQueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull Object[] values);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(String name, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(String name, P[] values, Type<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	MutationQueryImplementor<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	MutationQueryImplementor<T> setParameterList(int position, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(int position, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	MutationQueryImplementor<T> setParameterList(int position, Object[] values);
+	@Nonnull
+	MutationQueryImplementor<T> setParameterList(int position, @Nonnull Object[] values);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(int position, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(int position, P[] values, Type<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	MutationQueryImplementor<T> setProperties(Object bean);
+	@Nonnull
+	MutationQueryImplementor<T> setProperties(@Nonnull Object bean);
 
 	@Override
-	MutationQueryImplementor<T> setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	MutationQueryImplementor<T> setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 
 	@Override
-	<P> MutationQueryImplementor<T> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> MutationQueryImplementor<T> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> MutationQueryImplementor<T> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,6 +226,7 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
+	@Nullable
 	default LockModeType getLockMode() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
@@ -192,7 +235,8 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
-	default QueryImplementor<T> setLockMode(LockModeType lockMode) {
+	@Nonnull
+	default QueryImplementor<T> setLockMode(@Nonnull LockModeType lockMode) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
@@ -200,6 +244,7 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default CacheStoreMode getCacheStoreMode() {
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
@@ -207,7 +252,8 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
-	default QueryImplementor<T> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+	@Nonnull
+	default QueryImplementor<T> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
@@ -215,6 +261,7 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default CacheRetrieveMode getCacheRetrieveMode() {
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
@@ -222,7 +269,8 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
-	default QueryImplementor<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	@Nonnull
+	default QueryImplementor<T> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
@@ -237,6 +285,7 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default QueryImplementor<T> setMaxResults(int maxResults) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
@@ -252,6 +301,7 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default QueryImplementor<T> setFirstResult(int startPosition) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
@@ -259,6 +309,7 @@ public interface MutationQueryImplementor<T>
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default ScrollableResults<T> scroll() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
@@ -266,13 +317,15 @@ public interface MutationQueryImplementor<T>
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	default ScrollableResults<T> scroll(ScrollMode scrollMode) {
+	@Nonnull
+	default ScrollableResults<T> scroll(@Nonnull ScrollMode scrollMode) {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default List<T> list() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString() );
@@ -280,12 +333,14 @@ public interface MutationQueryImplementor<T>
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default List<T> getResultList() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default Stream<T> getResultStream() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );	}
@@ -293,6 +348,7 @@ public interface MutationQueryImplementor<T>
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default Stream<T> stream() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
@@ -300,6 +356,7 @@ public interface MutationQueryImplementor<T>
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nullable
 	default T uniqueResult() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
@@ -307,6 +364,7 @@ public interface MutationQueryImplementor<T>
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	default Optional<T> uniqueResultOptional() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
@@ -324,6 +382,7 @@ public interface MutationQueryImplementor<T>
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
+	@Nullable
 	default T getSingleResultOrNull() {
 		// IllegalStateException is the type required by JPA
 		throw new IllegalStateException( "MutationQuery cannot be treated as a SelectionQuery - " + getMutationString()  );
@@ -335,31 +394,40 @@ public interface MutationQueryImplementor<T>
 
 
 	@Override @Deprecated
-	MutationQueryImplementor<T> setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	MutationQueryImplementor<T> setFlushMode(@Nonnull FlushModeType flushMode);
 
 	@Override @Deprecated
-	MutationQueryImplementor<T> setParameter(String name, Instant value, TemporalType temporalType);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	MutationQueryImplementor<T> setParameter(String name, Calendar value, TemporalType temporalType);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	MutationQueryImplementor<T> setParameter(String name, Date value, TemporalType temporalType);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	MutationQueryImplementor<T> setParameter(int position, Instant value, TemporalType temporalType);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	MutationQueryImplementor<T> setParameter(int position, Date value, TemporalType temporalType);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	MutationQueryImplementor<T> setParameter(int position, Calendar value, TemporalType temporalType);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	MutationQueryImplementor<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	MutationQueryImplementor<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	MutationQueryImplementor<T> setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SelectionQuery Handling

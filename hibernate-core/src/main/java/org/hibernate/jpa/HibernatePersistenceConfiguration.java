@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceConfiguration;
@@ -105,7 +107,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * @param name the name of the persistence unit, which may be used by
 	 * the persistence provider for logging and error reporting
 	 */
-	public HibernatePersistenceConfiguration(String name) {
+	public HibernatePersistenceConfiguration(@Nonnull String name) {
 		super( name );
 		this.rootUrl = null;
 	}
@@ -126,7 +128,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @since 7.1
 	 */
-	public HibernatePersistenceConfiguration(String name, URL rootURL) {
+	public HibernatePersistenceConfiguration(@Nonnull String name, @Nullable URL rootURL) {
 		super( name );
 		this.rootUrl = rootURL;
 	}
@@ -148,7 +150,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @since 7.1
 	 */
-	public HibernatePersistenceConfiguration(String name, Class<?> classFromRootUrl) {
+	public HibernatePersistenceConfiguration(@Nonnull String name, @Nonnull Class<?> classFromRootUrl) {
 		this( name, classFromRootUrl.getProtectionDomain().getCodeSource().getLocation() );
 	}
 
@@ -156,6 +158,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * Create a new {@link SessionFactory} based on this configuration.
 	 */
 	@Override
+	@Nonnull
 	public SessionFactory createEntityManagerFactory() {
 		new EntityManagerFactoryBuilderImpl( this ).build();
 
@@ -168,6 +171,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see #JDBC_DRIVER
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration jdbcDriver(String driverName) {
 		property( JDBC_DRIVER, driverName );
 		return this;
@@ -179,6 +183,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see #JDBC_URL
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration jdbcUrl(String url) {
 		property( JDBC_URL, url );
 		return this;
@@ -192,6 +197,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * @see java.sql.DriverManager#getConnection(String, String, String)
 	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration jdbcUsername(String username) {
 		property( JDBC_USER, username );
 		return this;
@@ -205,6 +211,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * @see java.sql.DriverManager#getConnection(String, String, String)
 	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration jdbcPassword(String password) {
 		property( JDBC_PASSWORD, password );
 		return this;
@@ -220,6 +227,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * @see java.sql.DriverManager#getConnection(String, String, String)
 	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration jdbcCredentials(String username, String password) {
 		jdbcUsername( username );
 		jdbcPassword( password );
@@ -232,6 +240,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JdbcSettings#POOL_SIZE
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration jdbcPoolSize(int poolSize) {
 		property( JdbcSettings.POOL_SIZE, poolSize );
 		return this;
@@ -244,6 +253,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JdbcSettings#AUTOCOMMIT
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration jdbcAutocommit(boolean autocommit) {
 		property( JdbcSettings.AUTOCOMMIT, autocommit );
 		return this;
@@ -262,6 +272,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JdbcSettings#ISOLATION
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration jdbcTransactionIsolation(int isolationLevel) {
 		property( JdbcSettings.ISOLATION, isolationLevel );
 		return this;
@@ -277,6 +288,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * @param formatSql should logged SQL be formatted
 	 * @param highlightSql should logged SQL be highlighted with pretty colors
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
 		property( JdbcSettings.SHOW_SQL, showSql );
 		property( JdbcSettings.FORMAT_SQL, formatSql );
@@ -290,6 +302,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JpaComplianceSettings#JPA_QUERY_COMPLIANCE
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration queryCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_QUERY_COMPLIANCE, enabled );
 		return this;
@@ -301,6 +314,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JpaComplianceSettings#JPA_TRANSACTION_COMPLIANCE
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration transactionCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_TRANSACTION_COMPLIANCE, enabled );
 		return this;
@@ -315,6 +329,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JpaComplianceSettings#JPA_CLOSED_COMPLIANCE
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration closedCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_CLOSED_COMPLIANCE, enabled );
 		return this;
@@ -326,6 +341,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JpaComplianceSettings#JPA_PROXY_COMPLIANCE
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration proxyCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_PROXY_COMPLIANCE, enabled );
 		return this;
@@ -337,6 +353,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JpaComplianceSettings#JPA_PROXY_COMPLIANCE
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration cachingCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_PROXY_COMPLIANCE, enabled );
 		return this;
@@ -348,6 +365,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JpaComplianceSettings#JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration globalGeneratorCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, enabled );
 		return this;
@@ -359,6 +377,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JpaComplianceSettings#JPA_ORDER_BY_MAPPING_COMPLIANCE
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration orderByMappingCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, enabled );
 		return this;
@@ -372,6 +391,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JpaComplianceSettings#JPA_LOAD_BY_ID_COMPLIANCE
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration loadByIdCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_LOAD_BY_ID_COMPLIANCE, enabled );
 		return this;
@@ -380,7 +400,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	/**
 	 * Enable or disable the second-level and query caches.
 	 */
-	public HibernatePersistenceConfiguration caching(CachingType type) {
+	@Nonnull
+	public HibernatePersistenceConfiguration caching(@Nonnull CachingType type) {
 		assert Objects.nonNull( type );
 		if ( type == CachingType.NONE || type == CachingType.AUTO ) {
 			property( CacheSettings.USE_SECOND_LEVEL_CACHE, false );
@@ -410,7 +431,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * @see org.hibernate.annotations.Cache#usage
 	 * @see CacheSettings#DEFAULT_CACHE_CONCURRENCY_STRATEGY
 	 */
-	public HibernatePersistenceConfiguration cachingAccessType(AccessType type) {
+	@Nonnull
+	public HibernatePersistenceConfiguration cachingAccessType(@Nonnull AccessType type) {
 		// todo (7.0) : should this enable second-level cache if not?
 		property( CacheSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY, type );
 		return this;
@@ -421,6 +443,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JdbcSettings#STATEMENT_INSPECTOR
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration statementInspector(Class<? extends StatementInspector> inspectorImpl) {
 		property( JdbcSettings.STATEMENT_INSPECTOR, inspectorImpl );
 		return this;
@@ -431,6 +454,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JdbcSettings#STATEMENT_INSPECTOR
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration statementInspector(StatementInspector inspector) {
 		property( JdbcSettings.STATEMENT_INSPECTOR, inspector );
 		return this;
@@ -442,6 +466,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see MappingSettings#DEFAULT_CATALOG
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration defaultCatalog(String catalogName) {
 		property( MappingSettings.DEFAULT_CATALOG, catalogName );
 		return this;
@@ -453,6 +478,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see MappingSettings#DEFAULT_SCHEMA
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration defaultSchema(String schemaName) {
 		property( MappingSettings.DEFAULT_SCHEMA, schemaName );
 		return this;
@@ -504,7 +530,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see #managedClass
 	 */
-	public HibernatePersistenceConfiguration managedClasses(Class<?>... managedClasses) {
+	@Nonnull
+	public HibernatePersistenceConfiguration managedClasses(@Nonnull Class<?>... managedClasses) {
 		Collections.addAll( managedClasses(), managedClasses );
 		return this;
 	}
@@ -514,7 +541,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see #managedClass
 	 */
-	public HibernatePersistenceConfiguration managedClasses(Collection<Class<?>> managedClasses) {
+	@Nonnull
+	public HibernatePersistenceConfiguration managedClasses(@Nonnull Collection<Class<?>> managedClasses) {
 		managedClasses().addAll( managedClasses );
 		return this;
 	}
@@ -524,7 +552,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see #mappingFiles()
 	 */
-	public HibernatePersistenceConfiguration mappingFiles(String... names) {
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingFiles(@Nonnull String... names) {
 		Collections.addAll( mappingFiles(), names );
 		return this;
 	}
@@ -534,7 +563,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see #mappingFiles()
 	 */
-	public HibernatePersistenceConfiguration mappingFiles(Collection<String> names) {
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingFiles(@Nonnull Collection<String> names) {
 		mappingFiles().addAll( names );
 		return this;
 	}
@@ -549,6 +579,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @since 7.1
 	 */
+	@Nullable
 	public URL rootUrl() {
 		return rootUrl;
 	}
@@ -563,6 +594,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @since 7.1
 	 */
+	@Nonnull
 	public List<URL> jarFileUrls() {
 		return jarFileUrls;
 	}
@@ -574,7 +606,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @since 7.1
 	 */
-	public HibernatePersistenceConfiguration jarFileUrl(URL url) {
+	@Nonnull
+	public HibernatePersistenceConfiguration jarFileUrl(@Nonnull URL url) {
 		jarFileUrls.add( url );
 		return this;
 	}
@@ -586,7 +619,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @since 7.1
 	 */
-	public HibernatePersistenceConfiguration jarFileUrls(URL... urls) {
+	@Nonnull
+	public HibernatePersistenceConfiguration jarFileUrls(@Nonnull URL... urls) {
 		Collections.addAll( jarFileUrls, urls );
 		return this;
 	}
@@ -598,7 +632,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @since 7.1
 	 */
-	public HibernatePersistenceConfiguration jarFileUrls(Collection<URL> urls) {
+	@Nonnull
+	public HibernatePersistenceConfiguration jarFileUrls(@Nonnull Collection<URL> urls) {
 		jarFileUrls.addAll( urls );
 		return this;
 	}
@@ -611,7 +646,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @since 8.0
 	 */
-	public HibernatePersistenceConfiguration jarFileUrl(Class<?> classFromJarFile) {
+	@Nonnull
+	public HibernatePersistenceConfiguration jarFileUrl(@Nonnull Class<?> classFromJarFile) {
 		jarFileUrls.add( classFromJarFile.getProtectionDomain().getCodeSource().getLocation() );
 		return this;
 	}
@@ -624,7 +660,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @since 8.0
 	 */
-	public HibernatePersistenceConfiguration jarFileUrls(Class<?>... classesFromJarFiles) {
+	@Nonnull
+	public HibernatePersistenceConfiguration jarFileUrls(@Nonnull Class<?>... classesFromJarFiles) {
 		for ( int i = 0; i < classesFromJarFiles.length; i++ ) {
 			jarFileUrls.add( classesFromJarFiles[i].getProtectionDomain().getCodeSource().getLocation() );
 		}
@@ -641,6 +678,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see SchemaToolingSettings#HBM2DDL_AUTO
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration schemaToolingAction(Action action) {
 		property( SchemaToolingSettings.HBM2DDL_AUTO, action );
 		return this;
@@ -651,6 +689,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JdbcSettings#STATEMENT_OBSERVER
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration statementObserver(StatementObserver statementObserver) {
 		property( JdbcSettings.STATEMENT_OBSERVER, statementObserver );
 		return this;
@@ -661,6 +700,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JdbcSettings#STATEMENT_OBSERVER
 	 */
+	@Nonnull
 	public HibernatePersistenceConfiguration statementObserver(Class<? extends StatementObserver> statementObserverImpl) {
 		property( JdbcSettings.STATEMENT_OBSERVER, statementObserverImpl );
 		return this;
@@ -671,73 +711,85 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	// covariant overrides
 
 	@Override
-	public HibernatePersistenceConfiguration provider(String providerClassName) {
+	@Nonnull
+	public HibernatePersistenceConfiguration provider(@Nullable String providerClassName) {
 		super.provider( providerClassName );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration jtaDataSource(String dataSourceJndiName) {
+	@Nonnull
+	public HibernatePersistenceConfiguration jtaDataSource(@Nullable String dataSourceJndiName) {
 		super.jtaDataSource( dataSourceJndiName );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration nonJtaDataSource(String dataSourceJndiName) {
+	@Nonnull
+	public HibernatePersistenceConfiguration nonJtaDataSource(@Nullable String dataSourceJndiName) {
 		super.nonJtaDataSource( dataSourceJndiName );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration managedClass(Class<?> managedClass) {
+	@Nonnull
+	public HibernatePersistenceConfiguration managedClass(@Nonnull Class<?> managedClass) {
 		super.managedClass( managedClass );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration mappingFile(String name) {
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingFile(@Nonnull String name) {
 		super.mappingFile( name );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration transactionType(PersistenceUnitTransactionType transactionType) {
+	@Nonnull
+	public HibernatePersistenceConfiguration transactionType(@Nonnull PersistenceUnitTransactionType transactionType) {
 		super.transactionType( transactionType );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration sharedCacheMode(SharedCacheMode sharedCacheMode) {
+	@Nonnull
+	public HibernatePersistenceConfiguration sharedCacheMode(@Nonnull SharedCacheMode sharedCacheMode) {
 		super.sharedCacheMode( sharedCacheMode );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration validationMode(ValidationMode validationMode) {
+	@Nonnull
+	public HibernatePersistenceConfiguration validationMode(@Nonnull ValidationMode validationMode) {
 		super.validationMode( validationMode );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration schemaManagementDatabaseAction(SchemaManagementAction action) {
+	@Nonnull
+	public HibernatePersistenceConfiguration schemaManagementDatabaseAction(@Nonnull SchemaManagementAction action) {
 		super.schemaManagementDatabaseAction( action );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration schemaManagementScriptsAction(SchemaManagementAction action) {
+	@Nonnull
+	public HibernatePersistenceConfiguration schemaManagementScriptsAction(@Nonnull SchemaManagementAction action) {
 		super.schemaManagementScriptsAction( action );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration property(String name, Object value) {
+	@Nonnull
+	public HibernatePersistenceConfiguration property(@Nonnull String name, @Nullable Object value) {
 		super.property( name, value );
 		return this;
 	}
 
 	@Override
-	public HibernatePersistenceConfiguration properties(Map<String, ?> properties) {
+	@Nonnull
+	public HibernatePersistenceConfiguration properties(@Nonnull Map<String, ?> properties) {
 		super.properties( properties );
 		return this;
 	}

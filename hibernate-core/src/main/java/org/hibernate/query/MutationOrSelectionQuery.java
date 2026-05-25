@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -93,6 +95,7 @@ public interface MutationOrSelectionQuery
 	 *
 	 * @throws IllegalSelectQueryException If the query is not a select query.
 	 */
+	@Nonnull
 	SelectionQuery<?> asSelectionQuery();
 
 	/**
@@ -101,6 +104,7 @@ public interface MutationOrSelectionQuery
 	 * @throws IllegalSelectQueryException If the query is not a select query.
 	 * @throws IllegalArgumentException If the given {@code type} is not compatible with the query's defined result type.
 	 */
+	@Nonnull
 	<R> SelectionQuery<R> asSelectionQuery(Class<R> type);
 
 	/**
@@ -109,6 +113,7 @@ public interface MutationOrSelectionQuery
 	 * @throws IllegalSelectQueryException If the query is not a selection query.
 	 * @throws IllegalArgumentException If the given graph result type is not compatible with the {@code Query} type parameter.
 	 */
+	@Nonnull
 	<X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph);
 
 	/**
@@ -123,6 +128,7 @@ public interface MutationOrSelectionQuery
 	 * @see SharedSessionContract#createQuery(String, EntityGraph)
 	 * @see #asSelectionQuery(Class)
 	 */
+	@Nonnull
 	<X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic);
 
 	/**
@@ -130,6 +136,7 @@ public interface MutationOrSelectionQuery
 	 *
 	 * @throws IllegalMutationQueryException If the query is not a mutation query.
 	 */
+	@Nonnull
 	MutationQuery asMutationQuery();
 
 	/**
@@ -138,26 +145,30 @@ public interface MutationOrSelectionQuery
 	 * @param resultType The Java class of the query result type
 	 */
 	@Override
-	<R> SelectionQuery<R> ofType(Class<R> resultType);
+	@Nonnull
+	<R> SelectionQuery<R> ofType(@Nonnull Class<R> resultType);
 
 	/**
 	 * {@inheritDoc}
 	 * @param graph The entity graph, interpreted as a load graph
 	 */
 	@Override
-	<R> SelectionQuery<R> withEntityGraph(EntityGraph<R> graph);
+	@Nonnull
+	<R> SelectionQuery<R> withEntityGraph(@Nonnull EntityGraph<R> graph);
 
 	/**
 	 * {@inheritDoc}
 	 * @param mapping The result set mapping
 	 */
 	@Override
-	<R> SelectionQuery<R> withResultSetMapping(ResultSetMapping<R> mapping);
+	@Nonnull
+	<R> SelectionQuery<R> withResultSetMapping(@Nonnull ResultSetMapping<R> mapping);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Nonnull
 	MutationQuery asStatement();
 
 
@@ -165,29 +176,37 @@ public interface MutationOrSelectionQuery
 	// Return type overrides
 
 	@Override
-	MutationOrSelectionQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	MutationOrSelectionQuery setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	@Override
 	@Deprecated
+	@Nonnull
 	MutationOrSelectionQuery setQueryPlanCacheable(boolean queryPlanCacheable);
 
 	@Override
-	MutationOrSelectionQuery addQueryHint(String hint);
+	@Nonnull
+	MutationOrSelectionQuery addQueryHint(@Nonnull String hint);
 
 	@Override
+	@Nonnull
 	MutationOrSelectionQuery setTimeout(int timeout);
 
 	@Override
-	MutationOrSelectionQuery setTimeout(Integer timeout);
+	@Nonnull
+	MutationOrSelectionQuery setTimeout(@Nullable Integer timeout);
 
 	@Override
-	MutationOrSelectionQuery setTimeout(Timeout timeout);
+	@Nonnull
+	MutationOrSelectionQuery setTimeout(@Nullable Timeout timeout);
 
 	@Override
-	MutationOrSelectionQuery setComment(String comment);
+	@Nonnull
+	MutationOrSelectionQuery setComment(@Nullable String comment);
 
 	@Override
-	MutationOrSelectionQuery setHint(String hintName, Object value);
+	@Nonnull
+	MutationOrSelectionQuery setHint(@Nonnull String hintName, @Nullable Object value);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -196,12 +215,14 @@ public interface MutationOrSelectionQuery
 	@Override
 	@Deprecated
 	@SuppressWarnings("deprecation")
-	MutationOrSelectionQuery setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	MutationOrSelectionQuery setFlushMode(@Nonnull FlushModeType flushMode);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery setEntityGraph(EntityGraph<? super Object> graph, GraphSemantic semantic);
+	@Nonnull
+	MutationOrSelectionQuery setEntityGraph(@Nonnull EntityGraph<? super Object> graph, @Nonnull GraphSemantic semantic);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -215,6 +236,7 @@ public interface MutationOrSelectionQuery
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings({"unchecked", "rawtypes", "removal"})
+	@Nonnull
 	List getResultList();
 
 	@Override
@@ -225,250 +247,313 @@ public interface MutationOrSelectionQuery
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nullable
 	Object getSingleResultOrNull();
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings({"unchecked", "rawtypes", "removal"})
+	@Nonnull
 	Stream getResultStream();
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings({"unchecked", "rawtypes", "removal"})
+	@Nonnull
 	List list();
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings({"unchecked", "rawtypes", "removal"})
+	@Nonnull
 	ScrollableResults scroll();
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings({"unchecked", "rawtypes", "removal"})
-	ScrollableResults scroll(ScrollMode scrollMode);
+	@Nonnull
+	ScrollableResults scroll(@Nonnull ScrollMode scrollMode);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings({"unchecked", "rawtypes", "removal"})
+	@Nonnull
 	Stream stream();
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nullable
 	Object uniqueResult();
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings({"unchecked", "rawtypes", "removal"})
+	@Nonnull
 	Optional uniqueResultOptional();
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nonnull
 	MutationOrSelectionQuery setFetchSize(int fetchSize);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nonnull
 	MutationOrSelectionQuery setReadOnly(boolean readOnly);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nonnull
 	MutationOrSelectionQuery setMaxResults(int maxResults);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nonnull
 	MutationOrSelectionQuery setFirstResult(int startPosition);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery setCacheMode(CacheMode cacheMode);
+	@Nonnull
+	MutationOrSelectionQuery setCacheMode(@Nonnull CacheMode cacheMode);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	@Nonnull
+	MutationOrSelectionQuery setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	@Nonnull
+	MutationOrSelectionQuery setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery setCacheRegion(String cacheRegion);
+	MutationOrSelectionQuery setCacheRegion(@Nullable String cacheRegion);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery setLockMode(LockModeType lockMode);
+	@Nonnull
+	MutationOrSelectionQuery setLockMode(@Nonnull LockModeType lockMode);
 
 	@Override
 	@Deprecated(forRemoval = true)
-	MutationOrSelectionQuery setHibernateLockMode(LockMode lockMode);
+	@Nonnull
+	MutationOrSelectionQuery setHibernateLockMode(@Nonnull LockMode lockMode);
 
 	@Override
 	@Deprecated(forRemoval = true)
-	MutationOrSelectionQuery setFollowOnStrategy(Locking.FollowOn followOnStrategy);
+	@Nonnull
+	MutationOrSelectionQuery setFollowOnStrategy(@Nonnull Locking.FollowOn followOnStrategy);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nonnull
 	MutationOrSelectionQuery setCacheable(boolean cacheable);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery enableFetchProfile(String profileName);
+	@Nonnull
+	MutationOrSelectionQuery enableFetchProfile(@Nonnull String profileName);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery disableFetchProfile(String profileName);
+	@Nonnull
+	MutationOrSelectionQuery disableFetchProfile(@Nonnull String profileName);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	MutationOrSelectionQuery setResultListTransformer(ResultListTransformer<Object> transformer);
+	@Nonnull
+	MutationOrSelectionQuery setResultListTransformer(@Nonnull ResultListTransformer<Object> transformer);
 
 	@Override
 	@Deprecated(forRemoval = true)
 	@SuppressWarnings("removal")
-	<X> Query<X> setTupleTransformer(TupleTransformer<X> transformer);
+	@Nonnull
+	<X> Query<X> setTupleTransformer(@Nonnull TupleTransformer<X> transformer);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter handling
 
 	@Override
-	<P> MutationOrSelectionQuery setParameter(String name, P value, Class<P> type);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameter(String name, P value, Type<P> type);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	MutationOrSelectionQuery setParameter(String name, Object value);
+	@Nonnull
+	MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable Object value);
 
 	@Override
-	MutationOrSelectionQuery setParameter(int position, Object value);
+	@Nonnull
+	MutationOrSelectionQuery setParameter(int position, @Nullable Object value);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameter(int position, P value, Class<P> type);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameter(int position, P value, Type<P> type);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameter(int position, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationOrSelectionQuery setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> MutationOrSelectionQuery setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> MutationOrSelectionQuery setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
-
-	@Override
-	@Deprecated
-	MutationOrSelectionQuery setParameter(String name, Instant value, TemporalType temporalType);
-
-	@Override
-	@Deprecated
-	MutationOrSelectionQuery setParameter(String name, Calendar value, TemporalType temporalType);
-
-	@Override
-	@Deprecated
-	MutationOrSelectionQuery setParameter(String name, Date value, TemporalType temporalType);
+	@Nonnull
+	<P> MutationOrSelectionQuery setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
 	@Deprecated
-	MutationOrSelectionQuery setParameter(int position, Instant value, TemporalType temporalType);
+	@Nonnull
+	MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override
 	@Deprecated
-	MutationOrSelectionQuery setParameter(int position, Date value, TemporalType temporalType);
+	@Nonnull
+	MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override
 	@Deprecated
-	MutationOrSelectionQuery setParameter(int position, Calendar value, TemporalType temporalType);
-
-	@Override
-	<P> MutationOrSelectionQuery setParameter(QueryParameter<P> parameter, P value);
-
-	@Override
-	<P> MutationOrSelectionQuery setParameter(QueryParameter<P> parameter, P value, Class<P> type);
-
-	@Override
-	<P> MutationOrSelectionQuery setParameter(QueryParameter<P> parameter, P val, Type<P> type);
-
-	@Override
-	<P> MutationOrSelectionQuery setParameter(Parameter<P> param, P value);
+	@Nonnull
+	MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
 	@Deprecated
-	MutationOrSelectionQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	MutationOrSelectionQuery setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override
 	@Deprecated
-	MutationOrSelectionQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	MutationOrSelectionQuery setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	MutationOrSelectionQuery setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+	@Deprecated
+	@Nonnull
+	MutationOrSelectionQuery setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(String name, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	MutationOrSelectionQuery setParameterList(String name, Object[] values);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(String name, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameter(@Nonnull Parameter<P> param, @Nullable P value);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(String name, P[] values, Type<P> type);
+	@Deprecated
+	@Nonnull
+	MutationOrSelectionQuery setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override
-	MutationOrSelectionQuery setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	@Deprecated
+	@Nonnull
+	MutationOrSelectionQuery setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	MutationOrSelectionQuery setParameterList(@Nonnull String name, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(int position, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	MutationOrSelectionQuery setParameterList(int position, Object[] values);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(int position, P[] values, Class<P> javaType);
+	@Nonnull
+	MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull Object[] values);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(int position, P[] values, Type<P> type);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	MutationOrSelectionQuery setParameterList(int position, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, P[] values);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	MutationOrSelectionQuery setParameterList(int position, @Nonnull Object[] values);
 
 	@Override
-	<P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	MutationOrSelectionQuery setProperties(Object bean);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	MutationOrSelectionQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values);
+
+	@Override
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
+
+	@Override
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
+
+	@Override
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values);
+
+	@Override
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
+
+	@Override
+	@Nonnull
+	<P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type);
+
+	@Override
+	@Nonnull
+	MutationOrSelectionQuery setProperties(@Nonnull Object bean);
+
+	@Override
+	@Nonnull
+	MutationOrSelectionQuery setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 }

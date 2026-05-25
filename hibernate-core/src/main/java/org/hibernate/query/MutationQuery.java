@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
@@ -13,7 +15,6 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.Type;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.SharedSessionContract;
 
@@ -81,6 +82,7 @@ public interface MutationQuery extends CommonQueryContract, Statement {
 	/**
 	 * The HQL or native-SQL string, or {@code null} in the case of a criteria query.
 	 */
+	@Nullable
 	String getMutationString();
 
 	/**
@@ -124,178 +126,227 @@ public interface MutationQuery extends CommonQueryContract, Statement {
 	 * {@inheritDoc}
 	 */
 	@Override
-	MutationQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	MutationQuery setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	@Deprecated(since = "7")
-	MutationQuery setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	MutationQuery setFlushMode(@Nonnull FlushModeType flushMode);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
+	@Nonnull
 	MutationQuery setTimeout(int timeout);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	MutationQuery setTimeout(Integer timeout);
+	@Nonnull
+	MutationQuery setTimeout(@Nullable Integer timeout);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	MutationQuery setTimeout(Timeout timeout);
+	@Nonnull
+	MutationQuery setTimeout(@Nullable Timeout timeout);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	MutationQuery setComment(String comment);
+	@Nonnull
+	MutationQuery setComment(@Nullable String comment);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	MutationQuery setHint(String hintName, Object value);
+	@Nonnull
+	MutationQuery setHint(@Nonnull String hintName, @Nullable Object value);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	MutationQuery addOption(Option option);
+	@Nonnull
+	MutationQuery addOption(@Nonnull Option option);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	MutationQuery addQueryHint(String hint);
+	@Nonnull
+	MutationQuery addQueryHint(@Nonnull String hint);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter Handling
 
 	@Override
-	<P> MutationQuery setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> MutationQuery setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> MutationQuery setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> MutationQuery setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	MutationQuery setParameter(String name, Object value);
+	@Nonnull
+	MutationQuery setParameter(@Nonnull String name, @Nullable Object value);
 
 	@Override
-	<P> MutationQuery setParameter(String name, P value, Class<P> type);
+	@Nonnull
+	<P> MutationQuery setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> MutationQuery setParameter(String name, P value, Type<P> type);
+	@Nonnull
+	<P> MutationQuery setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override @Deprecated(since = "7")
-	MutationQuery setParameter(String name, Instant value, TemporalType temporalType);
+	@Nonnull
+	MutationQuery setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	MutationQuery setParameter(String name, Calendar value, TemporalType temporalType);
+	@Nonnull
+	MutationQuery setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	MutationQuery setParameter(String name, Date value, TemporalType temporalType);
+	@Nonnull
+	MutationQuery setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	MutationQuery setParameter(int position, Object value);
+	@Nonnull
+	MutationQuery setParameter(int position, @Nullable Object value);
 
 	@Override
-	<P> MutationQuery setParameter(int position, P value, Class<P> type);
+	@Nonnull
+	<P> MutationQuery setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> MutationQuery setParameter(int position, P value, Type<P> type);
+	@Nonnull
+	<P> MutationQuery setParameter(int position, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override @Deprecated(since = "7")
-	MutationQuery setParameter(int position, Instant value, TemporalType temporalType);
+	@Nonnull
+	MutationQuery setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	MutationQuery setParameter(int position, Date value, TemporalType temporalType);
+	@Nonnull
+	MutationQuery setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	MutationQuery setParameter(int position, Calendar value, TemporalType temporalType);
+	@Nonnull
+	MutationQuery setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override
-	<P> MutationQuery setParameter(QueryParameter<P> parameter, P value);
+	@Nonnull
+	<P> MutationQuery setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value);
 
 	@Override
-	<P> MutationQuery setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	@Nonnull
+	<P> MutationQuery setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> MutationQuery setParameter(QueryParameter<P> parameter, P val, Type<P> type);
+	@Nonnull
+	<P> MutationQuery setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationQuery setParameter(Parameter<P> param, P value);
+	@Nonnull
+	<P> MutationQuery setParameter(@Nonnull Parameter<P> param, @Nullable P value);
 
 	@Override @Deprecated(since = "7")
-	MutationQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	MutationQuery setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	MutationQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	MutationQuery setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	MutationQuery setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	MutationQuery setParameterList(@Nonnull String name, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> MutationQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(String name, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	MutationQuery setParameterList(String name, Object[] values);
+	@Nonnull
+	MutationQuery setParameterList(@Nonnull String name, @Nonnull Object[] values);
 
 	@Override
-	<P> MutationQuery setParameterList(String name, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(String name, P[] values, Type<P> type);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	MutationQuery setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	MutationQuery setParameterList(int position, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> MutationQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQuery setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(int position, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> MutationQuery setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	MutationQuery setParameterList(int position, Object[] values);
+	@Nonnull
+	MutationQuery setParameterList(int position, @Nonnull Object[] values);
 
 	@Override
-	<P> MutationQuery setParameterList(int position, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQuery setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(int position, P[] values, Type<P> type);
+	@Nonnull
+	<P> MutationQuery setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values);
 
 	@Override
-	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values);
 
 	@Override
-	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> MutationQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	MutationQuery setProperties(Object bean);
+	@Nonnull
+	MutationQuery setProperties(@Nonnull Object bean);
 
 	@Override
-	MutationQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	MutationQuery setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 }

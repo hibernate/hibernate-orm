@@ -105,6 +105,9 @@ public interface Query<T> extends CommonQueryContract {
 	// Options
 
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	Query<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
@@ -122,12 +125,18 @@ public interface Query<T> extends CommonQueryContract {
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @apiNote Since this is a legacy method of Hibernate, the timeout
+	 *          value is expressed in <em>seconds</em>.
 	 */
 	@Override
 	Query<T> setTimeout(int timeout);
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @apiNote Since this method is inherited from JPA, the timeout
+	 *          is expressed in <em>milliseconds</em>.
 	 */
 	@Override
 	Query<T> setTimeout(Integer timeout);
@@ -139,14 +148,18 @@ public interface Query<T> extends CommonQueryContract {
 	Query<T> setTimeout(Timeout timeout);
 
 	/**
-	 * Whether the execution plan for this {@code Query<T>} is cached.
+	 * Whether the execution plan for this query is cached.
+	 *
+	 * @since 6.3
 	 */
 	boolean isQueryPlanCacheable();
 
 	/**
-	 * Enable/disable {@code Query<T>} plan caching for this query, if available.
+	 * Enable or disable query plan caching for this query, if available.
 	 *
 	 * @see #isQueryPlanCacheable
+	 *
+	 * @since 6.3
 	 */
 	Query<T> setQueryPlanCacheable(boolean queryPlanCacheable);
 
@@ -377,7 +390,8 @@ public interface Query<T> extends CommonQueryContract {
 	Integer getFetchSize();
 
 	/**
-	 * Sets a JDBC fetch size hint for the query.
+	 * Specify a {@linkplain java.sql.Statement#setFetchSize JDBC fetch size}
+	 * to use when executing this query.
 	 *
 	 * @param fetchSize the fetch size hint
 	 *
@@ -984,16 +998,14 @@ public interface Query<T> extends CommonQueryContract {
 	/**
 	 * Get the execution options for this {@code Query}. Many of the setters
 	 * of this object update the state of the returned {@link QueryOptions}.
-	 * This is useful because it gives access to s primitive value in its
+	 * This is useful because it gives access to a primitive value in its
 	 * (nullable) wrapper form, rather than the primitive form as required
 	 * by JPA. This allows us to distinguish whether a value has been
 	 * explicitly set by the client.
 	 *
-	 * @return Return the encapsulation of this query's options.
-	 *
 	 * @deprecated The various {@code Query<T>} subtypes already expose all
-	 * relevant options; furthermore, exposing {@link QueryOptions} is
-	 * layer-breaking, as it is an SPI contract exposed via an API.
+	 * relevant options; furthermore, this operation is a layer-breaker,
+	 * exposing the {@link QueryOptions} SPI type via an API.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
 	QueryOptions getQueryOptions();

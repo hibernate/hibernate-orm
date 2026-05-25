@@ -9,10 +9,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.internal.scrollable.EmptyScrollableResults;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.Limit;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 
@@ -74,7 +74,7 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
+	public ScrollableResults<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
 			return EmptyScrollableResults.instance();
 		}

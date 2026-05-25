@@ -13,13 +13,13 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.util.OptionsHelper;
@@ -42,13 +42,11 @@ import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.procedure.ResultSetOutput;
@@ -302,28 +300,25 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setLockScope(PessimisticLockScope lockScope) {
-		throw new IllegalStateException( "Locking not supported for ProcedureCall" );
-	}
-
-	@Override
 	public ProcedureCallImplementor<R> addQueryHint(String hint) {
 		super.addQueryHint( hint );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	@SuppressWarnings("removal")
 	public Query<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		throw new UnsupportedOperationException( "Entity graph not supported for ProcedureCall" );
 	}
 
-	@Override
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public Query<R> enableFetchProfile(String profileName) {
 		throw new UnsupportedOperationException( "Fetch profiles not supported for ProcedureCall" );
 	}
 
-	@Override
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public Query<R> disableFetchProfile(String profileName) {
 		throw new UnsupportedOperationException( "Fetch profiles not supported for ProcedureCall" );
 	}
@@ -1227,16 +1222,19 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+	@SuppressWarnings("removal")
+	public ScrollableResults<R> scroll(ScrollMode scrollMode) {
 		throw new UnsupportedOperationException( "Cannot scroll a ProcedureCall" );
 	}
 
-	@Override @Deprecated @SuppressWarnings("deprecation")
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public Stream<R> getResultStream() {
 		return stream();
 	}
 
-	@Override @Deprecated @SuppressWarnings("deprecation")
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public Stream<R> stream() {
 		return getResultList().stream();
 	}
@@ -1419,7 +1417,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
 		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}
 }

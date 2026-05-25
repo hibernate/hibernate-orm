@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.scrollable.EmptyScrollableResults;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
@@ -148,7 +148,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
+	public ScrollableResults<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
 			return EmptyScrollableResults.instance();
 		}

@@ -118,31 +118,66 @@ public interface MutationQuery extends CommonQueryContract, Statement {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Covariant returns
+	// Options
 
-	@Override @Deprecated(since = "7")
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	MutationQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@Deprecated(since = "7")
 	MutationQuery setFlushMode(FlushModeType flushMode);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	MutationQuery setTimeout(int timeout);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	MutationQuery setTimeout(Integer timeout);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	MutationQuery setTimeout(Timeout timeout);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	MutationQuery setComment(String comment);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	MutationQuery setHint(String hintName, Object value);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	MutationQuery addOption(Option option);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	MutationQuery addQueryHint(String hint);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Parameter Handling
 
 	@Override
 	<P> MutationQuery setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
@@ -263,7 +298,4 @@ public interface MutationQuery extends CommonQueryContract, Statement {
 
 	@Override
 	MutationQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
-
-	@Override
-	MutationQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
 }

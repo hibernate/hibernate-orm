@@ -7,7 +7,7 @@ package org.hibernate.orm.test.collection.list;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.ScrollableResults;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -90,7 +90,7 @@ public class IterateOverListInTheSetMethodTest {
 		collectingStatementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResultsImplementor<Parent> results = session.createQuery(
+					try (ScrollableResults<Parent> results = session.createQuery(
 									"select p from Parent p",
 									Parent.class
 							)

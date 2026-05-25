@@ -9,7 +9,6 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.Statement;
@@ -17,6 +16,7 @@ import jakarta.persistence.metamodel.Type;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.util.OptionsHelper;
@@ -29,7 +29,6 @@ import org.hibernate.query.IllegalSelectQueryException;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.named.NamedMutationMemento;
 import org.hibernate.query.named.NamedQueryMemento;
@@ -42,7 +41,6 @@ import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.internal.AggregatedNonSelectQueryPlanImpl;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -104,7 +102,7 @@ public class MutationQueryImpl<T>
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
-		validateQuery( targetType, sqm, hql );
+		validateQuery( sqm, hql );
 	}
 
 	@Override
@@ -112,7 +110,7 @@ public class MutationQueryImpl<T>
 		throw new IllegalSelectQueryException( "MutationQuery cannot be treated as SelectionQuery", hql );
 	}
 
-	private static <R> void validateQuery(Class<R> expectedResultType, SqmDmlStatement<R> sqm, String hql) {
+	private static <R> void validateQuery(SqmDmlStatement<R> sqm, String hql) {
 		if ( sqm instanceof AbstractSqmDmlStatement<R> abstractSqm ) {
 			abstractSqm.validate( hql );
 		}
@@ -177,7 +175,7 @@ public class MutationQueryImpl<T>
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		bindValueBindCriteriaParameters( domainParameterXref, parameterBindings );
 
-		validateQuery( targetType, sqm, hql );
+		validateQuery( sqm, hql );
 	}
 
 	public MutationQueryImpl(
@@ -257,8 +255,8 @@ public class MutationQueryImpl<T>
 	}
 
 	private NonSelectQueryPlan buildNonSelectQueryPlan() {
-		// to get here the SQM statement has already been validated to be
-		// a non-select variety...
+		// To get here, the SQM statement has already been
+		// validated to be a non-select variety
 		final var sqmStatement = getSqmStatement();
 		if ( sqmStatement instanceof SqmDeleteStatement<?> ) {
 			return buildDeleteQueryPlan();
@@ -393,7 +391,7 @@ public class MutationQueryImpl<T>
 	}
 
 	@Override @SuppressWarnings("deprecation")
-	public ScrollableResultsImplementor<T> scroll(ScrollMode scrollMode) {
+	public ScrollableResults<T> scroll(ScrollMode scrollMode) {
 		final var message = "Attempting to scroll list from a mutation query";
 		throw new IllegalStateException( message, new IllegalSelectQueryException( message, hql ) );
 	}
@@ -440,12 +438,6 @@ public class MutationQueryImpl<T>
 		else {
 			throw selectionOption( "Locking" );
 		}
-	}
-
-	@Override
-	@Deprecated @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setLockScope(PessimisticLockScope lockScope) {
-		return super.setLockScope( lockScope );
 	}
 
 	@Override
@@ -581,11 +573,13 @@ public class MutationQueryImpl<T>
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public Query<T> enableFetchProfile(String profileName) {
 		throw new UnsupportedOperationException( "Fetch profiles are not supported for mutation queries" );
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public Query<T> disableFetchProfile(String profileName) {
 		throw new UnsupportedOperationException( "Fetch profiles are not supported for mutation queries" );
 	}
@@ -879,25 +873,5 @@ public class MutationQueryImpl<T>
 
 			);
 		}
-	}
-
-	@Override
-	public SelectionQueryImplementor<T> asSelectionQuery() {
-		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
-	}
-
-	@Override
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
-		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
-	}
-
-	@Override
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
-		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
-	}
-
-	@Override
-	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
-		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}
 }

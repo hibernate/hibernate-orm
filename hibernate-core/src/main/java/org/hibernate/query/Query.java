@@ -11,7 +11,6 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
@@ -84,6 +83,10 @@ import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushMode
  * @param <T> The {@linkplain SelectionQuery#getResultType result type} for
  *            selection queries or the {@linkplain MutationQuery#getTargetType
  *            target type} for mutation statements.
+ *
+ * @apiNote Like {@link jakarta.persistence.Query} in JPA 4, this interface is
+ *          now essentially redundant. Newly written code should always prefer
+ *          {@link SelectionQuery} or {@link MutationQuery}.
  *
  * @see jakarta.persistence.Query
  * @see SelectionQuery
@@ -422,7 +425,11 @@ public interface Query<T> extends CommonQueryContract {
 	 * @return {@code true} if the entities and proxies loaded by the query
 	 *         will be put in read-only mode; {@code false} otherwise
 	 *         (they will be modifiable)
+	 *
+	 * @deprecated Use {@linkplain SelectionQuery} instead as read-only mode is only relevant for
+	 * selection queries
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	boolean isReadOnly();
 
 	/**
@@ -453,7 +460,11 @@ public interface Query<T> extends CommonQueryContract {
 	 *                 loaded by the query are to be put in read-only mode;
 	 *                 {@code false} indicates that entities and proxies
 	 *                 loaded by the query will be put in modifiable mode
+	 *
+	 * @deprecated Use {@linkplain SelectionQuery} instead as read-only mode is only relevant for
+	 * selection queries
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	Query<T> setReadOnly(boolean readOnly);
 
 	/**
@@ -594,7 +605,6 @@ public interface Query<T> extends CommonQueryContract {
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
 	Query<T> setMaxResults(int maxResults);
 
-
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as applying result limits
 	 * is only relevant for queries which return results.
@@ -652,39 +662,6 @@ public interface Query<T> extends CommonQueryContract {
 	Query<T> setHibernateLockMode(LockMode lockMode);
 
 	/**
-	 * Timeout applied specifically to pessimistic lock acquisition.
-	 *
-	 * @deprecated Use {@linkplain SelectionQuery} instead as locking
-	 * is only relevant for queries which return results.
-	 */
-	@Deprecated
-	Timeout getLockTimeout();
-
-	/**
-	 * Set a timeout to be applied specifically to pessimistic lock acquisition.
-	 *
-	 * @see #getLockTimeout()
-	 *
-	 * @deprecated Use {@linkplain SelectionQuery} instead as locking
-	 * is only relevant for queries which return results.
-	 */
-	@Deprecated
-	Query<T> setLockTimeout(Timeout lockTimeout);
-
-	/**
-	 * Apply a scope to any pessimistic locking applied to the query.
-	 *
-	 * @param lockScope The lock scope to apply
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated Use {@linkplain SelectionQuery} instead as locking is only
-	 * relevant for queries which return results.
-	 */
-	@Deprecated(since = "8.0")
-	Query<T> setLockScope(PessimisticLockScope lockScope);
-
-	/**
 	 * Control how Hibernate should handle cases where it is determined
 	 * subsequent SQL queries would be needs to completely accomplish
 	 * locking as requested.
@@ -695,6 +672,8 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @deprecated Use {@linkplain SelectionQuery} instead as locking is only
 	 * relevant for queries which return results.
+	 *
+	 * @since 7.1
 	 */
 	@Deprecated(since = "8.0")
 	Query<T> setFollowOnStrategy(Locking.FollowOn strategy);
@@ -703,16 +682,20 @@ public interface Query<T> extends CommonQueryContract {
 	 * Set a {@link TupleTransformer}.
 	 * @deprecated Use {@linkplain SelectionQuery} instead as tuple
 	 * transformation is only relevant for queries which return results.
+	 *
+	 * @since 6.0
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0", forRemoval = true)
 	<X> Query<X> setTupleTransformer(TupleTransformer<X> transformer);
 
 	/**
 	 * Set a {@link ResultListTransformer}.
 	 * @deprecated Use {@linkplain SelectionQuery} instead as result list
 	 * transformation is only relevant for queries which return results.
+	 *
+	 * @since 6.0
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0", forRemoval = true)
 	Query<T> setResultListTransformer(ResultListTransformer<T> transformer);
 
 	/**
@@ -725,7 +708,7 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0", forRemoval = true)
 	List<T> list();
 
 	/**
@@ -741,7 +724,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Override
-	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Deprecated(since = "8.0", forRemoval = true) @SuppressWarnings("removal")
 	default List<T> getResultList() {
 		return list();
 	}
@@ -761,7 +744,7 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0", forRemoval = true)
 	ScrollableResults<T> scroll();
 
 	/**
@@ -774,7 +757,7 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0", forRemoval = true)
 	ScrollableResults<T> scroll(ScrollMode scrollMode);
 
 	/**
@@ -795,7 +778,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Override
-	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Deprecated(since = "8.0", forRemoval = true)
+	@SuppressWarnings("removal")
 	default Stream<T> getResultStream() {
 		return stream();
 	}
@@ -815,7 +799,7 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0", forRemoval = true)
 	default Stream<T> stream() {
 		return list().stream();
 	}
@@ -830,7 +814,7 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0", forRemoval = true)
 	T uniqueResult();
 
 	/**
@@ -845,7 +829,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Override
-	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Deprecated(since = "8.0", forRemoval = true)
+	@SuppressWarnings("removal")
 	T getSingleResult();
 
 	/**
@@ -861,7 +846,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Override
-	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Deprecated(since = "8.0", forRemoval = true)
+	@SuppressWarnings("removal")
 	T getSingleResultOrNull();
 
 	/**
@@ -874,7 +860,7 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.0", forRemoval = true)
 	Optional<T> uniqueResultOptional();
 
 	/**
@@ -899,12 +885,46 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain MutationQuery} instead for queries which mutate data.
 	 */
 	@Override
-	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Deprecated(since = "8.0", forRemoval = true)
+	@SuppressWarnings("removal")
 	int executeUpdate();
+
+	/**
+	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch
+	 * profile} with the given name during execution of this query. If the
+	 * requested fetch profile is already enabled, the call has no effect.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @param profileName the name of the fetch profile to be enabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
+	Query<T> enableFetchProfile(String profileName);
+
+	/**
+	 * Disable the {@linkplain org.hibernate.annotations.FetchProfile fetch
+	 * profile} with the given name in this session. If the fetch profile is
+	 * not currently enabled, the call has no effect.
+	 *
+	 * @param profileName the name of the fetch profile to be disabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
+	Query<T> disableFetchProfile(String profileName);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// deprecated methods
+	// Deprecated methods
 
 	/**
 	 * The JPA {@link FlushModeType} in effect for this query. By default, the
@@ -963,39 +983,6 @@ public interface Query<T> extends CommonQueryContract {
 	Query<T> setEntityGraph(EntityGraph<? super T> graph, GraphSemantic semantic);
 
 	/**
-	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch
-	 * profile} with the given name during execution of this query. If the
-	 * requested fetch profile is already enabled, the call has no effect.
-	 * <p>
-	 * This is an alternative way to specify the associations which
-	 * should be fetched as part of the initial query.
-	 *
-	 * @param profileName the name of the fetch profile to be enabled
-	 *
-	 * @throws UnknownProfileException Indicates that the given name does not
-	 *                                 match any known fetch profile names
-	 *
-	 * @see org.hibernate.annotations.FetchProfile
-	 */
-	@Deprecated(since = "8.0")
-	Query<T> enableFetchProfile(String profileName);
-
-	/**
-	 * Disable the {@linkplain org.hibernate.annotations.FetchProfile fetch
-	 * profile} with the given name in this session. If the fetch profile is
-	 * not currently enabled, the call has no effect.
-	 *
-	 * @param profileName the name of the fetch profile to be disabled
-	 *
-	 * @throws UnknownProfileException Indicates that the given name does not
-	 *                                 match any known fetch profile names
-	 *
-	 * @see org.hibernate.annotations.FetchProfile
-	 */
-	@Deprecated(since = "8.0")
-	Query<T> disableFetchProfile(String profileName);
-
-	/**
 	 * Get the execution options for this {@code Query}. Many of the setters
 	 * of this object update the state of the returned {@link QueryOptions}.
 	 * This is useful because it gives access to a primitive value in its
@@ -1009,6 +996,10 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
 	QueryOptions getQueryOptions();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Deprecated TemporalType Parameter Handling
 
 	/**
 	 * {@link jakarta.persistence.Query} override

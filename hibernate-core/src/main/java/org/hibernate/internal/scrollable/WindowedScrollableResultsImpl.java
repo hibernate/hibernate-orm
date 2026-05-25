@@ -4,7 +4,7 @@
  */
 package org.hibernate.internal.scrollable;
 
-import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.ScrollableResults;
 
 /**
  * Scrollable results view applying an in-memory offset/limit without
@@ -15,7 +15,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
  * @since 7.4
  */
 public class WindowedScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
-	private final ScrollableResultsImplementor<R> delegate;
+	private final ScrollableResults<R> delegate;
 	private final int firstRow;
 	private final Integer maxRows;
 

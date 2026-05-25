@@ -11,7 +11,6 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
@@ -145,66 +144,71 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	// Execution
 
 	@Override
+	@SuppressWarnings("removal")
 	public int executeUpdate() {
 		return delegate.asMutationQuery().execute();
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "removal"})
 	public List list() {
 		return delegate.list();
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "removal"})
 	public List getResultList() {
 		return delegate.getResultList();
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public Object uniqueResult() {
 		return delegate.uniqueResult();
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public Object getSingleResult() {
 		return delegate.getSingleResult();
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public Object getSingleResultOrNull() {
 		return delegate.getSingleResultOrNull();
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "removal"})
 	public Optional uniqueResultOptional() {
 		return delegate.uniqueResultOptional();
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "removal"})
 	public Stream getResultStream() {
 		return delegate.getResultStream();
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "removal"})
 	public Stream stream() {
 		return delegate.stream();
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "removal"})
 	public ScrollableResults scroll() {
 		return delegate.scroll();
 	}
 
 	@Override @Deprecated
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({"rawtypes", "removal"})
 	public ScrollableResults scroll(ScrollMode scrollMode) {
 		return delegate.scroll( scrollMode );
 	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
@@ -219,7 +223,8 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 		return delegate.getQueryFlushMode();
 	}
 
-	@Override @Deprecated @SuppressWarnings("deprecation")
+	@Override @Deprecated
+	@SuppressWarnings("deprecation")
 	public FlushModeType getFlushMode() {
 		return delegate.getFlushMode();
 	}
@@ -230,7 +235,8 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 		return this;
 	}
 
-	@Override @SuppressWarnings("deprecation")
+	@Override
+	@SuppressWarnings("deprecation")
 	public MutationOrSelectionQuery setFlushMode(FlushModeType flushMode) {
 		delegate.setFlushMode( flushMode );
 		return this;
@@ -294,6 +300,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setFetchSize(int fetchSize) {
 		//noinspection removal
 		delegate.setFetchSize( fetchSize );
@@ -301,11 +308,13 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public boolean isReadOnly() {
 		return delegate.isReadOnly();
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setReadOnly(boolean readOnly) {
 		delegate.setReadOnly( readOnly );
 		return this;
@@ -317,52 +326,61 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setMaxResults(int maxResults) {
 		delegate.setMaxResults( maxResults );
 		return this;
 	}
 
-	@Override @Deprecated @SuppressWarnings("removal")
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public int getFirstResult() {
 		return delegate.getFirstResult();
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setFirstResult(int startPosition) {
 		delegate.setFirstResult( startPosition );
 		return this;
 	}
 
-	@Override @Deprecated @SuppressWarnings("removal")
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public CacheMode getCacheMode() {
 		return delegate.getCacheMode();
 	}
 
-	@Override @Deprecated @SuppressWarnings("removal")
+	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setCacheMode(CacheMode cacheMode) {
 		delegate.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	public CacheStoreMode getCacheStoreMode() {
 		return delegate.getCacheStoreMode();
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setCacheStoreMode(CacheStoreMode cacheStoreMode) {
 		delegate.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings("removal")
+	@Deprecated
+	@SuppressWarnings("removal")
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return delegate.getCacheRetrieveMode();
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
 		delegate.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
@@ -386,6 +404,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setCacheable(boolean cacheable) {
 		//noinspection removal
 		delegate.setCacheable( cacheable );
@@ -399,6 +418,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setCacheRegion(String cacheRegion) {
 		//noinspection removal
 		delegate.setCacheRegion( cacheRegion );
@@ -412,6 +432,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setLockMode(LockModeType lockMode) {
 		delegate.setLockMode( lockMode );
 		return this;
@@ -423,41 +444,28 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setHibernateLockMode(LockMode lockMode) {
 		delegate.setHibernateLockMode( lockMode );
 		return this;
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setLockScope(PessimisticLockScope lockScope) {
-		delegate.setLockScope( lockScope );
-		return this;
-	}
-
-	@Override @Deprecated
-	public Timeout getLockTimeout() {
-		return delegate.getLockTimeout();
-	}
-
-	@Override @Deprecated
-	public MutationOrSelectionQuery setLockTimeout(Timeout lockTimeout) {
-		delegate.setLockTimeout( lockTimeout );
-		return this;
-	}
-
-	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
 		delegate.setFollowOnStrategy( followOnStrategy );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public <X> SelectionQuery<X> setTupleTransformer(TupleTransformer<X> transformer) {
 		return (SelectionQuery<X>) delegate.setTupleTransformer( transformer );
 	}
 
 	@Override
-	@Deprecated @SuppressWarnings({"unchecked","rawtypes"})
+	@Deprecated
+	@SuppressWarnings({"unchecked", "rawtypes", "removal"})
 	public MutationOrSelectionQuery setResultListTransformer(ResultListTransformer<Object> transformer) {
 		final var resultListTransformer = (ResultListTransformer) transformer;
 		delegate.setResultListTransformer( resultListTransformer );
@@ -472,12 +480,14 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery enableFetchProfile(String profileName) {
 		delegate.enableFetchProfile( profileName );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public MutationOrSelectionQuery disableFetchProfile(String profileName) {
 		delegate.disableFetchProfile( profileName );
 		return this;

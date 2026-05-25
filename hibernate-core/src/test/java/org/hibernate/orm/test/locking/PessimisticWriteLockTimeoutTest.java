@@ -9,8 +9,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.query.Query;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -48,13 +46,11 @@ public class PessimisticWriteLockTimeoutTest {
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNoWait.class )
 	public void testNoWait(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final var sqlCollector = factoryScope.getCollectingStatementInspector();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {
-			//noinspection removal
 			session.createQuery( "select a from A a", A.class )
-					.unwrap( Query.class )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
 					.setLockTimeout( Timeouts.NO_WAIT )
 					.list();
@@ -69,11 +65,10 @@ public class PessimisticWriteLockTimeoutTest {
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSkipLocked.class )
 	public void testSkipLocked(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final var sqlCollector = factoryScope.getCollectingStatementInspector();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {
-			//noinspection removal
 			session.createQuery("select a from A a", A.class )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
 					.setLockTimeout( Timeouts.SKIP_LOCKED )

@@ -17,13 +17,15 @@ import org.hibernate.NonUniqueResultException;
  *
  * @param <T> The result list element type
  *
- * @see Query#setResultListTransformer
- * @see Query#list
- * @see Query#getResultList
+ * @see SelectionQuery#setResultListTransformer
+ * @see SelectionQuery#getResultList
+ * @see SelectionQuery#list
  * @see TupleTransformer
  *
  * @author Steve Ebersole
  * @author Gavin King
+ *
+ * @since 6.0
  */
 @Incubating
 @FunctionalInterface

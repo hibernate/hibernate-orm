@@ -11,13 +11,13 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.StandardStatementCreator;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
@@ -146,7 +146,7 @@ public interface JdbcSelectExecutor {
 		);
 	}
 
-	default <R> ScrollableResultsImplementor<R> scroll(
+	default <R> ScrollableResults<R> scroll(
 			JdbcSelect jdbcSelect,
 			ScrollMode scrollMode,
 			JdbcParameterBindings jdbcParameterBindings,
@@ -158,7 +158,7 @@ public interface JdbcSelectExecutor {
 	/**
 	 * @since 6.6
 	 */
-	default <R> ScrollableResultsImplementor<R> scroll(
+	default <R> ScrollableResults<R> scroll(
 			JdbcSelect jdbcSelect,
 			ScrollMode scrollMode,
 			JdbcParameterBindings jdbcParameterBindings,

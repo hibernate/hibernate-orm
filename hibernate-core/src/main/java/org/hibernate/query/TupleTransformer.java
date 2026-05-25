@@ -20,14 +20,14 @@ import java.util.List;
  * the {@link org.hibernate.sql.results.spi.RowTransformer} contract, which is
  * always used to actually process the results internally.
  *
- * @see Query#setTupleTransformer
- * @see Query#list
- * @see Query#getResultList
+ * @see SelectionQuery#setTupleTransformer
  * @see ResultListTransformer
  * @see org.hibernate.sql.results.spi.RowTransformer
  *
  * @author Steve Ebersole
  * @author Gavin King
+ *
+ * @since 6.0
  */
 @Incubating
 @FunctionalInterface

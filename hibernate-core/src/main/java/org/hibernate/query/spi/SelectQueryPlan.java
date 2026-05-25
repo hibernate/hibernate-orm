@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 
@@ -45,6 +46,6 @@ public interface SelectQueryPlan<R> extends QueryPlan {
 	/**
 	 * Perform (execute) the query returning a ScrollableResults
 	 */
-	ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext);
+	ScrollableResults<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext);
 
 }

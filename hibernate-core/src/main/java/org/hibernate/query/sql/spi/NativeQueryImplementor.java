@@ -22,6 +22,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.NativeQuery;
@@ -36,7 +37,6 @@ import org.hibernate.query.named.NamedNativeQueryMemento;
 import org.hibernate.query.named.internal.NativeSelectionMementoImpl;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.spi.MutationQueryImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 
 import java.time.Instant;
@@ -104,11 +104,11 @@ public interface NativeQueryImplementor<R>
 
 	@Override
 	@SuppressWarnings("deprecation")
-	ScrollableResultsImplementor<R> scroll();
+	ScrollableResults<R> scroll();
 
 	@Override
 	@SuppressWarnings("deprecation")
-	ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode);
+	ScrollableResults<R> scroll(ScrollMode scrollMode);
 
 	@Override
 	@SuppressWarnings("deprecation")
@@ -207,6 +207,7 @@ public interface NativeQueryImplementor<R>
 	NativeQueryImplementor<R> setFetchSize(int fetchSize);
 
 	@Override
+	@SuppressWarnings("removal")
 	NativeQueryImplementor<R> setReadOnly(boolean readOnly);
 
 	@Override
@@ -240,9 +241,11 @@ public interface NativeQueryImplementor<R>
 	NativeQueryImplementor<R> addQueryHint(String hint);
 
 	@Override
+	@SuppressWarnings("removal")
 	<X> NativeQueryImplementor<X> setTupleTransformer(TupleTransformer<X> transformer);
 
 	@Override
+	@SuppressWarnings("removal")
 	NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	@Override @Deprecated @SuppressWarnings("removal")
@@ -253,9 +256,11 @@ public interface NativeQueryImplementor<R>
 	NativeQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	NativeQueryImplementor<R> disableFetchProfile(String profileName);
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	NativeQueryImplementor<R> enableFetchProfile(String profileName);
 
 	@Override
@@ -270,7 +275,7 @@ public interface NativeQueryImplementor<R>
 	@Override
 	NativeQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
 
-	@Override @SuppressWarnings("deprecation")
+	@Override
 	NativeQueryImplementor<R> setLockScope(PessimisticLockScope lockScope);
 
 	@Override

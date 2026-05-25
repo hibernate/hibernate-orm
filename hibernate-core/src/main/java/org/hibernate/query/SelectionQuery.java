@@ -163,7 +163,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @apiNote Synonym for {@link #list()}
 	 */
 	@Override
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings("removal")
 	default List<R> getResultList() {
 		return list();
 	}
@@ -177,6 +177,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @return the result list
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	List<R> list();
 
 	/**
@@ -193,7 +194,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @apiNote Synonym for {@link #stream()}
 	 */
 	@Override
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings("removal")
 	default Stream<R> getResultStream() {
 		return stream();
 	}
@@ -216,7 +217,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 5.2
 	 */
 	@Override
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings("removal")
 	default Stream<R> stream() {
 		return list().stream();
 	}
@@ -231,6 +232,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @throws jakarta.persistence.NoResultException if there is no result to return
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	R getSingleResult();
 
 	/**
@@ -242,6 +244,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	R uniqueResult();
 
 	/**
@@ -255,6 +258,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @since 6.0
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	R getSingleResultOrNull();
 
 	/**
@@ -266,6 +270,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	Optional<R> uniqueResultOptional();
 
 	/**
@@ -295,6 +300,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see #scroll(ScrollMode)
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	ScrollableResults<R> scroll();
 
 	/**
@@ -306,6 +312,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @apiNote Not every JDBC driver supports every {@link ScrollMode}.
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	ScrollableResults<R> scroll(ScrollMode scrollMode);
 
 	/**
@@ -330,51 +337,17 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	SelectionQuery<R> setHint(String hintName, Object value);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	SelectionQuery<R> addOption(Option option);
-
-	/**
-	 * Apply an {@link EntityGraph} to the query using {@linkplain GraphSemantic#LOAD load graph} semantics.
-	 * <p>
-	 * This is an alternative way to specify the associations which
-	 * should be fetched as part of the initial query.
-	 *
-	 * @since 6.3
-	 *
-	 * @see SharedSessionContract#createSelectionQuery(String, EntityGraph)
-	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
-	 *
-	 * @deprecated Prefer passing the entity-graph while creating the query -
-	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
-	 */
-	@Deprecated(since = "8.0", forRemoval = true)
-	default SelectionQuery<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
-		return setEntityGraph( entityGraph, GraphSemantic.LOAD );
-	}
-
-	/**
-	 * Apply an {@link EntityGraph} to the query.
-	 * <p>
-	 * This is an alternative way to specify the associations which
-	 * should be fetched as part of the initial query.
-	 *
-	 * @since 6.3
-	 *
-	 * @see SharedSessionContract#createSelectionQuery(String, EntityGraph)
-	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph)
-	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph,GraphSemantic)
-	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
-	 *
-	 * @deprecated Prefer passing the entity-graph while creating the query -
-	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
-	 */
-	@Override
-	@Deprecated(since = "8.0", forRemoval = true)
-	@SuppressWarnings("removal")
-	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	/**
 	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch
@@ -392,6 +365,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see org.hibernate.annotations.FetchProfile
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQuery<R> enableFetchProfile(String profileName);
 
 	/**
@@ -407,23 +381,52 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see org.hibernate.annotations.FetchProfile
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQuery<R> disableFetchProfile(String profileName);
 
-	@Override @SuppressWarnings("deprecation")
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@SuppressWarnings("deprecation")
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @since 7.0
+	 */
 	@Override
 	SelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
+	/**
+	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
+	 * query timeout} to use when executing the query.
+	 */
 	@Override
 	SelectionQuery<R> setTimeout(int timeout);
 
+	/**
+	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
+	 * query timeout} to use when executing the query.
+	 *
+	 * @since 7.0
+	 */
 	@Override
 	SelectionQuery<R> setTimeout(Integer timeout);
 
+	/**
+	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
+	 * query timeout} to use when executing the query.
+	 *
+	 * @since 7.0
+	 */
 	@Override
 	SelectionQuery<R> setTimeout(Timeout timeout);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	SelectionQuery<R> setComment(String comment);
 
@@ -459,6 +462,26 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	@SuppressWarnings("removal")
 	SelectionQuery<R> setFetchSize(int fetchSize);
 
+	/**
+	 * Should entities and proxies loaded by this Query be put in read-only
+	 * mode? If the read-only/modifiable setting was not initialized, then
+	 * the default read-only/modifiable setting for the persistence context
+	 * is returned instead.
+	 * <p>
+	 * The read-only/modifiable setting has no impact on entities/proxies
+	 * returned by the query that existed in the session before the query
+	 * was executed.
+	 *
+	 * @see #setReadOnly(boolean)
+	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * @return {@code true} if the entities and proxies loaded by the query
+	 *         will be put in read-only mode; {@code false} otherwise
+	 *         (they will be modifiable)
+	 */
+	@Override
+	@SuppressWarnings("removal")
+	boolean isReadOnly();
 
 	/**
 	 * Set the read-only/modifiable mode for entities and proxies loaded
@@ -490,13 +513,26 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *                 loaded by the query will be put in modifiable mode
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQuery<R> setReadOnly(boolean readOnly);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
+	int getMaxResults();
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	SelectionQuery<R> setMaxResults(int maxResults);
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	int getFirstResult();
 
 	/**
 	 * {@inheritDoc}
@@ -653,7 +689,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	SelectionQuery<R> setLockMode(LockModeType lockMode);
 
 	/**
-	 * Get the root {@link LockMode} for the query
+	 * {@inheritDoc}
 	 *
 	 * @see #getLockMode()
 	 */
@@ -661,7 +697,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	LockMode getHibernateLockMode();
 
 	/**
-	 * Specify the root {@link LockMode} for the query
+	 * {@inheritDoc}
 	 *
 	 * @see #setLockMode(LockModeType)
 	 */
@@ -670,14 +706,32 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @since 8.0
+	 */
+	@Override
+	PessimisticLockScope getLockScope();
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @since 8.0
 	 */
 	@Override
 	SelectionQuery<R> setLockScope(PessimisticLockScope lockScope);
 
-	@Override
+	/**
+	 * Get the pessimistic lock timeout, if any.
+	 *
+	 * @since 8.0
+	 */
 	Timeout getLockTimeout();
 
-	@Override
+	/**
+	 * Specify a pessimistic lock timeout.
+	 *
+	 * @since 8.0
+	 */
 	SelectionQuery<R> setLockTimeout(Timeout lockTimeout);
 
 	/**
@@ -686,20 +740,73 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	@Override
 	SelectionQuery<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	SelectionQuery<R> addQueryHint(String hint);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Transformers
 
 	/**
 	 * Set a {@link TupleTransformer}.
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	<X> SelectionQuery<X> setTupleTransformer(TupleTransformer<X> transformer);
 
 	/**
 	 * Set a {@link ResultListTransformer}.
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	SelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Deprecated methods
+
+	/**
+	 * Apply an {@link EntityGraph} to the query using {@linkplain GraphSemantic#LOAD load graph} semantics.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @since 6.3
+	 *
+	 * @see SharedSessionContract#createSelectionQuery(String, EntityGraph)
+	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
+	 *
+	 * @deprecated Prefer passing the entity-graph while creating the query -
+	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
+	default SelectionQuery<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
+		return setEntityGraph( entityGraph, GraphSemantic.LOAD );
+	}
+
+	/**
+	 * Apply an {@link EntityGraph} to the query.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @since 6.3
+	 *
+	 * @see SharedSessionContract#createSelectionQuery(String, EntityGraph)
+	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph)
+	 * @see MutationOrSelectionQuery#asSelectionQuery(EntityGraph,GraphSemantic)
+	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
+	 *
+	 * @deprecated Prefer passing the entity-graph while creating the query -
+	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
+	 */
+	@Override
+	@Deprecated(since = "8.0", forRemoval = true)
+	@SuppressWarnings("removal")
+	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

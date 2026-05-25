@@ -26,6 +26,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -76,7 +77,6 @@ import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -558,7 +558,7 @@ public class NativeQueryImpl<R>
 //	}
 
 	@Override
-	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> graph, GraphSemantic semantic) {
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> graph, GraphSemantic semantic) {
 		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}
 
@@ -728,9 +728,13 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public Timeout getLockTimeout() {
+		return null;
+	}
+
+	@Override
 	public NativeQueryImplementor<R> setLockTimeout(Timeout lockTimeout) {
-		super.setLockTimeout( lockTimeout );
-		return this;
+		throw new IllegalStateException( "Lock timeout not supported for native query" );
 	}
 
 	@Override
@@ -741,12 +745,14 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeQueryImplementor<R> disableFetchProfile(String profileName) {
 		queryOptions.disableFetchProfile( profileName );
 		return this;
 	}
 
 	@Override @Deprecated
+	@SuppressWarnings("removal")
 	public NativeQueryImplementor<R> enableFetchProfile(String profileName) {
 		if ( getSessionFactory().containsFetchProfileDefinition( profileName ) ) {
 			getQueryOptions().enableFetchProfile( profileName );
@@ -995,11 +1001,11 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+	public ScrollableResults<R> scroll(ScrollMode scrollMode) {
 		return executeQuery( scrollMode, this::doScroll );
 	}
 
-	private ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
+	private ScrollableResults<R> doScroll(ScrollMode scrollMode) {
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 

@@ -5,8 +5,8 @@
 package org.hibernate.internal.scrollable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
@@ -19,7 +19,7 @@ import org.hibernate.sql.results.spi.RowReader;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractScrollableResults<R> implements ScrollableResultsImplementor<R> {
+public abstract class AbstractScrollableResults<R> implements ScrollableResults<R> {
 	private final JdbcValues jdbcValues;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
 	private final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState;

@@ -5,12 +5,10 @@
 package org.hibernate.orm.test.jpa.lock;
 
 import jakarta.persistence.LockModeType;
-import jakarta.persistence.Query;
 
-import jakarta.persistence.Timeout;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -18,18 +16,17 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * no need to run this on DB matrix
- *
  * @author Strong Liu
  */
 @RequiresDialect(H2Dialect.class)
 @Jpa(
-		annotatedClasses = {UnversionedLock.class},
-		integrationSettings = {@Setting(name = AvailableSettings.JPA_LOCK_TIMEOUT, value = "2000")}
+		annotatedClasses = UnversionedLock.class,
+		integrationSettings = @Setting(name = JAKARTA_LOCK_TIMEOUT, value = "2000")
 )
 public class LockTimeoutPropertyTest {
 
@@ -37,10 +34,9 @@ public class LockTimeoutPropertyTest {
 	public void testLockTimeoutASNamedQueryHint(EntityManagerFactoryScope scope){
 		scope.inEntityManager( em -> {
 			em.getTransaction().begin();
-			Query query = em.createNamedQuery( "getAll" );
+			var query = em.createNamedQuery( "getAll" );
 			query.setLockMode( LockModeType.PESSIMISTIC_READ );
-
-			Timeout timeout = query.unwrap( org.hibernate.query.Query.class ).getLockTimeout();
+			var timeout = query.unwrap(SelectionQuery.class).getLockTimeout();
 			assertEquals( 3000, timeout.milliseconds() );
 		} );
 	}
@@ -51,20 +47,16 @@ public class LockTimeoutPropertyTest {
 	public void testTimeoutHint(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			em.getTransaction().begin();
-			boolean b = em.getProperties().containsKey( AvailableSettings.JPA_LOCK_TIMEOUT );
-			assertTrue( b );
-			int timeout = Integer.parseInt( em.getProperties().get( AvailableSettings.JPA_LOCK_TIMEOUT ).toString() );
-			assertEquals( 2000, timeout);
-			org.hibernate.query.Query q = (org.hibernate.query.Query) em.createQuery( "select u from UnversionedLock u" );
-			timeout = q.getLockTimeout().milliseconds();
-			assertEquals( 2000, timeout );
+			assertTrue( em.getProperties().containsKey( JAKARTA_LOCK_TIMEOUT ) );
+			assertEquals( 2000, Integer.parseInt( em.getProperties().get( JAKARTA_LOCK_TIMEOUT ).toString() ) );
 
-			Query query = em.createQuery( "select u from UnversionedLock u" );
-			query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
-			query.setHint( AvailableSettings.JPA_LOCK_TIMEOUT, 3000 );
-			q = (org.hibernate.query.Query) query;
-			timeout = q.getLockTimeout().milliseconds();
-			assertEquals( 3000, timeout );
+			var query1 = em.createQuery( "select u from UnversionedLock u" ).unwrap(SelectionQuery.class);
+			assertEquals( 2000, query1.getLockTimeout().milliseconds() );
+
+			var query2 = em.createQuery( "select u from UnversionedLock u" ).unwrap(SelectionQuery.class);
+			query2.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+			query2.setHint( JAKARTA_LOCK_TIMEOUT, 3000 );
+			assertEquals( 3000, query2.getLockTimeout().milliseconds() );
 			em.getTransaction().rollback();
 		} );
 	}

@@ -40,16 +40,22 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Casts (needed by MutationOrSelectionQueryImpl)
 
+	@Nonnull
 	MutationQueryImplementor<T> asMutationQuery();
 
+	@Nonnull
 	SelectionQueryImplementor<T> asSelectionQuery();
 
+	@Nonnull
 	<X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type);
 
+	@Nonnull
 	<X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph);
 
+	@Nonnull
 	<X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic);
 
+	@Nonnull
 	<R> SelectionQueryImplementor<R> withResultSetMapping(ResultSetMapping<R> mapping);
 
 
@@ -124,6 +130,7 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter Handling
 
+	@Nonnull
 	QueryParameterBindings getParameterBindings();
 
 	@Override

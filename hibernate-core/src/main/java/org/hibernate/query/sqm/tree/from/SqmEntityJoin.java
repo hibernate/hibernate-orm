@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -100,6 +101,7 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
+	@Nonnull
 	public SqmFrom<?, L> getParent() {
 		return getRoot();
 	}
@@ -110,11 +112,13 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
+	@Nonnull
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}
 
 	@Override
+	@Nonnull
 	public SqmEntityDomainType<R> getModel() {
 		return (SqmEntityDomainType<R>) super.getModel();
 	}
@@ -140,6 +144,7 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
+	@Nonnull
 	public SqmEntityJoin<L,R> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmEntityJoin<L,R>) super.on( restriction );
 	}
@@ -150,11 +155,13 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
+	@Nonnull
 	public SqmEntityJoin<L, R> on(BooleanExpression... restrictions) {
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 
 	@Override
+	@Nonnull
 	public SqmEntityJoin<L, R> on(List<? extends Expression<Boolean>> restrictions) {
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}

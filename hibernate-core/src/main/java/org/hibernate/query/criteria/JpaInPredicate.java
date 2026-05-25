@@ -4,8 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * @author Steve Ebersole
@@ -17,6 +17,7 @@ public interface JpaInPredicate<T> extends JpaPredicate, CriteriaBuilder.In<T>  
 	 * @return expression
 	 */
 	@Override
+	@Nonnull
 	JpaExpression<T> getExpression();
 
 	/**
@@ -25,7 +26,8 @@ public interface JpaInPredicate<T> extends JpaPredicate, CriteriaBuilder.In<T>  
 	 *  @return in predicate
 	 */
 	@Override
-	JpaInPredicate<T> value(@NonNull T value);
+	@Nonnull
+	JpaInPredicate<T> value(T value);
 
 	/**
 	 *  Add to list of values to be tested against.

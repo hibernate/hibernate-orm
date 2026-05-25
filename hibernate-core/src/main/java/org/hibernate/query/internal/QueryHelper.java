@@ -33,8 +33,8 @@ public class QueryHelper {
 		// disallow direct instantiation
 	}
 
-	@SafeVarargs
-	public static <T> @Nullable SqmBindableType<? extends T> highestPrecedenceType(@Nullable SqmBindableType<? extends T>... types) {
+	@Nullable @SafeVarargs
+	public static <T> SqmBindableType<? extends T> highestPrecedenceType(@Nullable SqmBindableType<? extends T>... types) {
 		if ( types.length == 0 ) {
 			return null;
 		}
@@ -51,7 +51,8 @@ public class QueryHelper {
 		return highest;
 	}
 
-	public static <X> @Nullable SqmBindableType<? extends X> highestPrecedenceType2(
+	@Nullable
+	public static <X> SqmBindableType<? extends X> highestPrecedenceType2(
 			@Nullable SqmBindableType<? extends X> type1,
 			@Nullable SqmBindableType<? extends X> type2) {
 		if ( type1 == null && type2 == null ) {
@@ -229,7 +230,7 @@ public class QueryHelper {
 	}
 
 
-	public static int @Nullable [] unnamedParameterIndices(DomainParameterXref domainParameterXref) {
+	public static int[] unnamedParameterIndices(DomainParameterXref domainParameterXref) {
 		final var jpaCriteriaParamResolutions = domainParameterXref
 				.getParameterResolutions()
 				.getJpaCriteriaParamResolutions();

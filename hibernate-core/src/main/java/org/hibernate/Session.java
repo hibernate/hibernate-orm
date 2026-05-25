@@ -77,7 +77,7 @@ import java.util.List;
 /// [#setReadOnly(Object,boolean)] or simply by [evicting][#detach(Object)]
 /// it from the persistence context. A session may be set to load entities as read-only
 /// [by default][#setDefaultReadOnly(boolean)], or this may be controlled at the
-/// [query level][org.hibernate.query.Query#setReadOnly(boolean)].
+/// [query level][org.hibernate.query.SelectionQuery#setReadOnly(boolean)].
 ///
 /// The state of a transient or detached instance may be made persistent by copying it to
 /// a persistent instance using [#merge(Object)]. Since version 7, all older operations
@@ -250,11 +250,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// the second level cache.
 	///
 	/// @param cacheMode the new cache mode
-	void setCacheMode(CacheMode cacheMode);
+	void setCacheMode(@Nonnull CacheMode cacheMode);
 
 	/// Get the current [cache mode][CacheMode] for this session.
 	///
 	/// @return the current cache mode
+	@Nonnull
 	CacheMode getCacheMode();
 
 	/// The JPA-defined [CacheStoreMode].
@@ -391,7 +392,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// To override the default read-only mode of the current session for
 	/// all entities and proxies returned by a given `Query`, use
-	/// [org.hibernate.query.Query#setReadOnly(boolean)].
+	/// [org.hibernate.query.SelectionQuery#setReadOnly(boolean)].
 	///
 	/// Every instance of an [immutable][org.hibernate.annotations.Immutable]
 	/// entity is loaded in read-only mode.
@@ -817,8 +818,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @return a persistent instance or null
 	///
-	/// @see #get(String, Object, LockOptions)
-	///
 	/// @deprecated The semantics of this method may change in a future release.
 	@Deprecated(since = "7.0", forRemoval = true)
 	@Nonnull
@@ -871,7 +870,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated This method will be removed.
 	///             Use [#lock(Object, LockModeType, LockOption...)] instead
 	@Deprecated(since = "7.0", forRemoval = true) @SuppressWarnings("removal")
-	@Nonnull
 	void lock(@Nonnull Object object, @Nonnull LockOptions lockOptions);
 
 	/// Reread the state of the given managed instance from the underlying database,
@@ -1405,23 +1403,16 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override @Deprecated(forRemoval = true) @SuppressWarnings("removal")
+	@Override @Deprecated(forRemoval = true)
+	@SuppressWarnings("removal")
 	@Nonnull
 	MutationQuery createQuery(@Nonnull CriteriaStatement<?> criteriaStatement);
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	@Nonnull
-	default <T> T unwrap(@Nonnull Class<T> type) {
-		return SharedSessionContract.super.unwrap(type);
-	}
 
 	/// @deprecated Use [#createNamedQuery(String)] instead. Retained to allow for
 	/// forms using Hibernate's legacy result-set building, though such usages
 	/// should migrate to using [jakarta.persistence.sql.ResultSetMapping].
-	@Deprecated(since = "8.0") @SuppressWarnings("rawtypes")
+	@Deprecated(since = "8.0", forRemoval = true)
+	@SuppressWarnings("rawtypes")
 	@Nonnull
 	NativeQuery getNamedNativeQuery(@Nonnull String name);
 

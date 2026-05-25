@@ -4,6 +4,8 @@
  */
 package org.hibernate.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.ConnectionConsumer;
@@ -22,7 +24,6 @@ import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.Metamodel;
 import jakarta.persistence.sql.EntityMapping;
 import jakarta.persistence.sql.ResultSetMapping;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.audit.AuditLog;
@@ -286,12 +287,12 @@ abstract class AbstractSharedSessionContract
 			addSharedSessionTransactionObserver( transactionCoordinator );
 			sharedOptions.registerParentSessionObserver( new ParentSessionObserver() {
 				@Override
-				public void onParentFlush() {
+	public void onParentFlush() {
 					propagateFlush();
 				}
 
 				@Override
-				public void onParentClose() {
+	public void onParentClose() {
 					propagateClose();
 				}
 			} );
@@ -331,34 +332,38 @@ abstract class AbstractSharedSessionContract
 	// EntityHandler (JPA)
 
 	@Override
+	@Nonnull
 	public EntityManagerFactory getEntityManagerFactory() {
 		checkOpen();
 		return getFactory();
 	}
 
 	@Override
+	@Nonnull
 	public Metamodel getMetamodel() {
 		checkOpen();
 		return factory.getJpaMetamodel();
 	}
 
 	@Override
+	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
 		return getCacheMode().getJpaStoreMode();
 	}
 
 	@Override
+	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return getCacheMode().getJpaRetrieveMode();
 	}
 
 	@Override
-	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+	public void setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		setCacheMode( fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
 	}
 
 	@Override
-	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	public void setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		setCacheMode( fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
 	}
 
@@ -367,6 +372,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getProperties() {
 		// EntityManager Javadoc implies that the
 		// returned map should be a mutable copy,
@@ -382,7 +388,7 @@ abstract class AbstractSharedSessionContract
 	protected abstract Map<String, Object> getInitialProperties();
 
 	@Override
-	public void setProperty(String propertyName, Object value) {
+	public void setProperty(@Nonnull String propertyName, @Nullable Object value) {
 		checkOpen();
 		if ( propertyName == null ) {
 			SESSION_LOGGER.nullPropertyKey();
@@ -476,7 +482,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object id) {
+	@Nullable
+	public <T> T find(@Nonnull Class<T> entityClass, @Nonnull Object id) {
 		checkOpen();
 
 		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
@@ -485,7 +492,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object key, FindOption... findOptions) {
+	@Nullable
+	public <T> T find(@Nonnull Class<T> entityClass, @Nonnull Object key, @Nullable FindOption... findOptions) {
 		checkOpen();
 
 		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
@@ -494,7 +502,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> T find(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
+	public <T> T find(@Nonnull EntityGraph<T> entityGraph, @Nonnull Object key, @Nullable FindOption... findOptions) {
 		checkOpen();
 
 		final var graph = (RootGraphImplementor<T>) entityGraph;
@@ -508,14 +516,15 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public Object find(String entityName, Object key, FindOption... findOptions) {
+	public Object find(@Nonnull String entityName, @Nonnull Object key, @Nullable FindOption... findOptions) {
 		checkOpen();
 		final var entityDescriptor = requireEntityPersisterForLoad( entityName );
 		return byKey( entityDescriptor, findOptions ).performFind( key );
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object id) {
+	@Nonnull
+	public <T> T get(@Nonnull Class<T> entityClass, @Nonnull Object id) {
 		final var result = find( entityClass, id );
 		if ( result == null ) {
 			throw notFound( entityClass.getName(), id );
@@ -524,7 +533,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object key, FindOption... findOptions) {
+	@Nonnull
+	public <T> T get(@Nonnull Class<T> entityClass, @Nonnull Object key, @Nullable FindOption... findOptions) {
 		final var result = find( entityClass, key, findOptions );
 		if ( result == null ) {
 			throw notFound( entityClass.getName(), key );
@@ -533,7 +543,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> T get(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
+	@Nonnull
+	public <T> T get(@Nonnull EntityGraph<T> entityGraph, @Nonnull Object key, @Nullable FindOption... findOptions) {
 		final var result = find( entityGraph, key, findOptions );
 		if ( result == null ) {
 			final var graph = (RootGraphImplementor<T>) entityGraph;
@@ -543,7 +554,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public Object get(String entityName, Object key, FindOption... findOptions) {
+	@Nonnull
+	public Object get(@Nonnull String entityName, @Nonnull Object key, @Nullable FindOption... findOptions) {
 		final var result = find( entityName, key, findOptions );
 		if ( result == null ) {
 			throw notFound( entityName, key );
@@ -552,21 +564,23 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> List<T> getMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
+	@Nonnull
+	public <T> List<T> getMultiple(@Nonnull Class<T> entityClass, @Nonnull List<?> keys, @Nullable FindOption... findOptions) {
 		final var results = findMultiple( entityClass, keys, findOptions );
 		Helper.verifyGetMultipleResults( results, entityClass.getName(), keys, findOptions );
 		return results;
 	}
 
 	@Override
-	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
+	@Nonnull
+	public <T> List<T> getMultiple(@Nonnull EntityGraph<T> entityGraph, @Nonnull List<?> keys, @Nullable FindOption... findOptions) {
 		final var results = findMultiple( entityGraph, keys, findOptions );
 		Helper.verifyGetMultipleResults( results, ( (RootGraph<T>) entityGraph ).getGraphedType().getTypeName(), keys );
 		return results;
 	}
 
 	@Override
-	public <C> void runWithConnection(ConnectionConsumer<C> action) {
+	public <C> void runWithConnection(@Nonnull ConnectionConsumer<C> action) {
 		doWork( connection -> {
 			try {
 				//noinspection unchecked
@@ -582,7 +596,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
+	public <C, T> T callWithConnection(@Nonnull ConnectionFunction<C, T> function) {
 		return doReturningWork( connection -> {
 			try {
 				//noinspection unchecked
@@ -598,13 +612,15 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> SelectionQueryImplementor<T> createQuery(String hql, EntityGraph<T> entityGraph) {
+	@Nonnull
+	public <T> SelectionQueryImplementor<T> createQuery(@Nonnull String hql, @Nonnull EntityGraph<T> entityGraph) {
 		// by definition this HQL must be a selection query
 		return createSelectionQuery( hql, entityGraph );
 	}
 
 	@Override
-	public <T> NativeQueryImplementor<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping) {
+	@Nonnull
+	public <T> NativeQueryImplementor<T> createNativeQuery(@Nonnull String sql, @Nonnull ResultSetMapping<T> resultSetMapping) {
 		checksBeforeQueryCreation();
 		final var query = new NativeQueryImpl<>( sql, resultSetMapping, this );
 		if ( isEmpty( query.getComment() ) ) {
@@ -620,7 +636,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> RootGraph<T> getEntityGraph(Class<T> entityClass, String name) {
+	@Nonnull
+	public <T> RootGraph<T> getEntityGraph(@Nonnull Class<T> entityClass, @Nonnull String name) {
 		return castEntityGraph( entityClass, name, getEntityGraph( name ) );
 	}
 
@@ -653,6 +670,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder sessionWithOptions() {
 		checkSessionReentrancy();
 		return new SharedSessionBuilderImpl( this ) {
@@ -821,6 +839,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public final SessionFactoryImplementor getFactory() {
 		return factory;
 	}
@@ -831,6 +850,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public final JdbcCoordinator getJdbcCoordinator() {
 		return jdbcCoordinator;
 	}
@@ -850,11 +870,13 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public final SessionEventListenerManager getEventListenerManager() {
 		return sessionEventsManager;
 	}
 
 	@Override
+	@Nonnull
 	public final UUID getSessionIdentifier() {
 		if ( sessionIdentifier == null ) {
 			//Lazily initialized: otherwise all the UUID generations will cause significant amount of contention.
@@ -864,6 +886,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionContractImplementor getSession() {
 		return this;
 	}
@@ -930,6 +953,7 @@ abstract class AbstractSharedSessionContract
 			try {
 				if ( !isTransactionCoordinatorShared ) {
 					checkBeforeClosingJdbcCoordinator();
+					//noinspection resource
 					jdbcCoordinator.close();
 				}
 			}
@@ -1001,6 +1025,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nullable
 	public Timeout getDefaultTimeout() {
 		final var timeoutInMilliseconds = getHintedQueryTimeout();
 		return timeoutInMilliseconds != null
@@ -1017,6 +1042,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nullable
 	public Timeout getDefaultLockTimeout() {
 		final var timeoutInMilliseconds = getHintedLockTimeout();
 		return timeoutInMilliseconds != null
@@ -1109,7 +1135,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
+	public void checkTransactionNeededForUpdateOperation(@Nonnull String exceptionMessage) {
 		if ( !factoryOptions.isAllowOutOfTransactionUpdateOperations()
 				&& !isTransactionInProgress() ) {
 			throw new TransactionRequiredException( exceptionMessage );
@@ -1125,6 +1151,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public Transaction getTransaction() throws HibernateException {
 		if ( !isTransactionAccessible() ) {
 			throw new IllegalStateException(
@@ -1135,6 +1162,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public Transaction accessTransaction() {
 		checkSessionReentrancy();
 		if ( currentHibernateTransaction == null ) {
@@ -1168,6 +1196,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public Transaction beginTransaction() {
 		checkOpen();
 		final Transaction transaction = accessTransaction();
@@ -1226,6 +1255,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nullable
 	public Transaction getCurrentTransaction() {
 		return currentHibernateTransaction;
 	}
@@ -1321,7 +1351,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
+	@Nonnull
+	public EntityKey generateEntityKey(@Nonnull Object id, @Nonnull EntityPersister persister) {
 		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
 		return temporalId != null && temporalId != AuditLog.ALL_CHANGESETS
 				? new TemporalEntityKey( id, persister, temporalId )
@@ -1329,7 +1360,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public CollectionKey generateCollectionKey(CollectionPersister persister, Object key) {
+	@Nonnull
+	public CollectionKey generateCollectionKey(@Nonnull CollectionPersister persister, @Nonnull Object key) {
 		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
 		return temporalId != null && temporalId != AuditLog.ALL_CHANGESETS
 				? new TemporalCollectionKey( persister, key, temporalId )
@@ -1337,6 +1369,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public final SessionFactoryImplementor getSessionFactory() {
 		return factory;
 	}
@@ -1362,11 +1395,13 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public Dialect getDialect() {
 		return jdbcServices.getJdbcEnvironment().getDialect();
 	}
 
 	@Override
+	@Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return factory.getTypeConfiguration();
 	}
@@ -1394,17 +1429,22 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public final JdbcServices getJdbcServices() {
 		return jdbcServices;
 	}
 
 	@Override
+	@Nonnull
 	public CacheMode getCacheMode() {
 		return cacheMode;
 	}
 
 	@Override
-	public void setCacheMode(CacheMode cacheMode) {
+	public void setCacheMode(@Nonnull CacheMode cacheMode) {
+		if ( cacheMode == null ) {
+			throw new IllegalArgumentException( "CacheMode cannot be null" );
+		}
 		checkSessionReentrancy();
 		this.cacheMode = cacheMode;
 	}
@@ -1440,7 +1480,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public void doWork(final Work work) throws HibernateException {
+	public void doWork(final @Nonnull Work work) throws HibernateException {
 		doWork( (workExecutor, connection) -> {
 			workExecutor.executeWork( work, connection );
 			return null;
@@ -1448,7 +1488,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> T doReturningWork(final ReturningWork<T> work) throws HibernateException {
+	public <T> T doReturningWork(final @Nonnull ReturningWork<T> work) throws HibernateException {
 		return doWork( (workExecutor, connection) -> workExecutor.executeReturningWork( work, connection ) );
 	}
 
@@ -1462,7 +1502,8 @@ abstract class AbstractSharedSessionContract
 	// HQL
 
 	@Override
-	public <R> SelectionQueryImplementor<R> createSelectionQuery(String hql, Class<R> expectedResultType) {
+	@Nonnull
+	public <R> SelectionQueryImplementor<R> createSelectionQuery(@Nonnull String hql, @Nonnull Class<R> expectedResultType) {
 		checksBeforeQueryCreation();
 		try {
 			final var interpretation = interpretHql( hql, expectedResultType );
@@ -1475,7 +1516,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> SelectionQueryImplementor<T> createQuery(String queryString, Class<T> expectedResultType) {
+	@Nonnull
+	public <T> SelectionQueryImplementor<T> createQuery(@Nonnull String queryString, @Nonnull Class<T> expectedResultType) {
 		// JPA form
 		try {
 			return createSelectionQuery( queryString, expectedResultType );
@@ -1492,7 +1534,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <R> SelectionQueryImplementor<R> createSelectionQuery(String hql, EntityGraph<R> resultGraph) {
+	@Nonnull
+	public <R> SelectionQueryImplementor<R> createSelectionQuery(@Nonnull String hql, @Nonnull EntityGraph<R> resultGraph) {
 		checksBeforeQueryCreation();
 		final var resultType = resultGraph.getGraphedType().getJavaType();
 		try {
@@ -1545,7 +1588,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public MutationQuery createStatement(String hqlString) {
+	@Nonnull
+	public MutationQuery createStatement(@Nonnull String hqlString) {
 		// JPA form
 		try {
 			return createMutationQuery( hqlString );
@@ -1563,9 +1607,9 @@ abstract class AbstractSharedSessionContract
 		}
 	}
 
-
 	@Override
-	public MutationOrSelectionQuery createQuery(String hql) {
+	@Nonnull
+	public MutationOrSelectionQuery createQuery(@Nonnull String hql) {
 		// JPA form
 		checksBeforeQueryCreation();
 		try {
@@ -1593,7 +1637,8 @@ abstract class AbstractSharedSessionContract
 	// Criteria
 
 	@Override
-	public <R> SelectionQueryImplementor<R> createSelectionQuery(CriteriaQuery<R> criteria) {
+	@Nonnull
+	public <R> SelectionQueryImplementor<R> createSelectionQuery(@Nonnull CriteriaQuery<R> criteria) {
 		checksBeforeQueryCreation();
 		try {
 			final SelectionQueryImplementor<R> selectionQuery;
@@ -1618,9 +1663,9 @@ abstract class AbstractSharedSessionContract
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Reference
-
 	@Override
-	public <R> SelectionQueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference) {
+	@Nonnull
+	public <R> SelectionQueryImplementor<R> createQuery(@Nonnull TypedQueryReference<R> typedQueryReference) {
 		checksBeforeQueryCreation();
 		try {
 			final SelectionQueryImplementor<R> selectionQuery;
@@ -1654,7 +1699,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public MutationQuery createStatement(StatementReference statementReference) {
+	@Nonnull
+	public MutationQuery createStatement(@Nonnull StatementReference statementReference) {
 		checksBeforeQueryCreation();
 		if ( statementReference instanceof MutationSpecificationImpl<?> specification ) {
 			return specification.createQuery( this );
@@ -1678,16 +1724,17 @@ abstract class AbstractSharedSessionContract
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Native Query
-
 	@Override
-	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, @Nullable Class<T> resultClass) {
+	@Nonnull
+	public <T> NativeQueryImplementor<T> createNativeQuery(@Nonnull String sqlString, @Nonnull Class<T> resultClass) {
 		checksBeforeQueryCreation();
 		return buildNativeQuery( sqlString, null, resultClass );
 	}
 
 	@Override
+	@Nonnull
 	public <T> NativeQueryImplementor<T> createNativeQuery(
-			String sqlString,
+			@Nonnull String sqlString,
 			@Nullable String resultSetMappingName,
 			@Nullable Class<T> resultClass) {
 		checksBeforeQueryCreation();
@@ -1701,7 +1748,11 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, Class<T> resultClass, String tableAlias) {
+	@Nonnull
+	public <T> NativeQueryImplementor<T> createNativeQuery(
+			@Nonnull String sqlString,
+			@Nonnull Class<T> resultClass,
+			@Nonnull String tableAlias) {
 		checksBeforeQueryCreation();
 		final var query = buildNativeQuery( sqlString, null, resultClass );
 		if ( getMappingMetamodel().isEntityClass( resultClass ) ) {
@@ -1740,9 +1791,10 @@ abstract class AbstractSharedSessionContract
 	/**
 	 * @deprecated This is a JPA defined method, but Hibernate considers it deprecated.
 	 * Use {@linkplain #createNativeQuery(String, Class)}  or {@linkplain #createNativeStatement(String)} instead.
-	 */
+	 */@Nonnull
+
 	@Override @Deprecated
-	public NativeQueryImplementor<?> createNativeQuery(String sqlString) {
+	public NativeQueryImplementor<?> createNativeQuery(@Nonnull String sqlString) {
 		checksBeforeQueryCreation();
 		try {
 			final var query = new NativeQueryImpl<>( sqlString, this );
@@ -1757,9 +1809,10 @@ abstract class AbstractSharedSessionContract
 	/**
 	 * @deprecated This is a JPA defined method, but Hibernate considers it deprecated.
 	 * Use {@linkplain #createNativeQuery(String, String, Class)} instead.
-	 */
+	 */@Nonnull
+
 	@Override @Deprecated
-	public NativeQueryImplementor<?> createNativeQuery(String sqlString, String resultSetMappingName) {
+	public NativeQueryImplementor<?> createNativeQuery(@Nonnull String sqlString, @Nonnull String resultSetMappingName) {
 		checksBeforeQueryCreation();
 		return buildNativeQuery(
 				sqlString,
@@ -1856,9 +1909,9 @@ abstract class AbstractSharedSessionContract
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named Query
-
 	@Override
-	public <R> SelectionQueryImplementor<R> createNamedQuery(String name, Class<R> resultClass) {
+	@Nonnull
+	public <R> SelectionQueryImplementor<R> createNamedQuery(@Nonnull String name, @Nonnull Class<R> resultClass) {
 		checksBeforeQueryCreation();
 		if ( resultClass == null ) {
 			throw new IllegalArgumentException( "Result class is null" );
@@ -1885,7 +1938,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public MutationOrSelectionQuery createNamedQuery(String name) {
+	@Nonnull
+	public MutationOrSelectionQuery createNamedQuery(@Nonnull String name) {
 		checksBeforeQueryCreation();
 		try {
 			return buildNamedQuery( name,
@@ -1898,19 +1952,22 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName) {
+	@Nonnull
+	public <R> NativeQueryImplementor<R> createNamedQuery(@Nonnull String name, @Nonnull String resultSetMappingName) {
 		final NamedNativeQueryMemento<?> nativeQueryMemento = getNativeQueryMemento( name );
 		return nativeQueryMemento.toQuery( this, resultSetMappingName );
 	}
 
 	@Override
-	public <R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass) {
+	@Nonnull
+	public <R> NativeQueryImplementor<R> createNamedQuery(@Nonnull String name, @Nonnull String resultSetMappingName, @Nonnull Class<R> resultClass) {
 		final NamedNativeQueryMemento<?> queryMemento = getNativeQueryMemento( name );
 		return queryMemento.toQuery( this, resultSetMappingName );
 	}
 
 	@Override
-	public <R> SelectionQuery<R> createNamedSelectionQuery(String queryName, Class<R> expectedResultType) {
+	@Nonnull
+	public <R> SelectionQuery<R> createNamedSelectionQuery(@Nonnull String queryName, @Nonnull Class<R> expectedResultType) {
 		checksBeforeQueryCreation();
 		return buildNamedQuery( queryName,
 				memento -> memento.toSelectionQuery( this, expectedResultType ),
@@ -1918,7 +1975,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public MutationQuery createNamedStatement(String queryName) {
+	@Nonnull
+	public MutationQuery createNamedStatement(@Nonnull String queryName) {
 		checksBeforeQueryCreation();
 		return buildNamedQuery( queryName,
 				memento -> memento.toMutationQuery( this ),
@@ -1998,7 +2056,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public MutationQuery createNamedMutationQuery(String queryName) {
+	@Nonnull
+	public MutationQuery createNamedMutationQuery(@Nonnull String queryName) {
 		checksBeforeQueryCreation();
 		var query = buildNamedQuery( queryName,
 				memento -> memento.toMutationQuery( this ),
@@ -2007,7 +2066,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public MutationQueryImplementor<?> createMutationQuery(CriteriaStatement<?> criteriaUpdate) {
+	@Nonnull
+	public MutationQueryImplementor<?> createMutationQuery(@Nonnull CriteriaStatement<?> criteriaUpdate) {
 		checkOpen();
 		try {
 			final var query = new MutationQueryImpl<>( (SqmDmlStatement<?>) criteriaUpdate, this );
@@ -2021,12 +2081,14 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public MutationQueryImplementor<?> createStatement(CriteriaStatement<?> criteriaStatement) {
+	@Nonnull
+	public MutationQueryImplementor<?> createStatement(@Nonnull CriteriaStatement<?> criteriaStatement) {
 		return createMutationQuery( criteriaStatement );
 	}
 
 	@Override
-	public MutationQueryImplementor<?> createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert) {
+	@Nonnull
+	public MutationQueryImplementor<?> createMutationQuery(@SuppressWarnings("rawtypes") @Nonnull JpaCriteriaInsert insert) {
 		checkOpen();
 		try {
 			final MutationQueryImpl<?> mutationQuery = new MutationQueryImpl<>( (SqmDmlStatement<?>) insert, this );
@@ -2039,7 +2101,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public MutationQuery createNativeStatement(String sql) {
+	@Nonnull
+	public MutationQuery createNativeStatement(@Nonnull String sql) {
 		checksBeforeQueryCreation();
 		try {
 			final var query = new NativeQueryImpl<>( sql, true, this );
@@ -2052,7 +2115,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public ProcedureCall getNamedProcedureCall(String name) {
+	@Nonnull
+	public ProcedureCall getNamedProcedureCall(@Nonnull String name) {
 		checkOpen();
 
 		final var memento =
@@ -2068,7 +2132,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public ProcedureCall createNamedStoredProcedureQuery(String name) {
+	@Nonnull
+	public ProcedureCall createNamedStoredProcedureQuery(@Nonnull String name) {
 		return getNamedProcedureCall( name );
 	}
 
@@ -2077,7 +2142,8 @@ abstract class AbstractSharedSessionContract
 	// dynamic ProcedureCall support
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureCall(@Nonnull String procedureName) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
 		final var procedureCall = new ProcedureCallImpl<>( this, procedureName );
@@ -2086,7 +2152,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureCall(@Nonnull String procedureName, @Nonnull Class<?>... resultClasses) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
 		final var procedureCall = new ProcedureCallImpl<>( this, procedureName, resultClasses );
@@ -2095,7 +2162,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureCall(@Nonnull String procedureName, @Nonnull String... resultSetMappings) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
 		final var procedureCall = new ProcedureCallImpl<>( this, procedureName, resultSetMappings );
@@ -2104,7 +2172,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
 		final var procedureCall = new ProcedureCallImpl<>( this, procedureName );
@@ -2113,7 +2182,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName, Class<?>... resultClasses) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName, @Nonnull Class<?>... resultClasses) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
 		final var procedureCall = new ProcedureCallImpl<>( this, procedureName, resultClasses );
@@ -2122,7 +2192,8 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName, @Nonnull String... resultSetMappings) {
 		checkOpen();
 		@SuppressWarnings("UnnecessaryLocalVariable")
 		final var procedureCall = new ProcedureCallImpl<>( this, procedureName, resultSetMappings );
@@ -2131,12 +2202,14 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
+	@Nonnull
+	public <T> SelectionQueryImplementor<T> createQuery(@Nonnull CriteriaSelect<T> selectQuery) {
 		return createSelectionQuery( selectQuery );
 	}
 
 	@Override
-	public <T> SelectionQueryImplementor<T> createSelectionQuery(CriteriaSelect<T> criteriaQuery) {
+	@Nonnull
+	public <T> SelectionQueryImplementor<T> createSelectionQuery(@Nonnull CriteriaSelect<T> criteriaQuery) {
 		checkOpen();
 		if ( criteriaQuery instanceof CriteriaDefinition<T> criteriaDefinition ) {
 			final SelectionQueryImplementor<T> selectionQuery
@@ -2168,27 +2241,31 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
+	@Nonnull
+	public <T> RootGraphImplementor<T> createEntityGraph(@Nonnull Class<T> rootType) {
 		checkOpen();
 		return new RootGraphImpl<>( null, getFactory().getJpaMetamodel().entity( rootType ) );
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
+	@Nullable
+	public <T> RootGraph<T> createEntityGraph(@Nonnull Class<T> rootType, @Nonnull String graphName) {
 		final var entityGraph = createEntityGraph( graphName );
 		return entityGraph == null ? null : castEntityGraph( rootType, graphName, entityGraph );
 	}
 
 	@Override @Deprecated
-	public RootGraphImplementor<?> createEntityGraph(String graphName) {
+	@Nullable
+	public RootGraphImplementor<?> createEntityGraph(@Nonnull String graphName) {
 		checkOpen();
 		final var named = getFactory().findEntityGraphByName( graphName );
 		return named == null ? null : named.makeCopy( true );
 	}
 
 	@Override
-	public RootGraphImplementor<?> getEntityGraph(String graphName) {
+	@Nonnull
+	public RootGraphImplementor<?> getEntityGraph(@Nonnull String graphName) {
 		checkOpen();
 		final var named = getFactory().findEntityGraphByName( graphName );
 		if ( named == null ) {
@@ -2200,12 +2277,14 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
-	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+	@Nonnull
+	public <T> List<EntityGraph<? super T>> getEntityGraphs(@Nonnull Class<T> entityClass) {
 		checkOpen();
 		return getFactory().findEntityGraphsByType( entityClass );
 	}
 
 	@Override
+	@Nonnull
 	public ExceptionConverter getExceptionConverter() {
 		if ( exceptionConverter == null ) {
 			exceptionConverter = new ExceptionConverterImpl( this );
@@ -2230,6 +2309,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public HibernateCriteriaBuilder getCriteriaBuilder() {
 		checkOpen();
 		return getFactory().getCriteriaBuilder();
@@ -2244,21 +2324,23 @@ abstract class AbstractSharedSessionContract
 	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Filter getEnabledFilter(String filterName) {
+	@Nullable
+	public Filter getEnabledFilter(@Nonnull String filterName) {
 		checkSessionReentrancy();
 		pulseTransactionCoordinator();
 		return getLoadQueryInfluencers().getEnabledFilter( filterName );
 	}
 
 	@Override
-	public Filter enableFilter(String filterName) {
+	@Nonnull
+	public Filter enableFilter(@Nonnull String filterName) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		return getLoadQueryInfluencers().enableFilter( filterName );
 	}
 
 	@Override
-	public void disableFilter(String filterName) {
+	public void disableFilter(@Nonnull String filterName) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		getLoadQueryInfluencers().disableFilter( filterName );
@@ -2275,6 +2357,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	@Override
+	@Nonnull
 	public SessionAssociationMarkers getSessionAssociationMarkers() {
 		if ( sessionAssociationMarkers == null ) {
 			sessionAssociationMarkers = new SessionAssociationMarkers( this );
@@ -2354,6 +2437,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	protected static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
+		@SuppressWarnings("deprecation")
 		final CacheRetrieveMode cacheRetrieveMode =
 				(CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
 		return cacheRetrieveMode == null
@@ -2362,6 +2446,7 @@ abstract class AbstractSharedSessionContract
 	}
 
 	protected static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
+		@SuppressWarnings("deprecation")
 		final CacheStoreMode cacheStoreMode =
 				(CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 		return cacheStoreMode == null
@@ -2372,7 +2457,7 @@ abstract class AbstractSharedSessionContract
 	/**
 	 * Run a Jakarta Persistence entity lifecycle callback.
 	 */
-	public void runEntityLifecycleCallback(Runnable callback) {
+	public void runEntityLifecycleCallback(@Nonnull Runnable callback) {
 		startSessionUseProhibited();
 		try {
 			callback.run();
@@ -2385,7 +2470,7 @@ abstract class AbstractSharedSessionContract
 	/**
 	 * Call a Jakarta Persistence entity lifecycle callback.
 	 */
-	public <T> T callEntityLifecycleCallback(Supplier<T> callback) {
+	public <T> T callEntityLifecycleCallback(@Nonnull Supplier<T> callback) {
 		startSessionUseProhibited();
 		try {
 			return callback.get();
@@ -2398,7 +2483,7 @@ abstract class AbstractSharedSessionContract
 	/**
 	 * Run a Hibernate {@link Interceptor} callback.
 	 */
-	public void runInterceptorCallback(Runnable callback) {
+	public void runInterceptorCallback(@Nonnull Runnable callback) {
 		startSessionUseProhibited();
 		try {
 			callback.run();
@@ -2411,7 +2496,7 @@ abstract class AbstractSharedSessionContract
 	/**
 	 * Call a Hibernate {@link Interceptor} callback.
 	 */
-	public <T> T callInterceptorCallback(Supplier<T> callback) {
+	public <T> T callInterceptorCallback(@Nonnull Supplier<T> callback) {
 		startSessionUseProhibited();
 		try {
 			return callback.get();

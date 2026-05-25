@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -103,7 +104,7 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 	}
 
 	@Override
-	public SessionBuilderImplementor tenantIdentifier(Object tenantIdentifier) {
+	public SessionBuilderImplementor tenantIdentifier(@Nullable Object tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
 		return this;
 	}

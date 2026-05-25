@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.named.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -74,7 +75,9 @@ public abstract class AbstractSelectionMemento<R>
 	}
 
 	@Override
+	@Nonnull
 	public Class<? extends R> getResultType() {
+		//TODO: fix!!
 		return queryType;
 	}
 

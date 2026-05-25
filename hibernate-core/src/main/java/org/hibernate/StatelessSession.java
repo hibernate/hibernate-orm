@@ -206,7 +206,7 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *
 	 * @param entity a detached entity instance, or a new instance
 	 *               with an assigned identifier
-	 * @throws TransientObjectException is the entity has a null id
+	 * @throws TransientObjectException if the entity has a null id
 	 *
 	 * @since 6.3
 	 */
@@ -233,7 +233,7 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *
 	 * @param entityName The entityName for the entity to be merged
 	 * @param entity a detached entity instance
-	 * @throws TransientObjectException is the entity has a null id
+	 * @throws TransientObjectException if the entity has a null id
 	 *
 	 * @since 6.3
 	 */
@@ -379,11 +379,4 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 */
 	@Nullable
 	Object getIdentifier(@Nonnull Object entity);
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	@Nonnull
-	<T> T unwrap(@Nonnull Class<T> type);
 }

@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockOptions;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sqm.spi.InterpretationsKeySource;
@@ -86,7 +85,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	}
 
 	private final Object query;
-	private final int @Nullable [] unnamedParameterIndices;
+	private final int[] unnamedParameterIndices;
 	private final Class<?> resultType;
 	private final LockOptions lockOptions;
 	private final Collection<String> enabledFetchProfiles;
@@ -95,7 +94,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 
 	private SqmInterpretationsKey(
 			Object query,
-			int @Nullable [] unnamedParameterIndices,
+			int[] unnamedParameterIndices,
 			int hashCode,
 			Class<?> resultType,
 			LockOptions lockOptions,

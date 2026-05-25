@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Filter;
 import org.hibernate.Internal;
 import org.hibernate.UnknownProfileException;
@@ -176,11 +177,11 @@ public class LoadQueryInfluencers implements Serializable {
 		return enabledFilters == null ? emptySet() : unmodifiableSet( enabledFilters.keySet() );
 	}
 
-	public @Nullable Filter getEnabledFilter(String filterName) {
+	public @Nullable Filter getEnabledFilter(@Nonnull String filterName) {
 		return enabledFilters == null ? null : enabledFilters.get( filterName );
 	}
 
-	public Filter enableFilter(String filterName) {
+	public Filter enableFilter(@Nonnull String filterName) {
 		final var filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
 			enabledFilters = new TreeMap<>();
@@ -189,7 +190,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return filter;
 	}
 
-	public void disableFilter(String filterName) {
+	public void disableFilter(@Nonnull String filterName) {
 		if ( enabledFilters != null ) {
 			enabledFilters.remove( filterName );
 		}

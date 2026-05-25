@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sql.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -542,7 +543,7 @@ public class NativeQueryImpl<R>
 				getHints()
 		);
 	}
-//
+
 //	private Class<R> extractResultClass(ResultSetMapping resultSetMapping) {
 //		final List<ResultBuilder> resultBuilders = resultSetMapping.getResultBuilders();
 //		if ( resultBuilders.size() == 1 ) {
@@ -558,17 +559,20 @@ public class NativeQueryImpl<R>
 //	}
 
 	@Override
+	@Nonnull
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> graph, GraphSemantic semantic) {
 		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> asSelectionQuery() {
 		errorIfNotSelectForSure();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public <X> NativeQueryImplementor<X> asSelectionQuery(Class<X> type) {
 		errorIfNotSelectForSure();
 		//noinspection unchecked
@@ -576,11 +580,13 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public <X> NativeQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
 		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> asMutationQuery() {
 		errorIfNotSelectForSure();
 		return this;
@@ -634,11 +640,13 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nullable
 	public String getQueryString() {
 		return sqlString;
 	}
 
 	@Override
+	@Nonnull
 	public ParameterMetadataImplementor getParameterMetadata() {
 		return parameterMetadata;
 	}
@@ -664,11 +672,13 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public QueryParameterBindings getQueryParameterBindings() {
 		return parameterBindings;
 	}
 
 	@Override
+	@Nonnull
 	public QueryParameterBindings getParameterBindings() {
 		return getQueryParameterBindings();
 	}
@@ -698,47 +708,55 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public @Nullable Class<R> getTargetType() {
+	@Nullable
+	public Class<R> getTargetType() {
 		return resultType;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setTimeout(Timeout timeout) {
+	@Nonnull
+	public NativeQueryImplementor<R> setTimeout(@Nullable Timeout timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public LockModeType getLockMode() {
 		// JPA says this is illegal
 		throw new IllegalStateException( "LockModeType not supported for native query" );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setLockMode(LockModeType lockModeType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setLockMode(@Nonnull LockModeType lockModeType) {
 		// JPA says this is illegal
 		throw new IllegalStateException( "LockModeType not supported for native query" );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setHibernateLockMode(LockMode lockMode) {
+	@Nonnull
+	public NativeQueryImplementor<R> setHibernateLockMode(@Nonnull LockMode lockMode) {
 		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( lockMode );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public Timeout getLockTimeout() {
 		return null;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setLockTimeout(Timeout lockTimeout) {
+	@Nonnull
+	public NativeQueryImplementor<R> setLockTimeout(@Nullable Timeout lockTimeout) {
 		throw new IllegalStateException( "Lock timeout not supported for native query" );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+	@Nonnull
+	public NativeQueryImplementor<R> setLockScope(@Nonnull PessimisticLockScope lockScope) {
 		//noinspection removal
 		queryOptions.getLockOptions().setLockScope( lockScope );
 		return this;
@@ -746,14 +764,16 @@ public class NativeQueryImpl<R>
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public NativeQueryImplementor<R> disableFetchProfile(String profileName) {
+	@Nonnull
+	public NativeQueryImplementor<R> disableFetchProfile(@Nonnull String profileName) {
 		queryOptions.disableFetchProfile( profileName );
 		return this;
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public NativeQueryImplementor<R> enableFetchProfile(String profileName) {
+	@Nonnull
+	public NativeQueryImplementor<R> enableFetchProfile(@Nonnull String profileName) {
 		if ( getSessionFactory().containsFetchProfileDefinition( profileName ) ) {
 			getQueryOptions().enableFetchProfile( profileName );
 			return this;
@@ -772,43 +792,51 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+	@Nonnull
+	public NativeQueryImplementor<R> setFollowOnStrategy(@Nonnull Locking.FollowOn followOnStrategy) {
 		//noinspection removal
 		queryOptions.getLockOptions().setFollowOnStrategy( followOnStrategy );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public Integer getFetchSize() {
 		return queryOptions.getFetchSize();
 	}
 
 	@Override
+	@Nullable
 	public String getCacheRegion() {
 		return queryOptions.getResultCacheRegionName();
 	}
 
 	@Override
+	@Nonnull
 	public MutationQuery asStatement() {
 		return asMutationQuery();
 	}
 
 	@Override
-	public <T> SelectionQuery<T> ofType(Class<T> resultType) {
+	@Nonnull
+	public <T> SelectionQuery<T> ofType(@Nonnull Class<T> resultType) {
 		return asSelectionQuery( resultType );
 	}
 
 	@Override
-	public <T> SelectionQuery<T> withEntityGraph(EntityGraph<T> graph) {
+	@Nonnull
+	public <T> SelectionQuery<T> withEntityGraph(@Nonnull EntityGraph<T> graph) {
 		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}
 
 	@Override
-	public <T> SelectionQueryImplementor<T> withResultSetMapping(jakarta.persistence.sql.ResultSetMapping<T> mapping) {
+	@Nonnull
+	public <T> SelectionQueryImplementor<T> withResultSetMapping(@Nonnull jakarta.persistence.sql.ResultSetMapping<T> mapping) {
 		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
 	@Override
+	@Nullable
 	public PessimisticLockScope getLockScope() {
 		//noinspection removal
 		return queryOptions.getLockOptions().getLockScope();
@@ -901,7 +929,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <T> NativeQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
+	@Nonnull
+	public <T> NativeQueryImplementor<T> setTupleTransformer(@Nonnull TupleTransformer<T> transformer) {
 		errorIfNotSelectForSure();
 		queryOptions.setTupleTransformer( transformer );
 		//noinspection unchecked
@@ -909,7 +938,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer) {
+	@Nonnull
+	public NativeQueryImplementor<R> setResultListTransformer(@Nonnull ResultListTransformer<R> transformer) {
 		errorIfNotSelectForSure();
 		queryOptions.setResultListTransformer( transformer );
 		return this;
@@ -921,7 +951,6 @@ public class NativeQueryImpl<R>
 		}
 		return startsWithSelect;
 	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -981,6 +1010,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public List<R> getResultList() {
 		return executeQuery( this::doList );
 	}
@@ -1001,7 +1031,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public ScrollableResults<R> scroll(ScrollMode scrollMode) {
+	@Nonnull
+	public ScrollableResults<R> scroll(@Nonnull ScrollMode scrollMode) {
 		return executeQuery( scrollMode, this::doScroll );
 	}
 
@@ -1481,58 +1512,67 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+	@Nonnull
+	public NativeQueryImplementor<R> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
 		getQueryOptions().setFlushMode( FlushModeTypeHelper.getFlushMode(queryFlushMode) );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addOption(TypedQuery.Option option) {
+	@Nonnull
+	public NativeQueryImplementor<R> addOption(@Nonnull TypedQuery.Option option) {
 		OptionsHelper.applyOption( this, option );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addOption(Statement.Option option) {
+	@Nonnull
+	public NativeQueryImplementor<R> addOption(@Nonnull Statement.Option option) {
 		OptionsHelper.applyOption( this, option );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("rawtypes")
+	@Nonnull
 	public Set getOptions() {
 		return OptionsHelper.getTypedQueryOptions( getQueryOptions() );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setFlushMode(FlushModeType flushModeType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setFlushMode(@Nonnull FlushModeType flushModeType) {
 		super.setFlushMode( flushModeType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setCacheMode(CacheMode cacheMode) {
+	@Nonnull
+	public NativeQueryImplementor<R> setCacheMode(@Nonnull CacheMode cacheMode) {
 		errorIfNotSelectForSure();
 		queryOptions.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	@Nonnull
+	public NativeQueryImplementor<R> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		errorIfNotSelectForSure();
 		queryOptions.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+	@Nonnull
+	public NativeQueryImplementor<R> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		errorIfNotSelectForSure();
 		queryOptions.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setTimeout(Integer timeout) {
+	@Nonnull
+	public NativeQueryImplementor<R> setTimeout(@Nullable Integer timeout) {
 		if ( timeout == null ) {
 			timeout = -1;
 		}
@@ -1541,6 +1581,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> setCacheable(boolean cacheable) {
 		errorIfNotSelectForSure();
 		queryOptions.setResultCachingEnabled( cacheable );
@@ -1548,25 +1589,28 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setCacheRegion(String cacheRegion) {
+	public NativeQueryImplementor<R> setCacheRegion(@Nullable String cacheRegion) {
 		errorIfNotSelectForSure();
 		queryOptions.setResultCacheRegionName( cacheRegion );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
 		queryOptions.setQueryPlanCachingEnabled( queryPlanCacheable );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> setTimeout(int timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> setFetchSize(int fetchSize) {
 		errorIfNotSelectForSure();
 		queryOptions.setFetchSize( fetchSize );
@@ -1574,6 +1618,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> setReadOnly(boolean readOnly) {
 		errorIfNotSelectForSure();
 		queryOptions.setReadOnly( readOnly );
@@ -1581,25 +1626,29 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setComment(String comment) {
+	@Nonnull
+	public NativeQueryImplementor<R> setComment(@Nullable String comment) {
 		super.setComment( comment );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> addQueryHint(String hint) {
+	@Nonnull
+	public NativeQueryImplementor<R> addQueryHint(@Nonnull String hint) {
 		super.addQueryHint( hint );
 		return this;
 	}
 
 	@Override @Deprecated
-	public NativeQueryImplementor<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
+	@Nonnull
+	public NativeQueryImplementor<R> setEntityGraph(@Nonnull EntityGraph<? super R> entityGraph) {
 		throw new UnsupportedOperationException( "EntityGraphs are not supported for native queries" );
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public NativeQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
+	@Nonnull
+	public NativeQueryImplementor<R> setEntityGraph(@Nonnull EntityGraph<? super R> graph, @Nonnull GraphSemantic semantic) {
 		throw new UnsupportedOperationException( "EntityGraphs are not supported for native queries" );
 	}
 
@@ -1634,255 +1683,295 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameter(String name, Object value) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Object value) {
 		super.setParameter( name, value );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(String name, P value, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> javaTypeClass) {
 		super.setParameter( name, value, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(String name, P value, Type<P> type) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 	@SuppressWarnings("deprecation")
 	@Override @Deprecated
-	public NativeQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameter(int position, Object value) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(int position, @Nullable Object value) {
 		super.setParameter( position, value );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(int position, P value, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaTypeClass) {
 		super.setParameter( position, value, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(int position, P value, Type<P> type) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> javaTypeClass) {
 		super.setParameter( parameter, value, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameter(@Nonnull Parameter<P> parameter, @Nullable P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converterClass) {
 		super.setConvertedParameter( name, value, converterClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converterClass) {
 		super.setConvertedParameter( position, value, converterClass );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaTypeClass) {
 		super.setParameterList( name, values, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameterList(String name, Object[] values) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull Object[] values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaTypeClass) {
 		super.setParameterList( name, values, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameterList(int position, @Nonnull @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaTypeClass) {
 		super.setParameterList( position, values, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameterList(int position, Object[] values) {
+	@Nonnull
+	public NativeQueryImplementor<R> setParameterList(int position, @Nonnull Object[] values) {
 		super.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaTypeClass) {
 		super.setParameterList( position, values, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
 
-
-
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values) {
 		super.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaTypeClass) {
 		super.setParameterList( parameter, values, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values) {
 		super.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaTypeClass) {
 		super.setParameterList( parameter, values, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> NativeQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map map) {
+	@Nonnull
+	public NativeQueryImplementor<R> setProperties(@Nonnull @SuppressWarnings("rawtypes") Map map) {
 		super.setProperties( map );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setProperties(Object bean) {
+	@Nonnull
+	public NativeQueryImplementor<R> setProperties(@Nonnull Object bean) {
 		super.setProperties( bean );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> setMaxResults(int maxResults) {
 		queryOptions.getLimit().setMaxRows( maxResults );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public NativeQueryImplementor<R> setFirstResult(int startPosition) {
 		queryOptions.getLimit().setFirstRow( startPosition );
 		return this;
@@ -1891,9 +1980,9 @@ public class NativeQueryImpl<R>
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Hints
-
 	@Override
-	public NativeQueryImplementor<R> setHint(String hintName, Object value) {
+	@Nonnull
+	public NativeQueryImplementor<R> setHint(@Nonnull String hintName, @Nullable Object value) {
 		super.setHint( hintName, value );
 		return this;
 	}

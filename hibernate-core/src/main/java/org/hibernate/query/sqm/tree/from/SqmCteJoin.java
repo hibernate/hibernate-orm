@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -152,11 +153,13 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 	}
 
 	@Override
+	@Nonnull
 	public SqmFrom<?, T> getParent() {
 		return getCorrelationParent();
 	}
 
 	@Override
+	@Nonnull
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}

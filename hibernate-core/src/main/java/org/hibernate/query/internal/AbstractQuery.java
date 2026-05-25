@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -99,6 +101,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@Nonnull
 	public final <X> X unwrap(Class<X> type) {
 		if ( type.isInstance( this ) ) {
 			return type.cast( this );
@@ -181,32 +184,38 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public List<T> list() {
 		return getResultList();
 	}
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public abstract List<T> getResultList();
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public ScrollableResults<T> scroll() {
 		return scroll( getSessionFactory().getJdbcServices().getDialect().defaultScrollMode() );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
-	public abstract ScrollableResults<T> scroll(ScrollMode scrollMode);
+	@Nonnull
+	public abstract ScrollableResults<T> scroll(@Nonnull ScrollMode scrollMode);
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public Stream<T> stream() {
 		return getResultStream();
 	}
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public Stream<T> getResultStream() {
 		final var results = scroll( ScrollMode.FORWARD_ONLY );
 		final var spliterator = spliteratorUnknownSize( new ScrollableResultsIterator<>( results ), NONNULL );
@@ -215,6 +224,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	public T uniqueResult() {
 		// note: throws different exception type
 		//       to getSingleResultOrNull()
@@ -223,6 +233,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public Optional<T> uniqueResultOptional() {
 		return ofNullable( uniqueResult() );
 	}
@@ -242,6 +253,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override @SuppressWarnings("removal")
+	@Nullable
 	public T getSingleResultOrNull() {
 		try {
 			return uniqueElement( getResultList() );
@@ -255,40 +267,47 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	// Options
 
 	@Override @SuppressWarnings("removal")
+	@Nonnull
 	public MutableQueryOptions getQueryOptions() {
 		return queryOptions;
 	}
 
 	@Override
-	public QueryImplementor<T> setHint(String hintName, Object value) {
+	@Nonnull
+	public QueryImplementor<T> setHint(@Nonnull String hintName, @Nullable Object value) {
 		super.setHint( hintName, value );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public String getComment() {
 		return getQueryOptions().getComment();
 	}
 
 	@Override
-	public QueryImplementor<T> setComment(String comment) {
+	@Nonnull
+	public QueryImplementor<T> setComment(@Nullable String comment) {
 		getQueryOptions().setComment( comment );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> addQueryHint(String hint) {
+	@Nonnull
+	public QueryImplementor<T> addQueryHint(@Nonnull String hint) {
 		queryOptions.addDatabaseHint( hint );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public QueryFlushMode getQueryFlushMode() {
 		return queryFlushModeFromFlushMode( getQueryOptions().getFlushMode() );
 	}
 
 	@Override
-	public QueryImplementor<T> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+	@Nonnull
+	public QueryImplementor<T> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
 		getQueryOptions().setFlushMode( interpretQueryFlushMode(queryFlushMode) );
 		return this;
 	}
@@ -298,25 +317,29 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
-	public QueryImplementor<T> setFlushMode(FlushModeType flushMode) {
+	@Nonnull
+	public QueryImplementor<T> setFlushMode(@Nonnull FlushModeType flushMode) {
 		super.setFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public QueryImplementor<T> setTimeout(int timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setTimeout(Integer timeout) {
+	@Nonnull
+	public QueryImplementor<T> setTimeout(@Nullable Integer timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setTimeout(Timeout timeout) {
+	@Nonnull
+	public QueryImplementor<T> setTimeout(@Nullable Timeout timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
@@ -327,12 +350,14 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	public Integer getFetchSize() {
 		return queryOptions.getFetchSize();
 	}
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public QueryImplementor<T> setFetchSize(int fetchSize) {
 		verifySelectionOption( "Fetch size" );
 		queryOptions.setFetchSize( fetchSize );
@@ -347,6 +372,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public Query<T> setReadOnly(boolean readOnly) {
 		verifySelectionOption( "Fetch size" );
 		queryOptions.setReadOnly( readOnly );
@@ -360,6 +386,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@Nonnull
 	public QueryImplementor<T> setMaxResults(int maxResult) {
 		verifySelectionOption( "Max results" );
 		super.setMaxResults( maxResult );
@@ -373,6 +400,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
+	@Nonnull
 	public QueryImplementor<T> setFirstResult(int startPosition) {
 		verifySelectionOption( "First result" );
 		super.setFirstResult( startPosition );
@@ -385,6 +413,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override @SuppressWarnings("removal")
+	@Nonnull
 	public Query<T> setCacheable(boolean cacheable) {
 		verifySelectionOption( "Result caching" );
 		queryOptions.setResultCachingEnabled( cacheable );
@@ -392,12 +421,14 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override @SuppressWarnings("removal")
+	@Nonnull
 	public CacheMode getCacheMode() {
 		return queryOptions.getCacheMode();
 	}
 
 	@Override @SuppressWarnings("removal")
-	public Query<T> setCacheMode(CacheMode cacheMode) {
+	@Nonnull
+	public Query<T> setCacheMode(@Nonnull CacheMode cacheMode) {
 		verifySelectionOption( "Result caching" );
 		queryOptions.setCacheMode( cacheMode );
 		return this;
@@ -405,62 +436,71 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	public String getCacheRegion() {
 		return queryOptions.getResultCacheRegionName();
 	}
 
 	@Override
 	@SuppressWarnings("removal")
-	public Query<T> setCacheRegion(String cacheRegion) {
+	public Query<T> setCacheRegion(@Nullable String cacheRegion) {
 		verifySelectionOption( "Result caching" );
 		queryOptions.setResultCacheRegionName( cacheRegion );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		throw new IllegalStateException( "Cache retrieval not supported" );
 	}
 
 	@Override
-	public QueryImplementor<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	@Nonnull
+	public QueryImplementor<T> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		verifySelectionOption( "Result caching" );
 		super.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
 		throw new IllegalStateException( "Cache storage not supported" );
 	}
 
 	@Override
-	public QueryImplementor<T> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+	@Nonnull
+	public QueryImplementor<T> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		verifySelectionOption( "Result caching" );
 		super.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override @SuppressWarnings("removal")
+	@Nullable
 	public LockModeType getLockMode() {
 		return queryOptions.getLockOptions().getLockMode().toJpaLockMode();
 	}
 
 	@Override
-	public QueryImplementor<T> setLockMode(LockModeType lockMode) {
+	@Nonnull
+	public QueryImplementor<T> setLockMode(@Nonnull LockModeType lockMode) {
 		verifySelectionOption( "Locking" );
 		super.setLockMode( lockMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public LockMode getHibernateLockMode() {
 		//noinspection removal
 		return queryOptions.getLockOptions().getLockMode();
 	}
 
 	@Override
-	public QueryImplementor<T> setHibernateLockMode(LockMode lockMode) {
+	@Nonnull
+	public QueryImplementor<T> setHibernateLockMode(@Nonnull LockMode lockMode) {
 		verifySelectionOption( "Locking" );
 		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( lockMode );
@@ -468,7 +508,8 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	}
 
 	@Override
-	public QueryImplementor<T> setFollowOnStrategy(Locking.FollowOn strategy) {
+	@Nonnull
+	public QueryImplementor<T> setFollowOnStrategy(@Nonnull Locking.FollowOn strategy) {
 		verifySelectionOption( "Locking" );
 		//noinspection removal
 		queryOptions.getLockOptions().setFollowOnStrategy( strategy );
@@ -477,7 +518,8 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@SuppressWarnings("removal")
-	public <X> QueryImplementor<X> setTupleTransformer(TupleTransformer<X> transformer) {
+	@Nonnull
+	public <X> QueryImplementor<X> setTupleTransformer(@Nonnull TupleTransformer<X> transformer) {
 		verifySelectionOption( "Result transformation" );
 		getQueryOptions().setTupleTransformer( transformer );
 		//noinspection unchecked
@@ -486,7 +528,8 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@SuppressWarnings("removal")
-	public QueryImplementor<T> setResultListTransformer(ResultListTransformer<T> transformer) {
+	@Nonnull
+	public QueryImplementor<T> setResultListTransformer(@Nonnull ResultListTransformer<T> transformer) {
 		verifySelectionOption( "Result transformation" );
 		getQueryOptions().setResultListTransformer( transformer );
 		return this;
@@ -495,241 +538,279 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter binding
-
 	@Override
-	public QueryImplementor<T> setParameter(String name, Object value) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(@Nonnull String name, @Nullable Object value) {
 		super.setParameter( name, value );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameter(String name, P value, Class<P> javaType) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> javaType) {
 		super.setParameter( name, value, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameter(String name, P value, Type<P> type) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setParameter(int position, Object value) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(int position, @Nullable Object value) {
 		super.setParameter( position, value );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameter(int position, P value, Class<P> javaType) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaType) {
 		super.setParameter( position, value, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameter(int position, P value, Type<P> type) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameter(QueryParameter<P> parameter, P value) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> javaType) {
 		super.setParameter( parameter, value, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameter(Parameter<P> parameter, P value) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameter(@Nonnull Parameter<P> parameter, @Nullable P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setProperties(@SuppressWarnings("rawtypes") Map map) {
+	@Nonnull
+	public QueryImplementor<T> setProperties(@Nonnull @SuppressWarnings("rawtypes") Map map) {
 		super.setProperties( map );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setProperties(Object bean) {
+	@Nonnull
+	public QueryImplementor<T> setProperties(@Nonnull Object bean) {
 		super.setProperties( bean );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
+	@Nonnull
+	public <P> QueryImplementor<T> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converterClass) {
 		super.setConvertedParameter( name, value, converterClass );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
+	@Nonnull
+	public <P> QueryImplementor<T> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converterClass) {
 		super.setConvertedParameter( position,value, converterClass );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
-	public <P> QueryImplementor<T> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType) {
 		super.setParameterList( name, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(String name, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setParameterList(String name, Object[] values) {
+	@Nonnull
+	public QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull Object[] values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(String name, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaType) {
 		super.setParameterList( name, values, javaType );
 		return this;
 	}
 
-	public <P> QueryImplementor<T> setParameterList(String name, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public QueryImplementor<T> setParameterList(int position, @Nonnull @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType) {
 		super.setParameterList( position, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(int position, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<T> setParameterList(int position, Object[] values) {
+	@Nonnull
+	public QueryImplementor<T> setParameterList(int position, @Nonnull Object[] values) {
 		super.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(int position, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType) {
 		super.setParameterList( position, values, javaType );
 		return this;
 	}
 
-	public <P> QueryImplementor<T> setParameterList(int position, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
 
-
 	@Override
-	public <P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values) {
 		super.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType) {
 		super.setParameterList( parameter, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values) {
 		super.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType) {
 		super.setParameterList( parameter, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setParameter(String name, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setParameter(int position, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setParameter(String name, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setParameter(String name, Date value, TemporalType temporalType) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setParameter(int position, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7") @SuppressWarnings("deprecation")
-	public QueryImplementor<T> setParameter(int position, Date value, TemporalType temporalType) {
+	@Nonnull
+	public QueryImplementor<T> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}

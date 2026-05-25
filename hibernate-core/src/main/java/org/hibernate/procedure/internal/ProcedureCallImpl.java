@@ -4,6 +4,8 @@
  */
 package org.hibernate.procedure.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -96,12 +98,14 @@ public class ProcedureCallImpl<R>
 		implements ProcedureCallImplementor<R> {
 
 	@Override
-	public ProcedureCallImpl<R> addOption(Option option) {
+	@Nonnull
+	public ProcedureCallImpl<R> addOption(@Nonnull Option option) {
 		OptionsHelper.applyOption( this, option );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public Set<Option> getOptions() {
 		return OptionsHelper.getStoredProcedureOptions( getQueryOptions() );
 	}
@@ -229,11 +233,13 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public String getProcedureName() {
 		return procedureName;
 	}
 
 	@Override
+	@Nullable
 	public String getQueryString() {
 		return "ProcedureCall::" + procedureName;
 	}
@@ -243,83 +249,96 @@ public class ProcedureCallImpl<R>
 	// Casts
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> asSelectionQuery() {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
 	}
 
 	@Override
+	@Nonnull
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
 	}
 
 	@Override
+	@Nonnull
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
 	}
 
 	@Override
-	public <X> SelectionQueryImplementor<X> withResultSetMapping(jakarta.persistence.sql.ResultSetMapping<X> mapping) {
+	@Nonnull
+	public <X> SelectionQueryImplementor<X> withResultSetMapping(@Nonnull jakarta.persistence.sql.ResultSetMapping<X> mapping) {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
 	}
 
 	@Override
+	@Nonnull
 	public MutationQueryImplementor<R> asMutationQuery() {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as MutationQuery" );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
-
 	@Override
-	public ProcedureCallImplementor<R> setComment(String comment) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setComment(@Nullable String comment) {
 		super.setComment( comment );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
 		super.setQueryFlushMode( queryFlushMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> setMaxResults(int maxResult) {
 		super.setMaxResults( maxResult );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> setFirstResult(int startPosition) {
 		super.setFirstResult( startPosition );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setLockMode(LockModeType lockMode) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setLockMode(@Nonnull LockModeType lockMode) {
 		throw new IllegalStateException( "Locking not supported for ProcedureCall" );
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> addQueryHint(String hint) {
+	@Nonnull
+	public ProcedureCallImplementor<R> addQueryHint(@Nonnull String hint) {
 		super.addQueryHint( hint );
 		return this;
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public Query<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
+	@Nonnull
+	public Query<R> setEntityGraph(@Nonnull EntityGraph<? super R> graph, @Nonnull GraphSemantic semantic) {
 		throw new UnsupportedOperationException( "Entity graph not supported for ProcedureCall" );
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public Query<R> enableFetchProfile(String profileName) {
+	@Nonnull
+	public Query<R> enableFetchProfile(@Nonnull String profileName) {
 		throw new UnsupportedOperationException( "Fetch profiles not supported for ProcedureCall" );
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public Query<R> disableFetchProfile(String profileName) {
+	@Nonnull
+	public Query<R> disableFetchProfile(@Nonnull String profileName) {
 		throw new UnsupportedOperationException( "Fetch profiles not supported for ProcedureCall" );
 	}
 
@@ -329,12 +348,14 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
 		throw new UnsupportedOperationException( "Not supported" );
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setTimeout(Integer timeout) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setTimeout(@Nullable Integer timeout) {
 		if ( timeout == null ) {
 			timeout = -1;
 		}
@@ -343,19 +364,22 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> setTimeout(int timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setTimeout(Timeout timeout) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setTimeout(@Nullable Timeout timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
 	@Deprecated @SuppressWarnings("removal")
+	@Nullable
 	public LockModeType getLockMode() {
 		// the JPA spec requires IllegalStateException here, even
 		// though it's logically an UnsupportedOperationException
@@ -363,7 +387,8 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setFlushMode(FlushModeType flushModeType) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setFlushMode(@Nonnull FlushModeType flushModeType) {
 		super.setFlushMode( flushModeType );
 		return this;
 	}
@@ -373,19 +398,22 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		super.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		super.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setHint(@Nonnull String hintName, @Nullable Object value) {
 		super.setHint( hintName, value );
 		return this;
 	}
@@ -492,37 +520,44 @@ public class ProcedureCallImpl<R>
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter Handling
-
 	@Override
+	@Nonnull
 	public ProcedureParameterMetadataImplementor getParameterMetadata() {
 		return parameterMetadata;
 	}
 
 	@Override
+	@Nonnull
 	public QueryParameterBindings getParameterBindings() {
 		return parameterBindings;
 	}
 
 	@Override
+	@Nonnull
 	protected QueryParameterBindings getQueryParameterBindings() {
 		return parameterBindings;
 	}
 
+	@Nonnull
+	@Override
 	public ParameterStrategy getParameterStrategy() {
 		return getParameterMetadata().getParameterStrategy();
 	}
 
 	@Override
+	@Nullable
 	public FunctionReturnImplementor<?> getFunctionReturn() {
 		return functionReturn;
 	}
 
 	@Override
-	public ProcedureParameterImplementor<?> getParameterRegistration(String name) {
+	@Nonnull
+	public ProcedureParameterImplementor<?> getParameterRegistration(@Nonnull String name) {
 		return parameterMetadata.getQueryParameter( name );
 	}
 
 	@Override
+	@Nonnull
 	public List<ProcedureParameter<?>> getRegisteredParameters() {
 		return unmodifiableList( parameterMetadata.getRegistrationsAsList() );
 	}
@@ -570,6 +605,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> markAsFunctionCall(int sqlType) {
 		functionReturn = new FunctionReturnImpl<>( this, sqlType );
 		return this;
@@ -580,7 +616,8 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <T> FunctionReturnImplementor<T> registerResultParameter(Class<T> aClass) {
+	@Nonnull
+	public <T> FunctionReturnImplementor<T> registerResultParameter(@Nonnull Class<T> aClass) {
 		//noinspection resource
 		markAsFunctionCall( aClass );
 		//noinspection unchecked
@@ -588,7 +625,8 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> markAsFunctionCall(Class<?> resultType) {
+	@Nonnull
+	public ProcedureCallImplementor<R> markAsFunctionCall(@Nonnull Class<?> resultType) {
 		final var basicType = getTypeConfiguration().getBasicTypeForJavaType( resultType );
 		if ( basicType == null ) {
 			throw new IllegalArgumentException( "Could not resolve a BasicType for the Java type: " + resultType.getName() );
@@ -598,7 +636,8 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCall markAsFunctionCall(Type<?> typeReference) {
+	@Nonnull
+	public ProcedureCall markAsFunctionCall(@Nonnull Type<?> typeReference) {
 		if ( !(typeReference instanceof OutputableType<?> outputableType) ) {
 			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
 		}
@@ -627,7 +666,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode) {
+	@Nonnull
+	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
+			int position,
+			@Nonnull Class<?> type,
+			@Nonnull ParameterMode mode) {
 		getSession().checkOpen( true );
 		try {
 			if ( AttributeConverter.class.isAssignableFrom( type ) ) {
@@ -649,10 +692,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			String parameterName,
-			Class<?> type,
-			ParameterMode mode) {
+			@Nonnull Class<?> type,
+			@Nonnull ParameterMode mode) {
 		getSession().checkOpen( true );
 		try {
 			if ( AttributeConverter.class.isAssignableFrom( type ) ) {
@@ -702,10 +746,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			int position,
-			Type<?> type,
-			ParameterMode mode) {
+			@Nonnull Type<?> type,
+			@Nonnull ParameterMode mode) {
 		getSession().checkOpen( true );
 
 		try {
@@ -722,10 +767,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			String parameterName,
-			Type<?> type,
-			ParameterMode mode) {
+			@Nonnull Type<?> type,
+			@Nonnull ParameterMode mode) {
 		getSession().checkOpen( true );
 		try {
 			registerParameter( parameterName, type, mode );
@@ -741,6 +787,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public <T> ProcedureParameterImplementor<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
 		final var parameterType = getMappingMetamodel().resolveParameterBindType( javaType );
 		final var procedureParameter =
@@ -750,10 +797,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public <T> ProcedureParameterImplementor<T> registerParameter(
 			int position,
-			Type<T> typeReference,
-			ParameterMode mode) {
+			@Nonnull Type<T> typeReference,
+			@Nonnull ParameterMode mode) {
 		final var expressible = resolveExpressible( typeReference );
 		final var procedureParameter =
 				new ProcedureParameterImpl<>( position, mode, typeReference.getJavaType(), expressible );
@@ -761,7 +809,7 @@ public class ProcedureCallImpl<R>
 		return procedureParameter;
 	}
 
-	private <T> SqmBindableType<T> resolveExpressible(Type<T> typeReference) {
+	private <T> SqmBindableType<T> resolveExpressible(@Nonnull Type<T> typeReference) {
 		return getSessionFactory().getRuntimeMetamodels().resolveExpressible( typeReference );
 	}
 
@@ -770,12 +818,14 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureParameterImplementor<?> getParameterRegistration(int position) {
 		return parameterMetadata.getQueryParameter( position );
 	}
 
 	@Override
-	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> javaType, ParameterMode mode) {
+	@Nonnull
+	public <T> ProcedureParameterImplementor<T> registerParameter(@Nonnull String name, @Nonnull Class<T> javaType, @Nonnull ParameterMode mode) {
 		final var parameterType = getMappingMetamodel().resolveParameterBindType( javaType );
 		final var parameter =
 				new ProcedureParameterImpl<>( name, mode, getExpressibleJavaType( parameterType ), parameterType );
@@ -784,7 +834,8 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(int position, Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
+	@Nonnull
+	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(int position, @Nonnull Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
 		final var convertedType = createConvertedParameterType(
 				converter,
 				getSession().getFactory().getServiceRegistry(),
@@ -801,7 +852,8 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(String parameterName, Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
+	@Nonnull
+	public <T> ProcedureParameterImplementor<T> registerConvertedParameter(@Nonnull String parameterName, @Nonnull Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode) {
 		final var convertedType = createConvertedParameterType(
 				converter,
 				getSession().getFactory().getServiceRegistry(),
@@ -829,10 +881,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public <T> ProcedureParameterImplementor<T> registerParameter(
 			String name,
-			Type<T> typeReference,
-			ParameterMode mode) {
+			@Nonnull Type<T> typeReference,
+			@Nonnull ParameterMode mode) {
 		final var parameter =
 				new ProcedureParameterImpl<>( name, mode, typeReference.getJavaType(),
 						resolveExpressible( typeReference ) );
@@ -861,12 +914,14 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> addSynchronizedQuerySpace(String querySpace) {
 		synchronizedQuerySpaces().add( querySpace );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> addSynchronizedEntityName(String entityName) {
 		final var entityDescriptor = getMappingMetamodel().getEntityDescriptor( entityName );
 		addSynchronizedQuerySpaces( entityDescriptor );
@@ -878,6 +933,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureCallImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) {
 		final var entityDescriptor = getMappingMetamodel().getEntityDescriptor( entityClass );
 		addSynchronizedQuerySpaces( entityDescriptor );
@@ -889,6 +945,7 @@ public class ProcedureCallImpl<R>
 	// Memento
 
 	@Override
+	@Nonnull
 	public NamedCallableQueryMemento toMemento(String name) {
 		return new NamedCallableQueryMementoImpl(
 				name,
@@ -936,6 +993,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureOutputs getOutputs() {
 		if ( outputs == null ) {
 			outputs = buildOutputs();
@@ -1129,7 +1187,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public Object getOutputParameterValue(String parameterName) {
+	public Object getOutputParameterValue(@Nonnull String parameterName) {
 		// According to spec, an exception thrown from this method should not mark for rollback.
 		try {
 			return getOutputs().getOutputParameterValue( parameterName );
@@ -1143,7 +1201,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <T> T getOutputParameterValue(Parameter<T> parameter) {
+	public <T> T getOutputParameterValue(@Nonnull Parameter<T> parameter) {
 		return getOutputs().getOutputParameterValue( (ProcedureParameter<T>) parameter );
 	}
 
@@ -1205,6 +1263,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public List<R> getResultList() {
 		final var results = results( output -> output.asResultSetOutput().getResultList() );
 		//noinspection unchecked
@@ -1212,37 +1271,44 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <R1> List<R1> getResultList(Class<R1> type) {
+	@Nullable
+	public <R1> List<R1> getResultList(@Nonnull Class<R1> type) {
 		return results( output -> output.asResultSetOutput( type ).getResultList() );
 	}
 
 	@Override
-	public <R1> List<R1> getResultList(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
+	@Nullable
+	public <R1> List<R1> getResultList(@Nonnull jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
 		return results( output -> output.asResultSetOutput( resultSetMapping ).getResultList() );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
-	public ScrollableResults<R> scroll(ScrollMode scrollMode) {
+	@Nonnull
+	public ScrollableResults<R> scroll(@Nonnull ScrollMode scrollMode) {
 		throw new UnsupportedOperationException( "Cannot scroll a ProcedureCall" );
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	public Stream<R> getResultStream() {
 		return stream();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	public Stream<R> stream() {
 		return getResultList().stream();
 	}
 
 	@Override
-	public <R1> R1 getSingleResult(Class<R1> aClass) {
+	@Nullable
+	public <R1> R1 getSingleResult(@Nonnull Class<R1> aClass) {
 		try {
-			return getSingleResult( getResultList( aClass ) );
+			final var list = getResultList( aClass );
+			return list == null ? null : getSingleResult( list );
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
@@ -1250,9 +1316,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <R1> R1 getSingleResult(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
+	@Nullable
+	public <R1> R1 getSingleResult(@Nonnull jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
 		try {
-			return getSingleResult( getResultList( resultSetMapping ) );
+			final var list = getResultList( resultSetMapping );
+			return list == null ? null : getSingleResult( list );
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
@@ -1267,9 +1335,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <R1> R1 getSingleResultOrNull(Class<R1> aClass) {
+	@Nullable
+	public <R1> R1 getSingleResultOrNull(@Nonnull Class<R1> aClass) {
 		try {
-			return uniqueElement( getResultList( aClass ) );
+			final var list = getResultList( aClass );
+			return list == null ? null : uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
@@ -1277,9 +1347,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <R1> R1 getSingleResultOrNull(jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
+	@Nullable
+	public <R1> R1 getSingleResultOrNull(@Nonnull jakarta.persistence.sql.ResultSetMapping<R1> resultSetMapping) {
 		try {
-			return uniqueElement( getResultList( resultSetMapping ) );
+			final var list = getResultList( resultSetMapping );
+			return list == null ? null : uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
@@ -1287,7 +1359,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	protected  <X> X unwrapDelegates(Class<X> type) {
+	protected <X> X unwrapDelegates(Class<X> type) {
 		if ( type.isInstance( getOutputs() ) ) {
 			return type.cast( getOutputs() );
 		}
@@ -1295,128 +1367,147 @@ public class ProcedureCallImpl<R>
 		return super.unwrapDelegates( type );
 	}
 
-
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
+	@Nonnull
+	public <P> ProcedureCallImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(Parameter<P> parameter, P value) {
+	@Nonnull
+	public <P> ProcedureCallImplementor<R> setParameter(@Nonnull Parameter<P> parameter, @Nullable P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(String name, Object value) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable Object value) {
 		super.setParameter( name, value );
 		return this;
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> javaTypeClass) {
 		super.setParameter( name, value, javaTypeClass );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(int position, Object value) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setParameter(int position, @Nullable Object value) {
 		super.setParameter( position, value );
 		return this;
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, Class<P> javaTypeClass) {
+	@Nonnull
+	public <P> ProcedureCallImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaTypeClass) {
 		super.setParameter( position, value, javaTypeClass );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public <P> ProcedureCallImplementor<R> setParameter(
-			QueryParameter<P> parameter,
-			P value,
-			Type<P> type) {
+			@Nonnull QueryParameter<P> parameter,
+			@Nullable P value,
+			@Nonnull Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, Type<P> type) {
+	@Nonnull
+	public <P> ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, Type<P> type) {
+	@Nonnull
+	public <P> ProcedureCallImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map map) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setProperties(@Nonnull @SuppressWarnings("rawtypes") Map map) {
 		super.setProperties( map );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setProperties(Object bean) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setProperties(@Nonnull Object bean) {
 		super.setProperties( bean );
 		return this;
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+	@Nonnull
+	public <P> ProcedureCallImplementor<R> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter) {
 		super.setConvertedParameter( name, value, converter );
 		return this;
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+	@Nonnull
+	public <P> ProcedureCallImplementor<R> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter) {
 		super.setConvertedParameter( position, value, converter );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
+	@Nonnull
 	public ProcedureCallImplementor<R> setParameter(
-			Parameter<Calendar> parameter,
-			Calendar value,
-			TemporalType temporalPrecision) {
+			@Nonnull Parameter<Calendar> parameter,
+			@Nullable Calendar value,
+			@Nonnull TemporalType temporalPrecision) {
 		super.setParameter( parameter, value, temporalPrecision );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public ProcedureCallImplementor<R> setParameter(Parameter<Date> parameter, Date value, TemporalType temporalPrecision) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setParameter(@Nonnull Parameter<Date> parameter, @Nullable Date value, @Nonnull TemporalType temporalPrecision) {
 		super.setParameter( parameter, value, temporalPrecision );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalPrecision) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalPrecision) {
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalPrecision) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalPrecision) {
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalPrecision) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalPrecision) {
 		super.setParameter( position, value, temporalPrecision );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalPrecision) {
+	@Nonnull
+	public ProcedureCallImplementor<R> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalPrecision) {
 		super.setParameter( position, value, temporalPrecision );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
 		throw new IllegalSelectQueryException( "Not a HQL query", getQueryString() );
 	}

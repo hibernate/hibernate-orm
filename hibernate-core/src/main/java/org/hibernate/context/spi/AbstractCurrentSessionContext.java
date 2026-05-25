@@ -44,14 +44,19 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 		if ( resolver != null && resolver.validateExistingCurrentSessions() ) {
 			final Object currentValue = resolver.resolveCurrentTenantIdentifier();
 			final var tenantIdentifierJavaType = factory.getTenantIdentifierJavaType();
-			if ( !tenantIdentifierJavaType.areEqual( currentValue, existingSession.getTenantIdentifierValue() ) ) {
+			final Object tenantIdentifierValue = existingSession.getTenantIdentifierValue();
+			if ( tenantIdentifierValue == null || currentValue == null ) {
+				if ( tenantIdentifierValue != currentValue ) {
+					throw new TenantIdentifierMismatchException(
+							"Reported current tenant identifier did not match tenant identifier from existing session [%s]"
+					);
+				}
+			}
+			else if ( !tenantIdentifierJavaType.areEqual( currentValue, tenantIdentifierValue ) ) {
 				throw new TenantIdentifierMismatchException(
-						String.format(
-								"Reported current tenant identifier [%s] did not match tenant identifier from " +
-										"existing session [%s]",
-								tenantIdentifierJavaType.toString( currentValue ),
-								tenantIdentifierJavaType.toString( existingSession.getTenantIdentifierValue() )
-						)
+						"Reported current tenant identifier [%s] did not match tenant identifier from existing session [%s]"
+								.formatted( tenantIdentifierJavaType.toString( currentValue ),
+										tenantIdentifierJavaType.toString( tenantIdentifierValue ) )
 				);
 			}
 		}

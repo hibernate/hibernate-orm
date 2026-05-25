@@ -9,7 +9,6 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityHandler;
 import jakarta.persistence.FindOption;
-import jakarta.persistence.PersistenceException;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
@@ -54,6 +53,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
 	 * @see SessionBuilder#tenantIdentifier(Object)
 	 */
+	@Nullable
 	String getTenantIdentifier();
 
 	/**
@@ -65,6 +65,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
 	 * @see SessionBuilder#tenantIdentifier(Object)
 	 */
+	@Nullable
 	Object getTenantIdentifierValue();
 
 	/**
@@ -72,17 +73,18 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @return the current cache mode
 	 */
+	@Nonnull
 	CacheMode getCacheMode();
 
 	/**
 	 * Set the current {@linkplain CacheMode cache mode} for this session.
 	 * <p>
 	 * The cache mode determines the manner in which this session can interact with
-	 * the second level cache.
+	 * the second-level cache.
 	 *
 	 * @param cacheMode the new cache mode
 	 */
-	void setCacheMode(CacheMode cacheMode);
+	void setCacheMode(@Nonnull CacheMode cacheMode);
 
 	/**
 	 * End the session by releasing the JDBC connection and cleaning up.
@@ -139,6 +141,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see #getTransaction()
 	 * @see Transaction#begin()
 	 */
+	@Nonnull
 	Transaction beginTransaction();
 
 	/**
@@ -167,7 +170,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	Transaction getTransaction();
 
 	/**
-	 * Join the currently-active JTA transaction.
+	 * Join the currently active JTA transaction.
 	 *
 	 * @see jakarta.persistence.EntityManager#joinTransaction()
 	 *
@@ -194,7 +197,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	/// a mapped dynamic entity
 	/// @see SessionFactory#createGraphForDynamicEntity(String)
 	/// @see #find(EntityGraph, Object, FindOption...)
-	default Object find(String entityName, Object id) {
+	@Nullable
+	default Object find(@Nonnull String entityName, @Nonnull Object id) {
 		return find( entityName, id, LockMode.NONE );
 	}
 
@@ -211,7 +215,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	///
 	/// @see SessionFactory#createGraphForDynamicEntity(String)
 	/// @see #find(EntityGraph,Object,FindOption...)
-	Object find(String entityName, Object key, FindOption... findOptions);
+	@Nullable
+	Object find(@Nonnull String entityName, @Nonnull Object key, @Nullable FindOption... findOptions);
 
 	/// Form of [#find(String,Object)] throwing [jakarta.persistence.EntityNotFoundException]
 	/// if no entity exists for that id rather than returning null.
@@ -225,7 +230,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	/// was found for the given `id`
 	/// @see SessionFactory#createGraphForDynamicEntity(String)
 	/// @see #get(EntityGraph, Object, FindOption...)
-	default Object get(String entityName, Object id) {
+	@Nonnull
+	default Object get(@Nonnull String entityName, @Nonnull Object id) {
 		return get( entityName, id, LockMode.NONE );
 	}
 
@@ -245,7 +251,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	///
 	/// @see SessionFactory#createGraphForDynamicEntity(String)
 	/// @see #get(EntityGraph,Object,FindOption...)
-	Object get(String entityName, Object key, FindOption... findOptions);
+	@Nonnull
+	Object get(@Nonnull String entityName, @Nonnull Object key, @Nullable FindOption... findOptions);
 
 	/**
 	 * Create a typed {@link Query} instance for the given HQL query
@@ -314,7 +321,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	/// 		...
 	/// 		.list();
 	/// ```
-	default <R> SelectionQuery<R> createQuery(Class<R> resultClass, String hqlString) {
+	@Nonnull
+	default <R> SelectionQuery<R> createQuery(@Nonnull Class<R> resultClass, @Nonnull String hqlString) {
 		return createQuery( hqlString, resultClass );
 	}
 
@@ -482,7 +490,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaSelect)
 	 */
-	<R> SelectionQuery<R> createSelectionQuery(CriteriaSelect<R> criteria);
+	@Nonnull
+	<R> SelectionQuery<R> createSelectionQuery(@Nonnull CriteriaSelect<R> criteria);
 
 	/**
 	 * Create a {@link SelectionQuery} reference for the given
@@ -490,17 +499,20 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaSelect)
 	 */
-	<R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria);
+	@Nonnull
+	<R> SelectionQuery<R> createSelectionQuery(@Nonnull CriteriaQuery<R> criteria);
 
 	/**
 	 * Create a {@link MutationQuery} from the given update criteria tree
 	 */
-	MutationQuery createMutationQuery(CriteriaStatement<?> criteriaStatement);
+	@Nonnull
+	MutationQuery createMutationQuery(@Nonnull CriteriaStatement<?> criteriaStatement);
 
 	/**
 	 * Create a {@link MutationQuery} from the given insert criteria tree
 	 */
-	MutationQuery createMutationQuery(JpaCriteriaInsert<?> insert);
+	@Nonnull
+	MutationQuery createMutationQuery(@Nonnull JpaCriteriaInsert<?> insert);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL query.
@@ -626,10 +638,14 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	<R> SelectionQuery<R> createNamedQuery(@Nonnull String name, @Nonnull Class<R> resultClass);
 
 	@Override
-	MutationQuery createNamedStatement(String name);
+	@Nonnull
+	MutationQuery createNamedStatement(@Nonnull String name);
 
-	<R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName);
-	<R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass);
+	@Nonnull
+	<R> NativeQuery<R> createNamedQuery(@Nonnull String name, @Nonnull String resultSetMappingName);
+
+	@Nonnull
+	<R> NativeQuery<R> createNamedQuery(@Nonnull String name, @Nonnull String resultSetMappingName, @Nonnull Class<R> resultClass);
 
 	@Override
 	@Nonnull
@@ -650,7 +666,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @throws IllegalSelectQueryException if the given HQL query is not a select query
 	 * @throws UnknownNamedQueryException if no query has been defined with the given name
 	 */
-	<R> SelectionQuery<R> createNamedSelectionQuery(String name, Class<R> resultType);
+	@Nonnull
+	<R> SelectionQuery<R> createNamedSelectionQuery(@Nonnull String name, @Nonnull Class<R> resultType);
 
 	/**
 	 * Create a {@link MutationQuery} instance for the given named insert,
@@ -661,7 +678,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @throws IllegalMutationQueryException if the given HQL query is a select query
 	 * @throws UnknownNamedQueryException if no query has been defined with the given name
 	 */
-	MutationQuery createNamedMutationQuery(String name);
+	@Nonnull
+	MutationQuery createNamedMutationQuery(@Nonnull String name);
 
 	/**
 	 * Obtain a {@link ProcedureCall} based on a named template
@@ -672,7 +690,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see jakarta.persistence.NamedStoredProcedureQuery
 	 */
-	ProcedureCall getNamedProcedureCall(String name);
+	@Nonnull
+	ProcedureCall getNamedProcedureCall(@Nonnull String name);
 
 	/**
 	 * Create a {@link ProcedureCall} to a stored procedure.
@@ -681,7 +700,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	ProcedureCall createStoredProcedureCall(String procedureName);
+	@Nonnull
+	ProcedureCall createStoredProcedureCall(@Nonnull String procedureName);
 
 	/**
 	 * Create a {@link ProcedureCall} to a stored procedure with the given result
@@ -692,7 +712,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses);
+	@Nonnull
+	ProcedureCall createStoredProcedureCall(@Nonnull String procedureName, @Nonnull Class<?>... resultClasses);
 
 	/**
 	 * Create a {@link ProcedureCall} to a stored procedure with the given result
@@ -703,7 +724,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings);
+	@Nonnull
+	ProcedureCall createStoredProcedureCall(@Nonnull String procedureName, @Nonnull String... resultSetMappings);
 
 	/**
 	 * Obtain a {@link ProcedureCall} based on a named template
@@ -773,7 +795,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * {@link StatelessSession} triggers a sort of write-behind behaviour
 	 * where operations are batched and executed asynchronously, undermining
 	 * the semantics of the stateless programming model. We recommend the use
-	 * of explicitly-batching operations like
+	 * of explicitly batching operations like
 	 * {@link StatelessSession#insertMultiple insertMultiple()},
 	 * {@link StatelessSession#updateMultiple updateMultiple()}, and
 	 * {@link StatelessSession#deleteMultiple deleteMultiple()} instead.
@@ -813,7 +835,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @apiNote This method competes with the JPA-defined method
 	 *          {@link jakarta.persistence.EntityManager#runWithConnection}
 	 */
-	void doWork(Work work) throws HibernateException;
+	void doWork(@Nonnull Work work) throws HibernateException;
 
 	/**
 	 * Perform work using the {@link java.sql.Connection} underlying by this session,
@@ -829,7 +851,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @apiNote This method competes with the JPA-defined method
 	 *          {@link jakarta.persistence.EntityManager#callWithConnection}
 	 */
-	<T> T doReturningWork(ReturningWork<T> work);
+	<T> T doReturningWork(@Nonnull ReturningWork<T> work);
 
 	/**
 	 * Create a new mutable instance of {@link EntityGraph}, with only
@@ -951,7 +973,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see org.hibernate.annotations.FilterDef
 	 */
-	Filter enableFilter(String filterName);
+	@Nonnull
+	Filter enableFilter(@Nonnull String filterName);
 
 	/**
 	 * Retrieve a currently enabled {@linkplain Filter filter} by name.
@@ -960,18 +983,20 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @return the {@link Filter} instance representing the enabled filter.
 	 */
-	Filter getEnabledFilter(String filterName);
+	@Nullable
+	Filter getEnabledFilter(@Nonnull String filterName);
 
 	/**
 	 * Disable the named {@linkplain Filter filter} for the current session.
 	 *
 	 * @param filterName the name of the filter to be disabled.
 	 */
-	void disableFilter(String filterName);
+	void disableFilter(@Nonnull String filterName);
 
 	/**
 	 * The factory which created this session.
 	 */
+	@Nonnull
 	SessionFactory getFactory();
 
 	/**
@@ -982,7 +1007,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @since 7.0
 	 */
-	default void inTransaction(Consumer<? super Transaction> action) {
+	default void inTransaction(@Nonnull Consumer<? super Transaction> action) {
 		final Transaction transaction = beginTransaction();
 		manageTransaction( transaction, transaction, action );
 	}
@@ -996,7 +1021,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @since 7.0
 	 */
-	default <R> R fromTransaction(Function<? super Transaction,R> action) {
+	default <R> R fromTransaction(@Nonnull Function<? super Transaction,R> action) {
 		final Transaction transaction = beginTransaction();
 		return manageTransaction( transaction, transaction, action );
 	}
@@ -1018,33 +1043,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @return the session builder
 	 */
-	SharedSessionBuilder sessionWithOptions();
-
-	/**
-	 * Return an object of the specified type to allow access to
-	 * a provider-specific API.
-	 *
-	 * @param type the class of the object to be returned.
-	 * This is usually either the underlying class
-	 * implementing {@code SharedSessionContract} or an
-	 * interface it implements.
-	 * @return an instance of the specified class
-	 * @throws PersistenceException if the provider does not
-	 * support the given type
-	 */
 	@Nonnull
-	default <T> T unwrap(@Nonnull Class<T> type) {
-		// Not checking type.isInstance(...) because some implementations
-		// might want to hide that they implement some types.
-		// Implementations wanting a more liberal behavior need to override this method.
-		if ( type.isAssignableFrom( SharedSessionContract.class ) ) {
-			return type.cast( this );
-		}
-
-		throw new PersistenceException(
-				"Hibernate cannot unwrap '" + getClass().getName() + "' as '" + type.getName() + "'" );
-	}
-
+	SharedSessionBuilder sessionWithOptions();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

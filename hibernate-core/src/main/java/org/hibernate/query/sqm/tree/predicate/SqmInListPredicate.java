@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.criteria.JpaExpression;
@@ -94,12 +94,14 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
+	@Nonnull
 	public SqmExpression<T> getExpression() {
 		return getTestExpression();
 	}
 
 	@Override
-	public SqmInPredicate<T> value(@NonNull Object value) {
+	@Nonnull
+	public SqmInPredicate<T> value(T value) {
 		if ( value instanceof Collection ) {
 			//noinspection unchecked
 			for ( T v : ( (Collection<T>) value ) ) {
@@ -107,7 +109,6 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 			}
 		}
 		else {
-			//noinspection unchecked
 			addExpression( nodeBuilder().value( (T) value, testExpression ) );
 		}
 
@@ -115,7 +116,8 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public SqmInPredicate<T> value(Expression<? extends T> value) {
+	@Nonnull
+	public SqmInPredicate<T> value(@Nonnull Expression<? extends T> value) {
 		//noinspection unchecked
 		addExpression( (SqmExpression<T>) value );
 		return this;

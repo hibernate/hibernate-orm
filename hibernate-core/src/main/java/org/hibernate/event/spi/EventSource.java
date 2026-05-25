@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -26,7 +27,7 @@ public interface EventSource extends SessionImplementor {
 	 * Instantiate an entity instance, using either an interceptor,
 	 * or the given persister
 	 */
-	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
+	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) throws HibernateException;
 
 	/**
 	 * Force an immediate flush
@@ -75,6 +76,7 @@ public interface EventSource extends SessionImplementor {
 	}
 
 	@Override
+	@Nonnull
 	default TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
 		return getActionQueue().getTransactionCompletionCallbacks();
 	}

@@ -77,17 +77,21 @@ public interface NativeQueryImplementor<R>
 	// Casts
 
 	@Override
+	@Nonnull
 	default NativeQueryImplementor<R> asMutationQuery() {
 		return (NativeQueryImplementor<R>) MutationQueryImplementor.super.asMutationQuery();
 	}
 
 	@Override
+	@Nonnull
 	NativeQueryImplementor<R> asSelectionQuery();
 
 	@Override
+	@Nonnull
 	<X> NativeQueryImplementor<X> asSelectionQuery(Class<X> type);
 
 	@Override
+	@Nonnull
 	<X> NativeQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph);
 
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.cache.internal;
 
+import jakarta.annotation.Nonnull;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -171,6 +172,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
@@ -198,12 +200,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Entity data
 
 	@Override
-	public boolean containsEntity(Class<?> entityClass, Object identifier) {
+	public boolean containsEntity(@Nonnull Class<?> entityClass, @Nonnull Object identifier) {
 		return containsEntity( entityClass.getName(), identifier );
 	}
 
 	@Override
-	public boolean containsEntity(String entityName, Object identifier) {
+	public boolean containsEntity(@Nonnull String entityName, @Nonnull Object identifier) {
 		final var persister = getEntityDescriptor( entityName );
 		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
@@ -222,12 +224,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictEntityData(Class<?> entityClass, Object identifier) {
+	public void evictEntityData(@Nonnull Class<?> entityClass, @Nonnull Object identifier) {
 		evictEntityData( entityClass.getName(), identifier );
 	}
 
 	@Override
-	public void evictEntityData(String entityName, Object identifier) {
+	public void evictEntityData(@Nonnull String entityName, @Nonnull Object identifier) {
 		final var persister = getEntityDescriptor( entityName );
 		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
@@ -239,12 +241,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictEntityData(Class<?> entityClass) {
+	public void evictEntityData(@Nonnull Class<?> entityClass) {
 		evictEntityData( entityClass.getName() );
 	}
 
 	@Override
-	public void evictEntityData(String entityName) {
+	public void evictEntityData(@Nonnull String entityName) {
 		evictEntityData( getEntityDescriptor( entityName ) );
 	}
 
@@ -293,12 +295,12 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Natural-id data
 
 	@Override
-	public void evictNaturalIdData(Class<?> entityClass) {
+	public void evictNaturalIdData(@Nonnull Class<?> entityClass) {
 		evictNaturalIdData( entityClass.getName() );
 	}
 
 	@Override
-	public void evictNaturalIdData(String entityName) {
+	public void evictNaturalIdData(@Nonnull String entityName) {
 		evictNaturalIdData( getEntityDescriptor( entityName ) );
 	}
 
@@ -324,7 +326,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Collection data
 
 	@Override
-	public boolean containsCollection(String role, Object ownerIdentifier) {
+	public boolean containsCollection(@Nonnull String role, @Nonnull Object ownerIdentifier) {
 		final var persister = getCollectionDescriptor( role );
 		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
@@ -338,7 +340,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictCollectionData(String role, Object ownerIdentifier) {
+	public void evictCollectionData(@Nonnull String role, @Nonnull Object ownerIdentifier) {
 		final var persister = getCollectionDescriptor( role );
 		final var cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
@@ -350,7 +352,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictCollectionData(String role) {
+	public void evictCollectionData(@Nonnull String role) {
 		evictCollectionData( getCollectionDescriptor( role ) );
 	}
 
@@ -377,7 +379,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Query-results data
 
 	@Override
-	public boolean containsQuery(String regionName) {
+	public boolean containsQuery(@Nonnull String regionName) {
 		return getQueryResultsCacheStrictly( regionName ) != null;
 	}
 
@@ -387,7 +389,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictQueryRegion(String regionName) {
+	public void evictQueryRegion(@Nonnull String regionName) {
 		final var cache = getQueryResultsCache( regionName );
 		if ( cache != null ) {
 			evictQueryResultRegion( cache );
@@ -488,7 +490,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictRegion(String regionName) {
+	public void evictRegion(@Nonnull String regionName) {
 		getRegion( regionName ).clear();
 		final var queryResultsRegionWithDuplicateName =
 				queryResultsRegionsByDuplicateName.get( regionName );

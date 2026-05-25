@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
@@ -24,6 +25,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicateCollection;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.spi.NavigablePath;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
 /**
@@ -80,6 +82,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	@Override
+	@Nonnull
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}
@@ -171,14 +174,16 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	@Override
+	@Nonnull
 	public SqmCrossJoin<T> on(BooleanExpression... restrictions) {
 		sqmJoinPredicates.setPredicate( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
 
 	@Override
-	public @Nullable From<?, T> getParent() {
-		return getLhs();
+	@Nonnull
+	public From<?, T> getParent() {
+		return castNonNull( getLhs() );
 	}
 
 	@SuppressWarnings("unchecked")

@@ -5,6 +5,8 @@
 package org.hibernate.context.spi;
 
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A callback registered with the {@link org.hibernate.SessionFactory} that is
  * responsible for resolving the current tenant identifier.
@@ -25,10 +27,11 @@ public interface CurrentTenantIdentifierResolver<T> {
 	 *
 	 * @return The current tenant identifier
 	 */
+	@Nullable
 	T resolveCurrentTenantIdentifier();
 
 	/**
-	 * Should we validate that the tenant identifier of a "current sessions" that
+	 * Should we validate that the tenant identifier of a "current session" that
 	 * already exists when {@link CurrentSessionContext#currentSession()} is called
 	 * matches the value returned here from {@link #resolveCurrentTenantIdentifier()}?
 	 *

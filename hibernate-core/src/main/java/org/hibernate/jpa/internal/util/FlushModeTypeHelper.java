@@ -43,7 +43,7 @@ public class FlushModeTypeHelper {
 		};
 	}
 
-	public static QueryFlushMode getForcedFlushMode(FlushMode flushMode) {
+	public static QueryFlushMode getQueryFlushMode(FlushMode flushMode) {
 		if ( flushMode == null ) {
 			return QueryFlushMode.DEFAULT;
 		}

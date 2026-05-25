@@ -1761,6 +1761,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public LockOptions getDefaultLockOptions() {
 		return LockOptions.NONE;
 	}

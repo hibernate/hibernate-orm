@@ -9,6 +9,7 @@ import java.util.Set;
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.tool.schema.ValidationConstraintDdlInfluence;
 
 /**
  * Defines the context needed to call the {@link TypeSafeActivator}.
@@ -47,4 +48,9 @@ public interface ActivationContext {
 	 * @return The SessionFactoryServiceRegistry
 	 */
 	SessionFactoryServiceRegistry getServiceRegistry();
+
+	/**
+	 * @return Resolved validation constraint influence on DDL.
+	 */
+	ValidationConstraintDdlInfluence getValidationConstraintDdlInfluence();
 }

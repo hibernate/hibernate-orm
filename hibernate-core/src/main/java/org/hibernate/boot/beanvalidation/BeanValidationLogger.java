@@ -43,10 +43,6 @@ public interface BeanValidationLogger extends BasicLogger {
 	void validationFactorySkipped();
 
 	@LogMessage(level = DEBUG)
-	@Message(id = 101002, value = "Skipping application of relational constraints from legacy Hibernate Validator")
-	void skippingLegacyHVConstraints();
-
-	@LogMessage(level = DEBUG)
 	@Message(id = 101003, value = "ConstraintComposition type could not be determined. Assuming AND")
 	void constraintCompositionTypeUnknown(@Cause Throwable ex);
 

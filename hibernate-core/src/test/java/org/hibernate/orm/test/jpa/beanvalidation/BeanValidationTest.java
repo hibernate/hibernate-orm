@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.jpa.beanvalidation;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -26,7 +27,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @Jpa(
 		annotatedClasses = { CupHolder.class },
-		integrationSettings = { @Setting(name = AvailableSettings.JAKARTA_VALIDATION_MODE, value = "auto") }
+		integrationSettings = { @Setting(name = AvailableSettings.JAKARTA_VALIDATION_MODE, value = "auto"),
+				@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "REQUIRED") }
 )
 public class BeanValidationTest {
 

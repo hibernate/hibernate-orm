@@ -248,6 +248,30 @@ bootstrapping and supply the root and/or non-root URLs.
 This section describes changes in behavior that applications should be aware of.
 
 
+[[validation-ddl-influence]]
+=== Jakarta Validation DDL influence enabled by default
+
+Jakarta Persistence 4.0 specifies that constraints from Jakarta Validation annotations,
+such as `@NotNull`, `@Size`, `@Digits` and others, should influence the generated DDL
+schema. For example, a property annotated `@NotNull` will result in a non-nullable column.
+
+Previously, this behavior required explicitly setting the validation mode to `DDL`
+(a Hibernate-specific extension to the JPA `ValidationMode` enum).
+
+As a result:
+
+* `org.hibernate.boot.beanvalidation.ValidationMode.DDL` is deprecated for removal.
+* A new setting `hibernate.tooling.schema.apply_validation_constraints` has been added to
+  `SchemaToolingSettings` as the way to control the influence of Jakarta Validation constraints
+  on the generated DDL schema. Valid values are defined by `ValidationConstraintDdlInfluence`:
+  - `AUTO` (default) — apply constraints if a Jakarta Validation provider is available,
+    silently skip otherwise
+  - `REQUIRED` — apply constraints and fail if no Jakarta Validation provider is available
+  - `DISABLED` — do not apply constraints
+* The legacy setting `hibernate.validator.apply_to_ddl` is also deprecated for removal
+  in favor of the new setting.
+
+
 [[graph-flushing-behavior]]
 === Graph-based Flushing
 

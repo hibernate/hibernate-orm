@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.annotations.beanvalidation;
 
 import jakarta.validation.ConstraintViolationException;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -24,7 +25,10 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Emmanuel Bernard
  */
 @ServiceRegistry(
-		settings = @Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "none")
+		settings = {
+				@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "none"),
+				@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "DISABLED")
+		}
 )
 @DomainModel(annotatedClasses = {
 		Address.class,

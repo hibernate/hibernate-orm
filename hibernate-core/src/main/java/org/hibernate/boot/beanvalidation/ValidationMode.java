@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.tool.schema.ValidationConstraintDdlInfluence;
 
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
@@ -22,6 +23,15 @@ public enum ValidationMode {
 	AUTO,
 	CALLBACK,
 	NONE,
+	/**
+	 * @deprecated The influence of Jakarta Validation constraints on DDL schema generation
+	 * is now enabled by default when the validation mode is {@link #AUTO}. Use the setting
+	 * {@value org.hibernate.cfg.SchemaToolingSettings#APPLY_VALIDATION_CONSTRAINTS} to
+	 * control this behavior instead. To require that a Jakarta Validation provider is
+	 * available (as this mode did), use
+	 * {@link ValidationConstraintDdlInfluence#REQUIRED REQUIRED}.
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	DDL;
 
 	private String externalForm() {

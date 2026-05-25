@@ -4,11 +4,13 @@
  */
 package org.hibernate.cfg;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy;
+import org.hibernate.tool.schema.ValidationConstraintDdlInfluence;
 
 /**
  * @author Steve Ebersole
@@ -433,6 +435,23 @@ public interface SchemaToolingSettings {
 	///
 	/// @since 7.3
 	String UNIQUE_KEY_VALIDATION =  "hibernate.tooling.schema.unique_key_validation";
+
+	/// Whether constraints from Jakarta Validation annotations (for example,
+	/// {@link jakarta.validation.constraints.NotNull @NotNull},
+	/// {@link jakarta.validation.constraints.Size @Size},
+	/// {@link jakarta.validation.constraints.Digits @Digits})
+	/// should influence the generated DDL schema — for example, by making
+	/// a column non-nullable or setting its length, precision, or scale.
+	///
+	/// Valid values are defined by
+	/// {@link ValidationConstraintDdlInfluence}.
+	///
+	/// @settingDefault {@link ValidationConstraintDdlInfluence#AUTO}
+	///
+	/// @since 8.0
+	/// @see ValidationConstraintDdlInfluence
+	@Incubating
+	String APPLY_VALIDATION_CONSTRAINTS = "hibernate.tooling.schema.apply_validation_constraints";
 
 	/**
 	 * Specifies whether to automatically create also the database schema/catalog.

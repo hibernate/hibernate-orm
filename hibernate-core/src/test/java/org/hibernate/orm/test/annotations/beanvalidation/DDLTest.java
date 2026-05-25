@@ -6,7 +6,7 @@ package org.hibernate.orm.test.annotations.beanvalidation;
 
 import java.util.List;
 
-import org.hibernate.cfg.ValidationSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Hardy Ferentschik
  */
 @ServiceRegistry(settings = {
-		@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "DDL"),
+		@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "REQUIRED"),
 		@Setting(name = PersistentTableStrategy.DROP_ID_TABLES, value = "true"),
 		@Setting(name = GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, value = "true"),
 		@Setting(name = LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, value = "true")

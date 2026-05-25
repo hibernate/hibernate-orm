@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -78,64 +80,75 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
+	@Nonnull
 	public SelectionQuery<?> asSelectionQuery() {
 		return delegate.asSelectionQuery();
 	}
 
 	@Override
+	@Nonnull
 	public <R> SelectionQuery<R> asSelectionQuery(Class<R> type) {
 		return delegate.asSelectionQuery( type );
 	}
 
 	@Override
+	@Nonnull
 	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph) {
 		return delegate.asSelectionQuery( entityGraph );
 	}
 
 	@Override
+	@Nonnull
 	public <X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
 		return delegate.asSelectionQuery( entityGraph, graphSemantic );
 	}
 
 	@Override
+	@Nonnull
 	public MutationQuery asMutationQuery() {
 		return delegate.asMutationQuery();
 	}
 
 	@Override
+	@Nonnull
 	public MutationQuery asStatement() {
 		return delegate.asMutationQuery();
 	}
 
 	@Override
-	public <R> SelectionQuery<R> ofType(Class<R> type) {
+	@Nonnull
+	public <R> SelectionQuery<R> ofType(@Nonnull Class<R> type) {
 		return delegate.asSelectionQuery( type );
 	}
 
 	@Override
-	public <R> SelectionQuery<R> withEntityGraph(EntityGraph<R> entityGraph) {
+	@Nonnull
+	public <R> SelectionQuery<R> withEntityGraph(@Nonnull EntityGraph<R> entityGraph) {
 		return delegate.asSelectionQuery( entityGraph );
 	}
 
 	@Override
-	public <R> SelectionQuery<R> withResultSetMapping(ResultSetMapping<R> mapping) {
+	@Nonnull
+	public <R> SelectionQuery<R> withResultSetMapping(@Nonnull ResultSetMapping<R> mapping) {
 		return delegate.withResultSetMapping( mapping );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Query identity
-
 	@Override
+	@Nullable
 	public String getQueryString() {
 		return delegate.getQueryString();
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionContract getSession() {
 		return delegate.getSession();
 	}
 
 	@Override @Deprecated @SuppressWarnings("removal")
+	@Nonnull
 	public QueryOptions getQueryOptions() {
 		return delegate.getQueryOptions();
 	}
@@ -151,18 +164,21 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override @Deprecated
 	@SuppressWarnings({"rawtypes", "removal"})
+	@Nonnull
 	public List list() {
 		return delegate.list();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings({"rawtypes", "removal"})
+	@Nonnull
 	public List getResultList() {
 		return delegate.getResultList();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nullable
 	public Object uniqueResult() {
 		return delegate.uniqueResult();
 	}
@@ -175,37 +191,43 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nullable
 	public Object getSingleResultOrNull() {
 		return delegate.getSingleResultOrNull();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings({"rawtypes", "removal"})
+	@Nonnull
 	public Optional uniqueResultOptional() {
 		return delegate.uniqueResultOptional();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings({"rawtypes", "removal"})
+	@Nonnull
 	public Stream getResultStream() {
 		return delegate.getResultStream();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings({"rawtypes", "removal"})
+	@Nonnull
 	public Stream stream() {
 		return delegate.stream();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings({"rawtypes", "removal"})
+	@Nonnull
 	public ScrollableResults scroll() {
 		return delegate.scroll();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings({"rawtypes", "removal"})
-	public ScrollableResults scroll(ScrollMode scrollMode) {
+	@Nonnull
+	public ScrollableResults scroll(@Nonnull ScrollMode scrollMode) {
 		return delegate.scroll( scrollMode );
 	}
 
@@ -219,88 +241,103 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
+	@Nonnull
 	public QueryFlushMode getQueryFlushMode() {
 		return delegate.getQueryFlushMode();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("deprecation")
+	@Nonnull
 	public FlushModeType getFlushMode() {
 		return delegate.getFlushMode();
 	}
 
 	@Override
-	public MutationOrSelectionQuery setQueryFlushMode(QueryFlushMode queryFlushMode) {
+	@Nonnull
+	public MutationOrSelectionQuery setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
 		delegate.setQueryFlushMode( queryFlushMode );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("deprecation")
-	public MutationOrSelectionQuery setFlushMode(FlushModeType flushMode) {
+	@Nonnull
+	public MutationOrSelectionQuery setFlushMode(@Nonnull FlushModeType flushMode) {
 		delegate.setFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public String getComment() {
 		return delegate.getComment();
 	}
 
 	@Override
-	public MutationOrSelectionQuery setComment(String comment) {
+	@Nonnull
+	public MutationOrSelectionQuery setComment(@Nullable String comment) {
 		delegate.setComment( comment );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery addQueryHint(String hint) {
+	@Nonnull
+	public MutationOrSelectionQuery addQueryHint(@Nonnull String hint) {
 		delegate.addQueryHint( hint );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public Integer getTimeout() {
 		return delegate.getTimeout();
 	}
 
 	@Override
+	@Nonnull
 	public MutationOrSelectionQuery setTimeout(int timeout) {
 		delegate.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setTimeout(Integer timeout) {
+	@Nonnull
+	public MutationOrSelectionQuery setTimeout(@Nullable Integer timeout) {
 		delegate.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setTimeout(Timeout timeout) {
+	@Nonnull
+	public MutationOrSelectionQuery setTimeout(@Nullable Timeout timeout) {
 		delegate.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setHint(String hintName, Object value) {
+	@Nonnull
+	public MutationOrSelectionQuery setHint(@Nonnull String hintName, @Nullable Object value) {
 		delegate.setHint( hintName, value );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getHints() {
 		return delegate.getHints();
 	}
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	public Integer getFetchSize() {
 		return delegate.getFetchSize();
 	}
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public MutationOrSelectionQuery setFetchSize(int fetchSize) {
 		//noinspection removal
 		delegate.setFetchSize( fetchSize );
@@ -315,6 +352,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public MutationOrSelectionQuery setReadOnly(boolean readOnly) {
 		delegate.setReadOnly( readOnly );
 		return this;
@@ -327,6 +365,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public MutationOrSelectionQuery setMaxResults(int maxResults) {
 		delegate.setMaxResults( maxResults );
 		return this;
@@ -340,6 +379,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	public MutationOrSelectionQuery setFirstResult(int startPosition) {
 		delegate.setFirstResult( startPosition );
 		return this;
@@ -347,13 +387,15 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	public CacheMode getCacheMode() {
 		return delegate.getCacheMode();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public MutationOrSelectionQuery setCacheMode(CacheMode cacheMode) {
+	@Nonnull
+	public MutationOrSelectionQuery setCacheMode(@Nonnull CacheMode cacheMode) {
 		delegate.setCacheMode( cacheMode );
 		return this;
 	}
@@ -361,13 +403,15 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
 		return delegate.getCacheStoreMode();
 	}
 
 	@Override
 	@SuppressWarnings("removal")
-	public MutationOrSelectionQuery setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+	@Nonnull
+	public MutationOrSelectionQuery setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		delegate.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
@@ -375,13 +419,15 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	@Override
 	@Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return delegate.getCacheRetrieveMode();
 	}
 
 	@Override
 	@SuppressWarnings("removal")
-	public MutationOrSelectionQuery setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	@Nonnull
+	public MutationOrSelectionQuery setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		delegate.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}
@@ -392,6 +438,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	}
 
 	@Override
+	@Nonnull
 	public MutationOrSelectionQuery setQueryPlanCacheable(boolean queryPlanCacheable) {
 		delegate.setQueryPlanCacheable( queryPlanCacheable );
 		return this;
@@ -405,6 +452,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nonnull
 	public MutationOrSelectionQuery setCacheable(boolean cacheable) {
 		//noinspection removal
 		delegate.setCacheable( cacheable );
@@ -413,13 +461,14 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
+	@Nullable
 	public String getCacheRegion() {
 		return delegate.getCacheRegion();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public MutationOrSelectionQuery setCacheRegion(String cacheRegion) {
+	public MutationOrSelectionQuery setCacheRegion(@Nullable String cacheRegion) {
 		//noinspection removal
 		delegate.setCacheRegion( cacheRegion );
 		return this;
@@ -427,46 +476,53 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override
 	@Deprecated @SuppressWarnings("removal")
+	@Nullable
 	public LockModeType getLockMode() {
 		return delegate.getLockMode();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public MutationOrSelectionQuery setLockMode(LockModeType lockMode) {
+	@Nonnull
+	public MutationOrSelectionQuery setLockMode(@Nonnull LockModeType lockMode) {
 		delegate.setLockMode( lockMode );
 		return this;
 	}
 
 	@Override @Deprecated
+	@Nonnull
 	public LockMode getHibernateLockMode() {
 		return delegate.getHibernateLockMode();
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public MutationOrSelectionQuery setHibernateLockMode(LockMode lockMode) {
+	@Nonnull
+	public MutationOrSelectionQuery setHibernateLockMode(@Nonnull LockMode lockMode) {
 		delegate.setHibernateLockMode( lockMode );
 		return this;
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public MutationOrSelectionQuery setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+	@Nonnull
+	public MutationOrSelectionQuery setFollowOnStrategy(@Nonnull Locking.FollowOn followOnStrategy) {
 		delegate.setFollowOnStrategy( followOnStrategy );
 		return this;
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public <X> SelectionQuery<X> setTupleTransformer(TupleTransformer<X> transformer) {
+	@Nonnull
+	public <X> SelectionQuery<X> setTupleTransformer(@Nonnull TupleTransformer<X> transformer) {
 		return (SelectionQuery<X>) delegate.setTupleTransformer( transformer );
 	}
 
 	@Override
 	@Deprecated
 	@SuppressWarnings({"unchecked", "rawtypes", "removal"})
-	public MutationOrSelectionQuery setResultListTransformer(ResultListTransformer<Object> transformer) {
+	@Nonnull
+	public MutationOrSelectionQuery setResultListTransformer(@Nonnull ResultListTransformer<Object> transformer) {
 		final var resultListTransformer = (ResultListTransformer) transformer;
 		delegate.setResultListTransformer( resultListTransformer );
 		return this;
@@ -474,70 +530,79 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override
 	@Deprecated @SuppressWarnings("removal")
-	public MutationOrSelectionQuery setEntityGraph(EntityGraph<? super Object> graph, GraphSemantic semantic) {
+	@Nonnull
+	public MutationOrSelectionQuery setEntityGraph(@Nonnull EntityGraph<? super Object> graph, @Nonnull GraphSemantic semantic) {
 		delegate.setEntityGraph( graph, semantic );
 		return this;
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public MutationOrSelectionQuery enableFetchProfile(String profileName) {
+	@Nonnull
+	public MutationOrSelectionQuery enableFetchProfile(@Nonnull String profileName) {
 		delegate.enableFetchProfile( profileName );
 		return this;
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public MutationOrSelectionQuery disableFetchProfile(String profileName) {
+	@Nonnull
+	public MutationOrSelectionQuery disableFetchProfile(@Nonnull String profileName) {
 		delegate.disableFetchProfile( profileName );
 		return this;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter metadata
-
 	@Override
+	@Nonnull
 	public ParameterMetadata getParameterMetadata() {
 		return delegate.getParameterMetadata();
 	}
 
 	@Override
+	@Nonnull
 	public Set<Parameter<?>> getParameters() {
 		return delegate.getParameters();
 	}
 
 	@Override
-	public Parameter<?> getParameter(String name) {
+	@Nonnull
+	public Parameter<?> getParameter(@Nonnull String name) {
 		return delegate.getParameter( name );
 	}
 
 	@Override
-	public <T> Parameter<T> getParameter(String name, Class<T> type) {
+	@Nonnull
+	public <T> Parameter<T> getParameter(@Nonnull String name, @Nonnull Class<T> type) {
 		return delegate.getParameter( name, type );
 	}
 
 	@Override
+	@Nonnull
 	public Parameter<?> getParameter(int position) {
 		return delegate.getParameter( position );
 	}
 
 	@Override
-	public <T> Parameter<T> getParameter(int position, Class<T> type) {
+	@Nonnull
+	public <T> Parameter<T> getParameter(int position, @Nonnull Class<T> type) {
 		return delegate.getParameter( position, type );
 	}
 
 	@Override
-	public boolean isBound(Parameter<?> param) {
+	public boolean isBound(@Nonnull Parameter<?> param) {
 		return delegate.isBound( param );
 	}
 
 	@Override
-	public <T> T getParameterValue(Parameter<T> param) {
+	public <T> T getParameterValue(@Nonnull Parameter<T> param) {
 		return delegate.getParameterValue( param );
 	}
 
 	@Override
-	public Object getParameterValue(String name) {
+	@Nullable
+	public Object getParameterValue(@Nonnull String name) {
 		return delegate.getParameterValue( name );
 	}
 
@@ -548,243 +613,282 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter binding
-
 	@Override
-	public MutationOrSelectionQuery setParameter(String name, Object value) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable Object value) {
 		delegate.setParameter( name, value );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameter(String name, P value, Class<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> type) {
 		delegate.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameter(String name, P value, Type<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type) {
 		delegate.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setParameter(int position, Object value) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(int position, @Nullable Object value) {
 		delegate.setParameter( position, value );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameter(int position, P value, Class<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameter(int position, @Nullable P value, @Nonnull Class<P> type) {
 		delegate.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameter(int position, P value, Type<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameter(int position, @Nullable P value, @Nonnull Type<P> type) {
 		delegate.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter) {
 		delegate.setConvertedParameter( name, value, converter );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter) {
 		delegate.setConvertedParameter( position, value, converter );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameter(QueryParameter<P> parameter, P value) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value) {
 		delegate.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameter(QueryParameter<P> parameter, P value, Class<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type) {
 		delegate.setParameter( parameter, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameter(QueryParameter<P> parameter, P val, Type<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type) {
 		delegate.setParameter( parameter, val, type );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameter(Parameter<P> param, P value) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameter(@Nonnull Parameter<P> param, @Nullable P value) {
 		delegate.setParameter( param, value );
 		return this;
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setParameter(String name, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType) {
 		delegate.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setParameter(String name, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		delegate.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setParameter(String name, Date value, TemporalType temporalType) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		delegate.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setParameter(int position, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType) {
 		delegate.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setParameter(int position, Date value, TemporalType temporalType) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		delegate.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setParameter(int position, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		delegate.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		delegate.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public MutationOrSelectionQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		delegate.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull @SuppressWarnings("rawtypes") Collection values) {
 		delegate.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType) {
 		delegate.setParameterList( name, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(String name, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		delegate.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setParameterList(String name, Object[] values) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull Object[] values) {
 		delegate.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(String name, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaType) {
 		delegate.setParameterList( name, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(String name, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type) {
 		delegate.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameterList(int position, @Nonnull @SuppressWarnings("rawtypes") Collection values) {
 		delegate.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType) {
 		delegate.setParameterList( position, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(int position, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		delegate.setParameterList( position, values, type );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setParameterList(int position, Object[] values) {
+	@Nonnull
+	public MutationOrSelectionQuery setParameterList(int position, @Nonnull Object[] values) {
 		delegate.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(int position, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType) {
 		delegate.setParameterList( position, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(int position, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type) {
 		delegate.setParameterList( position, values, type );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values) {
 		delegate.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType) {
 		delegate.setParameterList( parameter, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		delegate.setParameterList( parameter, values, type );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, P[] values) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values) {
 		delegate.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType) {
 		delegate.setParameterList( parameter, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> MutationOrSelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> MutationOrSelectionQuery setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type) {
 		delegate.setParameterList( parameter, values, type );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setProperties(Object bean) {
+	@Nonnull
+	public MutationOrSelectionQuery setProperties(@Nonnull Object bean) {
 		delegate.setProperties( bean );
 		return this;
 	}
 
 	@Override
-	public MutationOrSelectionQuery setProperties(@SuppressWarnings("rawtypes") Map bean) {
+	@Nonnull
+	public MutationOrSelectionQuery setProperties(@Nonnull @SuppressWarnings("rawtypes") Map bean) {
 		delegate.setProperties( bean );
 		return this;
 	}
@@ -793,6 +897,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	// Unwrap
 
 	@Override
+	@Nonnull
 	public <T> T unwrap(Class<T> cls) {
 		return cls.isInstance( this ) ? cls.cast( this ) : delegate.unwrap( cls );
 	}

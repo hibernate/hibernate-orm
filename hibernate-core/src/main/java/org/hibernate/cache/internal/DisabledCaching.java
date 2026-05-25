@@ -4,6 +4,7 @@
  */
 package org.hibernate.cache.internal;
 
+import jakarta.annotation.Nonnull;
 import java.util.Collections;
 import java.util.Set;
 
@@ -35,6 +36,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
@@ -50,32 +52,32 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public boolean containsEntity(Class<?> entityClass, Object identifier) {
+	public boolean containsEntity(@Nonnull Class<?> entityClass, @Nonnull Object identifier) {
 		return false;
 	}
 
 	@Override
-	public boolean containsEntity(String entityName, Object identifier) {
+	public boolean containsEntity(@Nonnull String entityName, @Nonnull Object identifier) {
 		return false;
 	}
 
 	@Override
-	public void evictEntityData(Class<?> entityClass, Object identifier) {
+	public void evictEntityData(@Nonnull Class<?> entityClass, @Nonnull Object identifier) {
 		// nothing to do
 	}
 
 	@Override
-	public void evictEntityData(String entityName, Object identifier) {
+	public void evictEntityData(@Nonnull String entityName, @Nonnull Object identifier) {
 		// nothing to do
 	}
 
 	@Override
-	public void evictEntityData(Class<?> entityClass) {
+	public void evictEntityData(@Nonnull Class<?> entityClass) {
 		// nothing to do
 	}
 
 	@Override
-	public void evictEntityData(String entityName) {
+	public void evictEntityData(@Nonnull String entityName) {
 		// nothing to do
 	}
 
@@ -85,12 +87,12 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public void evictNaturalIdData(Class<?> entityClass) {
+	public void evictNaturalIdData(@Nonnull Class<?> entityClass) {
 		// nothing to do
 	}
 
 	@Override
-	public void evictNaturalIdData(String entityName) {
+	public void evictNaturalIdData(@Nonnull String entityName) {
 		// nothing to do
 	}
 
@@ -100,17 +102,17 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public boolean containsCollection(String role, Object ownerIdentifier) {
+	public boolean containsCollection(@Nonnull String role, @Nonnull Object ownerIdentifier) {
 		return false;
 	}
 
 	@Override
-	public void evictCollectionData(String role, Object ownerIdentifier) {
+	public void evictCollectionData(@Nonnull String role, @Nonnull Object ownerIdentifier) {
 		// nothing to do
 	}
 
 	@Override
-	public void evictCollectionData(String role) {
+	public void evictCollectionData(@Nonnull String role) {
 		// nothing to do
 	}
 
@@ -120,7 +122,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public boolean containsQuery(String regionName) {
+	public boolean containsQuery(@Nonnull String regionName) {
 		return false;
 	}
 
@@ -130,7 +132,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public void evictQueryRegion(String regionName) {
+	public void evictQueryRegion(@Nonnull String regionName) {
 		// nothing to do
 	}
 
@@ -140,7 +142,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public void evictRegion(String regionName) {
+	public void evictRegion(@Nonnull String regionName) {
 		// nothing to do
 	}
 

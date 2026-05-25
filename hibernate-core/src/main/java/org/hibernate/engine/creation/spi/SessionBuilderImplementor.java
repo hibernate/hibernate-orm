@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.creation.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -66,7 +67,7 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 	SessionBuilderImplementor flushMode(FlushMode flushMode);
 
 	@Override
-	SessionBuilderImplementor tenantIdentifier(Object tenantIdentifier);
+	SessionBuilderImplementor tenantIdentifier(@Nullable Object tenantIdentifier);
 
 	@Override
 	SessionBuilderImplementor readOnly(boolean readOnly);

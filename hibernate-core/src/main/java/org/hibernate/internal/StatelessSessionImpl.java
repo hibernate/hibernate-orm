@@ -4,6 +4,8 @@
  */
 package org.hibernate.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityAgent;
@@ -31,6 +33,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -273,6 +276,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public FlushMode getHibernateFlushMode() {
 		// NOTE: only ever *not* MANUAL when this is a "child session"
 		return flushMode;
@@ -282,37 +286,35 @@ public class StatelessSessionImpl
 		return getFactory().getStatistics();
 	}
 
-	private CacheMode getCacheModeSafely() {
-		var mode = getCacheMode();
-		return mode == null ? CacheMode.NORMAL : mode;
+	@Override
+	public void setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
+		setCacheMode( CacheMode.fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
 	}
 
 	@Override
-	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
-		setCacheMode( CacheMode.fromJpaModes( cacheRetrieveMode, getCacheModeSafely().getJpaStoreMode() ) );
+	public void setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
+		setCacheMode( CacheMode.fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
 	}
 
 	@Override
-	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
-		setCacheMode( CacheMode.fromJpaModes( getCacheModeSafely().getJpaRetrieveMode(), cacheStoreMode ) );
-	}
-
-	@Override
+	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
-		return getCacheModeSafely().getJpaRetrieveMode();
+		return getCacheMode().getJpaRetrieveMode();
 	}
 
 	@Override
+	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
-		return getCacheModeSafely().getJpaStoreMode();
+		return getCacheMode().getJpaStoreMode();
 	}
 
 	@Override
-	public void addOption(EntityAgent.Option option) {
+	public void addOption(@Nonnull EntityAgent.Option option) {
 		OptionsHelper.applyOption( this, option );
 	}
 
 	@Override
+	@Nonnull
 	public Set<EntityAgent.Option> getOptions() {
 		return OptionsHelper.getOptions( this );
 	}
@@ -320,12 +322,12 @@ public class StatelessSessionImpl
 	// inserts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void insert(Object entity) {
+	public void insert(@Nonnull Object entity) {
 		insert( null, entity );
 	}
 
 	@Override
-	public void insertMultiple(List<?> entities) {
+	public void insertMultiple(@Nonnull List<?> entities) {
 		checkOpen();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
@@ -347,7 +349,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public Object insert(String entityName, Object entity) {
+	public Object insert(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
 		try {
 			return doInsert( entityName, entity );
@@ -499,12 +501,12 @@ public class StatelessSessionImpl
 	// deletes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void delete(Object entity) {
+	public void delete(@Nonnull Object entity) {
 		delete( null, entity );
 	}
 
 	@Override
-	public void deleteMultiple(List<?> entities) {
+	public void deleteMultiple(@Nonnull List<?> entities) {
 		checkOpen();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
@@ -526,7 +528,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void delete(String entityName, Object entity) {
+	public void delete(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
 		try {
 			doDelete( entityName, entity );
@@ -598,12 +600,12 @@ public class StatelessSessionImpl
 	// updates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void update(Object entity) {
+	public void update(@Nonnull Object entity) {
 		update( null, entity );
 	}
 
 	@Override
-	public void updateMultiple(List<?> entities) {
+	public void updateMultiple(@Nonnull List<?> entities) {
 		checkOpen();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
@@ -625,7 +627,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void update(String entityName, Object entity) {
+	public void update(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
 		try {
 			doUpdate( entityName, entity );
@@ -706,12 +708,12 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void upsert(Object entity) {
+	public void upsert(@Nonnull Object entity) {
 		upsert( null, entity );
 	}
 
 	@Override
-	public void upsertMultiple(List<?> entities) {
+	public void upsertMultiple(@Nonnull List<?> entities) {
 		checkOpen();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
@@ -733,7 +735,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void upsert(String entityName, Object entity) {
+	public void upsert(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
 		try {
 			doUpsert( entityName, entity );
@@ -1105,7 +1107,8 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public Object get(String entityName, Object key, FindOption... findOptions) {
+	@Nonnull
+	public Object get(@Nonnull String entityName, @Nonnull Object key, FindOption... findOptions) {
 		final var result = find( entityName, key, findOptions );
 		if ( result == null ) {
 			throw notFound( entityName, key );
@@ -1114,7 +1117,9 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public Object get(String entityName, Object id, LockMode lockMode) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode) {
 		return get( entityName, id, (FindOption) lockMode );
 	}
 
@@ -1126,9 +1131,11 @@ public class StatelessSessionImpl
 	}
 
 	@Override
+	@SuppressWarnings("removal")
+	@Nonnull
 	public <T> T get(
-			EntityGraph<T> graph, GraphSemantic graphSemantic,
-			Object id, LockMode lockMode) {
+			@Nonnull EntityGraph<T> graph, @Nonnull GraphSemantic graphSemantic,
+			@Nonnull Object id, @Nonnull LockMode lockMode) {
 		final var rootGraph = (RootGraphImplementor<T>) graph;
 		checkOpen();
 
@@ -1145,7 +1152,11 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public <T> List<T> findMultiple(Class<T> entityClass, List<?> keys, FindOption... findOptions) {
+	@Nonnull
+	public <T> List<T> findMultiple(
+			@Nonnull Class<T> entityClass,
+			@Nonnull List<?> keys,
+			@Nullable FindOption... findOptions) {
 		checkOpen();
 		try {
 			final var operation = new StatelessFindMultipleByKeyOperation<T>(
@@ -1168,7 +1179,11 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public <T> List<T> findMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
+	@Nonnull
+	public <T> List<T> findMultiple(
+			@Nonnull EntityGraph<T> entityGraph,
+			@Nonnull List<?> keys,
+			@Nullable FindOption... findOptions) {
 		checkOpen();
 		try {
 			final var graph = (RootGraphImplementor<T>) entityGraph;
@@ -1196,7 +1211,9 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, GraphSemantic graphSemantic, List<?> ids) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <T> List<T> getMultiple(@Nonnull EntityGraph<T> entityGraph, @Nonnull GraphSemantic graphSemantic, @Nonnull List<?> ids) {
 		checkOpen();
 		try {
 			final var rootGraph = (RootGraphImplementor<T>) entityGraph;
@@ -1219,7 +1236,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void refresh(Object entity) {
+	public void refresh(@Nonnull Object entity) {
 		checkOpen();
 		try {
 			doRefresh( bestGuessEntityName( entity ), entity, LockMode.NONE );
@@ -1233,12 +1250,12 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void refresh(String entityName, Object entity) {
+	public void refresh(@Nonnull String entityName, @Nonnull Object entity) {
 		refresh( entityName, entity, LockMode.NONE );
 	}
 
 	@Override
-	public void refresh(Object entity, LockMode lockMode) {
+	public void refresh(@Nonnull Object entity, @Nonnull LockMode lockMode) {
 		checkOpen();
 		try {
 			doRefresh( bestGuessEntityName( entity ), entity, lockMode );
@@ -1252,7 +1269,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void refresh(String entityName, Object entity, LockMode lockMode) {
+	public void refresh(@Nonnull String entityName, @Nonnull Object entity, @Nonnull LockMode lockMode) {
 		checkOpen();
 		try {
 			doRefresh( entityName, entity, lockMode );
@@ -1298,7 +1315,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockModeType) {
+	public void refresh(@Nonnull Object entity, @Nonnull LockModeType lockModeType) {
 		checkOpen();
 		try {
 			doRefresh( bestGuessEntityName( entity ), entity, LockMode.fromJpaLockMode( lockModeType ) );
@@ -1312,7 +1329,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void refreshMultiple(List<?> entities) {
+	public void refreshMultiple(@Nonnull List<?> entities) {
 		checkOpen();
 
 		// NOTE: the incoming list of entities can be heterogeneous - the elements
@@ -1335,7 +1352,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public Object immediateLoad(String entityName, Object id) {
+	public Object immediateLoad(@Nonnull String entityName, @Nonnull Object id) {
 		if ( getPersistenceContextInternal().isLoadFinished() ) {
 			throw new SessionException( "proxies cannot be fetched by a stateless session" );
 		}
@@ -1344,7 +1361,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void initializeCollection(PersistentCollection<?> collection, boolean writing) {
+	public void initializeCollection(@Nonnull PersistentCollection<?> collection, boolean writing) {
 		checkOpen();
 		final var persistenceContext = getPersistenceContextInternal();
 		final var ce = persistenceContext.getCollectionEntry( collection );
@@ -1378,15 +1395,15 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public Object instantiate(EntityPersister persister, Object id) {
+	public Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) {
 		checkOpen();
 		return persister.instantiate( id, this );
 	}
 
 	@Override
 	public Object internalLoad(
-			String entityName,
-			Object id,
+			@Nonnull String entityName,
+			@Nonnull Object id,
 			boolean eager,
 			boolean nullable) {
 		checkOpen();
@@ -1446,7 +1463,8 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public <T> T fetch(T association) {
+	@Nonnull
+	public <T> T fetch(@Nonnull T association) {
 		checkOpen();
 		try {
 			return doFetch( association );
@@ -1535,7 +1553,8 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public Object getIdentifier(Object entity) {
+	@Nullable
+	public Object getIdentifier(@Nonnull Object entity) {
 		checkOpen();
 		return getFactory().getPersistenceUnitUtil().getIdentifier(entity);
 	}
@@ -1581,7 +1600,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public String bestGuessEntityName(Object object) {
+	public String bestGuessEntityName(@Nonnull Object object) {
 		final var lazyInitializer = extractLazyInitializer( object );
 		return guessEntityName( lazyInitializer == null
 				? object
@@ -1589,13 +1608,18 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public Object getContextEntityIdentifier(Object object) {
+	public String bestGuessEntityName(@Nonnull Object object, @Nullable EntityEntry entry) {
+		throw new UnsupportedOperationException( "Method not available in StatelessSession" );
+	}
+
+	@Override
+	public Object getContextEntityIdentifier(@Nonnull Object object) {
 		checkOpen();
 		return null;
 	}
 
 	@Override
-	public String guessEntityName(Object entity) {
+	public String guessEntityName(@Nonnull Object entity) {
 		checkOpen();
 		if ( entity == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
@@ -1604,7 +1628,8 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public EntityPersister getEntityPersister(String entityName, Object entity) {
+	@Nonnull
+	public EntityPersister getEntityPersister(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
 		if ( entity == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
@@ -1615,7 +1640,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public Object getEntityUsingInterceptor(EntityKey key) {
+	public Object getEntityUsingInterceptor(@Nonnull EntityKey key) {
 		checkOpen();
 
 		final var persistenceContext = getPersistenceContext();
@@ -1635,6 +1660,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceContext getPersistenceContext() {
 		return temporaryPersistenceContext;
 	}
@@ -1683,6 +1709,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return influencers;
 	}
@@ -1694,6 +1721,7 @@ public class StatelessSessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceContext getPersistenceContextInternal() {
 		//In this case implemented the same as #getPersistenceContext
 		return temporaryPersistenceContext;
@@ -1816,7 +1844,11 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public void lock(String entityName, Object child, LockOptions lockOptions) {
+	public void lock(
+			@Nonnull String entityName,
+			@Nonnull Object child,
+			@SuppressWarnings("removal")
+			@Nonnull LockOptions lockOptions) {
 		final var persister = getEntityPersister( entityName, child );
 		persister.lock( persister.getIdentifier( child ), persister.getVersion( child ), child, lockOptions, this );
 		final var entry = getPersistenceContextInternal().getEntry( child );
@@ -1827,17 +1859,23 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+	public Object loadFromSecondLevelCache(
+			@Nonnull EntityPersister persister,
+			@Nonnull EntityKey entityKey,
+			@Nullable Object instanceToLoad,
+			@Nonnull LockMode lockMode) {
 		return CacheLoadHelper.loadFromSecondLevelCache( this, instanceToLoad, lockMode, persister, entityKey );
 	}
 
 	@Override
+	@Nonnull
 	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
 		return transactionCompletionCallbacks.forSharing();
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> type) {
+	@Nonnull
+	public <T> T unwrap(@Nonnull Class<T> type) {
 		checkOpen();
 
 		if ( type.isInstance( this ) ) {

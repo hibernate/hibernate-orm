@@ -344,6 +344,7 @@ public interface SelectionQueryImplementor<R>
 	// MutationQuery Handling
 
 	@Override
+	@Nonnull
 	default MutationQueryImplementor<R> asMutationQuery() {
 		throw new IllegalMutationQueryException( "SelectionQuery cannot be treated as a MutationQuery", getQueryString() );
 	}

@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.QueryParameter;
@@ -94,14 +95,10 @@ public abstract class AbstractSqmQuery<R>
 	}
 
 	@Override
+	@Nonnull
 	public QueryImplementor<R> setQueryPlanCacheable(boolean cachePlans) {
 		queryOptions.setQueryPlanCachingEnabled( cachePlans );
 		return this;
-	}
-
-	@Override
-	protected void applyQueryPlanCachingHint(String hintName, Object value) {
-		super.applyQueryPlanCachingHint( hintName, value );
 	}
 
 	public abstract DomainParameterXref getDomainParameterXref();
@@ -146,11 +143,13 @@ public abstract class AbstractSqmQuery<R>
 	}
 
 	@Override
-	public int @Nullable [] unnamedParameterIndices() {
+	@Nullable
+	public int[] unnamedParameterIndices() {
 		return QueryHelper.unnamedParameterIndices( getDomainParameterXref() );
 	}
 
 	@Override
+	@Nonnull
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return session.getLoadQueryInfluencers();
 	}
@@ -206,11 +205,13 @@ public abstract class AbstractSqmQuery<R>
 	// Unwrap
 
 	@Override
-	protected  <X> X unwrapDelegates(Class<X> type) {
+	protected <X> X unwrapDelegates(Class<X> type) {
 		if ( type.isInstance( getDomainParameterXref() ) ) {
 			//noinspection unchecked
 			return (X) getDomainParameterXref();
 		}
-		return super.unwrapDelegates( type );
+		else {
+			return super.unwrapDelegates( type );
+		}
 	}
 }

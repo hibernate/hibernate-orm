@@ -4,6 +4,8 @@
  */
 package org.hibernate.internal;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Entity;
@@ -165,6 +167,7 @@ public class SessionImpl
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
+	@SuppressWarnings("removal")
 	private LockOptions lockOptions;
 
 	private FlushMode flushMode;
@@ -263,16 +266,19 @@ public class SessionImpl
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public LockOptions getDefaultLockOptions() {
 		return getLockOptionsForRead();
 	}
 
+	@SuppressWarnings("removal")
 	private LockOptions getLockOptionsForRead() {
 		return lockOptions == null
 				? getSessionFactoryOptions().getDefaultLockOptions()
 				: lockOptions;
 	}
 
+	@SuppressWarnings("removal")
 	private LockOptions getLockOptionsForWrite() {
 		if ( lockOptions == null ) {
 			lockOptions = new LockOptions();
@@ -479,7 +485,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void addEventListeners(SessionEventListener... listeners) {
+	public void addEventListeners(@Nonnull SessionEventListener... listeners) {
 		checkSessionReentrancy();
 		getEventListenerManager().addListener( listeners );
 	}
@@ -522,7 +528,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object getEntityUsingInterceptor(EntityKey key) {
+	public Object getEntityUsingInterceptor(@Nonnull EntityKey key) {
 		checkOpenOrWaitingForAutoClose();
 		// todo : should this get moved to PersistentContext?
 		// logically, is PersistentContext the "thing" to which an interceptor gets attached?
@@ -574,24 +580,27 @@ public class SessionImpl
 	// lock() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void lock(Object object, LockOptions lockOptions) {
+	@SuppressWarnings("removal")
+	public void lock(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
 		fireLock( new LockEvent( object, lockOptions, this ) );
 	}
 
 	@Override
-	public void lock(String entityName, Object object, LockOptions lockOptions) {
+	@SuppressWarnings("removal")
+	public void lock(@Nonnull String entityName, @Nonnull Object object, @Nonnull LockOptions lockOptions) {
 		fireLock( new LockEvent( entityName, object, lockOptions, this ) );
 	}
 
 	@Override
-	public void lock(Object object, LockMode lockMode) {
+	@SuppressWarnings("removal")
+	public void lock(@Nonnull Object object, @Nonnull LockMode lockMode) {
 		final var lockOptions = copySessionLockOptions();
 		lockOptions.setLockMode( lockMode );
 		fireLock( new LockEvent( object, lockOptions, this ) );
 	}
 
 	@Override
-	public void lock(Object object, LockMode lockMode, LockOption... lockOptions) {
+	public void lock(@Nonnull Object object, @Nonnull LockMode lockMode, @Nullable LockOption... lockOptions) {
 		lock( object, buildLockOptions( lockMode, lockOptions ) );
 	}
 
@@ -612,7 +621,10 @@ public class SessionImpl
 		}
 	}
 
-	private void convertIfJpaBootstrap(RuntimeException exception, LockOptions lockOptions) {
+	private void convertIfJpaBootstrap(
+			RuntimeException exception,
+			@SuppressWarnings("removal")
+			LockOptions lockOptions) {
 		if ( !isJpaBootstrap() && exception instanceof HibernateException ) {
 			throw exception;
 		}
@@ -636,7 +648,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void persist(Object object) {
+	public void persist(@Nonnull Object object) {
 		checkOpen();
 		firePersist( new PersistEvent( null, object, this ) );
 	}
@@ -728,13 +740,15 @@ public class SessionImpl
 	// merge() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override @SuppressWarnings("unchecked")
-	public <T> T merge(String entityName, T object) {
+	@Nonnull
+	public <T> T merge(@Nonnull String entityName, @Nonnull T object) {
 		checkOpen();
 		return (T) fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
 	@Override
-	public <T> T merge(T object, EntityGraph<? super T> loadGraph) {
+	@Nonnull
+	public <T> T merge(@Nonnull T object, @Nonnull EntityGraph<? super T> loadGraph) {
 		final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 		try {
 			effectiveEntityGraph.applyGraph( (RootGraphImplementor<?>) loadGraph, GraphSemantic.LOAD );
@@ -746,7 +760,8 @@ public class SessionImpl
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public <T> T merge(T object) {
+	@Nonnull
+	public <T> T merge(@Nonnull T object) {
 		checkOpen();
 		return (T) fireMerge( new MergeEvent( null, object, this ));
 	}
@@ -894,10 +909,12 @@ public class SessionImpl
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	// find()/get()/load() operations
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<?> keys, FindOption... options) {
+	@Nonnull
+	public <E> List<E> findMultiple(@Nonnull Class<E> entityType, @Nonnull List<?> keys, @Nullable FindOption... options) {
 		//noinspection unchecked
 		return findMultiple(
 				requireEntityPersisterForLoad( entityType ),
@@ -927,7 +944,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> keys, FindOption... options) {
+	@Nonnull
+	public <E> List<E> findMultiple(@Nonnull EntityGraph<E> entityGraph, @Nonnull List<?> keys, @Nullable FindOption... options) {
 		final var rootGraph = (RootGraphImplementor<E>) entityGraph;
 		final var type = rootGraph.getGraphedType();
 		final var entityDescriptor = switch ( type.getRepresentationMode() ) {
@@ -940,7 +958,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void load(Object object, Object id) {
+	public void load(@Nonnull Object object, @Nonnull Object id) {
 		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
@@ -950,7 +968,7 @@ public class SessionImpl
 	 * Do NOT return a proxy.
 	 */
 	@Override
-	public Object immediateLoad(String entityName, Object id) {
+	public Object immediateLoad(@Nonnull String entityName, @Nonnull Object id) {
 		if ( SESSION_LOGGER.isDebugEnabled() ) {
 			final var persister = requireEntityPersister( entityName );
 			SESSION_LOGGER.initializingProxy( infoString( persister, id, getFactory() ) );
@@ -964,7 +982,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object internalLoad(String entityName, Object id, boolean eager, boolean nullable) {
+	public Object internalLoad(@Nonnull String entityName, @Nonnull Object id, boolean eager, boolean nullable) {
 		final var type = internalLoadType( eager, nullable );
 		final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 		final var semantic = effectiveEntityGraph.getSemantic();
@@ -1007,7 +1025,10 @@ public class SessionImpl
 
 	@Override
 	public Object loadFromSecondLevelCache(
-			EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+			@Nonnull EntityPersister persister,
+			@Nonnull EntityKey entityKey,
+			@Nullable Object instanceToLoad,
+			@Nonnull LockMode lockMode) {
 		final Object entity =
 				CacheLoadHelper.loadFromSecondLevelCache( this, instanceToLoad, lockMode, persister, entityKey );
 		if ( entity != null ) {
@@ -1045,7 +1066,12 @@ public class SessionImpl
 	 * It's an allocation hot spot.
 	 */
 	// Hibernate Reactive may need to use this
-	protected LoadEvent makeLoadEvent(String entityName, Object id, Boolean readOnly, LockOptions lockOptions) {
+	protected LoadEvent makeLoadEvent(
+			String entityName,
+			Object id,
+			Boolean readOnly,
+			@SuppressWarnings("removal")
+			LockOptions lockOptions) {
 		final var event = loadEvent;
 		if ( event == null ) {
 			return new LoadEvent( id, entityName, lockOptions, this, readOnly );
@@ -1109,79 +1135,115 @@ public class SessionImpl
 	}
 
 	@Override @Deprecated
-	public <T> T get(Class<T> entityClass, Object id, LockMode lockMode) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <T> T get(@Nonnull Class<T> entityClass, @Nonnull Object id, @Nonnull LockMode lockMode) {
 		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
 	@Override @Deprecated
-	public Object get(String entityName, Object id, LockMode lockMode) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode) {
 		return this.byId( entityName ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
 	@Override @Deprecated
-	public <T> T get(Class<T> entityClass, Object id, LockOptions lockOptions) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <T> T get(@Nonnull Class<T> entityClass, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
 		return this.byId( entityClass ).with( lockOptions ).load( id );
 	}
 
 	@Override @Deprecated
-	public Object get(String entityName, Object id, LockOptions lockOptions) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
 		return this.byId( entityName ).with( lockOptions ).load( id );
 	}
 
 	@Override
-	public <T> IdentifierLoadAccessImpl<T> byId(String entityName) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <T> IdentifierLoadAccessImpl<T> byId(@Nonnull String entityName) {
 		return new IdentifierLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
-	public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <T> IdentifierLoadAccessImpl<T> byId(@Nonnull Class<T> entityClass) {
 		return new IdentifierLoadAccessImpl<>( this, requireEntityPersisterForLoad( entityClass ) );
 	}
 
 	@Override
-	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(Class<T> entityClass) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(@Nonnull Class<T> entityClass) {
+		//noinspection deprecation
 		return new MultiIdentifierLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
-	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(String entityName) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(@Nonnull String entityName) {
+		//noinspection deprecation
 		return new MultiIdentifierLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
-	public <T> NaturalIdLoadAccess<T> byNaturalId(String entityName) {
+	@SuppressWarnings("deprecation")
+	@Nonnull
+	public <T> NaturalIdLoadAccess<T> byNaturalId(@Nonnull String entityName) {
 		return new NaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
-	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass) {
+	@SuppressWarnings("deprecation")
+	@Nonnull
+	public <T> NaturalIdLoadAccess<T> byNaturalId(@Nonnull Class<T> entityClass) {
 		return new NaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
-	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(String entityName) {
+	@SuppressWarnings("deprecation")
+	@Nonnull
+	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(@Nonnull String entityName) {
 		return new SimpleNaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityName ) );
 	}
 
 	@Override
-	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(Class<T> entityClass) {
+	@SuppressWarnings("deprecation")
+	@Nonnull
+	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(@Nonnull Class<T> entityClass) {
 		return new SimpleNaturalIdLoadAccessImpl<>( this, requireEntityPersister( entityClass ) );
 	}
 
 	@Override
-	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(Class<T> entityClass) {
+	@SuppressWarnings("deprecation")
+	@Nonnull
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(@Nonnull Class<T> entityClass) {
 		return new NaturalIdMultiLoadAccessStandard<>( requireEntityPersister( entityClass ), this );
 	}
 
 	@Override
-	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(String entityName) {
+	@SuppressWarnings("deprecation")
+	@Nonnull
+	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(@Nonnull String entityName) {
 		return new NaturalIdMultiLoadAccessStandard<>( requireEntityPersister( entityName ), this );
 	}
 
 	@Override
-	public Object load(LoadType loadType, Object id, String entityName, LockOptions lockOptions, Boolean readOnly) {
+	public Object load(
+			LoadType loadType,
+			Object id, String entityName,
+			@SuppressWarnings("removal")
+			LockOptions lockOptions,
+			Boolean readOnly) {
 		boolean success = false;
 		try {
+			@SuppressWarnings("removal")
 			final var event =
 					makeLoadEvent( entityName, id, readOnly,
 							lockOptions == null ? LockOptions.NONE : lockOptions );
@@ -1223,12 +1285,13 @@ public class SessionImpl
 	// refresh() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void refresh(Object object) {
+	public void refresh(@Nonnull Object object) {
 		fireRefresh( new RefreshEvent( object, this ) );
 	}
 
 	@Override
-	public void refresh(Object object, LockOptions lockOptions) {
+	@SuppressWarnings("removal")
+	public void refresh(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
 		fireRefresh( new RefreshEvent( object, lockOptions, this ) );
 	}
 
@@ -1307,12 +1370,12 @@ public class SessionImpl
 	// replicate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void replicate(Object obj, ReplicationMode replicationMode) {
+	public void replicate(@Nonnull Object obj, @Nonnull @SuppressWarnings("deprecation") ReplicationMode replicationMode) {
 		fireReplicate( new ReplicateEvent( obj, replicationMode, this ) );
 	}
 
 	@Override
-	public void replicate(String entityName, Object obj, ReplicationMode replicationMode) {
+	public void replicate(@Nonnull String entityName, @Nonnull Object obj, @Nonnull @SuppressWarnings("deprecation") ReplicationMode replicationMode) {
 		fireReplicate( new ReplicateEvent( entityName, obj, replicationMode, this ) );
 	}
 
@@ -1333,7 +1396,7 @@ public class SessionImpl
 	 * (references held by application or other persistent instances are okay)
 	 */
 	@Override
-	public void evict(Object object) {
+	public void evict(@Nonnull Object object) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		eventListenerGroups.eventListenerGroup_EVICT
@@ -1452,28 +1515,31 @@ public class SessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public FlushMode getHibernateFlushMode() {
 		return flushMode;
 	}
 
 	@Override
+	@Nonnull
 	public FlushModeType getFlushMode() {
 		checkOpen();
 		return getFlushModeType( getHibernateFlushMode() );
 	}
 
 	@Override
-	public void setFlushMode(FlushModeType flushModeType) {
+	public void setFlushMode(@Nonnull FlushModeType flushModeType) {
 		checkOpen();
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 	}
 
 	@Override
-	public void addOption(EntityManager.Option option) {
+	public void addOption(@Nonnull EntityManager.Option option) {
 		OptionsHelper.applyOption( this, option );
 	}
 
 	@Override
+	@Nonnull
 	public Set<EntityManager.Option> getOptions() {
 		return OptionsHelper.getOptions( this );
 	}
@@ -1505,7 +1571,7 @@ public class SessionImpl
 	 * give the interceptor an opportunity to override the default instantiation
 	 */
 	@Override
-	public Object instantiate(EntityPersister persister, Object id) {
+	public Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		Object result = callInterceptorCallback(
@@ -1518,7 +1584,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public EntityPersister getEntityPersister(final String entityName, final Object entity) {
+	@Nonnull
+	public EntityPersister getEntityPersister(final @Nullable String entityName, final @Nonnull Object entity) {
 		checkOpenOrWaitingForAutoClose();
 		if ( entityName == null ) {
 			return requireEntityPersister( guessEntityName( entity ) );
@@ -1554,8 +1621,10 @@ public class SessionImpl
 	}
 
 	// not for internal use:
+
 	@Override
-	public Object getIdentifier(Object object) {
+	@Nullable
+	public Object getIdentifier(@Nonnull Object object) {
 		checkOpen();
 		checkTransactionSyncStatus();
 		if ( object == null ) {
@@ -1577,7 +1646,7 @@ public class SessionImpl
 	 * {@link org.hibernate.engine.internal.ForeignKeys#getEntityIdentifierIfNotUnsaved}.
 	 */
 	@Override
-	public Object getContextEntityIdentifier(Object object) {
+	public Object getContextEntityIdentifier(@Nonnull Object object) {
 		checkOpenOrWaitingForAutoClose();
 		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
@@ -1595,7 +1664,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public boolean contains(Object object) {
+	public boolean contains(@Nonnull Object object) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -1666,34 +1735,39 @@ public class SessionImpl
 		}
 	}
 
-	@Override @Deprecated(forRemoval = true)
-	public boolean contains(String entityName, Object object) {
+	@Override
+	@Deprecated(forRemoval = true)
+	@SuppressWarnings("removal")
+	public boolean contains(@Nonnull String entityName, @Nonnull Object object) {
 		return contains( object );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureCall(@Nonnull String procedureName) {
 		checkOpen();
 //		checkTransactionSynchStatus();
 		return super.createStoredProcedureCall( procedureName );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureCall(@Nonnull String procedureName, @Nonnull String... resultSetMappings) {
 		checkOpen();
 //		checkTransactionSynchStatus();
 		return super.createStoredProcedureCall( procedureName, resultSetMappings );
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureCall(@Nonnull String procedureName, @Nonnull Class<?>... resultClasses) {
 		checkOpen();
 //		checkTransactionSynchStatus();
 		return super.createStoredProcedureCall( procedureName, resultClasses );
 	}
 
 	@Override
-	public void initializeCollection(PersistentCollection<?> collection, boolean writing) {
+	public void initializeCollection(@Nonnull PersistentCollection<?> collection, boolean writing) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		eventListenerGroups.eventListenerGroup_INIT_COLLECTION
@@ -1703,7 +1777,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public String bestGuessEntityName(Object object) {
+	public String bestGuessEntityName(@Nonnull Object object) {
 		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			// it is possible for this method to be called during flush processing,
@@ -1720,7 +1794,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public String bestGuessEntityName(Object object, EntityEntry entry) {
+	public String bestGuessEntityName(@Nonnull Object object, @Nullable EntityEntry entry) {
 		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			// it is possible for this method to be called during flush processing,
@@ -1736,7 +1810,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public String getEntityName(Object object) {
+	@Nonnull
+	public String getEntityName(@Nonnull Object object) {
 		checkOpen();
 //		checkTransactionSynchStatus();
 
@@ -1768,7 +1843,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public String guessEntityName(Object object) {
+	public String guessEntityName(@Nonnull Object object) {
 		checkOpenOrWaitingForAutoClose();
 		return getEntityNameResolver().resolveEntityName( object );
 	}
@@ -1802,6 +1877,7 @@ public class SessionImpl
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public ActionQueue getActionQueue() {
 		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
@@ -1809,6 +1885,7 @@ public class SessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceContext getPersistenceContext() {
 		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
@@ -1816,11 +1893,13 @@ public class SessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceContext getPersistenceContextInternal() {
 		return persistenceContext;
 	}
 
 	@Override
+	@Nonnull
 	public SessionStatistics getStatistics() {
 		checkSessionReentrancy();
 		pulseTransactionCoordinator();
@@ -1834,6 +1913,7 @@ public class SessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public EventSource asEventSource() {
 		return this;
 	}
@@ -1853,36 +1933,38 @@ public class SessionImpl
 	}
 
 	@Override
-	public boolean isReadOnly(Object entityOrProxy) {
+	public boolean isReadOnly(@Nonnull Object entityOrProxy) {
 		checkOpen();
 //		checkTransactionSynchStatus();
 		return persistenceContext.isReadOnly( entityOrProxy );
 	}
 
 	@Override
-	public void setReadOnly(Object entity, boolean readOnly) {
+	public void setReadOnly(@Nonnull Object entity,  boolean readOnly) {
 		checkOpen();
 //		checkTransactionSynchStatus();
 		persistenceContext.setReadOnly( entity, readOnly );
 	}
 
 	@Override
+	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
 		return getCacheMode().getJpaStoreMode();
 	}
 
 	@Override
+	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return getCacheMode().getJpaRetrieveMode();
 	}
 
 	@Override
-	public void setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+	public void setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		setCacheMode( fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
 	}
 
 	@Override
-	public void setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	public void setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		setCacheMode( fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
 	}
 
@@ -1892,6 +1974,7 @@ public class SessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return loadQueryInfluencers;
 	}
@@ -1899,18 +1982,18 @@ public class SessionImpl
 	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean isFetchProfileEnabled(String name) throws UnknownProfileException {
+	public boolean isFetchProfileEnabled(@Nonnull String name) throws UnknownProfileException {
 		return loadQueryInfluencers.isFetchProfileEnabled( name );
 	}
 
 	@Override
-	public void enableFetchProfile(String name) throws UnknownProfileException {
+	public void enableFetchProfile(@Nonnull String name) throws UnknownProfileException {
 		checkSessionReentrancy();
 		loadQueryInfluencers.enableFetchProfile( name );
 	}
 
 	@Override
-	public void disableFetchProfile(String name) throws UnknownProfileException {
+	public void disableFetchProfile(@Nonnull String name) throws UnknownProfileException {
 		checkSessionReentrancy();
 		loadQueryInfluencers.disableFetchProfile( name );
 	}
@@ -1937,7 +2020,10 @@ public class SessionImpl
 		return loadQueryInfluencers.getBatchSize();
 	}
 
-	@Override @Deprecated(forRemoval = true)
+	@Override
+	@Deprecated(forRemoval = true)
+	@SuppressWarnings("removal")
+	@Nonnull
 	public LobHelper getLobHelper() {
 		return Hibernate.getLobHelper();
 	}
@@ -1979,11 +2065,11 @@ public class SessionImpl
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 		transactionObserver = new TransactionObserver() {
 			@Override
-			public void afterBegin() {
+	public void afterBegin() {
 			}
 
 			@Override
-			public void beforeCompletion() {
+	public void beforeCompletion() {
 				if ( isOpen() && getHibernateFlushMode() !=  FlushMode.MANUAL ) {
 					managedFlush();
 				}
@@ -1992,7 +2078,7 @@ public class SessionImpl
 			}
 
 			@Override
-			public void afterCompletion(boolean successful, boolean delayed) {
+	public void afterCompletion(boolean successful, boolean delayed) {
 				afterTransactionCompletion( successful, delayed );
 				if ( !isClosed() && autoClose ) {
 					managedClose();
@@ -2046,6 +2132,7 @@ public class SessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public SessionImplementor getSession() {
 		return this;
 	}
@@ -2054,7 +2141,7 @@ public class SessionImpl
 	// EntityManager impl
 
 	@Override
-	public void remove(Object entity) {
+	public void remove(@Nonnull Object entity) {
 		checkOpen();
 		try {
 			fireDelete( new DeleteEvent( entity, this ) );
@@ -2097,12 +2184,21 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+	@Nullable
+	public <T> T find(
+			@Nonnull Class<T> entityClass,
+			@Nonnull Object primaryKey,
+			@Nullable Map<String, Object> properties) {
 		return doFind( entityClass, primaryKey, LockMode.NONE, properties );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
+	@Nullable
+	public <T> T find(
+			@Nonnull Class<T> entityClass,
+			@Nonnull Object primaryKey,
+			@Nonnull LockModeType lockModeType,
+			@Nullable Map<String, Object> properties) {
 		if ( lockModeType == null ) {
 			throw new IllegalArgumentException("Given LockModeType was null");
 		}
@@ -2216,6 +2312,7 @@ public class SessionImpl
 			}
 		}
 		else {
+			@SuppressWarnings("deprecation")
 			final Object followOnLockingRef = properties.get( HibernateHints.HINT_FOLLOW_ON_LOCKING );
 			if ( followOnLockingRef != null ) {
 				followOn = Locking.FollowOn.fromLegacyValue( getBoolean( followOnLockingRef ) );
@@ -2271,7 +2368,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityClass, Object id) {
+	@Nonnull
+	public <T> T getReference(@Nonnull Class<T> entityClass, @Nonnull Object id) {
 		checkOpen();
 
 		try {
@@ -2287,7 +2385,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object getReference(String entityName, Object id) {
+	@Nonnull
+	public Object getReference(@Nonnull String entityName, @Nonnull Object id) {
 		checkOpen();
 
 		try {
@@ -2303,7 +2402,8 @@ public class SessionImpl
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public <T> T getReference(T object) {
+	@Nonnull
+	public <T> T getReference(@Nonnull T object) {
 		checkOpen();
 		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
@@ -2318,7 +2418,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityType, Object key, KeyType keyType) {
+	@Nonnull
+	public <T> T getReference(@Nonnull Class<T> entityType, @Nonnull Object key, @Nonnull KeyType keyType) {
 		checkOpen();
 
 		try {
@@ -2334,34 +2435,38 @@ public class SessionImpl
 	}
 
 	@Override
-	public void lock(Object entity, LockModeType lockModeType) {
+	public void lock(@Nonnull Object entity, @Nonnull LockModeType lockModeType) {
 		lock( entity, LockModeTypeHelper.getLockMode( lockModeType ) );
 	}
 
 	@Override
-	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
+	public void lock(@Nonnull Object entity, @Nonnull LockModeType lockModeType, @Nullable Map<String, Object> properties) {
 		lock( entity, buildLockOptions( LockModeTypeHelper.getLockMode( lockModeType ), properties ) );
 	}
 
 	@Override
-	public void lock(Object entity, LockModeType lockModeType, LockOption... options) {
+	public void lock(@Nonnull Object entity, @Nonnull LockModeType lockModeType, @Nullable LockOption... options) {
 		lock( entity, buildLockOptions( LockModeTypeHelper.getLockMode( lockModeType ), options ) );
 	}
 
+	@SuppressWarnings("removal")
 	private LockOptions buildLockOptions(LockMode lockMode, LockOption[] options) {
 		final var lockOptions = copySessionLockOptions();
 		lockOptions.setLockMode( lockMode );
-		for ( var option : options ) {
-			if ( option instanceof PessimisticLockScope lockScope ) {
-				lockOptions.setLockScope( lockScope );
-			}
-			else if ( option instanceof Timeout timeout ) {
-				lockOptions.setTimeOut( timeout.milliseconds() );
+		if ( options != null ) {
+			for ( var option : options ) {
+				if ( option instanceof PessimisticLockScope lockScope ) {
+					lockOptions.setLockScope( lockScope );
+				}
+				else if ( option instanceof Timeout timeout ) {
+					lockOptions.setTimeOut( timeout.milliseconds() );
+				}
 			}
 		}
 		return lockOptions;
 	}
 
+	@SuppressWarnings("removal")
 	private LockOptions buildLockOptions(LockMode lockMode, Map<String, Object> properties) {
 		final var lockOptions = copySessionLockOptions();
 		lockOptions.setLockMode( lockMode );
@@ -2371,6 +2476,7 @@ public class SessionImpl
 		return lockOptions;
 	}
 
+	@SuppressWarnings("removal")
 	private LockOptions copySessionLockOptions() {
 		final var copiedLockOptions = new LockOptions();
 		if ( lockOptions != null ) {
@@ -2380,12 +2486,12 @@ public class SessionImpl
 	}
 
 	@Override
-	public void refresh(Object entity, Map<String, Object> properties) {
+	public void refresh(@Nonnull Object entity, @Nullable Map<String, Object> properties) {
 		refresh( entity, null, properties );
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
+	public void refresh(@Nonnull Object entity, @Nullable LockModeType lockModeType, @Nullable Map<String, Object> properties) {
 		checkOpen();
 		final CacheMode previousCacheMode = getCacheMode();
 		final CacheMode refreshCacheMode = determineAppropriateLocalCacheMode( properties );
@@ -2404,44 +2510,47 @@ public class SessionImpl
 	}
 
 	@Override
-	public void refresh(Object entity, RefreshOption... options) {
-		CacheStoreMode storeMode = getCacheStoreMode();
-		LockOptions lockOptions = copySessionLockOptions();
-		for ( RefreshOption option : options ) {
-			if ( option instanceof CacheStoreMode cacheStoreMode ) {
-				storeMode = cacheStoreMode;
+	@SuppressWarnings("removal")
+	public void refresh(@Nonnull Object entity, @Nullable RefreshOption... options) {
+		if ( options != null ) {
+			CacheStoreMode storeMode = getCacheStoreMode();
+			LockOptions lockOptions = copySessionLockOptions();
+			for ( RefreshOption option : options ) {
+				if ( option instanceof CacheStoreMode cacheStoreMode ) {
+					storeMode = cacheStoreMode;
+				}
+				else if ( option instanceof LockModeType lockModeType ) {
+					lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+				}
+				else if ( option instanceof LockMode lockMode ) {
+					lockOptions.setLockMode( lockMode );
+				}
+				else if ( option instanceof LockOptions lockOpts ) {
+					lockOptions = lockOpts;
+				}
+				else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
+					lockOptions.setLockScope( pessimisticLockScope );
+				}
+				else if ( option instanceof Timeout timeout ) {
+					lockOptions.setTimeOut( timeout.milliseconds() );
+				}
 			}
-			else if ( option instanceof LockModeType lockModeType ) {
-				lockOptions.setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-			}
-			else if ( option instanceof LockMode lockMode ) {
-				lockOptions.setLockMode( lockMode );
-			}
-			else if ( option instanceof LockOptions lockOpts ) {
-				lockOptions = lockOpts;
-			}
-			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
-				lockOptions.setLockScope( pessimisticLockScope );
-			}
-			else if ( option instanceof Timeout timeout ) {
-				lockOptions.setTimeOut( timeout.milliseconds() );
-			}
-		}
 
-		final CacheMode previousCacheMode = getCacheMode();
-		if ( storeMode != null ) {
-			setCacheStoreMode( storeMode );
-		}
-		try {
-			refresh( entity, lockOptions );
-		}
-		finally {
-			setCacheMode( previousCacheMode );
+			final var previousCacheMode = getCacheMode();
+			if ( storeMode != null ) {
+				setCacheStoreMode( storeMode );
+			}
+			try {
+				refresh( entity, lockOptions );
+			}
+			finally {
+				setCacheMode( previousCacheMode );
+			}
 		}
 	}
 
 	@Override
-	public void detach(Object entity) {
+	public void detach(@Nonnull Object entity) {
 		checkOpen();
 		try {
 			evict( entity );
@@ -2452,7 +2561,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public LockModeType getLockMode(Object entity) {
+	@Nonnull
+	public LockModeType getLockMode(@Nonnull Object entity) {
 		checkOpen();
 
 		if ( !isTransactionInProgress() ) {
@@ -2487,6 +2597,7 @@ public class SessionImpl
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	protected void interpretProperty(String propertyName, Object value) {
 		switch ( propertyName ) {
 			case HINT_FLUSH_MODE:
@@ -2553,9 +2664,9 @@ public class SessionImpl
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 	@Override
-	public ProcedureCall createNamedStoredProcedureQuery(String name) {
+	@Nonnull
+	public ProcedureCall createNamedStoredProcedureQuery(@Nonnull String name) {
 		checkOpen();
 		try {
 			final var memento =
@@ -2572,7 +2683,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName) {
 		try {
 			return createStoredProcedureCall( procedureName );
 		}
@@ -2582,7 +2694,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName, @Nonnull Class... resultClasses) {
 		try {
 			return createStoredProcedureCall( procedureName, resultClasses );
 		}
@@ -2592,7 +2705,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+	@Nonnull
+	public ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName, @Nonnull String... resultSetMappings) {
 		checkOpen();
 		try {
 			try {
@@ -2608,7 +2722,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> type) {
+	@Nonnull
+	public <T> T unwrap(@Nonnull Class<T> type) {
 		checkOpen();
 
 		if ( type.isInstance( this ) ) {
@@ -2624,12 +2739,14 @@ public class SessionImpl
 	}
 
 	@Override
+	@Nonnull
 	public Object getDelegate() {
 		checkOpen();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public Collection<?> getManagedEntities() {
 		checkSessionReentrancy();
 		return persistenceContext.getEntityHoldersByKey()
@@ -2638,7 +2755,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public Collection<?> getManagedEntities(String entityName) {
+	@Nonnull
+	public Collection<?> getManagedEntities(@Nonnull String entityName) {
 		checkSessionReentrancy();
 		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
 				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
@@ -2647,7 +2765,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+	@Nonnull
+	public <E> Collection<E> getManagedEntities(@Nonnull Class<E> entityType) {
 		checkSessionReentrancy();
 		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
 				.filter( entry -> entry.getKey().getPersister().getMappedClass().equals( entityType ) )
@@ -2656,7 +2775,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+	@Nonnull
+	public <E> Collection<E> getManagedEntities(@Nonnull EntityType<E> entityType) {
 		checkSessionReentrancy();
 		final var entityDomainType = (EntityDomainType<E>) entityType;
 		final String entityName = entityDomainType.getHibernateEntityName();
@@ -2722,9 +2842,10 @@ public class SessionImpl
 		return loadQueryInfluencers == null ? null : loadQueryInfluencers.getReadOnly();
 	}
 
-	@SuppressWarnings("rawtypes")
-	@Override
-	public NativeQueryImplementor getNamedNativeQuery(String name) {
+	@Override @Deprecated
+	@SuppressWarnings({"rawtypes", "removal"})
+	@Nonnull
+	public NativeQueryImplementor getNamedNativeQuery(@Nonnull String name) {
 		final var query = createNamedQuery( name );
 		if ( query instanceof NativeQueryImplementor nativeQueryImplementor ) {
 			return nativeQueryImplementor;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -206,12 +208,14 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@Nullable
 	public Integer getTimeout() {
 		final var timeout = queryOptions.getTimeout();
 		return timeout == null ? null : timeout.milliseconds();
 	}
 
 	@Override
+	@Nonnull
 	public CommonQueryContractImplementor setTimeout(int timeout) {
 		session.checkOpen();
 		queryOptions.setTimeout( timeout );
@@ -219,28 +223,32 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public CommonQueryContractImplementor setTimeout(Integer timeout) {
+	@Nonnull
+	public CommonQueryContractImplementor setTimeout(@Nullable Integer timeout) {
+		session.checkOpen();
+		queryOptions.setTimeout( timeout == null ? null : Timeout.ms( timeout ) );
+		return this;
+	}
+
+	@Override
+	@Nonnull
+	public CommonQueryContractImplementor setTimeout(@Nullable Timeout timeout) {
 		session.checkOpen();
 		queryOptions.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public CommonQueryContractImplementor setTimeout(Timeout timeout) {
-		session.checkOpen();
-		queryOptions.setTimeout( timeout );
-		return this;
-	}
-
-	@Override
-	public CommonQueryContractImplementor addQueryHint(String hint) {
+	@Nonnull
+	public CommonQueryContractImplementor addQueryHint(@Nonnull String hint) {
 		session.checkOpen();
 		queryOptions.addDatabaseHint( hint );
 		return this;
 	}
 
 	@Override
-	public CommonQueryContractImplementor setLockMode(LockModeType lockMode) {
+	@Nonnull
+	public CommonQueryContractImplementor setLockMode(@Nonnull LockModeType lockMode) {
 		session.checkOpen();
 		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( LockMode.fromJpaLockMode( lockMode ) );
@@ -249,18 +257,21 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nullable
 	public LockModeType getLockMode() {
 		return queryOptions.getLockOptions().getLockMode().toJpaLockMode();
 	}
 
 	@Override
+	@Nonnull
 	public FlushModeType getFlushMode() {
 		session.checkOpen();
 		return FlushModeTypeHelper.getFlushModeType( getEffectiveFlushMode() );
 	}
 
 	@Override
-	public CommonQueryContractImplementor setFlushMode(FlushModeType flushMode) {
+	@Nonnull
+	public CommonQueryContractImplementor setFlushMode(@Nonnull FlushModeType flushMode) {
 		session.checkOpen();
 		queryOptions.setFlushMode( FlushMode.fromJpaFlushMode( flushMode ) );
 		return this;
@@ -274,12 +285,14 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return queryOptions.getCacheRetrieveMode();
 	}
 
 	@Override
-	public CommonQueryContractImplementor setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	@Nonnull
+	public CommonQueryContractImplementor setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		session.checkOpen();
 		queryOptions.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
@@ -287,18 +300,21 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
 		return queryOptions.getCacheStoreMode();
 	}
 
 	@Override
-	public CommonQueryContractImplementor setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+	@Nonnull
+	public CommonQueryContractImplementor setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		session.checkOpen();
 		queryOptions.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public CommonQueryContractImplementor setMaxResults(int maxResult) {
 		session.checkOpen();
 		queryOptions.getLimit().setMaxRows( maxResult );
@@ -312,6 +328,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@Nonnull
 	public CommonQueryContractImplementor setFirstResult(int startPosition) {
 		session.checkOpen();
 		queryOptions.getLimit().setFirstRow( startPosition );
@@ -405,7 +422,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public CommonQueryContractImplementor setHint(String hintName, Object value) {
+	@Nonnull
+	public CommonQueryContractImplementor setHint(@Nonnull String hintName, @Nullable Object value) {
 		try {
 			if ( !applyHint( hintName, value ) ) {
 				QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
@@ -748,25 +766,28 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
-
 	@Override
+	@Nullable
 	public String getComment() {
 		return queryOptions.getComment();
 	}
 
 	@Override
-	public CommonQueryContractImplementor setComment(String comment) {
+	@Nonnull
+	public CommonQueryContractImplementor setComment(@Nullable String comment) {
 		queryOptions.setComment( comment );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public QueryFlushMode getQueryFlushMode() {
 		return FlushModeTypeHelper.getQueryFlushMode( queryOptions.getFlushMode() );
 	}
 
 	@Override
-	public CommonQueryContractImplementor setQueryFlushMode(QueryFlushMode queryFlushMode) {
+	@Nonnull
+	public CommonQueryContractImplementor setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
 		queryOptions.setFlushMode( FlushModeTypeHelper.getFlushMode( queryFlushMode ) );
 		return this;
 	}
@@ -774,6 +795,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
+	@Nonnull
 	public final SharedSessionContractImplementor getSession() {
 		return session;
 	}
@@ -801,22 +823,24 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter handling
-
 	@Override
+	@Nonnull
 	public abstract ParameterMetadataImplementor getParameterMetadata();
 
+	@Nonnull
 	protected abstract QueryParameterBindings getQueryParameterBindings();
 
 	protected abstract boolean resolveJdbcParameterTypeIfNecessary();
 
 	@Override
+	@Nonnull
 	public Set<Parameter<?>> getParameters() {
 		session.checkOpen( false );
 		return unmodifiableSet( getParameterMetadata().getRegistrations() );
 	}
 
 	@Override
-	public boolean isBound(Parameter<?> param) {
+	public boolean isBound(@Nonnull Parameter<?> param) {
 		session.checkOpen();
 		final var parameter = getParameterMetadata().resolve( param );
 		return parameter != null
@@ -824,7 +848,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public QueryParameterImplementor<?> getParameter(String name) {
+	@Nonnull
+	public QueryParameterImplementor<?> getParameter(@Nonnull String name) {
 		session.checkOpen( false );
 		try {
 			return getParameterMetadata().getQueryParameter( name );
@@ -835,7 +860,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <T> QueryParameterImplementor<T> getParameter(String name, Class<T> type) {
+	@Nonnull
+	public <T> QueryParameterImplementor<T> getParameter(@Nonnull String name, @Nonnull Class<T> type) {
 		session.checkOpen( false );
 		try {
 			final var parameter = getParameterMetadata().getQueryParameter( name );
@@ -856,6 +882,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@Nonnull
 	public QueryParameterImplementor<?> getParameter(int position) {
 		session.checkOpen( false );
 		try {
@@ -867,7 +894,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <T> QueryParameterImplementor<T> getParameter(int position, Class<T> type) {
+	@Nonnull
+	public <T> QueryParameterImplementor<T> getParameter(int position, @Nonnull Class<T> type) {
 		session.checkOpen( false );
 		try {
 			final var parameter = getParameterMetadata().getQueryParameter( position );
@@ -888,7 +916,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <T> T getParameterValue(Parameter<T> param) {
+	public <T> T getParameterValue(@Nonnull Parameter<T> param) {
 		session.checkOpen( false );
 		final var parameter = getParameterMetadata().resolve( param );
 		if ( parameter == null ) {
@@ -911,7 +939,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public Object getParameterValue(String name) {
+	public Object getParameterValue(@Nonnull String name) {
 		session.checkOpen( false );
 		final var binding = getQueryParameterBindings().getBinding( name );
 		if ( !binding.isBound() ) {
@@ -921,6 +949,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@Nullable
 	public Object getParameterValue(int position) {
 		session.checkOpen( false );
 		final var binding = getQueryParameterBindings().getBinding( position );
@@ -1032,9 +1061,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return parameter;
 	}
 
-
 	@Override
-	public CommonQueryContractImplementor setParameter(String name, Object value) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(@Nonnull String name, @Nullable Object value) {
 		session.checkOpen( false );
 		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
 			setTypedParameter( name, typedParameterValue );
@@ -1051,9 +1080,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-
 	@Override
-	public <P> CommonQueryContractImplementor setParameter(String name, P value, Class<P> javaType) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameter(
+			@Nonnull String name,
+			@Nullable P value,
+			@Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameter( name, value );
@@ -1065,21 +1097,29 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameter(String name, P value, Type<P> type) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameter(
+			@Nonnull String name,
+			@Nullable P value,
+			@Nonnull Type<P> type) {
 		locateBinding( name ).setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override @Deprecated(since = "7")
-	public CommonQueryContractImplementor setParameter(String name, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(
+			@Nonnull String name,
+			@Nullable Instant value,
+			@Nonnull TemporalType temporalType) {
 		locateBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
-	public CommonQueryContractImplementor setParameter(int position, Object value) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(int position, @Nullable Object value) {
 		session.checkOpen( false );
-
 		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
 			setTypedParameter( position, typedParameterValue );
 		}
@@ -1096,7 +1136,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameter(int position, P value, Class<P> javaType) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameter(
+			int position, @Nullable P value, @Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameter( position, value );
@@ -1108,23 +1150,29 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameter(int position, P value, Type<P> type) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameter(
+			int position, @Nullable P value, @Nonnull Type<P> type) {
 		locateBinding( position ).setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public <P> CommonQueryContractImplementor setConvertedParameter(
-			String name, P value,
-			Class<? extends AttributeConverter<P, ?>> converterClass) {
+			@Nonnull String name,
+			@Nullable P value,
+			@Nonnull Class<? extends AttributeConverter<P, ?>> converterClass) {
 		setConvertedParameter( locateBinding( name ), value, converterClass );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public <P> CommonQueryContractImplementor setConvertedParameter(
-			int position, P value,
-			Class<? extends AttributeConverter<P, ?>> converterClass) {
+			int position,
+			@Nullable P value,
+			@Nonnull Class<? extends AttributeConverter<P, ?>> converterClass) {
 		setConvertedParameter( locateBinding( position ), value, converterClass );
 		return this;
 	}
@@ -1157,27 +1205,37 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	private static boolean isAssignableTo(BindableType<?> bindType, Class<?> valueType) {
+	private static boolean isAssignableTo(@Nonnull BindableType<?> bindType, @Nonnull Class<?> valueType) {
 		final var bindJavaType = bindType.getJavaType();
-		return bindJavaType == null
-			|| bindJavaType == Object.class
+		return bindJavaType == Object.class
 			|| bindJavaType.isAssignableFrom( valueType );
 	}
 
 	@Override @Deprecated
-	public CommonQueryContractImplementor setParameter(int position, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(
+			int position,
+			@Nullable Instant value,
+			@Nonnull TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameter(QueryParameter<P> parameter, P value) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameter(
+			@Nonnull QueryParameter<P> parameter,
+			@Nullable P value) {
 		locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameter(
+			@Nonnull QueryParameter<P> parameter,
+			@Nullable P value,
+			@Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameter( parameter, value );
@@ -1189,13 +1247,20 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameter(
+			@Nonnull QueryParameter<P> parameter,
+			@Nullable P value,
+			@Nonnull Type<P> type) {
 		locateBinding( parameter ).setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameter(Parameter<P> parameter, P value) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameter(
+			@Nonnull Parameter<P> parameter,
+			@Nullable P value) {
 		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
 			final var parameterType = parameter.getParameterType();
 			final var type = typedParameterValue.type();
@@ -1224,48 +1289,80 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override @Deprecated
-	public CommonQueryContractImplementor setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(
+			@Nonnull Parameter<Calendar> param,
+			@Nullable Calendar value,
+			@Nonnull TemporalType temporalType) {
 		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public CommonQueryContractImplementor setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(
+			@Nonnull Parameter<Date> param,
+			@Nullable Date value,
+			@Nonnull TemporalType temporalType) {
 		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public CommonQueryContractImplementor setParameter(String name, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(
+			@Nonnull String name,
+			@Nullable Calendar value,
+			@Nonnull TemporalType temporalType) {
 		locateBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public CommonQueryContractImplementor setParameter(String name, Date value, TemporalType temporalType) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(
+			@Nonnull String name,
+			@Nullable Date value,
+			@Nonnull TemporalType temporalType) {
 		locateBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public CommonQueryContractImplementor setParameter(int position, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(
+			int position,
+			@Nullable Calendar value,
+			@Nonnull TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated
-	public CommonQueryContractImplementor setParameter(int position, Date value, TemporalType temporalType) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameter(
+			int position,
+			@Nullable Date value,
+			@Nonnull TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
-	public CommonQueryContractImplementor setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameterList(
+			@Nonnull String name,
+			@SuppressWarnings("rawtypes")
+			@Nonnull Collection values) {
 		getQueryParameterBindings().getBinding( name ).setBindValues( values );
 		return this;
 	}
 
-	public <P> CommonQueryContractImplementor setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull String name,
+			@Nonnull Collection<? extends P> values,
+			@Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( name, values );
@@ -1277,13 +1374,18 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(String name, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull String name,
+			@Nonnull Collection<? extends P> values,
+			@Nonnull Type<P> type) {
 		locateBinding( name ).setBindValues( values, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
-	public CommonQueryContractImplementor setParameterList(String name, Object[] values) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameterList(@Nonnull String name, @Nonnull Object[] values) {
 		final var binding = getQueryParameterBindings().getBinding( name );
 		setParameterValues( values, binding );
 		return this;
@@ -1302,7 +1404,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(String name, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull String name,
+			@Nonnull P[] values,
+			@Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( name, values );
@@ -1313,20 +1419,32 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	public <P> CommonQueryContractImplementor setParameterList(String name, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull String name,
+			@Nonnull P[] values,
+			@Nonnull Type<P> type) {
 		locateBinding( name ).setBindValues( List.of( values ), (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
-	public CommonQueryContractImplementor setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameterList(
+			int position,
+			@SuppressWarnings("rawtypes")
+			@Nonnull Collection values) {
 		//TODO: type checking?
 		getQueryParameterBindings().getBinding( position ).setBindValues( values );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			int position,
+			@Nonnull Collection<? extends P> values,
+			@Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( position, values );
@@ -1338,20 +1456,29 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(int position, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			int position,
+			@Nonnull Collection<? extends P> values,
+			@Nonnull Type<P> type) {
 		locateBinding( position ).setBindValues( values, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
-	public CommonQueryContractImplementor setParameterList(int position, Object[] values) {
+	@Nonnull
+	public CommonQueryContractImplementor setParameterList(int position, @Nonnull Object[] values) {
 		final var binding = getQueryParameterBindings().getBinding( position );
 		setParameterValues( values, binding );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(int position, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			int position,
+			@Nonnull P[] values,
+			@Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( position, values );
@@ -1362,19 +1489,30 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	public <P> CommonQueryContractImplementor setParameterList(int position, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			int position,
+			@Nonnull P[] values,
+			@Nonnull Type<P> type) {
 		locateBinding( position ).setBindValues( List.of( values ), (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull QueryParameter<P> parameter,
+			@Nonnull Collection<? extends P> values) {
 		locateBinding( parameter ).setBindValues( values );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull QueryParameter<P> parameter,
+			@Nonnull Collection<? extends P> values,
+			@Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( parameter, values );
@@ -1386,19 +1524,30 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull QueryParameter<P> parameter,
+			@Nonnull Collection<? extends P> values,
+			@Nonnull Type<P> type) {
 		locateBinding( parameter ).setBindValues( values, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, P[] values) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull QueryParameter<P> parameter,
+			@Nonnull P[] values) {
 		locateBinding( parameter ).setBindValues( List.of( values ) );
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull QueryParameter<P> parameter,
+			@Nonnull P[] values,
+			@Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( parameter, values );
@@ -1410,13 +1559,18 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public <P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> CommonQueryContractImplementor setParameterList(
+			@Nonnull QueryParameter<P> parameter,
+			@Nonnull P[] values,
+			@Nonnull Type<P> type) {
 		locateBinding( parameter ).setBindValues( List.of( values ), (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
-	public CommonQueryContractImplementor setProperties(@SuppressWarnings("rawtypes") Map map) {
+	@Nonnull
+	public CommonQueryContractImplementor setProperties(@Nonnull @SuppressWarnings("rawtypes") Map map) {
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			final Object object = map.get( paramName );
 			if ( object == null ) {
@@ -1442,7 +1596,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
-	public CommonQueryContractImplementor setProperties(Object bean) {
+	@Nonnull
+	public CommonQueryContractImplementor setProperties(@Nonnull Object bean) {
 		final var beanClass = bean.getClass();
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			try {
@@ -1494,6 +1649,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	private FlushMode sessionFlushMode;
 	private CacheMode sessionCacheMode;
 
+	@Nonnull
 	protected abstract QueryOptions getQueryOptions();
 
 	/// hook for subtypes

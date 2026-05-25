@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -18,7 +20,6 @@ import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
 import jakarta.persistence.sql.ResultSetMapping;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -88,6 +89,7 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 
 import static java.lang.Boolean.TRUE;
+import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
@@ -319,6 +321,7 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@Nullable
 	public String getQueryString() {
 		return hql;
 	}
@@ -343,21 +346,25 @@ public class SelectionQueryImpl<R>
 	// Casts
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> asSelectionQuery() {
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
 		return new SelectionQueryImpl<>( this, type, null, null );
 	}
 
 	@Override
+	@Nonnull
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
 		return asSelectionQuery( entityGraph, GraphSemantic.LOAD );
 	}
 
 	@Override
+	@Nonnull
 	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
 		return new SelectionQueryImpl<>(
 				this,
@@ -368,7 +375,8 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public <S> SelectionQueryImplementor<S> withResultSetMapping(ResultSetMapping<S> mapping) {
+	@Nonnull
+	public <S> SelectionQueryImplementor<S> withResultSetMapping(@Nonnull ResultSetMapping<S> mapping) {
 		throw new IllegalStateException( "Result set mappings can only be used with native SQL queries" );
 	}
 
@@ -384,23 +392,27 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> setReadOnly(boolean readOnly) {
 		queryOptions.setReadOnly( readOnly );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public Integer getFetchSize() {
 		return getQueryOptions().getFetchSize();
 	}
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> setFetchSize(int fetchSize) {
 		queryOptions.setFetchSize( fetchSize );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> setFirstResult(int startPosition) {
 		session.checkOpen();
 		if ( startPosition < 0 ) {
@@ -411,6 +423,7 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> setMaxResults(int maxResults) {
 		if ( maxResults < 0 ) {
 			throw new IllegalArgumentException( "Max results cannot be negative" );
@@ -428,6 +441,7 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@Nullable
 	public LockModeType getLockMode() {
 		session.checkOpen( false );
 		//noinspection removal
@@ -435,7 +449,8 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setLockMode(LockModeType lockMode) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setLockMode(@Nonnull LockModeType lockMode) {
 		session.checkOpen( false );
 		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( LockMode.fromJpaLockMode( lockMode ) );
@@ -443,46 +458,53 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public LockMode getHibernateLockMode() {
 		//noinspection removal
 		return queryOptions.getLockOptions().getLockMode();
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setHibernateLockMode(LockMode lockMode) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setHibernateLockMode(@Nonnull LockMode lockMode) {
 		//noinspection removal
 		queryOptions.getLockOptions().setLockMode( lockMode );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public Timeout getLockTimeout() {
 		//noinspection removal
 		return queryOptions.getLockOptions().getTimeout();
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setLockTimeout(Timeout lockTimeout) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setLockTimeout(@Nullable Timeout lockTimeout) {
 		//noinspection removal
-		queryOptions.getLockOptions().setTimeout( lockTimeout );
+		queryOptions.getLockOptions().setTimeOut( lockTimeout == null ? WAIT_FOREVER_MILLI : lockTimeout.milliseconds() );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public PessimisticLockScope getLockScope() {
 		//noinspection removal
 		return queryOptions.getLockOptions().getLockScope();
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setLockScope(@Nonnull PessimisticLockScope lockScope) {
 		//noinspection removal
 		queryOptions.getLockOptions().setLockScope( lockScope );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setFollowOnStrategy(@Nonnull Locking.FollowOn followOnStrategy) {
 		//noinspection removal
 		queryOptions.getLockOptions().setFollowOnStrategy( followOnStrategy );
 		return this;
@@ -494,51 +516,59 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> setCacheable(boolean cacheable) {
 		queryOptions.setResultCachingEnabled( cacheable );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public CacheMode getCacheMode() {
 		return queryOptions.getCacheMode();
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setCacheMode(CacheMode cacheMode) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setCacheMode(@Nonnull CacheMode cacheMode) {
 		queryOptions.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return queryOptions.getCacheRetrieveMode();
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
 		queryOptions.setCacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
 		return queryOptions.getCacheStoreMode();
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
 		queryOptions.setCacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override
+	@Nullable
 	public String getCacheRegion() {
 		return queryOptions.getResultCacheRegionName();
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setCacheRegion(String cacheRegion) {
+	public SelectionQueryImplementor<R> setCacheRegion(@Nullable String cacheRegion) {
 		queryOptions.setResultCacheRegionName( cacheRegion );
 		return this;
 	}
@@ -552,32 +582,37 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
 		queryOptions.setQueryPlanCachingEnabled( queryPlanCacheable );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setHint(String hintName, Object value) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setHint(@Nonnull String hintName, @Nullable Object value) {
 		super.setHint( hintName, value );
 		return this;
 	}
 
 	@Override @Deprecated
-	public SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setEntityGraph(@Nonnull EntityGraph<? super R> entityGraph) {
 		setEntityGraph( entityGraph, GraphSemantic.LOAD );
 		return this;
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
-	public SelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setEntityGraph(@Nonnull EntityGraph<? super R> graph, @Nonnull GraphSemantic semantic) {
 		queryOptions.applyGraph( (RootGraphImplementor<?>) graph, semantic );
 		return this;
 	}
 
 	@Override
-	public <T> SelectionQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
+	@Nonnull
+	public <T> SelectionQueryImplementor<T> setTupleTransformer(@Nonnull TupleTransformer<T> transformer) {
 		// todo (jpa4) : not the best option.
 		queryOptions.setTupleTransformer( transformer );
 		//noinspection unchecked
@@ -585,14 +620,16 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setResultListTransformer(@Nonnull ResultListTransformer<R> transformer) {
 		queryOptions.setResultListTransformer( transformer );
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("removal")
-	public SelectionQueryImplementor<R> enableFetchProfile(String profileName) {
+	@Nonnull
+	public SelectionQueryImplementor<R> enableFetchProfile(@Nonnull String profileName) {
 		if ( getSessionFactory().containsFetchProfileDefinition( profileName ) ) {
 			getQueryOptions().enableFetchProfile( profileName );
 			return this;
@@ -604,60 +641,70 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	@SuppressWarnings("removal")
-	public SelectionQueryImplementor<R> disableFetchProfile(String profileName) {
+	@Nonnull
+	public SelectionQueryImplementor<R> disableFetchProfile(@Nonnull String profileName) {
 		getQueryOptions().disableFetchProfile( profileName );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setComment(String comment) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setComment(@Nullable String comment) {
 		super.setComment( comment );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> addOption(TypedQuery.Option option) {
+	@Nonnull
+	public SelectionQueryImplementor<R> addOption(@Nonnull TypedQuery.Option option) {
 		OptionsHelper.applyOption( this, option );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public Set<TypedQuery.Option> getOptions() {
 		return OptionsHelper.getTypedQueryOptions( getQueryOptions() );
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode) {
 		super.setQueryFlushMode( queryFlushMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> setTimeout(int timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setTimeout(Integer timeout) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setTimeout(@Nullable Integer timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setTimeout(Timeout timeout) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setTimeout(@Nullable Timeout timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setFlushMode(FlushModeType flushMode) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setFlushMode(@Nonnull FlushModeType flushMode) {
 		super.setFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> addQueryHint(String hint) {
+	@Nonnull
+	public SelectionQueryImplementor<R> addQueryHint(@Nonnull String hint) {
 		super.addQueryHint( hint );
 		return this;
 	}
@@ -665,210 +712,248 @@ public class SelectionQueryImpl<R>
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter handling
-
 	@Override
+	@Nonnull
 	public ParameterMetadataImplementor getParameterMetadata() {
 		return parameterMetadata;
 	}
 
 	@Override
+	@Nonnull
 	public QueryParameterBindings getQueryParameterBindings() {
 		return parameterBindings;
 	}
 
 	@Override
+	@Nonnull
 	public QueryParameterBindings getParameterBindings() {
 		return parameterBindings;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setParameter(String name, Object value) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Object value) {
 		super.setParameter( name, value );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameter(String name, P value, Class<P> javaType) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> javaType) {
 		super.setParameter( name, value, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameter(String name, P value, Type<P> type) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setParameter(int position, Object value) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(int position, @Nullable Object value) {
 		super.setParameter( position, value );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameter(int position, P value, Class<P> javaType) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaType) {
 		super.setParameter( position, value, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameter(int position, P value, Type<P> type) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> javaType) {
 		super.setParameter( parameter, value, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameter(@Nonnull Parameter<P> parameter, @Nullable P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map map) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setProperties(@Nonnull @SuppressWarnings("rawtypes") Map map) {
 		super.setProperties( map );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setProperties(Object bean) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setProperties(@Nonnull Object bean) {
 		super.setProperties( bean );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setConvertedParameter(
+			@Nonnull String name, @Nullable P value,
+			@Nonnull Class<? extends AttributeConverter<P, ?>> converterClass) {
 		super.setConvertedParameter( name, value, converterClass );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converterClass) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setConvertedParameter(
+			int position, @Nullable P value,
+			@Nonnull Class<? extends AttributeConverter<P, ?>> converterClass) {
 		super.setConvertedParameter( position, value, converterClass );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType) {
 		super.setParameterList( name, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setParameterList(String name, Object[] values) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull Object[] values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaType) {
 		super.setParameterList( name, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameterList(int position, @Nonnull @SuppressWarnings("rawtypes") Collection values) {
 		super.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType) {
 		super.setParameterList( position, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setParameterList(int position, Object[] values) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameterList(int position, @Nonnull Object[] values) {
 		super.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType) {
 		super.setParameterList( position, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(int position, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values) {
 		super.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType) {
 		super.setParameterList( parameter, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values) {
 		super.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType) {
 		super.setParameterList( parameter, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
+	@Nonnull
+	public <P> SelectionQueryImplementor<R> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
@@ -876,9 +961,8 @@ public class SelectionQueryImpl<R>
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution
-
-
 	@Override
+	@Nonnull
 	public List<R> getResultList() {
 		return executeQuery( this::doList );
 	}
@@ -910,7 +994,8 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public ScrollableResults<R> scroll(ScrollMode scrollMode) {
+	@Nonnull
+	public ScrollableResults<R> scroll(@Nonnull ScrollMode scrollMode) {
 		return executeQuery( scrollMode, this::doScroll );
 	}
 
@@ -1008,11 +1093,12 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public int @Nullable [] unnamedParameterIndices() {
+	public @Nullable int[] unnamedParameterIndices() {
 		return QueryHelper.unnamedParameterIndices( domainParameterXref );
 	}
 
 	@Override
+	@Nonnull
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return session.getLoadQueryInfluencers();
 	}
@@ -1221,7 +1307,7 @@ public class SelectionQueryImpl<R>
 		else {
 			return new DelegatingDomainQueryExecutionContext( this ) {
 				@Override
-				public QueryOptions getQueryOptions() {
+	public QueryOptions getQueryOptions() {
 					return normalizedQueryOptions;
 				}
 			};
@@ -1244,12 +1330,12 @@ public class SelectionQueryImpl<R>
 						: queryOptions;
 		final var scrollQueryOptions = new DelegatingQueryOptions( normalizedQueryOptions ) {
 			@Override
-			public boolean isScrollExecution() {
+	public boolean isScrollExecution() {
 				return true;
 			}
 
 			@Override
-			public Boolean isLimitInMemoryEnabled() {
+	public Boolean isLimitInMemoryEnabled() {
 				return applyLimitInScrollableResults
 						? TRUE
 						: super.isLimitInMemoryEnabled();
@@ -1257,7 +1343,7 @@ public class SelectionQueryImpl<R>
 		};
 		return new DelegatingDomainQueryExecutionContext( this ) {
 			@Override
-			public QueryOptions getQueryOptions() {
+	public QueryOptions getQueryOptions() {
 				return scrollQueryOptions;
 			}
 		};
@@ -1426,54 +1512,63 @@ public class SelectionQueryImpl<R>
 	// Deprecations
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public SelectionQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public SelectionQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public SelectionQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public SelectionQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public SelectionQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public SelectionQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public SelectionQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	public SelectionQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public MutationQueryImplementor<R> asMutationQuery() {
 		throw new IllegalMutationQueryException( "Not a mutation query", getQueryString() );
 	}

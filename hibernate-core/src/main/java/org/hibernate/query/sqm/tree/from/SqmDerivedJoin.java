@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
@@ -150,6 +151,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
+	@Nonnull
 	public SqmDerivedJoin<T> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmDerivedJoin<T>) super.on( restriction );
 	}
@@ -160,11 +162,13 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
+	@Nonnull
 	public SqmDerivedJoin<T> on(BooleanExpression... restrictions) {
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 
 	@Override
+	@Nonnull
 	public SqmDerivedJoin<T> on(List<? extends Expression<Boolean>> restrictions) {
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
@@ -219,12 +223,14 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
+	@Nonnull
 	public SqmFrom<?, T> getParent() {
 		//noinspection unchecked
 		return (SqmFrom<?, T>) getRoot();
 	}
 
 	@Override
+	@Nonnull
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}

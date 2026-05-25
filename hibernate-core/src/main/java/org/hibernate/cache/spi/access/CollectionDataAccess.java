@@ -4,6 +4,7 @@
  */
 package org.hibernate.cache.spi.access;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -35,7 +36,7 @@ public interface CollectionDataAccess extends CachedDomainDataAccess {
 			Object id,
 			CollectionPersister collectionDescriptor,
 			SessionFactoryImplementor factory,
-			String tenantIdentifier);
+			@Nullable String tenantIdentifier);
 
 	/**
 	 * Performs reverse operation to {@link #generateCacheKey}

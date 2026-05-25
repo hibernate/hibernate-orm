@@ -41,6 +41,7 @@ import java.util.stream.Stream;
  */
 public interface MutationQueryImplementor<T>
 		extends MutationQuery, QueryImplementor<T>, StatementReferenceProducer {
+
 	@Override
 	@Nullable
 	default String getMutationString() {
@@ -50,7 +51,7 @@ public interface MutationQueryImplementor<T>
 	@Override @Nullable
 	Class<T> getTargetType();
 
-	@Override
+	@Override @Nonnull
 	default MutationQueryImplementor<T> asMutationQuery() {
 		return this;
 	}
@@ -433,21 +434,25 @@ public interface MutationQueryImplementor<T>
 	// SelectionQuery Handling
 
 	@Override
+	@Nonnull
 	default SelectionQueryImplementor<T> asSelectionQuery() {
 		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}
 
 	@Override
+	@Nonnull
 	default <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
 		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}
 
 	@Override
+	@Nonnull
 	default <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
 		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}
 
 	@Override
+	@Nonnull
 	default <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
 		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}

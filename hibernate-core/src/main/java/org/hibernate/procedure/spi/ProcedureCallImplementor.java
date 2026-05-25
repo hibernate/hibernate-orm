@@ -52,9 +52,11 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	@Override
 	@Nonnull
 	ProcedureCallImplementor<R> setTimeout(@Nullable Integer timeout);
+
 	@Override
 	@Nonnull
 	ProcedureCallImplementor<R> setTimeout(int timeout);
+
 	@Override
 	@Nonnull
 	ProcedureCallImplementor<R> setTimeout(@Nullable Timeout timeout);
@@ -98,54 +100,70 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	@Nonnull
 	ProcedureParameterMetadataImplementor getParameterMetadata();
 
+	@Nonnull
 	ParameterStrategy getParameterStrategy();
 
 	@Override
+	@Nonnull
 	QueryParameterBindings getParameterBindings();
 
 	@Override
+	@Nullable
 	FunctionReturnImplementor<?> getFunctionReturn();
 
 	@Override
+	@Nonnull
 	<T> FunctionReturnImplementor<T> registerResultParameter(Class<T> resultType);
 
 	@Override
+	@Nonnull
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
 
 	@Override
+	@Nonnull
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
 
 	@Override
+	@Nonnull
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Type<?> type, ParameterMode mode);
 
 	@Override
+	@Nonnull
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Type<?> type, ParameterMode mode);
 
 	@Override
+	@Nonnull
 	<T> ProcedureParameterImplementor<T> registerConvertedParameter(int position, Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode);
 
 	@Override
+	@Nonnull
 	<T> ProcedureParameterImplementor<T> registerConvertedParameter(String parameterName, Class<? extends AttributeConverter<T, ?>> converter, ParameterMode mode);
 
 	@Override
+	@Nonnull
 	<T> ProcedureParameterImplementor<T> registerParameter(int position, Class<T> type, ParameterMode mode);
 
 	@Override
+	@Nonnull
 	<T> ProcedureParameterImplementor<T> registerParameter(int position, Type<T> type, ParameterMode mode);
 
 	@Override
+	@Nonnull
 	<T> ProcedureParameterImplementor<T> registerParameter(String parameterName, Class<T> type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
 
 	@Override
+	@Nonnull
 	<T> ProcedureParameterImplementor<T> registerParameter(String parameterName, Type<T> type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
 
 	@Override
+	@Nonnull
 	ProcedureParameterImplementor<?> getParameterRegistration(int position);
 
 	@Override
-	ProcedureParameterImplementor<?> getParameterRegistration(String name);
+	@Nonnull
+	ProcedureParameterImplementor<?> getParameterRegistration(@Nonnull String name);
 
 	@Override
 	@Nonnull
@@ -220,12 +238,15 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	// Execution
 
 	@Override
+	@SuppressWarnings("removal")
 	@Nonnull
 	List<R> getResultList();
 
 	@Override
+	@SuppressWarnings("removal")
 	R getSingleResult();
 
 	@Override
+	@Nonnull
 	NamedCallableQueryMemento toMemento(String name);
 }

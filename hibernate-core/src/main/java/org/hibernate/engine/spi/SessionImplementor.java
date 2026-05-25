@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaStatement;
 import org.hibernate.HibernateException;
@@ -58,18 +59,23 @@ import org.hibernate.type.descriptor.WrapperOptions;
 public interface SessionImplementor extends Session, SharedSessionContractImplementor {
 
 	@Override
+	@Nonnull
 	default SessionImplementor getSession() {
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	SessionFactoryImplementor getSessionFactory();
 
 	@Override
-	<T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery);
+	@Nonnull
+	<T> SelectionQueryImplementor<T> createQuery(@Nonnull CriteriaSelect<T> selectQuery);
 
+	@SuppressWarnings("removal")
 	@Override
-	default MutationQueryImplementor<?> createQuery(CriteriaStatement<?> criteriaStatement) {
+	@Nonnull
+	default MutationQueryImplementor<?> createQuery(@Nonnull CriteriaStatement<?> criteriaStatement) {
 		return createMutationQuery( criteriaStatement );
 	}
 
@@ -88,7 +94,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	boolean isAutoCloseSessionEnabled();
 
 	@Override
-	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
+	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) throws HibernateException;
 
 	/**
 	 * Initiate a flush to force deletion of a re-persisted entity.

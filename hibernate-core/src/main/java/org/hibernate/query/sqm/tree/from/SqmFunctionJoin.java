@@ -4,10 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -30,7 +30,6 @@ import org.hibernate.spi.NavigablePath;
 
 import java.util.List;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 
 /**
@@ -147,6 +146,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	@Override
+	@Nonnull
 	public SqmFunctionJoin<E> on(@Nullable Expression<Boolean> restriction) {
 		return (SqmFunctionJoin<E>) super.on( restriction );
 	}
@@ -157,11 +157,13 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	@Override
+	@Nonnull
 	public SqmFunctionJoin<E> on(BooleanExpression... restrictions) {
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
 
 	@Override
+	@Nonnull
 	public SqmFunctionJoin<E> on(List<? extends Expression<Boolean>> restrictions) {
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
@@ -220,11 +222,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	@Override
-	public @NonNull SqmFrom<?, Object> getParent() {
-		return castNonNull( super.getParent() );
-	}
-
-	@Override
+	@Nonnull
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}

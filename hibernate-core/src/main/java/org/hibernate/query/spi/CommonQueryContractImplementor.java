@@ -69,6 +69,7 @@ public interface CommonQueryContractImplementor extends CommonQueryContract {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter Handling
 
+	@Nonnull
 	QueryParameterBindings getParameterBindings();
 
 	@Override

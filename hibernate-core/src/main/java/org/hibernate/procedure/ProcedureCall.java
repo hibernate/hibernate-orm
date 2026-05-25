@@ -84,6 +84,7 @@ public interface ProcedureCall
 	 *
 	 * @return The procedure name.
 	 */
+	@Nonnull
 	String getProcedureName();
 
 
@@ -142,6 +143,7 @@ public interface ProcedureCall
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Nonnull
 	ProcedureCall markAsFunctionCall(int sqlType);
 
 	/**
@@ -153,7 +155,8 @@ public interface ProcedureCall
 	 * @return {@code this}, for method chaining
 	 * @since 6.2
 	 */
-	ProcedureCall markAsFunctionCall(Class<?> resultType);
+	@Nonnull
+	ProcedureCall markAsFunctionCall(@Nonnull Class<?> resultType);
 
 	/**
 	 * Mark this {@code ProcedureCall} as representing a call to a database function,
@@ -164,7 +167,8 @@ public interface ProcedureCall
 	 * @return {@code this}, for method chaining
 	 * @since 6.2
 	 */
-	ProcedureCall markAsFunctionCall(Type<?> typeReference);
+	@Nonnull
+	ProcedureCall markAsFunctionCall(@Nonnull Type<?> typeReference);
 
 	/**
 	 * Basic form for registering a positional parameter.
@@ -176,7 +180,8 @@ public interface ProcedureCall
 	 *
 	 * @return The parameter registration memento
 	 */
-	<T> ProcedureParameter<T> registerParameter(int position, Class<T> type, ParameterMode mode);
+	@Nonnull
+	<T> ProcedureParameter<T> registerParameter(int position, @Nonnull Class<T> type, @Nonnull ParameterMode mode);
 
 	/**
 	 * Basic form for registering a positional parameter.
@@ -188,13 +193,15 @@ public interface ProcedureCall
 	 *
 	 * @return The parameter registration memento
 	 */
-	<T> ProcedureParameter<T> registerParameter(int position, Type<T> type, ParameterMode mode);
+	@Nonnull
+	<T> ProcedureParameter<T> registerParameter(int position, @Nonnull Type<T> type, @Nonnull ParameterMode mode);
 
 	/**
 	 * Like {@link #registerStoredProcedureParameter(int, Class, ParameterMode)} but a type reference is given
 	 * instead of a class for the parameter type.
 	 */
-	ProcedureCall registerStoredProcedureParameter(int position, Type<?> type, ParameterMode mode);
+	@Nonnull
+	ProcedureCall registerStoredProcedureParameter(int position, @Nonnull Type<?> type, @Nonnull ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the position under which it was registered.
@@ -206,6 +213,7 @@ public interface ProcedureCall
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
 	 * @throws NoSuchParameterException If no parameter with that position exists
 	 */
+	@Nonnull
 	ProcedureParameter<?> getParameterRegistration(int position);
 
 	/**
@@ -221,7 +229,8 @@ public interface ProcedureCall
 	 * @throws NamedParametersNotSupportedException When the underlying database is known to not support
 	 * named procedure parameters.
 	 */
-	<T> ProcedureParameter<T> registerParameter(String parameterName, Class<T> type, ParameterMode mode)
+	@Nonnull
+	<T> ProcedureParameter<T> registerParameter(@Nonnull String parameterName, @Nonnull Class<T> type, @Nonnull ParameterMode mode)
 			throws NamedParametersNotSupportedException;
 
 	/**
@@ -237,14 +246,16 @@ public interface ProcedureCall
 	 * @throws NamedParametersNotSupportedException When the underlying database is known to not support
 	 * named procedure parameters.
 	 */
-	<T> ProcedureParameter<T> registerParameter(String parameterName, Type<T> type, ParameterMode mode)
+	@Nonnull
+	<T> ProcedureParameter<T> registerParameter(@Nonnull String parameterName, @Nonnull Type<T> type, @Nonnull ParameterMode mode)
 			throws NamedParametersNotSupportedException;
 
 	/**
 	 * Like {@link #registerStoredProcedureParameter(String, Class, ParameterMode)} but a type reference is given
 	 * instead of a class for the parameter type.
 	 */
-	ProcedureCall registerStoredProcedureParameter(String parameterName, Type<?> type, ParameterMode mode);
+	@Nonnull
+	ProcedureCall registerStoredProcedureParameter(@Nonnull String parameterName, @Nonnull Type<?> type, @Nonnull ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the name under which it was registered.
@@ -256,13 +267,15 @@ public interface ProcedureCall
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
 	 * @throws NoSuchParameterException If no parameter with that name exists
 	 */
-	ProcedureParameter<?> getParameterRegistration(String name);
+	@Nonnull
+	ProcedureParameter<?> getParameterRegistration(@Nonnull String name);
 
 	/**
 	 * Retrieve all registered parameters.
 	 *
 	 * @return The (immutable) list of all registered parameters.
 	 */
+	@Nonnull
 	List<ProcedureParameter<?>> getRegisteredParameters();
 
 	/**
@@ -274,6 +287,7 @@ public interface ProcedureCall
 	 *
 	 * @return The ProcedureOutputs representation
 	 */
+	@Nonnull
 	ProcedureOutputs getOutputs();
 
 	/**
@@ -284,6 +298,7 @@ public interface ProcedureCall
 	 * @since 7.0
 	 */
 	@Incubating
+	@Nullable
 	FunctionReturn<?> getFunctionReturn();
 
 	/**
@@ -309,12 +324,15 @@ public interface ProcedureCall
 	ProcedureCall setTimeout(@Nullable Timeout timeout);
 
 	@Override
+	@Nonnull
 	ProcedureCall addSynchronizedQuerySpace(String querySpace);
 
 	@Override
+	@Nonnull
 	ProcedureCall addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
+	@Nonnull
 	ProcedureCall addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
 	@Override
@@ -386,16 +404,20 @@ public interface ProcedureCall
 	ProcedureCall setFlushMode(@Nonnull FlushModeType flushMode);
 
 	@Override
+	@Nonnull
 	ProcedureCall registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
 
 	@Override
+	@Nonnull
 	ProcedureCall registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
 
 	@Override
 	@Nonnull
+	@SuppressWarnings("removal")
 	ProcedureCall setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	@Override
 	@Nonnull
+	@SuppressWarnings("removal")
 	ProcedureCall setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 }

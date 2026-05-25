@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -85,6 +86,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	}
 
 	@Override
+	@Nonnull
 	public SqmAttributeJoin<L,R> alias(String name) {
 		validateFetchAlias( name, fetchJoin, nodeBuilder() );
 		return (SqmAttributeJoin<L, R>) super.alias( name );
@@ -130,11 +132,13 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	}
 
 	@Override
-	public @NonNull SqmFrom<?, L> getParent() {
+	@Nonnull
+	public SqmFrom<?, L> getParent() {
 		return getLhs();
 	}
 
 	@Override
+	@Nonnull
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}

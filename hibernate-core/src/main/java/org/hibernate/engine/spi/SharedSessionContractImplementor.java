@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TransactionRequiredException;
@@ -11,7 +13,6 @@ import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.sql.ResultSetMapping;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -88,12 +89,14 @@ public interface SharedSessionContractImplementor
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
 	@Override
+	@Nonnull
 	SessionFactoryImplementor getFactory();
 
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
 	@Override
+	@Nonnull
 	default SessionFactoryImplementor getSessionFactory() {
 		return getFactory();
 	}
@@ -102,6 +105,7 @@ public interface SharedSessionContractImplementor
 	 * Obtain the {@link TypeConfiguration} for the factory which created this session.
 	 */
 	@Override
+	@Nonnull
 	default TypeConfiguration getTypeConfiguration() {
 		return getFactory().getTypeConfiguration();
 	}
@@ -110,6 +114,7 @@ public interface SharedSessionContractImplementor
 	 * Obtain the {@link Dialect}.
 	 */
 	@Override
+	@Nonnull
 	default Dialect getDialect() {
 		return getSessionFactory().getJdbcServices().getDialect();
 	}
@@ -117,6 +122,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Get the {@link SessionEventListenerManager} associated with this session.
 	 */
+	@Nonnull
 	SessionEventListenerManager getEventListenerManager();
 
 	/**
@@ -130,16 +136,19 @@ public interface SharedSessionContractImplementor
 	 *            prefer keeping a reference to it instead of invoking
 	 *            this method multiple times.
 	 */
+	@Nonnull
 	PersistenceContext getPersistenceContext();
 
 	/**
 	 * Obtain the {@link JdbcCoordinator} for this session.
 	 */
+	@Nonnull
 	JdbcCoordinator getJdbcCoordinator();
 
 	/**
 	 * Obtain the {@link JdbcServices} for the factory which created this session.
 	 */
+	@Nonnull
 	JdbcServices getJdbcServices();
 
 	/**
@@ -147,12 +156,14 @@ public interface SharedSessionContractImplementor
 	 * <p>
 	 * The UUID is useful mainly for logging.
 	 */
+	@Nonnull
 	UUID getSessionIdentifier();
 
 	/**
 	 * Returns this object, fulfilling the contract of {@link WrapperOptions}.
 	 */
 	@Override
+	@Nonnull
 	default SharedSessionContractImplementor getSession() {
 		return this;
 	}
@@ -218,17 +229,17 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Call a Jakarta Persistence entity lifecycle callback.
 	 */
-	<T> T callEntityLifecycleCallback(Supplier<T> callback);
+	<T> T callEntityLifecycleCallback(@Nonnull Supplier<T> callback);
 
 	/**
 	 * Run a Hibernate {@link Interceptor} callback.
 	 */
-	void runInterceptorCallback(Runnable callback);
+	void runInterceptorCallback(@Nonnull Runnable callback);
 
 	/**
 	 * Call a Hibernate {@link Interceptor} callback.
 	 */
-	<T> T callInterceptorCallback(Supplier<T> callback);
+	<T> T callInterceptorCallback(@Nonnull Supplier<T> callback);
 
 	/**
 	 * Prepare for the execution of a {@link Query} or
@@ -283,7 +294,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @param exceptionMessage the message to use for the {@link TransactionRequiredException}
 	 */
-	default void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
+	default void checkTransactionNeededForUpdateOperation(@Nonnull String exceptionMessage) {
 		if ( !isTransactionInProgress() ) {
 			throw new TransactionRequiredException( exceptionMessage );
 		}
@@ -297,6 +308,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return the {@link Transaction}
 	 */
+	@Nonnull
 	Transaction accessTransaction();
 
 	/**
@@ -306,6 +318,7 @@ public interface SharedSessionContractImplementor
 	 * @since 7.2
 	 */
 	@Incubating
+	@Nullable
 	Transaction getCurrentTransaction();
 
 	/**
@@ -322,6 +335,7 @@ public interface SharedSessionContractImplementor
 	 * @since 7.2
 	 */
 	@Incubating
+	@Nonnull
 	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor();
 
 	/**
@@ -346,7 +360,8 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The entity key
 	 */
-	EntityKey generateEntityKey(Object id, EntityPersister persister);
+	@Nonnull
+	EntityKey generateEntityKey(@Nonnull Object id, @Nonnull EntityPersister persister);
 
 	/**
 	 * Instantiate a {@link CollectionKey} with the given key and for the
@@ -361,7 +376,8 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The collection key
 	 */
-	CollectionKey generateCollectionKey(CollectionPersister persister, Object key);
+	@Nonnull
+	CollectionKey generateCollectionKey(@Nonnull CollectionPersister persister, @Nonnull Object key);
 
 	/**
 	 * Retrieves the {@link Interceptor} associated with this session.
@@ -371,7 +387,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Initialize the given collection (if not already initialized).
 	 */
-	void initializeCollection(PersistentCollection<?> collection, boolean writing)
+	void initializeCollection(@Nonnull PersistentCollection<?> collection, boolean writing)
 			throws HibernateException;
 
 	/**
@@ -387,7 +403,7 @@ public interface SharedSessionContractImplementor
 	 * <p>
 	 * When {@code eager = true}, the object is eagerly fetched from the database.
 	 */
-	Object internalLoad(String entityName, Object id, boolean eager, boolean nullable)
+	Object internalLoad(@Nonnull String entityName, @Nonnull Object id, boolean eager, boolean nullable)
 			throws HibernateException;
 
 	/**
@@ -395,7 +411,7 @@ public interface SharedSessionContractImplementor
 	 * This method is only called when lazily initializing a proxy.
 	 * Do not return the proxy.
 	 */
-	Object immediateLoad(String entityName, Object id);
+	Object immediateLoad(@Nonnull String entityName, @Nonnull Object id);
 
 
 	/**
@@ -404,19 +420,20 @@ public interface SharedSessionContractImplementor
 	 * @param entityName optional entity name
 	 * @param object the entity instance
 	 */
-	EntityPersister getEntityPersister(@Nullable String entityName, Object object);
+	@Nonnull
+	EntityPersister getEntityPersister(@Nullable String entityName, @Nonnull Object object);
 
 	/**
 	 * Get the entity instance associated with the given {@link EntityKey},
 	 * calling the {@link Interceptor} if necessary.
 	 */
-	Object getEntityUsingInterceptor(EntityKey key);
+	Object getEntityUsingInterceptor(@Nonnull EntityKey key);
 
 	/**
 	 * Return the identifier of the persistent object, or null if it is
 	 * not associated with this session.
 	 */
-	Object getContextEntityIdentifier(Object object);
+	Object getContextEntityIdentifier(@Nonnull Object object);
 
 	/**
 	 * Obtain the best estimate of the entity name of the given entity
@@ -424,7 +441,7 @@ public interface SharedSessionContractImplementor
 	 * considering information held in the proxy, and whether the object
 	 * is already associated with this session.
 	 */
-	String bestGuessEntityName(Object object);
+	String bestGuessEntityName(@Nonnull Object object);
 
 	/**
 	 * Obtain the best estimate of the entity name of the given entity
@@ -432,22 +449,20 @@ public interface SharedSessionContractImplementor
 	 * considering information held in the proxy, and whether the object
 	 * is already associated with this session.
 	 */
-	default String bestGuessEntityName(Object object, EntityEntry entry) {
-		return bestGuessEntityName( object );
-	}
+	String bestGuessEntityName(@Nonnull Object object, @Nullable EntityEntry entry);
 
 	/**
 	 * Obtain an estimate of the entity name of the given entity instance,
 	 * which is not involved in an association, using only the
 	 * {@link org.hibernate.EntityNameResolver}.
 	 */
-	String guessEntityName(Object entity);
+	String guessEntityName(@Nonnull Object entity);
 
 	/**
 	 * Instantiate the entity class of the given {@link EntityPersister},
 	 * initializing the new instance with the given identifier.
 	 */
-	Object instantiate(EntityPersister persister, Object id);
+	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id);
 
 	/**
 	 * Are entities and proxies loaded by this session read-only by default?
@@ -473,6 +488,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return The flush mode
 	 */
+	@Nonnull
 	FlushMode getHibernateFlushMode();
 
 	/**
@@ -498,6 +514,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @throws ClassCastException if the cast is not possible
 	 */
+	@Nonnull
 	default EventSource asEventSource() {
 		throw new ClassCastException( "session is not an EventSource" );
 	}
@@ -526,21 +543,25 @@ public interface SharedSessionContractImplementor
 	 * @return the {@link LoadQueryInfluencers} associated with this session;
 	 *         should never be null.
 	 */
+	@Nonnull
 	LoadQueryInfluencers getLoadQueryInfluencers();
 
 	/**
 	 * The default lock options associated with this session.
 	 */
+	@SuppressWarnings("removal")
 	LockOptions getDefaultLockOptions();
 
 	/**
 	 * Lock timeout specified on the SessionFactory via hint.
 	 */
+	@Nullable
 	Timeout getDefaultLockTimeout();
 
 	/**
 	 * Query timeout specified on the SessionFactory via hint.
 	 */
+	@Nullable
 	Timeout getDefaultTimeout();
 
 	/**
@@ -551,6 +572,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return the ExceptionConverter for this Session.
 	 */
+	@Nonnull
 	ExceptionConverter getExceptionConverter();
 
 	/**
@@ -565,6 +587,7 @@ public interface SharedSessionContractImplementor
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */
+	@Nullable
 	default Integer getConfiguredJdbcBatchSize() {
 		final Integer sessionJdbcBatchSize = getJdbcBatchSize();
 		return sessionJdbcBatchSize == null
@@ -583,6 +606,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return the {@link PersistenceContext} associated to this session.
 	 */
+	@Nonnull
 	PersistenceContext getPersistenceContextInternal();
 
 	/**
@@ -637,6 +661,7 @@ public interface SharedSessionContractImplementor
 	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
+	@Nonnull
 	default SessionImplementor asSessionImplementor() {
 		throw new ClassCastException( "session is not a SessionImplementor" );
 	}
@@ -659,6 +684,7 @@ public interface SharedSessionContractImplementor
 	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
+	@Nonnull
 	default StatelessSession asStatelessSession() {
 		return (StatelessSession) this;
 	}
@@ -676,7 +702,11 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Cascade the lock operation to the given child entity.
 	 */
-	void lock(String entityName, Object child, LockOptions lockOptions);
+	void lock(
+			@Nonnull String entityName,
+			@Nonnull Object child,
+			@SuppressWarnings("removal")
+			@Nonnull LockOptions lockOptions);
 
 	/**
 	 * Attempts to load the entity from the second-level cache.
@@ -691,7 +721,11 @@ public interface SharedSessionContractImplementor
 	 * @since 7.0
 	 */
 	@Incubating
-	Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode);
+	Object loadFromSecondLevelCache(
+			@Nonnull EntityPersister persister,
+			@Nonnull EntityKey entityKey,
+			@Nullable Object instanceToLoad,
+			@Nonnull LockMode lockMode);
 
 	/**
 	 * Wrap all state that lazy loading interceptors might need to
@@ -702,81 +736,112 @@ public interface SharedSessionContractImplementor
 	 * a different Session.
 	 */
 	@Incubating
+	@Nonnull
 	SessionAssociationMarkers getSessionAssociationMarkers();
 
 	@Override
-	<T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType);
+	@Nonnull
+	<T> RootGraphImplementor<T> createEntityGraph(@Nonnull Class<T> rootType);
 
 	@Override @Deprecated
 	@Nullable
-	RootGraphImplementor<?> createEntityGraph(String graphName);
+	@SuppressWarnings("removal")
+	RootGraphImplementor<?> createEntityGraph(@Nonnull String graphName);
 
 	@Override
-	RootGraphImplementor<?> getEntityGraph(String graphName);
+	@Nonnull
+	RootGraphImplementor<?> getEntityGraph(@Nonnull String graphName);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Query-related covariance
 
 	@Override
-	<R> SelectionQueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
+	@Nonnull
+	<R> SelectionQueryImplementor<R> createQuery(@Nonnull String queryString, @Nonnull Class<R> resultClass);
 
-	default <R> SelectionQueryImplementor<R> createQuery(Class<R> resultClass, String hqlString) {
+	@Nonnull
+	default <R> SelectionQueryImplementor<R> createQuery(@Nonnull Class<R> resultClass, @Nonnull String hqlString) {
 		return createQuery( hqlString, resultClass );
 	}
 
 	@Override
-	<R> SelectionQueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference);
+	@Nonnull
+	<R> SelectionQueryImplementor<R> createQuery(@Nonnull TypedQueryReference<R> typedQueryReference);
 
 	@Override
-	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
+	@Nonnull
+	<R> NativeQueryImplementor<R> createNativeQuery(@Nonnull String sqlString, @Nonnull Class<R> resultClass);
 
 	@Override
-	default <R> NativeQueryImplementor<R> createNativeQuery(Class<R> resultClass, String sqlString) {
+	@Nonnull
+	default <R> NativeQueryImplementor<R> createNativeQuery(@Nonnull Class<R> resultClass, @Nonnull String sqlString) {
 		return createNativeQuery( sqlString, resultClass );
 	}
 
 	@Override
-	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias);
+	@Nonnull
+	<R> NativeQueryImplementor<R> createNativeQuery(
+			@Nonnull String sqlString,
+			@Nonnull Class<R> resultClass,
+			@Nonnull String tableAlias);
 
 	@Override
-	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass);
+	@Nonnull
+	<R> NativeQueryImplementor<R> createNativeQuery(
+			@Nonnull String sqlString,
+			@Nonnull String resultSetMappingName,
+			@Nonnull Class<R> resultClass);
 
 	@Override
-	<R> SelectionQueryImplementor<R> createNamedQuery(String name, Class<R> resultClass);
+	@Nonnull
+	<R> SelectionQueryImplementor<R> createNamedQuery(@Nonnull String name, @Nonnull Class<R> resultClass);
 
 	@Override
-	<R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName);
+	@Nonnull
+	<R> NativeQueryImplementor<R> createNamedQuery(@Nonnull String name, @Nonnull String resultSetMappingName);
 
 	@Override
-	<R> NativeQueryImplementor<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass);
+	@Nonnull
+	<R> NativeQueryImplementor<R> createNamedQuery(
+			@Nonnull String name,
+			@Nonnull String resultSetMappingName,
+			@Nonnull Class<R> resultClass);
 
 	@Override
-	<T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> criteriaSelect);
+	@Nonnull
+	<T> SelectionQueryImplementor<T> createQuery(@Nonnull CriteriaSelect<T> criteriaSelect);
 
 	@Override
-	MutationQueryImplementor<?> createMutationQuery(CriteriaStatement<?> criteriaStatement);
+	@Nonnull
+	MutationQueryImplementor<?> createMutationQuery(@Nonnull CriteriaStatement<?> criteriaStatement);
 
 	@Override
 	@SuppressWarnings("rawtypes")
-	MutationQueryImplementor createStatement(CriteriaStatement<?> criteriaStatement);
+	@Nonnull
+	MutationQueryImplementor createStatement(@Nonnull CriteriaStatement<?> criteriaStatement);
 
 	@Override
-	MutationQueryImplementor<?> createMutationQuery(JpaCriteriaInsert<?> insert);
+	@Nonnull
+	MutationQueryImplementor<?> createMutationQuery(@Nonnull JpaCriteriaInsert<?> insert);
 
 	@Override
-	<T> SelectionQueryImplementor<T> createQuery(String hqlString, EntityGraph<T> entityGraph);
+	@Nonnull
+	<T> SelectionQueryImplementor<T> createQuery(@Nonnull String hqlString, @Nonnull EntityGraph<T> entityGraph);
 
 	@Override
 	@SuppressWarnings("rawtypes")
-	NativeQueryImplementor createNativeQuery(String sql);
+	@Nonnull
+	NativeQueryImplementor createNativeQuery(@Nonnull String sql);
 
 	@Override
 	@SuppressWarnings("rawtypes")
-	NativeQueryImplementor createNativeQuery(String sql, String resultSetMappingName);
+	@Nonnull
+	NativeQueryImplementor createNativeQuery(@Nonnull String sql, @Nonnull String resultSetMappingName);
 
 	@Override
-	<T> NativeQueryImplementor<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping);
+	@Nonnull
+	<T> NativeQueryImplementor<T> createNativeQuery(@Nonnull String sql, @Nonnull ResultSetMapping<T> resultSetMapping);
 
 	/**
 	 * Allows accessing session scoped extension storages of the particular session instance.

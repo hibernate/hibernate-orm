@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
@@ -37,7 +38,8 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	<S extends T> JpaTreatedPath<T,S> treatAs(Class<S> treatJavaType);
 
 	@Override
-	default <S extends T> JpaPath<S> treat(Class<S> treatJavaType) {
+	@Nonnull
+	default <S extends T> JpaPath<S> treat(@Nonnull Class<S> treatJavaType) {
 		return treatAs( treatJavaType );
 	}
 

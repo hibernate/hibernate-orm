@@ -621,12 +621,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override @SuppressWarnings("removal")
-	public RootGraphImplementor<?> createEntityGraph(String graphName) {
+	public @Nullable RootGraphImplementor<?> createEntityGraph(String graphName) {
 		return delegate.createEntityGraph( graphName );
 	}
 
 	@Override @SuppressWarnings("removal")
-	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
+	public <T> @Nullable RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
 		return delegate.createEntityGraph( rootType, graphName );
 	}
 
@@ -955,7 +955,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public Object getIdentifier(Object object) {
-		return delegate.getIdentifier( object );
+		return castNonNull( delegate.getIdentifier( object ) );
 	}
 
 	@Override @SuppressWarnings("removal")
@@ -980,7 +980,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public void setProperty(String propertyName, @Nullable Object value) {
-		((EntityManager) delegate).setProperty( propertyName, value );
+		delegate.setProperty( propertyName, value );
 	}
 
 	@Override
@@ -1009,18 +1009,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> @NonNull T merge(T object) {
+	public <T> @NonNull T merge(@NonNull T object) {
 		return castNonNull( delegate.merge( object ) );
 	}
 
 	@Override
-	public <T> T merge(String entityName, T object) {
-		return delegate.merge( entityName, object );
+	public <T> @NonNull T merge(String entityName, @NonNull T object) {
+		return castNonNull( delegate.merge( entityName, object ) );
 	}
 
 	@Override
-	public <T> T merge(T object, EntityGraph<? super T> loadGraph) {
-		return delegate.merge( object, loadGraph );
+	public <T> @NonNull T merge(@NonNull T object, EntityGraph<? super T> loadGraph) {
+		return castNonNull( delegate.merge( object, loadGraph ) );
 	}
 
 	@Override
@@ -1092,7 +1092,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void lock(Object object, LockMode lockMode, LockOption... lockOptions) {
+	public void lock(Object object, LockMode lockMode, LockOption @Nullable... lockOptions) {
 		delegate.lock( object, lockMode, lockOptions );
 	}
 
@@ -1162,8 +1162,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override @SuppressWarnings("removal")
-	public <T> T get(Class<T> theClass, Object id, LockMode lockMode) {
-		return delegate.get( theClass, id, lockMode );
+	public <T> @NonNull T get(Class<T> theClass, Object id, LockMode lockMode) {
+		return castNonNull( delegate.get( theClass, id, lockMode ) );
 	}
 
 	@Override
@@ -1177,8 +1177,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override @SuppressWarnings("removal")
-	public <T> T get(Class<T> entityType, Object id, LockOptions lockOptions) {
-		return delegate.get( entityType, id, lockOptions );
+	public <T> @NonNull T get(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return castNonNull( delegate.get( entityType, id, lockOptions ) );
 	}
 
 	@Override @SuppressWarnings("removal")
@@ -1192,13 +1192,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> @NonNull T getReference(T object) {
+	public <T> @NonNull T getReference(@NonNull T object) {
 		return castNonNull( delegate.getReference( object ) );
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityType, Object key, KeyType keyType) {
-		return delegate.getReference( entityType, key, keyType );
+	public <T> @NonNull T getReference(Class<T> entityType, Object key, KeyType keyType) {
+		return castNonNull( delegate.getReference( entityType, key, keyType ) );
 	}
 
 	@Override @SuppressWarnings("removal")

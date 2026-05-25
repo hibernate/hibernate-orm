@@ -1105,11 +1105,6 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object id, LockMode lockMode) {
-		return get( entityClass, id, (FindOption) lockMode );
-	}
-
-	@Override
 	public Object get(String entityName, Object key, FindOption... findOptions) {
 		final var result = find( entityName, key, findOptions );
 		if ( result == null ) {
@@ -1124,27 +1119,9 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public <T> T get(EntityGraph<T> entityGraph, Object id) {
-		final var result = find( entityGraph, id );
-		if ( result == null ) {
-			final var graph = (RootGraphImplementor<T>) entityGraph;
-			throw notFound( graph.getGraphedType().getTypeName(), id );
-		}
-		return result;
-	}
-
-	@Override
-	public <T> T get(EntityGraph<T> entityGraph, Object id, LockMode lockMode) {
-		final var result = find( entityGraph, id, lockMode );
-		if ( result == null ) {
-			final var graph = (RootGraphImplementor<T>) entityGraph;
-			throw notFound( graph.getGraphedType().getTypeName(), id );
-		}
-		return result;
-	}
-
-	@Override
-	public <T> T get(EntityGraph<T> graph, GraphSemantic graphSemantic, Object id) {
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <T> T get(@Nonnull EntityGraph<T> graph, @Nonnull GraphSemantic graphSemantic, @Nonnull Object id) {
 		return get( graph, graphSemantic, id, LockMode.NONE );
 	}
 
@@ -1159,7 +1136,7 @@ public class StatelessSessionImpl
 		effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
 
 		try {
-			Object result = get( rootGraph.getGraphedType().getTypeName(), id, lockMode );
+			final Object result = get( rootGraph.getGraphedType().getTypeName(), id, lockMode );
 			return graph.getGraphedType().getJavaType().cast( result );
 		}
 		finally {
@@ -1219,34 +1196,6 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids, LockMode lockMode) {
-		checkOpen();
-		try {
-			final var operation = new StatelessFindMultipleByKeyOperation<T>(
-					requireEntityPersisterForLoad( entityClass.getName() ),
-					this,
-					null,
-					getCacheMode(),
-					isDefaultReadOnly(),
-					getFactory(),
-					lockMode
-			);
-			return operation.performFind( ids, null, null );
-		}
-		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
-		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e );
-		}
-	}
-
-	@Override
-	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> ids) {
-		return getMultiple( entityGraph, GraphSemantic.LOAD, ids );
-	}
-
-	@Override
 	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, GraphSemantic graphSemantic, List<?> ids) {
 		checkOpen();
 		try {
@@ -1260,28 +1209,6 @@ public class StatelessSessionImpl
 					getFactory()
 			);
 			return operation.performFind( ids, graphSemantic, rootGraph );
-		}
-		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
-		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e );
-		}
-	}
-
-	@Override
-	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids) {
-		checkOpen();
-		try {
-			final var operation = new StatelessFindMultipleByKeyOperation<T>(
-					requireEntityPersisterForLoad( entityClass.getName() ),
-					this,
-					null,
-					getCacheMode(),
-					isDefaultReadOnly(),
-					getFactory()
-			);
-			return operation.performFind( ids, null, null );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );

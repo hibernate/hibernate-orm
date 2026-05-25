@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -138,55 +140,71 @@ public interface NativeQuery<T>
 
 
 	@Override
-	NativeQuery<T> setTimeout(Integer timeout);
+	@Nonnull
+	NativeQuery<T> setTimeout(@Nullable Integer timeout);
 
 	@Override
+	@Nonnull
 	NativeQuery<T> setQueryPlanCacheable(boolean queryPlanCacheable);
 
 	@Override
-	NativeQuery<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	NativeQuery<T> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	@Override @Deprecated(since = "7")
-	NativeQuery<T> setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	NativeQuery<T> setFlushMode(@Nonnull FlushModeType flushMode);
 
 	@Override
-	NativeQuery<T> setCacheMode(CacheMode cacheMode);
+	@Nonnull
+	NativeQuery<T> setCacheMode(@Nonnull CacheMode cacheMode);
 
 	@Override @SuppressWarnings("removal")
-	NativeQuery<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	@Nonnull
+	NativeQuery<T> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	@Override @SuppressWarnings("removal")
-	NativeQuery<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	@Nonnull
+	NativeQuery<T> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
+	@Nonnull
 	NativeQuery<T> setCacheable(boolean cacheable);
 
 	@Override
-	NativeQuery<T> setCacheRegion(String cacheRegion);
+	NativeQuery<T> setCacheRegion(@Nullable String cacheRegion);
 
 	@Override
+	@Nonnull
 	NativeQuery<T> setTimeout(int timeout);
 
 	@Override
+	@Nonnull
 	NativeQuery<T> setFetchSize(int fetchSize);
 
 	@Override
+	@Nonnull
 	NativeQuery<T> setReadOnly(boolean readOnly);
 
 	@Override
-	NativeQuery<T> setComment(String comment);
+	@Nonnull
+	NativeQuery<T> setComment(@Nullable String comment);
 
 	@Override
-	NativeQuery<T> addQueryHint(String hint);
+	@Nonnull
+	NativeQuery<T> addQueryHint(@Nonnull String hint);
 
 	@Override @SuppressWarnings("removal")
+	@Nonnull
 	NativeQuery<T> setMaxResults(int maxResults);
 
 	@Override @SuppressWarnings("removal")
+	@Nonnull
 	NativeQuery<T> setFirstResult(int startPosition);
 
 	@Override
-	NativeQuery<T> setHint(String hintName, Object value);
+	@Nonnull
+	NativeQuery<T> setHint(@Nonnull String hintName, @Nullable Object value);
 
 	/**
 	 * Not applicable to native SQL queries, due to an unfortunate
@@ -198,6 +216,7 @@ public interface NativeQuery<T>
 	 */
 	@SuppressWarnings("removal")
 	@Override
+	@Nullable
 	LockModeType getLockMode();
 
 	/**
@@ -209,6 +228,7 @@ public interface NativeQuery<T>
 	 * actually executed.
 	 */
 	@Override
+	@Nonnull
 	LockMode getHibernateLockMode();
 
 	/**
@@ -222,7 +242,8 @@ public interface NativeQuery<T>
 	 * @throws IllegalStateException as required by JPA
 	 */
 	@Override @SuppressWarnings("removal")
-	NativeQuery<T> setLockMode(LockModeType lockMode);
+	@Nonnull
+	NativeQuery<T> setLockMode(@Nonnull LockModeType lockMode);
 
 	/**
 	 * {@inheritDoc}
@@ -233,7 +254,8 @@ public interface NativeQuery<T>
 	 * actually executed.
 	 */
 	@Override
-	NativeQuery<T> setHibernateLockMode(LockMode lockMode);
+	@Nonnull
+	NativeQuery<T> setHibernateLockMode(@Nonnull LockMode lockMode);
 
 	/**
 	 * Apply a timeout to the corresponding database query.
@@ -242,7 +264,8 @@ public interface NativeQuery<T>
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> setTimeout(Timeout timeout);
+	@Nonnull
+	NativeQuery<T> setTimeout(@Nullable Timeout timeout);
 
 	/**
 	 * Apply a scope to any pessimistic locking applied to the query.
@@ -251,133 +274,176 @@ public interface NativeQuery<T>
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> setLockScope(PessimisticLockScope lockScope);
+	@Nonnull
+	NativeQuery<T> setLockScope(@Nonnull PessimisticLockScope lockScope);
 
 	@Override
-	<X> SelectionQuery<X> setTupleTransformer(TupleTransformer<X> transformer);
+	@Nonnull
+	<X> SelectionQuery<X> setTupleTransformer(@Nonnull TupleTransformer<X> transformer);
 
 	@Override
-	SelectionQuery<T> setResultListTransformer(ResultListTransformer<T> transformer);
+	@Nonnull
+	SelectionQuery<T> setResultListTransformer(@Nonnull ResultListTransformer<T> transformer);
 
 	@Override
-	NativeQuery<T> setParameter(String name, Object value);
+	@Nonnull
+	NativeQuery<T> setParameter(@Nonnull String name, @Nullable Object value);
 
 	@Override
-	<P> NativeQuery<T> setParameter(String name, P val, Class<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameter(@Nonnull String name, @Nullable P val, @Nonnull Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(String name, P val, Type<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameter(@Nonnull String name, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
+	@Nonnull
+	NativeQuery<T> setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
+	@Nonnull
+	NativeQuery<T> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
+	@Nonnull
+	NativeQuery<T> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameter(int position, Object value);
+	@Nonnull
+	NativeQuery<T> setParameter(int position, @Nullable Object value);
 
 	@Override
-	<P> NativeQuery<T> setParameter(int position, P val, Class<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameter(int position, @Nullable P val, @Nonnull Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(int position, P val, Type<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameter(int position, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
+	@Nonnull
+	NativeQuery<T> setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
+	@Nonnull
+	NativeQuery<T> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
+	@Nonnull
+	NativeQuery<T> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
+	@Nonnull
+	<P> NativeQuery<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Class<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
+	@Nonnull
+	<P> NativeQuery<T> setParameter(@Nonnull Parameter<P> param, @Nullable P value);
 
 	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	NativeQuery<T> setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	NativeQuery<T> setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setProperties(Object bean);
+	@Nonnull
+	NativeQuery<T> setProperties(@Nonnull Object bean);
 
 	@Override
-	NativeQuery<T> setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	NativeQuery<T> setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 
 	@Override
-	<P> NativeQuery<T> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> NativeQuery<T> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> NativeQuery<T> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> NativeQuery<T> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	NativeQuery<T> setParameterList(@Nonnull String name, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Class<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values);
+	@Nonnull
+	NativeQuery<T> setParameterList(@Nonnull String name, @Nonnull Object[] values);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(String name, P[] values, Class<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(String name, P[] values, Type<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Class<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Type<P> javaType);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> javaType);
 
 	@Override
-	NativeQuery<T> setParameterList(int position, Object[] values);
+	@Nonnull
+	NativeQuery<T> setParameterList(int position, @Nonnull Object[] values);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(int position, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(int position, P[] values, Type<P> javaType);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> NativeQuery<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 
 	/**
@@ -850,6 +916,7 @@ public interface NativeQuery<T>
 
 		NavigablePath getNavigablePath();
 
+	@Nullable
 		LockMode getLockMode();
 
 		/**
@@ -859,6 +926,7 @@ public interface NativeQuery<T>
 		 *
 		 * @return {@code this}, for method chaining
 		 */
+	@Nonnull
 		RootReturn setLockMode(LockMode lockMode);
 
 		RootReturn addIdColumnAliases(String... aliases);
@@ -926,6 +994,7 @@ public interface NativeQuery<T>
 		 *
 		 * @return {@code this}, for method chaining
 		 */
+	@Nonnull
 		FetchReturn setLockMode(LockMode lockMode);
 
 		/**

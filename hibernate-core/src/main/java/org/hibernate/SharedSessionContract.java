@@ -4,6 +4,8 @@
  */
 package org.hibernate;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityHandler;
 import jakarta.persistence.FindOption;
@@ -161,6 +163,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see jakarta.persistence.EntityManager#getTransaction()
 	 */
+	@Nonnull
 	Transaction getTransaction();
 
 	/**
@@ -293,7 +296,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityManager#createQuery(String,Class)
 	 */
 	@Override
-	<R> SelectionQuery<R> createQuery(String queryString, Class<R> resultClass);
+	@Nonnull
+	<R> SelectionQuery<R> createQuery(@Nonnull String queryString, @Nonnull Class<R> resultClass);
 
 	/// Synonym for {@linkplain #createQuery(String,Class)}, offering generally easier
 	/// readability for use code.  For example
@@ -318,7 +322,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityHandler#createQuery(String,EntityGraph)
 	 */
 	@Override
-	<T> SelectionQuery<T> createQuery(String hqlString, EntityGraph<T> entityGraph);
+	@Nonnull
+	<T> SelectionQuery<T> createQuery(@Nonnull String hqlString, @Nonnull EntityGraph<T> entityGraph);
 
 	/**
 	 * Create a {@link SelectionQuery} instance for the given HQL query
@@ -426,10 +431,12 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	MutationQuery createMutationQuery(String hqlString);
 
 	@Override
-	MutationQuery createStatement(String hqlString);
+	@Nonnull
+	MutationQuery createStatement(@Nonnull String hqlString);
 
 	@Override
-	MutationQuery createStatement(StatementReference statementReference);
+	@Nonnull
+	MutationQuery createStatement(@Nonnull StatementReference statementReference);
 
 	/**
 	 * Create a typed {@link Query} instance for the given typed query reference.
@@ -446,7 +453,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityManager#createQuery(TypedQueryReference)
 	 */
 	@Override
-	<R> SelectionQuery<R> createQuery(TypedQueryReference<R> typedQueryReference);
+	@Nonnull
+	<R> SelectionQuery<R> createQuery(@Nonnull TypedQueryReference<R> typedQueryReference);
 
 	/**
 	 * {@inheritDoc}
@@ -455,7 +463,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityHandler#createQuery(CriteriaSelect)
 	 */
 	@Override
-	<T> SelectionQuery<T> createQuery(CriteriaSelect<T> criteriaSelect);
+	@Nonnull
+	<T> SelectionQuery<T> createQuery(@Nonnull CriteriaSelect<T> criteriaSelect);
 
 	/**
 	 * {@inheritDoc}
@@ -464,7 +473,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityHandler#createStatement(CriteriaStatement)
 	 */
 	@Override
-	MutationQuery createStatement(CriteriaStatement<?> criteriaStatement);
+	@Nonnull
+	MutationQuery createStatement(@Nonnull CriteriaStatement<?> criteriaStatement);
 
 	/**
 	 * Create a {@link SelectionQuery} reference for the given
@@ -502,7 +512,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityHandler#createNativeQuery(String)
 	 */
 	@Override
-	NativeQuery<?> createNativeQuery(String sqlString);
+	@Nonnull
+	NativeQuery<?> createNativeQuery(@Nonnull String sqlString);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL query
@@ -529,7 +540,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityHandler#createNativeQuery(String,Class)
 	 */
 	@Override
-	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
+	@Nonnull
+	<R> NativeQuery<R> createNativeQuery(@Nonnull String sqlString, @Nonnull Class<R> resultClass);
 
 	/// Synonym for {@linkplain #createNativeQuery(String,Class)}, offering generally easier
 	/// readability for use code.  For example
@@ -610,7 +622,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @see jakarta.persistence.EntityManager#createNamedQuery(String,Class)
 	 */
 	@Override
-	<R> SelectionQuery<R> createNamedQuery(String name, Class<R> resultClass);
+	@Nonnull
+	<R> SelectionQuery<R> createNamedQuery(@Nonnull String name, @Nonnull Class<R> resultClass);
 
 	@Override
 	MutationQuery createNamedStatement(String name);
@@ -619,13 +632,16 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	<R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass);
 
 	@Override
-	MutationQuery createNativeStatement(String sql);
+	@Nonnull
+	MutationQuery createNativeStatement(@Nonnull String sql);
 
 	@Override
-	NativeQuery<?> createNativeQuery(String sql, String resultSetMapping);
+	@Nonnull
+	NativeQuery<?> createNativeQuery(@Nonnull String sql, @Nonnull String resultSetMapping);
 
 	@Override
-	<T> TypedQuery<T> createNativeQuery(String sql, ResultSetMapping<T> resultSetMapping);
+	@Nonnull
+	<T> TypedQuery<T> createNativeQuery(@Nonnull String sql, @Nonnull ResultSetMapping<T> resultSetMapping);
 
 	/**
 	 * Create a {@link SelectionQuery} instance for the named
@@ -698,7 +714,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see jakarta.persistence.NamedStoredProcedureQuery
 	 */
-	ProcedureCall createNamedStoredProcedureQuery(String name);
+	@Nonnull
+	ProcedureCall createNamedStoredProcedureQuery(@Nonnull String name);
 
 	/**
 	 * Create a {@link ProcedureCall} to a stored procedure.
@@ -707,7 +724,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	ProcedureCall createStoredProcedureQuery(String procedureName);
+	@Nonnull
+	ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName);
 
 	/**
 	 * Create a {@link ProcedureCall} to a stored procedure with the given result
@@ -718,7 +736,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	ProcedureCall createStoredProcedureQuery(String procedureName, Class<?>... resultClasses);
+	@Nonnull
+	ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName, @Nonnull Class<?>... resultClasses);
 
 	/**
 	 * Create a {@link ProcedureCall} to a stored procedure with the given result set
@@ -729,7 +748,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings);
+	@Nonnull
+	ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName, @Nonnull String... resultSetMappings);
 
 	/**
 	 * Get the session-level JDBC batch size for the current session.
@@ -780,6 +800,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see SessionFactory#getCriteriaBuilder()
 	 */
+	@Nonnull
 	HibernateCriteriaBuilder getCriteriaBuilder();
 
 	/**
@@ -821,7 +842,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see org.hibernate.graph.EntityGraphs#createGraph(jakarta.persistence.metamodel.EntityType)
 	 */
-	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
+	@Nonnull
+	<T> RootGraph<T> createEntityGraph(@Nonnull Class<T> rootType);
 
 	/**
 	 * Create a new mutable instance of {@link EntityGraph}, based on
@@ -837,7 +859,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @since 6.3
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	RootGraph<?> createEntityGraph(String graphName);
+	@Nullable
+	RootGraph<?> createEntityGraph(@Nonnull String graphName);
 
 	/**
 	 * Create a new mutable instance of {@link EntityGraph}, based on
@@ -856,7 +879,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @since 6.3
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
+	@Nullable
+	<T> RootGraph<T> createEntityGraph(@Nonnull Class<T> rootType, @Nonnull String graphName);
 
 	/**
 	 * Obtain a mutable copy of a predefined
@@ -878,7 +902,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @since 6.3
 	 */
-	RootGraph<?> getEntityGraph(String graphName);
+	@Nonnull
+	RootGraph<?> getEntityGraph(@Nonnull String graphName);
 
 	/**
 	 * Obtain a mutable copy of a predefined
@@ -897,7 +922,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @since 8.0
 	 */
-	<T> RootGraph<T> getEntityGraph(Class<T> rootType, String graphName);
+	@Nonnull
+	<T> RootGraph<T> getEntityGraph(@Nonnull Class<T> rootType, @Nonnull String graphName);
 
 	/**
 	 * Retrieve all named {@link EntityGraph}s with the given root entity type.
@@ -907,7 +933,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @since 6.3
 	 */
-	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
+	@Nonnull
+	<T> List<EntityGraph<? super T>> getEntityGraphs(@Nonnull Class<T> entityClass);
 
 	/**
 	 * Enable the named {@linkplain Filter filter} for this current session.
@@ -1005,7 +1032,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @throws PersistenceException if the provider does not
 	 * support the given type
 	 */
-	default <T> T unwrap(Class<T> type) {
+	@Nonnull
+	default <T> T unwrap(@Nonnull Class<T> type) {
 		// Not checking type.isInstance(...) because some implementations
 		// might want to hide that they implement some types.
 		// Implementations wanting a more liberal behavior need to override this method.
@@ -1029,7 +1057,8 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * update, delete, or insert {@linkplain jakarta.persistence.Statement statement}.
 	 */
 	@Override
-	MutationOrSelectionQuery createQuery(String queryString);
+	@Nonnull
+	MutationOrSelectionQuery createQuery(@Nonnull String queryString);
 
 	/**
 	 * Create an instance of {@link Query} for the given named query or statement,
@@ -1038,6 +1067,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * update, delete, or insert {@linkplain jakarta.persistence.Statement statement}.
 	 */
 	@Override
-	MutationOrSelectionQuery createNamedQuery(String name);
+	@Nonnull
+	MutationOrSelectionQuery createNamedQuery(@Nonnull String name);
 
 }

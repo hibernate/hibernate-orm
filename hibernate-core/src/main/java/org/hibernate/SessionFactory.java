@@ -4,6 +4,8 @@
  */
 package org.hibernate;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityManager;
@@ -159,6 +161,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @return The session builder
 	 */
+	@Nonnull
 	SessionBuilder withOptions();
 
 	/**
@@ -170,10 +173,13 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @return The created session.
 	 *
-	 * @apiNote This operation is very similar to {@link #createEntityManager()}
+	 * @apiNote This operation is very similar to
+	 *          {@link #createEntityManager(EntityManager.CreationOption...)}.
 	 *
-	 * @throws HibernateException Indicates a problem opening the session; pretty rare here.
+	 * @throws HibernateException Indicates a problem opening the session;
+	 *                            pretty rare here.
 	 */
+	@Nonnull
 	Session openSession() throws HibernateException;
 
 	/**
@@ -201,6 +207,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @see org.hibernate.context.spi.CurrentSessionContext
 	 * @see org.hibernate.cfg.AvailableSettings#CURRENT_SESSION_CONTEXT_CLASS
 	 */
+	@Nonnull
 	Session getCurrentSession() throws HibernateException;
 
 	/**
@@ -208,13 +215,19 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @return The stateless session builder
 	 */
+	@Nonnull
 	StatelessSessionBuilder withStatelessOptions();
 
 	/**
 	 * Open a new stateless session.
 	 *
 	 * @return The new stateless session.
+	 *
+	 * @apiNote This operation is very similar to
+	 *          {@link #createEntityAgent(EntityAgent.CreationOption...)}.
+	 *
 	 */
+	@Nonnull
 	StatelessSession openStatelessSession();
 
 	/**
@@ -225,7 +238,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @return The new stateless session.
 	 */
-	StatelessSession openStatelessSession(Connection connection);
+	@Nonnull
+	StatelessSession openStatelessSession(@Nonnull Connection connection);
 
 	/**
 	 * Open a {@link Session} and use it to perform the given action.
@@ -242,7 +256,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @see #inTransaction(Consumer)
 	 */
-	default void inSession(Consumer<? super Session> action) {
+	default void inSession(@Nonnull Consumer<? super Session> action) {
 		try ( Session session = openSession() ) {
 			action.accept( session );
 		}
@@ -266,7 +280,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default void inStatelessSession(Consumer<? super StatelessSession> action) {
+	default void inStatelessSession(@Nonnull Consumer<? super StatelessSession> action) {
 		try ( var session = openStatelessSession() ) {
 			action.accept( session );
 		}
@@ -279,7 +293,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @apiNote This method competes with the JPA-defined method
 	 *          {@link #runInTransaction}
 	 */
-	default void inTransaction(Consumer<? super Session> action) {
+	default void inTransaction(@Nonnull Consumer<? super Session> action) {
 		inSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
@@ -289,7 +303,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default void inStatelessTransaction(Consumer<? super StatelessSession> action) {
+	default void inStatelessTransaction(@Nonnull Consumer<? super StatelessSession> action) {
 		inStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
@@ -308,7 +322,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @see #fromTransaction(Function)
 	 */
-	default <R> R fromSession(Function<? super Session,R> action) {
+	default <R> R fromSession(@Nonnull Function<? super Session,R> action) {
 		try ( var session = openSession() ) {
 			return action.apply( session );
 		}
@@ -331,7 +345,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default <R> R fromStatelessSession(Function<? super StatelessSession,R> action) {
+	default <R> R fromStatelessSession(@Nonnull Function<? super StatelessSession,R> action) {
 		try ( var session = openStatelessSession() ) {
 			return action.apply( session );
 		}
@@ -344,7 +358,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @apiNote This method competes with the JPA-defined method
 	 *          {@link #callInTransaction}
 	 */
-	default <R> R fromTransaction(Function<? super Session,R> action) {
+	default <R> R fromTransaction(@Nonnull Function<? super Session,R> action) {
 		return fromSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
@@ -354,24 +368,21 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.3
 	 */
-	default <R> R fromStatelessTransaction(Function<? super StatelessSession,R> action) {
+	default <R> R fromStatelessTransaction(@Nonnull Function<? super StatelessSession,R> action) {
 		return fromStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
-	/**
-	 * Create a new {@link Session}.
-	 */
-	Session createEntityManager();
-
 	@Override
-	Session createEntityManager(EntityManager.CreationOption... options);
+	@Nonnull
+	Session createEntityManager(@Nullable EntityManager.CreationOption... options);
 
 	/**
 	 * Create a new {@link Session}, with the given
 	 * {@linkplain EntityManager#getProperties properties}.
 	 */
 	@Override
-	Session createEntityManager(Map<?, ?> map);
+	@Nonnull
+	Session createEntityManager(@Nullable Map<?, ?> map);
 
 	/**
 	 * Create a new {@link Session}, with the given
@@ -381,7 +392,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * {@linkplain jakarta.persistence.PersistenceUnitTransactionType#RESOURCE_LOCAL
 	 * resource-local} transaction management
 	 */
-	Session createEntityManager(SynchronizationType synchronizationType);
+	@Nonnull
+	Session createEntityManager(@Nonnull SynchronizationType synchronizationType);
 
 	/**
 	 * Create a new {@link Session}, with the given
@@ -393,18 +405,19 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * resource-local} transaction management
 	 */
 	@Override
-	Session createEntityManager(SynchronizationType synchronizationType, Map<?, ?> map);
-
-	EntityAgent createEntityAgent();
+	@Nonnull
+	Session createEntityManager(@Nonnull SynchronizationType synchronizationType, @Nullable Map<?, ?> map);
 
 	@Override
-	EntityAgent createEntityAgent(EntityAgent.CreationOption... options);
+	@Nonnull
+	StatelessSession createEntityAgent(@Nullable EntityAgent.CreationOption... options);
 
 	/**
 	 * Retrieve the {@linkplain Statistics statistics} for this factory.
 	 *
 	 * @return The statistics.
 	 */
+	@Nonnull
 	Statistics getStatistics();
 
 	/**
@@ -415,6 +428,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 6.2
 	 */
 	@Override
+	@Nonnull
 	SchemaManager getSchemaManager();
 
 	/**
@@ -426,6 +440,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @see SharedSessionContract#getCriteriaBuilder()
 	 */
 	@Override
+	@Nonnull
 	HibernateCriteriaBuilder getCriteriaBuilder();
 
 	/**
@@ -463,7 +478,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @see #addNamedEntityGraph
 	 */
-	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
+	@Nonnull
+	<T> List<EntityGraph<? super T>> findEntityGraphsByType(@Nonnull Class<T> entityClass);
 
 	/**
 	 * Return the root {@link EntityGraph} with the given name, or {@code null}
@@ -474,7 +490,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @see #addNamedEntityGraph
 	 */
-	RootGraph<?> findEntityGraphByName(String name);
+	@Nullable
+	RootGraph<?> findEntityGraphByName(@Nonnull String name);
 
 	/**
 	 *
@@ -486,7 +503,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 7.0
 	 */
-	default <T> RootGraph<T> createEntityGraph(Class<T> entityType) {
+	@Nonnull
+	default <T> RootGraph<T> createEntityGraph(@Nonnull Class<T> entityType) {
 		return new RootGraphImpl<>( null, (EntityDomainType<T>) getMetamodel().entity( entityType ) );
 	}
 
@@ -510,7 +528,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @see Session#find(EntityGraph, Object, FindOption...)
 	 * @see #createEntityGraph(Class)
 	 */
-	RootGraph<Map<String,?>> createGraphForDynamicEntity(String entityName);
+	@Nonnull
+	RootGraph<Map<String,?>> createGraphForDynamicEntity(@Nonnull String entityName);
 
 	/**
 	 * Creates a {@link RootGraph} for the given {@code rootEntityClass} and parses the
@@ -529,7 +548,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 7.0
 	 */
-	<T> RootGraph<T> parseEntityGraph(Class<T> rootEntityClass, CharSequence graphText);
+	@Nonnull
+	<T> RootGraph<T> parseEntityGraph(@Nonnull Class<T> rootEntityClass, @Nonnull CharSequence graphText);
 
 	/**
 	 * Creates a {@link RootGraph} for the given {@code rootEntityName} and parses the graph
@@ -549,7 +569,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 7.0
 	 */
 	@Incubating
-	<T> RootGraph<T> parseEntityGraph(String rootEntityName, CharSequence graphText);
+	@Nonnull
+	<T> RootGraph<T> parseEntityGraph(@Nonnull String rootEntityName, @Nonnull CharSequence graphText);
 
 	/**
 	 * Creates a {@link RootGraph} based on the passed string representation.  Here, the
@@ -565,7 +586,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 7.0
 	 */
 	@Incubating
-	<T> RootGraph<T> parseEntityGraph(CharSequence graphText);
+	@Nonnull
+	<T> RootGraph<T> parseEntityGraph(@Nonnull CharSequence graphText);
 
 	/**
 	 * Obtain the set of names of all {@linkplain org.hibernate.annotations.FilterDef
@@ -574,6 +596,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @return The set of filter names given by
 	 *         {@link org.hibernate.annotations.FilterDef} annotations
 	 */
+	@Nonnull
 	Set<String> getDefinedFilterNames();
 
 	/**
@@ -588,7 +611,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *             operation is a layer-breaker.
 	 */
 	@Deprecated(since = "6.2")
-	FilterDefinition getFilterDefinition(String filterName) throws HibernateException;
+	@Nonnull
+	FilterDefinition getFilterDefinition(@Nonnull String filterName) throws HibernateException;
 
 	/**
 	 * Obtain the set of names of all {@linkplain org.hibernate.annotations.FetchProfile
@@ -599,6 +623,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 6.2
 	 */
+	@Nonnull
 	Set<String> getDefinedFetchProfileNames();
 
 	/**
@@ -607,7 +632,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @param name The name to check
 	 * @return True if there is such a fetch profile; false otherwise.
 	 */
-	default boolean containsFetchProfileDefinition(String name) {
+	default boolean containsFetchProfileDefinition(@Nonnull String name) {
 		return getDefinedFilterNames().contains( name );
 	}
 
@@ -630,7 +655,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 7.0
 	 */
 	@Incubating
-	<R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query);
+	@Nonnull
+	<R> TypedQueryReference<R> addNamedQuery(@Nonnull String name, @Nonnull TypedQuery<R> query);
 
 	/**
 	 * The name assigned to this {@code SessionFactory}, if any.
@@ -650,6 +676,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceUnitName
 	 */
 	@Override
+	@Nullable
 	String getName();
 
 	/**
@@ -662,5 +689,6 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *             this operation is a layer-breaker.
 	 */
 	@Deprecated(since = "6.2")
+	@Nonnull
 	SessionFactoryOptions getSessionFactoryOptions();
 }

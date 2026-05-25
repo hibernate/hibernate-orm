@@ -4,6 +4,8 @@
  */
 package org.hibernate.procedure;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -89,25 +91,31 @@ public interface ProcedureCall
 	// Options
 
 	@Override
-	ProcedureCall setComment(String comment);
+	@Nonnull
+	ProcedureCall setComment(@Nullable String comment);
 
 	@Override
-	ProcedureCall addQueryHint(String hint);
+	@Nonnull
+	ProcedureCall addQueryHint(@Nonnull String hint);
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	ProcedureCall setMaxResults(int maxResults);
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	ProcedureCall setFirstResult(int startPosition);
 
 	@Override
 	@SuppressWarnings("removal")
-	ProcedureCall setLockMode(LockModeType lockMode);
+	@Nonnull
+	ProcedureCall setLockMode(@Nonnull LockModeType lockMode);
 
 	@Override
-	ProcedureCall setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	ProcedureCall setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -289,13 +297,16 @@ public interface ProcedureCall
 	/* Covariant overrides */
 
 	@Override
-	ProcedureCall setTimeout(Integer integer);
+	@Nonnull
+	ProcedureCall setTimeout(@Nullable Integer integer);
 
 	@Override
+	@Nonnull
 	ProcedureCall setTimeout(int timeout);
 
 	@Override
-	ProcedureCall setTimeout(Timeout timeout);
+	@Nonnull
+	ProcedureCall setTimeout(@Nullable Timeout timeout);
 
 	@Override
 	ProcedureCall addSynchronizedQuerySpace(String querySpace);
@@ -307,55 +318,72 @@ public interface ProcedureCall
 	ProcedureCall addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
 	@Override
-	ProcedureCall setHint(String hintName, Object value);
+	@Nonnull
+	ProcedureCall setHint(@Nonnull String hintName, @Nullable Object value);
 
 	@Override
-	<T> ProcedureCall setParameter( Parameter<T> param, T value);
+	@Nonnull
+	<T> ProcedureCall setParameter(@Nonnull Parameter<T> param, @Nullable T value);
 
 	@Override @Deprecated
-	ProcedureCall setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCall setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	ProcedureCall setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCall setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	ProcedureCall setParameter(String name, Object value);
+	@Nonnull
+	ProcedureCall setParameter(@Nonnull String name, @Nullable Object value);
 
 	@Override @Deprecated
-	ProcedureCall setParameter(String name, Calendar value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCall setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	ProcedureCall setParameter(String name, Date value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCall setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override
-	<P> ProcedureCall setParameter(String name, P value, Class<P> type);
+	@Nonnull
+	<P> ProcedureCall setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> ProcedureCall setParameter(String name, P value, Type<P> type);
+	@Nonnull
+	<P> ProcedureCall setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	<P> ProcedureCall setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> ProcedureCall setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	ProcedureCall setParameter(int position, Object value);
+	@Nonnull
+	ProcedureCall setParameter(int position, @Nullable Object value);
 
 	@Override
-	<P> ProcedureCall setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> ProcedureCall setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> ProcedureCall setParameter(int position, P value, Class<P> type);
+	@Nonnull
+	<P> ProcedureCall setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> ProcedureCall setParameter(int position, P value, Type<P> type);
+	@Nonnull
+	<P> ProcedureCall setParameter(int position, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override @Deprecated
-	ProcedureCall setParameter(int position, Calendar value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCall setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated
-	ProcedureCall setParameter(int position, Date value, TemporalType temporalType);
+	@Nonnull
+	ProcedureCall setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	ProcedureCall setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	ProcedureCall setFlushMode(@Nonnull FlushModeType flushMode);
 
 	@Override
 	ProcedureCall registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
@@ -364,8 +392,10 @@ public interface ProcedureCall
 	ProcedureCall registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
 
 	@Override
-	ProcedureCall setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	@Nonnull
+	ProcedureCall setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	@Override
-	ProcedureCall setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	@Nonnull
+	ProcedureCall setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 }

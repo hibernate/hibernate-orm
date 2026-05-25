@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -101,6 +103,7 @@ public interface Query<T> extends CommonQueryContract {
 	/**
 	 * The {@code Query<T>} as a string, or {@code null} in the case of a criteria query.
 	 */
+	@Nullable
 	String getQueryString();
 
 
@@ -112,19 +115,22 @@ public interface Query<T> extends CommonQueryContract {
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	Query<T> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setComment(String comment);
+	@Nonnull
+	Query<T> setComment(@Nullable String comment);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> addQueryHint(String hint);
+	@Nonnull
+	Query<T> addQueryHint(@Nonnull String hint);
 
 	/**
 	 * {@inheritDoc}
@@ -133,6 +139,7 @@ public interface Query<T> extends CommonQueryContract {
 	 *          value is expressed in <em>seconds</em>.
 	 */
 	@Override
+	@Nonnull
 	Query<T> setTimeout(int timeout);
 
 	/**
@@ -142,13 +149,15 @@ public interface Query<T> extends CommonQueryContract {
 	 *          is expressed in <em>milliseconds</em>.
 	 */
 	@Override
-	Query<T> setTimeout(Integer timeout);
+	@Nonnull
+	Query<T> setTimeout(@Nullable Integer timeout);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setTimeout(Timeout timeout);
+	@Nonnull
+	Query<T> setTimeout(@Nullable Timeout timeout);
 
 	/**
 	 * Whether the execution plan for this query is cached.
@@ -164,13 +173,15 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @since 6.3
 	 */
+	@Nonnull
 	Query<T> setQueryPlanCacheable(boolean queryPlanCacheable);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setHint(String hintName, Object value);
+	@Nonnull
+	Query<T> setHint(@Nonnull String hintName, @Nullable Object value);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -180,193 +191,225 @@ public interface Query<T> extends CommonQueryContract {
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setParameter(String parameter, Object argument);
+	@Nonnull
+	Query<T> setParameter(@Nonnull String parameter, @Nullable Object argument);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameter(String parameter, P argument, Class<P> type);
+	@Nonnull
+	<P> Query<T> setParameter(@Nonnull String parameter, @Nullable P argument, @Nonnull Class<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameter(String parameter, P argument, Type<P> type);
+	@Nonnull
+	<P> Query<T> setParameter(@Nonnull String parameter, @Nullable P argument, @Nonnull Type<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setParameter(int parameter, Object argument);
+	@Nonnull
+	Query<T> setParameter(int parameter, @Nullable Object argument);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameter(int parameter, P argument, Class<P> type);
+	@Nonnull
+	<P> Query<T> setParameter(int parameter, @Nullable P argument, @Nonnull Class<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameter(int parameter, P argument, Type<P> type);
+	@Nonnull
+	<P> Query<T> setParameter(int parameter, @Nullable P argument, @Nonnull Type<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameter(QueryParameter<P> parameter, P argument);
+	@Nonnull
+	<P> Query<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P argument);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameter(QueryParameter<P> parameter, P argument, Class<P> type);
+	@Nonnull
+	<P> Query<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P argument, @Nonnull Class<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameter(QueryParameter<P> parameter, P argument, Type<P> type);
+	@Nonnull
+	<P> Query<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P argument, @Nonnull Type<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameter(Parameter<P> parameter, P argument);
+	@Nonnull
+	<P> Query<T> setParameter(@Nonnull Parameter<P> parameter, @Nullable P argument);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> Query<T> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> Query<T> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setProperties(Object bean);
+	@Nonnull
+	Query<T> setProperties(@Nonnull Object bean);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	Query<T> setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setParameterList(String parameter, @SuppressWarnings("rawtypes") Collection arguments);
+	@Nonnull
+	Query<T> setParameterList(@Nonnull String parameter, @SuppressWarnings("rawtypes") @Nonnull Collection arguments);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(String parameter, Collection<? extends P> arguments, Class<P> javaType);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull String parameter, @Nonnull Collection<? extends P> arguments, @Nonnull Class<P> javaType);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(String parameter, Collection<? extends P> arguments, Type<P> type);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull String parameter, @Nonnull Collection<? extends P> arguments, @Nonnull Type<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setParameterList(String parameter, Object[] values);
+	@Nonnull
+	Query<T> setParameterList(@Nonnull String parameter, @Nonnull Object[] values);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(String parameter, P[] arguments, Class<P> javaType);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull String parameter, @Nonnull P[] arguments, @Nonnull Class<P> javaType);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(String parameter, P[] arguments, Type<P> type);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull String parameter, @Nonnull P[] arguments, @Nonnull Type<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setParameterList(int parameter, @SuppressWarnings("rawtypes") Collection arguments);
+	@Nonnull
+	Query<T> setParameterList(int parameter, @SuppressWarnings("rawtypes") @Nonnull Collection arguments);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(int parameter, Collection<? extends P> arguments, Class<P> javaType);
+	@Nonnull
+	<P> Query<T> setParameterList(int parameter, @Nonnull Collection<? extends P> arguments, @Nonnull Class<P> javaType);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(int parameter, Collection<? extends P> arguments, Type<P> type);
+	@Nonnull
+	<P> Query<T> setParameterList(int parameter, @Nonnull Collection<? extends P> arguments, @Nonnull Type<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	Query<T> setParameterList(int parameter, Object[] arguments);
+	@Nonnull
+	Query<T> setParameterList(int parameter, @Nonnull Object[] arguments);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(int parameter, P[] arguments, Class<P> javaType);
+	@Nonnull
+	<P> Query<T> setParameterList(int parameter, @Nonnull P[] arguments, @Nonnull Class<P> javaType);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(int parameter, P[] arguments, Type<P> type);
+	@Nonnull
+	<P> Query<T> setParameterList(int parameter, @Nonnull P[] arguments, @Nonnull Type<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> arguments);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments, Class<P> javaType);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> arguments, @Nonnull Class<P> javaType);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments, Type<P> type);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> arguments, @Nonnull Type<P> type);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(QueryParameter<P> parameter, P[] arguments);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] arguments);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(QueryParameter<P> parameter, P[] arguments, Class<P> javaType);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] arguments, @Nonnull Class<P> javaType);
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	<P> Query<T> setParameterList(QueryParameter<P> parameter, P[] arguments, Type<P> type);
+	@Nonnull
+	<P> Query<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] arguments, @Nonnull Type<P> type);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -390,6 +433,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * selection queries
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nullable
 	Integer getFetchSize();
 
 	/**
@@ -407,6 +451,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * selection queries
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nonnull
 	Query<T> setFetchSize(int fetchSize);
 
 	/**
@@ -465,6 +510,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * selection queries
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nonnull
 	Query<T> setReadOnly(boolean readOnly);
 
 	/**
@@ -494,6 +540,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * selection queries
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nonnull
 	Query<T> setCacheable(boolean cacheable);
 
 	/**
@@ -515,6 +562,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * selection queries
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nonnull
 	CacheMode getCacheMode();
 
 	/**
@@ -530,7 +578,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * selection queries
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	Query<T> setCacheMode(CacheMode cacheMode);
+	@Nonnull
+	Query<T> setCacheMode(@Nonnull CacheMode cacheMode);
 
 	/**
 	 * Obtain the name of the second level query cache region in which query
@@ -542,6 +591,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * selection queries
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nullable
 	String getCacheRegion();
 
 	/**
@@ -555,7 +605,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * selection queries
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	Query<T> setCacheRegion(String cacheRegion);
+	Query<T> setCacheRegion(@Nullable String cacheRegion);
 
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as second-level cache
@@ -563,6 +613,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Nonnull
 	CacheStoreMode getCacheStoreMode();
 
 	/**
@@ -571,7 +622,8 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
-	Query<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	@Nonnull
+	Query<T> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as second-level cache
@@ -579,6 +631,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Nonnull
 	CacheRetrieveMode getCacheRetrieveMode();
 
 	/**
@@ -587,7 +640,8 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
-	Query<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	@Nonnull
+	Query<T> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 
 	/**
 	 * @deprecated Use {@linkplain SelectionQuery} instead as applying result limits
@@ -603,6 +657,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Nonnull
 	Query<T> setMaxResults(int maxResults);
 
 	/**
@@ -619,6 +674,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Nonnull
 	Query<T> setFirstResult(int startPosition);
 
 	/**
@@ -627,6 +683,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
+	@Nullable
 	LockModeType getLockMode();
 
 	/**
@@ -635,7 +692,8 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0") @SuppressWarnings("removal")
-	Query<T> setLockMode(LockModeType lockMode);
+	@Nonnull
+	Query<T> setLockMode(@Nonnull LockModeType lockMode);
 
 	/**
 	 * Get the root {@link LockMode} for the query, expressed using Hibernate's
@@ -647,6 +705,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * only relevant for queries which return results.
 	 */
 	@Deprecated(since = "8.0")
+	@Nonnull
 	LockMode getHibernateLockMode();
 
 	/**
@@ -659,7 +718,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * only relevant for queries which return results.
 	 */
 	@Deprecated(since = "8.0")
-	Query<T> setHibernateLockMode(LockMode lockMode);
+	@Nonnull
+	Query<T> setHibernateLockMode(@Nonnull LockMode lockMode);
 
 	/**
 	 * Control how Hibernate should handle cases where it is determined
@@ -676,7 +736,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @since 7.1
 	 */
 	@Deprecated(since = "8.0")
-	Query<T> setFollowOnStrategy(Locking.FollowOn strategy);
+	@Nonnull
+	Query<T> setFollowOnStrategy(@Nonnull Locking.FollowOn strategy);
 
 	/**
 	 * Set a {@link TupleTransformer}.
@@ -686,7 +747,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @since 6.0
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	<X> Query<X> setTupleTransformer(TupleTransformer<X> transformer);
+	@Nonnull
+	<X> Query<X> setTupleTransformer(@Nonnull TupleTransformer<X> transformer);
 
 	/**
 	 * Set a {@link ResultListTransformer}.
@@ -696,7 +758,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @since 6.0
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	Query<T> setResultListTransformer(ResultListTransformer<T> transformer);
+	@Nonnull
+	Query<T> setResultListTransformer(@Nonnull ResultListTransformer<T> transformer);
 
 	/**
 	 * Execute the {@code Query<T>} and return the {@code Query<T>} results as a {@link List}.
@@ -709,6 +772,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nonnull
 	List<T> list();
 
 	/**
@@ -725,6 +789,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true) @SuppressWarnings("removal")
+	@Nonnull
 	default List<T> getResultList() {
 		return list();
 	}
@@ -745,6 +810,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nonnull
 	ScrollableResults<T> scroll();
 
 	/**
@@ -758,7 +824,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	ScrollableResults<T> scroll(ScrollMode scrollMode);
+	@Nonnull
+	ScrollableResults<T> scroll(@Nonnull ScrollMode scrollMode);
 
 	/**
 	 * Execute the {@code Query<T>} and return the {@code Query<T>} results as a {@link Stream}.
@@ -780,6 +847,7 @@ public interface Query<T> extends CommonQueryContract {
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nonnull
 	default Stream<T> getResultStream() {
 		return stream();
 	}
@@ -800,6 +868,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nonnull
 	default Stream<T> stream() {
 		return list().stream();
 	}
@@ -815,6 +884,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nullable
 	T uniqueResult();
 
 	/**
@@ -848,6 +918,7 @@ public interface Query<T> extends CommonQueryContract {
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
 	@SuppressWarnings("removal")
+	@Nullable
 	T getSingleResultOrNull();
 
 	/**
@@ -861,6 +932,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain SelectionQuery} instead for queries which return results.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nonnull
 	Optional<T> uniqueResultOptional();
 
 	/**
@@ -905,7 +977,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @see org.hibernate.annotations.FetchProfile
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	Query<T> enableFetchProfile(String profileName);
+	@Nonnull
+	Query<T> enableFetchProfile(@Nonnull String profileName);
 
 	/**
 	 * Disable the {@linkplain org.hibernate.annotations.FetchProfile fetch
@@ -920,7 +993,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @see org.hibernate.annotations.FetchProfile
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	Query<T> disableFetchProfile(String profileName);
+	@Nonnull
+	Query<T> disableFetchProfile(@Nonnull String profileName);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -935,11 +1009,9 @@ public interface Query<T> extends CommonQueryContract {
 	 * @see #getQueryFlushMode()
 	 */
 	@Override @Deprecated(since = "7")
+	@Nonnull
 	default FlushModeType getFlushMode() {
-		final var queryFlushMode = getQueryFlushMode();
-		return queryFlushMode == null
-				? FlushModeType.AUTO
-				: getFlushModeType( queryFlushMode );
+		return getFlushModeType( getQueryFlushMode() );
 	}
 
 	/**
@@ -958,7 +1030,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * @deprecated Use {@linkplain #setQueryFlushMode(QueryFlushMode)} instead.
 	 */
 	@Override @Deprecated(since = "7")
-	default Query<T> setFlushMode(FlushModeType flushMode) {
+	@Nonnull
+	default Query<T> setFlushMode(@Nonnull FlushModeType flushMode) {
 		setQueryFlushMode( queryFlushModeFromFlushModeType( flushMode ) );
 		return this;
 	}
@@ -980,7 +1053,8 @@ public interface Query<T> extends CommonQueryContract {
 	 * {@linkplain SharedSessionContract#createSelectionQuery(String, EntityGraph)}
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	Query<T> setEntityGraph(EntityGraph<? super T> graph, GraphSemantic semantic);
+	@Nonnull
+	Query<T> setEntityGraph(@Nonnull EntityGraph<? super T> graph, @Nonnull GraphSemantic semantic);
 
 	/**
 	 * Get the execution options for this {@code Query}. Many of the setters
@@ -995,6 +1069,7 @@ public interface Query<T> extends CommonQueryContract {
 	 * exposing the {@link QueryOptions} SPI type via an API.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
+	@Nonnull
 	QueryOptions getQueryOptions();
 
 
@@ -1005,49 +1080,57 @@ public interface Query<T> extends CommonQueryContract {
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override @Deprecated(since = "7")
-	Query<T> setParameter(Parameter<Calendar> parameter, Calendar argument, TemporalType temporalType);
+	@Nonnull
+	Query<T> setParameter(@Nonnull Parameter<Calendar> parameter, @Nullable Calendar argument, @Nonnull TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override @Deprecated(since = "7")
-	Query<T> setParameter(Parameter<Date> parameter, Date argument, TemporalType temporalType);
+	@Nonnull
+	Query<T> setParameter(@Nonnull Parameter<Date> parameter, @Nullable Date argument, @Nonnull TemporalType temporalType);
 
 	/**
 	 * Bind an {@link Instant} value to the named {@code Query<T>} parameter using
 	 * just the portion indicated by the given {@link TemporalType}.
 	 */
 	@Deprecated(since = "7")
-	Query<T> setParameter(String parameter, Instant argument, TemporalType temporalType);
+	@Nonnull
+	Query<T> setParameter(@Nonnull String parameter, @Nullable Instant argument, @Nonnull TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override @Deprecated(since = "7")
-	Query<T> setParameter(String parameter, Calendar argument, TemporalType temporalType);
+	@Nonnull
+	Query<T> setParameter(@Nonnull String parameter, @Nullable Calendar argument, @Nonnull TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override @Deprecated(since = "7")
-	Query<T> setParameter(String parameter, Date argument, TemporalType temporalType);
+	@Nonnull
+	Query<T> setParameter(@Nonnull String parameter, @Nullable Date argument, @Nonnull TemporalType temporalType);
 
 	/**
 	 * Bind an {@link Instant} value to the ordinal {@code Query<T>} parameter using
 	 * just the portion indicated by the given {@link TemporalType}.
 	 */
 	@Deprecated(since = "7")
-	Query<T> setParameter(int parameter, Instant argument, TemporalType temporalType);
+	@Nonnull
+	Query<T> setParameter(int parameter, @Nullable Instant argument, @Nonnull TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override @Deprecated(since = "7")
-	Query<T> setParameter(int parameter, Date argument, TemporalType temporalType);
+	@Nonnull
+	Query<T> setParameter(int parameter, @Nullable Date argument, @Nonnull TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override @Deprecated(since = "7")
-	Query<T> setParameter(int parameter, Calendar argument, TemporalType temporalType);
+	@Nonnull
+	Query<T> setParameter(int parameter, @Nullable Calendar argument, @Nonnull TemporalType temporalType);
 }

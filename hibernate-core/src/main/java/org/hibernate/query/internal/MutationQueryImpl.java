@@ -567,6 +567,7 @@ public class MutationQueryImpl<T>
 	}
 
 	@Override
+	@Deprecated
 	@SuppressWarnings("removal")
 	public Query<T> setEntityGraph(EntityGraph<? super T> graph, GraphSemantic semantic) {
 		throw new UnsupportedOperationException( "Entity graphs are not supported for mutation queries" );

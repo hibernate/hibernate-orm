@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.QueryFlushMode;
@@ -88,6 +90,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return The producer of this query
 	 */
+	@Nonnull
 	SharedSessionContract getSession();
 
 
@@ -109,6 +112,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	QueryFlushMode getQueryFlushMode();
 
 	/**
@@ -121,7 +125,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @since 7.0
 	 */
-	CommonQueryContract setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	CommonQueryContract setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	/**
 	 * The {@link FlushMode} in effect for this query, taking into account
@@ -151,6 +156,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * SQL commenting may be enabled using the configuration property
 	 * {@value org.hibernate.cfg.AvailableSettings#USE_SQL_COMMENTS}.
 	 */
+	@Nullable
 	String getComment();
 
 	/**
@@ -165,7 +171,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @see #getComment()
 	 */
-	CommonQueryContract setComment(String comment);
+	CommonQueryContract setComment(@Nullable String comment);
 
 	/**
 	 * Add a database query hint to the SQL query.
@@ -174,7 +180,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * {@link Dialect#getQueryHintString(String, List)} determines how
 	 * the hint is actually added to the SQL query.
 	 */
-	CommonQueryContract addQueryHint(String hint);
+	CommonQueryContract addQueryHint(@Nonnull String hint);
 
 	/**
 	 * Obtain the {@linkplain java.sql.Statement#setQueryTimeout JDBC
@@ -190,6 +196,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @see java.sql.Statement#setQueryTimeout(int)
 	 */
 	@Override
+	@Nullable
 	Integer getTimeout();
 
 	/**
@@ -203,6 +210,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @see org.hibernate.Timeouts
 	 * @see #setTimeout(Timeout)
 	 */
+	@Nonnull
 	CommonQueryContract setTimeout(int timeout);
 
 	/**
@@ -219,7 +227,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @since 7.0
 	 */
 	@Override
-	CommonQueryContract setTimeout(Integer timeout);
+	@Nonnull
+	CommonQueryContract setTimeout(@Nullable Integer timeout);
 
 	/**
 	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
@@ -228,7 +237,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @since 7.0
 	 */
 	@Override
-	CommonQueryContract setTimeout(Timeout timeout);
+	@Nonnull
+	CommonQueryContract setTimeout(@Nullable Timeout timeout);
 
 	/**
 	 * Set a hint. Hints are a
@@ -254,7 +264,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * which defines database hints to be applied to the SQL.
 	 *
 	 */
-	CommonQueryContract setHint(String hintName, Object value);
+	@Nonnull
+	CommonQueryContract setHint(@Nonnull String hintName, @Nullable Object value);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -266,6 +277,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	ParameterMetadata getParameterMetadata();
 
 	/**
@@ -282,12 +294,14 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<T> CommonQueryContract setParameter(QueryParameter<T> parameter, T value);
+	@Nonnull
+	<T> CommonQueryContract setParameter(@Nonnull QueryParameter<T> parameter, @Nullable T value);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(Parameter, Object)
 	 */
-	<T> CommonQueryContract setParameter(Parameter<T> param, T value);
+	@Nonnull
+	<T> CommonQueryContract setParameter(@Nonnull Parameter<T> param, @Nullable T value);
 
 	/**
 	 * Bind the given argument to a named query parameter.
@@ -302,7 +316,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @see TypedParameterValue
 	 */
-	CommonQueryContract setParameter(String parameter, Object value);
+	@Nonnull
+	CommonQueryContract setParameter(@Nonnull String parameter, @Nullable Object value);
 
 	/**
 	 * Bind the given argument to an ordinal query parameter.
@@ -317,7 +332,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @see TypedParameterValue
 	 */
-	CommonQueryContract setParameter(int parameter, Object value);
+	@Nonnull
+	CommonQueryContract setParameter(int parameter, @Nullable Object value);
 
 	/**
 	 * Bind an argument to the query parameter represented by the given
@@ -333,7 +349,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @see #setParameter(QueryParameter, Object, Type)
 	 */
-	<P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	/**
 	 * Bind the given argument to a named query parameter using the given
@@ -344,7 +361,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @see #setParameter(String, Object, Type)
 	 * @see #setParameter(int, Object, Class)
 	 */
-	<P> CommonQueryContract setParameter(String parameter, P value, Class<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameter(@Nonnull String parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
@@ -354,7 +372,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @see #setParameter(int, Object, Type)
 	 */
-	<P> CommonQueryContract setParameter(int parameter, P value, Class<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameter(int parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	/**
 	 * Bind an argument to the query parameter represented by the given
@@ -366,29 +385,34 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameter(QueryParameter<P> parameter, P val, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type);
 
 	/**
 	 * Bind the given argument to a named query parameter using the given
 	 * {@link Type}.
 	 */
-	<P> CommonQueryContract setParameter(String parameter, P value, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameter(@Nonnull String parameter, @Nullable P value, @Nonnull Type<P> type);
 
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
 	 * {@link Type}.
 	 */
-	<P> CommonQueryContract setParameter(int parameter, P value, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameter(int parameter, @Nullable P value, @Nonnull Type<P> type);
 
 	/**
 	 * @see jakarta.persistence.Query#setConvertedParameter(String, Object, Class)
 	 */
-	<P> CommonQueryContract setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> CommonQueryContract setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	/**
 	 * @see jakarta.persistence.Query#setConvertedParameter(int, Object, Class)
 	 */
-	<P> CommonQueryContract setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> CommonQueryContract setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
@@ -403,7 +427,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	CommonQueryContract setParameterList(String parameter, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	CommonQueryContract setParameterList(@Nonnull String parameter, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
@@ -418,7 +443,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(String parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull String parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
@@ -429,7 +455,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(String parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull String parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	/**
 	 * Bind multiple arguments to a named query parameter.
@@ -442,7 +469,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	CommonQueryContract setParameterList(String parameter, Object[] values);
+	@Nonnull
+	CommonQueryContract setParameterList(@Nonnull String parameter, @Nonnull Object[] values);
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
@@ -457,7 +485,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(String parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull String parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
@@ -468,7 +497,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(String parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull String parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
@@ -481,7 +511,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	CommonQueryContract setParameterList(int parameter, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	CommonQueryContract setParameterList(int parameter, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter using the given
@@ -496,7 +527,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(int parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(int parameter, @Nonnull Collection<? extends P> values, Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter using the given
@@ -507,7 +539,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(int parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(int parameter, @Nonnull Collection<? extends P> values, Type<P> type);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
@@ -520,7 +553,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	CommonQueryContract setParameterList(int parameter, Object[] values);
+	@Nonnull
+	CommonQueryContract setParameterList(int parameter, @Nonnull Object[] values);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter using the given
@@ -535,7 +569,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(int parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(int parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter using the given
@@ -546,7 +581,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(int parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(int parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -560,7 +596,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -576,7 +613,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -587,7 +625,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -602,7 +641,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -618,7 +658,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -629,7 +670,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContract setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	/**
 	 * Bind the property values of the given bean to named parameters of
@@ -640,7 +682,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	CommonQueryContract setProperties(Object bean);
+	@Nonnull
+	CommonQueryContract setProperties(@Nonnull Object bean);
 
 	/**
 	 * Bind the values of the given {@code Map} to named parameters of the
@@ -651,7 +694,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	CommonQueryContract setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	CommonQueryContract setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -664,7 +708,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @deprecated since {@link TemporalType} is deprecated
 	 */
 	@Deprecated(since = "7")
-	CommonQueryContract setParameter(String parameter, Instant value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContract setParameter(@Nonnull String parameter, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(String, Calendar, TemporalType)
@@ -672,7 +717,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @deprecated since {@link TemporalType} is deprecated
 	 */
 	@Deprecated(since = "7")
-	CommonQueryContract setParameter(String parameter, Calendar value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContract setParameter(@Nonnull String parameter, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(String, Date, TemporalType)
@@ -680,7 +726,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @deprecated since {@link TemporalType} is deprecated
 	 */
 	@Deprecated(since = "7")
-	CommonQueryContract setParameter(String parameter, Date value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContract setParameter(@Nonnull String parameter, @Nullable Date value, @Nonnull TemporalType temporalType);
 	/**
 	 * Bind an {@link Instant} to an ordinal query parameter using just the
 	 * portion indicated by the given {@link TemporalType}.
@@ -688,7 +735,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @deprecated since {@link TemporalType} is deprecated
 	 */
 	@Deprecated(since = "7")
-	CommonQueryContract setParameter(int parameter, Instant value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContract setParameter(int parameter, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(int, Date, TemporalType)
@@ -696,7 +744,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @deprecated since {@link TemporalType} is deprecated
 	 */
 	@Deprecated(since = "7")
-	CommonQueryContract setParameter(int parameter, Date value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContract setParameter(int parameter, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(int, Calendar, TemporalType)
@@ -704,7 +753,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @deprecated since {@link TemporalType} is deprecated
 	 */
 	@Deprecated(since = "7")
-	CommonQueryContract setParameter(int parameter, Calendar value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContract setParameter(int parameter, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(Parameter, Calendar, TemporalType)
@@ -712,7 +762,8 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @deprecated since {@link TemporalType} is deprecated
 	 */
 	@Deprecated(since = "7")
-	CommonQueryContract setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContract setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(Parameter, Date, TemporalType)
@@ -720,5 +771,6 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 * @deprecated since {@link TemporalType} is deprecated
 	 */
 	@Deprecated(since = "7")
-	CommonQueryContract setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContract setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 }

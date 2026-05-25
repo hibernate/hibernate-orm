@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -55,52 +57,68 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 	// Options
 
 	@Override
-	QueryImplementor<T> setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	QueryImplementor<T> setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	@Override @Deprecated @SuppressWarnings("deprecation")
-	QueryImplementor<T> setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	QueryImplementor<T> setFlushMode(@Nonnull FlushModeType flushMode);
 
 	@Override
-	QueryImplementor<T> setComment(String comment);
+	@Nonnull
+	QueryImplementor<T> setComment(@Nullable String comment);
 
 	@Override
-	QueryImplementor<T> addQueryHint(String hint);
+	@Nonnull
+	QueryImplementor<T> addQueryHint(@Nonnull String hint);
 
 	@Override
+	@Nonnull
 	QueryImplementor<T> setTimeout(int timeout);
 
 	@Override
-	QueryImplementor<T> setTimeout(Integer timeout);
+	@Nonnull
+	QueryImplementor<T> setTimeout(@Nullable Integer timeout);
 
 	@Override
-	QueryImplementor<T> setTimeout(Timeout timeout);
+	@Nonnull
+	QueryImplementor<T> setTimeout(@Nullable Timeout timeout);
 
 	@Override
+	@Nonnull
 	QueryImplementor<T> setQueryPlanCacheable(boolean queryPlanCacheable);
 
 	@Override
-	QueryImplementor<T> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	@Nonnull
+	QueryImplementor<T> setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	@Override
-	QueryImplementor<T> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	@Nonnull
+	QueryImplementor<T> setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
+	@Nonnull
 	QueryImplementor<T> setMaxResults(int maxResults);
 
 	@Override
+	@Nonnull
 	QueryImplementor<T> setFirstResult(int startPosition);
 
 	@Override
-	QueryImplementor<T> setLockMode(LockModeType lockMode);
+	@Nonnull
+	QueryImplementor<T> setLockMode(@Nonnull LockModeType lockMode);
 
 	@Override
-	QueryImplementor<T> setHibernateLockMode(LockMode lockMode);
+	@Nonnull
+	QueryImplementor<T> setHibernateLockMode(@Nonnull LockMode lockMode);
 
 	@Override
-	QueryImplementor<T> setFollowOnStrategy(Locking.FollowOn strategy);
+	@Nonnull
+	QueryImplementor<T> setFollowOnStrategy(@Nonnull Locking.FollowOn strategy);
 
 	@Override
-	QueryImplementor<T> setHint(String hintName, Object value);
+	@Nonnull
+	QueryImplementor<T> setHint(@Nonnull String hintName, @Nullable Object value);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -109,122 +127,162 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 	QueryParameterBindings getParameterBindings();
 
 	@Override
-	QueryImplementor<T> setParameter(String name, Object value);
+	@Nonnull
+	QueryImplementor<T> setParameter(@Nonnull String name, @Nullable Object value);
 
 	@Override
-	<P> QueryImplementor<T> setParameter(String name, P value, Class<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> QueryImplementor<T> setParameter(String name, P value, Type<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameter(@Nonnull String name, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	QueryImplementor<T> setParameter(int position, Object value);
+	@Nonnull
+	QueryImplementor<T> setParameter(int position, @Nullable Object value);
 
 	@Override
-	<P> QueryImplementor<T> setParameter(int position, P value, Class<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> QueryImplementor<T> setParameter(int position, P value, Type<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	<P> QueryImplementor<T> setParameter(QueryParameter<P> parameter, P value);
+	@Nonnull
+	<P> QueryImplementor<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value);
 
 	@Override
-	<P> QueryImplementor<T> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> QueryImplementor<T> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override
-	<P> QueryImplementor<T> setParameter(Parameter<P> param, P value);
+	@Nonnull
+	<P> QueryImplementor<T> setParameter(@Nonnull Parameter<P> param, @Nullable P value);
 
 	@Override
-	QueryImplementor<T> setProperties(Object bean);
+	@Nonnull
+	QueryImplementor<T> setProperties(@Nonnull Object bean);
 
 	@Override
-	QueryImplementor<T> setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	QueryImplementor<T> setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 
 	@Override
-	<P> QueryImplementor<T> setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> QueryImplementor<T> setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> QueryImplementor<T> setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> QueryImplementor<T> setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	QueryImplementor<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	QueryImplementor<T> setParameterList(@Nonnull String name, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(String name, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	QueryImplementor<T> setParameterList(String name, Object[] values);
+	@Nonnull
+	QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull Object[] values);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(String name, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(String name, P[] values, Type<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull String name, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	QueryImplementor<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	QueryImplementor<T> setParameterList(int position, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(int position, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(int position, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	QueryImplementor<T> setParameterList(int position, Object[] values);
+	@Nonnull
+	QueryImplementor<T> setParameterList(int position, @Nonnull Object[] values);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(int position, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(int position, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(int position, P[] values, Type<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(int position, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<T> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> QueryImplementor<T> setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override @Deprecated(since = "7")
-	QueryImplementor<T> setParameter(int position, Instant value, TemporalType temporalType);
+	@Nonnull
+	QueryImplementor<T> setParameter(int position, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	QueryImplementor<T> setParameter(int position, Date value, TemporalType temporalType);
+	@Nonnull
+	QueryImplementor<T> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	QueryImplementor<T> setParameter(int position, Calendar value, TemporalType temporalType);
+	@Nonnull
+	QueryImplementor<T> setParameter(int position, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	QueryImplementor<T> setParameter(String name, Instant value, TemporalType temporalType);
+	@Nonnull
+	QueryImplementor<T> setParameter(@Nonnull String name, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	QueryImplementor<T> setParameter(String name, Calendar value, TemporalType temporalType);
+	@Nonnull
+	QueryImplementor<T> setParameter(@Nonnull String name, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	QueryImplementor<T> setParameter(String name, Date value, TemporalType temporalType);
+	@Nonnull
+	QueryImplementor<T> setParameter(@Nonnull String name, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	QueryImplementor<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	QueryImplementor<T> setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")
-	QueryImplementor<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	QueryImplementor<T> setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -29,31 +31,39 @@ import java.util.Map;
 /// @author Steve Ebersole
 public interface CommonQueryContractImplementor extends CommonQueryContract {
 	@Override
+	@Nonnull
 	SharedSessionContractImplementor getSession();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
 	@Override
-	CommonQueryContractImplementor setQueryFlushMode(QueryFlushMode queryFlushMode);
+	@Nonnull
+	CommonQueryContractImplementor setQueryFlushMode(@Nonnull QueryFlushMode queryFlushMode);
 
 	@Override
-	CommonQueryContractImplementor setComment(String comment);
+	@Nonnull
+	CommonQueryContractImplementor setComment(@Nullable String comment);
 
 	@Override
-	CommonQueryContractImplementor addQueryHint(String hint);
+	@Nonnull
+	CommonQueryContractImplementor addQueryHint(@Nonnull String hint);
 
 	@Override
+	@Nonnull
 	CommonQueryContractImplementor setTimeout(int timeout);
 
 	@Override
-	CommonQueryContractImplementor setTimeout(Integer timeout);
+	@Nonnull
+	CommonQueryContractImplementor setTimeout(@Nullable Integer timeout);
 
 	@Override
-	CommonQueryContractImplementor setTimeout(Timeout timeout);
+	@Nonnull
+	CommonQueryContractImplementor setTimeout(@Nullable Timeout timeout);
 
 	@Override
-	CommonQueryContractImplementor setHint(String hintName, Object value);
+	@Nonnull
+	CommonQueryContractImplementor setHint(@Nonnull String hintName, @Nullable Object value);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,100 +72,132 @@ public interface CommonQueryContractImplementor extends CommonQueryContract {
 	QueryParameterBindings getParameterBindings();
 
 	@Override
-	<T> CommonQueryContractImplementor setParameter(QueryParameter<T> parameter, T value);
+	@Nonnull
+	<T> CommonQueryContractImplementor setParameter(@Nonnull QueryParameter<T> parameter, @Nullable T value);
 
 	@Override
-	<T> CommonQueryContractImplementor setParameter(Parameter<T> param, T value);
+	@Nonnull
+	<T> CommonQueryContractImplementor setParameter(@Nonnull Parameter<T> param, @Nullable T value);
 
 	@Override
-	CommonQueryContractImplementor setParameter(String parameter, Object value);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(@Nonnull String parameter, @Nullable Object value);
 
 	@Override
-	CommonQueryContractImplementor setParameter(int parameter, Object value);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(int parameter, @Nullable Object value);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameter(String parameter, P value, Class<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameter(@Nonnull String parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameter(int parameter, P value, Class<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameter(int parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameter(QueryParameter<P> parameter, P val, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P val, @Nonnull Type<P> type);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameter(String parameter, P value, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameter(@Nonnull String parameter, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameter(int parameter, P value, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameter(int parameter, @Nullable P value, @Nonnull Type<P> type);
 
 	@Override
-	CommonQueryContractImplementor setProperties(Object bean);
+	@Nonnull
+	CommonQueryContractImplementor setProperties(@Nonnull Object bean);
 
 	@Override
-	CommonQueryContractImplementor setProperties(@SuppressWarnings("rawtypes") Map bean);
+	@Nonnull
+	CommonQueryContractImplementor setProperties(@SuppressWarnings("rawtypes") @Nonnull Map bean);
 
 	@Override
-	<P> CommonQueryContractImplementor setConvertedParameter(String name, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> CommonQueryContractImplementor setConvertedParameter(@Nonnull String name, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	<P> CommonQueryContractImplementor setConvertedParameter(int position, P value, Class<? extends AttributeConverter<P, ?>> converter);
+	@Nonnull
+	<P> CommonQueryContractImplementor setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override
-	CommonQueryContractImplementor setParameterList(String parameter, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	CommonQueryContractImplementor setParameterList(@Nonnull String parameter, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(String parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull String parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(String parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull String parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	CommonQueryContractImplementor setParameterList(String parameter, Object[] values);
+	@Nonnull
+	CommonQueryContractImplementor setParameterList(@Nonnull String parameter, @Nonnull Object[] values);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(String parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull String parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(String parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull String parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	CommonQueryContractImplementor setParameterList(int parameter, @SuppressWarnings("rawtypes") Collection values);
+	@Nonnull
+	CommonQueryContractImplementor setParameterList(int parameter, @SuppressWarnings("rawtypes") @Nonnull Collection values);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(int parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(int parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(int parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(int parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	CommonQueryContractImplementor setParameterList(int parameter, Object[] values);
+	@Nonnull
+	CommonQueryContractImplementor setParameterList(int parameter, @Nonnull Object[] values);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(int parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(int parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(int parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(int parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull Collection<? extends P> values, @Nonnull Type<P> type);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, P[] values);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Class<P> javaType);
 
 	@Override
-	<P> CommonQueryContractImplementor setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
+	@Nonnull
+	<P> CommonQueryContractImplementor setParameterList(@Nonnull QueryParameter<P> parameter, @Nonnull P[] values, @Nonnull Type<P> type);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -163,56 +205,70 @@ public interface CommonQueryContractImplementor extends CommonQueryContract {
 
 	@SuppressWarnings("removal")
 	@Override
+	@Nonnull
 	CommonQueryContractImplementor setMaxResults(int maxResult);
 
 	@SuppressWarnings("removal")
 	@Override
+	@Nonnull
 	CommonQueryContractImplementor setFirstResult(int startPosition);
 
 	@Override
-	CommonQueryContractImplementor setFlushMode(FlushModeType flushMode);
+	@Nonnull
+	CommonQueryContractImplementor setFlushMode(@Nonnull FlushModeType flushMode);
 
 	@SuppressWarnings("removal")
 	@Override
-	CommonQueryContractImplementor setLockMode(LockModeType lockMode);
+	@Nonnull
+	CommonQueryContractImplementor setLockMode(@Nonnull LockModeType lockMode);
 
 	@SuppressWarnings("removal")
 	@Override
-	CommonQueryContractImplementor setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+	@Nonnull
+	CommonQueryContractImplementor setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode);
 
 	@SuppressWarnings("removal")
 	@Override
-	CommonQueryContractImplementor setCacheStoreMode(CacheStoreMode cacheStoreMode);
+	@Nonnull
+	CommonQueryContractImplementor setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode);
 
 	@SuppressWarnings("deprecation")
 	@Override
-	CommonQueryContractImplementor setParameter(String parameter, Instant value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(@Nonnull String parameter, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@SuppressWarnings("deprecation")
 	@Override
-	CommonQueryContractImplementor setParameter(String parameter, Calendar value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(@Nonnull String parameter, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@SuppressWarnings("deprecation")
 	@Override
-	CommonQueryContractImplementor setParameter(String parameter, Date value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(@Nonnull String parameter, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@SuppressWarnings("deprecation")
 	@Override
-	CommonQueryContractImplementor setParameter(int parameter, Instant value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(int parameter, @Nullable Instant value, @Nonnull TemporalType temporalType);
 
 	@SuppressWarnings("deprecation")
 	@Override
-	CommonQueryContractImplementor setParameter(int parameter, Date value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(int parameter, @Nullable Date value, @Nonnull TemporalType temporalType);
 
 	@SuppressWarnings("deprecation")
 	@Override
-	CommonQueryContractImplementor setParameter(int parameter, Calendar value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(int parameter, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@SuppressWarnings("deprecation")
 	@Override
-	CommonQueryContractImplementor setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(@Nonnull Parameter<Calendar> param, @Nullable Calendar value, @Nonnull TemporalType temporalType);
 
 	@SuppressWarnings("deprecation")
 	@Override
-	CommonQueryContractImplementor setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	@Nonnull
+	CommonQueryContractImplementor setParameter(@Nonnull Parameter<Date> param, @Nullable Date value, @Nonnull TemporalType temporalType);
 }

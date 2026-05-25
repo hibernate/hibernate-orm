@@ -4,6 +4,8 @@
  */
 package org.hibernate;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * An API for directly querying and managing the second-level cache.
  * <p>
@@ -120,6 +122,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @return The SessionFactory
 	 */
+	@Nonnull
 	SessionFactory getSessionFactory();
 
 
@@ -137,7 +140,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 * @return True if the underlying cache contains corresponding data; false
 	 * otherwise.
 	 */
-	boolean containsEntity(Class<?> entityClass, Object identifier);
+	boolean containsEntity(@Nonnull Class<?> entityClass, @Nonnull Object identifier);
 
 	/**
 	 * Determine whether the cache contains an item for the entity of the type
@@ -148,7 +151,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
-	boolean containsEntity(String entityName, Object identifier);
+	boolean containsEntity(@Nonnull String entityName, @Nonnull Object identifier);
 
 	/**
 	 * Evicts the cached item for the entity of the given type, and with the
@@ -159,7 +162,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(Class<?> entityClass, Object identifier);
+	void evictEntityData(@Nonnull Class<?> entityClass, @Nonnull Object identifier);
 
 	/**
 	 * Evict the cached item for the entity of the type with the given name,
@@ -170,7 +173,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(String entityName, Object identifier);
+	void evictEntityData(@Nonnull String entityName, @Nonnull Object identifier);
 
 	/**
 	 * Evict all cached data from the cache region to which the given entity
@@ -182,7 +185,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(Class<?> entityClass);
+	void evictEntityData(@Nonnull Class<?> entityClass);
 
 	/**
 	 * Evict all cached data from the cache region to which the given named
@@ -194,7 +197,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(String entityName);
+	void evictEntityData(@Nonnull String entityName);
 
 	/**
 	 * Evict all cached data from every cache region to which any entity type
@@ -216,7 +219,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictNaturalIdData(Class<?> entityClass);
+	void evictNaturalIdData(@Nonnull Class<?> entityClass);
 
 	/**
 	 * Evict all cached natural id mappings for the entity type with the
@@ -226,7 +229,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictNaturalIdData(String entityName);
+	void evictNaturalIdData(@Nonnull String entityName);
 
 	/**
 	 * Evict all cached natural id mappings for every entity type.
@@ -251,7 +254,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
-	boolean containsCollection(String role, Object ownerIdentifier);
+	boolean containsCollection(@Nonnull String role, @Nonnull Object ownerIdentifier);
 
 	/**
 	 * Evict the cached item for the collection with the given role and given
@@ -263,7 +266,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictCollectionData(String role, Object ownerIdentifier);
+	void evictCollectionData(@Nonnull String role, @Nonnull Object ownerIdentifier);
 
 	/**
 	 * Evict all cached data from the cache region to which the given collection
@@ -274,7 +277,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictCollectionData(String role);
+	void evictCollectionData(@Nonnull String role);
 
 	/**
 	 * Evict all cache data from every cache region to which some collection
@@ -297,7 +300,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
-	boolean containsQuery(String regionName);
+	boolean containsQuery(@Nonnull String regionName);
 
 	/**
 	 * Evict all cached query results from the default region.
@@ -309,7 +312,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @param regionName The cache name associated to the queries being cached.
 	 */
-	void evictQueryRegion(String regionName);
+	void evictQueryRegion(@Nonnull String regionName);
 
 	/**
 	 * Evict all cached query results from every region.
@@ -326,7 +329,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictRegion(String regionName);
+	void evictRegion(@Nonnull String regionName);
 
 	/**
 	 * Evict all cached entity data.

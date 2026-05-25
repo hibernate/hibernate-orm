@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -141,6 +142,15 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 			for ( var restriction : restrictions ) {
 				whereClause.applyPredicate( nodeBuilder().wrap( restriction ) );
 			}
+		}
+	}
+
+	protected void setWhere(List<? extends Expression<Boolean>> restrictions) {
+		final SqmWhereClause whereClause = initAndGetWhereClause();
+		// Clear the current predicate if one is present
+		whereClause.setPredicate( null );
+		for ( var restriction : restrictions ) {
+			whereClause.applyPredicate( nodeBuilder().wrap( restriction ) );
 		}
 	}
 

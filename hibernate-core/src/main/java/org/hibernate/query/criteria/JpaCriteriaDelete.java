@@ -9,6 +9,8 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.metamodel.EntityType;
 
+import java.util.List;
+
 /**
  * @author Steve Ebersole
  */
@@ -28,4 +30,7 @@ public interface JpaCriteriaDelete<T> extends JpaManipulationCriteria<T>, Criter
 
 	@Override
 	JpaCriteriaDelete<T> where(BooleanExpression... restrictions);
+
+	@Override
+	JpaCriteriaDelete<T> where(List<? extends Expression<Boolean>> restrictions);
 }

@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -106,6 +107,11 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public SqmSetJoin<O, E> on(BooleanExpression... restrictions) {
+		return (SqmSetJoin<O, E>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmSetJoin<O, E> on(List<? extends Expression<Boolean>> restrictions) {
 		return (SqmSetJoin<O, E>) super.on( restrictions );
 	}
 

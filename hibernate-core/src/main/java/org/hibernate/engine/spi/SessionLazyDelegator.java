@@ -25,6 +25,7 @@ import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
 import jakarta.persistence.sql.ResultSetMapping;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -65,6 +66,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * This helper class allows decorating a Session instance, while the
  * instance itself is lazily provided via a {@code Supplier}.
@@ -87,6 +90,18 @@ public class SessionLazyDelegator implements Session {
 
 	public SessionLazyDelegator(Supplier<Session> lazySessionLookup){
 		this.lazySession = lazySessionLookup;
+	}
+
+	private static FindOption[] nonNullOptions(FindOption @Nullable[] options) {
+		return options == null ? new FindOption[0] : options;
+	}
+
+	private static LockOption[] nonNullOptions(LockOption @Nullable[] options) {
+		return options == null ? new LockOption[0] : options;
+	}
+
+	private static RefreshOption[] nonNullOptions(RefreshOption @Nullable[] options) {
+		return options == null ? new RefreshOption[0] : options;
 	}
 
 	@Override
@@ -217,8 +232,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T merge(T object) {
-		return this.lazySession.get().merge( object );
+	public <T> @NonNull T merge(T object) {
+		return castNonNull( this.lazySession.get().merge( object ) );
 	}
 
 	@Override
@@ -282,38 +297,38 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
-		return this.lazySession.get().findMultiple( entityType, ids, options );
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption @Nullable... options) {
+		return this.lazySession.get().findMultiple( entityType, ids, nonNullOptions( options ) );
 	}
 
 	@Override
-	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
-		return this.lazySession.get().findMultiple( entityGraph, ids, options );
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption @Nullable... options) {
+		return this.lazySession.get().findMultiple( entityGraph, ids, nonNullOptions( options ) );
 	}
 
 	@Override
-	public <T> T get(Class<T> entityType, Object id) {
+	public <T> @NonNull T get(Class<T> entityType, Object id) {
 		return this.lazySession.get().get( entityType, id );
 	}
 
 	@Override
-	public <T> T get(Class<T> entityType, Object key, FindOption... findOptions) {
-		return this.lazySession.get().get( entityType, key, findOptions );
+	public <T> @NonNull T get(Class<T> entityType, Object key, FindOption @Nullable... findOptions) {
+		return this.lazySession.get().get( entityType, key, nonNullOptions( findOptions ) );
 	}
 
 	@Override
-	public <T> T get(EntityGraph<T> entityGraph, Object key, FindOption... findOptions) {
-		return this.lazySession.get().get( entityGraph, key, findOptions );
+	public <T> @NonNull T get(EntityGraph<T> entityGraph, Object key, FindOption @Nullable... findOptions) {
+		return this.lazySession.get().get( entityGraph, key, nonNullOptions( findOptions ) );
 	}
 
 	@Override
-	public <T> List<T> getMultiple(Class<T> entityType, List<?> keys, FindOption... findOptions) {
-		return this.lazySession.get().getMultiple( entityType, keys, findOptions );
+	public <T> List<T> getMultiple(Class<T> entityType, List<?> keys, FindOption @Nullable... findOptions) {
+		return this.lazySession.get().getMultiple( entityType, keys, nonNullOptions( findOptions ) );
 	}
 
 	@Override
-	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption... findOptions) {
-		return this.lazySession.get().getMultiple( entityGraph, keys, findOptions );
+	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> keys, FindOption @Nullable... findOptions) {
+		return this.lazySession.get().getMultiple( entityGraph, keys, nonNullOptions( findOptions ) );
 	}
 
 	@Override
@@ -322,8 +337,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public Object get(String entityName, Object key, FindOption... findOptions) {
-		return this.lazySession.get().get( entityName, key, findOptions );
+	public Object get(String entityName, Object key, FindOption @Nullable... findOptions) {
+		return this.lazySession.get().get( entityName, key, nonNullOptions( findOptions ) );
 	}
 
 	@Override
@@ -347,8 +362,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityType, Object id) {
-		return this.lazySession.get().getReference( entityType, id );
+	public <T> @NonNull T getReference(Class<T> entityType, Object id) {
+		return castNonNull( this.lazySession.get().getReference( entityType, id ) );
 	}
 
 	@Override
@@ -357,8 +372,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T getReference(T object) {
-		return this.lazySession.get().getReference( object );
+	public <T> @NonNull T getReference(T object) {
+		return castNonNull( this.lazySession.get().getReference( object ) );
 	}
 
 	@Override
@@ -838,18 +853,18 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
-		return this.lazySession.get().find( entityClass, primaryKey, options );
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, FindOption @Nullable... options) {
+		return this.lazySession.get().find( entityClass, primaryKey, nonNullOptions( options ) );
 	}
 
 	@Override
-	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
-		return this.lazySession.get().find( entityGraph, primaryKey, options );
+	public <T> @Nullable T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption @Nullable... options) {
+		return this.lazySession.get().find( entityGraph, primaryKey, nonNullOptions( options ) );
 	}
 
 	@Override
-	public Object find(String entityName, Object primaryKey, FindOption... options) {
-		return this.lazySession.get().find( entityName, primaryKey, options );
+	public Object find(String entityName, Object primaryKey, FindOption @Nullable... options) {
+		return this.lazySession.get().find( entityName, primaryKey, nonNullOptions( options ) );
 	}
 
 	@Override
@@ -858,28 +873,28 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public void lock(Object entity, LockModeType lockMode, Map<String, Object> properties) {
+	public void lock(Object entity, LockModeType lockMode, @Nullable Map<String, Object> properties) {
 		this.lazySession.get().lock( entity, lockMode, properties );
 	}
 
 	@Override
-	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
-		this.lazySession.get().lock( entity, lockMode, options );
+	public void lock(Object entity, LockModeType lockMode, LockOption @Nullable... options) {
+		this.lazySession.get().lock( entity, lockMode, nonNullOptions( options ) );
 	}
 
 	@Override
-	public void refresh(Object entity, Map<String, Object> properties) {
+	public void refresh(Object entity, @Nullable Map<String, Object> properties) {
 		this.lazySession.get().refresh( entity, properties );
 	}
 
 	@Override
-	public void refresh(Object entity, LockModeType lockMode, Map<String, Object> properties) {
+	public void refresh(Object entity, LockModeType lockMode, @Nullable Map<String, Object> properties) {
 		this.lazySession.get().refresh( entity, lockMode, properties );
 	}
 
 	@Override
-	public void refresh(Object entity, RefreshOption... options) {
-		this.lazySession.get().refresh( entity, options );
+	public void refresh(Object entity, RefreshOption @Nullable... options) {
+		this.lazySession.get().refresh( entity, nonNullOptions( options ) );
 	}
 
 	@Override
@@ -893,8 +908,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public void setProperty(String propertyName, Object value) {
-		this.lazySession.get().setProperty( propertyName, value );
+	public void setProperty(String propertyName, @Nullable Object value) {
+		((EntityManager) this.lazySession.get()).setProperty( propertyName, value );
 	}
 
 	@Override
@@ -913,10 +928,10 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> type) {
-		return type.isAssignableFrom( Session.class )
+	public <T> @NonNull T unwrap(Class<T> type) {
+		return castNonNull( type.isAssignableFrom( Session.class )
 				? type.cast( this )
-				: lazySession.get().unwrap( type );
+				: lazySession.get().unwrap( type ) );
 	}
 
 	@Override @Deprecated @SuppressWarnings("rawtypes")

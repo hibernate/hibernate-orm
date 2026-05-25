@@ -117,6 +117,11 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
+	public SqmListJoin<O, E> on(List<? extends Expression<Boolean>> restrictions) {
+		return (SqmListJoin<O, E>) super.on( restrictions );
+	}
+
+	@Override
 	public SqmCorrelatedListJoin<O, E> createCorrelation() {
 		return new SqmCorrelatedListJoin<>( this );
 	}

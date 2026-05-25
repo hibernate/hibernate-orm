@@ -9,6 +9,8 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 
+import java.util.List;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -32,6 +34,9 @@ public interface JpaJoin<L, R> extends JpaFrom<L,R>, Join<L,R> {
 
 	@Override
 	JpaJoin<L, R> on(BooleanExpression... restrictions);
+
+	@Override
+	JpaJoin<L, R> on(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<S extends R> JpaTreatedJoin<L,R,S> treatAs(Class<S> treatAsType);

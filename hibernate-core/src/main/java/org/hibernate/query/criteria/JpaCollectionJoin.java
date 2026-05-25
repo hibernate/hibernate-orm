@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Specialization of {@link JpaJoin} for {@link java.util.Collection} typed attribute joins
@@ -30,6 +31,9 @@ public interface JpaCollectionJoin<O, T> extends JpaPluralJoin<O, Collection<T>,
 
 	@Override
 	JpaCollectionJoin<O, T> on(BooleanExpression... restrictions);
+
+	@Override
+	JpaCollectionJoin<O, T> on(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<S extends T> JpaTreatedJoin<O,T, S> treatAs(Class<S> treatAsType);

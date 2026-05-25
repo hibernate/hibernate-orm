@@ -32,6 +32,9 @@ public interface JpaListJoin<O, T> extends JpaPluralJoin<O, List<T>, T>, ListJoi
 	JpaListJoin<O, T> on(BooleanExpression... restrictions);
 
 	@Override
+	JpaListJoin<O, T> on(List<? extends Expression<Boolean>> restrictions);
+
+	@Override
 	<S extends T> JpaTreatedJoin<O,T, S> treatAs(Class<S> treatAsType);
 
 	@Override

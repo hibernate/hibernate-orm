@@ -28,6 +28,8 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.spi.NavigablePath;
 
+import java.util.List;
+
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 
@@ -156,6 +158,11 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 
 	@Override
 	public SqmFunctionJoin<E> on(BooleanExpression... restrictions) {
+		return (SqmFunctionJoin<E>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmFunctionJoin<E> on(List<? extends Expression<Boolean>> restrictions) {
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
 

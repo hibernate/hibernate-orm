@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -103,6 +104,11 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public SqmBagJoin<O, E> on(JpaPredicate @Nullable... restrictions) {
+		return (SqmBagJoin<O, E>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmBagJoin<O, E> on(List<? extends Expression<Boolean>> restrictions) {
 		return (SqmBagJoin<O, E>) super.on( restrictions );
 	}
 

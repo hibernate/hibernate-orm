@@ -21,10 +21,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.StatementReference;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.NumericExpression;
 import jakarta.persistence.criteria.ParameterExpression;
@@ -174,6 +178,20 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public CriteriaDelete<?> createCriteriaDelete(String jpql) {
 		return criteriaBuilder.createCriteriaDelete( jpql );
+	}
+
+	@Override
+	public <T> TypedQueryReference<T> augment(
+			TypedQueryReference<T> reference,
+			Consumer<CriteriaQuery<T>> augmentation) {
+		return criteriaBuilder.augment( reference, augmentation );
+	}
+
+	@Override
+	public StatementReference augment(
+			StatementReference reference,
+			Consumer<CriteriaStatement<?>> augmentation) {
+		return criteriaBuilder.augment( reference, augmentation );
 	}
 
 	@Override

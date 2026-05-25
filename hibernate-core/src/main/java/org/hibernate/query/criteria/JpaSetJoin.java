@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.criteria.BooleanExpression;
@@ -30,6 +31,9 @@ public interface JpaSetJoin<O, T> extends JpaPluralJoin<O, Set<T>, T>, SetJoin<O
 
 	@Override
 	JpaSetJoin<O, T> on(BooleanExpression... restrictions);
+
+	@Override
+	JpaSetJoin<O, T> on(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<S extends T> JpaTreatedJoin<O,T,S> treatAs(Class<S> treatAsType);

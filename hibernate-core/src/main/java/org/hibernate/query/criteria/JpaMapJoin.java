@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import java.util.List;
 import java.util.Map;
 
 import jakarta.persistence.criteria.BooleanExpression;
@@ -30,6 +31,9 @@ public interface JpaMapJoin<O,K,V> extends JpaPluralJoin<O, Map<K, V>, V>, MapJo
 
 	@Override
 	JpaMapJoin<O, K, V> on(BooleanExpression... restrictions);
+
+	@Override
+	JpaMapJoin<O, K, V> on(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<S extends V> JpaTreatedJoin<O, V, S> treatAs(Class<S> treatAsType);

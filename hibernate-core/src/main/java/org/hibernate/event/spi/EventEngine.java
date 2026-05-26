@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.internal.EventListenerRegistryImpl;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Stoppable;
 
 import java.util.Collection;
@@ -33,30 +33,24 @@ public class EventEngine {
 	private final Map<String,EventType<?>> registeredEventTypes;
 	private final EventListenerRegistry listenerRegistry;
 
+	@Deprecated(since = "8.0", forRemoval = true)
 	public EventEngine(MetadataImplementor mappings, SessionFactoryImplementor sessionFactory) {
+		this( sessionFactory.getSessionFactoryOptions(), sessionFactory.getServiceRegistry() );
+	}
 
-		final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-		final ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// resolve (JPA) callback handlers
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// resolve event types and listeners
-
-		final var listenerRegistryBuilder = new EventListenerRegistryImpl.Builder( sessionFactoryOptions.isJpaBootstrap() );
-
+	public EventEngine(SessionFactoryOptions options, ServiceRegistry registry) {
+		final var listenerRegistryBuilder =
+				new EventListenerRegistryImpl.Builder( options.isJpaBootstrap() );
 		final Map<String,EventType<?>> eventTypes = new HashMap<>();
 		EventType.registerStandardTypes( eventTypes );
-
-		callContributors( serviceRegistry, new ContributionManager( eventTypes, listenerRegistryBuilder ) );
-
+		callContributors( registry, new ContributionManager( eventTypes, listenerRegistryBuilder ) );
 		registeredEventTypes = unmodifiableMap( eventTypes );
 		listenerRegistry = listenerRegistryBuilder.buildRegistry( registeredEventTypes );
 	}
 
 	private static void callContributors(
-			ServiceRegistryImplementor serviceRegistry, EventEngineContributions contributionManager) {
+			ServiceRegistry serviceRegistry,
+			EventEngineContributions contributionManager) {
 		final var discoveredContributors =
 				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( EventEngineContributor.class );
@@ -86,16 +80,10 @@ public class EventEngine {
 		}
 	}
 
-	private static class ContributionManager implements EventEngineContributions {
-		private final Map<String, EventType<?>> eventTypes;
-		private final EventListenerRegistryImpl.Builder listenerRegistryBuilder;
-
-		public ContributionManager(
-				Map<String, EventType<?>> eventTypes,
-				EventListenerRegistryImpl.Builder listenerRegistryBuilder) {
-			this.eventTypes = eventTypes;
-			this.listenerRegistryBuilder = listenerRegistryBuilder;
-		}
+	private record ContributionManager(
+			Map<String, EventType<?>> eventTypes,
+			EventListenerRegistryImpl.Builder listenerRegistryBuilder)
+			implements EventEngineContributions {
 
 		@Override
 		public <T> EventType<T> findEventType(String name) {

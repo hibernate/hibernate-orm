@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.QueryException;
+import org.hibernate.dialect.function.xml.HANAXmlTableFunction;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.json.ExpressionTypeHelper;
 import org.hibernate.dialect.function.json.HANAJsonValueFunction;
@@ -450,7 +451,12 @@ public class HANAUnnestFunction extends UnnestFunction {
 		if ( containerSqlTypeCode == SqlTypes.JSON_ARRAY ) {
 			return HANAJsonValueFunction.jsonValueReturningType( ddlType );
 		}
-		return ddlType;
+		else if ( containerSqlTypeCode == SqlTypes.XML_ARRAY ) {
+			return HANAXmlTableFunction.xmlValueReturningType( sqlTypedMapping, ddlType );
+		}
+		else {
+			return ddlType;
+		}
 	}
 
 	@Override

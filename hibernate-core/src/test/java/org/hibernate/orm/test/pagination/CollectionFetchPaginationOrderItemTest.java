@@ -120,10 +120,12 @@ public class CollectionFetchPaginationOrderItemTest {
 			assertTrue( generated.contains( "item_entity" ) );
 			var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 			if ( !(dialect instanceof HSQLDialect) && !(dialect instanceof MariaDBDialect) && !(dialect instanceof OracleDialect) && !(dialect instanceof SpannerDialect) ) {
-				final int existsStart = generated.indexOf( "exists(select 1 from item_entity" );
-				final int existsWhere = generated.indexOf( " where", existsStart );
+				final int existsStart = generated.indexOf( "exists(select 1 " );
+				final int existsFrom = generated.indexOf( " from item_entity", existsStart );
+				final int existsWhere = generated.indexOf( " where", existsFrom );
 				assertTrue( existsStart >= 0 );
-				assertTrue( existsWhere > existsStart );
+				assertTrue( existsFrom > existsStart );
+				assertTrue( existsWhere > existsFrom );
 				assertFalse( generated.substring( existsStart, existsWhere ).contains( " join " ) );
 			}
 		} );

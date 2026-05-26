@@ -6,7 +6,6 @@ package org.hibernate.envers.query.internal.impl;
 
 import java.util.Map;
 
-import org.hibernate.Incubating;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -20,7 +19,6 @@ import jakarta.persistence.criteria.JoinType;
  *
  * @author Chris Cranford
  */
-@Incubating
 public class RevisionsOfEntityAssociationQuery<Q extends AuditQueryImplementor> extends AbstractAuditAssociationQuery<Q> {
 
 	public RevisionsOfEntityAssociationQuery(

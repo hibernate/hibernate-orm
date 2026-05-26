@@ -5,7 +5,6 @@
 package org.hibernate.internal.find;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.hibernate.Incubating;
 import org.hibernate.KeyType;
 import org.hibernate.LockOptions;
 import org.hibernate.event.spi.LoadEventListener;
@@ -17,7 +16,6 @@ import static org.hibernate.internal.find.Helper.coerceId;
 /// GetReferenceOperation implementation for a [stateful session][org.hibernate.Session].
 ///
 /// @author Steve Ebersole
-@Incubating
 public class StatefulGetReferenceOperation<T> implements GetReferenceOperation<T> {
 	private final EntityPersister entityDescriptor;
 	private final StatefulLoadAccessContext loadAccessContext;

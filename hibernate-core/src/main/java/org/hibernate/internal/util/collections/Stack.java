@@ -8,7 +8,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.hibernate.Incubating;
 
 /**
  * Stack implementation exposing useful methods for Hibernate needs.
@@ -82,7 +81,6 @@ public interface Stack<T> {
 	 * @param <X> the return type of the function
 	 * @param <Y> the type of the fixed parameter
 	 */
-	@Incubating
 	<X,Y> X findCurrentFirstWithParameter(Y parameter, BiFunction<T, Y, X> biFunction);
 
 }

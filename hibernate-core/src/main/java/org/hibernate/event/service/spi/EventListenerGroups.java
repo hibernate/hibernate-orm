@@ -4,7 +4,6 @@
  */
 package org.hibernate.event.service.spi;
 
-import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEventListener;
@@ -52,7 +51,7 @@ import static org.hibernate.event.spi.EventType.*;
  *
  * @since 7.0
  */
-@Internal @Incubating
+@Internal
 public final class EventListenerGroups {
 
 	// All session events need to be iterated frequently;

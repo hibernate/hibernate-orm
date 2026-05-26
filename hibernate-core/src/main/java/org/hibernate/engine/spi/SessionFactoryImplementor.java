@@ -194,7 +194,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @since 7.0
 	 */
-	@Internal @Incubating
+	@Internal
 	EventListenerGroups getEventListenerGroups();
 
 	/**

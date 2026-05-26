@@ -6,7 +6,6 @@ package org.hibernate.envers.query.internal.impl;
 
 import java.util.Map;
 
-import org.hibernate.Incubating;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
@@ -24,7 +23,6 @@ import jakarta.persistence.criteria.JoinType;
  *
  * @author Chris Cranford
  */
-@Incubating
 public class EntitiesAtRevisionAssociationQuery<Q extends AuditQueryImplementor> extends AbstractAuditAssociationQuery<Q> {
 
 	public EntitiesAtRevisionAssociationQuery(

@@ -11,7 +11,6 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -414,7 +413,6 @@ public final class ConfigurationHelper {
 		return typeCode;
 	}
 
-	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(ServiceRegistry serviceRegistry) {
 		final Integer typeCode =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_BOOLEAN_JDBC_TYPE );
@@ -424,14 +422,12 @@ public final class ConfigurationHelper {
 						.getDialect().getPreferredSqlTypeCodeForBoolean();
 	}
 
-	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(ServiceRegistry serviceRegistry, Dialect dialect) {
 		final Integer typeCode =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_BOOLEAN_JDBC_TYPE );
 		return typeCode != null ? typeCode : dialect.getPreferredSqlTypeCodeForBoolean();
 	}
 
-	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForDuration(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_DURATION_JDBC_TYPE );
@@ -439,7 +435,6 @@ public final class ConfigurationHelper {
 
 	}
 
-	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForUuid(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_UUID_JDBC_TYPE );
@@ -447,7 +442,6 @@ public final class ConfigurationHelper {
 
 	}
 
-	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForInstant(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_INSTANT_JDBC_TYPE );
@@ -455,7 +449,6 @@ public final class ConfigurationHelper {
 
 	}
 
-	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForArray(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_ARRAY_JDBC_TYPE );

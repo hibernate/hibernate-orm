@@ -5,10 +5,13 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -47,6 +50,7 @@ public class BasicTypeRegistry implements Serializable {
 
 	private final Map<String, BasicType<?>> typesByName = new ConcurrentHashMap<>();
 	private final Map<String, BasicTypeReference<?>> typeReferencesByName = new ConcurrentHashMap<>();
+	private final Map<String, List<BasicTypeReference<?>>> typeReferencesByJavaTypeName = new ConcurrentHashMap<>();
 
 	public BasicTypeRegistry(TypeConfiguration typeConfiguration){
 		this.typeConfiguration = typeConfiguration;
@@ -251,14 +255,28 @@ public class BasicTypeRegistry implements Serializable {
 		if ( registeredTypeMatches( javaType, jdbcType, registeredType ) ) {
 			return registeredType;
 		}
-		else {
-			final BasicType<J> createdType = creator.get();
-			register( javaType, jdbcType, createdType );
-			return createdType;
+		// Create an ad-hoc type since the java type doesn't come from the registry and is probably explicitly defined
+		else if ( typeConfiguration.getJavaTypeRegistry().resolveDescriptor( javaType.getJavaType() ) == javaType ) {
+			final var basicTypeReferences = typeReferencesByJavaTypeName.get( javaType.getTypeName() );
+			if ( basicTypeReferences != null && !basicTypeReferences.isEmpty() ) {
+				final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+				for ( var typeReference : basicTypeReferences ) {
+					if ( jdbcTypeRegistry.getDescriptor( typeReference.getSqlTypeCode() ) == jdbcType ) {
+						final var basicType = typesByName.get( typeReference.getName() );
+						//noinspection unchecked
+						return registeredTypeMatches( javaType, jdbcType, basicType )
+								? (BasicType<J>) basicType
+								: (BasicType<J>) createBasicType( typeReference.getName(), typeReference );
+					}
+				}
+			}
 		}
+		final BasicType<J> createdType = creator.get();
+		register( javaType, jdbcType, createdType );
+		return createdType;
 	}
 
-	private static <J> boolean registeredTypeMatches(JavaType<J> javaType, JdbcType jdbcType, BasicType<J> registeredType) {
+	private static boolean registeredTypeMatches(JavaType<?> javaType, JdbcType jdbcType, @Nullable BasicType<?> registeredType) {
 		return registeredType != null
 			&& registeredType.getJdbcType() == jdbcType
 			&& registeredType.getMappedJavaType() == javaType;
@@ -342,7 +360,7 @@ public class BasicTypeRegistry implements Serializable {
 			throw new IllegalArgumentException( "Couldn't find type reference with name: " + typeReferenceKey );
 		}
 		for ( String additionalTypeReferenceKey : additionalTypeReferenceKeys ) {
-			typeReferencesByName.put( additionalTypeReferenceKey, basicTypeReference );
+			addTypeReference( additionalTypeReferenceKey, basicTypeReference );
 		}
 	}
 
@@ -394,7 +412,7 @@ public class BasicTypeRegistry implements Serializable {
 
 		// Legacy name registration
 		if ( StringHelper.isNotEmpty( legacyTypeClassName ) ) {
-			typeReferencesByName.put( legacyTypeClassName, type );
+			addTypeReference( legacyTypeClassName, type );
 		}
 
 		// explicit registration keys
@@ -458,19 +476,30 @@ public class BasicTypeRegistry implements Serializable {
 				// Incidentally, this might also help with map lookup efficiency.
 				key = key.intern();
 
-				// Incredibly verbose logging disabled
-//				LOG.tracef( "Adding type registration %s -> %s", key, type );
-
-				final BasicTypeReference<?> old = typeReferencesByName.put( key, type );
-//				if ( old != null && old != type ) {
-//					LOG.tracef(
-//							"Type registration key [%s] overrode previous entry : `%s`",
-//							key,
-//							old
-//					);
-//				}
+				addTypeReference( key, type );
 			}
+		}
+	}
 
+	private void addTypeReference(String name, BasicTypeReference<?> typeReference) {
+		// Incredibly verbose logging disabled
+//		LOG.tracef( "Adding type registration %s -> %s", key, type );
+
+				final BasicTypeReference<?> old = typeReferencesByName.put( name, typeReference );
+//		if ( old != null && old != type ) {
+//			LOG.tracef(
+//					"Type registration key [%s] overrode previous entry : `%s`",
+//					key,
+//					old
+//			);
+//		}
+
+		final var basicTypeReferences = typeReferencesByJavaTypeName.computeIfAbsent(
+				typeReference.getJavaType().getTypeName(),
+				s -> new ArrayList<>()
+		);
+		if ( !basicTypeReferences.contains( typeReference ) ) {
+			basicTypeReferences.add( typeReference );
 		}
 	}
 }

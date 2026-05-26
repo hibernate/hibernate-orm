@@ -138,12 +138,12 @@ public class MetamodelJsonSerializerImpl implements MetamodelSerializer {
 	}
 
 	private static <T> String identifierDescriptor(IdentifiableType<T> identifiableType) {
-		final Type<?> idType = identifiableType.getIdType();
-		if ( idType != null ) {
+		try {
+			final Type<?> idType = identifiableType.getIdType();
 			final var id = identifiableType.getId( idType.getJavaType() );
 			return id.getName();
 		}
-		else {
+		catch (IllegalStateException e) {
 			return null;
 		}
 	}

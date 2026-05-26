@@ -4,7 +4,8 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -67,12 +68,14 @@ public class MappedSuperclassTypeImpl<J>
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getBindableJavaType() {
 		return getJavaType();
 	}
 
 	@Override
-	public @Nullable SqmDomainType<J> getSqmType() {
+	@Nullable
+	public SqmDomainType<J> getSqmType() {
 		return this;
 	}
 
@@ -87,7 +90,8 @@ public class MappedSuperclassTypeImpl<J>
 	}
 
 	@Override
-	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
+	@Nullable
+	public SqmPathSource<?> findSubPathSource(@Nonnull String name) {
 		final var attribute = findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
@@ -101,12 +105,14 @@ public class MappedSuperclassTypeImpl<J>
 	}
 
 	@Override
-	public @Nullable SqmPathSource<?> getIdentifierDescriptor() {
+	@Nullable
+	public SqmPathSource<?> getIdentifierDescriptor() {
 		return super.getIdentifierDescriptor();
 	}
 
 	@Override
-	public @Nullable SqmPersistentAttribute<? super J, ?> findAttribute(String name) {
+	@Nullable
+	public SqmPersistentAttribute<? super J, ?> findAttribute(@Nonnull String name) {
 		final var attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
@@ -120,11 +126,13 @@ public class MappedSuperclassTypeImpl<J>
 	}
 
 	@Override
+	@Nonnull
 	public BindableType getBindableType() {
 		return ENTITY_TYPE;
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return MAPPED_SUPERCLASS;
 	}

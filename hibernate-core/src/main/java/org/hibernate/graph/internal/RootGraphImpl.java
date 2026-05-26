@@ -4,6 +4,7 @@
  */
 package org.hibernate.graph.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -44,11 +45,13 @@ public class RootGraphImpl<J> extends GraphImpl<J> implements RootGraphImplement
 	}
 
 	@Override
+	@Nonnull
 	public RootGraphImplementor<J> makeCopy(boolean mutable) {
 		return makeCopy( mutable, null );
 	}
 
 	@Override
+	@Nonnull
 	public RootGraphImplementor<J> makeCopy(boolean mutable, String name) {
 		return !mutable && !isMutable() ? this : new RootGraphImpl<>( name, this, mutable );
 	}

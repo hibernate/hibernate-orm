@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.metamodel.Attribute.PersistentAttributeType;
@@ -61,6 +62,7 @@ public enum AttributeClassification {
 	/**
 	 * The associated {@link PersistentAttributeType}, if one
 	 */
+	@Nullable
 	public PersistentAttributeType getJpaClassification() {
 		return switch ( this ) {
 			case BASIC -> PersistentAttributeType.BASIC;

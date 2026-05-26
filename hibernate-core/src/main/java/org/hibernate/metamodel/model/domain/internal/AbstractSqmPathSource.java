@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -31,6 +32,7 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getBindableJavaType() {
 		return domainType.getJavaType();
 	}
@@ -46,6 +48,7 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	}
 
 	@Override
+	@Nonnull
 	public BindableType getBindableType() {
 		return jpaBindableType;
 	}

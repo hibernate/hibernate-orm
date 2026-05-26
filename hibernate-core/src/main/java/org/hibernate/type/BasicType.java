@@ -4,6 +4,7 @@
  */
 package org.hibernate.type;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
@@ -36,6 +37,7 @@ public interface BasicType<T>
 	String[] getRegistrationKeys();
 
 	@Override
+	@Nonnull
 	default Class<T> getJavaType() {
 		return BasicDomainType.super.getJavaType();
 	}

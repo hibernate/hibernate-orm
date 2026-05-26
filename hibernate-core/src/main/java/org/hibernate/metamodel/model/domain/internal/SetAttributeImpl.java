@@ -6,6 +6,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -26,6 +27,7 @@ public class SetAttributeImpl<X, E>
 	}
 
 	@Override
+	@Nonnull
 	public CollectionType getCollectionType() {
 		return CollectionType.SET;
 	}

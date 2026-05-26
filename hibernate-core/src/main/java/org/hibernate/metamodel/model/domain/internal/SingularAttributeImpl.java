@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.time.temporal.Temporal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.BooleanAttribute;
 import jakarta.persistence.metamodel.ComparableAttribute;
 import jakarta.persistence.metamodel.NumericAttribute;
@@ -291,11 +292,13 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
+	@Nonnull
 	public SqmDomainType<J> getValueGraphType() {
 		return getPathType();
 	}
 
 	@Override
+	@Nullable
 	public SimpleDomainType<?> getKeyGraphType() {
 		return getType() instanceof IdentifiableDomainType<?> identifiableDomainType
 				? identifiableDomainType.getIdType()
@@ -303,12 +306,14 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
+	@Nonnull
 	public SimpleDomainType<J> getType() {
 		// TODO: very ugly and fragile, fix this
 		return (SimpleDomainType<J>) sqmPathSource.getPathType();
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getBindableJavaType() {
 //		return getJavaType();
 		return sqmPathSource.getBindableJavaType();

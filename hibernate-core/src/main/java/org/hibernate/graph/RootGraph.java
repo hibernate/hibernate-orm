@@ -4,6 +4,7 @@
  */
 package org.hibernate.graph;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.metamodel.EntityType;
 
@@ -31,6 +32,7 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	 * simply return this instance.
 	 */
 	@Override
+	@Nonnull
 	RootGraph<J> makeCopy(boolean mutable);
 
 	/**
@@ -40,6 +42,7 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	 * If this graph is immutable, and the argument is {@code false},
 	 * simply return this instance.
 	 */
+	@Nonnull
 	RootGraph<J> makeCopy(boolean mutable, String name);
 
 }

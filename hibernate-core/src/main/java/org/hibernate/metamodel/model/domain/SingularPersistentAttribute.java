@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 
@@ -15,9 +16,11 @@ import jakarta.persistence.metamodel.SingularAttribute;
 public interface SingularPersistentAttribute<D,J>
 		extends SingularAttribute<D,J>, PersistentAttribute<D,J>, PathSource<J> {
 	@Override
+	@Nonnull
 	SimpleDomainType<J> getType();
 
 	@Override
+	@Nonnull
 	ManagedDomainType<D> getDeclaringType();
 
 	/**
@@ -25,11 +28,13 @@ public interface SingularPersistentAttribute<D,J>
 	 * attribute type
 	 */
 	@Override
+	@Nonnull
 	default DomainType<J> getValueGraphType() {
 		return getType();
 	}
 
 	@Override
+	@Nonnull
 	default Class<J> getJavaType() {
 		return getType().getJavaType();
 	}

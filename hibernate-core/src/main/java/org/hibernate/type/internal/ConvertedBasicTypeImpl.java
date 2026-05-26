@@ -13,6 +13,7 @@ import java.time.ZonedDateTime;
 import java.util.Locale;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -124,6 +125,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getJavaType() {
 		return getExpressibleJavaType().getJavaTypeClass();
 	}

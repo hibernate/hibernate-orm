@@ -4,6 +4,8 @@
  */
 package org.hibernate.graph.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.FetchType;
 import org.hibernate.graph.AttributeNode;
 
@@ -27,13 +29,16 @@ import java.util.Map;
 public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, GraphNodeImplementor<J> {
 
 	@Override
+	@Nonnull
 	AttributeNodeImplementor<J, E, K> makeCopy(boolean mutable);
 
 	@Override
+	@Nonnull
 	SubGraphImplementor<J> addSubgraph();
 
 	@Override
-	<S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> type);
+	@Nonnull
+	<S extends J> SubGraphImplementor<S> addTreatedSubgraph(@Nonnull Class<S> type);
 
 	/**
 	 * Mark the attribute as removed or not.
@@ -57,32 +62,40 @@ public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, Gra
 	 * @apiNote This version is more lenient and is therefore disfavored. Prefer the use
 	 *          of {@link #addSingularSubgraph()} and {@link #addElementSubgraph()}.
 	 */
+	@Nonnull
 	SubGraphImplementor<E> addValueSubgraph();
 
 	/**
 	 * Create a value subgraph representing a singular value rooted at this attribute node.
 	 */
+	@Nonnull
 	SubGraphImplementor<J> addSingularSubgraph();
 
 	/**
 	 * Create a value subgraph representing a plural element rooted at this attribute node.
 	 */
+	@Nonnull
 	SubGraphImplementor<E> addElementSubgraph();
 
 	/**
 	 * Create a key subgraph rooted at this attribute node.
 	 */
+	@Nonnull
 	SubGraphImplementor<K> addKeySubgraph();
 
-	void merge(AttributeNodeImplementor<J,E,K> other);
+	void merge(@Nonnull AttributeNodeImplementor<J,E,K> other);
 
 	@Override
+	@Nonnull
 	Map<Class<?>, SubGraphImplementor<?>> getSubGraphs();
 
 	@Override
+	@Nonnull
 	Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphs();
 
+	@Nullable
 	SubGraphImplementor<E> getValueSubgraph();
 
+	@Nullable
 	SubGraphImplementor<K> getKeySubgraph();
 }

@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.UnsupportedMappingException;
@@ -250,12 +251,14 @@ public class AnonymousTupleType<T>
 	}
 
 	@Override
+	@Nonnull
 	public BindableType getBindableType() {
 		// TODO: should this be SINGULAR_ATTRIBUTE
 		return ENTITY_TYPE;
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		// TODO: should this be EMBEDDABLE
 		return ENTITY;
@@ -284,11 +287,13 @@ public class AnonymousTupleType<T>
 	}
 
 	@Override
+	@Nonnull
 	public Class<T> getBindableJavaType() {
 		return javaTypeDescriptor.getJavaTypeClass();
 	}
 
 	@Override
+	@Nonnull
 	public Class<T> getJavaType() {
 		return javaTypeDescriptor.getJavaTypeClass();
 	}

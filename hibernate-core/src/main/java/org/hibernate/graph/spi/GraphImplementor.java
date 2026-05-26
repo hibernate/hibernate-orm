@@ -7,6 +7,8 @@ package org.hibernate.graph.spi;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
@@ -39,91 +41,111 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	 *
 	 * @see jakarta.persistence.Graph#removeAttributeNode
 	 */
-	AttributeNodeImplementor<?,?,?> findNode(String name);
+	@Nullable
+	AttributeNodeImplementor<?,?,?> findNode(@Nonnull String name);
 
 	/**
 	 * Retrieve an already existing node, if one, from the graph excluding all other checks.
 	 * Used in implementing {@linkplain #findNode(String)}
 	 */
-	AttributeNodeImplementor<?,?,?> getExistingNode(PersistentAttribute<?, ?> attribute);
+	@Nullable
+	AttributeNodeImplementor<?,?,?> getExistingNode(@Nonnull PersistentAttribute<?, ?> attribute);
 
 	/**
 	 * Retrieve an already existing node, if one, from the graph excluding all other checks.
 	 * Used in implementing {@linkplain #findNode(String)}
 	 */
-	AttributeNodeImplementor<?,?,?> getExistingNode(String attributeName);
+	@Nullable
+	AttributeNodeImplementor<?,?,?> getExistingNode(@Nonnull String attributeName);
 
 	@Override
+	@Nonnull
 	GraphImplementor<J> makeCopy(boolean mutable);
 
-	void merge(GraphImplementor<J> other);
+	void merge(@Nullable GraphImplementor<J> other);
 
 	@Internal
-	void mergeInternal(GraphImplementor<J> graph);
+	void mergeInternal(@Nonnull GraphImplementor<J> graph);
 
 	@Override
+	@Nonnull
 	List<? extends AttributeNodeImplementor<?,?,?>> getAttributeNodeList();
 
+	@Nonnull
 	Map<PersistentAttribute<? super J, ?>, AttributeNodeImplementor<?,?,?>> getNodes();
 
+	@Nonnull
 	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getTreatedSubgraphs();
 
 	@Override
-	<Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(String attributeName);
+	@Nonnull
+	<Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(@Nonnull String attributeName);
 
 	@Override
-	<Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(Attribute<? super J, Y> attribute);
+	@Nonnull
+	<Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(@Nonnull Attribute<? super J, Y> attribute);
 
-	AttributeNodeImplementor<?,?,?> findOrCreateAttributeNode(String name);
-
-	@Override
-	<Y> AttributeNodeImplementor<Y,?,?> addAttributeNode(Attribute<? super J, Y> attribute);
-
-	@Override
-	<Y extends J> SubGraphImplementor<Y> addTreatedSubgraph(Class<Y> type);
-
-	<Y extends J> SubGraphImplementor<Y> addTreatedSubgraph(ManagedType<Y> type);
+	@Nonnull
+	AttributeNodeImplementor<?,?,?> findOrCreateAttributeNode(@Nonnull String name);
 
 	@Override
-	<X> SubGraphImplementor<X> addSubgraph(String attributeName);
+	@Nonnull
+	<Y> AttributeNodeImplementor<Y,?,?> addAttributeNode(@Nonnull Attribute<? super J, Y> attribute);
 
 	@Override
-	<X> SubGraphImplementor<X> addSubgraph(String attributeName, Class<X> type);
+	@Nonnull
+	<Y extends J> SubGraphImplementor<Y> addTreatedSubgraph(@Nonnull Class<Y> type);
+
+	@Nonnull
+	<Y extends J> SubGraphImplementor<Y> addTreatedSubgraph(@Nonnull ManagedType<Y> type);
 
 	@Override
-	<X> SubGraphImplementor<X> addSubgraph(Attribute<? super J, X> attribute);
+	@Nonnull
+	<X> SubGraphImplementor<X> addSubgraph(@Nonnull String attributeName);
 
 	@Override
-	<Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type);
+	@Nonnull
+	<X> SubGraphImplementor<X> addSubgraph(@Nonnull String attributeName, @Nonnull Class<X> type);
 
 	@Override
-	<AJ> SubGraphImplementor<AJ> addTreatedSubgraph(Attribute<? super J, ? super AJ> attribute, ManagedType<AJ> type);
+	@Nonnull
+	<X> SubGraphImplementor<X> addSubgraph(@Nonnull Attribute<? super J, X> attribute);
 
 	@Override
-	<E> SubGraphImplementor<E> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super E> attribute, Class<E> type);
+	@Nonnull
+	<Y> SubGraphImplementor<Y> addTreatedSubgraph(@Nonnull Attribute<? super J, ? super Y> attribute, @Nonnull Class<Y> type);
 
 	@Override
-	<AJ> SubGraph<AJ> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super AJ> attribute, ManagedType<AJ> type);
+	@Nonnull
+	<AJ> SubGraphImplementor<AJ> addTreatedSubgraph(@Nonnull Attribute<? super J, ? super AJ> attribute, @Nonnull ManagedType<AJ> type);
 
 	@Override
-	<X> SubGraphImplementor<X> addKeySubgraph(String attributeName);
+	@Nonnull
+	<E> SubGraphImplementor<E> addTreatedElementSubgraph(@Nonnull PluralAttribute<? super J, ?, ? super E> attribute, @Nonnull Class<E> type);
 
 	@Override
-	<X> SubGraphImplementor<X> addKeySubgraph(String attributeName, Class<X> type);
+	@Nonnull
+	<AJ> SubGraph<AJ> addTreatedElementSubgraph(@Nonnull PluralAttribute<? super J, ?, ? super AJ> attribute, @Nonnull ManagedType<AJ> type);
 
 	@Override
-	<K> SubGraphImplementor<K> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super K, ?> attribute, Class<K> type);
+	@Nonnull
+	<X> SubGraphImplementor<X> addKeySubgraph(@Nonnull String attributeName);
 
 	@Override
-	<AJ> SubGraphImplementor<AJ> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super AJ, ?> attribute, ManagedType<AJ> type);
+	@Nonnull
+	<X> SubGraphImplementor<X> addKeySubgraph(@Nonnull String attributeName, @Nonnull Class<X> type);
 
 	@Override
-	default boolean hasAttributeNode(String attributeName) {
-		return getAttributeNode( attributeName ) != null;
-	}
+	@Nonnull
+	<K> SubGraphImplementor<K> addTreatedMapKeySubgraph(@Nonnull MapAttribute<? super J, ? super K, ?> attribute, @Nonnull Class<K> type);
 
 	@Override
-	default boolean hasAttributeNode(Attribute<? super J, ?> attribute) {
-		return getAttributeNode( attribute ) != null;
-	}
+	@Nonnull
+	<AJ> SubGraphImplementor<AJ> addTreatedMapKeySubgraph(@Nonnull MapAttribute<? super J, ? super AJ, ?> attribute, @Nonnull ManagedType<AJ> type);
+
+	@Override
+	boolean hasAttributeNode(@Nonnull String attributeName);
+
+	@Override
+	boolean hasAttributeNode(@Nonnull Attribute<? super J, ?> attribute);
 }

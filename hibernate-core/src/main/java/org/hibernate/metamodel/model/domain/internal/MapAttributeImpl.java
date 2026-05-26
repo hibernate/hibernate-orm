@@ -6,6 +6,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -36,11 +37,13 @@ public class MapAttributeImpl<X, K, V>
 	}
 
 	@Override
+	@Nonnull
 	public CollectionType getCollectionType() {
 		return CollectionType.MAP;
 	}
 
 	@Override
+	@Nonnull
 	public Class<K> getKeyJavaType() {
 		return keyPathSource.getBindableJavaType();
 	}
@@ -84,11 +87,13 @@ public class MapAttributeImpl<X, K, V>
 	}
 
 	@Override
+	@Nonnull
 	public SimpleDomainType<K> getKeyType() {
 		return (SimpleDomainType<K>) keyPathSource.getPathType();
 	}
 
 	@Override
+	@Nonnull
 	public SimpleDomainType<K> getKeyGraphType() {
 		return getKeyType();
 	}

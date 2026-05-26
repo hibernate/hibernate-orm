@@ -7,6 +7,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Arrays;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -38,6 +39,7 @@ public class ArrayTupleType
 	}
 
 	@Override
+	@Nonnull
 	public Class<Object[]> getJavaType() {
 		return TupleType.super.getJavaType();
 	}
@@ -91,6 +93,7 @@ public class ArrayTupleType
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return EMBEDDABLE;
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.mapping.Any;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
@@ -90,11 +91,13 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T>, Sqm
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return ENTITY;
 	}
 
 	@Override
+	@Nonnull
 	public Class<T> getJavaType() {
 		return baseJtd.getJavaTypeClass();
 	}

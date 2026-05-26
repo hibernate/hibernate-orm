@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -31,6 +32,7 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, SqmDomainType<J>, J
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getJavaType() {
 		return BasicDomainType.super.getJavaType();
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -36,6 +37,7 @@ public interface DomainType<J> {
 	 *
 	 * @see jakarta.persistence.metamodel.Type#getJavaType
 	 */
+	@Nonnull
 	Class<J> getJavaType();
 
 	/**

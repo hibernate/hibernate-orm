@@ -4,6 +4,7 @@
  */
 package org.hibernate.graph.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.AttributeNode;
 import jakarta.persistence.FetchOption;
 import jakarta.persistence.FetchType;
@@ -57,6 +58,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	protected final Set<FetchOption> options = new HashSet<>();
 
 	@Override
+	@Nonnull
 	public Attribute<?, J> getAttribute() {
 		return attribute;
 	}
@@ -77,23 +79,27 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	}
 
 	@Override
+	@Nonnull
 	public final SubGraphImplementor<J> addSubgraph() {
 		return addSingularSubgraph();
 	}
 
 	@Override
-	public final <S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> type) {
+	@Nonnull
+	public final <S extends J> SubGraphImplementor<S> addTreatedSubgraph(@Nonnull Class<S> type) {
 		return addSingularSubgraph().addTreatedSubgraph( type );
 	}
 
 	@Override
-	public AttributeNode<J> addOption(FetchOption option) {
+	@Nonnull
+	public AttributeNode<J> addOption(@Nonnull FetchOption option) {
 		verifyMutability();
 		replaceOption( option );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public Set<FetchOption> getOptions() {
 		return new HashSet<>( options );
 	}
@@ -166,16 +172,19 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	}
 
 	@Override
+	@Nonnull
 	public String getAttributeName() {
 		return getAttributeDescriptor().getName();
 	}
 
 	@Override
+	@Nonnull
 	public PersistentAttribute<?, J> getAttributeDescriptor() {
 		return attribute;
 	}
 
 	@Override
+	@Nonnull
 	public SubGraphImplementor<E> addValueSubgraph() {
 		verifyMutability();
 		setFetchType( FetchType.EAGER );
@@ -187,16 +196,19 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	}
 
 	@Override
+	@Nonnull
 	public SubGraphImplementor<J> addSingularSubgraph() {
 		throw new UnsupportedOperationException("Not a singular attribute node");
 	}
 
 	@Override
+	@Nonnull
 	public SubGraphImplementor<E> addElementSubgraph() {
 		throw new UnsupportedOperationException( "Not a collection-valued attribute node" );
 	}
 
 	@Override
+	@Nonnull
 	public SubGraphImplementor<K> addKeySubgraph() {
 		throw new UnsupportedOperationException( "Not a Map-valued attribute node" );
 	}
@@ -236,7 +248,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	}
 
 	@Override
-	public void merge(AttributeNodeImplementor<J, E, K> that) {
+	public void merge(@Nonnull AttributeNodeImplementor<J, E, K> that) {
 		assert that.isMutable() == isMutable();
 		assert that.getAttributeDescriptor() == attribute;
 		for ( var option : that.getOptions() ) {
@@ -265,6 +277,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	}
 
 	@Override
+	@Nonnull
 	public Map<Class<?>, SubGraphImplementor<?>> getSubGraphs() {
 		if ( valueSubgraph == null ) {
 			return emptyMap();
@@ -278,6 +291,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	}
 
 	@Override
+	@Nonnull
 	public Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphs() {
 		if ( keySubgraph == null ) {
 			return emptyMap();
@@ -335,6 +349,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		}
 
 		@Override
+		@Nonnull
 		public SubGraphImplementor<J> addSingularSubgraph() {
 			checkToOne();
 			verifyMutability();
@@ -346,6 +361,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		}
 
 		@Override
+		@Nonnull
 		public AttributeNodeImplementor<J, J, Void> makeCopy(boolean mutable) {
 			return !mutable && !isMutable() ? this : new SingularAttributeNodeImpl<>( this, mutable );
 		}
@@ -364,6 +380,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		}
 
 		@Override
+		@Nonnull
 		public SubGraphImplementor<E> addElementSubgraph() {
 			checkToMany();
 			verifyMutability();
@@ -375,6 +392,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		}
 
 		@Override
+		@Nonnull
 		public AttributeNodeImplementor<J, E, Void> makeCopy(boolean mutable) {
 			return !mutable && !isMutable() ? this : new PluralAttributeNodeImpl<>( this, mutable );
 		}
@@ -395,6 +413,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		}
 
 		@Override
+		@Nonnull
 		public SubGraphImplementor<K> addKeySubgraph() {
 			verifyMutability();
 			setFetchType( FetchType.EAGER );
@@ -405,6 +424,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		}
 
 		@Override
+		@Nonnull
 		public SubGraphImplementor<V> addElementSubgraph() {
 			checkToMany();
 			verifyMutability();
@@ -416,6 +436,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		}
 
 		@Override
+		@Nonnull
 		public AttributeNodeImplementor<J, V, K> makeCopy(boolean mutable) {
 			return !mutable && !isMutable() ? this : new MapAttributeNodeImpl<>( this, mutable );
 		}

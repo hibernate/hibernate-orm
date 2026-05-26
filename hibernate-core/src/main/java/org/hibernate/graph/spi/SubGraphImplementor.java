@@ -4,6 +4,7 @@
  */
 package org.hibernate.graph.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.graph.SubGraph;
 
 /**
@@ -15,5 +16,6 @@ import org.hibernate.graph.SubGraph;
  */
 public interface SubGraphImplementor<J> extends SubGraph<J>, GraphImplementor<J> {
 	@Override
+	@Nonnull
 	SubGraphImplementor<J> makeCopy(boolean mutable);
 }

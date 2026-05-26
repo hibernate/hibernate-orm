@@ -5,21 +5,24 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.ObjectStreamException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Member;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildParentNavigablePath;
 
 /**
  * Models the commonality of the JPA {@link Attribute} hierarchy.
@@ -56,11 +59,13 @@ public abstract class AbstractAttribute<D,J,B>
 	}
 
 	@Override
+	@Nonnull
 	public String getName() {
 		return name;
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getJavaType() {
 		// TODO: create a new method to abstract this logic
 		return valueType instanceof BasicTypeImpl<?> basicType
@@ -75,31 +80,41 @@ public abstract class AbstractAttribute<D,J,B>
 	}
 
 	@Override
+	@Nonnull
 	public JavaType<J> getAttributeJavaType() {
 		return attributeJtd;
 	}
 
 	@Override
+	@Nonnull
 	public ManagedDomainType<D> getDeclaringType() {
 		return declaringType;
 	}
 
 	@Override
+	@Nonnull
 	public Member getJavaMember() {
 		return member;
 	}
 
 	@Override
+	@Nonnull
 	public AttributeClassification getAttributeClassification() {
 		return attributeClassification;
 	}
 
 	@Override
+	@Nonnull
 	public PersistentAttributeType getPersistentAttributeType() {
-		return getAttributeClassification().getJpaClassification();
+		final var classification = getAttributeClassification().getJpaClassification();
+		if ( classification == null ) {
+			throw new IllegalStateException( "Non-JPA classification: " + attributeClassification );
+		}
+		return classification;
 	}
 
 	@Override
+	@Nonnull
 	public DomainType<?> getValueGraphType() {
 		return valueType;
 	}
@@ -107,7 +122,7 @@ public abstract class AbstractAttribute<D,J,B>
 	NavigablePath getParentNavigablePath(SqmPath<?> parent) {
 		final var parentPathSource = parent.getResolvedModel();
 		final var parentType = parentPathSource.getPathType();
-		final NavigablePath parentNavigablePath = SqmCreationHelper.buildParentNavigablePath( parent, "" );
+		final var parentNavigablePath = buildParentNavigablePath( parent, "" );
 		if ( parentType != declaringType
 				&& parentType instanceof EntityDomainType<?> entityDomainType
 				&& entityDomainType.findAttribute( name ) == null ) {
@@ -128,19 +143,14 @@ public abstract class AbstractAttribute<D,J,B>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Serialization
 
+	@Serial
 	protected Object writeReplace() throws ObjectStreamException {
 		return new SerialForm( declaringType, name );
 	}
 
-	private static class SerialForm implements Serializable {
-		private final ManagedDomainType<?> declaringType;
-		private final String name;
-
-		public SerialForm(ManagedDomainType<?> declaringType, String name) {
-			this.declaringType = declaringType;
-			this.name = name;
-		}
-
+	private record SerialForm(ManagedDomainType<?> declaringType, String name)
+			implements Serializable {
+		@Serial
 		private Object readResolve() {
 			return declaringType.findAttribute( name );
 		}

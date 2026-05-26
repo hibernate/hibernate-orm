@@ -13,10 +13,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.metamodel.EntityType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.UnsupportedMappingException;
@@ -124,16 +125,19 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
+	@Nonnull
 	public String getName() {
 		return jpaEntityName;
 	}
 
 	@Override
+	@Nonnull
 	public EntityGraph<J> createEntityGraph() {
 		return new RootGraphImpl<>( null, this, true );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, EntityGraph<J>> getNamedEntityGraphs() {
 		if ( getJavaType() == null || getJavaType() == Map.class ) {
 			return Map.of();
@@ -143,11 +147,13 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getBindableJavaType() {
 		return getJavaType();
 	}
 
 	@Override
+	@Nonnull
 	public String getHibernateEntityName() {
 		return super.getTypeName();
 	}
@@ -248,7 +254,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public @Nullable SqmPersistentAttribute<? super J, ?> findAttribute(String name) {
+	public @Nullable SqmPersistentAttribute<? super J, ?> findAttribute(@Nonnull String name) {
 		final var attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
@@ -262,22 +268,25 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
+	@Nonnull
 	public BindableType getBindableType() {
 		return ENTITY_TYPE;
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return ENTITY;
 	}
 
 	@Override
+	@Nonnull
 	public Collection<? extends SqmEntityDomainType<? extends J>> getSubTypes() {
 		return subtypes;
 	}
 
 	@Override
-	public void addSubType(ManagedDomainType<? extends J> subType) {
+	public void addSubType(@Nonnull ManagedDomainType<? extends J> subType) {
 		super.addSubType( subType );
 		if ( subType instanceof SqmEntityDomainType<? extends J> entityDomainType ) {
 			subtypes.add( entityDomainType );

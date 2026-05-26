@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/orphan/manytomany/UserGroup.orm.xml"
+		xmlMappings = "org/hibernate/orm/test/orphan/manytomany/UserGroup.hbm.xml"
 )
 @SessionFactory
 public class ManyToManyOrphanTest {
@@ -82,6 +82,7 @@ public class ManyToManyOrphanTest {
 					criteria.from( Group.class );
 					List<Group> groups = s.createQuery( criteria ).list();
 
+//					List<Group> groups = s.createCriteria( Group.class ).list();
 					assertEquals( 1, groups.size() );
 					assertEquals( "seam", groups.get( 0 ).getName() );
 				}

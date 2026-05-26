@@ -1,6 +1,32 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.0.Final (May 26, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39172
+
+
+** Bug
+    * HHH-20454  HbmXmlTransformer generates an incorrect mapping for an HBM file containing a <many-to-one> association with a property-ref attribute.
+    * HHH-20451 Hbm <map-key-many-to-many> is ignored during HbmXmlTransformer conversion
+    * HHH-20418 @Access on entity wrongly affects @MappedSuperclass default
+    * HHH-20394 Cascade profile causes LAZY associations to be eagerly fetched even if they won't be affected
+    * HHH-20357 Component.sortProperties() reorders Envers originalId key, breaking joined audit-table FK/joins for JOINED inheritance
+    * HHH-20324 AnnotationException: overrides mapping specified using '@JoinColumnOrFormula' thrown when join column is overridden via XML mapping
+    * HHH-20125 ClassCastException on merge during polymorphic embeddable replace
+    * HHH-19214 Record as @IdClass - some tests are failing when record componets of ID class are not alphabetically sorted, but passing when sorted
+
+** Improvement
+    * HHH-20432 Increase the minimum container / worker threads to 4 to reduce build time
+    * HHH-20423 Relax the strict JPQL compliance and make `select` optional
+    * HHH-20419 Make BytecodeEnhancedTestEngine better compatible with Maven's parallel test execution
+    * HHH-19417 FetchProfile not properly overridden in mapping.xml
+    * HHH-17767 Add support for Value LOBs
+
+** Sub-task
+    * HHH-20439 enable ci for spanner
+
 Changes in 7.4.0.CR1 (May 07, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

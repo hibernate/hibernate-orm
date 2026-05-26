@@ -4,6 +4,9 @@
  */
 package org.hibernate.event.spi;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -28,6 +31,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  *
  * @author Steve Ebersole
  */
+@ServiceConsumer(value = EventEngineContributor.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class EventEngine {
 
 	private final Map<String,EventType<?>> registeredEventTypes;

@@ -5,6 +5,7 @@
 package org.hibernate.vector.internal;
 
 import org.hibernate.boot.model.TypeContributions;
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -21,6 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+@ServiceProvider(value = TypeContributor.class)
 public class DB2VectorTypeContributor implements TypeContributor {
 
 	@Override

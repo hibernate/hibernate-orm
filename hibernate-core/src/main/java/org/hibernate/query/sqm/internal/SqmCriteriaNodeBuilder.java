@@ -34,6 +34,9 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.criteria.BooleanExpression;
@@ -194,6 +197,7 @@ import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.c
  * @author Steve Ebersole
  * @author Yoobin Yoon
  */
+@ServiceConsumer(value = CriteriaBuilderExtension.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	private final String uuid;

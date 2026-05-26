@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.boot.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -33,6 +34,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  * @author Chris Cranford
  */
+@ServiceProvider(value = Integrator.class)
 public class EnversIntegrator implements Integrator {
 	private static final Logger log = Logger.getLogger( EnversIntegrator.class );
 

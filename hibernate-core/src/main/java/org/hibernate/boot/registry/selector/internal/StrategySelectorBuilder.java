@@ -7,6 +7,9 @@ package org.hibernate.boot.registry.selector.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -62,6 +65,8 @@ import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
  *
  * @author Steve Ebersole
  */
+@ServiceConsumer(value = DialectSelector.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
+@ServiceConsumer(value = StrategyRegistrationProvider.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class StrategySelectorBuilder {
 
 	private final List<StrategyRegistration<?>> explicitStrategyRegistrations = new ArrayList<>();

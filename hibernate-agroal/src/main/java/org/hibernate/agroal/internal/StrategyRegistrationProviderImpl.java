@@ -4,6 +4,7 @@
  */
 package org.hibernate.agroal.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
@@ -17,6 +18,7 @@ import static java.util.Collections.singleton;
  *
  * @author Luis Barreiro
  */
+@ServiceProvider(value = StrategyRegistrationProvider.class)
 public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 
 	@Override

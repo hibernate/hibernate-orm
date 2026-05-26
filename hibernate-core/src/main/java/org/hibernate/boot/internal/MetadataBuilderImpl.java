@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
@@ -105,6 +108,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
 /**
  * @author Steve Ebersole
  */
+@ServiceConsumer(value = MetadataSourcesContributor.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
+@ServiceConsumer(value = MetadataBuilderInitializer.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeContributions {
 
 	private final MetadataSources sources;

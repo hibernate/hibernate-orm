@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.boot.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.envers.internal.entities.RevisionTypeType;
@@ -14,6 +15,7 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @author Brett Meyer
  */
+@ServiceProvider(value = TypeContributor.class)
 public class TypeContributorImpl implements TypeContributor {
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {

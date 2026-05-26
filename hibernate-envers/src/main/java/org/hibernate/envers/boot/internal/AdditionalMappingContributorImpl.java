@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.boot.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
@@ -18,6 +19,7 @@ import static org.hibernate.cfg.AvailableSettings.XML_MAPPING_ENABLED;
 /**
  * @author Steve Ebersole
  */
+@ServiceProvider(value = AdditionalMappingContributor.class)
 public class AdditionalMappingContributorImpl implements AdditionalMappingContributor {
 	@Override
 	public String getContributorName() {

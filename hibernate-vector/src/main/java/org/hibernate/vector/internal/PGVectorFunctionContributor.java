@@ -4,6 +4,7 @@
  */
 package org.hibernate.vector.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.dialect.Dialect;
@@ -17,6 +18,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 
+@ServiceProvider(value = FunctionContributor.class)
 public class PGVectorFunctionContributor implements FunctionContributor {
 
 	@Override

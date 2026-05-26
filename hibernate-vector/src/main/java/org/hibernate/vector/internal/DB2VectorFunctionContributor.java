@@ -5,6 +5,7 @@
 package org.hibernate.vector.internal;
 
 import org.hibernate.boot.model.FunctionContributions;
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -12,6 +13,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 
+@ServiceProvider(value = FunctionContributor.class)
 public class DB2VectorFunctionContributor implements FunctionContributor {
 
 	@Override

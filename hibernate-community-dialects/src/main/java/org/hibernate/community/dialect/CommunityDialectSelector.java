@@ -6,9 +6,11 @@ package org.hibernate.community.dialect;
 
 import java.util.Objects;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.registry.selector.spi.DialectSelector;
 import org.hibernate.dialect.Dialect;
 
+@ServiceProvider(value = DialectSelector.class)
 public class CommunityDialectSelector implements DialectSelector {
 
 	@Override

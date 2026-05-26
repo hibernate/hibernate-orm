@@ -4,6 +4,7 @@
  */
 package org.hibernate.cache.jcache.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
@@ -19,6 +20,7 @@ import static java.util.Collections.singleton;
  *
  * @author Steve Ebersole
  */
+@ServiceProvider(value = StrategyRegistrationProvider.class)
 public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 
 	@Override

@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.internal;
 
+import aQute.bnd.annotation.Cardinality;
+import aQute.bnd.annotation.Resolution;
+import aQute.bnd.annotation.spi.ServiceConsumer;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -49,6 +52,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
  *
  * @author Steve Ebersole
  */
+@ServiceConsumer(value = FunctionContributor.class, cardinality = Cardinality.MULTIPLE, resolution = Resolution.OPTIONAL)
 public class QueryEngineImpl implements QueryEngine {
 
 	private static final Logger LOG_HQL_FUNCTIONS = Logger.getLogger( "org.hibernate.HQL_FUNCTIONS" );

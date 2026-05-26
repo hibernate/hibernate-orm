@@ -7,6 +7,7 @@ package org.hibernate.envers.boot.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
@@ -21,6 +22,7 @@ import org.hibernate.envers.strategy.ValidityAuditStrategy;
  * @author Chris Cranford
  * @since 6.0
  */
+@ServiceProvider(value = StrategyRegistrationProvider.class)
 public class AuditStrategyRegistrationProvider implements StrategyRegistrationProvider {
 
 	private static final List<StrategyRegistration<?>> STRATEGIES = new ArrayList<>();

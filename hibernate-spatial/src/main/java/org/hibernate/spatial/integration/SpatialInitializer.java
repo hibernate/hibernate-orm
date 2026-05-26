@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.integration;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.service.spi.ServiceContributor;
 
@@ -13,6 +14,7 @@ import org.hibernate.service.spi.ServiceContributor;
  * @author Karel Maesen, Geovise BVBA
  * @author Steve Ebersole
  */
+@ServiceProvider(value = ServiceContributor.class)
 public class SpatialInitializer implements ServiceContributor {
 
 	@Override

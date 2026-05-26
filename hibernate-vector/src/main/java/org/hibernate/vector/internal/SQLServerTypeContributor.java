@@ -4,6 +4,7 @@
  */
 package org.hibernate.vector.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.HibernateError;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
@@ -26,6 +27,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.lang.reflect.InvocationTargetException;
 
+@ServiceProvider(value = TypeContributor.class)
 public class SQLServerTypeContributor implements TypeContributor {
 
 	@Override

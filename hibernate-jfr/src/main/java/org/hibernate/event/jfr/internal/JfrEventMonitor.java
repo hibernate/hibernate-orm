@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.jfr.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.LockMode;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
@@ -23,6 +24,7 @@ import java.util.Objects;
 
 
 @AllowNonPortable
+@ServiceProvider(value = EventMonitor.class)
 public class JfrEventMonitor implements EventMonitor {
 
 	private static final EventType sessionOpenEventType = EventType.getEventType( SessionOpenEvent.class );

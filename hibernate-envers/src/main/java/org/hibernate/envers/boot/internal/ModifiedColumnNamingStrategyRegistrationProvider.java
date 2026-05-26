@@ -7,6 +7,7 @@ package org.hibernate.envers.boot.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
@@ -17,6 +18,7 @@ import org.hibernate.envers.boot.spi.ModifiedColumnNamingStrategy;
  *
  * @author Chris Cranford
  */
+@ServiceProvider(value = StrategyRegistrationProvider.class)
 public class ModifiedColumnNamingStrategyRegistrationProvider implements StrategyRegistrationProvider {
 	@Override
 	public Iterable<StrategyRegistration<?>> getStrategyRegistrations() {

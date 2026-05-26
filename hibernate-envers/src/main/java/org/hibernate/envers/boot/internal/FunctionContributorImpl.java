@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.boot.internal;
 
+import aQute.bnd.annotation.spi.ServiceProvider;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.envers.function.OrderByFragmentFunction;
@@ -13,6 +14,7 @@ import org.hibernate.envers.function.OrderByFragmentFunction;
  *
  * @author Christian Beikov
  */
+@ServiceProvider(value = FunctionContributor.class)
 public class FunctionContributorImpl implements FunctionContributor {
 
 	@Override

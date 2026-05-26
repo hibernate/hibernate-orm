@@ -5,7 +5,6 @@
 package org.hibernate.cache.internal;
 
 import jakarta.annotation.Nonnull;
-import java.util.Collections;
 import java.util.Set;
 
 import jakarta.persistence.PersistenceException;
@@ -20,6 +19,8 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+
+import static java.util.Collections.emptySet;
 
 /**
  * A {@link CacheImplementor} service used when the second-level cache is disabled.
@@ -187,8 +188,9 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getCacheRegionNames() {
-		return Collections.emptySet();
+		return emptySet();
 	}
 
 	@Override @Deprecated
@@ -207,22 +209,23 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public boolean contains(Class cls, Object primaryKey) {
+	public boolean contains(@Nonnull Class<?> cls, @Nonnull Object primaryKey) {
 		return false;
 	}
 
 	@Override
-	public void evict(Class cls, Object primaryKey) {
+	public void evict(@Nonnull Class<?> cls, @Nonnull Object primaryKey) {
 		// nothing to do
 	}
 
 	@Override
-	public void evict(Class cls) {
+	public void evict(@Nonnull Class<?> cls) {
 		// nothing to do
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> type) {
+	@Nonnull
+	public <T> T unwrap(@Nonnull Class<T> type) {
 		if ( type.isAssignableFrom( DisabledCaching.class ) ) {
 			return type.cast( this );
 		}

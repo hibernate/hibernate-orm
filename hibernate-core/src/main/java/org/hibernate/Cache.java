@@ -119,12 +119,9 @@ import jakarta.annotation.Nonnull;
 public interface Cache extends jakarta.persistence.Cache {
 	/**
 	 * The {@link SessionFactory} to which this {@code Cache} belongs.
-	 *
-	 * @return The SessionFactory
 	 */
 	@Nonnull
 	SessionFactory getSessionFactory();
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -7,6 +7,8 @@ package org.hibernate.cache.spi;
 import java.io.Serializable;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -32,6 +34,7 @@ import org.hibernate.service.Service;
  */
 public interface CacheImplementor extends Service, Cache, Serializable {
 	@Override
+	@Nonnull
 	SessionFactoryImplementor getSessionFactory();
 
 	/**
@@ -61,6 +64,7 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 *
 	 * @since 5.3
 	 */
+	@Nullable
 	Region getRegion(String regionName);
 
 	/**
@@ -68,6 +72,7 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 *
 	 * @since 5.3
 	 */
+	@Nonnull
 	Set<String> getCacheRegionNames();
 
 	/**
@@ -112,7 +117,7 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 */
 	@Deprecated
 	default void evictQueries() throws HibernateException {
-		QueryResultsCache cache = getDefaultQueryResultsCache();
+		final var cache = getDefaultQueryResultsCache();
 		if ( cache != null ) {
 			cache.clear();
 		}

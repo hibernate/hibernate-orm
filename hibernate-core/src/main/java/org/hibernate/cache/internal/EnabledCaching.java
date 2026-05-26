@@ -485,6 +485,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getCacheRegionNames() {
 		return regionsByName.keySet();
 	}
@@ -500,7 +501,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> type) {
+	@Nonnull
+	public <T> T unwrap(@Nonnull Class<T> type) {
 		if ( type.isAssignableFrom( EnabledCaching.class ) ) {
 			return type.cast( this );
 		}
@@ -527,19 +529,19 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// JPA-defined methods
 
 	@Override
-	public boolean contains(Class cls, Object primaryKey) {
+	public boolean contains(@Nonnull Class<?> cls, @Nonnull Object primaryKey) {
 		// JPA
 		return containsEntity( cls, primaryKey );
 	}
 
 	@Override
-	public void evict(Class cls, Object primaryKey) {
+	public void evict(@Nonnull Class<?> cls, @Nonnull Object primaryKey) {
 		// JPA call
 		evictEntityData( cls, primaryKey );
 	}
 
 	@Override
-	public void evict(Class cls) {
+	public void evict(@Nonnull Class<?> cls) {
 		// JPA
 		evictEntityData( cls );
 	}

@@ -1106,31 +1106,21 @@ public class StatelessSessionImpl
 		);
 	}
 
-	@Override
-	@Nonnull
-	public Object get(@Nonnull String entityName, @Nonnull Object key, FindOption... findOptions) {
-		final var result = find( entityName, key, findOptions );
-		if ( result == null ) {
-			throw notFound( entityName, key );
-		}
-		return result;
-	}
-
-	@Override
+	@Override @Deprecated
 	@SuppressWarnings("removal")
 	@Nonnull
 	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode) {
 		return get( entityName, id, (FindOption) lockMode );
 	}
 
-	@Override
+	@Override @Deprecated
 	@SuppressWarnings("removal")
 	@Nonnull
 	public <T> T get(@Nonnull EntityGraph<T> graph, @Nonnull GraphSemantic graphSemantic, @Nonnull Object id) {
 		return get( graph, graphSemantic, id, LockMode.NONE );
 	}
 
-	@Override
+	@Override @Deprecated
 	@SuppressWarnings("removal")
 	@Nonnull
 	public <T> T get(
@@ -1152,80 +1142,37 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	@Nonnull
-	public <T> List<T> findMultiple(
-			@Nonnull Class<T> entityClass,
+	<E> List<E> findMultiple(
+			@Nonnull EntityPersister entityDescriptor,
+			@Nullable GraphSemantic graphSemantic,
+			@Nullable RootGraphImplementor<E> graph,
 			@Nonnull List<?> keys,
-			@Nullable FindOption... findOptions) {
-		checkOpen();
-		try {
-			final var operation = new StatelessFindMultipleByKeyOperation<T>(
-					requireEntityPersisterForLoad( entityClass.getName() ),
-					this,
-					null,
-					getCacheMode(),
-					isDefaultReadOnly(),
-					getFactory(),
-					findOptions
-			);
-			return operation.performFind( keys, null, null );
-		}
-		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
-		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e );
-		}
-	}
-
-	@Override
-	@Nonnull
-	public <T> List<T> findMultiple(
-			@Nonnull EntityGraph<T> entityGraph,
-			@Nonnull List<?> keys,
-			@Nullable FindOption... findOptions) {
-		checkOpen();
-		try {
-			final var graph = (RootGraphImplementor<T>) entityGraph;
-			final var type = graph.getGraphedType();
-			final var operation = new StatelessFindMultipleByKeyOperation<T>(
-					switch ( type.getRepresentationMode() ) {
-						case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
-						case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
-					},
-					this,
-					null,
-					getCacheMode(),
-					isDefaultReadOnly(),
-					getFactory(),
-					findOptions
-			);
-			return operation.performFind( keys, GraphSemantic.LOAD, graph );
-		}
-		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
-		}
-		catch ( RuntimeException e ) {
-			throw getExceptionConverter().convert( e );
-		}
+			@Nullable FindOption... options) {
+		final var operation = new StatelessFindMultipleByKeyOperation<E>(
+				entityDescriptor,
+				this,
+				null,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				options
+		);
+		return operation.performFind( keys, graphSemantic, graph );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
-	public <T> List<T> getMultiple(@Nonnull EntityGraph<T> entityGraph, @Nonnull GraphSemantic graphSemantic, @Nonnull List<?> ids) {
+	public <T> List<T> getMultiple(
+			@Nonnull EntityGraph<T> entityGraph,
+			@Nonnull GraphSemantic graphSemantic,
+			@Nonnull List<?> ids) {
 		checkOpen();
 		try {
 			final var rootGraph = (RootGraphImplementor<T>) entityGraph;
-			final var operation = new StatelessFindMultipleByKeyOperation<T>(
-					requireEntityPersisterForLoad( rootGraph.getGraphedType().getTypeName() ),
-					this,
-					null,
-					getCacheMode(),
-					isDefaultReadOnly(),
-					getFactory()
-			);
-			return operation.performFind( ids, graphSemantic, rootGraph );
+			final var entityPersister =
+					requireEntityPersisterForLoad( rootGraph.getGraphedType().getTypeName() );
+			return findMultiple( entityPersister, graphSemantic, rootGraph, ids );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );

@@ -565,7 +565,10 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	@Nonnull
-	public <T> List<T> getMultiple(@Nonnull Class<T> entityClass, @Nonnull List<?> keys, @Nullable FindOption... findOptions) {
+	public <T> List<T> getMultiple(
+			@Nonnull Class<T> entityClass,
+			@Nonnull List<?> keys,
+			@Nullable FindOption... findOptions) {
 		final var results = findMultiple( entityClass, keys, findOptions );
 		Helper.verifyGetMultipleResults( results, entityClass.getName(), keys, findOptions );
 		return results;
@@ -573,11 +576,58 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	@Nonnull
-	public <T> List<T> getMultiple(@Nonnull EntityGraph<T> entityGraph, @Nonnull List<?> keys, @Nullable FindOption... findOptions) {
+	public <T> List<T> getMultiple(
+			@Nonnull EntityGraph<T> entityGraph,
+			@Nonnull List<?> keys,
+			@Nullable FindOption... findOptions) {
 		final var results = findMultiple( entityGraph, keys, findOptions );
 		Helper.verifyGetMultipleResults( results, ( (RootGraph<T>) entityGraph ).getGraphedType().getTypeName(), keys );
 		return results;
 	}
+
+	@Override
+	@Nonnull
+	public <E> List<E> findMultiple(
+			@Nonnull Class<E> entityType,
+			@Nonnull List<?> keys,
+			@Nullable FindOption... options) {
+		final var loadQueryInfluencers = getLoadQueryInfluencers();
+		final var entityPersister = requireEntityPersisterForLoad( entityType );
+		final var effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+		final var graph = effectiveEntityGraph.getGraph();
+		//TODO: should we be checking the graph type upfront?
+		@SuppressWarnings("unchecked")
+		final var castGraph = (RootGraphImplementor<E>) graph;
+		return findMultiple(
+				entityPersister,
+				effectiveEntityGraph.getSemantic(),
+				castGraph,
+				keys,
+				options
+		);
+	}
+
+	@Override
+	@Nonnull
+	public <E> List<E> findMultiple(
+			@Nonnull EntityGraph<E> entityGraph,
+			@Nonnull List<?> keys,
+			@Nullable FindOption... options) {
+		final var rootGraph = (RootGraphImplementor<E>) entityGraph;
+		final var type = rootGraph.getGraphedType();
+		final var entityDescriptor = switch ( type.getRepresentationMode() ) {
+			case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
+			case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
+		};
+		return findMultiple( entityDescriptor, GraphSemantic.LOAD, rootGraph, keys, options );
+	}
+
+	abstract <E> List<E> findMultiple(
+			@Nonnull EntityPersister entityDescriptor,
+			@Nullable GraphSemantic graphSemantic,
+			@Nullable RootGraphImplementor<E> rootGraph,
+			@Nonnull List<?> keys,
+			@Nullable FindOption... options);
 
 	@Override
 	public <C> void runWithConnection(@Nonnull ConnectionConsumer<C> action) {
@@ -620,13 +670,13 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	@Nonnull
-	public <T> NativeQueryImplementor<T> createNativeQuery(@Nonnull String sql, @Nonnull ResultSetMapping<T> resultSetMapping) {
+	public <T> NativeQueryImplementor<T> createNativeQuery(@Nonnull String sql, @Nonnull ResultSetMapping<T> mapping) {
 		checksBeforeQueryCreation();
-		final var query = new NativeQueryImpl<>( sql, resultSetMapping, this );
+		final var query = new NativeQueryImpl<>( sql, mapping, this );
 		if ( isEmpty( query.getComment() ) ) {
 			query.setComment( "dynamic native SQL query" );
 		}
-		if ( resultSetMapping instanceof EntityMapping<?> entityMapping ) {
+		if ( mapping instanceof EntityMapping<?> entityMapping ) {
 			final var lockMode = LockMode.fromJpaLockMode( entityMapping.lockMode() );
 			if ( lockMode.greaterThan( LockMode.READ ) ) {
 				query.setHibernateLockMode( lockMode );

@@ -246,7 +246,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				: options.getStatementObserver();
 
 		serviceRegistry = getServiceRegistry( options, this );
-		eventEngine = new EventEngine( bootMetamodel, this );
+		eventEngine = new EventEngine( options, serviceRegistry );
 
 		graphPlanningOptions = buildPlanningOptions( serviceRegistry.requireService( ConfigurationService.class ) );
 

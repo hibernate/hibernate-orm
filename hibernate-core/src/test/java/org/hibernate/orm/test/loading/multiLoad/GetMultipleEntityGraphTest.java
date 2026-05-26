@@ -34,7 +34,7 @@ public class GetMultipleEntityGraphTest {
 			s.insert(new Record(456L,gavin,"hello mars"));
 		});
 		scope.inStatelessTransaction(s-> {
-			List<Record> all = s.getMultiple(Record.class, List.of(456L, 123L, 2L));
+			List<Record> all = s.findMultiple(Record.class, List.of(456L, 123L, 2L));
 			assertEquals("hello mars",all.get(0).message);
 			assertEquals("hello earth",all.get(1).message);
 			assertNull(all.get(2));
@@ -42,13 +42,14 @@ public class GetMultipleEntityGraphTest {
 			assertFalse(Hibernate.isInitialized(all.get(1).owner));
 		});
 		scope.inStatelessTransaction(s-> {
-			List<Record> all = s.getMultiple(graph, List.of(456L, 123L));
+			List<Record> all = s.findMultiple(graph, List.of(456L, 123L));
 			assertEquals("hello mars",all.get(0).message);
 			assertEquals("hello earth",all.get(1).message);
 			assertTrue(Hibernate.isInitialized(all.get(0).owner));
 			assertTrue(Hibernate.isInitialized(all.get(1).owner));
 		});
 	}
+
 	@Entity(name = "Record")
 	static class Record {
 		@Id Long id;

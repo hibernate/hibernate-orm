@@ -26,7 +26,7 @@ public class GetMultipleFromCacheTest {
 			s.insert(new Record(456L,"hello mars"));
 		});
 		scope.inStatelessTransaction(s-> {
-			List<Record> all = s.getMultiple(Record.class, List.of(456L, 123L, 2L));
+			List<Record> all = s.findMultiple(Record.class, List.of(456L, 123L, 2L));
 			assertEquals("hello mars",all.get(0).message);
 			assertEquals("hello earth",all.get(1).message);
 			assertNull(all.get(2));
@@ -35,7 +35,7 @@ public class GetMultipleFromCacheTest {
 				scope.getSessionFactory().getStatistics().getSecondLevelCacheHitCount() );
 		scope.getSessionFactory().getStatistics().clear();
 		scope.inStatelessTransaction(s-> {
-			List<Record> all = s.getMultiple(Record.class, List.of(123L, 2L, 456L));
+			List<Record> all = s.findMultiple(Record.class, List.of(123L, 2L, 456L));
 			assertEquals("hello earth",all.get(0).message);
 			assertEquals("hello mars",all.get(2).message);
 			assertNull(all.get(1));
@@ -43,6 +43,7 @@ public class GetMultipleFromCacheTest {
 		assertEquals( 2,
 				scope.getSessionFactory().getStatistics().getSecondLevelCacheHitCount() );
 	}
+
 	@Entity(name = "Record")
 	@Cacheable
 	static class Record {

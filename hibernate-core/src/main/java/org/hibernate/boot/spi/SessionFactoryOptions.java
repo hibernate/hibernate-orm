@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -70,6 +71,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see SessionFactoryImplementor#getUuid
 	 */
 	@Override
+	@Nonnull
 	String getUuid();
 
 	/**
@@ -77,6 +79,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @return The service registry to use.
 	 */
+	@Nonnull
 	StandardServiceRegistry getServiceRegistry();
 
 	/**
@@ -155,7 +158,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_OBSERVER
 	 */
-	@Nullable StatementObserver getStatementObserver();
+	@Nullable
+	StatementObserver getStatementObserver();
 
 	/**
 	 * A stateless {@link Supplier} for {@linkplain Interceptor interceptor} instances

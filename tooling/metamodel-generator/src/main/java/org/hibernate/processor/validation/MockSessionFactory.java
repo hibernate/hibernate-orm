@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor.validation;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.Bindable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -251,11 +252,13 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
 	@Override
+	@Nonnull
 	public ClassLoaderService getClassLoaderService() {
 		return classLoaderService;
 	}
@@ -271,7 +274,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public void addObserver(SessionFactoryObserver observer) {
+	public void addObserver(@Nonnull SessionFactoryObserver observer) {
 	}
 
 	@Override
@@ -392,32 +395,38 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public MappingMetamodelImplementor getMetamodel() {
 		return metamodel;
 	}
 
 	@Override
+	@Nonnull
 	public StandardServiceRegistryImpl getServiceRegistry() {
 		return serviceRegistry;
 	}
 
 	@Override
+	@Nonnull
 	public JdbcServices getJdbcServices() {
 		return MockJdbcServicesInitiator.jdbcServices;
 //		return serviceRegistry.getService(JdbcServices.class);
 	}
 
 	@Override
+	@Nonnull
 	public String getName() {
 		return "mock";
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryOptions getSessionFactoryOptions() {
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getDefinedFilterNames() {
 		return emptySet();
 	}
@@ -428,6 +437,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return new StandardEntityNotFoundDelegate();
 	}
@@ -476,7 +486,7 @@ public abstract class MockSessionFactory
 	public void close() {}
 
 	@Override
-	public RootGraphImplementor<?> findEntityGraphByName(String s) {
+	public RootGraphImplementor<?> findEntityGraphByName(@Nonnull String s) {
 		throw new UnsupportedOperationException("operation not supported");
 	}
 
@@ -505,6 +515,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public StatisticsImplementor getStatistics() {
 		return new StatisticsImpl(this);
 	}
@@ -515,6 +526,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public NodeBuilder getCriteriaBuilder() {
 		return nodeBuilder;
 	}
@@ -539,26 +551,31 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public QueryEngine getQueryEngine() {
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SqlTranslationEngine getSqlTranslationEngine() {
 		return sqlTranslationEngine;
 	}
 
 	@Override
+	@Nonnull
 	public JpaMetamodelImplementor getJpaMetamodel() {
 		return metamodel.getJpaMetamodel();
 	}
 
 	@Override
+	@Nonnull
 	public MappingMetamodelImplementor getMappingMetamodel() {
 		return metamodel;
 	}
 
 	@Override
+	@Nonnull
 	public RuntimeMetamodelsImplementor getRuntimeMetamodels() {
 		return this;
 	}
@@ -584,6 +601,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public String getUuid() {
 		return "mock";
 	}
@@ -609,6 +627,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@SuppressWarnings("removal")
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return ImmutableEntityUpdateQueryHandlingMode.ALLOW;
 	}
@@ -818,6 +837,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
 		throw new UnsupportedOperationException("operation not supported");
 	}

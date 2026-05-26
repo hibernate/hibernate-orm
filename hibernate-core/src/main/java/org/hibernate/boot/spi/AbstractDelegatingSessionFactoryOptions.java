@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
@@ -69,11 +70,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	@Nonnull
 	public String getUuid() {
 		return delegate().getUuid();
 	}
 
 	@Override
+	@Nonnull
 	public StandardServiceRegistry getServiceRegistry() {
 		return delegate.getServiceRegistry();
 	}

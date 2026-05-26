@@ -676,7 +676,6 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceUnitName
 	 */
 	@Override
-	@Nullable
 	String getName();
 
 	/**

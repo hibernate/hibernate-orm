@@ -7,6 +7,8 @@ package org.hibernate.engine.spi;
 import java.util.Collection;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
@@ -76,6 +78,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * @return the opened {@code Session}.
 	 */
 	@Override
+	@Nonnull
 	SessionImplementor openSession();
 
 	/**
@@ -84,6 +87,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * certain customized options.
 	 */
 	@Override
+	@Nonnull
 	SessionBuilderImplementor withOptions();
 
 	/**
@@ -103,21 +107,25 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * Obtain the {@link StatisticsImplementor}.
 	 */
 	@Override
+	@Nonnull
 	StatisticsImplementor getStatistics();
 
 	/**
 	 * Obtain the {@link TypeConfiguration}
 	 */
+	@Nonnull
 	TypeConfiguration getTypeConfiguration();
 
 	/**
 	 * Obtain the {@link RuntimeMetamodelsImplementor}
 	 */
+	@Nonnull
 	RuntimeMetamodelsImplementor getRuntimeMetamodels();
 
 	/**
 	 * Obtain the {@link MappingMetamodelImplementor}
 	 */
+	@Nonnull
 	default MappingMetamodelImplementor getMappingMetamodel() {
 		return getRuntimeMetamodels().getMappingMetamodel();
 	}
@@ -125,6 +133,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	/**
 	 * Obtain the {@link JpaMetamodel}
 	 */
+	@Nonnull
 	default JpaMetamodel getJpaMetamodel() {
 		return getRuntimeMetamodels().getJpaMetamodel();
 	}
@@ -132,11 +141,13 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	/**
 	 * Obtain the {@link QueryEngine}
 	 */
+	@Nonnull
 	QueryEngine getQueryEngine();
 
 	/**
 	 * Obtain the {@link SqlTranslationEngine}
 	 */
+	@Nonnull
 	SqlTranslationEngine getSqlTranslationEngine();
 
 	/**
@@ -144,33 +155,38 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @return The factory's ServiceRegistry
 	 */
+	@Nonnull
 	ServiceRegistryImplementor getServiceRegistry();
 
 	/**
 	 * Get the EventEngine associated with this SessionFactory
 	 */
+	@Nonnull
 	EventEngine getEventEngine();
 
 	/**
 	 * Obtain the {@link EntityNotFoundDelegate}
 	 */
+	@Nonnull
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
 	/**
 	 * Register a {@link SessionFactoryObserver} of this factory.
 	 */
-	void addObserver(SessionFactoryObserver observer);
+	void addObserver(@Nonnull SessionFactoryObserver observer);
 
 	/**
 	 * Obtain the {@link CustomEntityDirtinessStrategy}
 	 */
 	//todo make a Service ?
+	@Nullable
 	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
 	/**
 	 * Obtain the {@link CurrentTenantIdentifierResolver}
 	 */
 	//todo make a Service ?
+	@Nullable
 	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
 
 	/**
@@ -180,6 +196,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * @since 7.2
 	 */
 	@Incubating
+	@Nullable
 	Object resolveTenantIdentifier();
 
 	/**
@@ -195,6 +212,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * @since 7.0
 	 */
 	@Internal @Incubating
+	@Nonnull
 	EventListenerGroups getEventListenerGroups();
 
 	/**
@@ -211,6 +229,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * @since 7.0
 	 */
 	@Incubating
+	@Nonnull
 	JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider();
 
 	/**
@@ -219,6 +238,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * @since 7.0
 	 */
 	@Incubating
+	@Nonnull
 	EntityCopyObserverFactory getEntityCopyObserver();
 
 	/**
@@ -227,6 +247,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * @since 7.0
 	 */
 	@Incubating
+	@Nonnull
 	ClassLoaderService getClassLoaderService();
 
 	/**
@@ -235,6 +256,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * @since 7.0
 	 */
 	@Incubating
+	@Nullable
 	ManagedBeanRegistry getManagedBeanRegistry();
 
 	/**
@@ -243,16 +265,19 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * @since 7.0
 	 */
 	@Incubating
+	@Nonnull
 	EventListenerRegistry getEventListenerRegistry();
 
 	/**
 	 * Efficient access to the {@link ChangesetCoordinator}.
 	 */
+	@Nonnull
 	ChangesetCoordinator getChangesetCoordinator();
 
 	/**
 	 * Configuration for graph planning as part of the ActionQueue.
 	 */
+	@Nonnull
 	PlanningOptions getGraphPlanningOptions();
 
 	/**
@@ -261,18 +286,21 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @apiNote Avoid using this operation.
 	 */
+	@Nonnull
 	WrapperOptions getWrapperOptions();
 
 	/**
 	 * Get the {@linkplain SessionFactoryOptions options} used to build this factory.
 	 */
 	@Override
+	@Nonnull
 	SessionFactoryOptions getSessionFactoryOptions();
 
 	/**
 	 * Access to the StatementObserver associated with this factory.
 	 */
-	@NonNull StatementObserver getStatementObserver();
+	@NonNull
+	StatementObserver getStatementObserver();
 
 	/**
 	 * Obtain the {@linkplain FilterDefinition definition of a filter} by name.
@@ -280,66 +308,79 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * @param filterName The name of a declared filter
 	 */
 	@Override
-	FilterDefinition getFilterDefinition(String filterName);
+	@Nonnull
+	FilterDefinition getFilterDefinition(@Nonnull String filterName);
 
 	/**
 	 * Obtain a collection of {@link FilterDefinition}s representing all the
 	 * {@linkplain org.hibernate.annotations.FilterDef#autoEnabled auto-enabled}
 	 * filters.
 	 */
+	@Nonnull
 	Collection<FilterDefinition> getAutoEnabledFilters();
 
 	/**
 	 * Obtain the {@link JdbcServices} service.
 	 */
+	@Nonnull
 	JdbcServices getJdbcServices();
 
 	/**
 	 * Obtain the {@link SqlStringGenerationContext}.
 	 */
+	@Nonnull
 	SqlStringGenerationContext getSqlStringGenerationContext();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// map these to Metamodel
 
 	@Override
-	RootGraphImplementor<?> findEntityGraphByName(String name);
+	@Nullable
+	RootGraphImplementor<?> findEntityGraphByName(@Nonnull String name);
 
 	@Override
-	default <T> RootGraphImplementor<T> createEntityGraph(Class<T> entityType) {
+	@Nonnull
+	default <T> RootGraphImplementor<T> createEntityGraph(@Nonnull Class<T> entityType) {
 		return (RootGraphImplementor<T>) SessionFactory.super.createEntityGraph( entityType );
 	}
 
 	@Override
-	RootGraphImplementor<Map<String, ?>> createGraphForDynamicEntity(String entityName);
+	@Nonnull
+	RootGraphImplementor<Map<String, ?>> createGraphForDynamicEntity(@Nonnull String entityName);
 
 	/**
 	 * The best guess entity name for an entity not in an association
 	 */
-	String bestGuessEntityName(Object object);
+	@Nullable
+	String bestGuessEntityName(@Nonnull Object object);
 
 	@Incubating
+	@Nullable
 	default JdbcSelectWithActionsBuilder getJdbcSelectWithActionsBuilder(){
 		return new JdbcSelectWithActions.Builder();
 	}
 
 	@Override
-	default <T> RootGraph<T> parseEntityGraph(Class<T> rootEntityClass, CharSequence graphText) {
+	@Nonnull
+	default <T> RootGraph<T> parseEntityGraph(@Nonnull Class<T> rootEntityClass, @Nonnull CharSequence graphText) {
 		return GraphParser.parse( rootEntityClass, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
 	}
 
 	@Override @Incubating
-	default <T> RootGraph<T> parseEntityGraph(String rootEntityName, CharSequence graphText) {
+	@Nonnull
+	default <T> RootGraph<T> parseEntityGraph(@Nonnull String rootEntityName, @Nonnull CharSequence graphText) {
 		return GraphParser.parse( rootEntityName, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
 	}
 
 	@Override @Incubating
-	default <T> RootGraph<T> parseEntityGraph(CharSequence graphText) {
+	@Nonnull
+	default <T> RootGraph<T> parseEntityGraph(@Nonnull CharSequence graphText) {
 		return GraphParser.parse( graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
 	}
 
 	/**
 	 * Access to the factory for ActionQueue instances configured for this factory.
 	 */
+	@Nonnull
 	ActionQueueFactory getActionQueueFactory();
 }

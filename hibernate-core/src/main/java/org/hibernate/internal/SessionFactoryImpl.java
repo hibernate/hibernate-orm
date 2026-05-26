@@ -4,6 +4,8 @@
  */
 package org.hibernate.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityHandler;
@@ -419,15 +421,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public EventListenerGroups getEventListenerGroups() {
 		return eventListenerGroups;
 	}
 
 	@Override
+	@Nonnull
 	public <E> EntityListenerRegistration addListener(
-			Class<E> entityClass,
-			Class<? extends Annotation> callbackType,
-			Consumer<? super E> callback) {
+			@Nonnull Class<E> entityClass,
+			@Nonnull Class<? extends Annotation> callbackType,
+			@Nonnull Consumer<? super E> callback) {
 		final var type = CallbackType.fromCallbackAnnotation( callbackType );
 		final List<EntityListenerRegistration> registrations = new ArrayList<>();
 		getMappingMetamodel().forEachEntityDescriptor( persister -> {
@@ -456,6 +460,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public ActionQueueFactory getActionQueueFactory() {
 		return actionQueueFactory;
 	}
@@ -465,31 +470,38 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return parameterMarkerStrategy;
 	}
 
+	@Nonnull
 	@Override
 	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
 		return jdbcValuesMappingProducerProvider;
 	}
 
 	@Override
+	@Nonnull
 	public EntityCopyObserverFactory getEntityCopyObserver() {
 		return entityCopyObserverFactory;
 	}
 
 	@Override
+	@Nonnull
 	public ClassLoaderService getClassLoaderService() {
 		return classLoaderService;
 	}
 
 	@Override
+	@Nullable
 	public ManagedBeanRegistry getManagedBeanRegistry() {
 		return managedBeanRegistry;
 	}
 
 	@Override
+	@Nonnull
 	public EventListenerRegistry getEventListenerRegistry() {
 		return eventEngine.getListenerRegistry();
 	}
 
+	@Override
+	@Nonnull
 	public PlanningOptions getGraphPlanningOptions() {
 		return graphPlanningOptions;
 	}
@@ -595,6 +607,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public SessionImplementor openSession() {
 		// The defaultSessionOpenOptions can't be used in some cases;
 		// for example when using a TenantIdentifierResolver.
@@ -613,6 +626,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public Session getCurrentSession() {
 		if ( currentSessionContext == null ) {
 			throw new HibernateException( "No CurrentSessionContext configured" );
@@ -621,6 +635,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor withOptions() {
 		return new SessionBuilderImpl( this ) {
 			@Override
@@ -631,6 +646,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public StatelessSessionBuilder withStatelessOptions() {
 		return new StatelessSessionBuilderImpl( this ) {
 			@Override
@@ -641,6 +657,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public StatelessSession openStatelessSession() {
 		return defaultStatelessOptions != null
 				? defaultStatelessOptions.openStatelessSession()
@@ -648,16 +665,18 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public StatelessSession openStatelessSession(Connection connection) {
+	@Nonnull
+	public StatelessSession openStatelessSession(@Nonnull Connection connection) {
 		return withStatelessOptions().connection( connection ).openStatelessSession();
 	}
 
 	@Override
-	public void addObserver(SessionFactoryObserver observer) {
+	public void addObserver(@Nonnull SessionFactoryObserver observer) {
 		observerChain.addObserver( observer );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getProperties() {
 		validateNotClosed();
 		return settings;
@@ -685,42 +704,50 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
 	@Override
+	@Nonnull
 	public QueryEngine getQueryEngine() {
 		return queryEngine;
 	}
 
 	@Override
+	@Nonnull
 	public SqlTranslationEngine getSqlTranslationEngine() {
 		return sqlTranslationEngine;
 	}
 
 	@Override
+	@Nonnull
 	public EventEngine getEventEngine() {
 		return eventEngine;
 	}
 
 	@Override
+	@Nonnull
 	public JdbcServices getJdbcServices() {
 		return jdbcServices;
 	}
 
 	@Override
+	@Nonnull
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
 		return sqlStringGenerationContext;
 	}
 
 	@Override
-	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+	@Nonnull
+	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(@Nonnull Class<T> entityClass) {
 		return getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
 
 	@Override
-	public Session createEntityManager(EntityManager.CreationOption... options) {
+	@Nonnull
+	public Session createEntityManager(@Nullable EntityManager.CreationOption... options) {
 		validateNotClosed();
 		SynchronizationType synchronizationType = SYNCHRONIZED;
 		if ( options != null ) {
@@ -768,13 +795,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return session;
 	}
 
-	public Session createEntityManager(Map<?,?> map) {
+	@Nonnull
+	public Session createEntityManager(@Nullable Map<?,?> map) {
 		validateNotClosed();
 		return buildEntityManager( SYNCHRONIZED, map );
 	}
 
 	@Override
-	public Session createEntityManager(SynchronizationType synchronizationType) {
+	@Nonnull
+	public Session createEntityManager(@Nonnull SynchronizationType synchronizationType) {
 		validateNotClosed();
 		errorIfResourceLocalDueToExplicitSynchronizationType();
 		return buildEntityManager( synchronizationType, null );
@@ -793,19 +822,21 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Session createEntityManager(SynchronizationType synchronizationType, Map<?,?> map) {
+	@Nonnull
+	public Session createEntityManager(@Nonnull SynchronizationType synchronizationType, @Nullable Map<?,?> map) {
 		validateNotClosed();
 		errorIfResourceLocalDueToExplicitSynchronizationType();
 		return buildEntityManager( synchronizationType, map );
 	}
 
-	public StatelessSession createEntityAgent() {
+	private StatelessSession createEntityAgent() {
 		validateNotClosed();
 		return openStatelessSession();
 	}
 
 	@Override
-	public StatelessSession createEntityAgent(EntityAgent.CreationOption... options) {
+	@Nonnull
+	public StatelessSession createEntityAgent(@Nullable EntityAgent.CreationOption... options) {
 		final var agent = createEntityAgent();
 		if ( options != null ) {
 			for ( var option : options ) {
@@ -818,8 +849,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public EntityAgent createEntityAgent(Map<?, ?> map) {
-		assert map != null;
+	@Nonnull
+	public EntityAgent createEntityAgent(@Nullable Map<?, ?> map) {
 		var agent = createEntityAgent();
 		if ( map != null ) {
 			map.forEach( (key,val) -> {
@@ -832,12 +863,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public NodeBuilder getCriteriaBuilder() {
 		validateNotClosed();
 		return queryEngine.getCriteriaBuilder();
 	}
 
 	@Override
+	@Nonnull
 	public MappingMetamodel getMetamodel() {
 		validateNotClosed();
 		return runtimeMetamodels.getMappingMetamodel();
@@ -849,7 +882,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public RootGraphImplementor<Map<String, ?>> createGraphForDynamicEntity(String entityName) {
+	@Nonnull
+	public RootGraphImplementor<Map<String, ?>> createGraphForDynamicEntity(@Nonnull String entityName) {
 		final var entity = getJpaMetamodel().entity( entityName );
 		if ( entity.getRepresentationMode() != RepresentationMode.MAP ) {
 			throw new IllegalArgumentException( "Entity '" + entityName + "' is not a dynamic entity" );
@@ -860,12 +894,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public RootGraphImplementor<?> findEntityGraphByName(String name) {
+	@Nullable
+	public RootGraphImplementor<?> findEntityGraphByName(@Nonnull String name) {
 		return getJpaMetamodel().findEntityGraphByName( name );
 	}
 
 	@Override
-	public String bestGuessEntityName(Object object) {
+	@Nullable
+	public String bestGuessEntityName(@Nonnull Object object) {
 		final var initializer = extractLazyInitializer( object );
 		if ( initializer != null ) {
 			// it is possible for this method to be called during flush processing,
@@ -879,6 +915,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryOptions getSessionFactoryOptions() {
 		return sessionFactoryOptions;
 	}
@@ -981,12 +1018,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceUnitUtil getPersistenceUnitUtil() {
 		validateNotClosed();
 		return jpaPersistenceUnitUtil;
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceUnitTransactionType getTransactionType() {
 		return transactionCoordinatorBuilder.isJta()
 				? PersistenceUnitTransactionType.JTA
@@ -1000,12 +1039,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, StatementReference> getNamedStatements() {
 		return getNamedObjectRepository().getNamedMutations();
 	}
 
 	@Override
-	public void addNamedQuery(String name, Query query) {
+	public void addNamedQuery(@Nonnull String name, @Nonnull Query query) {
 		if ( query instanceof TypedQuery<?> typedQuery ) {
 			addNamedQuery( name, typedQuery );
 		}
@@ -1030,31 +1070,36 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public <R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query) {
+	@Nonnull
+	public <R> TypedQueryReference<R> addNamedQuery(@Nonnull String name, @Nonnull TypedQuery<R> query) {
 		return getNamedObjectRepository().registerNamedQuery( name, query );
 	}
 
 	@Override
-	public StatementReference addNamedStatement(String name, Statement statement) {
+	@Nonnull
+	public StatementReference addNamedStatement(@Nonnull String name, @Nonnull Statement statement) {
 		return getNamedObjectRepository().registerNamedMutation( name, statement );
 	}
 
 	@Override
-	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
+	public <T> void addNamedEntityGraph(@Nonnull String graphName, @Nonnull EntityGraph<T> entityGraph) {
 		getJpaMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
 	}
 
 	@Override
-	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
+	@Nonnull
+	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(@Nonnull Class<R> resultType) {
 		return queryEngine.getNamedObjectRepository().getNamedQueries( resultType );
 	}
 	@Override
-	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(Class<E> entityType) {
+	@Nonnull
+	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(@Nonnull Class<E> entityType) {
 		return getJpaMetamodel().getNamedEntityGraphs( entityType );
 	}
 
 	@Override
-	public <R> Map<String, ResultSetMapping<R>> getResultSetMappings(Class<R> resultType) {
+	@Nonnull
+	public <R> Map<String, ResultSetMapping<R>> getResultSetMappings(@Nonnull Class<R> resultType) {
 		final var result = new HashMap<String, ResultSetMapping<R>>();
 		getNamedObjectRepository().visitResultSetMappingMementos( (memento) -> {
 			if ( memento.canBeTreatedAsResultSetMapping( resultType, this ) ) {
@@ -1066,6 +1111,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 
 	@Override
+	@Nonnull
 	public <T> T unwrap(Class<T> type) {
 		if ( type.isInstance( this ) ) {
 			return type.cast( this );
@@ -1103,12 +1149,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public void runInTransaction(Consumer<EntityManager> work) {
+	public void runInTransaction(@Nonnull Consumer<EntityManager> work) {
 		inTransaction( work );
 	}
 
 	@Override
-	public <H extends EntityHandler> void runInTransaction(Class<H> handlerType, Consumer<H> consumer) {
+	public <H extends EntityHandler> void runInTransaction(
+			@Nonnull Class<H> handlerType, @Nonnull Consumer<H> consumer) {
 		if ( EntityManager.class.isAssignableFrom( handlerType ) ) {
 			//noinspection unchecked
 			inTransaction( (Consumer<EntityManager>) consumer );
@@ -1123,12 +1170,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public <R> R callInTransaction(Function<EntityManager, R> work) {
+	public <R> R callInTransaction(@Nonnull Function<EntityManager, R> work) {
 		return fromTransaction( work );
 	}
 
 	@Override
-	public <R, H extends EntityHandler> R callInTransaction(Class<H> handlerType, Function<H, R> function) {
+	public <R, H extends EntityHandler> R callInTransaction(
+			@Nonnull Class<H> handlerType, @Nonnull Function<H, R> function) {
 		if ( EntityManager.class.isAssignableFrom( handlerType ) ) {
 			//noinspection unchecked
 			return fromTransaction( (Function<EntityManager,R>) function );
@@ -1149,6 +1197,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private transient StatisticsImplementor statistics;
 
+	@Override
+	@Nonnull
 	public StatisticsImplementor getStatistics() {
 		if ( statistics == null ) {
 			statistics = serviceRegistry.requireService( StatisticsImplementor.class );
@@ -1156,7 +1206,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return statistics;
 	}
 
-	public FilterDefinition getFilterDefinition(String filterName) {
+	@Override
+	@Nonnull
+	public FilterDefinition getFilterDefinition(@Nonnull String filterName) {
 		final var filterDefinition = filters.get( filterName );
 		if ( filterDefinition == null ) {
 			throw new UnknownFilterException( filterName );
@@ -1165,21 +1217,24 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public Collection<FilterDefinition> getAutoEnabledFilters() {
 		return autoEnabledFilters;
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getDefinedFilterNames() {
 		return unmodifiableSet( filters.keySet() );
 	}
 
 	@Override
-	public boolean containsFetchProfileDefinition(String name) {
+	public boolean containsFetchProfileDefinition(@Nonnull String name) {
 		return sqlTranslationEngine.containsFetchProfileDefinition( name );
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getDefinedFetchProfileNames() {
 		return sqlTranslationEngine.getDefinedFetchProfileNames();
 	}
@@ -1236,22 +1291,26 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public RuntimeMetamodelsImplementor getRuntimeMetamodels() {
 		return runtimeMetamodels;
 
 	}
 
 	@Override
+	@Nonnull
 	public JpaMetamodelImplementor getJpaMetamodel() {
 		return runtimeMetamodels.getJpaMetamodel();
 	}
 
 	@Override
+	@Nonnull
 	public ServiceRegistryImplementor getServiceRegistry() {
 		return serviceRegistry;
 	}
 
 	@Override
+	@Nonnull
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
 	}
@@ -1264,11 +1323,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
 		return getSessionFactoryOptions().getCustomEntityDirtinessStrategy();
 	}
 
 	@Override
+	@Nullable
 	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return getSessionFactoryOptions().getCurrentTenantIdentifierResolver();
 	}
@@ -1291,6 +1352,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public ChangesetCoordinator getChangesetCoordinator() {
 		return changesetCoordinator;
 	}
@@ -1398,16 +1460,19 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public WrapperOptions getWrapperOptions() {
 		return wrapperOptions;
 	}
 
 	@Override
+	@Nonnull
 	public SchemaManager getSchemaManager() {
 		return schemaManager;
 	}
 
 	@Override
+	@Nonnull
 	public MappingMetamodelImplementor getMappingMetamodel() {
 		return getRuntimeMetamodels().getMappingMetamodel();
 	}

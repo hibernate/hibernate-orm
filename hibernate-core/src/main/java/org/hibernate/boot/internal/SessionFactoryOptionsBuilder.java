@@ -17,6 +17,7 @@ import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.PessimisticLockScope;
@@ -970,11 +971,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// SessionFactoryOptionsState
 
 	@Override
+	@Nonnull
 	public String getUuid() {
 		return uuid;
 	}
 
 	@Override
+	@Nonnull
 	public StandardServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}
@@ -1327,11 +1330,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	@Nonnull
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
 		return customEntityDirtinessStrategy;
 	}
 
 	@Override
+	@Nonnull
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return entityNameResolvers.toArray( new EntityNameResolver[0] );
 	}

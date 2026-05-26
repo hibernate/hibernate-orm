@@ -410,39 +410,37 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	@Override
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
 		final var entityType = entity( entityClass );
+		//noinspection ConstantValue
 		if ( entityType == null ) {
 			throw new IllegalArgumentException( "Given class is not an entity: " + entityClass.getName() );
 		}
-		else {
-			final List<EntityGraph<? super T>> results = new ArrayList<>();
-			for ( var entityGraph : entityGraphMap.values() ) {
-				if ( entityGraph.appliesTo( entityType ) ) {
-					@SuppressWarnings("unchecked") // safe, we just checked
-					var result = (RootGraphImplementor<? super T>) entityGraph;
-					results.add( result );
-				}
+		final List<EntityGraph<? super T>> results = new ArrayList<>();
+		for ( var entityGraph : entityGraphMap.values() ) {
+			if ( entityGraph.appliesTo( entityType ) ) {
+				@SuppressWarnings("unchecked") // safe, we just checked
+				var result = (RootGraphImplementor<? super T>) entityGraph;
+				results.add( result );
 			}
-			return results;
 		}
+		return results;
 	}
 
 	@Override
 	public <T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityClass) {
 		final var entityType = entity( entityClass );
+		//noinspection ConstantValue
 		if ( entityType == null ) {
 			throw new IllegalArgumentException( "Given class is not an entity: " + entityClass.getName() );
 		}
-		else {
-			final Map<String, EntityGraph<? extends T>> results = new HashMap<>();
-			for ( var entityGraph : entityGraphMap.values() ) {
-				if ( entityGraph.appliesTo( entityType ) ) {
-					@SuppressWarnings("unchecked") // safe, we just checked
-					var graph = (EntityGraph<? extends T>) entityGraph;
-					results.put( entityGraph.getName(), graph );
-				}
+		final Map<String, EntityGraph<? extends T>> results = new HashMap<>();
+		for ( var entityGraph : entityGraphMap.values() ) {
+			if ( entityGraph.appliesTo( entityType ) ) {
+				@SuppressWarnings("unchecked") // safe, we just checked
+				var graph = (EntityGraph<? extends T>) entityGraph;
+				results.put( entityGraph.getName(), graph );
 			}
-			return results;
 		}
+		return results;
 	}
 
 	@Override

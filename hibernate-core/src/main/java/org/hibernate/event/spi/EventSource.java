@@ -5,6 +5,7 @@
 package org.hibernate.event.spi;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -28,6 +29,14 @@ public interface EventSource extends SessionImplementor {
 	 * or the given persister
 	 */
 	Object instantiate(@Nonnull EntityPersister persister, @Nonnull Object id) throws HibernateException;
+
+	/**
+	 * Obtain the best estimate of the entity name of the given entity
+	 * instance, which is not involved in an association, by also
+	 * considering information held in the proxy, and whether the object
+	 * is already associated with this session.
+	 */
+	String bestGuessEntityName(@Nonnull Object object, @Nullable EntityEntry entry);
 
 	/**
 	 * Force an immediate flush

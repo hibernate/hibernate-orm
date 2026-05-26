@@ -961,7 +961,7 @@ public class SessionImpl
 		final var graph = effectiveEntityGraph.getGraph();
 		boolean clearedEffectiveGraph;
 		if ( semantic == null
-				|| graph.appliesTo( getFactory().getJpaMetamodel().entity( entityName ) ) ) {
+				|| graph != null && graph.appliesTo( getFactory().getJpaMetamodel().entity( entityName ) ) ) {
 			clearedEffectiveGraph = false;
 		}
 		else {
@@ -1599,6 +1599,7 @@ public class SessionImpl
 	public Object getIdentifier(@Nonnull Object object) {
 		checkOpen();
 		checkTransactionSyncStatus();
+		//noinspection ConstantValue
 		if ( object == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}
@@ -1641,9 +1642,9 @@ public class SessionImpl
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
+		//noinspection ConstantValue
 		if ( object == null ) {
-			//TODO: this should throw IllegalArgumentException
-			return false;
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 
 		try {
@@ -1787,6 +1788,7 @@ public class SessionImpl
 		checkOpen();
 //		checkTransactionSynchStatus();
 
+		//noinspection ConstantValue
 		if ( object == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}
@@ -2171,6 +2173,7 @@ public class SessionImpl
 			@Nonnull Object primaryKey,
 			@Nonnull LockModeType lockModeType,
 			@Nullable Map<String, Object> properties) {
+		//noinspection ConstantValue
 		if ( lockModeType == null ) {
 			throw new IllegalArgumentException("Given LockModeType was null");
 		}
@@ -2179,22 +2182,31 @@ public class SessionImpl
 
 	private <T> T doFind(Class<T> entityClass, Object primaryKey, LockMode lockMode, Map<String, Object> properties) {
 		checkOpen();
-
+		if ( entityClass == null ) {
+			throw new IllegalArgumentException( "Entity class may not be null" );
+		}
 		final var options = determineFindOptions( lockMode, properties );
-
 		final var entityDescriptor = requireEntityPersisterForLoad( entityClass );
 		//noinspection unchecked
 		return (T) byKeyWithGraph( entityDescriptor, properties, options ).performFind( primaryKey );
 	}
 
 	private <T> FindByKeyOperation<T> byKeyWithGraph(EntityPersister entityDescriptor, Map<String, Object> properties, FindOption[] options) {
-		var fetchHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_FETCH_GRAPH );
-		var loadHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_LOAD_GRAPH );
-		if ( fetchHint == null ) {
-			fetchHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_FETCH_GRAPH );
+		RootGraphImplementor<?> fetchHint;
+		RootGraphImplementor<?> loadHint;
+		if ( properties != null ) {
+			fetchHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_FETCH_GRAPH );
+			loadHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_LOAD_GRAPH );
+			if ( fetchHint == null ) {
+				fetchHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_FETCH_GRAPH );
+			}
+			if ( loadHint == null ) {
+				loadHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_LOAD_GRAPH );
+			}
 		}
-		if ( loadHint == null ) {
-			loadHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_LOAD_GRAPH );
+		else {
+			fetchHint = null;
+			loadHint = null;
 		}
 
 		GraphSemantic graphSemantic = null;
@@ -2484,10 +2496,10 @@ public class SessionImpl
 	@Override
 	@SuppressWarnings("removal")
 	public void refresh(@Nonnull Object entity, @Nullable RefreshOption... options) {
+		CacheStoreMode storeMode = getCacheStoreMode();
+		LockOptions lockOptions = copySessionLockOptions();
 		if ( options != null ) {
-			CacheStoreMode storeMode = getCacheStoreMode();
-			LockOptions lockOptions = copySessionLockOptions();
-			for ( RefreshOption option : options ) {
+			for ( var option : options ) {
 				if ( option instanceof CacheStoreMode cacheStoreMode ) {
 					storeMode = cacheStoreMode;
 				}
@@ -2507,17 +2519,15 @@ public class SessionImpl
 					lockOptions.setTimeOut( timeout.milliseconds() );
 				}
 			}
+		}
 
-			final var previousCacheMode = getCacheMode();
-			if ( storeMode != null ) {
-				setCacheStoreMode( storeMode );
-			}
-			try {
-				refresh( entity, lockOptions );
-			}
-			finally {
-				setCacheMode( previousCacheMode );
-			}
+		final var previousCacheMode = getCacheMode();
+		setCacheStoreMode( storeMode );
+		try {
+			refresh( entity, lockOptions );
+		}
+		finally {
+			setCacheMode( previousCacheMode );
 		}
 	}
 
@@ -2541,6 +2551,7 @@ public class SessionImpl
 			throw new TransactionRequiredException( "No active transaction" );
 		}
 
+		//noinspection ConstantValue
 		if ( entity == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}

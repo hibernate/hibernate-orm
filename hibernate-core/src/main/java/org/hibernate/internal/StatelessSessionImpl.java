@@ -33,7 +33,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -1317,6 +1316,9 @@ public class StatelessSessionImpl
 		}
 		if ( !collection.wasInitialized() ) {
 			final var loadedPersister = ce.getLoadedPersister();
+			if ( loadedPersister == null ) {
+				throw new AssertionFailure( "collection entry has no loaded persister" );
+			}
 			final Object loadedKey = ce.getLoadedKey();
 			if ( SESSION_LOGGER.isTraceEnabled() ) {
 				SESSION_LOGGER.initializingCollection(
@@ -1555,11 +1557,6 @@ public class StatelessSessionImpl
 	}
 
 	@Override
-	public String bestGuessEntityName(@Nonnull Object object, @Nullable EntityEntry entry) {
-		throw new UnsupportedOperationException( "Method not available in StatelessSession" );
-	}
-
-	@Override
 	public Object getContextEntityIdentifier(@Nonnull Object object) {
 		checkOpen();
 		return null;
@@ -1568,6 +1565,7 @@ public class StatelessSessionImpl
 	@Override
 	public String guessEntityName(@Nonnull Object entity) {
 		checkOpen();
+		//noinspection ConstantValue
 		if ( entity == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}
@@ -1578,6 +1576,7 @@ public class StatelessSessionImpl
 	@Nonnull
 	public EntityPersister getEntityPersister(@Nullable String entityName, @Nonnull Object entity) {
 		checkOpen();
+		//noinspection ConstantValue
 		if ( entity == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}

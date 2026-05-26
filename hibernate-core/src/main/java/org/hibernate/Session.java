@@ -803,8 +803,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @return a persistent instance or null
 	///
 	/// @deprecated Use [#find(Class,Object,FindOption...)] instead.
-	@Deprecated(since = "7.0", forRemoval = true)
 	@Nonnull
+	@Deprecated(since = "7.0", forRemoval = true)
 	<T> T get(@Nonnull Class<T> entityType, @Nonnull Object id, @Nonnull LockMode lockMode);
 
 	/// Return the persistent instance of the given entity class with the given identifier,
@@ -819,8 +819,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @return a persistent instance or null
 	///
 	/// @deprecated The semantics of this method may change in a future release.
-	@Deprecated(since = "7.0", forRemoval = true)
 	@Nonnull
+	@Deprecated(since = "7.0", forRemoval = true)
 	Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode);
 
 	/// Return the persistent instance of the given entity class with the given identifier,
@@ -836,7 +836,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated This method will be removed.
 	///             Use [#find(Class,Object,FindOption...)] instead.
-	@Deprecated(since = "7.0", forRemoval = true) @SuppressWarnings("removal")
+	@Deprecated(since = "7.0", forRemoval = true)
+	@SuppressWarnings("removal")
 	@Nonnull
 	<T> T get(@Nonnull Class<T> entityType, @Nonnull Object id, @Nonnull LockOptions lockOptions);
 
@@ -853,9 +854,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated This method will be removed.
 	///             Use [SessionFactory#createGraphForDynamicEntity(String)]
-	///             together with [#find(EntityGraph,Object,FindOption...)]
+	///             together with [#find(EntityGraph, Object, FindOption...)]
 	///             to load [dynamic entities][org.hibernate.metamodel.RepresentationMode#MAP].
-	@Deprecated(since = "7.0", forRemoval = true) @SuppressWarnings("removal")
+	@Deprecated(since = "7.0", forRemoval = true)
+	@SuppressWarnings("removal")
 	@Nonnull
 	Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockOptions lockOptions);
 
@@ -869,7 +871,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated This method will be removed.
 	///             Use [#lock(Object, LockModeType, LockOption...)] instead
-	@Deprecated(since = "7.0", forRemoval = true) @SuppressWarnings("removal")
+	@SuppressWarnings("removal")
+	@Deprecated(since = "7.0", forRemoval = true)
 	void lock(@Nonnull Object object, @Nonnull LockOptions lockOptions);
 
 	/// Reread the state of the given managed instance from the underlying database,
@@ -880,8 +883,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated This method will be removed.
 	///             Use [#refresh(Object, RefreshOption...)] instead
-	@Deprecated(since = "7.0", forRemoval = true) @SuppressWarnings("removal")
-	@Nonnull
+	@SuppressWarnings("removal")
+	@Deprecated(since = "7.0", forRemoval = true)
 	void refresh(@Nonnull Object object, @Nonnull LockOptions lockOptions);
 
 	/// Return the entity name for the given persistent entity.
@@ -892,7 +895,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param object a persistent entity associated with this session
 	///
 	/// @return the entity name
-	@Nonnull String getEntityName(@Nonnull Object object);
+	@Nonnull
+	String getEntityName(@Nonnull Object object);
 
 	/// Return a reference to the persistent instance with the given class and identifier,
 	/// making the assumption that the instance is still persistent in the database. This
@@ -967,8 +971,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated This method will be removed.
 	///             Use [#find(Class,Object,FindOption...)] instead.
 	///             See [FindOption].
-	@Deprecated(since = "7.1", forRemoval = true)
 	@SuppressWarnings("removal")
+	@Deprecated(since = "7.1", forRemoval = true)
 	@Nonnull
 	<T> IdentifierLoadAccess<T> byId(@Nonnull Class<T> entityClass);
 
@@ -984,8 +988,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @deprecated This method will be removed.
 	///             Use [#find(String,Object,FindOption...)] instead.
 	///             See [FindOption].
-	@Deprecated(since = "7.1", forRemoval = true)
 	@SuppressWarnings("removal")
+	@Deprecated(since = "7.1", forRemoval = true)
 	@Nonnull
 	<T> IdentifierLoadAccess<T> byId(@Nonnull String entityName);
 
@@ -1001,9 +1005,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @see #findMultiple(Class, List, FindOption...)
 	///
 	/// @deprecated Use [#findMultiple(Class,List,FindOption...)] instead.
-	@Deprecated(since = "7.2", forRemoval = true)
-	@SuppressWarnings("removal")
 	@Nonnull
+	@SuppressWarnings("removal")
+	@Deprecated(since = "7.2", forRemoval = true)
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(@Nonnull Class<T> entityClass);
 
 	/// Create a [MultiIdentifierLoadAccess] instance to retrieve multiple instances
@@ -1017,9 +1021,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use [#findMultiple(EntityGraph,List,FindOption...)] instead,
 	/// 		with {@linkplain SessionFactory#createGraphForDynamicEntity(String)}.
-	@Deprecated(since = "7.2", forRemoval = true)
-	@SuppressWarnings("removal")
 	@Nonnull
+	@SuppressWarnings("removal")
+	@Deprecated(since = "7.2", forRemoval = true)
 	<T> MultiIdentifierLoadAccess<T> byMultipleIds(@Nonnull String entityName);
 
 	/// Create a [NaturalIdLoadAccess] instance to retrieve an instance of the given
@@ -1035,8 +1039,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///                            or if the entity does not declare a natural id
 	///
 	/// @deprecated Use {@linkplain #find} with [KeyType#NATURAL] instead.
-	@Deprecated(since = "7.3")
 	@Nonnull
+	@Deprecated(since = "7.3")
 	<T> NaturalIdLoadAccess<T> byNaturalId(@Nonnull Class<T> entityClass);
 
 	/// Create a [NaturalIdLoadAccess] instance to retrieve an instance of the named
@@ -1052,8 +1056,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///                            or if the entity does not declare a natural id
 	///
 	/// @deprecated Use {@linkplain #find} with [KeyType#NATURAL] instead.
-	@Deprecated(since = "7.3")
 	@Nonnull
+	@Deprecated(since = "7.3")
 	<T> NaturalIdLoadAccess<T> byNaturalId(@Nonnull String entityName);
 
 	/// Create a [SimpleNaturalIdLoadAccess] instance to retrieve an instance of the
@@ -1069,8 +1073,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///                            or if the entity does not declare a natural id
 	///
 	/// @deprecated Use {@linkplain #find} with [KeyType#NATURAL] instead.
-	@Deprecated(since = "7.3")
 	@Nonnull
+	@Deprecated(since = "7.3")
 	<T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(@Nonnull Class<T> entityClass);
 
 	/// Create a [SimpleNaturalIdLoadAccess] instance to retrieve an instance of the
@@ -1092,7 +1096,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/// Create a [MultiIdentifierLoadAccess] instance to retrieve multiple instances
 	/// of the given entity type by their by {@linkplain org.hibernate.annotations.NaturalId
-	///  natural id} values, using batching.
+	/// natural id} values, using batching.
 	///
 	/// @param entityClass the entity type to be retrieved
 	///
@@ -1103,13 +1107,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// @deprecated Use {@linkplain #findMultiple} with [KeyType#NATURAL] instead.
 	///
-	@Deprecated(since = "7.3")
 	@Nonnull
+	@Deprecated(since = "7.3")
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(@Nonnull Class<T> entityClass);
 
 	/// Create a [MultiIdentifierLoadAccess] instance to retrieve multiple instances
 	/// of the named entity type by their by {@linkplain org.hibernate.annotations.NaturalId
-	///  natural id} values, using batching.
+	/// natural id} values, using batching.
 	///
 	/// @param entityName the entity name of the entity type to be retrieved
 	///
@@ -1119,8 +1123,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///                            or if the entity does not declare a natural id
 	///
 	/// @deprecated Use {@linkplain #findMultiple} with [KeyType#NATURAL] instead.
-	@Deprecated(since = "7.3")
 	@Nonnull
+	@Deprecated(since = "7.3")
 	<T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(@Nonnull String entityName);
 
 	/// Get the [statistics][SessionStatistics] for this session.
@@ -1216,8 +1220,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @return an instance of [LobHelper]
 	///
 	/// @deprecated Use [#getLobHelper()] instead.
-	@Deprecated(since="7.0", forRemoval = true)
 	@Nonnull
+	@Deprecated(since="7.0", forRemoval = true)
 	LobHelper getLobHelper();
 
 	/// Obtain the collection of all managed entities which belong to this
@@ -1340,8 +1344,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param graphName The name of the predefined named entity graph
 	///
 	/// @deprecated Use [#getEntityGraph(String)] instead.
-	@Override @Deprecated(forRemoval = true) @SuppressWarnings("removal")
 	@Nullable
+	@SuppressWarnings("removal")
+	@Override @Deprecated(forRemoval = true)
 	RootGraph<?> createEntityGraph(@Nonnull String graphName);
 
 	/// Create a new mutable instance of [EntityGraph], based on
@@ -1353,8 +1358,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param graphName The name of the predefined named entity graph
 	///
 	/// @deprecated Use [#getEntityGraph(Class, String)] instead.
-	@Override @Deprecated(forRemoval = true) @SuppressWarnings("removal")
 	@Nullable
+	@SuppressWarnings("removal")
+	@Override @Deprecated(forRemoval = true)
 	<T> RootGraph<T> createEntityGraph(@Nonnull Class<T> rootType, @Nonnull String graphName);
 
 	/// Retrieve all named [EntityGraph]s with the given root entity type.
@@ -1403,17 +1409,18 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override @Deprecated(forRemoval = true)
-	@SuppressWarnings("removal")
 	@Nonnull
+	@Override
+	@SuppressWarnings("removal")
+	@Deprecated(forRemoval = true)
 	MutationQuery createQuery(@Nonnull CriteriaStatement<?> criteriaStatement);
 
 	/// @deprecated Use [#createNamedQuery(String)] instead. Retained to allow for
 	/// forms using Hibernate's legacy result-set building, though such usages
 	/// should migrate to using [jakarta.persistence.sql.ResultSetMapping].
-	@Deprecated(since = "8.0", forRemoval = true)
-	@SuppressWarnings("rawtypes")
 	@Nonnull
+	@SuppressWarnings("rawtypes")
+	@Deprecated(since = "8.0", forRemoval = true)
 	NativeQuery getNamedNativeQuery(@Nonnull String name);
 
 }

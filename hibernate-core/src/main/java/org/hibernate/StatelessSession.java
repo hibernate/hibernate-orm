@@ -107,7 +107,6 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
 	void insertMultiple(@Nonnull List<?> entities);
 
 	/**
@@ -142,7 +141,6 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
 	void updateMultiple(@Nonnull List<?> entities);
 
 	/**
@@ -175,7 +173,6 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
 	void deleteMultiple(@Nonnull List<?> entities);
 
 	/**
@@ -210,7 +207,6 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *
 	 * @since 6.3
 	 */
-	@Incubating
 	void upsert(@Nonnull Object entity);
 
 	/**
@@ -225,7 +221,6 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
 	void upsertMultiple(@Nonnull List<?> entities);
 
 	/**
@@ -237,7 +232,6 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *
 	 * @since 6.3
 	 */
-	@Incubating
 	void upsert(@Nonnull String entityName, @Nonnull Object entity);
 
 	/**
@@ -250,8 +244,8 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 * @return a detached entity instance, or null if there
 	 *         is no instance with the given id
 	 */
-	@Deprecated(forRemoval = true, since = "8.0")
 	@Nonnull
+	@Deprecated(forRemoval = true, since = "8.0")
 	Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode);
 
 	/**
@@ -268,8 +262,8 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *             instead
 	 * @since 6.3
 	 */
-	@Deprecated(forRemoval = true, since = "8.0")
 	@Nonnull
+	@Deprecated(forRemoval = true, since = "8.0")
 	<T> T get(@Nonnull EntityGraph<T> graph, @Nonnull GraphSemantic graphSemantic, @Nonnull Object id);
 
 	/**
@@ -288,8 +282,8 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *             instead
 	 * @since 6.3
 	 */
-	@Deprecated(forRemoval = true, since = "8.0")
 	@Nonnull
+	@Deprecated(forRemoval = true, since = "8.0")
 	<T> T get(@Nonnull EntityGraph<T> graph, @Nonnull GraphSemantic graphSemantic, @Nonnull Object id, @Nonnull LockMode lockMode);
 
 	/**
@@ -311,8 +305,8 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 *             instead
 	 * @since 7.0
 	 */
-	@Deprecated(forRemoval = true, since = "8.0")
 	@Nonnull
+	@Deprecated(forRemoval = true, since = "8.0")
 	<T> List<T> getMultiple(@Nonnull EntityGraph<T> entityGraph, @Nonnull GraphSemantic graphSemantic, @Nonnull List<?> ids);
 
 	/**

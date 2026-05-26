@@ -185,7 +185,7 @@ mysql_9_7() {
 mysql_post_setup() {
     # Install components
     # file://component_classic_hashing - This is for legacy hashing algorithms on MySQL 9.7: SHA1 and MD5.
-    $CONTAINER_CLI exec mysql bash -c "mysql -u root -phibernate_orm_test -e \"INSTALL COMPONENT 'file://component_classic_hashing'\"" 2>/dev/null
+    $CONTAINER_CLI exec mysql bash -c "mysql -u root -phibernate_orm_test -e \"INSTALL COMPONENT 'file://component_classic_hashing'\"" 2>/dev/null || true # Ignore errors on older MySQL versions that don't have this package
 
     databases=()
     for n in $(seq 1 $DB_COUNT)

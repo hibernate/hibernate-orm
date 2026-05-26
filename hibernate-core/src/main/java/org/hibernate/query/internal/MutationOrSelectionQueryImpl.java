@@ -26,6 +26,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.query.IllegalMutationQueryException;
+import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.ParameterMetadata;
@@ -112,29 +114,50 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	@Override
 	@Nonnull
 	public MutationQuery asStatement() {
-		return delegate.asMutationQuery();
+		try {
+			return delegate.asMutationQuery();
+		}
+		catch (IllegalMutationQueryException e) {
+			throw new IllegalStateException( e.getMessage(), e );
+		}
 	}
 
 	@Override
 	@Nonnull
 	public <R> SelectionQuery<R> ofType(@Nonnull Class<R> type) {
-		return delegate.asSelectionQuery( type );
+		try {
+			return delegate.asSelectionQuery( type );
+		}
+		catch (IllegalSelectQueryException e) {
+			throw new IllegalStateException( e.getMessage(), e );
+		}
 	}
 
 	@Override
 	@Nonnull
 	public <R> SelectionQuery<R> withEntityGraph(@Nonnull EntityGraph<R> entityGraph) {
-		return delegate.asSelectionQuery( entityGraph );
+		try {
+			return delegate.asSelectionQuery( entityGraph );
+		}
+		catch (IllegalSelectQueryException e) {
+			throw new IllegalStateException( e.getMessage(), e );
+		}
 	}
 
 	@Override
 	@Nonnull
 	public <R> SelectionQuery<R> withResultSetMapping(@Nonnull ResultSetMapping<R> mapping) {
-		return delegate.withResultSetMapping( mapping );
+		try {
+			return delegate.withResultSetMapping( mapping );
+		}
+		catch (IllegalSelectQueryException e) {
+			throw new IllegalStateException( e.getMessage(), e );
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Query identity
+
 	@Override
 	@Nullable
 	public String getQueryString() {
@@ -159,7 +182,7 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 	@Override
 	@SuppressWarnings("removal")
 	public int executeUpdate() {
-		return delegate.asMutationQuery().execute();
+		return delegate.executeUpdate();
 	}
 
 	@Override @Deprecated

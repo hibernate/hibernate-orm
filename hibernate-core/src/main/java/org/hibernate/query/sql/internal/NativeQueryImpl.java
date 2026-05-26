@@ -45,6 +45,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
@@ -814,13 +815,23 @@ public class NativeQueryImpl<R>
 	@Override
 	@Nonnull
 	public MutationQuery asStatement() {
-		return asMutationQuery();
+		try {
+			return asMutationQuery();
+		}
+		catch (IllegalMutationQueryException e) {
+			throw new IllegalStateException( "Cannot convert a native query to a statement", e );
+		}
 	}
 
 	@Override
 	@Nonnull
 	public <T> SelectionQuery<T> ofType(@Nonnull Class<T> resultType) {
-		return asSelectionQuery( resultType );
+		try {
+			return asSelectionQuery( resultType );
+		}
+		catch (IllegalSelectQueryException e) {
+			throw new IllegalStateException( "Cannot convert a native query to a typed query", e );
+		}
 	}
 
 	@Override

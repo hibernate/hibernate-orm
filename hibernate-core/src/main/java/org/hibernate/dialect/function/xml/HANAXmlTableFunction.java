@@ -73,6 +73,9 @@ import static org.hibernate.sql.ast.spi.AbstractSqlAstTranslator.isParameter;
  */
 public class HANAXmlTableFunction extends XmlTableFunction {
 
+	// The memory limit for a data type on HANA
+	private static final int MEMORY_LIMIT = 1024 * 1024 * 64;
+
 	public HANAXmlTableFunction(TypeConfiguration typeConfiguration) {
 		super( false, new DB2XmlTableSetReturningFunctionTypeResolver(), typeConfiguration );
 	}
@@ -401,7 +404,8 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 			// Float is also not supported, but double is
 			case "float" -> "double";
 			// Clobs are also not supported, so use the biggest nvarchar possible
-			case "clob", "nclob" -> "nvarchar(5000)";
+			case "clob" -> "varchar(" + MEMORY_LIMIT + ")";
+			case "nclob" -> "nvarchar(" + MEMORY_LIMIT + ")";
 			default -> columnDefinition;
 		};
 	}

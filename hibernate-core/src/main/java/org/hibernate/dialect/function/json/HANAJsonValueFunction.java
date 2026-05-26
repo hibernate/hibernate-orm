@@ -22,6 +22,9 @@ import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName
  */
 public class HANAJsonValueFunction extends JsonValueFunction {
 
+	// The memory limit for a data type on HANA
+	private static final int MEMORY_LIMIT = 1024 * 1024 * 64;
+
 	public HANAJsonValueFunction(TypeConfiguration typeConfiguration) {
 		super( typeConfiguration, true, false );
 	}
@@ -67,8 +70,9 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 		return switch ( baseName ) {
 			case "real", "float", "double", "decimal" -> "decimal";
 			case "tinyint", "smallint" -> "integer";
-			case "clob" -> "varchar(5000)";
-			case "nclob" -> "nvarchar(5000)";
+			// Clobs are also not supported, so use the biggest varchar/nvarchar possible
+			case "clob" -> "varchar(" + MEMORY_LIMIT + ")";
+			case "nclob" -> "nvarchar(" + MEMORY_LIMIT + ")";
 			default -> columnDefinition;
 		};
 	}

@@ -4,12 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.SemanticException;
@@ -105,6 +106,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		return walker.visitQueryGroup( this );
 	}
 
+	@Nonnull
 	@Override
 	public List<SqmQueryPart<T>> getQueryParts() {
 		return unmodifiableList( queryParts );
@@ -122,26 +124,30 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 
+	@Nonnull
 	@Override
-	public SqmQueryGroup<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
+	public SqmQueryGroup<T> setSortSpecifications(@Nonnull List<? extends JpaOrder> sortSpecifications) {
 		super.setSortSpecifications( sortSpecifications );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQueryGroup<T> setOffset(@Nullable JpaExpression<? extends Number> offset) {
 		super.setOffset( offset );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQueryGroup<T> setFetch(@Nullable JpaExpression<? extends Number> fetch) {
 		super.setFetch( fetch );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmQueryGroup<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+	public SqmQueryGroup<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, @Nonnull FetchClauseType fetchClauseType) {
 		super.setFetch( fetch, fetchClauseType );
 		return this;
 	}

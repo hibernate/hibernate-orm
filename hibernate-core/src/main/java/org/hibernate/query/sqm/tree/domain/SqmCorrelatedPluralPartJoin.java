@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -50,6 +51,7 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 		return walker.visitCorrelatedPluralPartJoin( this );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPluralPartJoin<O, T> getCorrelationParent() {
 		return correlationParent;

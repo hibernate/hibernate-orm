@@ -4,15 +4,16 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SemanticException;
@@ -94,27 +95,35 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 		// do nothing
 	}
 
+	@Nullable
 	@Override
 	default JavaType<T> getJavaTypeDescriptor() {
 		return getNodeType().getExpressibleJavaType();
 	}
 
+	@Nonnull
 	@Override
-	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType);
+	<S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull Class<S> treatJavaType);
 
+	@Nonnull
 	@Override
-	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget);
+	<S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget);
 
-	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, @Nullable String alias);
+	@Nonnull
+	<S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias);
 
-	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
+	@Nonnull
+	<S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias);
 
-	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch);
+	@Nonnull
+	<S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch);
 
-	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch);
+	@Nonnull
+	<S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch);
 
+	@Nonnull
 	default SqmRoot<?> findRoot() {
-		final SqmPath<?> lhs = getLhs();
+		final var lhs = getLhs();
 		if ( lhs != null ) {
 			return lhs.findRoot();
 		}
@@ -143,20 +152,25 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
+	@Nonnull
 	@Override
-	<Y> SqmPath<Y> get(SingularAttribute<? super T, Y> attribute);
+	<Y> SqmPath<Y> get(@Nonnull SingularAttribute<? super T, Y> attribute);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<E>> SqmPluralPath<C,E> get(PluralAttribute<? super T, C, E> collection);
+	<E, C extends Collection<E>> SqmPluralPath<C,E> get(@Nonnull PluralAttribute<? super T, C, E> collection);
 
+	@Nonnull
 	@Override
-	<K, V, M extends Map<K, V>> SqmPluralPath<M,V> get(MapAttribute<? super T, K, V> map);
+	<K, V, M extends Map<K, V>> SqmPluralPath<M,V> get(@Nonnull MapAttribute<? super T, K, V> map);
 
+	@Nonnull
 	@Override
 	SqmExpression<Class<? extends T>> type();
 
+	@Nonnull
 	@Override
-	<Y> SqmPath<Y> get(String attributeName);
+	<Y> SqmPath<Y> get(@Nonnull String attributeName);
 
 	/**
 	 * Same as {@link #get(String)}, but if {@code includeSubtypes} is set to {@code true}

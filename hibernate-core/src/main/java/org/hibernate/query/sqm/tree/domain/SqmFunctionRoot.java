@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -92,6 +93,7 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<E> getModel() {
 		throw new UnsupportedOperationException( "Function root does not have an entity type. Use getReferencedPathSource() instead." );
@@ -108,12 +110,14 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	}
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedRoot<E> createCorrelation() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public <S extends E> SqmTreatedFrom<E, E, S>  treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends E> SqmTreatedFrom<E, E, S>  treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		throw new UnsupportedOperationException( "Function roots can not be treated" );
 	}
 

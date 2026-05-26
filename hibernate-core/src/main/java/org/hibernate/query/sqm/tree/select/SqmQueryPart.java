@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
@@ -131,13 +132,15 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	// JPA
 
 	@Override
+	@Nonnull
 	public List<SqmSortSpecification> getSortSpecifications() {
 		final SqmOrderByClause orderByClause = getOrderByClause();
 		return orderByClause == null ? emptyList() : orderByClause.getSortSpecifications();
 	}
 
+	@Nonnull
 	@Override
-	public SqmQueryPart<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
+	public SqmQueryPart<T> setSortSpecifications(@Nonnull List<? extends JpaOrder> sortSpecifications) {
 		SqmOrderByClause orderByClause = getOrderByClause();
 		if ( orderByClause == null ) {
 			setOrderByClause( orderByClause = new SqmOrderByClause() );
@@ -154,6 +157,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		return getOffsetExpression();
 	}
 
+	@Nonnull
 	@Override
 	public SqmQueryPart<T> setOffset(@Nullable JpaExpression<? extends Number> offset) {
 		setOffsetExpression( (SqmExpression<? extends Number>) offset );
@@ -165,14 +169,16 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		return getFetchExpression();
 	}
 
+	@Nonnull
 	@Override
 	public SqmQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch) {
 		setFetchExpression( (SqmExpression<? extends Number>) fetch );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+	public JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
 		setFetchExpression( (SqmExpression<? extends Number>) fetch, fetchClauseType );
 		return this;
 	}

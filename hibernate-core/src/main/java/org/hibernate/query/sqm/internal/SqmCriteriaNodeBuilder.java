@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import jakarta.annotation.Nullable;
 import java.io.InvalidObjectException;
 import java.io.Serial;
 import java.io.Serializable;
@@ -34,6 +35,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.criteria.BooleanExpression;
@@ -173,7 +175,6 @@ import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.criteria.TemporalField;
 import jakarta.persistence.metamodel.Bindable;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 import static java.util.Arrays.asList;
@@ -352,6 +353,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return bindingContext.getJpaMetamodel();
 	}
 
+	@Nonnull
 	@Override
 	public SqmSelectStatement<Object> createQuery() {
 		// IMPORTANT: we want to pass null here for the result-type
@@ -361,8 +363,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmSelectStatement<>( Object.class, this );
 	}
 
+	@Nonnull
 	@Override
-	public <T> SqmSelectStatement<T> createQuery(Class<T> resultClass) {
+	public <T> SqmSelectStatement<T> createQuery(@Nonnull Class<T> resultClass) {
 		return new SqmSelectStatement<>( resultClass, this );
 	}
 
@@ -377,8 +380,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaQuery<?> createQuery(String jpql) {
+	public CriteriaQuery<?> createQuery(@Nonnull String jpql) {
 		if ( queryEngine.getHqlTranslator().translate( jpql, null )
 				instanceof SqmSelectStatement<?> selectStatement ) {
 			return new SqmSelectStatement<>( selectStatement );
@@ -388,23 +392,27 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass, String jpql) {
+	public <T> CriteriaQuery<T> createQuery(@Nonnull Class<T> resultClass, @Nonnull String jpql) {
 		return createQuery( jpql, resultClass );
 	}
 
+	@Nonnull
 	@Override
 	public SqmSelectStatement<Tuple> createTupleQuery() {
 		return new SqmSelectStatement<>( Tuple.class, this );
 	}
 
+	@Nonnull
 	@Override
-	public <T> SqmUpdateStatement<T> createCriteriaUpdate(Class<T> targetEntity) {
+	public <T> SqmUpdateStatement<T> createCriteriaUpdate(@Nonnull Class<T> targetEntity) {
 		return new SqmUpdateStatement<>( targetEntity, this );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity, String jpql) {
+	public <T> CriteriaUpdate<T> createCriteriaUpdate(@Nonnull Class<T> targetEntity, @Nonnull String jpql) {
 		if ( queryEngine.getHqlTranslator().translate( jpql, targetEntity )
 				instanceof SqmUpdateStatement<?> updateStatement ) {
 			return new SqmUpdateStatement<>( updateStatement );
@@ -414,8 +422,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaUpdate<?> createCriteriaUpdate(String jpql) {
+	public CriteriaUpdate<?> createCriteriaUpdate(@Nonnull String jpql) {
 		if ( queryEngine.getHqlTranslator().translate( jpql, null )
 				instanceof SqmUpdateStatement<?> updateStatement ) {
 			return new SqmUpdateStatement<>( updateStatement );
@@ -425,13 +434,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <T> SqmDeleteStatement<T> createCriteriaDelete(Class<T> targetEntity) {
+	public <T> SqmDeleteStatement<T> createCriteriaDelete(@Nonnull Class<T> targetEntity) {
 		return new SqmDeleteStatement<>( targetEntity, this );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity, String jpql) {
+	public <T> CriteriaDelete<T> createCriteriaDelete(@Nonnull Class<T> targetEntity, @Nonnull String jpql) {
 		if ( queryEngine.getHqlTranslator().translate( jpql, targetEntity )
 				instanceof SqmDeleteStatement<?> deleteStatement ) {
 			return new SqmDeleteStatement<>( deleteStatement );
@@ -441,8 +452,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaDelete<?> createCriteriaDelete(String jpql) {
+	public CriteriaDelete<?> createCriteriaDelete(@Nonnull String jpql) {
 		if ( queryEngine.getHqlTranslator().translate( jpql, null )
 				instanceof SqmDeleteStatement<?> deleteStatement ) {
 			return new SqmDeleteStatement<>( deleteStatement );
@@ -452,19 +464,21 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
 	public <T> TypedQueryReference<T> augment(
-			TypedQueryReference<T> reference,
-			Consumer<CriteriaQuery<T>> augmentation) {
+			@Nonnull TypedQueryReference<T> reference,
+			@Nonnull Consumer<CriteriaQuery<T>> augmentation) {
 		return SelectionSpecification.create( reference )
 				.augment( (builder, query, root) -> augmentation.accept( query ) )
 				.reference();
 	}
 
+	@Nonnull
 	@Override
 	public StatementReference augment(
-			StatementReference reference,
-			Consumer<CriteriaStatement<?>> augmentation) {
+			@Nonnull StatementReference reference,
+			@Nonnull Consumer<CriteriaStatement<?>> augmentation) {
 		return MutationSpecification.create( reference )
 				.augment( (builder, statement, root) -> augmentation.accept( (CriteriaStatement<?>) statement ) )
 				.reference();
@@ -506,8 +520,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return setOperation( all ? SetOperator.EXCEPT_ALL : SetOperator.EXCEPT, query1, queries );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+	public <T> JpaCriteriaSelect<T> union(@Nonnull CriteriaSelect<? extends T> left, @Nonnull CriteriaSelect<? extends T> right) {
 		if ( left instanceof Subquery<?> ) {
 			assert right instanceof Subquery<?>;
 			//noinspection unchecked
@@ -528,8 +543,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return setOperation( all ? SetOperator.UNION_ALL : SetOperator.UNION, query1, queries );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+	public <T> CriteriaSelect<T> unionAll(@Nonnull CriteriaSelect<? extends T> left, @Nonnull CriteriaSelect<? extends T> right) {
 		if ( left instanceof Subquery<?> ) {
 			assert right instanceof Subquery<?>;
 			//noinspection unchecked
@@ -548,8 +564,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return setOperation( all ? SetOperator.INTERSECT_ALL : SetOperator.INTERSECT, query1, queries );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+	public <T> CriteriaSelect<T> except(@Nonnull CriteriaSelect<T> left, @Nonnull CriteriaSelect<?> right) {
 		if ( left instanceof Subquery<?> ) {
 			assert right instanceof Subquery<?>;
 			//noinspection unchecked
@@ -565,8 +582,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+	public <T> CriteriaSelect<T> exceptAll(@Nonnull CriteriaSelect<T> left, @Nonnull CriteriaSelect<?> right) {
 		if ( left instanceof Subquery<?> ) {
 			assert right instanceof Subquery<?>;
 			//noinspection unchecked
@@ -771,34 +789,40 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmFkExpression<>( sqmPath );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T extends X> SqmPath<T> treat(Path<X> path, Class<T> type) {
+	public <X, T extends X> SqmPath<T> treat(@Nonnull Path<X> path, @Nonnull Class<T> type) {
 		return ( (SqmPath<X>) path ).treatAs( type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T extends X> SqmRoot<T> treat(Root<X> root, Class<T> type) {
+	public <X, T extends X> SqmRoot<T> treat(@Nonnull Root<X> root, @Nonnull Class<T> type) {
 		//noinspection unchecked
 		return (SqmTreatedRoot) ( (SqmRoot<X>) root ).treatAs( type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, Y, T extends Y> SqmFrom<X, T> treat(From<X, Y> from, Class<T> type) {
+	public <X, Y, T extends Y> SqmFrom<X, T> treat(@Nonnull From<X, Y> from, @Nonnull Class<T> type) {
 		return ( (SqmFrom<X, Y>) from ).treatAs( type );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+	public <T> JpaCriteriaQuery<T> union(@Nonnull CriteriaQuery<? extends T> left, @Nonnull CriteriaQuery<? extends T> right) {
 		return createUnionSet( SetOperator.UNION, left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+	public <T> JpaCriteriaQuery<T> unionAll(@Nonnull CriteriaQuery<? extends T> left, @Nonnull CriteriaQuery<? extends T> right) {
 		return createUnionSet( SetOperator.UNION_ALL, left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+	public <T> CriteriaSelect<T> intersect(@Nonnull CriteriaSelect<? super T> left, @Nonnull CriteriaSelect<? super T> right) {
 		if ( left instanceof Subquery<?> ) {
 			assert right instanceof Subquery<?>;
 			//noinspection unchecked
@@ -808,8 +832,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return setOperation( SetOperator.INTERSECT, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+	public <T> CriteriaSelect<T> intersectAll(@Nonnull CriteriaSelect<? super T> left, @Nonnull CriteriaSelect<? super T> right) {
 		if ( left instanceof Subquery<?> ) {
 			assert right instanceof Subquery<?>;
 			//noinspection unchecked
@@ -845,13 +870,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return sqmSelectStatement;
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+	public <T> JpaCriteriaQuery<T> intersect(@Nonnull CriteriaQuery<? super T> left, @Nonnull CriteriaQuery<? super T> right) {
 		return createIntersectSet( SetOperator.INTERSECT, left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+	public <T> JpaCriteriaQuery<T> intersectAll(@Nonnull CriteriaQuery<? super T> left, @Nonnull CriteriaQuery<? super T> right) {
 		return createIntersectSet( SetOperator.INTERSECT_ALL, left, right );
 	}
 
@@ -881,13 +908,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return sqmSelectStatement;
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+	public <T> JpaCriteriaQuery<T> except(@Nonnull CriteriaQuery<T> left, @Nonnull CriteriaQuery<?> right) {
 		return createExceptSet( SetOperator.EXCEPT, left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+	public <T> JpaCriteriaQuery<T> exceptAll(@Nonnull CriteriaQuery<T> left, @Nonnull CriteriaQuery<?> right) {
 		return createExceptSet( SetOperator.EXCEPT_ALL, left, right );
 	}
 
@@ -917,28 +946,33 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return sqmSelectStatement;
 	}
 
+	@Nonnull
 	@Override
-	public <X, T, V extends T> SqmSingularJoin<X, V> treat(Join<X, T> join, Class<V> type) {
+	public <X, T, V extends T> SqmSingularJoin<X, V> treat(@Nonnull Join<X, T> join, @Nonnull Class<V> type) {
 		return (SqmTreatedSingularJoin<X,T,V>) ( (SqmSingularJoin<X, T>) join ).treatAs( type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T, E extends T> SqmBagJoin<X, E> treat(CollectionJoin<X, T> join, Class<E> type) {
+	public <X, T, E extends T> SqmBagJoin<X, E> treat(@Nonnull CollectionJoin<X, T> join, @Nonnull Class<E> type) {
 		return ( (SqmBagJoin<X, T>) join ).treatAs( type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T, E extends T> SqmSetJoin<X, E> treat(SetJoin<X, T> join, Class<E> type) {
+	public <X, T, E extends T> SqmSetJoin<X, E> treat(@Nonnull SetJoin<X, T> join, @Nonnull Class<E> type) {
 		return ( (SqmSetJoin<X, T>) join ).treatAs( type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T, E extends T> SqmListJoin<X, E> treat(ListJoin<X, T> join, Class<E> type) {
+	public <X, T, E extends T> SqmListJoin<X, E> treat(@Nonnull ListJoin<X, T> join, @Nonnull Class<E> type) {
 		return ( (SqmListJoin<X, T>) join ).treatAs( type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, K, T, V extends T> SqmMapJoin<X, K, V> treat(MapJoin<X, K, T> join, Class<V> type) {
+	public <X, K, T, V extends T> SqmMapJoin<X, K, V> treat(@Nonnull MapJoin<X, K, T> join, @Nonnull Class<V> type) {
 		return ( (SqmMapJoin<X, K, T>) join ).treatAs( type );
 	}
 
@@ -966,23 +1000,27 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmSortSpecification( (SqmExpression<?>) sortExpression );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSortSpecification asc(Expression<?> x) {
+	public SqmSortSpecification asc(@Nonnull Expression<?> x) {
 		return new SqmSortSpecification( (SqmExpression<?>) x, SortDirection.ASCENDING );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSortSpecification desc(Expression<?> x) {
+	public SqmSortSpecification desc(@Nonnull Expression<?> x) {
 		return new SqmSortSpecification( (SqmExpression<?>) x, SortDirection.DESCENDING );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSortSpecification asc(Expression<?> expression, Nulls nullPrecedence) {
+	public SqmSortSpecification asc(@Nonnull Expression<?> expression, @Nonnull Nulls nullPrecedence) {
 		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.ASCENDING, nullPrecedence );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSortSpecification desc(Expression<?> expression, Nulls nullPrecedence) {
+	public SqmSortSpecification desc(@Nonnull Expression<?> expression, @Nonnull Nulls nullPrecedence) {
 		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.DESCENDING, nullPrecedence );
 	}
 
@@ -1047,13 +1085,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(Selection<?>... selections) {
+	public JpaCompoundSelection<Tuple> tuple(@Nonnull Selection<?>... selections) {
 		return tuple( asList( selections ) );
 	}
 
+	@Nonnull
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
+	public JpaCompoundSelection<Tuple> tuple(@Nonnull List<Selection<?>> selections) {
 		checkMultiselect( selections );
 		return new SqmJpaCompoundSelection<>(
 				selections.stream().map( selection -> (SqmSelectableNode<?>) selection ).toList(),
@@ -1062,14 +1102,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCompoundSelection<Object[]> array(Selection<?>... selections) {
+	public JpaCompoundSelection<Object[]> array(@Nonnull Selection<?>... selections) {
 		return array( Object[].class,
 				Arrays.stream( selections ).map( selection -> (SqmSelectableNode<?>) selection ).toList() );
 	}
 
+	@Nonnull
 	@Override
-	public JpaCompoundSelection<Object[]> array(List<Selection<?>> selections) {
+	public JpaCompoundSelection<Object[]> array(@Nonnull List<Selection<?>> selections) {
 		return arrayInternal( Object[].class,
 				selections.stream().map( selection -> (SqmSelectableNode<?>) selection ).toList() );
 	}
@@ -1092,8 +1134,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmJpaCompoundSelection<>( selections, javaType, this );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... arguments) {
+	public <Y> JpaCompoundSelection<Y> construct(@Nonnull Class<Y> resultClass, @Nonnull Selection<?>... arguments) {
 		return constructInternal( resultClass,
 				Arrays.stream( arguments ).map( arg -> (SqmSelectableNode<?>) arg ).toList() );
 	}
@@ -1153,8 +1196,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<Double> avg(Expression<N> argument) {
+	public <N extends Number> SqmExpression<Double> avg(@Nonnull Expression<N> argument) {
 		return getFunctionDescriptor( "avg" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
@@ -1162,9 +1206,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	public <N extends Number> SqmExpression<N> sum(Expression<N> argument) {
+	public <N extends Number> SqmExpression<N> sum(@Nonnull Expression<N> argument) {
 		final var typedNode = (SqmTypedNode<N>) argument;
 		return getFunctionDescriptor( "sum" ).generateSqmExpression(
 				typedNode,
@@ -1173,8 +1218,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Long> sumAsLong(Expression<Integer> argument) {
+	public SqmExpression<Long> sumAsLong(@Nonnull Expression<Integer> argument) {
 		return getFunctionDescriptor( "sum" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
@@ -1182,8 +1228,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Double> sumAsDouble(Expression<Float> argument) {
+	public SqmExpression<Double> sumAsDouble(@Nonnull Expression<Float> argument) {
 		return getFunctionDescriptor( "sum" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
@@ -1191,8 +1238,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> max(Expression<N> argument) {
+	public <N extends Number> SqmExpression<N> max(@Nonnull Expression<N> argument) {
 		return getFunctionDescriptor( "max" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
@@ -1200,8 +1248,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> min(Expression<N> argument) {
+	public <N extends Number> SqmExpression<N> min(@Nonnull Expression<N> argument) {
 		return getFunctionDescriptor( "min" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
@@ -1209,20 +1258,23 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <X extends Comparable<? super X>> SqmExpression<X> greatest(Expression<X> argument) {
+	public <X extends Comparable<? super X>> SqmExpression<X> greatest(@Nonnull Expression<X> argument) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "max" )
 				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine);
 	}
 
+	@Nonnull
 	@Override
-	public <X extends Comparable<? super X>> SqmExpression<X> least(Expression<X> argument) {
+	public <X extends Comparable<? super X>> SqmExpression<X> least(@Nonnull Expression<X> argument) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "min" )
 				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Long> count(Expression<?> argument) {
+	public SqmExpression<Long> count(@Nonnull Expression<?> argument) {
 		return getFunctionDescriptor( "count" ).generateSqmExpression(
 				(SqmTypedNode<?>) argument,
 				null,
@@ -1230,8 +1282,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Long> countDistinct(Expression<?> argument) {
+	public SqmExpression<Long> countDistinct(@Nonnull Expression<?> argument) {
 		return getFunctionDescriptor( "count" ).generateSqmExpression(
 				new SqmDistinct<>( (SqmExpression<?>) argument, this ),
 				null,
@@ -1248,8 +1301,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Integer> sign(Expression<? extends Number> x) {
+	public SqmExpression<Integer> sign(@Nonnull Expression<? extends Number> x) {
 		return getFunctionDescriptor( "sign" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
@@ -1257,8 +1311,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> ceiling(Expression<N> x) {
+	public <N extends Number> SqmExpression<N> ceiling(@Nonnull Expression<N> x) {
 		return getFunctionDescriptor( "ceiling" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
@@ -1266,8 +1321,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> floor(Expression<N> x) {
+	public <N extends Number> SqmExpression<N> floor(@Nonnull Expression<N> x) {
 		return getFunctionDescriptor( "floor" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
@@ -1275,8 +1331,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Double> exp(Expression<? extends Number> x) {
+	public SqmExpression<Double> exp(@Nonnull Expression<? extends Number> x) {
 		return getFunctionDescriptor( "exp" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
@@ -1284,8 +1341,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Double> ln(Expression<? extends Number> x) {
+	public SqmExpression<Double> ln(@Nonnull Expression<? extends Number> x) {
 		return getFunctionDescriptor( "ln" ).generateSqmExpression(
 				(SqmExpression<?>) x,
 				null,
@@ -1293,8 +1351,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Double> power(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public SqmExpression<Double> power(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
 		return getFunctionDescriptor( "power" ).generateSqmExpression(
 				asList( (SqmExpression<?>) x, (SqmExpression<?>) y),
 				null,
@@ -1302,8 +1361,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Double> power(Expression<? extends Number> x, Number y) {
+	public SqmExpression<Double> power(@Nonnull Expression<? extends Number> x, Number y) {
 		return getFunctionDescriptor( "power" ).generateSqmExpression(
 				asList( (SqmExpression<?>) x, value( y ) ),
 				null,
@@ -1311,8 +1371,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <T extends Number> SqmExpression<T> round(Expression<T> x, Integer n) {
+	public <T extends Number> SqmExpression<T> round(@Nonnull Expression<T> x, @Nonnull Integer n) {
 		return getFunctionDescriptor( "round" ).generateSqmExpression(
 				asList( (SqmExpression<?>) x, value( n ) ),
 				null,
@@ -1329,8 +1390,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> neg(Expression<N> x) {
+	public <N extends Number> SqmExpression<N> neg(@Nonnull Expression<N> x) {
 		return new SqmUnaryOperation<>(
 				UnaryArithmeticOperator.UNARY_MINUS,
 				(SqmExpression<N>) x,
@@ -1338,8 +1400,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> abs(Expression<N> x) {
+	public <N extends Number> SqmExpression<N> abs(@Nonnull Expression<N> x) {
 		return getFunctionDescriptor( "abs" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
@@ -1457,8 +1520,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				value( datetime ), (SqmExpression<Duration>) duration );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> sum(Expression<? extends N> x, Expression<? extends N> y) {
+	public <N extends Number> SqmExpression<N> sum(@Nonnull Expression<? extends N> x, @Nonnull Expression<? extends N> y) {
 		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD,
 				(SqmExpression<? extends N>) x, (SqmExpression<? extends N>) y );
 	}
@@ -1485,8 +1549,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> sum(Expression<? extends N> x, N y) {
+	public <N extends Number> SqmExpression<N> sum(@Nonnull Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
 				(SqmExpression<? extends N>) x,
@@ -1494,8 +1559,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> sum(N x, Expression<? extends N> y) {
+	public <N extends Number> SqmExpression<N> sum(N x, @Nonnull Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
 				value( x ),
@@ -1503,8 +1569,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> prod(Expression<? extends N> x, Expression<? extends N> y) {
+	public <N extends Number> SqmExpression<N> prod(@Nonnull Expression<? extends N> x, @Nonnull Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
 				(SqmExpression<? extends N>) x,
@@ -1512,8 +1579,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> prod(Expression<? extends N> x, N y) {
+	public <N extends Number> SqmExpression<N> prod(@Nonnull Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
 				(SqmExpression<? extends N>) x,
@@ -1521,8 +1589,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> prod(N x, Expression<? extends N> y) {
+	public <N extends Number> SqmExpression<N> prod(N x, @Nonnull Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
 				value( x ),
@@ -1530,8 +1599,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> diff(Expression<? extends N> x, Expression<? extends N> y) {
+	public <N extends Number> SqmExpression<N> diff(@Nonnull Expression<? extends N> x, @Nonnull Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
 				(SqmExpression<? extends N>) x,
@@ -1539,8 +1609,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> diff(Expression<? extends N> x, N y) {
+	public <N extends Number> SqmExpression<N> diff(@Nonnull Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
 				(SqmExpression<? extends N>) x,
@@ -1548,8 +1619,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> SqmExpression<N> diff(N x, Expression<? extends N> y) {
+	public <N extends Number> SqmExpression<N> diff(N x, @Nonnull Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
 				value( x ),
@@ -1557,8 +1629,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Number> quot(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public SqmExpression<Number> quot(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
 				(SqmExpression<? extends Number>) x,
@@ -1566,8 +1639,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Number> quot(Expression<? extends Number> x, Number y) {
+	public SqmExpression<Number> quot(@Nonnull Expression<? extends Number> x, Number y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
 				(SqmExpression<? extends Number>) x,
@@ -1575,8 +1649,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Number> quot(Number x, Expression<? extends Number> y) {
+	public SqmExpression<Number> quot(Number x, @Nonnull Expression<? extends Number> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
 				value( x ),
@@ -1593,8 +1668,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Integer> mod(Expression<Integer> x, Expression<Integer> y) {
+	public SqmExpression<Integer> mod(@Nonnull Expression<Integer> x, @Nonnull Expression<Integer> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
 				(SqmExpression<Integer>) x,
@@ -1602,8 +1678,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Integer> mod(Expression<Integer> x, Integer y) {
+	public SqmExpression<Integer> mod(@Nonnull Expression<Integer> x, Integer y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
 				(SqmExpression<Integer>) x,
@@ -1611,8 +1688,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Integer> mod(Integer x, Expression<Integer> y) {
+	public SqmExpression<Integer> mod(Integer x, @Nonnull Expression<Integer> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
 				value( x ),
@@ -1620,8 +1698,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Double> sqrt(Expression<? extends Number> x) {
+	public SqmExpression<Double> sqrt(@Nonnull Expression<? extends Number> x) {
 		return getFunctionDescriptor( "sqrt" ).generateSqmExpression(
 				(SqmTypedNode<?>) x,
 				null,
@@ -1629,38 +1708,45 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Long> toLong(Expression<? extends Number> number) {
+	public SqmExpression<Long> toLong(@Nonnull Expression<? extends Number> number) {
 		return ( (SqmExpression<?>) number ).asLong();
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Integer> toInteger(Expression<? extends Number> number) {
+	public SqmExpression<Integer> toInteger(@Nonnull Expression<? extends Number> number) {
 		return ( (SqmExpression<?>) number ).asInteger();
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Float> toFloat(Expression<? extends Number> number) {
+	public SqmExpression<Float> toFloat(@Nonnull Expression<? extends Number> number) {
 		return ( (SqmExpression<?>) number ).asFloat();
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<Double> toDouble(Expression<? extends Number> number) {
+	public SqmExpression<Double> toDouble(@Nonnull Expression<? extends Number> number) {
 		return ( (SqmExpression<?>) number ).asDouble();
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<BigDecimal> toBigDecimal(Expression<? extends Number> number) {
+	public SqmExpression<BigDecimal> toBigDecimal(@Nonnull Expression<? extends Number> number) {
 		return ( (SqmExpression<?>) number ).asBigDecimal();
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<BigInteger> toBigInteger(Expression<? extends Number> number) {
+	public SqmExpression<BigInteger> toBigInteger(@Nonnull Expression<? extends Number> number) {
 		return ( (SqmExpression<?>) number ).asBigInteger();
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<String> toString(Expression<Character> character) {
+	public SqmExpression<String> toString(@Nonnull Expression<Character> character) {
 		return ( (SqmExpression<?>) character ).asString();
 	}
 
@@ -1717,8 +1803,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return configuration.getBasicTypeRegistry().resolve( enumJavaType, jdbcType );
 	}
 
+	@Nonnull
 	@Override
-	public <T> SqmLiteral<T> literal(@Nullable T value) {
+	public <T> SqmLiteral<T> literal(@Nonnull T value) {
 		if ( value == null ) {
 			if ( jpaCompliance.isJpaQueryComplianceEnabled() ) {
 				throw new IllegalArgumentException( "literal value cannot be null" );
@@ -1730,21 +1817,25 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number & Comparable<N>> SqmNumericExpression<N> numericLiteral(N value) {
+	public <N extends Number & Comparable<N>> SqmNumericExpression<N> numericLiteral(@Nonnull N value) {
 		return new SqmNumericExpressionWrapper<>( literal( value ) );
 	}
 
+	@Nonnull
 	@Override
-	public TextExpression stringLiteral(String value) {
+	public TextExpression stringLiteral(@Nonnull String value) {
 		return new SqmTextExpressionWrapper( literal( value ) );
 	}
 
+	@Nonnull
 	@Override
-	public <T extends Temporal & Comparable<? super T>> TemporalExpression<T> temporalLiteral(T value) {
+	public <T extends Temporal & Comparable<? super T>> TemporalExpression<T> temporalLiteral(@Nonnull T value) {
 		return new SqmTemporalExpressionWrapper<>( literal( value ) );
 	}
 
+	@Nonnull
 	@Override
 	public BooleanExpression booleanLiteral(boolean value) {
 		return new SqmBooleanExpressionWrapper( literal( value ) );
@@ -1783,8 +1874,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <T> SqmExpression<T> nullLiteral(Class<T> resultClass) {
+	public <T> SqmExpression<T> nullLiteral(@Nonnull Class<T> resultClass) {
 		if ( resultClass.isEnum() ) {
 			// No basic types are registered for enum java types, we have to use an untyped null literal in this case
 			return new SqmLiteralNull<>( this );
@@ -1829,13 +1921,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass) {
+	public <T> JpaCriteriaParameter<T> parameter(@Nonnull Class<T> paramClass) {
 		return parameter( paramClass, null );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, @Nullable String name) {
+	public <T> JpaCriteriaParameter<T> parameter(@Nonnull Class<T> paramClass, @Nonnull String name) {
 		final var basicType = getTypeConfiguration().getBasicTypeForJavaType( paramClass );
 		final boolean notBasic = basicType == null;
 		final var parameterType =
@@ -1846,8 +1940,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new JpaCriteriaParameter<>( name, parameterType, notBasic, this );
 	}
 
+	@Nonnull
 	@Override
-	public <T> ParameterExpression<T> convertedParameter(Class<? extends AttributeConverter<T, ?>> converter) {
+	public <T> ParameterExpression<T> convertedParameter(@Nonnull Class<? extends AttributeConverter<T, ?>> converter) {
 		return new JpaCriteriaParameter<>(
 				null,
 				createConvertedParameterType( converter, serviceRegistry, getTypeConfiguration() ),
@@ -1867,8 +1962,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new JpaCriteriaParameter<>( name, parameterType, true, this );
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<String> concat(List<Expression<String>> expressions) {
+	public SqmExpression<String> concat(@Nonnull List<Expression<String>> expressions) {
 		//noinspection RedundantCast, unchecked
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				(List<? extends SqmTypedNode<?>>) (List<?>) expressions,
@@ -1877,8 +1973,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<String> concat(Expression<String> x, Expression<String> y) {
+	public SqmExpression<String> concat(@Nonnull Expression<String> x, @Nonnull Expression<String> y) {
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( (SqmExpression<String>) x, (SqmExpression<String>) y ),
 				null,
@@ -1886,8 +1983,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<String> concat(Expression<String> x, String y) {
+	public SqmExpression<String> concat(@Nonnull Expression<String> x, @Nonnull String y) {
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( (SqmExpression<String>) x, value( y, (SqmExpression<String>) x ) ),
 				null,
@@ -1895,8 +1993,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<String> concat(String x, Expression<String> y) {
+	public SqmExpression<String> concat(@Nonnull String x, @Nonnull Expression<String> y) {
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( value( x, (SqmExpression<String>) y ), (SqmExpression<String>) y ),
 				null,
@@ -1913,8 +2012,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> substring(Expression<String> source, Expression<Integer> from) {
+	public SqmFunction<String> substring(@Nonnull Expression<String> source, @Nonnull Expression<Integer> from) {
 		return createSubstringNode(
 				(SqmExpression<String>) source,
 				(SqmExpression<Integer>) from,
@@ -1933,8 +2033,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> substring(Expression<String> source, int from) {
+	public SqmFunction<String> substring(@Nonnull Expression<String> source, int from) {
 		return createSubstringNode(
 				(SqmExpression<String>) source,
 				value( from ),
@@ -1942,8 +2043,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> substring(Expression<String> source, Expression<Integer> from, Expression<Integer> len) {
+	public SqmFunction<String> substring(@Nonnull Expression<String> source, @Nonnull Expression<Integer> from, @Nonnull Expression<Integer> len) {
 		return createSubstringNode(
 				(SqmExpression<String>) source,
 				(SqmExpression<Integer>) from,
@@ -1951,8 +2053,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> substring(Expression<String> source, int from, int len) {
+	public SqmFunction<String> substring(@Nonnull Expression<String> source, int from, int len) {
 		return createSubstringNode(
 				(SqmExpression<String>) source,
 				value( from ),
@@ -1960,8 +2063,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> trim(Expression<String> source) {
+	public SqmFunction<String> trim(@Nonnull Expression<String> source) {
 		return createTrimNode( null, null, (SqmExpression<String>) source );
 	}
 
@@ -1991,33 +2095,39 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> trim(Trimspec ts, Expression<String> source) {
+	public SqmFunction<String> trim(@Nonnull Trimspec ts, @Nonnull Expression<String> source) {
 		return createTrimNode( fromCriteriaTrimSpec( ts ), null, (SqmExpression<String>) source );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> trim(Expression<Character> trimChar, Expression<String> source) {
+	public SqmFunction<String> trim(@Nonnull Expression<Character> trimChar, @Nonnull Expression<String> source) {
 		return createTrimNode( null, (SqmExpression<Character>) trimChar, (SqmExpression<String>) source );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> trim(Trimspec ts, Expression<Character> trimChar, Expression<String> source) {
+	public SqmFunction<String> trim(@Nonnull Trimspec ts, @Nonnull Expression<Character> trimChar, @Nonnull Expression<String> source) {
 		return createTrimNode( fromCriteriaTrimSpec( ts ), (SqmExpression<Character>) trimChar, (SqmExpression<String>) source );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> trim(char trimChar, Expression<String> source) {
+	public SqmFunction<String> trim(char trimChar, @Nonnull Expression<String> source) {
 		return createTrimNode( null, literal( trimChar ), (SqmExpression<String>) source );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> trim(Trimspec ts, char trimChar, Expression<String> source) {
+	public SqmFunction<String> trim(@Nonnull Trimspec ts, char trimChar, @Nonnull Expression<String> source) {
 		return createTrimNode( fromCriteriaTrimSpec( ts ), literal( trimChar ), (SqmExpression<String>) source );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> lower(Expression<String> x) {
+	public SqmFunction<String> lower(@Nonnull Expression<String> x) {
 		return getFunctionDescriptor( "lower" ).generateSqmExpression(
 				(SqmExpression<String>) x,
 				null,
@@ -2025,8 +2135,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> upper(Expression<String> x) {
+	public SqmFunction<String> upper(@Nonnull Expression<String> x) {
 		return getFunctionDescriptor( "upper" ).generateSqmExpression(
 				(SqmExpression<String>) x,
 				null,
@@ -2034,8 +2145,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<Integer> length(Expression<String> argument) {
+	public SqmFunction<Integer> length(@Nonnull Expression<String> argument) {
 		return getFunctionDescriptor( "length" ).generateSqmExpression(
 				(SqmExpression<String>) argument,
 				null,
@@ -2043,8 +2155,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<Integer> locate(Expression<String> source, Expression<String> pattern) {
+	public SqmFunction<Integer> locate(@Nonnull Expression<String> source, @Nonnull Expression<String> pattern) {
 		return createLocateFunctionNode(
 				(SqmExpression<String>) source,
 				(SqmExpression<String>) pattern,
@@ -2065,8 +2178,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<Integer> locate(Expression<String> source, String pattern) {
+	public SqmFunction<Integer> locate(@Nonnull Expression<String> source, @Nonnull String pattern) {
 		return createLocateFunctionNode(
 				(SqmExpression<String>) source,
 				value( pattern ),
@@ -2074,8 +2188,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<Integer> locate(Expression<String> source, Expression<String> pattern, Expression<Integer> startPosition) {
+	public SqmFunction<Integer> locate(@Nonnull Expression<String> source, @Nonnull Expression<String> pattern, @Nonnull Expression<Integer> startPosition) {
 		return createLocateFunctionNode(
 				(SqmExpression<String>) source,
 				(SqmExpression<String>) pattern,
@@ -2083,8 +2198,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<Integer> locate(Expression<String> source, String pattern, int startPosition) {
+	public SqmFunction<Integer> locate(@Nonnull Expression<String> source, @Nonnull String pattern, int startPosition) {
 		return createLocateFunctionNode(
 				(SqmExpression<String>) source,
 				value( pattern ),
@@ -2092,6 +2208,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
 	public SqmFunction<Date> currentDate() {
 		return getFunctionDescriptor("current_date")
@@ -2101,6 +2218,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				);
 	}
 
+	@Nonnull
 	@Override
 	public SqmFunction<Timestamp> currentTimestamp() {
 		return getFunctionDescriptor("current_timestamp")
@@ -2110,6 +2228,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				);
 	}
 
+	@Nonnull
 	@Override
 	public SqmFunction<Time> currentTime() {
 		return getFunctionDescriptor("current_time")
@@ -2130,6 +2249,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				);
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<LocalDate> localDate() {
 		return getFunctionDescriptor("local_date")
@@ -2139,6 +2259,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				);
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<LocalDateTime> localDateTime() {
 		return getFunctionDescriptor("local_datetime")
@@ -2148,6 +2269,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				);
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<LocalTime> localTime() {
 		return getFunctionDescriptor("local_time")
@@ -2167,8 +2289,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return ((SqmPath<?>) path).get( EntityVersionMapping.VERSION_ROLE_NAME );
 	}
 
+	@Nonnull
 	@Override
-	public <T> SqmFunction<T> function(String name, Class<T> type, Expression<?>[] args) {
+	public <T> SqmFunction<T> function(@Nonnull String name, @Nonnull Class<T> type, @Nonnull Expression<?>[] args) {
 		final var resultType = getTypeConfiguration().standardBasicTypeForJavaType( type );
 		return getFunctionTemplate( name, resultType ).generateSqmExpression(
 				expressionList( args ),
@@ -2206,8 +2329,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmModifiedSubQueryExpression<Y> all(Subquery<Y> subquery) {
+	public <Y> SqmModifiedSubQueryExpression<Y> all(@Nonnull Subquery<Y> subquery) {
 		return new SqmModifiedSubQueryExpression<>(
 				(SqmSubQuery<Y>) subquery,
 				SqmModifiedSubQueryExpression.Modifier.ALL,
@@ -2215,8 +2339,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmModifiedSubQueryExpression<Y> some(Subquery<Y> subquery) {
+	public <Y> SqmModifiedSubQueryExpression<Y> some(@Nonnull Subquery<Y> subquery) {
 		return new SqmModifiedSubQueryExpression<>(
 				(SqmSubQuery<Y>) subquery,
 				SqmModifiedSubQueryExpression.Modifier.SOME,
@@ -2224,8 +2349,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmModifiedSubQueryExpression<Y> any(Subquery<Y> subquery) {
+	public <Y> SqmModifiedSubQueryExpression<Y> any(@Nonnull Subquery<Y> subquery) {
 		return new SqmModifiedSubQueryExpression<>(
 				(SqmSubQuery<Y>) subquery,
 				SqmModifiedSubQueryExpression.Modifier.ANY,
@@ -2378,23 +2504,27 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 //			|| is a literal enum mapped to a PostgreSQL named 'enum' type
 	}
 
+	@Nonnull
 	@Override
-	public <C extends Collection<?>> SqmExpression<Integer> size(Expression<C> collection) {
+	public <C extends Collection<?>> SqmExpression<Integer> size(@Nonnull Expression<C> collection) {
 		return new SqmCollectionSize( (SqmPath<C>) collection, this );
 	}
 
+	@Nonnull
 	@Override
-	public <C extends Collection<?>> SqmExpression<Integer> size(C collection) {
+	public <C extends Collection<?>> SqmExpression<Integer> size(@Nonnull C collection) {
 		return new SqmLiteral<>( collection.size(), getIntegerType(), this );
 	}
 
+	@Nonnull
 	@Override
 	public <T> SqmCoalesce<T> coalesce() {
 		return new SqmCoalesce<>( this );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
+	public <Y> SqmCoalesce<Y> coalesce(@Nonnull Expression<? extends Y> x, @Nonnull Expression<? extends Y> y) {
 		@SuppressWarnings("unchecked")
 		final var sqmExpressible = (SqmBindableType<Y>) highestPrecedenceType(
 				( (SqmExpression<? extends Y>) x ).getExpressible(),
@@ -2403,19 +2533,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmCoalesce<>( sqmExpressible, 2, this ).value(x).value(y);
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmCoalesce<Y> coalesce(Expression<? extends Y> x, Y y) {
+	public <Y> SqmCoalesce<Y> coalesce(@Nonnull Expression<? extends Y> x, Y y) {
 		return coalesce( x, value( y, (SqmExpression<? extends Y>) x ) );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmExpression<Y> nullif(Expression<Y> x, Expression<?> y) {
+	public <Y> SqmExpression<Y> nullif(@Nonnull Expression<Y> x, @Nonnull Expression<?> y) {
 		//noinspection unchecked
 		return createNullifFunctionNode( (SqmExpression<Y>) x, (SqmExpression<Y>) y );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmExpression<Y> nullif(Expression<Y> x, Y y) {
+	public <Y> SqmExpression<Y> nullif(@Nonnull Expression<Y> x, Y y) {
 		return createNullifFunctionNode( (SqmExpression<Y>) x, value( y, (SqmExpression<Y>) x ) );
 	}
 
@@ -2435,25 +2568,29 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return queryEngine.getSqmFunctionRegistry().findSetReturningFunctionDescriptor( name );
 	}
 
+	@Nonnull
 	@Override
-	public <C, R> SqmCaseSimple<C, R> selectCase(Expression<? extends C> expression) {
+	public <C, R> SqmCaseSimple<C, R> selectCase(@Nonnull Expression<? extends C> expression) {
 		//noinspection unchecked
 		return new SqmCaseSimple<>( (SqmExpression<C>) expression, this );
 	}
 
+	@Nonnull
 	@Override
-	public <C, R> SqmCaseSimple<C, R> selectCase(Expression<? extends C> expression, Class<R> resultType) {
+	public <C, R> SqmCaseSimple<C, R> selectCase(@Nonnull Expression<? extends C> expression, @Nonnull Class<R> resultType) {
 		//noinspection unchecked
 		return new SqmCaseSimple<>( (SqmExpression<C>) expression, getCaseResultType( resultType ), this );
 	}
 
+	@Nonnull
 	@Override
 	public <R> SqmCaseSearched<R> selectCase() {
 		return new SqmCaseSearched<>( this );
 	}
 
+	@Nonnull
 	@Override
-	public <R> SqmCaseSearched<R> selectCase(Class<R> resultType) {
+	public <R> SqmCaseSearched<R> selectCase(@Nonnull Class<R> resultType) {
 		return new SqmCaseSearched<>( getCaseResultType( resultType ), this );
 	}
 
@@ -2478,8 +2615,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Nonnull
 	@Override
-	public SqmPredicate and(Expression<Boolean> x, Expression<Boolean> y) {
+	public SqmPredicate and(@Nonnull Expression<Boolean> x, @Nonnull Expression<Boolean> y) {
 		return new SqmJunctionPredicate(
 				Predicate.BooleanOperator.AND,
 				wrap( x ),
@@ -2488,8 +2626,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate and(BooleanExpression... restrictions) {
+	public JpaPredicate and(@Nonnull BooleanExpression... restrictions) {
 		if ( restrictions == null || restrictions.length == 0 ) {
 			return conjunction();
 		}
@@ -2502,8 +2641,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate and(List<? extends Expression<Boolean>> restrictions) {
+	public SqmPredicate and(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		if ( restrictions == null || restrictions.isEmpty() ) {
 			return conjunction();
 		}
@@ -2516,8 +2656,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate and(Predicate... restrictions) {
+	public SqmPredicate and(@Nonnull Predicate... restrictions) {
 		if ( restrictions == null || restrictions.length == 0 ) {
 			return conjunction();
 		}
@@ -2530,8 +2671,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate or(Expression<Boolean> x, Expression<Boolean> y) {
+	public SqmPredicate or(@Nonnull Expression<Boolean> x, @Nonnull Expression<Boolean> y) {
 		return new SqmJunctionPredicate(
 				Predicate.BooleanOperator.OR,
 				wrap( x ),
@@ -2540,8 +2682,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate or(BooleanExpression... restrictions) {
+	public JpaPredicate or(@Nonnull BooleanExpression... restrictions) {
 		if ( restrictions == null || restrictions.length == 0 ) {
 			return disjunction();
 		}
@@ -2554,8 +2697,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate or(Predicate... restrictions) {
+	public SqmPredicate or(@Nonnull Predicate... restrictions) {
 		if ( restrictions == null || restrictions.length == 0 ) {
 			return disjunction();
 		}
@@ -2568,8 +2712,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate or(List<? extends Expression<Boolean>> restrictions) {
+	public SqmPredicate or(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		if ( restrictions == null || restrictions.isEmpty() ) {
 			return disjunction();
 		}
@@ -2582,11 +2727,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate not(Expression<Boolean> restriction) {
+	public SqmPredicate not(@Nonnull Expression<Boolean> restriction) {
 		return wrap( restriction ).not();
 	}
 
+	@Nonnull
 	@Override
 	public SqmPredicate conjunction() {
 		return new SqmComparisonPredicate(
@@ -2597,6 +2744,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
 	public SqmPredicate disjunction() {
 		return new SqmComparisonPredicate(
@@ -2607,28 +2755,33 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate isTrue(Expression<Boolean> x) {
+	public SqmPredicate isTrue(@Nonnull Expression<Boolean> x) {
 		return wrap( x );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate isFalse(Expression<Boolean> x) {
+	public SqmPredicate isFalse(@Nonnull Expression<Boolean> x) {
 		return wrap( x ).not();
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate isNull(Expression<?> x) {
+	public SqmPredicate isNull(@Nonnull Expression<?> x) {
 		return new SqmNullnessPredicate( (SqmExpression<?>) x, this );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate isNotNull(Expression<?> x) {
+	public SqmPredicate isNotNull(@Nonnull Expression<?> x) {
 		return new SqmNullnessPredicate( (SqmExpression<?>) x, this ).not();
 	}
 
+	@Nonnull
 	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Expression<? extends Y> lower, Expression<? extends Y> upper) {
+	public <Y extends Comparable<? super Y>> SqmPredicate between(@Nonnull Expression<? extends Y> value, @Nonnull Expression<? extends Y> lower, @Nonnull Expression<? extends Y> upper) {
 		return new SqmBetweenPredicate(
 				(SqmExpression<? extends Y>) value,
 				(SqmExpression<? extends Y>) lower,
@@ -2659,8 +2812,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Y lower, Y upper) {
+	public <Y extends Comparable<? super Y>> SqmPredicate between(@Nonnull Expression<? extends Y> value, Y lower, Y upper) {
 		final var valueExpression = (SqmExpression<? extends Y>) value;
 		return new SqmBetweenPredicate(
 				valueExpression,
@@ -2671,11 +2825,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate between(
 			Y value,
-			Expression<? extends Y> lower,
-			Expression<? extends Y> upper) {
+			@Nonnull Expression<? extends Y> lower,
+			@Nonnull Expression<? extends Y> upper) {
 		final var lowerExpression = (SqmExpression<? extends Y>) lower;
 		return new SqmBetweenPredicate(
 				value( value, lowerExpression ),
@@ -2686,8 +2841,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate equal(Expression<?> x, Expression<?> y) {
+	public SqmPredicate equal(@Nonnull Expression<?> x, @Nonnull Expression<?> y) {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.EQUAL,
@@ -2696,8 +2852,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate equal(Expression<?> x, Object y) {
+	public SqmPredicate equal(@Nonnull Expression<?> x, Object y) {
 		final var yExpr = value( y, (SqmExpression<?>) x );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
@@ -2707,8 +2864,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notEqual(Expression<?> x, Expression<?> y) {
+	public SqmPredicate notEqual(@Nonnull Expression<?> x, @Nonnull Expression<?> y) {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_EQUAL,
@@ -2717,8 +2875,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notEqual(Expression<?> x, Object y) {
+	public SqmPredicate notEqual(@Nonnull Expression<?> x, Object y) {
 		final var yExpr = value( y, (SqmExpression<?>) x );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
@@ -2770,8 +2929,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Expression<? extends Y> y) {
+	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(@Nonnull Expression<? extends Y> x, @Nonnull Expression<? extends Y> y) {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2780,92 +2940,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Y y) {
-		final var yExpr = value( y, (SqmExpression<?>) x );
-		return new SqmComparisonPredicate(
-				(SqmExpression<?>) x,
-				ComparisonOperator.GREATER_THAN,
-				yExpr,
-				this
-		);
-	}
-
-	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Expression<? extends Y> y) {
-		return new SqmComparisonPredicate(
-				(SqmExpression<?>) x,
-				ComparisonOperator.GREATER_THAN_OR_EQUAL,
-				(SqmExpression<?>) y,
-				this
-		);
-	}
-
-	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Y y) {
-		final var yExpr = value( y, (SqmExpression<?>) x );
-		return new SqmComparisonPredicate(
-				(SqmExpression<?>) x,
-				ComparisonOperator.GREATER_THAN_OR_EQUAL,
-				yExpr,
-				this
-		);
-	}
-
-	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(Expression<? extends Y> x, Expression<? extends Y> y) {
-		return new SqmComparisonPredicate(
-				(SqmExpression<?>) x,
-				ComparisonOperator.LESS_THAN,
-				(SqmExpression<?>) y,
-				this
-		);
-	}
-
-	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(Expression<? extends Y> x, Y y) {
-		final var yExpr = value( y, (SqmExpression<?>) x );
-		return new SqmComparisonPredicate(
-				(SqmExpression<?>) x,
-				ComparisonOperator.LESS_THAN,
-				yExpr,
-				this
-		);
-	}
-
-	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate lessThanOrEqualTo(Expression<? extends Y> x, Expression<? extends Y> y) {
-		return new SqmComparisonPredicate(
-				(SqmExpression<?>) x,
-				ComparisonOperator.LESS_THAN_OR_EQUAL,
-				(SqmExpression<?>) y,
-				this
-		);
-	}
-
-	@Override
-	public <Y extends Comparable<? super Y>> SqmPredicate lessThanOrEqualTo(Expression<? extends Y> x, Y y) {
-		final var yExpr = value( y, (SqmExpression<?>) x );
-		return new SqmComparisonPredicate(
-				(SqmExpression<?>) x,
-				ComparisonOperator.LESS_THAN_OR_EQUAL,
-				yExpr,
-				this
-		);
-	}
-
-	@Override
-	public SqmPredicate gt(Expression<? extends Number> x, Expression<? extends Number> y) {
-		return new SqmComparisonPredicate(
-				(SqmExpression<?>) x,
-				ComparisonOperator.GREATER_THAN,
-				(SqmExpression<?>) y,
-				this
-		);
-	}
-
-	@Override
-	public SqmPredicate gt(Expression<? extends Number> x, Number y) {
+	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(@Nonnull Expression<? extends Y> x, Y y) {
 		final var yExpr = value( y, (SqmExpression<?>) x );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
@@ -2875,8 +2952,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate ge(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(@Nonnull Expression<? extends Y> x, @Nonnull Expression<? extends Y> y) {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2885,8 +2963,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate ge(Expression<? extends Number> x, Number y) {
+	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(@Nonnull Expression<? extends Y> x, Y y) {
 		final var yExpr = value( y, (SqmExpression<?>) x );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
@@ -2896,8 +2975,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate lt(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(@Nonnull Expression<? extends Y> x, @Nonnull Expression<? extends Y> y) {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2906,8 +2986,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate lt(Expression<? extends Number> x, Number y) {
+	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(@Nonnull Expression<? extends Y> x, Y y) {
 		final var yExpr = value( y, (SqmExpression<?>) x );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
@@ -2917,8 +2998,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate le(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public <Y extends Comparable<? super Y>> SqmPredicate lessThanOrEqualTo(@Nonnull Expression<? extends Y> x, @Nonnull Expression<? extends Y> y) {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
@@ -2927,8 +3009,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate le(Expression<? extends Number> x, Number y) {
+	public <Y extends Comparable<? super Y>> SqmPredicate lessThanOrEqualTo(@Nonnull Expression<? extends Y> x, Y y) {
 		final var yExpr = value( y, (SqmExpression<?>) x );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
@@ -2938,33 +3021,131 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <C extends Collection<?>> SqmPredicate isEmpty(Expression<C> collection) {
+	public SqmPredicate gt(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.GREATER_THAN,
+				(SqmExpression<?>) y,
+				this
+		);
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate gt(@Nonnull Expression<? extends Number> x, Number y) {
+		final var yExpr = value( y, (SqmExpression<?>) x );
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.GREATER_THAN,
+				yExpr,
+				this
+		);
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate ge(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.GREATER_THAN_OR_EQUAL,
+				(SqmExpression<?>) y,
+				this
+		);
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate ge(@Nonnull Expression<? extends Number> x, Number y) {
+		final var yExpr = value( y, (SqmExpression<?>) x );
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.GREATER_THAN_OR_EQUAL,
+				yExpr,
+				this
+		);
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate lt(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.LESS_THAN,
+				(SqmExpression<?>) y,
+				this
+		);
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate lt(@Nonnull Expression<? extends Number> x, Number y) {
+		final var yExpr = value( y, (SqmExpression<?>) x );
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.LESS_THAN,
+				yExpr,
+				this
+		);
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate le(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.LESS_THAN_OR_EQUAL,
+				(SqmExpression<?>) y,
+				this
+		);
+	}
+
+	@Nonnull
+	@Override
+	public SqmPredicate le(@Nonnull Expression<? extends Number> x, Number y) {
+		final var yExpr = value( y, (SqmExpression<?>) x );
+		return new SqmComparisonPredicate(
+				(SqmExpression<?>) x,
+				ComparisonOperator.LESS_THAN_OR_EQUAL,
+				yExpr,
+				this
+		);
+	}
+
+	@Nonnull
+	@Override
+	public <C extends Collection<?>> SqmPredicate isEmpty(@Nonnull Expression<C> collection) {
 		return new SqmEmptinessPredicate( (SqmPluralValuedSimplePath<C>) collection, false, this );
 	}
 
+	@Nonnull
 	@Override
-	public <C extends Collection<?>> SqmPredicate isNotEmpty(Expression<C> collection) {
+	public <C extends Collection<?>> SqmPredicate isNotEmpty(@Nonnull Expression<C> collection) {
 		return new SqmEmptinessPredicate( (SqmPluralValuedSimplePath<C>) collection, true, this );
 	}
 
+	@Nonnull
 	@Override
-	public <E, C extends Collection<E>> SqmPredicate isMember(Expression<E> elem, Expression<C> collection) {
+	public <E, C extends Collection<E>> SqmPredicate isMember(@Nonnull Expression<E> elem, @Nonnull Expression<C> collection) {
 		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, false);
 	}
 
+	@Nonnull
 	@Override
-	public <E, C extends Collection<E>> SqmPredicate isMember(E elem, Expression<C> collection) {
+	public <E, C extends Collection<E>> SqmPredicate isMember(E elem, @Nonnull Expression<C> collection) {
 		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, false);
 	}
 
+	@Nonnull
 	@Override
-	public <E, C extends Collection<E>> SqmPredicate isNotMember(Expression<E> elem, Expression<C> collection) {
+	public <E, C extends Collection<E>> SqmPredicate isNotMember(@Nonnull Expression<E> elem, @Nonnull Expression<C> collection) {
 		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, true);
 	}
 
+	@Nonnull
 	@Override
-	public <E, C extends Collection<E>> SqmPredicate isNotMember(E elem, Expression<C> collection) {
+	public <E, C extends Collection<E>> SqmPredicate isNotMember(E elem, @Nonnull Expression<C> collection) {
 		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, true);
 	}
 
@@ -2977,8 +3158,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate like(Expression<String> searchString, Expression<String> pattern) {
+	public SqmPredicate like(@Nonnull Expression<String> searchString, @Nonnull Expression<String> pattern) {
 		return new SqmLikePredicate(
 				(SqmExpression<?>) searchString,
 				(SqmExpression<?>) pattern,
@@ -2986,8 +3168,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate like(Expression<String> searchString, String pattern) {
+	public SqmPredicate like(@Nonnull Expression<String> searchString, @Nonnull String pattern) {
 		return new SqmLikePredicate(
 				(SqmExpression<?>) searchString,
 				value( pattern, (SqmExpression<?>) searchString ),
@@ -2995,8 +3178,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate like(Expression<String> searchString, Expression<String> pattern, Expression<Character> escapeChar) {
+	public SqmPredicate like(@Nonnull Expression<String> searchString, @Nonnull Expression<String> pattern, @Nonnull Expression<Character> escapeChar) {
 		return new SqmLikePredicate(
 				(SqmExpression<?>) searchString,
 				(SqmExpression<?>) pattern,
@@ -3005,8 +3189,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate like(Expression<String> searchString, Expression<String> pattern, char escapeChar) {
+	public SqmPredicate like(@Nonnull Expression<String> searchString, @Nonnull Expression<String> pattern, char escapeChar) {
 		return new SqmLikePredicate(
 				(SqmExpression<?>) searchString,
 				(SqmExpression<?>) pattern,
@@ -3015,8 +3200,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate like(Expression<String> searchString, String pattern, Expression<Character> escapeChar) {
+	public SqmPredicate like(@Nonnull Expression<String> searchString, @Nonnull String pattern, @Nonnull Expression<Character> escapeChar) {
 		return new SqmLikePredicate(
 				(SqmExpression<?>) searchString,
 				value( pattern, (SqmExpression<?>) searchString ),
@@ -3025,8 +3211,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate like(Expression<String> searchString, String pattern, char escapeChar) {
+	public SqmPredicate like(@Nonnull Expression<String> searchString, @Nonnull String pattern, char escapeChar) {
 		return new SqmLikePredicate(
 				(SqmExpression<?>) searchString,
 				value( pattern, (SqmExpression<?>) searchString ),
@@ -3108,33 +3295,39 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notLike(Expression<String> x, Expression<String> pattern) {
+	public SqmPredicate notLike(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern) {
 		return not( like( x, pattern ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notLike(Expression<String> x, String pattern) {
+	public SqmPredicate notLike(@Nonnull Expression<String> x, @Nonnull String pattern) {
 		return not( like( x, pattern ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notLike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
+	public SqmPredicate notLike(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull Expression<Character> escapeChar) {
 		return not( like( x, pattern, escapeChar ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notLike(Expression<String> x, Expression<String> pattern, char escapeChar) {
+	public SqmPredicate notLike(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, char escapeChar) {
 		return not( like( x, pattern, escapeChar ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notLike(Expression<String> x, String pattern, Expression<Character> escapeChar) {
+	public SqmPredicate notLike(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull Expression<Character> escapeChar) {
 		return not( like( x, pattern, escapeChar ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notLike(Expression<String> x, String pattern, char escapeChar) {
+	public SqmPredicate notLike(@Nonnull Expression<String> x, @Nonnull String pattern, char escapeChar) {
 		return not( like( x, pattern, escapeChar ) );
 	}
 
@@ -3228,9 +3421,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> SqmInPredicate<T> in(Expression<? extends T> expression) {
+	public <T> SqmInPredicate<T> in(@Nonnull Expression<? extends T> expression) {
 		return new SqmInListPredicate<>( (SqmExpression<T>) expression, this );
 	}
 
@@ -3272,8 +3466,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmInSubQueryPredicate<>( (SqmExpression<T>) expression, subQuery, this );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate exists(Subquery<?> subQuery) {
+	public SqmPredicate exists(@Nonnull Subquery<?> subQuery) {
 		return new SqmExistsPredicate( (SqmExpression<?>) subQuery, this );
 	}
 
@@ -3346,8 +3541,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <N, T extends Temporal> SqmExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+	public <N, T extends Temporal> SqmExpression<N> extract(@Nonnull TemporalField<N, T> field, @Nonnull Expression<T> temporal) {
 		Class<?> resultType = Integer.class;
 		final TemporalUnit temporalUnit;
 		switch ( field.toString() ) {
@@ -3646,13 +3842,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return repeat( value( x), times );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> left(Expression<String> x, int length) {
+	public SqmFunction<String> left(@Nonnull Expression<String> x, int length) {
 		return left( x, value( length ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> left(Expression<String> x, Expression<Integer> length) {
+	public SqmFunction<String> left(@Nonnull Expression<String> x, @Nonnull Expression<Integer> length) {
 		return getFunctionDescriptor( "left" ).generateSqmExpression(
 				asList( (SqmExpression<String>) x, (SqmExpression<Integer>) length ),
 				null,
@@ -3660,13 +3858,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> right(Expression<String> x, int length) {
+	public SqmFunction<String> right(@Nonnull Expression<String> x, int length) {
 		return right( x, value( length ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> right(Expression<String> x, Expression<Integer> length) {
+	public SqmFunction<String> right(@Nonnull Expression<String> x, @Nonnull Expression<Integer> length) {
 		return getFunctionDescriptor( "right" ).generateSqmExpression(
 				asList( (SqmExpression<String>) x, (SqmExpression<Integer>) length ),
 				null,
@@ -3674,27 +3874,31 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> replace(Expression<String> x, String pattern, String replacement) {
+	public SqmFunction<String> replace(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull String replacement) {
 		SqmExpression<String> sqmPattern = value( pattern );
 		return replace( x, sqmPattern, value( replacement, sqmPattern ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> replace(Expression<String> x, String pattern, Expression<String> replacement) {
+	public SqmFunction<String> replace(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull Expression<String> replacement) {
 		return replace( x, value( pattern ), replacement );
 	}
 
+	@Nonnull
 	@Override
-	public SqmFunction<String> replace(Expression<String> x, Expression<String> pattern, String replacement) {
+	public SqmFunction<String> replace(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull String replacement) {
 		return replace( x, pattern, value( replacement ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmFunction<String> replace(
-			Expression<String> x,
-			Expression<String> pattern,
-			Expression<String> replacement) {
+			@Nonnull Expression<String> x,
+			@Nonnull Expression<String> pattern,
+			@Nonnull Expression<String> replacement) {
 		return getFunctionDescriptor( "replace" ).generateSqmExpression(
 				asList(
 						(SqmExpression<String>) x,

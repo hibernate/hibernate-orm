@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.BasicPluralType;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.Type;
 
@@ -154,13 +155,15 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		function.appendHqlString( hql, context );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull Class<S> treatJavaType) {
 		throw new TreatException( "Embeddable paths cannot be TREAT-ed" );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		throw new TreatException( "Embeddable paths cannot be TREAT-ed" );
 	}
 

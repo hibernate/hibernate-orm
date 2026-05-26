@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.BooleanExpression;
@@ -12,7 +14,6 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -22,7 +23,6 @@ import org.hibernate.query.criteria.JpaSelectCriteria;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -46,6 +46,7 @@ import java.util.function.Function;
 import static java.lang.Character.isAlphabetic;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.acquireUniqueAlias;
 
 /**
  * @author Steve Ebersole
@@ -97,6 +98,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
+	@Nonnull
 	public Collection<SqmCteStatement<?>> getCteStatements() {
 		return cteStatements.values();
 	}
@@ -115,53 +117,64 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
+	@Nonnull
 	public Collection<? extends JpaCteCriteria<?>> getCteCriterias() {
 		return cteStatements.values();
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public <X> @Nullable JpaCteCriteria<X> getCteCriteria(String cteName) {
+	@Override
+	@SuppressWarnings("unchecked")
+	@Nullable
+	public <X> JpaCteCriteria<X> getCteCriteria(@Nonnull String cteName) {
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
-	@Override @Deprecated
-	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
+	@Override
+	@Deprecated
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <X> JpaCteCriteria<X> with(@Nonnull AbstractQuery<X> criteria) {
 		// Use of acquireUniqueAlias() results in interpretation cache miss
-		return withInternal( "_" + SqmCreationHelper.acquireUniqueAlias(), criteria );
+		return withInternal( "_" + acquireUniqueAlias(), criteria );
 	}
 
+	@Nonnull
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
-			AbstractQuery<X> baseCriteria,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull AbstractQuery<X> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		return withInternal( generateAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
+	@Nonnull
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
-			AbstractQuery<X> baseCriteria,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull AbstractQuery<X> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		return withInternal( generateAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaCteCriteria<X> with(String name, AbstractQuery<X> criteria) {
+	public <X> JpaCteCriteria<X> with(@Nonnull String name, @Nonnull AbstractQuery<X> criteria) {
 		return withInternal( validateCteName( name ), criteria );
 	}
 
+	@Nonnull
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
-			String name,
-			AbstractQuery<X> baseCriteria,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull String name,
+			@Nonnull AbstractQuery<X> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		return withInternal( validateCteName( name ), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
+	@Nonnull
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
-			String name,
-			AbstractQuery<X> baseCriteria,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull String name,
+			@Nonnull AbstractQuery<X> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		return withInternal( validateCteName( name ), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
@@ -212,16 +225,19 @@ public abstract class AbstractSqmSelectQuery<T>
 		return cteStatement;
 	}
 
+	@Nonnull
 	@Override
 	public Class<T> getResultType() {
 		return resultType;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> getQuerySpec() {
 		return sqmQueryPart.getFirstQuerySpec();
 	}
 
+	@Nonnull
 	@Override
 	public SqmQueryPart<T> getQueryPart() {
 		return sqmQueryPart;
@@ -231,6 +247,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		this.sqmQueryPart = sqmQueryPart;
 	}
 
+	@Nonnull
 	@Override
 	public Set<Root<?>> getRoots() {
 		return unmodifiableSet( getQuerySpec().getRoots() );
@@ -281,8 +298,9 @@ public abstract class AbstractSqmSelectQuery<T>
 		return result;
 	}
 
+	@Nonnull
 	@Override
-	public <X> SqmRoot<X> from(Class<X> entityClass) {
+	public <X> SqmRoot<X> from(@Nonnull Class<X> entityClass) {
 		return addRoot(
 				new SqmRoot<>(
 						nodeBuilder().getDomainModel().entity( entityClass ),
@@ -293,22 +311,25 @@ public abstract class AbstractSqmSelectQuery<T>
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <X> SqmDerivedRoot<X> from(Subquery<X> subquery) {
+	public <X> SqmDerivedRoot<X> from(@Nonnull Subquery<X> subquery) {
 		validateComplianceFromSubQuery();
 		final var root = new SqmDerivedRoot<>( (SqmSubQuery<X>) subquery, null );
 		addRoot( root );
 		return root;
 	}
 
-	public <X> JpaRoot<X> from(JpaCteCriteria<X> cte) {
+	@Nonnull
+	public <X> JpaRoot<X> from(@Nonnull JpaCteCriteria<X> cte) {
 		final var root = new SqmCteRoot<>( ( SqmCteStatement<X> ) cte, null );
 		addRoot( root );
 		return root;
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function) {
+	public <X> JpaFunctionRoot<X> from(@Nonnull JpaSetReturningFunction<X> function) {
 		final var root = new SqmFunctionRoot<>( (SqmSetReturningFunction<X>) function, null );
 		addRoot( root );
 		return root;
@@ -319,8 +340,9 @@ public abstract class AbstractSqmSelectQuery<T>
 		return root;
 	}
 
+	@Nonnull
 	@Override
-	public <X> SqmRoot<X> from(EntityType<X> entityType) {
+	public <X> SqmRoot<X> from(@Nonnull EntityType<X> entityType) {
 		return addRoot(
 				new SqmRoot<>(
 						(EntityDomainType<X>) entityType,
@@ -347,14 +369,16 @@ public abstract class AbstractSqmSelectQuery<T>
 		return getQuerySpec().isDistinct();
 	}
 
+	@Nonnull
 	@Override
 	public SqmSelectQuery<T> distinct(boolean distinct) {
 		getQuerySpec().setDistinct( distinct );
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable JpaSelection<T> getSelection() {
+	public JpaSelection<T> getSelection() {
 		final var selectClause = getQuerySpec().getSelectClause();
 		final var selections = selectClause.getSelections();
 		return (JpaSelection<T>) switch ( selections.size() ) {
@@ -368,25 +392,29 @@ public abstract class AbstractSqmSelectQuery<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Restriction
 
+	@Nullable
 	@Override
-	public @Nullable SqmPredicate getRestriction() {
+	public SqmPredicate getRestriction() {
 		return getQuerySpec().getRestriction();
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectQuery<T> where(@Nullable Expression<Boolean> restriction) {
+	public SqmSelectQuery<T> where(@Nonnull Expression<Boolean> restriction) {
 		getQuerySpec().setRestriction( restriction );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectQuery<T> where(BooleanExpression... restrictions) {
+	public SqmSelectQuery<T> where(@Nonnull BooleanExpression... restrictions) {
 		getQuerySpec().setRestriction( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSelectCriteria<T> where(List<? extends Expression<Boolean>> restrictions) {
+	public JpaSelectCriteria<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		getQuerySpec().setRestriction( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
@@ -394,42 +422,49 @@ public abstract class AbstractSqmSelectQuery<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grouping
 
+	@Nonnull
 	@Override
 	public List<Expression<?>> getGroupList() {
 		return unmodifiableList( getQuerySpec().getGroupingExpressions() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectQuery<T> groupBy(Expression<?>... expressions) {
+	public SqmSelectQuery<T> groupBy(@Nonnull Expression<?>... expressions) {
 		getQuerySpec().setGroupingExpressions( expressions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectQuery<T> groupBy(List<Expression<?>> grouping) {
+	public SqmSelectQuery<T> groupBy(@Nonnull List<Expression<?>> grouping) {
 		getQuerySpec().setGroupingExpressions( grouping );
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmPredicate getGroupRestriction() {
+	public SqmPredicate getGroupRestriction() {
 		return getQuerySpec().getGroupRestriction();
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectQuery<T> having(@Nullable Expression<Boolean> booleanExpression) {
+	public SqmSelectQuery<T> having(@Nonnull Expression<Boolean> booleanExpression) {
 		getQuerySpec().setGroupRestriction( booleanExpression );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSelectCriteria<T> having(BooleanExpression... restrictions) {
+	public JpaSelectCriteria<T> having(@Nonnull BooleanExpression... restrictions) {
 		getQuerySpec().setGroupRestriction( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSelectCriteria<T> having(List<? extends Expression<Boolean>> restrictions) {
+	public JpaSelectCriteria<T> having(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		getQuerySpec().setGroupRestriction( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}

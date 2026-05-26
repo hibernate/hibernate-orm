@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.criteria.JpaSelectCriteria;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
@@ -17,11 +18,14 @@ import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
  * @author Steve Ebersole
  */
 public interface SqmSelectQuery<T> extends SqmQuery<T>, JpaSelectCriteria<T>, SqmNode, SqmCteContainer {
+	@Nonnull
 	@Override
 	SqmQuerySpec<T> getQuerySpec();
 
+	@Nonnull
 	SqmQueryPart<T> getQueryPart();
 
+	@Nonnull
 	@Override
 	SqmSelectQuery<T> distinct(boolean distinct);
 

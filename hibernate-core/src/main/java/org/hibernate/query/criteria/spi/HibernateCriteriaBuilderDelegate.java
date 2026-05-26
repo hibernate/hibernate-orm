@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria.spi;
 
+import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.TypedQueryReference;
@@ -34,7 +36,6 @@ import jakarta.persistence.criteria.NumericExpression;
 import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.TemporalExpression;
 import jakarta.persistence.criteria.TextExpression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.*;
@@ -120,13 +121,15 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.unwrap( clazz );
 	}
 
+	@Nonnull
 	@Override
 	public JpaCriteriaQuery<Object> createQuery() {
 		return criteriaBuilder.createQuery();
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> createQuery(Class<T> resultClass) {
+	public <T> JpaCriteriaQuery<T> createQuery(@Nonnull Class<T> resultClass) {
 		return criteriaBuilder.createQuery( resultClass );
 	}
 
@@ -135,62 +138,73 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.createQuery( hql, resultClass );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass, String jpql) {
+	public <T> CriteriaQuery<T> createQuery(@Nonnull Class<T> resultClass, @Nonnull String jpql) {
 		return criteriaBuilder.createQuery( resultClass, jpql );
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaQuery<?> createQuery(String jpql) {
+	public CriteriaQuery<?> createQuery(@Nonnull String jpql) {
 		return criteriaBuilder.createQuery( jpql );
 	}
 
+	@Nonnull
 	@Override
 	public JpaCriteriaQuery<Tuple> createTupleQuery() {
 		return criteriaBuilder.createTupleQuery();
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity) {
+	public <T> JpaCriteriaUpdate<T> createCriteriaUpdate(@Nonnull Class<T> targetEntity) {
 		return criteriaBuilder.createCriteriaUpdate( targetEntity );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity, String jpql) {
+	public <T> CriteriaUpdate<T> createCriteriaUpdate(@Nonnull Class<T> targetEntity, @Nonnull String jpql) {
 		return criteriaBuilder.createCriteriaUpdate( targetEntity, jpql );
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaUpdate<?> createCriteriaUpdate(String jpql) {
+	public CriteriaUpdate<?> createCriteriaUpdate(@Nonnull String jpql) {
 		return criteriaBuilder.createCriteriaUpdate( jpql );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
+	public <T> JpaCriteriaDelete<T> createCriteriaDelete(@Nonnull Class<T> targetEntity) {
 		return criteriaBuilder.createCriteriaDelete( targetEntity );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity, String jpql) {
+	public <T> CriteriaDelete<T> createCriteriaDelete(@Nonnull Class<T> targetEntity, @Nonnull String jpql) {
 		return criteriaBuilder.createCriteriaDelete( targetEntity, jpql );
 	}
 
+	@Nonnull
 	@Override
-	public CriteriaDelete<?> createCriteriaDelete(String jpql) {
+	public CriteriaDelete<?> createCriteriaDelete(@Nonnull String jpql) {
 		return criteriaBuilder.createCriteriaDelete( jpql );
 	}
 
+	@Nonnull
 	@Override
 	public <T> TypedQueryReference<T> augment(
-			TypedQueryReference<T> reference,
-			Consumer<CriteriaQuery<T>> augmentation) {
+			@Nonnull TypedQueryReference<T> reference,
+			@Nonnull Consumer<CriteriaQuery<T>> augmentation) {
 		return criteriaBuilder.augment( reference, augmentation );
 	}
 
+	@Nonnull
 	@Override
 	public StatementReference augment(
-			StatementReference reference,
-			Consumer<CriteriaStatement<?>> augmentation) {
+			@Nonnull StatementReference reference,
+			@Nonnull Consumer<CriteriaStatement<?>> augmentation) {
 		return criteriaBuilder.augment( reference, augmentation );
 	}
 
@@ -264,8 +278,9 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.except( all, query1, queries );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+	public <T> CriteriaSelect<T> union(@Nonnull CriteriaSelect<? extends T> left, @Nonnull CriteriaSelect<? extends T> right) {
 		return criteriaBuilder.union( left, right );
 	}
 
@@ -274,8 +289,9 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.unionAll( query1, query2 );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+	public <T> CriteriaSelect<T> unionAll(@Nonnull CriteriaSelect<? extends T> left, @Nonnull CriteriaSelect<? extends T> right) {
 		return criteriaBuilder.unionAll( left, right );
 	}
 
@@ -304,13 +320,15 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.intersect( all, query1, queries );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+	public <T> CriteriaSelect<T> except(@Nonnull CriteriaSelect<T> left, @Nonnull CriteriaSelect<?> right) {
 		return criteriaBuilder.except( left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+	public <T> CriteriaSelect<T> exceptAll(@Nonnull CriteriaSelect<T> left, @Nonnull CriteriaSelect<?> right) {
 		return criteriaBuilder.exceptAll( left, right );
 	}
 
@@ -331,43 +349,51 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 
 
+	@Nonnull
 	@Override
-	public JpaExpression<Integer> sign(Expression<? extends Number> x) {
+	public JpaExpression<Integer> sign(@Nonnull Expression<? extends Number> x) {
 		return criteriaBuilder.sign( x );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> ceiling(Expression<N> x) {
+	public <N extends Number> JpaExpression<N> ceiling(@Nonnull Expression<N> x) {
 		return criteriaBuilder.ceiling( x );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> floor(Expression<N> x) {
+	public <N extends Number> JpaExpression<N> floor(@Nonnull Expression<N> x) {
 		return criteriaBuilder.floor( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Double> exp(Expression<? extends Number> x) {
+	public JpaExpression<Double> exp(@Nonnull Expression<? extends Number> x) {
 		return criteriaBuilder.exp( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Double> ln(Expression<? extends Number> x) {
+	public JpaExpression<Double> ln(@Nonnull Expression<? extends Number> x) {
 		return criteriaBuilder.ln( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Double> power(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public JpaExpression<Double> power(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
 		return criteriaBuilder.power( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Double> power(Expression<? extends Number> x, Number y) {
+	public JpaExpression<Double> power(@Nonnull Expression<? extends Number> x, Number y) {
 		return criteriaBuilder.power( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <T extends Number> JpaExpression<T> round(Expression<T> x, Integer n) {
+	public <T extends Number> JpaExpression<T> round(@Nonnull Expression<T> x, @Nonnull Integer n) {
 		return criteriaBuilder.round( x, n );
 	}
 
@@ -376,23 +402,27 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.truncate( x, n );
 	}
 
+	@Nonnull
 	@Override
 	public JpaExpression<LocalDate> localDate() {
 		return criteriaBuilder.localDate();
 	}
 
+	@Nonnull
 	@Override
 	public JpaExpression<LocalDateTime> localDateTime() {
 		return criteriaBuilder.localDateTime();
 	}
 
+	@Nonnull
 	@Override
 	public JpaExpression<LocalTime> localTime() {
 		return criteriaBuilder.localTime();
 	}
 
+	@Nonnull
 	@Override
-	public <N, T extends Temporal> JpaExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+	public <N, T extends Temporal> JpaExpression<N> extract(@Nonnull TemporalField<N, T> field, @Nonnull Expression<T> temporal) {
 		return null;
 	}
 
@@ -401,88 +431,105 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.fk( path );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T extends X> JpaPath<T> treat(Path<X> path, Class<T> type) {
+	public <X, T extends X> JpaPath<T> treat(@Nonnull Path<X> path, @Nonnull Class<T> type) {
 		return criteriaBuilder.treat( path, type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T extends X> JpaRoot<T> treat(Root<X> root, Class<T> type) {
+	public <X, T extends X> JpaRoot<T> treat(@Nonnull Root<X> root, @Nonnull Class<T> type) {
 		return criteriaBuilder.treat( root, type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, Y, T extends Y> JpaFrom<X, T> treat(From<X, Y> from, Class<T> type) {
+	public <X, Y, T extends Y> JpaFrom<X, T> treat(@Nonnull From<X, Y> from, @Nonnull Class<T> type) {
 		return criteriaBuilder.treat( from, type );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+	public <T> JpaCriteriaQuery<T> union(@Nonnull CriteriaQuery<? extends T> left, @Nonnull CriteriaQuery<? extends T> right) {
 		return criteriaBuilder.union( left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+	public <T> JpaCriteriaQuery<T> unionAll(@Nonnull CriteriaQuery<? extends T> left, @Nonnull CriteriaQuery<? extends T> right) {
 		return criteriaBuilder.unionAll( left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+	public <T> CriteriaSelect<T> intersect(@Nonnull CriteriaSelect<? super T> left, @Nonnull CriteriaSelect<? super T> right) {
 		return criteriaBuilder.intersect( left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+	public <T> CriteriaSelect<T> intersectAll(@Nonnull CriteriaSelect<? super T> left, @Nonnull CriteriaSelect<? super T> right) {
 		return criteriaBuilder.intersectAll( left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+	public <T> JpaCriteriaQuery<T> intersect(@Nonnull CriteriaQuery<? super T> left, @Nonnull CriteriaQuery<? super T> right) {
 		return criteriaBuilder.intersect( left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+	public <T> JpaCriteriaQuery<T> intersectAll(@Nonnull CriteriaQuery<? super T> left, @Nonnull CriteriaQuery<? super T> right) {
 		return criteriaBuilder.intersectAll( left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+	public <T> JpaCriteriaQuery<T> except(@Nonnull CriteriaQuery<T> left, @Nonnull CriteriaQuery<?> right) {
 		return criteriaBuilder.except( left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+	public <T> JpaCriteriaQuery<T> exceptAll(@Nonnull CriteriaQuery<T> left, @Nonnull CriteriaQuery<?> right) {
 		return criteriaBuilder.exceptAll( left, right );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T, V extends T> JpaJoin<X, V> treat(Join<X, T> join, Class<V> type) {
+	public <X, T, V extends T> JpaJoin<X, V> treat(@Nonnull Join<X, T> join, @Nonnull Class<V> type) {
 		return criteriaBuilder.treat( join, type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T, E extends T> JpaCollectionJoin<X, E> treat(CollectionJoin<X, T> join, Class<E> type) {
+	public <X, T, E extends T> JpaCollectionJoin<X, E> treat(@Nonnull CollectionJoin<X, T> join, @Nonnull Class<E> type) {
 		return criteriaBuilder.treat( join, type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T, E extends T> JpaSetJoin<X, E> treat(SetJoin<X, T> join, Class<E> type) {
+	public <X, T, E extends T> JpaSetJoin<X, E> treat(@Nonnull SetJoin<X, T> join, @Nonnull Class<E> type) {
 		return criteriaBuilder.treat( join, type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, T, E extends T> JpaListJoin<X, E> treat(ListJoin<X, T> join, Class<E> type) {
+	public <X, T, E extends T> JpaListJoin<X, E> treat(@Nonnull ListJoin<X, T> join, @Nonnull Class<E> type) {
 		return criteriaBuilder.treat( join, type );
 	}
 
+	@Nonnull
 	@Override
-	public <X, K, T, V extends T> JpaMapJoin<X, K, V> treat(MapJoin<X, K, T> join, Class<V> type) {
+	public <X, K, T, V extends T> JpaMapJoin<X, K, V> treat(@Nonnull MapJoin<X, K, T> join, @Nonnull Class<V> type) {
 		return criteriaBuilder.treat( join, type );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections) {
+	public <Y> JpaCompoundSelection<Y> construct(@Nonnull Class<Y> resultClass, @Nonnull Selection<?>... selections) {
 		return criteriaBuilder.construct( resultClass, selections );
 	}
 
@@ -491,23 +538,27 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.construct( resultClass, arguments );
 	}
 
+	@Nonnull
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(Selection<?>... selections) {
+	public JpaCompoundSelection<Tuple> tuple(@Nonnull Selection<?>... selections) {
 		return criteriaBuilder.tuple( selections );
 	}
 
+	@Nonnull
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
+	public JpaCompoundSelection<Tuple> tuple(@Nonnull List<Selection<?>> selections) {
 		return criteriaBuilder.tuple( selections );
 	}
 
+	@Nonnull
 	@Override
-	public JpaCompoundSelection<Object[]> array(Selection<?>... selections) {
+	public JpaCompoundSelection<Object[]> array(@Nonnull Selection<?>... selections) {
 		return criteriaBuilder.array( selections );
 	}
 
+	@Nonnull
 	@Override
-	public JpaCompoundSelection<Object[]> array(List<Selection<?>> selections) {
+	public JpaCompoundSelection<Object[]> array(@Nonnull List<Selection<?>> selections) {
 		return criteriaBuilder.array( selections );
 	}
 
@@ -521,48 +572,57 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.array( resultClass, selections );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<Double> avg(Expression<N> argument) {
+	public <N extends Number> JpaExpression<Double> avg(@Nonnull Expression<N> argument) {
 		return criteriaBuilder.avg( argument );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> sum(Expression<N> argument) {
+	public <N extends Number> JpaExpression<N> sum(@Nonnull Expression<N> argument) {
 		return criteriaBuilder.sum( argument );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Long> sumAsLong(Expression<Integer> argument) {
+	public JpaExpression<Long> sumAsLong(@Nonnull Expression<Integer> argument) {
 		return criteriaBuilder.sumAsLong( argument );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Double> sumAsDouble(Expression<Float> argument) {
+	public JpaExpression<Double> sumAsDouble(@Nonnull Expression<Float> argument) {
 		return criteriaBuilder.sumAsDouble( argument );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> max(Expression<N> argument) {
+	public <N extends Number> JpaExpression<N> max(@Nonnull Expression<N> argument) {
 		return criteriaBuilder.max( argument );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> min(Expression<N> argument) {
+	public <N extends Number> JpaExpression<N> min(@Nonnull Expression<N> argument) {
 		return criteriaBuilder.min( argument );
 	}
 
+	@Nonnull
 	@Override
-	public <X extends Comparable<? super X>> JpaExpression<X> greatest(Expression<X> argument) {
+	public <X extends Comparable<? super X>> JpaExpression<X> greatest(@Nonnull Expression<X> argument) {
 		return criteriaBuilder.greatest( argument );
 	}
 
+	@Nonnull
 	@Override
-	public <X extends Comparable<? super X>> JpaExpression<X> least(Expression<X> argument) {
+	public <X extends Comparable<? super X>> JpaExpression<X> least(@Nonnull Expression<X> argument) {
 		return criteriaBuilder.least( argument );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Long> count(Expression<?> argument) {
+	public JpaExpression<Long> count(@Nonnull Expression<?> argument) {
 		return criteriaBuilder.count( argument );
 	}
 
@@ -571,156 +631,187 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.count();
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Long> countDistinct(Expression<?> x) {
+	public JpaExpression<Long> countDistinct(@Nonnull Expression<?> x) {
 		return criteriaBuilder.countDistinct( x );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> neg(Expression<N> x) {
+	public <N extends Number> JpaExpression<N> neg(@Nonnull Expression<N> x) {
 		return criteriaBuilder.neg( x );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> abs(Expression<N> x) {
+	public <N extends Number> JpaExpression<N> abs(@Nonnull Expression<N> x) {
 		return criteriaBuilder.abs( x );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> sum(Expression<? extends N> x, Expression<? extends N> y) {
+	public <N extends Number> JpaExpression<N> sum(@Nonnull Expression<? extends N> x, @Nonnull Expression<? extends N> y) {
 		return criteriaBuilder.sum( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> sum(Expression<? extends N> x, N y) {
+	public <N extends Number> JpaExpression<N> sum(@Nonnull Expression<? extends N> x, N y) {
 		return criteriaBuilder.sum( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> sum(N x, Expression<? extends N> y) {
+	public <N extends Number> JpaExpression<N> sum(N x, @Nonnull Expression<? extends N> y) {
 		return criteriaBuilder.sum( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> prod(Expression<? extends N> x, Expression<? extends N> y) {
+	public <N extends Number> JpaExpression<N> prod(@Nonnull Expression<? extends N> x, @Nonnull Expression<? extends N> y) {
 		return criteriaBuilder.prod( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> prod(Expression<? extends N> x, N y) {
+	public <N extends Number> JpaExpression<N> prod(@Nonnull Expression<? extends N> x, N y) {
 		return criteriaBuilder.prod( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> prod(N x, Expression<? extends N> y) {
+	public <N extends Number> JpaExpression<N> prod(N x, @Nonnull Expression<? extends N> y) {
 		return criteriaBuilder.prod( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> diff(Expression<? extends N> x, Expression<? extends N> y) {
+	public <N extends Number> JpaExpression<N> diff(@Nonnull Expression<? extends N> x, @Nonnull Expression<? extends N> y) {
 		return criteriaBuilder.diff( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> diff(Expression<? extends N> x, N y) {
+	public <N extends Number> JpaExpression<N> diff(@Nonnull Expression<? extends N> x, N y) {
 		return criteriaBuilder.diff( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number> JpaExpression<N> diff(N x, Expression<? extends N> y) {
+	public <N extends Number> JpaExpression<N> diff(N x, @Nonnull Expression<? extends N> y) {
 		return criteriaBuilder.diff( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Number> quot(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public JpaExpression<Number> quot(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
 		return criteriaBuilder.quot( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Number> quot(Expression<? extends Number> x, Number y) {
+	public JpaExpression<Number> quot(@Nonnull Expression<? extends Number> x, Number y) {
 		return criteriaBuilder.quot( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Number> quot(Number x, Expression<? extends Number> y) {
+	public JpaExpression<Number> quot(Number x, @Nonnull Expression<? extends Number> y) {
 		return criteriaBuilder.quot( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Integer> mod(Expression<Integer> x, Expression<Integer> y) {
+	public JpaExpression<Integer> mod(@Nonnull Expression<Integer> x, @Nonnull Expression<Integer> y) {
 		return criteriaBuilder.mod( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Integer> mod(Expression<Integer> x, Integer y) {
+	public JpaExpression<Integer> mod(@Nonnull Expression<Integer> x, Integer y) {
 		return criteriaBuilder.mod( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Integer> mod(Integer x, Expression<Integer> y) {
+	public JpaExpression<Integer> mod(Integer x, @Nonnull Expression<Integer> y) {
 		return criteriaBuilder.mod( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Double> sqrt(Expression<? extends Number> x) {
+	public JpaExpression<Double> sqrt(@Nonnull Expression<? extends Number> x) {
 		return criteriaBuilder.sqrt( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Long> toLong(Expression<? extends Number> number) {
+	public JpaExpression<Long> toLong(@Nonnull Expression<? extends Number> number) {
 		return criteriaBuilder.toLong( number );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Integer> toInteger(Expression<? extends Number> number) {
+	public JpaExpression<Integer> toInteger(@Nonnull Expression<? extends Number> number) {
 		return criteriaBuilder.toInteger( number );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Float> toFloat(Expression<? extends Number> number) {
+	public JpaExpression<Float> toFloat(@Nonnull Expression<? extends Number> number) {
 		return criteriaBuilder.toFloat( number );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<Double> toDouble(Expression<? extends Number> number) {
+	public JpaExpression<Double> toDouble(@Nonnull Expression<? extends Number> number) {
 		return criteriaBuilder.toDouble( number );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<BigDecimal> toBigDecimal(Expression<? extends Number> number) {
+	public JpaExpression<BigDecimal> toBigDecimal(@Nonnull Expression<? extends Number> number) {
 		return criteriaBuilder.toBigDecimal( number );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<BigInteger> toBigInteger(Expression<? extends Number> number) {
+	public JpaExpression<BigInteger> toBigInteger(@Nonnull Expression<? extends Number> number) {
 		return criteriaBuilder.toBigInteger( number );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<String> toString(Expression<Character> character) {
+	public JpaExpression<String> toString(@Nonnull Expression<Character> character) {
 		return criteriaBuilder.toString( character );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaExpression<T> literal(@Nullable T value) {
+	public <T> JpaExpression<T> literal(@Nonnull T value) {
 		return criteriaBuilder.literal( value );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number & Comparable<N>> NumericExpression<N> numericLiteral(N value) {
+	public <N extends Number & Comparable<N>> NumericExpression<N> numericLiteral(@Nonnull N value) {
 		return criteriaBuilder.numericLiteral( value );
 	}
 
+	@Nonnull
 	@Override
-	public TextExpression stringLiteral(String value) {
+	public TextExpression stringLiteral(@Nonnull String value) {
 		return criteriaBuilder.stringLiteral( value );
 	}
 
+	@Nonnull
 	@Override
-	public <T extends Temporal & Comparable<? super T>> TemporalExpression<T> temporalLiteral(T value) {
+	public <T extends Temporal & Comparable<? super T>> TemporalExpression<T> temporalLiteral(@Nonnull T value) {
 		return criteriaBuilder.temporalLiteral( value );
 	}
 
+	@Nonnull
 	@Override
 	public BooleanExpression booleanLiteral(boolean value) {
 		return criteriaBuilder.booleanLiteral( value );
@@ -736,28 +827,33 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.literals( values );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaExpression<T> nullLiteral(Class<T> resultClass) {
+	public <T> JpaExpression<T> nullLiteral(@Nonnull Class<T> resultClass) {
 		return criteriaBuilder.nullLiteral( resultClass );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaParameterExpression<T> parameter(Class<T> paramClass) {
+	public <T> JpaParameterExpression<T> parameter(@Nonnull Class<T> paramClass) {
 		return criteriaBuilder.parameter( paramClass );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name) {
+	public <T> JpaParameterExpression<T> parameter(@Nonnull Class<T> paramClass, @Nonnull String name) {
 		return criteriaBuilder.parameter( paramClass, name );
 	}
 
+	@Nonnull
 	@Override
-	public <T> ParameterExpression<T> convertedParameter(Class<? extends AttributeConverter<T, ?>> converter) {
+	public <T> ParameterExpression<T> convertedParameter(@Nonnull Class<? extends AttributeConverter<T, ?>> converter) {
 		return criteriaBuilder.convertedParameter( converter );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<String> concat(Expression<String> x, Expression<String> y) {
+	public JpaExpression<String> concat(@Nonnull Expression<String> x, @Nonnull Expression<String> y) {
 		return criteriaBuilder.concat( x, y );
 	}
 
@@ -771,13 +867,15 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.listParameter( paramClass, name );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<String> concat(Expression<String> x, String y) {
+	public JpaExpression<String> concat(@Nonnull Expression<String> x, @Nonnull String y) {
 		return criteriaBuilder.concat( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<String> concat(String x, Expression<String> y) {
+	public JpaExpression<String> concat(@Nonnull String x, @Nonnull Expression<String> y) {
 		return criteriaBuilder.concat( x, y );
 	}
 
@@ -786,101 +884,121 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.concat( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> substring(Expression<String> x, Expression<Integer> from) {
+	public JpaFunction<String> substring(@Nonnull Expression<String> x, @Nonnull Expression<Integer> from) {
 		return criteriaBuilder.substring( x, from );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> substring(Expression<String> x, int from) {
+	public JpaFunction<String> substring(@Nonnull Expression<String> x, int from) {
 		return criteriaBuilder.substring( x, from );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> substring(Expression<String> x, Expression<Integer> from, Expression<Integer> len) {
+	public JpaFunction<String> substring(@Nonnull Expression<String> x, @Nonnull Expression<Integer> from, @Nonnull Expression<Integer> len) {
 		return criteriaBuilder.substring( x, from, len );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> substring(Expression<String> x, int from, int len) {
+	public JpaFunction<String> substring(@Nonnull Expression<String> x, int from, int len) {
 		return criteriaBuilder.substring( x, from, len );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> trim(Expression<String> x) {
+	public JpaFunction<String> trim(@Nonnull Expression<String> x) {
 		return criteriaBuilder.trim( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> trim(Trimspec ts, Expression<String> x) {
+	public JpaFunction<String> trim(@Nonnull Trimspec ts, @Nonnull Expression<String> x) {
 		return criteriaBuilder.trim( ts, x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> trim(Expression<Character> t, Expression<String> x) {
+	public JpaFunction<String> trim(@Nonnull Expression<Character> t, @Nonnull Expression<String> x) {
 		return criteriaBuilder.trim( t, x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> trim(Trimspec ts, Expression<Character> t, Expression<String> x) {
+	public JpaFunction<String> trim(@Nonnull Trimspec ts, @Nonnull Expression<Character> t, @Nonnull Expression<String> x) {
 		return criteriaBuilder.trim( ts, t, x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> trim(char t, Expression<String> x) {
+	public JpaFunction<String> trim(char t, @Nonnull Expression<String> x) {
 		return criteriaBuilder.trim( t, x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> trim(Trimspec ts, char t, Expression<String> x) {
+	public JpaFunction<String> trim(@Nonnull Trimspec ts, char t, @Nonnull Expression<String> x) {
 		return criteriaBuilder.trim( ts, t, x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> lower(Expression<String> x) {
+	public JpaFunction<String> lower(@Nonnull Expression<String> x) {
 		return criteriaBuilder.lower( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> upper(Expression<String> x) {
+	public JpaFunction<String> upper(@Nonnull Expression<String> x) {
 		return criteriaBuilder.upper( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<Integer> length(Expression<String> x) {
+	public JpaFunction<Integer> length(@Nonnull Expression<String> x) {
 		return criteriaBuilder.length( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<Integer> locate(Expression<String> x, Expression<String> pattern) {
+	public JpaFunction<Integer> locate(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern) {
 		return criteriaBuilder.locate( x, pattern );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<Integer> locate(Expression<String> x, String pattern) {
+	public JpaFunction<Integer> locate(@Nonnull Expression<String> x, @Nonnull String pattern) {
 		return criteriaBuilder.locate( x, pattern );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<Integer> locate(Expression<String> x, Expression<String> pattern, Expression<Integer> from) {
+	public JpaFunction<Integer> locate(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull Expression<Integer> from) {
 		return criteriaBuilder.locate( x, pattern, from );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<Integer> locate(Expression<String> x, String pattern, int from) {
+	public JpaFunction<Integer> locate(@Nonnull Expression<String> x, @Nonnull String pattern, int from) {
 		return criteriaBuilder.locate( x, pattern, from );
 	}
 
+	@Nonnull
 	@Override
 	public JpaFunction<Date> currentDate() {
 		return criteriaBuilder.currentDate();
 	}
 
+	@Nonnull
 	@Override
 	public JpaFunction<Time> currentTime() {
 		return criteriaBuilder.currentTime();
 	}
 
+	@Nonnull
 	@Override
 	public JpaFunction<Timestamp> currentTimestamp() {
 		return criteriaBuilder.currentTimestamp();
@@ -901,23 +1019,27 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.version( path );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaFunction<T> function(String name, Class<T> type, Expression<?>... args) {
+	public <T> JpaFunction<T> function(@Nonnull String name, @Nonnull Class<T> type, @Nonnull Expression<?>... args) {
 		return criteriaBuilder.function( name, type, args );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> JpaExpression<Y> all(Subquery<Y> subquery) {
+	public <Y> JpaExpression<Y> all(@Nonnull Subquery<Y> subquery) {
 		return criteriaBuilder.all( subquery );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> JpaExpression<Y> some(Subquery<Y> subquery) {
+	public <Y> JpaExpression<Y> some(@Nonnull Subquery<Y> subquery) {
 		return criteriaBuilder.some( subquery );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> JpaExpression<Y> any(Subquery<Y> subquery) {
+	public <Y> JpaExpression<Y> any(@Nonnull Subquery<Y> subquery) {
 		return criteriaBuilder.any( subquery );
 	}
 
@@ -931,153 +1053,183 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.value( value );
 	}
 
+	@Nonnull
 	@Override
-	public <C extends Collection<?>> JpaExpression<Integer> size(Expression<C> collection) {
+	public <C extends Collection<?>> JpaExpression<Integer> size(@Nonnull Expression<C> collection) {
 		return criteriaBuilder.size( collection );
 	}
 
+	@Nonnull
 	@Override
-	public <C extends Collection<?>> JpaExpression<Integer> size(C collection) {
+	public <C extends Collection<?>> JpaExpression<Integer> size(@Nonnull C collection) {
 		return criteriaBuilder.size( collection );
 	}
 
+	@Nonnull
 	@Override
 	public <T> JpaCoalesce<T> coalesce() {
 		return criteriaBuilder.coalesce();
 	}
 
+	@Nonnull
 	@Override
-	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
+	public <Y> JpaCoalesce<Y> coalesce(@Nonnull Expression<? extends Y> x, @Nonnull Expression<? extends Y> y) {
 		return criteriaBuilder.coalesce( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Y y) {
+	public <Y> JpaCoalesce<Y> coalesce(@Nonnull Expression<? extends Y> x, Y y) {
 		return criteriaBuilder.coalesce( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> JpaExpression<Y> nullif(Expression<Y> x, Expression<?> y) {
+	public <Y> JpaExpression<Y> nullif(@Nonnull Expression<Y> x, @Nonnull Expression<?> y) {
 		return criteriaBuilder.nullif( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <Y> JpaExpression<Y> nullif(Expression<Y> x, Y y) {
+	public <Y> JpaExpression<Y> nullif(@Nonnull Expression<Y> x, Y y) {
 		return criteriaBuilder.nullif( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <C, R> JpaSimpleCase<C, R> selectCase(Expression<? extends C> expression) {
+	public <C, R> JpaSimpleCase<C, R> selectCase(@Nonnull Expression<? extends C> expression) {
 		return criteriaBuilder.selectCase( expression );
 	}
 
+	@Nonnull
 	@Override
-	public <C, R> JpaSimpleCase<C, R> selectCase(Expression<? extends C> expression, Class<R> resultType) {
+	public <C, R> JpaSimpleCase<C, R> selectCase(@Nonnull Expression<? extends C> expression, @Nonnull Class<R> resultType) {
 		return criteriaBuilder.selectCase( expression, resultType );
 	}
 
+	@Nonnull
 	@Override
 	public <R> JpaSearchedCase<R> selectCase() {
 		return criteriaBuilder.selectCase();
 	}
 
+	@Nonnull
 	@Override
-	public <R> JpaSearchedCase<R> selectCase(Class<R> resultType) {
+	public <R> JpaSearchedCase<R> selectCase(@Nonnull Class<R> resultType) {
 		return criteriaBuilder.selectCase( resultType );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate and(Expression<Boolean> x, Expression<Boolean> y) {
+	public JpaPredicate and(@Nonnull Expression<Boolean> x, @Nonnull Expression<Boolean> y) {
 		return criteriaBuilder.and( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate and(Predicate... restrictions) {
+	public JpaPredicate and(@Nonnull Predicate... restrictions) {
 		return criteriaBuilder.and( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate and(BooleanExpression... restrictions) {
+	public JpaPredicate and(@Nonnull BooleanExpression... restrictions) {
 		return criteriaBuilder.and( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate and(List<? extends Expression<Boolean>> restrictions) {
+	public JpaPredicate and(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return criteriaBuilder.and( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate or(Expression<Boolean> x, Expression<Boolean> y) {
+	public JpaPredicate or(@Nonnull Expression<Boolean> x, @Nonnull Expression<Boolean> y) {
 		return criteriaBuilder.or( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate or(Predicate... restrictions) {
+	public JpaPredicate or(@Nonnull Predicate... restrictions) {
 		return criteriaBuilder.or( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate or(BooleanExpression... restrictions) {
+	public JpaPredicate or(@Nonnull BooleanExpression... restrictions) {
 		return criteriaBuilder.or( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate or(List<? extends Expression<Boolean>> restrictions) {
+	public JpaPredicate or(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return criteriaBuilder.or( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate not(Expression<Boolean> restriction) {
+	public JpaPredicate not(@Nonnull Expression<Boolean> restriction) {
 		return criteriaBuilder.not( restriction );
 	}
 
+	@Nonnull
 	@Override
 	public JpaPredicate conjunction() {
 		return criteriaBuilder.conjunction();
 	}
 
+	@Nonnull
 	@Override
 	public JpaPredicate disjunction() {
 		return criteriaBuilder.disjunction();
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate isTrue(Expression<Boolean> x) {
+	public JpaPredicate isTrue(@Nonnull Expression<Boolean> x) {
 		return criteriaBuilder.isTrue( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate isFalse(Expression<Boolean> x) {
+	public JpaPredicate isFalse(@Nonnull Expression<Boolean> x) {
 		return criteriaBuilder.isFalse( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate isNull(Expression<?> x) {
+	public JpaPredicate isNull(@Nonnull Expression<?> x) {
 		return criteriaBuilder.isNull( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate isNotNull(Expression<?> x) {
+	public JpaPredicate isNotNull(@Nonnull Expression<?> x) {
 		return criteriaBuilder.isNotNull( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate equal(Expression<?> x, Expression<?> y) {
+	public JpaPredicate equal(@Nonnull Expression<?> x, @Nonnull Expression<?> y) {
 		return criteriaBuilder.equal( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate equal(Expression<?> x, Object y) {
+	public JpaPredicate equal(@Nonnull Expression<?> x, Object y) {
 		return criteriaBuilder.equal( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate notEqual(Expression<?> x, Expression<?> y) {
+	public JpaPredicate notEqual(@Nonnull Expression<?> x, @Nonnull Expression<?> y) {
 		return criteriaBuilder.notEqual( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate notEqual(Expression<?> x, Object y) {
+	public JpaPredicate notEqual(@Nonnull Expression<?> x, Object y) {
 		return criteriaBuilder.notEqual( x, y );
 	}
 
@@ -1101,172 +1253,203 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.notDistinctFrom( x, y );
 	}
 
+	@Nonnull
 	@Override
 	public <Y extends Comparable<? super Y>> JpaPredicate greaterThan(
-			Expression<? extends Y> x,
-			Expression<? extends Y> y) {
+			@Nonnull Expression<? extends Y> x,
+			@Nonnull Expression<? extends Y> y) {
 		return criteriaBuilder.greaterThan( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <Y extends Comparable<? super Y>> JpaPredicate greaterThan(Expression<? extends Y> x, Y y) {
+	public <Y extends Comparable<? super Y>> JpaPredicate greaterThan(@Nonnull Expression<? extends Y> x, Y y) {
 		return criteriaBuilder.greaterThan( x, y );
 	}
 
+	@Nonnull
 	@Override
 	public <Y extends Comparable<? super Y>> JpaPredicate greaterThanOrEqualTo(
-			Expression<? extends Y> x,
-			Expression<? extends Y> y) {
+			@Nonnull Expression<? extends Y> x,
+			@Nonnull Expression<? extends Y> y) {
 		return criteriaBuilder.greaterThanOrEqualTo( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <Y extends Comparable<? super Y>> JpaPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Y y) {
+	public <Y extends Comparable<? super Y>> JpaPredicate greaterThanOrEqualTo(@Nonnull Expression<? extends Y> x, Y y) {
 		return criteriaBuilder.greaterThanOrEqualTo( x, y );
 	}
 
+	@Nonnull
 	@Override
 	public <Y extends Comparable<? super Y>> JpaPredicate lessThan(
-			Expression<? extends Y> x,
-			Expression<? extends Y> y) {
+			@Nonnull Expression<? extends Y> x,
+			@Nonnull Expression<? extends Y> y) {
 		return criteriaBuilder.lessThan( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <Y extends Comparable<? super Y>> JpaPredicate lessThan(Expression<? extends Y> x, Y y) {
+	public <Y extends Comparable<? super Y>> JpaPredicate lessThan(@Nonnull Expression<? extends Y> x, Y y) {
 		return criteriaBuilder.lessThan( x, y );
 	}
 
+	@Nonnull
 	@Override
 	public <Y extends Comparable<? super Y>> JpaPredicate lessThanOrEqualTo(
-			Expression<? extends Y> x,
-			Expression<? extends Y> y) {
+			@Nonnull Expression<? extends Y> x,
+			@Nonnull Expression<? extends Y> y) {
 		return criteriaBuilder.lessThanOrEqualTo( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <Y extends Comparable<? super Y>> JpaPredicate lessThanOrEqualTo(Expression<? extends Y> x, Y y) {
+	public <Y extends Comparable<? super Y>> JpaPredicate lessThanOrEqualTo(@Nonnull Expression<? extends Y> x, Y y) {
 		return criteriaBuilder.lessThanOrEqualTo( x, y );
 	}
 
+	@Nonnull
 	@Override
 	public <Y extends Comparable<? super Y>> JpaPredicate between(
-			Expression<? extends Y> value,
-			Expression<? extends Y> lower,
-			Expression<? extends Y> upper) {
+			@Nonnull Expression<? extends Y> value,
+			@Nonnull Expression<? extends Y> lower,
+			@Nonnull Expression<? extends Y> upper) {
 		return criteriaBuilder.between( value, lower, upper );
 	}
 
+	@Nonnull
 	@Override
-	public <Y extends Comparable<? super Y>> JpaPredicate between(Expression<? extends Y> value, Y lower, Y upper) {
+	public <Y extends Comparable<? super Y>> JpaPredicate between(@Nonnull Expression<? extends Y> value, Y lower, Y upper) {
 		return criteriaBuilder.between( value, lower, upper );
 	}
 
+	@Nonnull
 	@Override
 	public <Y extends Comparable<? super Y>> JpaPredicate between(
 			Y value,
-			Expression<? extends Y> lower,
-			Expression<? extends Y> upper) {
+			@Nonnull Expression<? extends Y> lower,
+			@Nonnull Expression<? extends Y> upper) {
 		return criteriaBuilder.between( value, lower, upper );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate gt(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public JpaPredicate gt(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
 		return criteriaBuilder.gt( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate gt(Expression<? extends Number> x, Number y) {
+	public JpaPredicate gt(@Nonnull Expression<? extends Number> x, Number y) {
 		return criteriaBuilder.gt( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate ge(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public JpaPredicate ge(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
 		return criteriaBuilder.ge( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate ge(Expression<? extends Number> x, Number y) {
+	public JpaPredicate ge(@Nonnull Expression<? extends Number> x, Number y) {
 		return criteriaBuilder.ge( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate lt(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public JpaPredicate lt(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
 		return criteriaBuilder.lt( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate lt(Expression<? extends Number> x, Number y) {
+	public JpaPredicate lt(@Nonnull Expression<? extends Number> x, Number y) {
 		return criteriaBuilder.lt( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate le(Expression<? extends Number> x, Expression<? extends Number> y) {
+	public JpaPredicate le(@Nonnull Expression<? extends Number> x, @Nonnull Expression<? extends Number> y) {
 		return criteriaBuilder.le( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate le(Expression<? extends Number> x, Number y) {
+	public JpaPredicate le(@Nonnull Expression<? extends Number> x, Number y) {
 		return criteriaBuilder.le( x, y );
 	}
 
+	@Nonnull
 	@Override
-	public <C extends Collection<?>> JpaPredicate isEmpty(Expression<C> collection) {
+	public <C extends Collection<?>> JpaPredicate isEmpty(@Nonnull Expression<C> collection) {
 		return criteriaBuilder.isEmpty( collection );
 	}
 
+	@Nonnull
 	@Override
-	public <C extends Collection<?>> JpaPredicate isNotEmpty(Expression<C> collection) {
+	public <C extends Collection<?>> JpaPredicate isNotEmpty(@Nonnull Expression<C> collection) {
 		return criteriaBuilder.isNotEmpty( collection );
 	}
 
+	@Nonnull
 	@Override
-	public <E, C extends Collection<E>> JpaPredicate isMember(Expression<E> elem, Expression<C> collection) {
+	public <E, C extends Collection<E>> JpaPredicate isMember(@Nonnull Expression<E> elem, @Nonnull Expression<C> collection) {
 		return criteriaBuilder.isMember( elem, collection );
 	}
 
+	@Nonnull
 	@Override
-	public <E, C extends Collection<E>> JpaPredicate isMember(E elem, Expression<C> collection) {
+	public <E, C extends Collection<E>> JpaPredicate isMember(E elem, @Nonnull Expression<C> collection) {
 		return criteriaBuilder.isMember( elem, collection );
 	}
 
+	@Nonnull
 	@Override
-	public <E, C extends Collection<E>> JpaPredicate isNotMember(Expression<E> elem, Expression<C> collection) {
+	public <E, C extends Collection<E>> JpaPredicate isNotMember(@Nonnull Expression<E> elem, @Nonnull Expression<C> collection) {
 		return criteriaBuilder.isNotMember( elem, collection );
 	}
 
+	@Nonnull
 	@Override
-	public <E, C extends Collection<E>> JpaPredicate isNotMember(E elem, Expression<C> collection) {
+	public <E, C extends Collection<E>> JpaPredicate isNotMember(E elem, @Nonnull Expression<C> collection) {
 		return criteriaBuilder.isNotMember( elem, collection );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate like(Expression<String> x, Expression<String> pattern) {
+	public JpaPredicate like(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern) {
 		return criteriaBuilder.like( x, pattern );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate like(Expression<String> x, String pattern) {
+	public JpaPredicate like(@Nonnull Expression<String> x, @Nonnull String pattern) {
 		return criteriaBuilder.like( x, pattern );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate like(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
+	public JpaPredicate like(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull Expression<Character> escapeChar) {
 		return criteriaBuilder.like( x, pattern, escapeChar );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate like(Expression<String> x, Expression<String> pattern, char escapeChar) {
+	public JpaPredicate like(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, char escapeChar) {
 		return criteriaBuilder.like( x, pattern, escapeChar );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate like(Expression<String> x, String pattern, Expression<Character> escapeChar) {
+	public JpaPredicate like(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull Expression<Character> escapeChar) {
 		return criteriaBuilder.like( x, pattern, escapeChar );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate like(Expression<String> x, String pattern, char escapeChar) {
+	public JpaPredicate like(@Nonnull Expression<String> x, @Nonnull String pattern, char escapeChar) {
 		return criteriaBuilder.like( x, pattern, escapeChar );
 	}
 
@@ -1300,38 +1483,45 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.ilike( x, pattern, escapeChar );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate notLike(Expression<String> x, Expression<String> pattern) {
+	public JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern) {
 		return criteriaBuilder.notLike( x, pattern );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate notLike(Expression<String> x, String pattern) {
+	public JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull String pattern) {
 		return criteriaBuilder.notLike( x, pattern );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate notLike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
+	public JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull Expression<Character> escapeChar) {
 		return criteriaBuilder.notLike( x, pattern, escapeChar );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate notLike(Expression<String> x, Expression<String> pattern, char escapeChar) {
+	public JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, char escapeChar) {
 		return criteriaBuilder.notLike( x, pattern, escapeChar );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate notLike(Expression<String> x, String pattern, Expression<Character> escapeChar) {
+	public JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull Expression<Character> escapeChar) {
 		return criteriaBuilder.notLike( x, pattern, escapeChar );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate notLike(Expression<String> x, String pattern, char escapeChar) {
+	public JpaPredicate notLike(@Nonnull Expression<String> x, @Nonnull String pattern, char escapeChar) {
 		return criteriaBuilder.notLike( x, pattern, escapeChar );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<String> concat(List<Expression<String>> expressions) {
+	public JpaExpression<String> concat(@Nonnull List<Expression<String>> expressions) {
 		return criteriaBuilder.concat( expressions );
 	}
 
@@ -1385,8 +1575,9 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.notIlikeRegexp( x, pattern );
 	}
 
+	@Nonnull
 	@Override
-	public <T> JpaInPredicate<T> in(Expression<? extends T> expression) {
+	public <T> JpaInPredicate<T> in(@Nonnull Expression<? extends T> expression) {
 		return criteriaBuilder.in( expression );
 	}
 
@@ -1405,8 +1596,9 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.in( expression, values );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate exists(Subquery<?> subquery) {
+	public JpaPredicate exists(@Nonnull Subquery<?> subquery) {
 		return criteriaBuilder.exists( subquery );
 	}
 
@@ -1454,23 +1646,27 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.sort( sortExpression );
 	}
 
+	@Nonnull
 	@Override
-	public JpaOrder asc(Expression<?> x) {
+	public JpaOrder asc(@Nonnull Expression<?> x) {
 		return criteriaBuilder.asc( x );
 	}
 
+	@Nonnull
 	@Override
-	public JpaOrder desc(Expression<?> x) {
+	public JpaOrder desc(@Nonnull Expression<?> x) {
 		return criteriaBuilder.desc( x );
 	}
 
+	@Nonnull
 	@Override
-	public Order asc(Expression<?> expression, Nulls nullPrecedence) {
+	public Order asc(@Nonnull Expression<?> expression, @Nonnull Nulls nullPrecedence) {
 		return criteriaBuilder.asc( expression, nullPrecedence );
 	}
 
+	@Nonnull
 	@Override
-	public Order desc(Expression<?> expression, Nulls nullPrecedence) {
+	public Order desc(@Nonnull Expression<?> expression, @Nonnull Nulls nullPrecedence) {
 		return criteriaBuilder.desc( expression, nullPrecedence );
 	}
 
@@ -1744,46 +1940,54 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.repeat( x, times );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> left(Expression<String> x, int length) {
+	public JpaFunction<String> left(@Nonnull Expression<String> x, int length) {
 		return criteriaBuilder.left( x, length );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> left(Expression<String> x, Expression<Integer> length) {
+	public JpaFunction<String> left(@Nonnull Expression<String> x, @Nonnull Expression<Integer> length) {
 		return criteriaBuilder.left( x, length );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> right(Expression<String> x, int length) {
+	public JpaFunction<String> right(@Nonnull Expression<String> x, int length) {
 		return criteriaBuilder.right( x, length );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> right(Expression<String> x, Expression<Integer> length) {
+	public JpaFunction<String> right(@Nonnull Expression<String> x, @Nonnull Expression<Integer> length) {
 		return criteriaBuilder.right( x, length );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> replace(Expression<String> x, String pattern, String replacement) {
+	public JpaFunction<String> replace(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull String replacement) {
 		return criteriaBuilder.replace( x, pattern, replacement );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> replace(Expression<String> x, String pattern, Expression<String> replacement) {
+	public JpaFunction<String> replace(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull Expression<String> replacement) {
 		return criteriaBuilder.replace( x, pattern, replacement );
 	}
 
+	@Nonnull
 	@Override
-	public JpaFunction<String> replace(Expression<String> x, Expression<String> pattern, String replacement) {
+	public JpaFunction<String> replace(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull String replacement) {
 		return criteriaBuilder.replace( x, pattern, replacement );
 	}
 
+	@Nonnull
 	@Override
 	public JpaFunction<String> replace(
-			Expression<String> x,
-			Expression<String> pattern,
-			Expression<String> replacement) {
+			@Nonnull Expression<String> x,
+			@Nonnull Expression<String> pattern,
+			@Nonnull Expression<String> replacement) {
 		return criteriaBuilder.replace( x, pattern, replacement );
 	}
 

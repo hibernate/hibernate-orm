@@ -6,6 +6,7 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.common.FetchClauseType;
 
@@ -22,9 +23,11 @@ public interface JpaQueryPart<T> extends JpaCriteriaNode {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Ordering clause
 
+	@Nonnull
 	List<? extends JpaOrder> getSortSpecifications();
 
-	JpaQueryPart<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
+	@Nonnull
+	JpaQueryPart<T> setSortSpecifications(@Nonnull List<? extends JpaOrder> sortSpecifications);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,15 +35,20 @@ public interface JpaQueryPart<T> extends JpaCriteriaNode {
 
 	//TODO: these operations should only accept integer literals or parameters
 
-	@Nullable JpaExpression<? extends Number> getOffset();
+	@Nullable
+	JpaExpression<? extends Number> getOffset();
 
-	JpaQueryPart<T> setOffset(@Nullable JpaExpression<? extends Number> offset);
+	@Nonnull
+	JpaQueryPart<T> setOffset(JpaExpression<? extends Number> offset);
 
-	@Nullable JpaExpression<? extends Number> getFetch();
+	@Nullable
+	JpaExpression<? extends Number> getFetch();
 
+	@Nonnull
 	JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch);
 
-	JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+	@Nonnull
+	JpaQueryPart<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
 	FetchClauseType getFetchClauseType();
 }

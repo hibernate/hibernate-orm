@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -15,46 +16,55 @@ public interface SqmBooleanExpressionImplementor
 		extends SqmComparableExpressionImplementor<Boolean>, SqmBooleanExpression {
 	SqmCriteriaNodeBuilder nodeBuilder();
 
+	@Nonnull
 	@Override
 	default SqmComparableExpression<Boolean> max() {
 		throw new UnsupportedOperationException( "max() not supported" );
 	}
 
+	@Nonnull
 	@Override
 	default SqmComparableExpression<Boolean> min() {
 		throw new UnsupportedOperationException( "min() not supported" );
 	}
 
+	@Nonnull
 	@Override
-	default SqmPredicate and(Expression<Boolean> y) {
+	default SqmPredicate and(@Nonnull Expression<Boolean> y) {
 		return nodeBuilder().and( this, y );
 	}
 
+	@Nonnull
 	@Override
-	default SqmPredicate or(Expression<Boolean> y) {
+	default SqmPredicate or(@Nonnull Expression<Boolean> y) {
 		return nodeBuilder().or( this, y );
 	}
 
+	@Nonnull
 	@Override
 	default SqmPredicate not() {
 		return nodeBuilder().not( this );
 	}
 
+	@Nonnull
 	@Override
-	default SqmBooleanExpression coalesce(Expression<? extends Boolean> y) {
+	default SqmBooleanExpression coalesce(@Nonnull Expression<? extends Boolean> y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmBooleanExpression coalesce(Boolean y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	default SqmBooleanExpression nullif(Expression<? extends Boolean> y) {
+	default SqmBooleanExpression nullif(@Nonnull Expression<? extends Boolean> y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().nullif( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmBooleanExpression nullif(Boolean y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().nullif( this, y ) );

@@ -4,12 +4,13 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import jakarta.persistence.metamodel.EntityType;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionContract;
@@ -213,115 +214,138 @@ public abstract class CriteriaDefinition<R>
 		this( entityManager.getEntityManagerFactory(), baseQuery );
 	}
 
+	@Nonnull
 	public SelectionQuery<R> createSelectionQuery(SharedSessionContract session) {
 		return session.createQuery( query );
 	}
 
-	public TypedQuery<R> createQuery(EntityManager entityManager) {
+	@Nonnull
+	public TypedQuery<R> createQuery(@Nonnull EntityManager entityManager) {
 		return entityManager.createQuery( query );
 	}
 
 	@Incubating
-	public JpaCriteriaQuery<R> restrict(Predicate predicate) {
+	@Nonnull
+	public JpaCriteriaQuery<R> restrict(@Nonnull Predicate predicate) {
 		final JpaPredicate existing = getRestriction();
 		return existing == null ? where( predicate ) : where( existing, predicate );
 	}
 
 	@Override
+	@Nonnull
 	public HibernateCriteriaBuilder getCriteriaBuilder() {
 		return query.getCriteriaBuilder();
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> select(Selection<? extends R> selection) {
+	public JpaCriteriaQuery<R> select(@Nonnull Selection<? extends R> selection) {
 		return query.select(selection);
 	}
 
+	@Nonnull
 	@Override @Deprecated
-	public JpaCriteriaQuery<R> multiselect(Selection<?>... selections) {
+	public JpaCriteriaQuery<R> multiselect(@Nonnull Selection<?>... selections) {
 		return query.multiselect(selections);
 	}
 
+	@Nonnull
 	@Override @Deprecated
-	public JpaCriteriaQuery<R> multiselect(List<Selection<?>> list) {
+	public JpaCriteriaQuery<R> multiselect(@Nonnull List<Selection<?>> list) {
 		return query.multiselect(list);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> where(@Nullable Expression<Boolean> restriction) {
+	public JpaCriteriaQuery<R> where(@Nonnull Expression<Boolean> restriction) {
 		return query.where(restriction);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> groupBy(Expression... grouping) {
+	public JpaCriteriaQuery<R> groupBy(@Nonnull Expression... grouping) {
 		return query.groupBy(grouping);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> groupBy(List<Expression<?>> grouping) {
+	public JpaCriteriaQuery<R> groupBy(@Nonnull List<Expression<?>> grouping) {
 		return query.groupBy(grouping);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> having(Expression<Boolean> restriction) {
+	public JpaCriteriaQuery<R> having(@Nonnull Expression<Boolean> restriction) {
 		return query.having(restriction);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> orderBy(Order... o) {
+	public JpaCriteriaQuery<R> orderBy(@Nonnull Order... o) {
 		return query.orderBy(o);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> orderBy(List<Order> o) {
+	public JpaCriteriaQuery<R> orderBy(@Nonnull List<Order> o) {
 		return query.orderBy(o);
 	}
 
+	@Nonnull
 	@Override
 	public JpaCriteriaQuery<R> distinct(boolean distinct) {
 		return query.distinct(distinct);
 	}
 
+	@Nonnull
 	@Override
 	public List<Order> getOrderList() {
 		return query.getOrderList();
 	}
 
+	@Nonnull
 	@Override
 	public Set<ParameterExpression<?>> getParameters() {
 		return query.getParameters();
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaRoot<X> from(Class<X> entityClass) {
+	public <X> JpaRoot<X> from(@Nonnull Class<X> entityClass) {
 		return query.from(entityClass);
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaRoot<X> from(EntityType<X> entity) {
+	public <X> JpaRoot<X> from(@Nonnull EntityType<X> entity) {
 		return query.from(entity);
 	}
 
+	@Nonnull
 	@Override
-	public <U> JpaSubQuery<U> subquery(Class<U> type) {
+	public <U> JpaSubQuery<U> subquery(@Nonnull Class<U> type) {
 		return query.subquery(type);
 	}
 
+	@Nonnull
 	@Override
 	public Set<Root<?>> getRoots() {
 		return query.getRoots();
 	}
 
+	@Nullable
 	@Override
 	public JpaSelection<R> getSelection() {
 		return query.getSelection();
 	}
 
+	@Nonnull
 	@Override
 	public List<Expression<?>> getGroupList() {
 		return query.getGroupList();
 	}
 
+	@Nullable
 	@Override
 	public JpaPredicate getGroupRestriction() {
 		return query.getGroupRestriction();
@@ -332,78 +356,93 @@ public abstract class CriteriaDefinition<R>
 		return query.isDistinct();
 	}
 
+	@Nonnull
 	@Override
 	public Class<R> getResultType() {
 		return query.getResultType();
 	}
 
+	@Nullable
 	@Override
-	public @Nullable JpaPredicate getRestriction() {
+	public JpaPredicate getRestriction() {
 		return query.getRestriction();
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> where(List<? extends Expression<Boolean>> restrictions) {
+	public JpaCriteriaQuery<R> where(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return query.where(restrictions);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> where(BooleanExpression... restrictions) {
+	public JpaCriteriaQuery<R> where(@Nonnull BooleanExpression... restrictions) {
 		return query.where(restrictions);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> having(BooleanExpression... restrictions) {
+	public JpaCriteriaQuery<R> having(@Nonnull BooleanExpression... restrictions) {
 		return query.having(restrictions);
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<R> having(List<? extends Expression<Boolean>> restrictions) {
+	public JpaCriteriaQuery<R> having(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return query.having(restrictions);
 	}
 
+	@Nonnull
 	@Override
-	public <U> JpaSubQuery<U> subquery(EntityType<U> type) {
+	public <U> JpaSubQuery<U> subquery(@Nonnull EntityType<U> type) {
 		return query.subquery( type );
 	}
 
+	@Nullable
 	@Override
 	public JpaExpression<Number> getOffset() {
 		return query.getOffset();
 	}
 
 	@Override
-	public JpaCriteriaQuery<R> offset(JpaExpression<? extends Number> offset) {
+	@Nonnull
+	public JpaCriteriaQuery<R> offset(@Nullable JpaExpression<? extends Number> offset) {
 		return query.offset(offset);
 	}
 
 	@Override
-	public JpaCriteriaQuery<R> offset(Number offset) {
+	@Nonnull
+	public JpaCriteriaQuery<R> offset(@Nullable Number offset) {
 		return query.offset(offset);
 	}
 
+	@Nullable
 	@Override
 	public JpaExpression<Number> getFetch() {
 		return query.getFetch();
 	}
 
 	@Override
-	public JpaCriteriaQuery<R> fetch(JpaExpression<? extends Number> fetch) {
+	@Nonnull
+	public JpaCriteriaQuery<R> fetch(@Nullable JpaExpression<? extends Number> fetch) {
 		return query.fetch(fetch);
 	}
 
 	@Override
-	public JpaCriteriaQuery<R> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+	@Nonnull
+	public JpaCriteriaQuery<R> fetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
 		return query.fetch(fetch, fetchClauseType);
 	}
 
 	@Override
-	public JpaCriteriaQuery<R> fetch(Number fetch) {
+	@Nonnull
+	public JpaCriteriaQuery<R> fetch(@Nullable Number fetch) {
 		return query.fetch(fetch);
 	}
 
 	@Override
-	public JpaCriteriaQuery<R> fetch(Number fetch, FetchClauseType fetchClauseType) {
+	@Nonnull
+	public JpaCriteriaQuery<R> fetch(@Nullable Number fetch, FetchClauseType fetchClauseType) {
 		return query.fetch(fetch, fetchClauseType);
 	}
 
@@ -413,95 +452,118 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
+	@Nonnull
 	public List<? extends JpaRoot<?>> getRootList() {
 		return query.getRootList();
 	}
 
 	@Override
+	@Nonnull
 	public <E> JpaRoot<? extends E> getRoot(int position, Class<E> type) {
 		return query.getRoot( position, type );
 	}
 
 	@Override
+	@Nonnull
 	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
 		return query.getRoot( alias, type );
 	}
 
 	@Override
+	@Nonnull
 	public Collection<? extends JpaCteCriteria<?>> getCteCriterias() {
 		return query.getCteCriterias();
 	}
 
 	@Override
-	public <T> @Nullable JpaCteCriteria<T> getCteCriteria(String cteName) {
+	public <T> @Nullable JpaCteCriteria<T> getCteCriteria(@Nonnull String cteName) {
 		return query.getCteCriteria(cteName);
 	}
 
 	@Override
-	public <T> JpaCteCriteria<T> with(AbstractQuery<T> criteria) {
+	@Deprecated(since = "7", forRemoval = true)
+	@SuppressWarnings("removal")
+	@Nonnull
+	public <T> JpaCteCriteria<T> with(@Nonnull AbstractQuery<T> criteria) {
 		return query.with(criteria);
 	}
 
 	@Override
-	public <T> JpaCteCriteria<T> withRecursiveUnionAll(AbstractQuery<T> baseCriteria, Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer) {
+	@Nonnull
+	public <T> JpaCteCriteria<T> withRecursiveUnionAll(
+			@Nonnull AbstractQuery<T> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer) {
 		return query.withRecursiveUnionAll(baseCriteria, recursiveCriteriaProducer);
 	}
 
 	@Override
-	public <T> JpaCteCriteria<T> withRecursiveUnionDistinct(AbstractQuery<T> baseCriteria, Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer) {
+	@Nonnull
+	public <T> JpaCteCriteria<T> withRecursiveUnionDistinct(
+			@Nonnull AbstractQuery<T> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer) {
 		return query.withRecursiveUnionDistinct(baseCriteria, recursiveCriteriaProducer);
 	}
 
 	@Override
-	public <T> JpaCteCriteria<T> with(String name, AbstractQuery<T> criteria) {
+	@Nonnull
+	public <T> JpaCteCriteria<T> with(@Nonnull String name, @Nonnull AbstractQuery<T> criteria) {
 		return query.with(name, criteria);
 	}
 
 	@Override
+	@Nonnull
 	public <T> JpaCteCriteria<T> withRecursiveUnionAll(
-			String name, AbstractQuery<T> baseCriteria,
-			Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer) {
+			@Nonnull String name, @Nonnull AbstractQuery<T> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer) {
 		return query.withRecursiveUnionAll(name, baseCriteria, recursiveCriteriaProducer);
 	}
 
 	@Override
+	@Nonnull
 	public <T> JpaCteCriteria<T> withRecursiveUnionDistinct(
-			String name, AbstractQuery<T> baseCriteria,
-			Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer) {
+			@Nonnull String name, @Nonnull AbstractQuery<T> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<T>, AbstractQuery<T>> recursiveCriteriaProducer) {
 		return query.withRecursiveUnionDistinct(name, baseCriteria, recursiveCriteriaProducer);
 	}
 
 	@Override
+	@Nonnull
 	public JpaQueryStructure<R> getQuerySpec() {
 		return query.getQuerySpec();
 	}
 
 	@Override
+	@Nonnull
 	public JpaQueryPart<R> getQueryPart() {
 		return query.getQueryPart();
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaDerivedRoot<X> from(Subquery<X> subquery) {
+	public <X> JpaDerivedRoot<X> from(@Nonnull Subquery<X> subquery) {
 		return query.from(subquery);
 	}
 
 	@Override
-	public <X> JpaRoot<X> from(JpaCteCriteria<X> cte) {
+	@Nonnull
+	public <X> JpaRoot<X> from(@Nonnull JpaCteCriteria<X> cte) {
 		return query.from(cte);
 	}
 
 	@Override
-	public <X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function) {
+	@Nonnull
+	public <X> JpaFunctionRoot<X> from(@Nonnull JpaSetReturningFunction<X> function) {
 		return query.from( function );
 	}
 
 	@Override
+	@Nonnull
 	public JpaCriteriaQuery<Long> createCountQuery() {
 		return query.createCountQuery();
 	}
 
 	@Override
+	@Nonnull
 	public JpaCriteriaQuery<Boolean> createExistsQuery() {
 		return query.createExistsQuery();
 	}

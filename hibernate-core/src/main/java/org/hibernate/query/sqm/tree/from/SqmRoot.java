@@ -4,11 +4,12 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.TreatException;
@@ -96,14 +97,15 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		super.copyTo( target, context );
 		if ( orderedJoins != null ) {
 			target.orderedJoins = new ArrayList<>( orderedJoins.size() );
-			for ( SqmJoin<?, ?> orderedJoin : orderedJoins ) {
+			for ( var orderedJoin : orderedJoins ) {
 				target.orderedJoins.add( orderedJoin.copy( context ) );
 			}
 		}
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmPath<?> getLhs() {
+	public SqmPath<?> getLhs() {
 		// a root has no LHS
 		return null;
 	}
@@ -145,6 +147,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Override
+	@Nonnull
 	public SqmRoot<?> findRoot() {
 		return this;
 	}
@@ -180,6 +183,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<E> getModel() {
 		return (SqmEntityDomainType<E>) getReferencedPathSource();
@@ -191,6 +195,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedRoot<E> createCorrelation() {
 		return new SqmCorrelatedRoot<>( this );
 	}
@@ -204,33 +209,39 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return !hasTreats();
 	}
 
+	@Nonnull
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType) {
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return treatAs( treatJavaType, null, false );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		return treatAs( treatTarget, null, false );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		return treatAs( treatTarget, alias, false );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		if ( alias != null ) {
 			throw new TreatException( "Root path treats can not be aliased - " + getNavigablePath().getFullPath() );
 		}

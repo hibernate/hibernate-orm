@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -72,6 +73,7 @@ public class SqmCorrelatedCteJoin<T> extends SqmCteJoin<T> implements SqmCorrela
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmCteJoin<T> getCorrelationParent() {
 		return correlationParent;

@@ -7,6 +7,7 @@ package org.hibernate.query.criteria;
 import java.util.Arrays;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
@@ -21,21 +22,25 @@ public interface JpaCteCriteria<T> extends JpaCriteriaNode {
 	/**
 	 * The name under which this CTE is registered.
 	 */
-	@Nullable String getName();
+	@Nullable
+	String getName();
 
 	/**
 	 * The type of the CTE.
 	 */
+	@Nonnull
 	JpaCteCriteriaType<T> getType();
 
 	/**
 	 * The definition of the CTE.
 	 */
+	@Nonnull
 	JpaSelectCriteria<?> getCteDefinition();
 
 	/**
 	 * The container within this CTE is registered.
 	 */
+	@Nonnull
 	JpaCteContainer getCteContainer();
 
 	/**
@@ -48,16 +53,21 @@ public interface JpaCteCriteria<T> extends JpaCriteriaNode {
 	 * The kind of search (breadth-first or depth-first) that should be done for a recursive query.
 	 * May be null if unspecified or if this is not a recursive query.
 	 */
-	@Nullable CteSearchClauseKind getSearchClauseKind();
+	@Nullable
+	CteSearchClauseKind getSearchClauseKind();
+
 	/**
 	 * The order by which should be searched.
 	 */
+	@Nonnull
 	List<JpaSearchOrder> getSearchBySpecifications();
+
 	/**
 	 * The attribute name by which one can order the final CTE result, to achieve the search order.
 	 * Note that an implicit {@link JpaCteCriteriaAttribute} will be made available for this.
 	 */
-	@Nullable String getSearchAttributeName();
+	@Nullable
+	String getSearchAttributeName();
 
 	default void search(CteSearchClauseKind kind, String searchAttributeName, JpaSearchOrder... searchOrders) {
 		search( kind, searchAttributeName, Arrays.asList( searchOrders ) );
@@ -68,29 +78,34 @@ public interface JpaCteCriteria<T> extends JpaCriteriaNode {
 	/**
 	 * The attributes to use for cycle detection.
 	 */
+	@Nonnull
 	List<JpaCteCriteriaAttribute> getCycleAttributes();
 
 	/**
 	 * The attribute name which is used to mark when a cycle has been detected.
 	 * Note that an implicit {@link JpaCteCriteriaAttribute} will be made available for this.
 	 */
-	@Nullable String getCycleMarkAttributeName();
+	@Nullable
+	String getCycleMarkAttributeName();
 
 	/**
 	 * The attribute name that represents the computation path, which is used for cycle detection.
 	 * Note that an implicit {@link JpaCteCriteriaAttribute} will be made available for this.
 	 */
-	@Nullable String getCyclePathAttributeName();
+	@Nullable
+	String getCyclePathAttributeName();
 
 	/**
 	 * The value which is set for the cycle mark attribute when a cycle is detected.
 	 */
-	@Nullable Object getCycleValue();
+	@Nullable
+	Object getCycleValue();
 
 	/**
 	 * The default value for the cycle mark attribute when no cycle is detected.
 	 */
-	@Nullable Object getNoCycleValue();
+	@Nullable
+	Object getNoCycleValue();
 
 	default void cycle(String cycleMarkAttributeName, JpaCteCriteriaAttribute... cycleColumns) {
 		cycleUsing( cycleMarkAttributeName, null, Arrays.asList( cycleColumns ) );

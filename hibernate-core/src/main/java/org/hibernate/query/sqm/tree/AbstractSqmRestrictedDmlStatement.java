@@ -4,13 +4,13 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import jakarta.persistence.criteria.BooleanExpression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCriteriaBase;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -104,8 +104,9 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		this.whereClause = whereClause;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable JpaPredicate getRestriction() {
+	public JpaPredicate getRestriction() {
 		return whereClause == null ? null : whereClause.getPredicate();
 	}
 
@@ -123,7 +124,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		return whereClause;
 	}
 
-	protected void setWhere(Predicate @Nullable ... restrictions) {
+	protected void setWhere(@Nullable Predicate ... restrictions) {
 		final SqmWhereClause whereClause = initAndGetWhereClause();
 		// Clear the current predicate if one is present
 		whereClause.setPredicate( null );

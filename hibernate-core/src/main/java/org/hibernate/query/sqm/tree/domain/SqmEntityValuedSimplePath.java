@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -75,13 +76,15 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 //		return (EntityDomainType<T>) getReferencedPathSource().getSqmPathType();
 //	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedEntityValuedSimplePath<T,S> treatAs(Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedEntityValuedSimplePath<T,S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return (SqmTreatedEntityValuedSimplePath<T, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		return getTreatedPath( treatTarget );
 	}
 }

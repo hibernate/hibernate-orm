@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.criteria.JpaManipulationCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
@@ -22,6 +23,7 @@ public interface SqmDmlStatement<E> extends SqmStatement<E>, SqmCteContainer, Jp
 	/**
 	 * Get the root path that is the target of the DML statement.
 	 */
+	@Nonnull
 	@Override
 	SqmRoot<E> getTarget();
 
@@ -29,5 +31,5 @@ public interface SqmDmlStatement<E> extends SqmStatement<E>, SqmCteContainer, Jp
 	 * Set the root path
 	 */
 	@Override
-	void setTarget(JpaRoot<E> root);
+	void setTarget(@Nonnull JpaRoot<E> root);
 }

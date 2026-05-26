@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,11 +29,11 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
 import jakarta.persistence.criteria.Path;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -139,40 +140,47 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 		return walker.visitInsertValuesStatement( this );
 	}
 
+	@Nonnull
 	@Override
-	public <U> Subquery<U> subquery(EntityType<U> type) {
+	public <U> Subquery<U> subquery(@Nonnull EntityType<U> type) {
 		throw new UnsupportedOperationException( "INSERT query cannot be sub-query" );
 	}
 
+	@Nullable
 	@Override
-	public @Nullable JpaPredicate getRestriction() {
+	public JpaPredicate getRestriction() {
 		return null;
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertValuesStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths) {
+	public SqmInsertValuesStatement<T> setInsertionTargetPaths(@Nonnull Path<?>... insertionTargetPaths) {
 		super.setInsertionTargetPaths( insertionTargetPaths );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertValuesStatement<T> setInsertionTargetPaths(@Nullable List<? extends Path<?>> insertionTargetPaths) {
+	public SqmInsertValuesStatement<T> setInsertionTargetPaths(@Nonnull List<? extends Path<?>> insertionTargetPaths) {
 		super.setInsertionTargetPaths( insertionTargetPaths );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertValuesStatement<T> values(JpaValues... values) {
+	public SqmInsertValuesStatement<T> values(@Nonnull JpaValues... values) {
 		return values( Arrays.asList( values ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertValuesStatement<T> values(List<? extends JpaValues> values) {
+	public SqmInsertValuesStatement<T> values(@Nonnull List<? extends JpaValues> values) {
 		//noinspection unchecked
 		this.valuesList = (List<SqmValues>) values;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmInsertValuesStatement<T> onConflict(@Nullable JpaConflictClause<T> conflictClause) {
 		super.onConflict( conflictClause );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import java.util.List;
 
@@ -22,29 +23,36 @@ import jakarta.persistence.criteria.PluralJoin;
  */
 public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, E> {
 	@Override
-	@NonNull PluralPersistentAttribute<? super O, C, E> getAttribute();
+	@NonNull
+	PluralPersistentAttribute<? super O, C, E> getAttribute();
 
+	@Nonnull
 	@Override
 	JpaPluralJoin<O, ? extends C, E> on(@Nullable JpaExpression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaPluralJoin<O, ? extends C, E> on(@Nullable Expression<Boolean> restriction);
+	JpaPluralJoin<O, ? extends C, E> on(@Nonnull Expression<Boolean> restriction);
 
 	@Override
+	@Nonnull
 	JpaPluralJoin<O, ? extends C, E> on(JpaPredicate @Nullable... restrictions);
 
+	@Nonnull
 	@Override
-	JpaPluralJoin<O, ? extends C, E> on(BooleanExpression... restrictions);
+	JpaPluralJoin<O, ? extends C, E> on(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaPluralJoin<O, ? extends C, E> on(List<? extends Expression<Boolean>> restrictions);
+	JpaPluralJoin<O, ? extends C, E> on(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<S extends E> JpaTreatedJoin<O, E, S> treatAs(Class<S> treatAsType);
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	default <S extends E> JpaPluralJoin<O, ?, S> treat(Class<S> treatAsType) {
+	default <S extends E> JpaPluralJoin<O, ?, S> treat(@Nonnull Class<S> treatAsType) {
 		return (JpaPluralJoin<O, ?, S>) treatAs( treatAsType );
 	}
 

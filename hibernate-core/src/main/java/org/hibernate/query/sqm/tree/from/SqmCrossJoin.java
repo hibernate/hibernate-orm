@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaCrossJoin;
@@ -115,8 +115,9 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 		return sqmRoot;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmFrom<?, T> getLhs() {
+	public SqmFrom<?, T> getLhs() {
 		// a cross-join has no LHS
 		return null;
 	}
@@ -136,11 +137,13 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	@Override
+	@Nonnull
 	public SqmRoot<?> findRoot() {
 		return getRoot();
 	}
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedCrossJoin<T> createCorrelation() {
 		return new SqmCorrelatedCrossJoin<>( this );
 	}
@@ -158,8 +161,9 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nullable
 	@Override
-	public @Nullable PersistentAttribute<? super T, ?> getAttribute() {
+	public PersistentAttribute<? super T, ?> getAttribute() {
 		return null;
 	}
 
@@ -175,7 +179,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 
 	@Override
 	@Nonnull
-	public SqmCrossJoin<T> on(BooleanExpression... restrictions) {
+	public SqmCrossJoin<T> on(@Nonnull BooleanExpression... restrictions) {
 		sqmJoinPredicates.setPredicate( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
@@ -188,25 +192,29 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedCrossJoin treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedCrossJoin treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( treatJavaType, alias, false );
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedCrossJoin treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedCrossJoin treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		return treatAs( treatTarget, alias, false );
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedCrossJoin treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends T> SqmTreatedCrossJoin treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, false );
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedCrossJoin treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends T> SqmTreatedCrossJoin treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		if ( alias != null ) {
 			throw new IllegalArgumentException( "Cross join treats can not be aliased" );
 		}
@@ -220,15 +228,17 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 		return treat;
 	}
 
+	@Nonnull
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedCrossJoin treatAs(Class<S> treatAsType) {
+	public <S extends T> SqmTreatedCrossJoin treatAs(@Nonnull Class<S> treatAsType) {
 		return treatAs( treatAsType, null, false );
 	}
 
+	@Nonnull
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedCrossJoin treatAs(EntityDomainType<S> treatAsType) {
+	public <S extends T> SqmTreatedCrossJoin treatAs(@Nonnull EntityDomainType<S> treatAsType) {
 		return treatAs( treatAsType, null, false );
 	}
 

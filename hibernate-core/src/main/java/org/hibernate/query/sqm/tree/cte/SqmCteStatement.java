@@ -4,13 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
@@ -31,6 +31,7 @@ import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.Subquery;
 
@@ -183,11 +184,13 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		return cteTable;
 	}
 
+	@Nonnull
 	@Override
 	public SqmSelectQuery<?> getCteDefinition() {
 		return cteDefinition;
 	}
 
+	@Nonnull
 	@Override
 	public SqmCteContainer getCteContainer() {
 		return cteContainer;
@@ -208,6 +211,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		return searchClauseKind;
 	}
 
+	@Nonnull
 	@Override
 	public List<JpaSearchOrder> getSearchBySpecifications() {
 		//noinspection unchecked
@@ -219,6 +223,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		return searchAttributeName;
 	}
 
+	@Nonnull
 	@Override
 	public List<JpaCteCriteriaAttribute> getCycleAttributes() {
 		//noinspection unchecked
@@ -253,6 +258,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		return noCycleValue;
 	}
 
+	@Nonnull
 	@Override
 	public JpaCteCriteriaType<T> getType() {
 		return cteTable;

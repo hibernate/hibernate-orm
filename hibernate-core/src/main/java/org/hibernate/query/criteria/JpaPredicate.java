@@ -4,12 +4,14 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
  */
 public interface JpaPredicate extends JpaBooleanExpression, Predicate {
+	@Nonnull
 	@Override
 	JpaPredicate not();
 }

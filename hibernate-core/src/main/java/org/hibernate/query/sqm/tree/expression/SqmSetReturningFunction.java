@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.sqm.tree.SqmCacheable;
@@ -57,6 +58,7 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode
 		return functionDescriptor;
 	}
 
+	@Nonnull
 	@Override
 	public String getFunctionName() {
 		return functionName;

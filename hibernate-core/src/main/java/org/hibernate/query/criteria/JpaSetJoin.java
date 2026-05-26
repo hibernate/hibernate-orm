@@ -7,8 +7,9 @@ package org.hibernate.query.criteria;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.BooleanExpression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import jakarta.persistence.criteria.Expression;
@@ -22,25 +23,32 @@ import jakarta.persistence.criteria.SetJoin;
 public interface JpaSetJoin<O, T> extends JpaPluralJoin<O, Set<T>, T>, SetJoin<O, T> {
 
 	@Override
+	@Nonnull
 	JpaSetJoin<O, T> on(@Nullable JpaExpression<Boolean> restriction);
 
-	JpaSetJoin<O, T> on(@Nullable Expression<Boolean> restriction);
+	@Override
+	@Nonnull
+	JpaSetJoin<O, T> on(@Nonnull Expression<Boolean> restriction);
 
 	@Override
-	JpaSetJoin<O, T> on(JpaPredicate @Nullable... restrictions);
+	@Nonnull
+	JpaSetJoin<O, T> on(@Nullable JpaPredicate... restrictions);
 
+	@Nonnull
 	@Override
-	JpaSetJoin<O, T> on(BooleanExpression... restrictions);
+	JpaSetJoin<O, T> on(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaSetJoin<O, T> on(List<? extends Expression<Boolean>> restrictions);
+	JpaSetJoin<O, T> on(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<S extends T> JpaTreatedJoin<O,T,S> treatAs(Class<S> treatAsType);
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	default <S extends T> JpaSetJoin<O, S> treat(Class<S> treatAsType) {
+	default <S extends T> JpaSetJoin<O, S> treat(@Nonnull Class<S> treatAsType) {
 		return (JpaSetJoin<O, S>) treatAs( treatAsType );
 	}
 

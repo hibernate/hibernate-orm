@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.criteria.JpaBooleanExpression;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -12,24 +13,31 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
  * @author Steve Ebersole
  */
 public interface SqmBooleanExpression extends SqmComparableExpression<Boolean>, JpaBooleanExpression {
+	@Nonnull
 	@Override
-	SqmBooleanExpression coalesce(Boolean y);
+	SqmBooleanExpression coalesce(@Nonnull Boolean y);
 
+	@Nonnull
 	@Override
-	SqmBooleanExpression coalesce(Expression<? extends Boolean> y);
+	SqmBooleanExpression coalesce(@Nonnull Expression<? extends Boolean> y);
 
+	@Nonnull
 	@Override
 	SqmBooleanExpression nullif(Boolean y);
 
+	@Nonnull
 	@Override
-	SqmBooleanExpression nullif(Expression<? extends Boolean> y);
+	SqmBooleanExpression nullif(@Nonnull Expression<? extends Boolean> y);
 
+	@Nonnull
 	@Override
-	SqmPredicate and(Expression<Boolean> y);
+	SqmPredicate and(@Nonnull Expression<Boolean> y);
 
+	@Nonnull
 	@Override
-	SqmPredicate or(Expression<Boolean> y);
+	SqmPredicate or(@Nonnull Expression<Boolean> y);
 
+	@Nonnull
 	@Override
 	SqmPredicate not();
 

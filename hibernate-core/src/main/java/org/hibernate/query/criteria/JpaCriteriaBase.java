@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -11,9 +12,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public interface JpaCriteriaBase extends CommonAbstractCriteria, JpaCriteriaNode {
+	@Nonnull
 	@Override
-	<U> JpaSubQuery<U> subquery(Class<U> type);
+	<U> JpaSubQuery<U> subquery(@Nonnull Class<U> type);
 
+	@Nullable
 	@Override
-	@Nullable JpaPredicate getRestriction();
+	JpaPredicate getRestriction();
 }

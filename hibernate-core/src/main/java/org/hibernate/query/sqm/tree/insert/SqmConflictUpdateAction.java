@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.query.criteria.JpaConflictUpdateAction;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCacheable;
@@ -18,11 +19,11 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
@@ -51,32 +52,37 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		this.whereClause = whereClause;
 	}
 
+	@Nonnull
 	@Override
-	public <Y, X extends Y> SqmConflictUpdateAction<T> set(SingularAttribute<? super T, Y> attribute, @Nullable X value) {
+	public <Y, X extends Y> SqmConflictUpdateAction<T> set(@Nonnull SingularAttribute<? super T, Y> attribute, @Nullable X value) {
 		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmConflictUpdateAction<T> set(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value) {
+	public <Y> SqmConflictUpdateAction<T> set(@Nonnull SingularAttribute<? super T, Y> attribute, @Nonnull Expression<? extends Y> value) {
 		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) value );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public <Y, X extends Y> SqmConflictUpdateAction<T> set(Path<Y> attribute, @Nullable X value) {
+	public <Y, X extends Y> SqmConflictUpdateAction<T> set(@Nonnull Path<Y> attribute, @Nullable X value) {
 		applyAssignment( (SqmPath<Y>) attribute, (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmConflictUpdateAction<T> set(Path<Y> attribute, Expression<? extends Y> value) {
+	public <Y> SqmConflictUpdateAction<T> set(@Nonnull Path<Y> attribute, @Nonnull Expression<? extends Y> value) {
 		applyAssignment( (SqmPath<Y>) attribute, (SqmExpression<? extends Y>) value );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmConflictUpdateAction<T> set(String attributeName, @Nullable Object value) {
+	public SqmConflictUpdateAction<T> set(@Nonnull String attributeName, @Nullable Object value) {
 		final SqmPath sqmPath = getTarget().get(attributeName);
 		final SqmExpression expression;
 		if ( value instanceof SqmExpression ) {
@@ -98,14 +104,16 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		setClause.addAssignment( new SqmAssignment<>( targetPath, value ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmConflictUpdateAction<T> where(@Nullable Expression<Boolean> restriction) {
 		initAndGetWhereClause().setPredicate( (SqmPredicate) restriction );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmConflictUpdateAction<T> where(Predicate @Nullable... restrictions) {
+	public SqmConflictUpdateAction<T> where(@Nonnull Predicate ... restrictions) {
 		final SqmWhereClause whereClause = initAndGetWhereClause();
 		// Clear the current predicate if one is present
 		whereClause.setPredicate( null );

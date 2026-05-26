@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -97,13 +98,15 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return getTreatedPath( nodeBuilder().getDomainModel().embeddable( treatJavaType ) );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		throw new TreatException( "Embeddable paths cannot be TREAT-ed to an entity type" );
 	}
 

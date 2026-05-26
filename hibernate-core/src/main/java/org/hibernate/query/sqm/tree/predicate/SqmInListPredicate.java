@@ -4,13 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;

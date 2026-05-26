@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.criteria.JpaNumericExpression;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -20,138 +21,183 @@ public interface SqmNumericExpression<N extends Number & Comparable<N>>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// NumericExpression
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> coalesce(N y);
 
+	@Nonnull
 	@Override
-	SqmNumericExpression<N> coalesce(Expression<? extends N> y);
+	SqmNumericExpression<N> coalesce(@Nonnull Expression<? extends N> y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> nullif(N y);
 
+	@Nonnull
 	@Override
-	SqmNumericExpression<N> nullif(Expression<? extends N> y);
+	SqmNumericExpression<N> nullif(@Nonnull Expression<? extends N> y);
 
+	@Nonnull
 	@Override
-	SqmPredicate gt(Expression<? extends Number> y);
+	SqmPredicate gt(@Nonnull Expression<? extends Number> y);
 
+	@Nonnull
 	@Override
 	SqmPredicate gt(Number y);
 
+	@Nonnull
 	@Override
-	SqmPredicate ge(Expression<? extends Number> y);
+	SqmPredicate ge(@Nonnull Expression<? extends Number> y);
 
+	@Nonnull
 	@Override
 	SqmPredicate ge(Number y);
 
+	@Nonnull
 	@Override
-	SqmPredicate lt(Expression<? extends Number> y);
+	SqmPredicate lt(@Nonnull Expression<? extends Number> y);
 
+	@Nonnull
 	@Override
 	SqmPredicate lt(Number y);
 
+	@Nonnull
 	@Override
-	SqmPredicate le(Expression<? extends Number> y);
+	SqmPredicate le(@Nonnull Expression<? extends Number> y);
 
+	@Nonnull
 	@Override
 	SqmPredicate le(Number y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Integer> sign();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> negated();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> abs();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> ceiling();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> floor();
 
+	@Nonnull
 	@Override
-	SqmNumericExpression<N> plus(Expression<? extends N> y);
+	SqmNumericExpression<N> plus(@Nonnull Expression<? extends N> y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> plus(N y);
 
+	@Nonnull
 	@Override
-	SqmNumericExpression<N> times(Expression<? extends N> y);
+	SqmNumericExpression<N> times(@Nonnull Expression<? extends N> y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> times(N y);
 
+	@Nonnull
 	@Override
-	SqmNumericExpression<N> minus(Expression<? extends N> y);
+	SqmNumericExpression<N> minus(@Nonnull Expression<? extends N> y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> minus(N y);
 
+	@Nonnull
 	@Override
-	SqmNumericExpression<N> dividedBy(Expression<? extends N> y);
+	SqmNumericExpression<N> dividedBy(@Nonnull Expression<? extends N> y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> dividedBy(N y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> subtractedFrom(N y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> dividedInto(N y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Double> sqrt();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Double> exp();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Double> ln();
 
+	@Nonnull
 	@Override
-	SqmNumericExpression<Double> power(Expression<? extends Number> y);
+	SqmNumericExpression<Double> power(@Nonnull Expression<? extends Number> y);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Double> power(Number y);
 
+	@Nonnull
 	@Override
-	SqmNumericExpression<N> round(Integer n);
+	SqmNumericExpression<N> round(@Nonnull Integer n);
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Double> avg();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> sum();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Long> sumAsLong();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Double> sumAsDouble();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> max();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<N> min();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Long> toLong();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Integer> toInteger();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Float> toFloat();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<Double> toDouble();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<BigDecimal> toBigDecimal();
 
+	@Nonnull
 	@Override
 	SqmNumericExpression<BigInteger> toBigInteger();
 }

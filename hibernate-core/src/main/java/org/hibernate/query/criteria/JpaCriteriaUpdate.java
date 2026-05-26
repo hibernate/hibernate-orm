@@ -4,13 +4,14 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
@@ -25,36 +26,47 @@ public interface JpaCriteriaUpdate<T> extends JpaManipulationCriteria<T>, Criter
 
 	JpaCriteriaUpdate<T> versioned(boolean versioned);
 
+	@Nonnull
 	@Override
-	JpaRoot<T> from(Class<T> entityClass);
+	JpaRoot<T> from(@Nonnull Class<T> entityClass);
 
+	@Nonnull
 	@Override
-	JpaRoot<T> from(EntityType<T> entity);
+	JpaRoot<T> from(@Nonnull EntityType<T> entity);
 
+	@Nonnull
 	@Override
-	<Y, X extends Y> JpaCriteriaUpdate<T> set(SingularAttribute<? super T, Y> attribute, @Nullable X value);
+	<Y, X extends Y> JpaCriteriaUpdate<T> set(@Nonnull SingularAttribute<? super T, Y> attribute, @Nullable X value);
 
+	@Nonnull
 	@Override
-	<Y> JpaCriteriaUpdate<T> set( SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value);
+	<Y> JpaCriteriaUpdate<T> set( @Nonnull SingularAttribute<? super T, Y> attribute, @Nonnull Expression<? extends Y> value);
 
+	@Nonnull
 	@Override
-	<Y, X extends Y> JpaCriteriaUpdate<T> set(Path<Y> attribute, @Nullable X value);
+	<Y, X extends Y> JpaCriteriaUpdate<T> set(@Nonnull Path<Y> attribute, @Nullable X value);
 
+	@Nonnull
 	@Override
-	<Y> JpaCriteriaUpdate<T> set(Path<Y> attribute, Expression<? extends Y> value);
+	<Y> JpaCriteriaUpdate<T> set(@Nonnull Path<Y> attribute, @Nonnull Expression<? extends Y> value);
 
+	@Nonnull
 	@Override
-	JpaCriteriaUpdate<T> set(String attributeName, @Nullable Object value);
+	JpaCriteriaUpdate<T> set(@Nonnull String attributeName, @Nullable Object value);
 
+	@Nullable
 	@Override
 	JpaRoot<T> getRoot();
 
+	@Nonnull
 	@Override
-	JpaCriteriaUpdate<T> where(@Nullable Expression<Boolean> restriction);
+	JpaCriteriaUpdate<T> where(@Nonnull Expression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaCriteriaUpdate<T> where(BooleanExpression... restrictions);
+	JpaCriteriaUpdate<T> where(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaCriteriaUpdate<T> where(List<? extends Expression<Boolean>> restrictions);
+	JpaCriteriaUpdate<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions);
 }

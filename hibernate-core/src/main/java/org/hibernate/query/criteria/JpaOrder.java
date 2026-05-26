@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Order;
 
@@ -27,6 +28,7 @@ public interface JpaOrder extends Order, JpaCriteriaNode {
 	/**
 	 * The precedence for nulls for this order element
 	 */
+	@Nonnull
 	Nulls getNullPrecedence();
 
 
@@ -36,12 +38,14 @@ public interface JpaOrder extends Order, JpaCriteriaNode {
 	/**
 	 * Reverse the sorting direction
 	 */
+	@Nonnull
 	@Override
 	JpaOrder reverse();
 
 	/**
 	 * The expression to sort by
 	 */
+	@Nonnull
 	@Override
 	JpaExpression<?> getExpression();
 }

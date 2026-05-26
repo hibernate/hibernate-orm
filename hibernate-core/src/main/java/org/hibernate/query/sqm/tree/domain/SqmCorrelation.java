@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
@@ -21,6 +22,7 @@ public interface SqmCorrelation<L,R> extends SqmFrom<L,R>, SqmPathWrapper<R,R> {
 	SqmRoot<L> getCorrelatedRoot();
 
 	@Override
+	@Nonnull
 	default SqmRoot<?> findRoot() {
 		return getCorrelatedRoot();
 	}

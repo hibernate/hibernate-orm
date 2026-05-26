@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.Expression;
@@ -20,27 +21,33 @@ import java.util.List;
  */
 public interface JpaCollectionJoin<O, T> extends JpaPluralJoin<O, Collection<T>, T>, CollectionJoin<O, T> {
 
+	@Nonnull
 	@Override
 	JpaCollectionJoin<O, T> on(@Nullable JpaExpression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaCollectionJoin<O, T> on(@Nullable Expression<Boolean> restriction);
+	JpaCollectionJoin<O, T> on(@Nonnull Expression<Boolean> restriction);
 
+	@Nonnull
 	@Override
 	JpaCollectionJoin<O, T> on(JpaPredicate @Nullable... restrictions);
 
+	@Nonnull
 	@Override
-	JpaCollectionJoin<O, T> on(BooleanExpression... restrictions);
+	JpaCollectionJoin<O, T> on(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaCollectionJoin<O, T> on(List<? extends Expression<Boolean>> restrictions);
+	JpaCollectionJoin<O, T> on(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<S extends T> JpaTreatedJoin<O,T, S> treatAs(Class<S> treatAsType);
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	default <S extends T> JpaCollectionJoin<O, S> treat(Class<S> treatAsType) {
+	default <S extends T> JpaCollectionJoin<O, S> treat(@Nonnull Class<S> treatAsType) {
 		return (JpaCollectionJoin<O, S>) treatAs( treatAsType );
 	}
 

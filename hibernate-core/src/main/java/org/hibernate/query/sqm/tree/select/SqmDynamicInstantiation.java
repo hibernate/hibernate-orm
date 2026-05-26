@@ -4,13 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -242,6 +242,7 @@ public class SqmDynamicInstantiation<T>
 		return arguments == null ? emptyList() : unmodifiableList( arguments );
 	}
 
+	@Nullable
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
 		return getInstantiationTarget().getTargetTypeDescriptor();

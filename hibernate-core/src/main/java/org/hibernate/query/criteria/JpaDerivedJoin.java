@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 
@@ -26,17 +27,22 @@ public interface JpaDerivedJoin<T> extends JpaDerivedFrom<T>, JpaJoin<T,T> {
 	boolean isLateral();
 
 	@Override
+	@Nonnull
 	JpaDerivedJoin<T> on(@Nullable JpaExpression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaDerivedJoin<T> on(@Nullable Expression<Boolean> restriction);
+	JpaDerivedJoin<T> on(@Nonnull Expression<Boolean> restriction);
 
 	@Override
+	@Nonnull
 	JpaDerivedJoin<T> on(JpaPredicate @Nullable... restrictions);
 
+	@Nonnull
 	@Override
-	JpaDerivedJoin<T> on(BooleanExpression... restrictions);
+	JpaDerivedJoin<T> on(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaDerivedJoin<T> on(List<? extends Expression<Boolean>> restrictions);
+	JpaDerivedJoin<T> on(@Nonnull List<? extends Expression<Boolean>> restrictions);
 }

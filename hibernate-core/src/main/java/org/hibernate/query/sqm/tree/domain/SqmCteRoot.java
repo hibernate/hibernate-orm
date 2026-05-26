@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -83,6 +84,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<T> getModel() {
 		throw new UnsupportedOperationException( "Cte root does not have an entity type. Use getReferencedPathSource() instead." );
@@ -99,6 +101,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 	}
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedRoot<T> createCorrelation() {
 		return new SqmCorrelatedDerivedRoot<>( this );
 	}

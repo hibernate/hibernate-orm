@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
@@ -69,6 +70,7 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 				: pathSource;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<T> getModel() {
 		return super.getReferencedPathSource();

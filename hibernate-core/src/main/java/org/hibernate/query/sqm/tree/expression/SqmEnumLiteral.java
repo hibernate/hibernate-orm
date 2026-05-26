@@ -4,12 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -136,36 +137,43 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 		return getExpressibleJavaType().toOrdinal( getEnumValue() );
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<Long> asLong() {
 		return nodeBuilder().literal( ordinalValue().longValue() );
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<Integer> asInteger() {
 		return nodeBuilder().literal( ordinalValue() );
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<Float> asFloat() {
 		return nodeBuilder().literal( ordinalValue().floatValue() );
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<Double> asDouble() {
 		return nodeBuilder().literal( ordinalValue().doubleValue() );
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
 		throw new UnsupportedOperationException( "Enum literal cannot be cast to BigDecimal" );
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
 		throw new UnsupportedOperationException( "Enum literal cannot be cast to BigInteger" );
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<String> asString() {
 		return nodeBuilder().literal( getExpressibleJavaType().toName( getEnumValue() ) );

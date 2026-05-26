@@ -4,10 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
 import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -23,14 +23,14 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Gavin King
  */
 public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> {
-	private final CollectionPart.@Nullable Nature selectedPartNature;
+	private final CollectionPart.@org.checkerframework.checker.nullness.qual.Nullable Nature selectedPartNature;
 	private final JavaType<C> javaType;
 	private final SqmBindableType<C> selectionType;
 
 	@SuppressWarnings("unchecked")
 	public SqmPluralPartSelectionPath(
 			SqmPluralValuedSimplePath<C> pluralPath,
-			CollectionPart.@Nullable Nature selectedPartNature) {
+			CollectionPart.@org.checkerframework.checker.nullness.qual.Nullable Nature selectedPartNature) {
 		this(
 				pluralPath.getNavigablePath(),
 				(SqmPluralPersistentAttribute<?, C, ?>) pluralPath.getModel(),
@@ -48,7 +48,7 @@ public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> 
 			SqmPath<?> lhs,
 			@Nullable String explicitAlias,
 			NodeBuilder nodeBuilder,
-			CollectionPart.@Nullable Nature selectedPartNature) {
+			CollectionPart.@org.checkerframework.checker.nullness.qual.Nullable Nature selectedPartNature) {
 		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
 		this.selectedPartNature = selectedPartNature;
 		this.javaType = selectedPartNature == null
@@ -59,7 +59,7 @@ public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> 
 		this.selectionType = new PluralAttributeCollectionType<>( javaType );
 	}
 
-	public CollectionPart.@Nullable Nature getSelectedPartNature() {
+	public CollectionPart.@org.checkerframework.checker.nullness.qual.Nullable Nature getSelectedPartNature() {
 		return selectedPartNature;
 	}
 

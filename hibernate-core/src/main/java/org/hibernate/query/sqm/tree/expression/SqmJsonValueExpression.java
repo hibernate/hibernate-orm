@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,6 @@ import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 

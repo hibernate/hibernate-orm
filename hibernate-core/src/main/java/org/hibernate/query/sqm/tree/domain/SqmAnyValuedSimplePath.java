@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -62,33 +63,39 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 		return path;
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull Class<S> treatJavaType) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Nonnull
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) {
+	@Nonnull
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		throw new UnsupportedOperationException();
 	}
 

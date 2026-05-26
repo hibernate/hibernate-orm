@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 
 /**
@@ -15,6 +16,7 @@ public interface JpaDerivedFrom<T> extends JpaFrom<T,T> {
 	/**
 	 * The subquery part for this derived from node.
 	 */
+	@Nonnull
 	JpaSubQuery<T> getQueryPart();
 
 }

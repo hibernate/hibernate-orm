@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.Expression;
@@ -15,7 +17,6 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.common.FetchClauseType;
 
 import java.util.List;
@@ -66,54 +67,71 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
+	@Nonnull
 	@Override
 	JpaSubQuery<T> distinct(boolean distinct);
 
 	@Override
-	@Nullable JpaExpression<T> getSelection();
+	@Nullable
+	JpaExpression<T> getSelection();
 
+	@Nonnull
 	@Override
-	JpaSubQuery<T> select(Expression<T> expression);
+	JpaSubQuery<T> select(@Nonnull Expression<T> expression);
 
+	@Nonnull
 	@Override
-	JpaSubQuery<T> where(Expression<Boolean> restriction);
+	JpaSubQuery<T> where(@Nonnull Expression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaSubQuery<T> where(BooleanExpression... restrictions);
+	JpaSubQuery<T> where(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaSubQuery<T> where(List<? extends Expression<Boolean>> restrictions);
+	JpaSubQuery<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	@Nonnull
 	@Override
-	JpaSubQuery<T> groupBy(Expression<?>... grouping);
+	JpaSubQuery<T> groupBy(@Nonnull Expression<?>... grouping);
 
+	@Nonnull
 	@Override
-	JpaSubQuery<T> groupBy(List<Expression<?>> grouping);
+	JpaSubQuery<T> groupBy(@Nonnull List<Expression<?>> grouping);
 
+	@Nonnull
 	@Override
-	JpaSubQuery<T> having(Expression<Boolean> restriction);
+	JpaSubQuery<T> having(@Nonnull Expression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaSubQuery<T> having(BooleanExpression... restrictions);
+	JpaSubQuery<T> having(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaSubQuery<T> having(List<? extends Expression<Boolean>> restrictions);
+	JpaSubQuery<T> having(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	@Nonnull
 	@Override
-	<Y> JpaRoot<Y> correlate(Root<Y> parentRoot);
+	<Y> JpaRoot<Y> correlate(@Nonnull Root<Y> parentRoot);
 
+	@Nonnull
 	@Override
-	<X, Y> JpaJoin<X, Y> correlate(Join<X, Y> parentJoin);
+	<X, Y> JpaJoin<X, Y> correlate(@Nonnull Join<X, Y> parentJoin);
 
+	@Nonnull
 	@Override
-	<X, Y> JpaCollectionJoin<X, Y> correlate(CollectionJoin<X, Y> parentCollection);
+	<X, Y> JpaCollectionJoin<X, Y> correlate(@Nonnull CollectionJoin<X, Y> parentCollection);
 
+	@Nonnull
 	@Override
-	<X, Y> JpaSetJoin<X, Y> correlate(SetJoin<X, Y> parentSet);
+	<X, Y> JpaSetJoin<X, Y> correlate(@Nonnull SetJoin<X, Y> parentSet);
 
+	@Nonnull
 	@Override
-	<X, Y> JpaListJoin<X, Y> correlate(ListJoin<X, Y> parentList);
+	<X, Y> JpaListJoin<X, Y> correlate(@Nonnull ListJoin<X, Y> parentList);
 
+	@Nonnull
 	@Override
-	<X, K, V> JpaMapJoin<X, K, V> correlate(MapJoin<X, K, V> parentMap);
+	<X, K, V> JpaMapJoin<X, K, V> correlate(@Nonnull MapJoin<X, K, V> parentMap);
 }

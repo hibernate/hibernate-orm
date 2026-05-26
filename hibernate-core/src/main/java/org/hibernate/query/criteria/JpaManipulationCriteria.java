@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * @author Steve Ebersole
  */
@@ -11,10 +13,11 @@ public interface JpaManipulationCriteria<E> extends JpaQueryableCriteria<E> {
 	/**
 	 * Get the root path that is the target of the DML statement.
 	 */
+	@Nonnull
 	JpaRoot<E> getTarget();
 
 	/**
 	 * Set the root path
 	 */
-	void setTarget(JpaRoot<E> root);
+	void setTarget(@Nonnull JpaRoot<E> root);
 }

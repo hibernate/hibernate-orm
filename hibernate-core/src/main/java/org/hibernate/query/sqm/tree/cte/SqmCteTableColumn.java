@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -41,6 +42,7 @@ public class SqmCteTableColumn implements JpaCteCriteriaAttribute, SqmCacheable 
 		return typeExpressible;
 	}
 
+	@Nonnull
 	@Override
 	public JpaCteCriteriaType<?> getDeclaringType() {
 		return cteTable;

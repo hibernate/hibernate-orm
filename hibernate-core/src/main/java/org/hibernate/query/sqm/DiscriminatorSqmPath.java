@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.ComparableExpression;
 import jakarta.persistence.criteria.NumericExpression;
 import jakarta.persistence.criteria.TemporalExpression;
@@ -16,7 +18,6 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.TemporalAttribute;
 import jakarta.persistence.metamodel.TextAttribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -48,86 +49,101 @@ public interface DiscriminatorSqmPath<T> extends SqmPath<T> {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@Nonnull
 	@Override
-	default <Y> SqmPath<Y> get(String attributeName) {
+	default <Y> SqmPath<Y> get(@Nonnull String attributeName) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@Nonnull
 	@Override
-	default <Y> SqmPath<Y> get(SingularAttribute<? super T, Y> attribute) {
+	default <Y> SqmPath<Y> get(@Nonnull SingularAttribute<? super T, Y> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@Nonnull
 	@Override
-	default <E, C extends Collection<E>> SqmPluralPath<C, E> get(PluralAttribute<? super T, C, E> collection) {
+	default <E, C extends Collection<E>> SqmPluralPath<C, E> get(@Nonnull PluralAttribute<? super T, C, E> collection) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@Nonnull
 	@Override
-	default <K, V, M extends Map<K, V>> SqmPluralPath<M, V> get(MapAttribute<? super T, K, V> map) {
+	default <K, V, M extends Map<K, V>> SqmPluralPath<M, V> get(@Nonnull MapAttribute<? super T, K, V> map) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@Nonnull
 	@Override
-	default SqmBooleanExpression get(BooleanAttribute<? super T> attribute) {
+	default SqmBooleanExpression get(@Nonnull BooleanAttribute<? super T> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@Nonnull
 	@Override
-	default <C extends Comparable<? super C>> ComparableExpression<C> get(ComparableAttribute<? super T, C> attribute) {
+	default <C extends Comparable<? super C>> ComparableExpression<C> get(@Nonnull ComparableAttribute<? super T, C> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@Nonnull
 	@Override
-	default <A extends Temporal & Comparable<? super A>> TemporalExpression<A> get(TemporalAttribute<? super T, A> attribute) {
+	default <A extends Temporal & Comparable<? super A>> TemporalExpression<A> get(@Nonnull TemporalAttribute<? super T, A> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@Nonnull
 	@Override
-	default <N extends Number & Comparable<N>> NumericExpression<N> get(NumericAttribute<? super T, N> attribute) {
+	default <N extends Number & Comparable<N>> NumericExpression<N> get(@Nonnull NumericAttribute<? super T, N> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@Nonnull
 	@Override
-	default TextExpression get(TextAttribute<? super T> attribute) {
+	default TextExpression get(@Nonnull TextAttribute<? super T> attribute) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
 
 
+	@Nonnull
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(Class treatJavaType) {
+	default SqmTreatedPath treatAs(@Nonnull Class treatJavaType) {
+		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
+	}
+
+	@Nonnull
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	default SqmTreatedPath treatAs(@Nonnull EntityDomainType treatTarget) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(EntityDomainType treatTarget) {
+	@Nonnull
+	default SqmTreatedPath treatAs(@Nonnull Class treatJavaType, @Nullable String alias) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(Class treatJavaType, @Nullable String alias) {
+	@Nonnull
+	default SqmTreatedPath treatAs(@Nonnull EntityDomainType treatTarget, @Nullable String alias) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(EntityDomainType treatTarget, @Nullable String alias) {
+	@Nonnull
+	default SqmTreatedPath treatAs(@Nonnull Class treatJavaType, @Nullable String alias, boolean fetch) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default SqmTreatedPath treatAs(Class treatJavaType, @Nullable String alias, boolean fetch) {
-		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	default SqmTreatedPath treatAs(EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	default SqmTreatedPath treatAs(@Nonnull EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 }

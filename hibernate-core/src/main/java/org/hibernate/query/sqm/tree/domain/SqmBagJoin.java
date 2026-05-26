@@ -4,10 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
@@ -72,6 +72,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmBagPersistentAttribute<O,E> getModel() {
 		return (SqmBagPersistentAttribute<O, E>) super.getModel();
@@ -83,69 +84,82 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public @NonNull SqmBagPersistentAttribute<O,E> getAttribute() {
+	@Nonnull
+	public SqmBagPersistentAttribute<O,E> getAttribute() {
 		return getModel();
 	}
 
 	@Override
+	@Nonnull
 	public SqmBagJoin<O, E> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmBagJoin<O, E>) super.on( restriction );
 	}
 
+	@Nonnull
 	@Override
-	public SqmBagJoin<O, E> on(BooleanExpression... restrictions) {
+	public SqmBagJoin<O, E> on(@Nonnull BooleanExpression... restrictions) {
 		return (SqmBagJoin<O, E>) super.on( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public SqmBagJoin<O, E> on(@Nullable Expression<Boolean> restriction) {
+	public SqmBagJoin<O, E> on(@Nonnull Expression<Boolean> restriction) {
 		return (SqmBagJoin<O, E>) super.on( restriction );
 	}
 
 	@Override
-	public SqmBagJoin<O, E> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	public SqmBagJoin<O, E> on(@Nullable JpaPredicate... restrictions) {
 		return (SqmBagJoin<O, E>) super.on( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public SqmBagJoin<O, E> on(List<? extends Expression<Boolean>> restrictions) {
+	public SqmBagJoin<O, E> on(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return (SqmBagJoin<O, E>) super.on( restrictions );
 	}
 
 	// todo (6.0) : need to resolve these fetches against the element/index descriptors
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedBagJoin<O, E> createCorrelation() {
 		return new SqmCorrelatedBagJoin<>( this );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends E> SqmTreatedBagJoin<O, E, S> treatAs(Class<S> treatJavaType) {
+	public <S extends E> SqmTreatedBagJoin<O, E, S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return treatAs( treatJavaType, null );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends E> SqmBagJoin<O, S> treat(Class<S> treatJavaType) {
+	public <S extends E> SqmBagJoin<O, S> treat(@Nonnull Class<S> treatJavaType) {
 		return treatAs( treatJavaType );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		return treatAs( treatTarget, null );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		return treatAs( treatTarget, alias, false );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedBagJoin<O, E, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends E> SqmTreatedBagJoin<O, E, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
 		final SqmTreatedBagJoin<O, E, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
@@ -160,7 +174,8 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		final SqmTreatedBagJoin<O,E,S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedBagJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );

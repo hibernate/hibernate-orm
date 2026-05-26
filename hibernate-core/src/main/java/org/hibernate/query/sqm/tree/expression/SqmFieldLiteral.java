@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -21,7 +22,6 @@ import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 

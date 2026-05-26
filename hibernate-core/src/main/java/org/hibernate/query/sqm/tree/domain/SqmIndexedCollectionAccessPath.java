@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
@@ -88,13 +89,15 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 		return walker.visitIndexedPluralAccessPath( this );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		if ( getReferencedPathSource().getPathType() instanceof EntityDomainType ) {
 			return getTreatedPath( treatTarget );
 		}

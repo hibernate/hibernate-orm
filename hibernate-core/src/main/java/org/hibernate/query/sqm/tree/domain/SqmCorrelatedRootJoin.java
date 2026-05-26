@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -68,6 +69,7 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 		return rootJoin;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<T> getCorrelationParent() {
 		return this;

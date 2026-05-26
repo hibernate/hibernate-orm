@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.time.temporal.Temporal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.TemporalField;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
@@ -17,26 +18,31 @@ public interface SqmTemporalExpressionImplementor<T extends Temporal & Comparabl
 		extends SqmComparableExpressionImplementor<T>, SqmTemporalExpression<T> {
 	SqmCriteriaNodeBuilder nodeBuilder();
 
+	@Nonnull
 	@Override
-	default <N extends Number & Comparable<N>> SqmNumericExpression<N> extract(TemporalField<N, T> field) {
+	default <N extends Number & Comparable<N>> SqmNumericExpression<N> extract(@Nonnull TemporalField<N, T> field) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().extract( field, this ) );
 	}
 
+	@Nonnull
 	@Override
-	default SqmTemporalExpression<T> coalesce(Expression<? extends T> y) {
+	default SqmTemporalExpression<T> coalesce(@Nonnull Expression<? extends T> y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmTemporalExpression<T> coalesce(T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	default SqmTemporalExpression<T> nullif(Expression<? extends T> y) {
+	default SqmTemporalExpression<T> nullif(@Nonnull Expression<? extends T> y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmTemporalExpression<T> nullif(T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().nullif( this, y ) );

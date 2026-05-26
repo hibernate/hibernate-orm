@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.PluralExpression;
 import jakarta.persistence.criteria.Expression;
 
@@ -11,24 +12,31 @@ import jakarta.persistence.criteria.Expression;
  * @author Steve Ebersole
  */
 public interface JpaPluralExpression<C, E> extends PluralExpression<C, E>, JpaExpression<C> {
+	@Nonnull
 	@Override
 	JpaPredicate isEmpty();
 
+	@Nonnull
 	@Override
 	JpaPredicate isNotEmpty();
 
+	@Nonnull
 	@Override
 	JpaNumericExpression<Integer> size();
 
+	@Nonnull
 	@Override
-	JpaPredicate contains(Expression<? extends E> elem);
+	JpaPredicate contains(@Nonnull Expression<? extends E> elem);
 
+	@Nonnull
 	@Override
-	JpaPredicate contains(E elem);
+	JpaPredicate contains(@Nonnull E elem);
 
+	@Nonnull
 	@Override
-	JpaPredicate notContains(Expression<? extends E> elem);
+	JpaPredicate notContains(@Nonnull Expression<? extends E> elem);
 
+	@Nonnull
 	@Override
-	JpaPredicate notContains(E elem);
+	JpaPredicate notContains(@Nonnull E elem);
 }

@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -77,11 +78,13 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<S> getModel() {
 		return treatTarget;
@@ -112,33 +115,39 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedEntityJoin<L,R,S> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmTreatedEntityJoin<L, R, S>) super.on( restriction );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTreatedEntityJoin<L,R,S> on(@Nullable Expression<Boolean> restriction) {
+	public SqmTreatedEntityJoin<L,R,S> on(@Nonnull Expression<Boolean> restriction) {
 		return (SqmTreatedEntityJoin<L, R, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedEntityJoin<L,R,S> on(JpaPredicate @Nullable ... restrictions) {
+	@Nonnull
+	public SqmTreatedEntityJoin<L,R,S> on(@Nullable JpaPredicate ... restrictions) {
 		return (SqmTreatedEntityJoin<L, R, S>) super.on( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTreatedEntityJoin<L,R,S> on(BooleanExpression... restrictions) {
+	public SqmTreatedEntityJoin<L,R,S> on(@Nonnull BooleanExpression... restrictions) {
 		return (SqmTreatedEntityJoin<L,R,S>) super.on( restrictions );
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedEntityJoin<L, S, S1> treatAs(Class<S1> treatJavaType, @Nullable String alias, boolean fetched) {
+	@Nonnull
+	public <S1 extends S> SqmTreatedEntityJoin<L, S, S1> treatAs(@Nonnull Class<S1> treatJavaType, @Nullable String alias, boolean fetched) {
 		//noinspection unchecked
 		return (SqmTreatedEntityJoin<L, S, S1>) wrappedPath.treatAs( treatJavaType, alias, fetched );
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedEntityJoin<L, S, S1> treatAs(EntityDomainType<S1> treatTarget, @Nullable String alias, boolean fetched) {
+	@Nonnull
+	public <S1 extends S> SqmTreatedEntityJoin<L, S, S1> treatAs(@Nonnull EntityDomainType<S1> treatTarget, @Nullable String alias, boolean fetched) {
 		//noinspection unchecked
 		return (SqmTreatedEntityJoin<L, S, S1>) wrappedPath.treatAs( treatTarget, alias, fetched );
 	}

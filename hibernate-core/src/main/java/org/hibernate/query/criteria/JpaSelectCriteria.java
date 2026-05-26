@@ -4,12 +4,13 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
@@ -23,10 +24,12 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	/**
 	 * The query structure.  See {@link JpaQueryStructure} for details
 	 */
+	@Nonnull
 	JpaQueryStructure<T> getQuerySpec();
 	/**
 	 * The query structure.  See {@link JpaQueryStructure} for details
 	 */
+	@Nonnull
 	JpaQueryPart<T> getQueryPart();
 
 	/**
@@ -36,7 +39,8 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	 * @param subquery the subquery
 	 * @return query root corresponding to the given subquery
 	 */
-	<X> JpaDerivedRoot<X> from(Subquery<X> subquery);
+	@Nonnull
+	<X> JpaDerivedRoot<X> from(@Nonnull Subquery<X> subquery);
 
 	/**
 	 * Create and add a query root corresponding to the given cte,
@@ -45,7 +49,8 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	 * @param cte the cte criteria
 	 * @return query root corresponding to the given cte
 	 */
-	<X> JpaRoot<X> from(JpaCteCriteria<X> cte);
+	@Nonnull
+	<X> JpaRoot<X> from(@Nonnull JpaCteCriteria<X> cte);
 
 	/**
 	 * Create and add a query root corresponding to the given set-returning function,
@@ -54,47 +59,62 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	 * @param function the set-returning function
 	 * @return query root corresponding to the given function
 	 */
-	<X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function);
+	@Nonnull
+	<X> JpaFunctionRoot<X> from(@Nonnull JpaSetReturningFunction<X> function);
 
+	@Nonnull
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);
 
 	@Override
-	@Nullable JpaSelection<T> getSelection();
+	@Nullable
+	JpaSelection<T> getSelection();
+
+	@Nonnull
+	@Override
+	<X> JpaRoot<X> from(@Nonnull Class<X> entityClass);
+
+	@Nonnull
+	@Override
+	<X> JpaRoot<X> from(@Nonnull EntityType<X> entity);
 
 	@Override
-	<X> JpaRoot<X> from(Class<X> entityClass);
+	@Nullable
+	JpaPredicate getRestriction();
+
+	@Nonnull
+	@Override
+	JpaSelectCriteria<T> where(@Nonnull Expression<Boolean> restriction);
+
+	@Nonnull
+	@Override
+	JpaSelectCriteria<T> where(@Nonnull BooleanExpression... restrictions);
+
+	@Nonnull
+	@Override
+	JpaSelectCriteria<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions);
+
+	@Nonnull
+	@Override
+	JpaSelectCriteria<T> groupBy(@Nonnull Expression<?>... grouping);
+
+	@Nonnull
+	@Override
+	JpaSelectCriteria<T> groupBy(@Nonnull List<Expression<?>> grouping);
 
 	@Override
-	<X> JpaRoot<X> from(EntityType<X> entity);
+	@Nullable
+	JpaPredicate getGroupRestriction();
 
+	@Nonnull
 	@Override
-	@Nullable JpaPredicate getRestriction();
+	JpaSelectCriteria<T> having(@Nonnull Expression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaSelectCriteria<T> where(@Nullable Expression<Boolean> restriction);
+	JpaSelectCriteria<T> having(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaSelectCriteria<T> where(BooleanExpression... restrictions);
-
-	@Override
-	JpaSelectCriteria<T> where(List<? extends Expression<Boolean>> restrictions);
-
-	@Override
-	JpaSelectCriteria<T> groupBy(Expression<?>... grouping);
-
-	@Override
-	JpaSelectCriteria<T> groupBy(List<Expression<?>> grouping);
-
-	@Override
-	@Nullable JpaPredicate getGroupRestriction();
-
-	@Override
-	JpaSelectCriteria<T> having(@Nullable Expression<Boolean> restriction);
-
-	@Override
-	JpaSelectCriteria<T> having(BooleanExpression... restrictions);
-
-	@Override
-	JpaSelectCriteria<T> having(List<? extends Expression<Boolean>> restrictions);
+	JpaSelectCriteria<T> having(@Nonnull List<? extends Expression<Boolean>> restrictions);
 }

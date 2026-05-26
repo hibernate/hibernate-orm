@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -37,6 +38,7 @@ public class SqmValues implements JpaValues, Serializable, SqmCacheable {
 		return new SqmValues( this, context );
 	}
 
+	@Nonnull
 	@Override
 	public List<SqmExpression<?>> getExpressions() {
 		return Collections.unmodifiableList( expressions );

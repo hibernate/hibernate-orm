@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -96,6 +97,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType<S> getTreatTarget() {
 		return treatTarget;
@@ -121,14 +123,16 @@ public class SqmTreatedSimplePath<T, S extends T>
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
-	public <S1 extends S> SqmTreatedEntityValuedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) {
+	public <S1 extends S> SqmTreatedEntityValuedSimplePath<S,S1> treatAs(@Nonnull Class<S1> treatJavaType) {
 		return super.treatAs( treatJavaType );
 	}
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmPath<?> get(String attributeName) {
+	public SqmPath<?> get(@Nonnull String attributeName) {
 		return resolvePath( attributeName, treatTarget.getSubPathSource( attributeName ) );
 	}
 

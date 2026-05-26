@@ -6,6 +6,7 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 
 /**
@@ -32,11 +33,14 @@ import org.hibernate.Incubating;
 @Incubating
 public interface JpaCriteriaInsertValues<T> extends JpaCriteriaInsert<T> {
 
-	JpaCriteriaInsertValues<T> values(JpaValues... values);
+	@Nonnull
+	JpaCriteriaInsertValues<T> values(@Nonnull JpaValues... values);
 
-	JpaCriteriaInsertValues<T> values(List<? extends JpaValues> values);
+	@Nonnull
+	JpaCriteriaInsertValues<T> values(@Nonnull List<? extends JpaValues> values);
 
 	@Override
-	JpaCriteriaInsertValues<T> onConflict(JpaConflictClause<T> conflictClause);
+	@Nonnull
+	JpaCriteriaInsertValues<T> onConflict(@Nonnull JpaConflictClause<T> conflictClause);
 
 }

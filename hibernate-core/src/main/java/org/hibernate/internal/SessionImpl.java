@@ -909,28 +909,14 @@ public class SessionImpl
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 	// find()/get()/load() operations
 
-	@Override
-	@Nonnull
-	public <E> List<E> findMultiple(@Nonnull Class<E> entityType, @Nonnull List<?> keys, @Nullable FindOption... options) {
-		//noinspection unchecked
-		return findMultiple(
-				requireEntityPersisterForLoad( entityType ),
-				loadQueryInfluencers.getEffectiveEntityGraph().getSemantic(),
-				(RootGraphImplementor<E>) loadQueryInfluencers.getEffectiveEntityGraph().getGraph(),
-				(List<Object>) keys,
-				options
-		);
-	}
-
-	private <E> List<E> findMultiple(
-			EntityPersister entityDescriptor,
-			GraphSemantic graphSemantic,
-			RootGraphImplementor<E> rootGraph,
-			List<Object> keys,
-			FindOption... options) {
+	<E> List<E> findMultiple(
+			@Nonnull EntityPersister entityDescriptor,
+			@Nullable GraphSemantic graphSemantic,
+			@Nullable RootGraphImplementor<E> rootGraph,
+			@Nonnull List<?> keys,
+			@Nullable FindOption... options) {
 		final var operation = new StatefulFindMultipleByKeyOperation<E>(
 				entityDescriptor,
 				this,
@@ -941,20 +927,6 @@ public class SessionImpl
 				options
 		);
 		return operation.performFind( keys, graphSemantic, rootGraph );
-	}
-
-	@Override
-	@Nonnull
-	public <E> List<E> findMultiple(@Nonnull EntityGraph<E> entityGraph, @Nonnull List<?> keys, @Nullable FindOption... options) {
-		final var rootGraph = (RootGraphImplementor<E>) entityGraph;
-		final var type = rootGraph.getGraphedType();
-		final var entityDescriptor = switch ( type.getRepresentationMode() ) {
-			case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
-			case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
-		};
-
-		//noinspection unchecked
-		return findMultiple( entityDescriptor, GraphSemantic.LOAD, rootGraph, (List<Object>) keys, options );
 	}
 
 	@Override

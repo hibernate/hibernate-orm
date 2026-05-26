@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 
@@ -40,6 +41,7 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 
 	protected abstract SqmNegatablePredicate createNegatedNode();
 
+	@Nonnull
 	@Override
 	public SqmNegatablePredicate not() {
 		// in certain cases JPA required that this always return

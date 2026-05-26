@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -12,8 +13,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -269,6 +270,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return getSelectClause().isDistinct();
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setDistinct(boolean distinct) {
 		getSelectClause().makeDistinct( distinct );
@@ -281,6 +283,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return (JpaSelection<T>) getSelectClause().resolveJpaSelection();
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setSelection(JpaSelection<T> selection) {
 		final var selectClause = getSelectClause();
@@ -315,6 +318,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return getFromClause().getRoots();
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> addRoot(JpaRoot<?> root) {
 		if ( getFromClause() == null ) {
@@ -330,6 +334,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return whereClause == null ? null : whereClause.getPredicate();
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setRestriction(@Nullable JpaPredicate restriction) {
 		if ( restriction == null ) {
@@ -345,6 +350,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setRestriction(@Nullable Expression<Boolean> restriction) {
 		if ( restriction == null ) {
@@ -360,6 +366,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setRestriction(BooleanExpression... restrictions) {
 		SqmWhereClause whereClause = getWhereClause();
@@ -371,7 +378,8 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return this;
 	}
 
-	public SqmQuerySpec<T> setRestriction(Predicate @Nullable... restrictions) {
+	@Nonnull
+	public SqmQuerySpec<T> setRestriction(@Nullable Predicate... restrictions) {
 		if ( restrictions == null ) {
 			throw new IllegalArgumentException( "The predicate array cannot be null" );
 		}
@@ -387,6 +395,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setRestriction(List<Predicate> restrictions) {
 		if ( restrictions == null ) {
@@ -417,11 +426,13 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
+	@Nonnull
 	@Override
 	public List<SqmExpression<?>> getGroupingExpressions() {
 		return groupByClauseExpressions;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setGroupingExpressions(List<? extends Expression<?>> groupExpressions) {
 		this.hasPositionalGroupItem = false;
@@ -435,6 +446,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setGroupingExpressions(Expression<?>... groupExpressions) {
 		this.hasPositionalGroupItem = false;
@@ -453,56 +465,65 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return havingClausePredicate;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(@Nullable JpaPredicate restriction) {
 		havingClausePredicate = (SqmPredicate) restriction;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(@Nullable Expression<Boolean> restriction) {
 		havingClausePredicate = restriction == null ? null : nodeBuilder().wrap( restriction );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setGroupRestriction(Predicate @Nullable... restrictions) {
+	public SqmQuerySpec<T> setGroupRestriction(@Nullable Predicate... restrictions) {
 		havingClausePredicate = restrictions == null ? null : nodeBuilder().wrap( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(BooleanExpression... restrictions) {
 		havingClausePredicate = restrictions == null ? null : nodeBuilder().wrap( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(List<Predicate> restrictions) {
 		havingClausePredicate = nodeBuilder().wrap( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
+	public SqmQuerySpec<T> setSortSpecifications(@Nonnull List<? extends JpaOrder> sortSpecifications) {
 		super.setSortSpecifications( sortSpecifications );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setOffset(@Nullable JpaExpression<? extends Number> offset) {
 		setOffsetExpression( (SqmExpression<? extends Number>) offset );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setFetch(@Nullable JpaExpression<? extends Number> fetch) {
 		setFetchExpression( (SqmExpression<? extends Number>) fetch );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmQuerySpec<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+	public SqmQuerySpec<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
 		setFetchExpression( (SqmExpression<? extends Number>) fetch, fetchClauseType );
 		return this;
 	}

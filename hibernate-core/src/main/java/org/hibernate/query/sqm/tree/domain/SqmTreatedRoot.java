@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -57,6 +58,7 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedRoot copy(SqmCopyContext context) {
 		final SqmTreatedRoot existing = context.getCopy( this );
 		if ( existing != null ) {
@@ -74,6 +76,7 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public EntityDomainType getTreatTarget() {
 		return treatTarget;
@@ -99,8 +102,9 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 		return treatTarget;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmPath<?> getLhs() {
+	public SqmPath<?> getLhs() {
 		return wrappedPath.getLhs();
 	}
 
@@ -131,7 +135,8 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	}
 
 	@Override
-	public SqmTreatedFrom treatAs(EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public SqmTreatedFrom treatAs(@Nonnull EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
 		//noinspection unchecked
 		return wrappedPath.treatAs( treatTarget, alias, fetch );
 	}

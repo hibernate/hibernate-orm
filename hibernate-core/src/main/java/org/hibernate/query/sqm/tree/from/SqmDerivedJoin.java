@@ -4,12 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -120,15 +119,18 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 		return path;
 	}
 
+	@Nonnull
 	public SqmRoot<?> getRoot() {
 		return (SqmRoot<?>) castNonNull( super.getLhs() );
 	}
 
 	@Override
-	public @NonNull SqmRoot<?> findRoot() {
+	@Nonnull
+	public SqmRoot<?> findRoot() {
 		return getRoot();
 	}
 
+	@Nonnull
 	@Override
 	public SqmSubQuery<T> getQueryPart() {
 		return subQuery;
@@ -139,37 +141,40 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 		return lateral;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmFrom<?,T> getLhs() {
+	public SqmFrom<?,T> getLhs() {
 		// A derived-join has no LHS
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public SqmDerivedJoin<T> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmDerivedJoin<T>) super.on( restriction );
 	}
 
 	@Override
 	@Nonnull
-	public SqmDerivedJoin<T> on(@Nullable Expression<Boolean> restriction) {
+	public SqmDerivedJoin<T> on(@Nonnull Expression<Boolean> restriction) {
 		return (SqmDerivedJoin<T>) super.on( restriction );
 	}
 
 	@Override
-	public SqmDerivedJoin<T> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	public SqmDerivedJoin<T> on(@Nullable JpaPredicate... restrictions) {
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 
 	@Override
 	@Nonnull
-	public SqmDerivedJoin<T> on(BooleanExpression... restrictions) {
+	public SqmDerivedJoin<T> on(@Nonnull BooleanExpression... restrictions) {
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 
 	@Override
 	@Nonnull
-	public SqmDerivedJoin<T> on(List<? extends Expression<Boolean>> restrictions) {
+	public SqmDerivedJoin<T> on(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 
@@ -182,42 +187,50 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	// JPA
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedDerivedJoin<T> createCorrelation() {
 		return new SqmCorrelatedDerivedJoin<>( this );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatTarget) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull Class<S> treatTarget) {
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
+	}
+
+	@Nonnull
+	@Override
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget) {
+	@Nonnull
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
+	@Nonnull
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
+	@Nullable
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched) {
-		throw new UnsupportedOperationException( "Derived joins can not be treated" );
-	}
-
-	@Override
-	public @Nullable PersistentAttribute<? super T, ?> getAttribute() {
+	public PersistentAttribute<? super T, ?> getAttribute() {
 		// none
 		return null;
 	}

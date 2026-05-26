@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 
@@ -11,15 +12,19 @@ import jakarta.persistence.criteria.Expression;
  * @author Steve Ebersole
  */
 public interface JpaSearchedCase<T> extends JpaExpression<T>, CriteriaBuilder.Case<T> {
+	@Nonnull
 	@Override
-	JpaSearchedCase<T> when(Expression<Boolean> condition, T result);
+	JpaSearchedCase<T> when(@Nonnull Expression<Boolean> condition, T result);
 
+	@Nonnull
 	@Override
-	JpaSearchedCase<T> when(Expression<Boolean> condition, Expression<? extends T> result);
+	JpaSearchedCase<T> when(@Nonnull Expression<Boolean> condition, @Nonnull Expression<? extends T> result);
 
+	@Nonnull
 	@Override
 	JpaExpression<T> otherwise(T result);
 
+	@Nonnull
 	@Override
-	JpaExpression<T> otherwise(Expression<? extends T> result);
+	JpaExpression<T> otherwise(@Nonnull Expression<? extends T> result);
 }

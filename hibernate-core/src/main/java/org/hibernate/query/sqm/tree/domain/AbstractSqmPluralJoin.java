@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.PluralJoin;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaPluralJoin;
@@ -57,15 +58,17 @@ public abstract class AbstractSqmPluralJoin<L,C,E>
 		super( lhs, navigablePath, (SqmPathSource<E>) joinedNavigable, alias, joinType, fetched, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPluralPersistentAttribute<L, C, E> getModel() {
 //		return (SqmPluralPersistentAttribute<L, C, E>) super.getNodeType();
 		return (SqmPluralPersistentAttribute<L, C, E>) super.getModel();
 	}
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	public <S extends E> JpaPluralJoin<L, ?, S> treat(Class<S> treatJavaType) {
+	public <S extends E> JpaPluralJoin<L, ?, S> treat(@Nonnull Class<S> treatJavaType) {
 		return (JpaPluralJoin<L, ?, S>) treatAs( treatJavaType );
 	}
 }

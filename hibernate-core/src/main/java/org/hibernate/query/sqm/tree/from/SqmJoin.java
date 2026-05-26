@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
@@ -17,7 +19,6 @@ import jakarta.persistence.metamodel.SingularAttribute;
 
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -65,138 +66,177 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	 */
 	void setJoinPredicate(@Nullable SqmPredicate predicate);
 
+	@Nonnull
 	@Override
-	<Y> SqmAttributeJoin<R, Y> join(String attributeName);
+	<Y> SqmAttributeJoin<R, Y> join(@Nonnull String attributeName);
 
+	@Nonnull
 	@Override
-	<Y> SqmAttributeJoin<R, Y> join(String attributeName, JoinType jt);
+	<Y> SqmAttributeJoin<R, Y> join(@Nonnull String attributeName, @Nonnull JoinType jt);
 
 	@Override
 	SqmJoin<L, R> copy(SqmCopyContext context);
 
+	@Nonnull
 	@Override
-	<S extends R> SqmTreatedJoin<L,R,S> treatAs(Class<S> treatAsType);
+	<S extends R> SqmTreatedJoin<L,R,S> treatAs(@Nonnull Class<S> treatAsType);
+
+	@Nonnull
+	@Override
+	<S extends R> SqmTreatedJoin<L,R,S> treatAs(@Nonnull EntityDomainType<S> treatAsType);
 
 	@Override
-	<S extends R> SqmTreatedJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType);
+	@Nonnull
+	<S extends R> SqmTreatedJoin<L,R,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias);
 
 	@Override
-	<S extends R> SqmTreatedJoin<L,R,S> treatAs(Class<S> treatJavaType, @Nullable String alias);
+	@Nonnull
+	<S extends R> SqmTreatedJoin<L,R,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias);
 
+	@Nullable
 	@Override
-	<S extends R> SqmTreatedJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
-
-	@Override
-	default @Nullable SqmPredicate getOn() {
+	default SqmPredicate getOn() {
 		return getJoinPredicate();
 	}
 
 	@Override
+	@Nonnull
 	default SqmJoin<L, R> on(@Nullable JpaExpression<Boolean> restriction) {
 		setJoinPredicate( restriction == null ? null : nodeBuilder().wrap( restriction ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	default SqmJoin<L, R> on(@Nullable Expression<Boolean> restriction) {
+	default SqmJoin<L, R> on(@Nonnull Expression<Boolean> restriction) {
 		setJoinPredicate( restriction == null ? null : nodeBuilder().wrap( restriction ) );
 		return this;
 	}
 
 	@Override
-	default SqmJoin<L, R> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	default SqmJoin<L, R> on(@Nullable JpaPredicate... restrictions) {
 		setJoinPredicate( restrictions == null ? null : nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	SqmJoin<L, R> on(BooleanExpression... restrictions);
+	SqmJoin<L, R> on(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	default SqmJoin<L, R> on(List<? extends Expression<Boolean>> restrictions) {
+	default SqmJoin<L, R> on(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		setJoinPredicate( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
 
-	default <X> JpaEntityJoin<R, X> join(Class<X> entityJavaType, SqmJoinType joinType) {
+	@Nonnull
+	default <X> JpaEntityJoin<R, X> join(@Nonnull Class<X> entityJavaType, @Nonnull SqmJoinType joinType) {
 		return join( entityJavaType, joinType.getCorrespondingJpaJoinType() );
 	}
 
+	@Nonnull
 	@Override
-	<Y> JpaJoin<R, Y> join(EntityType<Y> entity);
+	<Y> JpaJoin<R, Y> join(@Nonnull EntityType<Y> entity);
 
+	@Nonnull
 	@Override
-	<Y> JpaJoin<R, Y> join(EntityType<Y> entity, JoinType joinType);
+	<Y> JpaJoin<R, Y> join(@Nonnull EntityType<Y> entity, @Nonnull JoinType joinType);
 
+	@Nonnull
 	@Override
-	<X> JpaEntityJoin<R, X> join(EntityDomainType<X> entity);
+	<X> JpaEntityJoin<R, X> join(@Nonnull EntityDomainType<X> entity);
 
+	@Nonnull
 	@Override
-	<X> JpaDerivedJoin<X> join(Subquery<X> subquery);
+	<X> JpaDerivedJoin<X> join(@Nonnull Subquery<X> subquery);
 
+	@Nonnull
 	@Override
-	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery);
+	<X> JpaDerivedJoin<X> joinLateral(@Nonnull Subquery<X> subquery);
 
+	@Nonnull
 	@Override
-	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte);
+	<X> JpaJoin<?, X> join(@Nonnull JpaCteCriteria<X> cte);
 
+	@Nonnull
 	@Override
-	<X> JpaCrossJoin<X> crossJoin(Class<X> entityJavaType);
+	<X> JpaCrossJoin<X> crossJoin(@Nonnull Class<X> entityJavaType);
 
+	@Nonnull
 	@Override
-	<X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity);
+	<X> JpaCrossJoin<X> crossJoin(@Nonnull EntityDomainType<X> entity);
 
+	@Nonnull
 	@Override
-	<A> SqmSingularJoin<R, A> join(SingularAttribute<? super R, A> attribute);
+	<A> SqmSingularJoin<R, A> join(@Nonnull SingularAttribute<? super R, A> attribute);
 
+	@Nonnull
 	@Override
-	<A> SqmSingularJoin<R, A> join(SingularAttribute<? super R, A> attribute, JoinType jt);
+	<A> SqmSingularJoin<R, A> join(@Nonnull SingularAttribute<? super R, A> attribute, @Nonnull JoinType jt);
 
+	@Nonnull
 	@Override
-	<E> SqmBagJoin<R, E> join(CollectionAttribute<? super R, E> attribute);
+	<E> SqmBagJoin<R, E> join(@Nonnull CollectionAttribute<? super R, E> attribute);
 
+	@Nonnull
 	@Override
-	<E> SqmBagJoin<R, E> join(CollectionAttribute<? super R, E> attribute, JoinType jt);
+	<E> SqmBagJoin<R, E> join(@Nonnull CollectionAttribute<? super R, E> attribute, @Nonnull JoinType jt);
 
+	@Nonnull
 	@Override
-	<E> SqmSetJoin<R, E> join(SetAttribute<? super R, E> set);
+	<E> SqmSetJoin<R, E> join(@Nonnull SetAttribute<? super R, E> set);
 
+	@Nonnull
 	@Override
-	<E> SqmSetJoin<R, E> join(SetAttribute<? super R, E> set, JoinType jt);
+	<E> SqmSetJoin<R, E> join(@Nonnull SetAttribute<? super R, E> set, @Nonnull JoinType jt);
 
+	@Nonnull
 	@Override
-	<E> SqmListJoin<R, E> join(ListAttribute<? super R, E> list);
+	<E> SqmListJoin<R, E> join(@Nonnull ListAttribute<? super R, E> list);
 
+	@Nonnull
 	@Override
-	<E> SqmListJoin<R, E> join(ListAttribute<? super R, E> list, JoinType jt);
+	<E> SqmListJoin<R, E> join(@Nonnull ListAttribute<? super R, E> list, @Nonnull JoinType jt);
 
+	@Nonnull
 	@Override
-	<K, V> SqmMapJoin<R, K, V> join(MapAttribute<? super R, K, V> map);
+	<K, V> SqmMapJoin<R, K, V> join(@Nonnull MapAttribute<? super R, K, V> map);
 
+	@Nonnull
 	@Override
-	<K, V> SqmMapJoin<R, K, V> join(MapAttribute<? super R, K, V> map, JoinType jt);
+	<K, V> SqmMapJoin<R, K, V> join(@Nonnull MapAttribute<? super R, K, V> map, @Nonnull JoinType jt);
 
+	@Nonnull
 	@Override
-	<Y> SqmBagJoin<R, Y> joinCollection(String attributeName);
+	<Y> SqmBagJoin<R, Y> joinCollection(@Nonnull String attributeName);
 
+	@Nonnull
 	@Override
-	<Y> SqmBagJoin<R, Y> joinCollection(String attributeName, JoinType jt);
+	<Y> SqmBagJoin<R, Y> joinCollection(@Nonnull String attributeName, @Nonnull JoinType jt);
 
+	@Nonnull
 	@Override
-	<Y> SqmSetJoin<R, Y> joinSet(String attributeName);
+	<Y> SqmSetJoin<R, Y> joinSet(@Nonnull String attributeName);
 
+	@Nonnull
 	@Override
-	<Y> SqmSetJoin<R, Y> joinSet(String attributeName, JoinType jt);
+	<Y> SqmSetJoin<R, Y> joinSet(@Nonnull String attributeName, @Nonnull JoinType jt);
 
+	@Nonnull
 	@Override
-	<Y> SqmListJoin<R, Y> joinList(String attributeName);
+	<Y> SqmListJoin<R, Y> joinList(@Nonnull String attributeName);
 
+	@Nonnull
 	@Override
-	<Y> SqmListJoin<R, Y> joinList(String attributeName, JoinType jt);
+	<Y> SqmListJoin<R, Y> joinList(@Nonnull String attributeName, @Nonnull JoinType jt);
 
+	@Nonnull
 	@Override
-	<K, V> SqmMapJoin<R, K, V> joinMap(String attributeName);
+	<K, V> SqmMapJoin<R, K, V> joinMap(@Nonnull String attributeName);
 
+	@Nonnull
 	@Override
-	<K, V> SqmMapJoin<R, K, V> joinMap(String attributeName, JoinType jt);
+	<K, V> SqmMapJoin<R, K, V> joinMap(@Nonnull String attributeName, @Nonnull JoinType jt);
 }

@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PathSource;
@@ -76,6 +77,7 @@ public class SqmMapJoin<L, K, V>
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmMapPersistentAttribute<L, K, V> getModel() {
 		return (SqmMapPersistentAttribute<L, K, V>) super.getModel();
@@ -94,70 +96,83 @@ public class SqmMapJoin<L, K, V>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
 	public SqmPath<K> key() {
 		final PathSource<K> keyPathSource = getAttribute().getKeyPathSource();
 		return resolvePath( keyPathSource.getPathName(), (SqmPathSource<K>) keyPathSource );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<V> value() {
 		final PathSource<V> elementPathSource = getAttribute().getElementPathSource();
 		return resolvePath( elementPathSource.getPathName(), (SqmPathSource<V>) elementPathSource );
 	}
 
+	@Nonnull
 	@Override
 	public Expression<Map.Entry<K, V>> entry() {
 		return new SqmMapEntryReference<>( this, nodeBuilder() );
 	}
 
 	@Override
+	@Nonnull
 	public SqmMapJoin<L, K, V> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmMapJoin<L, K, V>) super.on( restriction );
 	}
 
+	@Nonnull
 	@Override
-	public SqmMapJoin<L, K, V> on(@Nullable Expression<Boolean> restriction) {
+	public SqmMapJoin<L, K, V> on(@Nonnull Expression<Boolean> restriction) {
 		return (SqmMapJoin<L, K, V>) super.on( restriction );
 	}
 
 	@Override
-	public SqmMapJoin<L, K, V> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	public SqmMapJoin<L, K, V> on(@Nullable JpaPredicate... restrictions) {
+		return (SqmMapJoin<L, K, V>) super.on( restrictions );
+	}
+
+	@Nonnull
+	@Override
+	public SqmMapJoin<L, K, V> on(@Nonnull BooleanExpression... restrictions) {
+		return (SqmMapJoin<L, K, V>) super.on( restrictions );
+	}
+
+	@Nonnull
+	@Override
+	public SqmMapJoin<L, K, V> on(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return (SqmMapJoin<L, K, V>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmMapJoin<L, K, V> on(BooleanExpression... restrictions) {
-		return (SqmMapJoin<L, K, V>) super.on( restrictions );
-	}
-
-	@Override
-	public SqmMapJoin<L, K, V> on(List<? extends Expression<Boolean>> restrictions) {
-		return (SqmMapJoin<L, K, V>) super.on( restrictions );
-	}
-
-	@Override
+	@Nonnull
 	public SqmCorrelatedMapJoin<L, K, V> createCorrelation() {
 		return new SqmCorrelatedMapJoin<>( this );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType) {
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return treatAs( treatJavaType, null );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends V> SqmMapJoin<L, K, S> treat(Class<S> treatJavaType) {
+	public <S extends V> SqmMapJoin<L, K, S> treat(@Nonnull Class<S> treatJavaType) {
 		return treatAs( treatJavaType );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
 		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
@@ -171,13 +186,15 @@ public class SqmMapJoin<L, K, V>
 		return treat;
 	}
 
+	@Nonnull
 	@Override
-	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		return treatAs( treatTarget, null );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedMapJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
@@ -186,7 +203,8 @@ public class SqmMapJoin<L, K, V>
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedMapJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias ) );

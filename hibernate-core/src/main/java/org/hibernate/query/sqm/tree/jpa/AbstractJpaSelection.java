@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.jpa;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import java.util.List;
 
 import org.hibernate.query.criteria.JpaSelection;
@@ -11,7 +13,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Base support for {@link JpaSelection} impls.
@@ -25,8 +26,9 @@ public abstract class AbstractJpaSelection<T>
 		super( sqmExpressible, criteriaBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public JpaSelection<T> alias(String alias) {
+	public JpaSelection<T> alias(@Nonnull String alias) {
 		setAlias( alias );
 		return this;
 	}

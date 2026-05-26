@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.BooleanExpression;
@@ -23,7 +25,6 @@ import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.criteria.JpaCrossJoin;
@@ -197,7 +198,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public <X> @Nullable JpaCteCriteria<X> getCteCriteria(String cteName) {
+	public <X> @Nullable JpaCteCriteria<X> getCteCriteria(@Nonnull String cteName) {
 		final JpaCteCriteria<X> cteCriteria = super.getCteCriteria( cteName );
 		return cteCriteria == null && parent instanceof JpaCteContainer cteContainer
 				? cteContainer.getCteCriteria( cteName )
@@ -234,11 +235,13 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuery<?> getContainingQuery() {
 		return parent;
 	}
 
+	@Nonnull
 	@Override
 	public SqmSelectQuery<?> getParent() {
 		// JPA only allows subqueries on select queries
@@ -255,14 +258,16 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		return alias;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> alias(String alias) {
+	public SqmSubQuery<T> alias(@Nonnull String alias) {
 		this.alias = alias;
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> select(Expression<T> expression) {
+	public SqmSubQuery<T> select(@Nonnull Expression<T> expression) {
 		//noinspection unchecked
 		getQuerySpec().setSelection( (JpaSelection<T>) expression );
 //		applyInferableType( (Class<T>) querySpec.getSelection().getJavaType() );
@@ -309,8 +314,9 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmExpression<T> getSelection() {
+	public SqmExpression<T> getSelection() {
 		return (SqmExpression<T>) super.getSelection();
 	}
 
@@ -325,68 +331,79 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		return Collections.emptyList();
 	}
 
+	@Nonnull
 	@Override
 	public List<Selection<?>> getCompoundSelectionItems() {
 		// A subquery is always a single/scalar expression, so it can't be a compound selection
 		throw new IllegalStateException( "JPA selection is not compound" );
 	}
 
+	@Nonnull
 	@Override
 	public SqmSubQuery<T> distinct(boolean distinct) {
 		super.distinct( distinct );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> where(@Nullable Expression<Boolean> restriction) {
+	public SqmSubQuery<T> where(@Nonnull Expression<Boolean> restriction) {
 		super.where( restriction );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> where(BooleanExpression... restrictions) {
+	public SqmSubQuery<T> where(@Nonnull BooleanExpression... restrictions) {
 		super.where( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> where(List<? extends Expression<Boolean>> restrictions) {
+	public SqmSubQuery<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		super.where( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> groupBy(Expression<?>... expressions) {
+	public SqmSubQuery<T> groupBy(@Nonnull Expression<?>... expressions) {
 		super.groupBy( expressions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> groupBy(List<Expression<?>> grouping) {
+	public SqmSubQuery<T> groupBy(@Nonnull List<Expression<?>> grouping) {
 		super.groupBy( grouping );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> having(@Nullable Expression<Boolean> booleanExpression) {
+	public SqmSubQuery<T> having(@Nonnull Expression<Boolean> booleanExpression) {
 		super.having( booleanExpression );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> having(BooleanExpression... restrictions) {
+	public SqmSubQuery<T> having(@Nonnull BooleanExpression... restrictions) {
 		super.having( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSubQuery<T> having(List<? extends Expression<Boolean>> restrictions) {
+	public SqmSubQuery<T> having(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		super.having( restrictions );
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable JpaExpression<Number> getOffset() {
+	public JpaExpression<Number> getOffset() {
 		//noinspection unchecked
 		return (JpaExpression<Number>) getQueryPart().getOffset();
 	}
@@ -405,8 +422,9 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable JpaExpression<Number> getFetch() {
+	public JpaExpression<Number> getFetch() {
 		//noinspection unchecked
 		return (JpaExpression<Number>) getQueryPart().getFetch();
 	}
@@ -496,15 +514,17 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmRoot<Y> correlate(Root<Y> parentRoot) {
+	public <Y> SqmRoot<Y> correlate(@Nonnull Root<Y> parentRoot) {
 		final SqmCorrelatedRoot<Y> correlated = ( (SqmRoot<Y>) parentRoot ).createCorrelation();
 		getQuerySpec().addRoot( correlated );
 		return correlated;
 	}
 
+	@Nonnull
 	@Override
-	public <X, Y> SqmFrom<X, Y> correlate(From<X, Y> parentFrom) {
+	public <X, Y> SqmFrom<X, Y> correlate(@Nonnull From<X, Y> parentFrom) {
 		if ( parentFrom instanceof Root<?> ) {
 			//noinspection unchecked
 			return (SqmFrom<X, Y>) correlate( (Root<Y>) parentFrom );
@@ -523,8 +543,9 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <X, Y> SqmCorrelatedJoin<X, Y> correlate(Join<X, Y> join) {
+	public <X, Y> SqmCorrelatedJoin<X, Y> correlate(@Nonnull Join<X, Y> join) {
 		if ( join instanceof PluralJoin<?, ?, ?> pluralJoin ) {
 			return switch ( pluralJoin.getModel().getCollectionType() ) {
 				case COLLECTION -> correlate( (CollectionJoin<X, Y>) join );
@@ -539,32 +560,36 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		return correlated;
 	}
 
+	@Nonnull
 	@Override
-	public <X, Y> SqmCorrelatedBagJoin<X, Y> correlate(CollectionJoin<X, Y> parentCollection) {
+	public <X, Y> SqmCorrelatedBagJoin<X, Y> correlate(@Nonnull CollectionJoin<X, Y> parentCollection) {
 		final SqmCorrelatedBagJoin<X, Y> correlated =
 				( (SqmBagJoin<X, Y>) parentCollection ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
+	@Nonnull
 	@Override
-	public <X, Y> SqmCorrelatedSetJoin<X, Y> correlate(SetJoin<X, Y> parentSet) {
+	public <X, Y> SqmCorrelatedSetJoin<X, Y> correlate(@Nonnull SetJoin<X, Y> parentSet) {
 		final SqmCorrelatedSetJoin<X, Y> correlated =
 				( (SqmSetJoin<X, Y>) parentSet ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
+	@Nonnull
 	@Override
-	public <X, Y> SqmCorrelatedListJoin<X, Y> correlate(ListJoin<X, Y> parentList) {
+	public <X, Y> SqmCorrelatedListJoin<X, Y> correlate(@Nonnull ListJoin<X, Y> parentList) {
 		final SqmCorrelatedListJoin<X, Y> correlated =
 				( (SqmListJoin<X, Y>) parentList ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
+	@Nonnull
 	@Override
-	public <X, K, V> SqmCorrelatedMapJoin<X, K, V> correlate(MapJoin<X, K, V> parentMap) {
+	public <X, K, V> SqmCorrelatedMapJoin<X, K, V> correlate(@Nonnull MapJoin<X, K, V> parentMap) {
 		final SqmCorrelatedMapJoin<X, K, V> correlated =
 				( (SqmMapJoin<X, K, V>) parentMap ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
@@ -587,6 +612,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		return correlated;
 	}
 
+	@Nonnull
 	@Override
 	public Set<Join<?, ?>> getCorrelatedJoins() {
 		final Set<Join<?, ?>> correlatedJoins = Collections.newSetFromMap( new IdentityHashMap<>() );
@@ -605,21 +631,25 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		return correlatedJoins;
 	}
 
+	@Nonnull
 	@Override
 	public Predicate exists() {
 		return nodeBuilder().exists( this );
 	}
 
+	@Nonnull
 	@Override
 	public Expression<T> all() {
 		return nodeBuilder().all( this );
 	}
 
+	@Nonnull
 	@Override
 	public Expression<T> some() {
 		return nodeBuilder().some( this );
 	}
 
+	@Nonnull
 	@Override
 	public Expression<T> any() {
 		return nodeBuilder().any( this );
@@ -640,67 +670,80 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 //		return correlatedJoins;
 //	}
 
+	@Nonnull
 	@Override
 	public SqmPredicate isNull() {
 		return nodeBuilder().isNull( this );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPredicate isNotNull() {
 		return nodeBuilder().isNotNull( this );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate equalTo(Expression<?> that) {
+	public SqmPredicate equalTo(@Nonnull Expression<?> that) {
 		return nodeBuilder().equal( this, that );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPredicate equalTo(Object that) {
 		return nodeBuilder().equal( this, that );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInPredicate<?> in(Object... values) {
+	public SqmInPredicate<?> in(@Nonnull Object... values) {
 		return nodeBuilder().in( this, values );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInPredicate<?> in(Expression<?>... values) {
+	public SqmInPredicate<?> in(@Nonnull Expression<?>... values) {
 		return nodeBuilder().in( this, values );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInPredicate<?> in(Collection<?> values) {
+	public SqmInPredicate<?> in(@Nonnull Collection<?> values) {
 		//noinspection unchecked
 		return nodeBuilder().in( this, (Collection<T>) values );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInPredicate<?> in(Expression<Collection<?>> values) {
+	public SqmInPredicate<?> in(@Nonnull Expression<Collection<?>> values) {
 		return nodeBuilder().in( this, values );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInPredicate<T> in(Subquery<T> subquery) {
+	public SqmInPredicate<T> in(@Nonnull Subquery<T> subquery) {
 		return nodeBuilder().in( subquery );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<T> coalesce(Expression<? extends T> y) {
+	public JpaExpression<T> coalesce(@Nonnull Expression<? extends T> y) {
 		return nodeBuilder().coalesce( this, y );
 	}
 
+	@Nonnull
 	@Override
 	public JpaExpression<T> coalesce(T y) {
 		return nodeBuilder().coalesce( this, y );
 	}
 
+	@Nonnull
 	@Override
-	public JpaExpression<T> nullif(Expression<? extends T> y) {
+	public JpaExpression<T> nullif(@Nonnull Expression<? extends T> y) {
 		return nodeBuilder().nullif( this, y );
 	}
 
+	@Nonnull
 	@Override
 	public JpaExpression<T> nullif(T y) {
 		return nodeBuilder().nullif( this, y );
@@ -716,26 +759,31 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		return nodeBuilder().selectCase( this );
 	}
 
+	@Nonnull
 	@Override
-	public <R> SqmCaseSimple<T, R> selectCase(Class<R> resultType) {
+	public <R> SqmCaseSimple<T, R> selectCase(@Nonnull Class<R> resultType) {
 		return nodeBuilder().selectCase( this, resultType );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate isMember(Expression<? extends Collection<? super T>> collection) {
+	public SqmPredicate isMember(@Nonnull Expression<? extends Collection<? super T>> collection) {
 		throw new UnsupportedOperationException( "isMember() is not supported for SqmSubQuery" );
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate isNotMember(Expression<? extends Collection<? super T>> collection) {
+	public JpaPredicate isNotMember(@Nonnull Expression<? extends Collection<? super T>> collection) {
 		throw new UnsupportedOperationException( "isNotMember() is not supported for SqmSubQuery" );
 	}
 
+	@Nonnull
 	@Override
 	public SqmNumericExpression<Long> count() {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().count( this ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmNumericExpression<Long> countDistinct() {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().countDistinct( this ) );
@@ -762,8 +810,9 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <X> SqmExpression<X> as(Class<X> type) {
+	public <X> SqmExpression<X> as(@Nonnull Class<X> type) {
 		return nodeBuilder().cast( this, type );
 	}
 
@@ -778,33 +827,39 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		return getResultType();
 	}
 
+	@Nonnull
 	@Override
-	public <U> SqmSubQuery<U> subquery(Class<U> type) {
+	public <U> SqmSubQuery<U> subquery(@Nonnull Class<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
-	public <U> Subquery<U> subquery(EntityType<U> type) {
+	public <U> Subquery<U> subquery(@Nonnull EntityType<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
 	public Set<ParameterExpression<?>> getParameters() {
 		return emptySet();
 	}
 
+	@Nonnull
 	@Override
-	public JpaPredicate notEqualTo(Expression<?> value) {
+	public JpaPredicate notEqualTo(@Nonnull Expression<?> value) {
 		return nodeBuilder().notEqual( this, value );
 	}
 
+	@Nonnull
 	@Override
 	public JpaPredicate notEqualTo(Object value) {
 		return nodeBuilder().notEqual( this, value );
 	}
 
+	@Nonnull
 	@Override
-	public <X> SqmExpression<X> cast(Class<X> targetType) {
+	public <X> SqmExpression<X> cast(@Nonnull Class<X> targetType) {
 		return nodeBuilder().cast( this, targetType );
 	}
 

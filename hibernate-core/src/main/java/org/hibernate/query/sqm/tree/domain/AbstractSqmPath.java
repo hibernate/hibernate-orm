@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.ComparableExpression;
 import jakarta.persistence.criteria.TemporalExpression;
 import jakarta.persistence.metamodel.BooleanAttribute;
@@ -21,7 +23,6 @@ import jakarta.persistence.metamodel.NumericAttribute;
 import jakarta.persistence.metamodel.TemporalAttribute;
 import jakarta.persistence.metamodel.TextAttribute;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -111,7 +112,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
 	}
 
-	private @Nullable SqmPath<?> getLhsOrRoot() {
+	private SqmPath<?> getLhsOrRoot() {
 		final var lhs = getLhs();
 		return lhs != null ? lhs : findRoot();
 	}
@@ -136,8 +137,9 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return navigablePath;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmPath<?> getLhs() {
+	public SqmPath<?> getLhs() {
 		return lhs;
 	}
 
@@ -181,6 +183,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		setAlias( explicitAlias );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<T> getModel() {
 		return getReferencedPathSource();
@@ -217,6 +220,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return castNonNull( super.getNodeJavaType() );
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<Class<? extends T>> type() {
 		final var referencedPathSource = getReferencedPathSource();
@@ -234,8 +238,9 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmPath<Y> get(String attributeName) {
+	public <Y> SqmPath<Y> get(@Nonnull String attributeName) {
 		@SuppressWarnings("unchecked")
 		final var subNavigable = (SqmPathSource<Y>) getResolvedModel().getSubPathSource( attributeName );
 		return resolvePath( attributeName, subNavigable );
@@ -299,7 +304,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		}
 	}
 
-	private <S extends T> SqmTreatedPath<T, S> treat(ManagedDomainType<S> treatTarget) {
+	@Nonnull
+	private <S extends T> SqmTreatedPath<T, S> treat(@Nonnull ManagedDomainType<S> treatTarget) {
 		if ( treatTarget instanceof SqmEntityDomainType<S> entityDomainType ) {
 			return new SqmTreatedEntityValuedSimplePath<>( this, entityDomainType, nodeBuilder() );
 		}
@@ -311,33 +317,39 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		return getTreatedPath( treatTarget );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		return getTreatedPath( treatTarget );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends T> SqmTreatedPath<T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		return treatAs( treatTarget );
 	}
 
@@ -386,20 +398,23 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		}
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmPath<Y> get(SingularAttribute<? super T, Y> jpaAttribute) {
+	public <Y> SqmPath<Y> get(@Nonnull SingularAttribute<? super T, Y> jpaAttribute) {
 		//noinspection unchecked
 		return (SqmPath<Y>) resolvePath( (PersistentAttribute<?, ?>) jpaAttribute );
 	}
 
+	@Nonnull
 	@Override
-	public <E, C extends Collection<E>> SqmPluralPath<C,E> get(PluralAttribute<? super T, C, E> attribute) {
+	public <E, C extends Collection<E>> SqmPluralPath<C,E> get(@Nonnull PluralAttribute<? super T, C, E> attribute) {
 		//noinspection unchecked
 		return (SqmPluralPath<C, E>) resolvePath( (PersistentAttribute<T, C>) attribute );
 	}
 
+	@Nonnull
 	@Override
-	public <K, V, M extends Map<K, V>> SqmPluralPath<M,V> get(MapAttribute<? super T, K, V> attribute) {
+	public <K, V, M extends Map<K, V>> SqmPluralPath<M,V> get(@Nonnull MapAttribute<? super T, K, V> attribute) {
 		final var mapAttribute = (SqmMapPersistentAttribute<? super T, K, V>) attribute;
 		final var path = resolvePath(
 				mapAttribute,
@@ -417,32 +432,37 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return (SqmPluralPath<M, V>) path;
 	}
 
+	@Nonnull
 	@Override
-	public <C extends Comparable<? super C>> ComparableExpression<C> get(ComparableAttribute<? super T, C> attribute) {
+	public <C extends Comparable<? super C>> ComparableExpression<C> get(@Nonnull ComparableAttribute<? super T, C> attribute) {
 		//noinspection unchecked
 		return (ComparableExpression<C>) resolvePath( (PersistentAttribute<T, C>) attribute );
 	}
 
+	@Nonnull
 	@Override
-	public SqmBooleanPath get(BooleanAttribute<? super T> attribute) {
+	public SqmBooleanPath get(@Nonnull BooleanAttribute<? super T> attribute) {
 		//noinspection unchecked
 		return (SqmBooleanPath) resolvePath( (PersistentAttribute<?, Boolean>) attribute );
 	}
 
+	@Nonnull
 	@Override
-	public <T1 extends Temporal & Comparable<? super T1>> TemporalExpression<T1> get(TemporalAttribute<? super T, T1> attribute) {
+	public <T1 extends Temporal & Comparable<? super T1>> TemporalExpression<T1> get(@Nonnull TemporalAttribute<? super T, T1> attribute) {
 		//noinspection unchecked
 		return (SqmTemporalPath<T1>) resolvePath( (PersistentAttribute<?, T1>) attribute );
 	}
 
+	@Nonnull
 	@Override
-	public <N extends Number & Comparable<N>> SqmNumericPath<N> get(NumericAttribute<? super T, N> attribute) {
+	public <N extends Number & Comparable<N>> SqmNumericPath<N> get(@Nonnull NumericAttribute<? super T, N> attribute) {
 		//noinspection unchecked
 		return (SqmNumericPath<N>) resolvePath( (PersistentAttribute<?, N>) attribute );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTextPath get(TextAttribute<? super T> attribute) {
+	public SqmTextPath get(@Nonnull TextAttribute<? super T> attribute) {
 		//noinspection unchecked
 		return (SqmTextPath) resolvePath( (PersistentAttribute<? super T, String>) attribute );
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.expression.SqmBooleanExpression;
 
@@ -11,15 +12,19 @@ import org.hibernate.query.sqm.tree.expression.SqmBooleanExpression;
  * @author Steve Ebersole
  */
 public interface SqmBooleanPath extends SqmPath<Boolean>, SqmBooleanExpression {
+	@Nonnull
 	@Override
-	SqmBooleanExpression coalesce(Expression<? extends Boolean> y);
+	SqmBooleanExpression coalesce(@Nonnull Expression<? extends Boolean> y);
 
+	@Nonnull
 	@Override
 	SqmBooleanExpression coalesce(Boolean y);
 
+	@Nonnull
 	@Override
-	SqmBooleanExpression nullif(Expression<? extends Boolean> y);
+	SqmBooleanExpression nullif(@Nonnull Expression<? extends Boolean> y);
 
+	@Nonnull
 	@Override
 	SqmBooleanExpression nullif(Boolean y);
 }

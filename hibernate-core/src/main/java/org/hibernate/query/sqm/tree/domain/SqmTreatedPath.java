@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.criteria.JpaTreatedPath;
@@ -15,15 +16,18 @@ import org.hibernate.query.criteria.JpaTreatedPath;
  * @author Steve Ebersole
  */
 public interface SqmTreatedPath<T, S extends T> extends JpaTreatedPath<T,S>, SqmPathWrapper<T, S> {
+	@Nonnull
 	ManagedDomainType<S> getTreatTarget();
 
 	@Override
 	SqmPath<T> getWrappedPath();
 
+	@Nonnull
 	@Override
-	<S1 extends S> SqmTreatedPath<S, S1> treatAs(Class<S1> treatJavaType);
+	<S1 extends S> SqmTreatedPath<S, S1> treatAs(@Nonnull Class<S1> treatJavaType);
 
+	@Nonnull
 	@Override
-	<S1 extends S> SqmTreatedPath<S, S1> treatAs(EntityDomainType<S1> treatTarget);
+	<S1 extends S> SqmTreatedPath<S, S1> treatAs(@Nonnull EntityDomainType<S1> treatTarget);
 
 }

@@ -4,12 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.NumericExpression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Subquery;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -84,8 +85,9 @@ public class SqmMapEntryReference<K,V>
 		return (Class<Map.Entry<K, V>>) entryClass;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSelection<Map.Entry<K, V>> alias(String name) {
+	public JpaSelection<Map.Entry<K, V>> alias(@Nonnull String name) {
 		this.explicitAlias = name;
 		return this;
 	}
@@ -95,6 +97,7 @@ public class SqmMapEntryReference<K,V>
 		return EMBEDDABLE;
 	}
 
+	@Nullable
 	@Override
 	public JavaType<Map.Entry<K, V>> getJavaTypeDescriptor() {
 		return mapEntryTypeDescriptor;
@@ -184,86 +187,103 @@ public class SqmMapEntryReference<K,V>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA (ugh)
 
+	@Nonnull
 	@Override
 	public Predicate isNull() {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
 	public Predicate isNotNull() {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate equalTo(Expression<?> value) {
+	public Predicate equalTo(@Nonnull Expression<?> value) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
 	public Predicate equalTo(Object value) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate notEqualTo(Expression<?> value) {
+	public Predicate notEqualTo(@Nonnull Expression<?> value) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
 	public Predicate notEqualTo(Object value) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate in(Object... values) {
+	public Predicate in(@Nonnull Object... values) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate in(Expression<?>... values) {
+	public Predicate in(@Nonnull Expression<?>... values) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate in(Collection<?> values) {
+	public Predicate in(@Nonnull Collection<?> values) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate in(Expression<Collection<?>> values) {
+	public Predicate in(@Nonnull Expression<Collection<?>> values) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public <X> Expression<X> as(Class<X> type) {
+	public <X> Expression<X> as(@Nonnull Class<X> type) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public <X> Expression<X> cast(Class<X> type) {
+	public <X> Expression<X> cast(@Nonnull Class<X> type) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate in(Subquery<Map.Entry<K, V>> subquery) {
+	public Predicate in(@Nonnull Subquery<Map.Entry<K, V>> subquery) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Expression<Map.Entry<K, V>> coalesce(Expression<? extends Map.Entry<K, V>> y) {
+	public Expression<Map.Entry<K, V>> coalesce(@Nonnull Expression<? extends Map.Entry<K, V>> y) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
 	public Expression<Map.Entry<K, V>> coalesce(Map.Entry<K, V> y) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Expression<Map.Entry<K, V>> nullif(Expression<? extends Map.Entry<K, V>> y) {
+	public Expression<Map.Entry<K, V>> nullif(@Nonnull Expression<? extends Map.Entry<K, V>> y) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
 	public Expression<Map.Entry<K, V>> nullif(Map.Entry<K, V> y) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
@@ -273,26 +293,31 @@ public class SqmMapEntryReference<K,V>
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public <R> CriteriaBuilder.SimpleCase<Map.Entry<K, V>, R> selectCase(Class<R> resultType) {
+	public <R> CriteriaBuilder.SimpleCase<Map.Entry<K, V>, R> selectCase(@Nonnull Class<R> resultType) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate isMember(Expression<? extends Collection<? super Map.Entry<K, V>>> collection) {
+	public Predicate isMember(@Nonnull Expression<? extends Collection<? super Map.Entry<K, V>>> collection) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate isNotMember(Expression<? extends Collection<? super Map.Entry<K, V>>> collection) {
+	public Predicate isNotMember(@Nonnull Expression<? extends Collection<? super Map.Entry<K, V>>> collection) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
 	public NumericExpression<Long> count() {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 
+	@Nonnull
 	@Override
 	public NumericExpression<Long> countDistinct() {
 		throw new UnsupportedOperationException( "Whatever JPA" );

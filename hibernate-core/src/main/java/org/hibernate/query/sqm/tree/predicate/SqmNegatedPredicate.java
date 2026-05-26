@@ -4,14 +4,15 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
@@ -47,6 +48,7 @@ public class SqmNegatedPredicate extends AbstractSqmPredicate {
 		return wrappedPredicate;
 	}
 
+	@Nonnull
 	@Override
 	public List<Expression<Boolean>> getExpressions() {
 		final List<Expression<Boolean>> expressions = new ArrayList<>( 1 );
@@ -93,6 +95,7 @@ public class SqmNegatedPredicate extends AbstractSqmPredicate {
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPredicate not() {
 		return new SqmNegatedPredicate( this, nodeBuilder() );

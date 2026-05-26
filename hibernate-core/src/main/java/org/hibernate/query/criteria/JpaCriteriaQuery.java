@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
@@ -33,6 +34,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 *
 	 * @see org.hibernate.query.SelectionQuery#getResultCount()
 	 */
+	@Nonnull
 	JpaCriteriaQuery<Long> createCountQuery();
 
 	/**
@@ -41,26 +43,35 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 * @since 7.1
 	 */
 	@Incubating
+	@Nonnull
 	JpaCriteriaQuery<Boolean> createExistsQuery();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
 
-	@Nullable JpaExpression<Number> getOffset();
+	@Nullable
+	JpaExpression<Number> getOffset();
 
+	@Nonnull
 	JpaCriteriaQuery<T> offset(@Nullable JpaExpression<? extends Number> offset);
 
+	@Nonnull
 	JpaCriteriaQuery<T> offset(@Nullable Number offset);
 
-	@Nullable JpaExpression<Number> getFetch();
+	@Nullable
+	JpaExpression<Number> getFetch();
 
+	@Nonnull
 	JpaCriteriaQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch);
 
-	JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+	@Nonnull
+	JpaCriteriaQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
+	@Nonnull
 	JpaCriteriaQuery<T> fetch(@Nullable Number fetch);
 
-	JpaCriteriaQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType);
+	@Nonnull
+	JpaCriteriaQuery<T> fetch(@Nullable Number fetch, FetchClauseType fetchClauseType);
 
 	FetchClauseType getFetchClauseType();
 
@@ -70,6 +81,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	/**
 	 * Return the {@linkplain #getRoots() roots} as a list.
 	 */
+	@Nonnull
 	List<? extends JpaRoot<?>> getRootList();
 
 	/**
@@ -83,6 +95,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 *         position is not of the given type, or if there are not
 	 *         enough root entities in the query
 	 */
+	@Nonnull
 	<E> JpaRoot<? extends E> getRoot(int position, Class<E> type);
 
 	/**
@@ -96,6 +109,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 *         given alias is not of the given type, or if there is
 	 *         no root entities with the given alias
 	 */
+	@Nonnull
 	<E> JpaRoot<? extends E> getRoot(String alias, Class<E> type);
 
 	/**
@@ -104,6 +118,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 * @apiNote Warning!  This actually walks the criteria tree looking
 	 * for parameters nodes.
 	 */
+	@Nonnull
 	@Override
 	Set<ParameterExpression<?>> getParameters();
 
@@ -111,56 +126,74 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutators
 
+	@Nonnull
 	@Override
-	<X> JpaRoot<X> from(Class<X> entityClass);
+	<X> JpaRoot<X> from(@Nonnull Class<X> entityClass);
 
+	@Nonnull
 	@Override
-	<X> JpaRoot<X> from(EntityType<X> entity);
+	<X> JpaRoot<X> from(@Nonnull EntityType<X> entity);
 
+	@Nonnull
 	@Override
 	JpaCriteriaQuery<T> distinct(boolean distinct);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> select(Selection<? extends T> selection);
+	JpaCriteriaQuery<T> select(@Nonnull Selection<? extends T> selection);
 
+	@Nonnull
 	@Override @Deprecated
-	JpaCriteriaQuery<T> multiselect(Selection<?>... selections);
+	JpaCriteriaQuery<T> multiselect(@Nonnull Selection<?>... selections);
 
+	@Nonnull
 	@Override @Deprecated
-	JpaCriteriaQuery<T> multiselect(List<Selection<?>> selectionList);
+	JpaCriteriaQuery<T> multiselect(@Nonnull List<Selection<?>> selectionList);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> where(@Nullable Expression<Boolean> restriction);
+	JpaCriteriaQuery<T> where(@Nonnull Expression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> where(BooleanExpression... restrictions);
+	JpaCriteriaQuery<T> where(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> where(List<? extends Expression<Boolean>> restrictions);
+	JpaCriteriaQuery<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> groupBy(Expression<?>... grouping);
+	JpaCriteriaQuery<T> groupBy(@Nonnull Expression<?>... grouping);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> groupBy(List<Expression<?>> grouping);
+	JpaCriteriaQuery<T> groupBy(@Nonnull List<Expression<?>> grouping);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> having(@Nullable Expression<Boolean> restriction);
+	JpaCriteriaQuery<T> having(@Nonnull Expression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> having(BooleanExpression... restrictions);
+	JpaCriteriaQuery<T> having(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> having(List<? extends Expression<Boolean>> restrictions);
+	JpaCriteriaQuery<T> having(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> orderBy(Order... o);
+	JpaCriteriaQuery<T> orderBy(@Nonnull Order... o);
 
+	@Nonnull
 	@Override
-	JpaCriteriaQuery<T> orderBy(List<Order> o);
+	JpaCriteriaQuery<T> orderBy(@Nonnull List<Order> o);
 
+	@Nonnull
 	@Override
-	<U> JpaSubQuery<U> subquery(EntityType<U> type);
+	<U> JpaSubQuery<U> subquery(@Nonnull EntityType<U> type);
 
+	@Nonnull
 	HibernateCriteriaBuilder getCriteriaBuilder();
 }

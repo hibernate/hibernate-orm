@@ -4,12 +4,12 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Selection;
 
 /// Models either a `Tuple` or `Object[]` selection as defined by the
@@ -92,8 +93,9 @@ public class SqmJpaCompoundSelection<T>
 		return selectableNodes;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSelection<T> alias(String name) {
+	public JpaSelection<T> alias(@Nonnull String name) {
 		return this;
 	}
 

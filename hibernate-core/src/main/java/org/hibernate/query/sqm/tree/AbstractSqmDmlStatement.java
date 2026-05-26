@@ -4,13 +4,13 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.AbstractQuery;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static java.lang.Character.isAlphabetic;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.acquireUniqueAlias;
 
 /**
  * @author Steve Ebersole
@@ -78,63 +79,74 @@ public abstract class AbstractSqmDmlStatement<E>
 	public abstract void validate(@Nullable String hql);
 
 	@Override
+	@Nonnull
 	public Collection<SqmCteStatement<?>> getCteStatements() {
 		return cteStatements.values();
 	}
 
 	@Override
-	public @Nullable SqmCteStatement<?> getCteStatement(String cteLabel) {
+	@Nullable public SqmCteStatement<?> getCteStatement(String cteLabel) {
 		return cteStatements.get( cteLabel );
 	}
 
 	@Override
+	@Nonnull
 	public Collection<? extends JpaCteCriteria<?>> getCteCriterias() {
 		return cteStatements.values();
 	}
 
 	@Override
-	public <X> @Nullable JpaCteCriteria<X> getCteCriteria(String cteName) {
+	@Nullable
+	public <X> JpaCteCriteria<X> getCteCriteria(@Nonnull String cteName) {
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
-	@Override @Deprecated
-	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
+	@Override
+	@Deprecated
+	@Nonnull
+	@SuppressWarnings("removal")
+	public <X> JpaCteCriteria<X> with(@Nonnull AbstractQuery<X> criteria) {
 		// Use of acquireUniqueAlias() results in interpretation cache miss
-		return withInternal( "_" + SqmCreationHelper.acquireUniqueAlias(), criteria );
+		return withInternal( "_" + acquireUniqueAlias(), criteria );
 	}
 
+	@Nonnull
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
-			AbstractQuery<X> baseCriteria,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull AbstractQuery<X> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		return withInternal( generateAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
+	@Nonnull
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
-			AbstractQuery<X> baseCriteria,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull AbstractQuery<X> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		return withInternal( generateAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
+	@Nonnull
 	@Override
-	public <X> JpaCteCriteria<X> with(String name, AbstractQuery<X> criteria) {
+	public <X> JpaCteCriteria<X> with(@Nonnull String name, @Nonnull AbstractQuery<X> criteria) {
 		return withInternal( validateCteName( name ), criteria );
 	}
 
+	@Nonnull
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
-			String name,
-			AbstractQuery<X> baseCriteria,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull String name,
+			@Nonnull AbstractQuery<X> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		return withInternal( validateCteName( name ), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
+	@Nonnull
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
-			String name,
-			AbstractQuery<X> baseCriteria,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			@Nonnull String name,
+			@Nonnull AbstractQuery<X> baseCriteria,
+			@Nonnull Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
 		return withInternal( validateCteName( name ), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
@@ -185,18 +197,20 @@ public abstract class AbstractSqmDmlStatement<E>
 		return cteStatement;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<E> getTarget() {
 		return target;
 	}
 
 	@Override
-	public void setTarget(JpaRoot<E> root) {
+	public void setTarget(@Nonnull JpaRoot<E> root) {
 		this.target = (SqmRoot<E>) root;
 	}
 
+	@Nonnull
 	@Override
-	public <U> SqmSubQuery<U> subquery(Class<U> type) {
+	public <U> SqmSubQuery<U> subquery(@Nonnull Class<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
@@ -12,7 +13,6 @@ import jakarta.persistence.criteria.JoinType;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -80,31 +80,33 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 
 	@Override
 	@Nonnull
-	public SqmJoin<L, R> on(BooleanExpression... restrictions) {
+	public SqmJoin<L, R> on(@Nonnull BooleanExpression... restrictions) {
 		setJoinPredicate( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
 
 	@Override
 	@Nonnull
-	public SqmJoin<L, R> on(List<? extends Expression<Boolean>> restrictions) {
+	public SqmJoin<L, R> on(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		setJoinPredicate( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SqmJoin<L, R> on(@Nullable JpaExpression<Boolean> restriction) {
 		return SqmJoin.super.on( restriction );
 	}
 
 	@Override
 	@Nonnull
-	public SqmJoin<L, R> on(@Nullable Expression<Boolean> restriction) {
+	public SqmJoin<L, R> on(@Nonnull Expression<Boolean> restriction) {
 		return SqmJoin.super.on( restriction );
 	}
 
 	@Override
-	public SqmJoin<L, R> on(JpaPredicate @Nullable ... restrictions) {
+	@Nonnull
+	public SqmJoin<L, R> on(@Nullable JpaPredicate ... restrictions) {
 		return SqmJoin.super.on( restrictions );
 	}
 
@@ -113,30 +115,37 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 		target.onClausePredicate = onClausePredicate == null ? null : onClausePredicate.copy( context );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends R> SqmTreatedJoin<L, R, S> treatAs(Class<S> treatTarget) {
+	public <S extends R> SqmTreatedJoin<L, R, S> treatAs(@Nonnull Class<S> treatTarget) {
+		return treatAs( treatTarget, null );
+	}
+
+	@Nonnull
+	@Override
+	public <S extends R> SqmTreatedJoin<L, R, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		return treatAs( treatTarget, null );
 	}
 
 	@Override
-	public <S extends R> SqmTreatedJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget) {
-		return treatAs( treatTarget, null );
-	}
+	@Nonnull
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias);
 
 	@Override
-	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(Class<S> treatJavaType, @Nullable String alias);
+	@Nonnull
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias);
 
 	@Override
-	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
+	@Nonnull
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetched);
 
 	@Override
-	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched);
+	@Nonnull
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched);
 
+	@Nullable
 	@Override
-	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched);
-
-	@Override
-	public @Nullable SqmFrom<?, L> getLhs() {
+	public SqmFrom<?, L> getLhs() {
 		//noinspection unchecked
 		return (SqmFrom<?, L>) super.getLhs();
 	}
@@ -153,19 +162,21 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 		return joinType.getCorrespondingJpaJoinType();
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmPredicate getOn() {
+	public SqmPredicate getOn() {
 		return getJoinPredicate();
 	}
 
 	@Override
 	@Nonnull
-	public <X> SqmEntityJoin<R, X> join(Class<X> targetEntityClass) {
+	public <X> SqmEntityJoin<R, X> join(@Nonnull Class<X> targetEntityClass) {
 		return join( targetEntityClass, joinType.getCorrespondingJpaJoinType() );
 	}
 
+	@Nonnull
 	@Override
-	public <X> SqmEntityJoin<R, X> join(Class<X> targetEntityClass, SqmJoinType joinType) {
+	public <X> SqmEntityJoin<R, X> join(@Nonnull Class<X> targetEntityClass, @Nonnull SqmJoinType joinType) {
 		return join( targetEntityClass, joinType.getCorrespondingJpaJoinType() );
 	}
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
+import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -12,8 +13,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Path;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * The general contract for INSERT statements.  At the moment only the INSERT-SELECT
@@ -22,14 +23,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public interface SqmInsertStatement<T> extends SqmDmlStatement<T>, JpaCriteriaInsert<T> {
+	@Nonnull
 	@Override
 	List<SqmPath<?>> getInsertionTargetPaths();
 
+	@Nonnull
 	@Override
-	SqmInsertStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths);
+	SqmInsertStatement<T> setInsertionTargetPaths(@Nonnull Path<?>... insertionTargetPaths);
 
+	@Nonnull
 	@Override
-	SqmInsertStatement<T> setInsertionTargetPaths(List<? extends Path<?>> insertionTargetPaths);
+	SqmInsertStatement<T> setInsertionTargetPaths(@Nonnull List<? extends Path<?>> insertionTargetPaths);
 
 	@Override
 	SqmInsertStatement<T> copy(SqmCopyContext context);

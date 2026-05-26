@@ -6,6 +6,7 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.Path;
@@ -23,65 +24,76 @@ public interface JpaConflictClause<T> {
 	/**
 	 * The excluded row/object which was not inserted.
 	 */
+	@Nonnull
 	JpaRoot<T> getExcludedRoot();
 
 	/**
 	 * The unique constraint name for which a constraint violation is allowed.
 	 */
-	@Nullable String getConstraintName();
+	@Nullable
+	String getConstraintName();
 
 	/**
 	 * Sets the unique constraint name for which a constraint violation is allowed.
 	 *
 	 * @throws IllegalStateException when constraint paths have already been defined
 	 */
+	@Nonnull
 	JpaConflictClause<T> conflictOnConstraint(@Nullable String constraintName);
 
 	/**
 	 * The paths which are part of a unique constraint, for which a constraint violation is allowed.
 	 */
+	@Nonnull
 	List<? extends JpaPath<?>> getConstraintPaths();
 
 	/**
 	 * Shorthand for calling {@link #conflictOnConstraintPaths(List)} with paths resolved for the given attributes
 	 * against the insert target.
 	 */
+	@Nonnull
 	JpaConflictClause<T> conflictOnConstraintAttributes(String... attributes);
 
 	/**
 	 * Shorthand for calling {@link #conflictOnConstraintPaths(List)} with paths resolved for the given attributes
 	 * against the insert target.
 	 */
-	JpaConflictClause<T> conflictOnConstraintAttributes(SingularAttribute<T, ?>... attributes);
+	@Nonnull
+	JpaConflictClause<T> conflictOnConstraintAttributes(@Nonnull SingularAttribute<T, ?>... attributes);
 
 	/**
 	 * See {@link #conflictOnConstraintPaths(List)}.
 	 */
-	JpaConflictClause<T> conflictOnConstraintPaths(Path<?>... paths);
+	@Nonnull
+	JpaConflictClause<T> conflictOnConstraintPaths(@Nonnull Path<?>... paths);
 
 	/**
 	 * Sets the paths which are part of a unique constraint, for which a constraint violation is allowed.
 	 *
 	 * @throws IllegalStateException when a constraint name has already been defined
 	 */
-	JpaConflictClause<T> conflictOnConstraintPaths(List<? extends Path<?>> paths);
+	@Nonnull
+	JpaConflictClause<T> conflictOnConstraintPaths(@Nonnull List<? extends Path<?>> paths);
 
 	/**
 	 * The action to do when a conflict due to a unique constraint violation happens.
 	 */
-	@Nullable JpaConflictUpdateAction<T> getConflictAction();
+	@Nullable
+	JpaConflictUpdateAction<T> getConflictAction();
 
 	/**
 	 * Sets the action to do on a conflict. Setting {@code null} means to do nothing.
 	 *
 	 * @see #createConflictUpdateAction()
 	 */
+	@Nonnull
 	JpaConflictClause<T> onConflictDo(@Nullable JpaConflictUpdateAction<T> action);
 
 	/**
 	 * Shorthand version for calling {@link #onConflictDo(JpaConflictUpdateAction)} with {@link #createConflictUpdateAction()}
 	 * as argument and returning the update action.
 	 */
+	@Nonnull
 	default JpaConflictUpdateAction<T> onConflictDoUpdate() {
 		final JpaConflictUpdateAction<T> conflictUpdateAction = createConflictUpdateAction();
 		onConflictDo( conflictUpdateAction );
@@ -91,6 +103,7 @@ public interface JpaConflictClause<T> {
 	/**
 	 * Shorthand version for calling {@link #onConflictDo(JpaConflictUpdateAction)} with a {@code null} argument.
 	 */
+	@Nonnull
 	default JpaConflictClause<T> onConflictDoNothing() {
 		return onConflictDo( null );
 	}
@@ -101,5 +114,6 @@ public interface JpaConflictClause<T> {
 	 * @return a new conflict update action
 	 * @see #onConflictDo(JpaConflictUpdateAction)
 	 */
+	@Nonnull
 	JpaConflictUpdateAction<T> createConflictUpdateAction();
 }

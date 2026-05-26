@@ -6,6 +6,7 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -29,10 +30,12 @@ public interface JpaCteCriteriaType<T> extends JpaCriteriaNode {
 	/**
 	 * The attributes of the CTE type.
 	 */
+	@Nonnull
 	List<JpaCteCriteriaAttribute> getAttributes();
 
 	/**
 	 * Returns the found attribute or null.
 	 */
-	@Nullable JpaCteCriteriaAttribute getAttribute(String name);
+	@Nullable
+	JpaCteCriteriaAttribute getAttribute(String name);
 }

@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -68,6 +69,7 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 	}
 
 	@Override
+	@Nonnull
 	public SqmRoot<?> findRoot() {
 		return getCorrelatedRoot();
 	}
@@ -77,6 +79,7 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 		return walker.visitCorrelatedEntityJoin(this);
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityJoin<L,R> getCorrelationParent() {
 		return correlationParent;
@@ -98,6 +101,7 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 	}
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedEntityJoin<L,R> createCorrelation() {
 		return new SqmCorrelatedEntityJoin<>( this );
 	}

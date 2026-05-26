@@ -4,11 +4,12 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
@@ -105,6 +106,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public List<JpaCteCriteriaAttribute> getAttributes() {
 		//noinspection unchecked

@@ -4,12 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.function.Consumer;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -60,67 +61,83 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 		jpaSelectionConsumer.accept( this );
 	}
 
+	@Nonnull
 	@Override
 	default SqmExpression<Long> asLong() {
 		return cast( Long.class );
 	}
 
+	@Nonnull
 	@Override
 	default SqmExpression<Integer> asInteger() {
 		return cast( Integer.class );
 	}
 
+	@Nonnull
 	@Override
 	default SqmExpression<Float> asFloat() {
 		return cast( Float.class );
 	}
 
+	@Nonnull
 	@Override
 	default SqmExpression<Double> asDouble() {
 		return cast( Double.class );
 	}
 
+	@Nonnull
 	@Override
 	default SqmExpression<BigDecimal> asBigDecimal() {
 		return cast( BigDecimal.class );
 	}
 
+	@Nonnull
 	@Override
 	default SqmExpression<BigInteger> asBigInteger() {
 		return cast( BigInteger.class );
 	}
 
+	@Nonnull
 	@Override
 	default SqmExpression<String> asString() {
 		return cast( String.class );
 	}
 
+	@Nonnull
 	@Override
-	<X> SqmExpression<X> as(Class<X> type);
+	<X> SqmExpression<X> as(@Nonnull Class<X> type);
 
+	@Nonnull
 	@Override
 	SqmPredicate isNull();
 
+	@Nonnull
 	@Override
 	SqmPredicate isNotNull();
 
+	@Nonnull
 	@Override
-	SqmPredicate equalTo(Expression<?> value);
+	SqmPredicate equalTo(@Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
 	SqmPredicate equalTo(Object value);
 
+	@Nonnull
 	@Override
-	SqmPredicate in(Object... values);
+	SqmPredicate in(@Nonnull Object... values);
 
+	@Nonnull
 	@Override
-	SqmPredicate in(Expression<?>... values);
+	SqmPredicate in(@Nonnull Expression<?>... values);
 
+	@Nonnull
 	@Override
-	SqmPredicate in(Collection<?> values);
+	SqmPredicate in(@Nonnull Collection<?> values);
 
+	@Nonnull
 	@Override
-	SqmPredicate in(Expression<Collection<?>> values);
+	SqmPredicate in(@Nonnull Expression<Collection<?>> values);
 
 	@Override
 	SqmExpression<T> copy(SqmCopyContext context);
@@ -140,8 +157,9 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 		}
 	}
 
+	@Nonnull
 	@Override
-	default <X> SqmExpression<X> cast(Class<X> type) {
+	default <X> SqmExpression<X> cast(@Nonnull Class<X> type) {
 		final BasicType<X> basicType = nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type );
 		if ( basicType == null ) {
 			throw new IllegalArgumentException( "Couldn't determine basic type for java type: " + type.getName() );
@@ -149,9 +167,11 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 		return castAs( basicType );
 	}
 
+	@Nonnull
 	@Override
-	JpaPredicate notEqualTo(Expression<?> value);
+	JpaPredicate notEqualTo(@Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
 	JpaPredicate notEqualTo(Object value);
 }

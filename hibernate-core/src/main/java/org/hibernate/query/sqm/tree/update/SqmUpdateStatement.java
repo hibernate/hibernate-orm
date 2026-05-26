@@ -4,12 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.update;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
@@ -200,36 +201,41 @@ public class SqmUpdateStatement<T>
 		this.setClause = setClause;
 	}
 
+	@Nonnull
 	@Override
-	public <Y, X extends Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, @Nullable X value) {
+	public <Y, X extends Y> SqmUpdateStatement<T> set(@Nonnull SingularAttribute<? super T, Y> attribute, @Nullable X value) {
 		final var nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
 		SqmPath<Y> sqmAttribute = getTarget().get( attribute );
 		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value) {
+	public <Y> SqmUpdateStatement<T> set(@Nonnull SingularAttribute<? super T, Y> attribute, @Nonnull Expression<? extends Y> value) {
 		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) value );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public <Y, X extends Y> SqmUpdateStatement<T> set(Path<Y> attribute, @Nullable X value) {
+	public <Y, X extends Y> SqmUpdateStatement<T> set(@Nonnull Path<Y> attribute, @Nullable X value) {
 		final var nodeBuilder = (SqmCriteriaNodeBuilder) nodeBuilder();
 		final SqmPath<Y> sqmAttribute = (SqmPath<Y>) attribute;
 		applyAssignment( sqmAttribute, nodeBuilder.value( value, sqmAttribute ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public <Y> SqmUpdateStatement<T> set(Path<Y> attribute, Expression<? extends Y> value) {
+	public <Y> SqmUpdateStatement<T> set(@Nonnull Path<Y> attribute, @Nonnull Expression<? extends Y> value) {
 		applyAssignment( (SqmPath<Y>) attribute, (SqmExpression<? extends Y>) value );
 		return this;
 	}
 
+	@Nonnull
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public SqmUpdateStatement<T> set(String attributeName, @Nullable Object value) {
+	public SqmUpdateStatement<T> set(@Nonnull String attributeName, @Nullable Object value) {
 		final SqmPath sqmPath = getTarget().get( attributeName );
 		final SqmExpression expression;
 		if ( value instanceof SqmExpression ) {
@@ -261,7 +267,7 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public void setTarget(JpaRoot<T> root) {
+	public void setTarget(@Nonnull JpaRoot<T> root) {
 		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
 					String.format(
@@ -273,20 +279,23 @@ public class SqmUpdateStatement<T>
 		super.setTarget( root );
 	}
 
+	@Nonnull
 	@Override
-	public SqmUpdateStatement<T> where(@Nullable Expression<Boolean> restriction) {
+	public SqmUpdateStatement<T> where(@Nonnull Expression<Boolean> restriction) {
 		setWhere( restriction );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmUpdateStatement<T> where(BooleanExpression... restrictions) {
+	public SqmUpdateStatement<T> where(@Nonnull BooleanExpression... restrictions) {
 		setWhere( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmUpdateStatement<T> where(List<? extends Expression<Boolean>> restrictions) {
+	public SqmUpdateStatement<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		setWhere( restrictions );
 		return this;
 	}
@@ -296,8 +305,9 @@ public class SqmUpdateStatement<T>
 		return walker.visitUpdateStatement( this );
 	}
 
+	@Nonnull
 	@Override
-	public <U> SqmSubQuery<U> subquery(EntityType<U> type) {
+	public <U> SqmSubQuery<U> subquery(@Nonnull EntityType<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 

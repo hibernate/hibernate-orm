@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
 import java.time.temporal.Temporal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.SqmTemporalExpression;
@@ -54,21 +55,25 @@ public class SqmTemporalValuedSimplePath<T extends Temporal & Comparable<? super
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmTemporalExpression<T> coalesce(Expression<? extends T> y) {
+	public SqmTemporalExpression<T> coalesce(@Nonnull Expression<? extends T> y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmTemporalExpression<T> coalesce(T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTemporalExpression<T> nullif(Expression<? extends T> y) {
+	public SqmTemporalExpression<T> nullif(@Nonnull Expression<? extends T> y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmTemporalExpression<T> nullif(T y) {
 		return new SqmTemporalExpressionWrapper<>( nodeBuilder().nullif( this, y ) );

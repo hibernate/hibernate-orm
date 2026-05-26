@@ -4,9 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -81,11 +82,13 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 		throw new UnsupportedOperationException("Treated cross joins doesn't support explicit alias");
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType getTreatTarget() {
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmEntityDomainType getModel() {
 		return treatTarget;
@@ -124,24 +127,28 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 	}
 
 	@Override
-	public SqmTreatedCrossJoin on(JpaPredicate @Nullable ... restrictions) {
+	@Nonnull
+	public SqmTreatedCrossJoin on(@Nullable JpaPredicate ... restrictions) {
 		return (SqmTreatedCrossJoin) super.on( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTreatedCrossJoin on(@Nullable Expression restriction) {
+	public SqmTreatedCrossJoin on(@Nonnull Expression restriction) {
 		//noinspection unchecked
 		return (SqmTreatedCrossJoin) super.on( restriction );
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedCrossJoin on(@Nullable JpaExpression restriction) {
 		//noinspection unchecked
 		return (SqmTreatedCrossJoin) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedCrossJoin treatAs(EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public SqmTreatedCrossJoin treatAs(@Nonnull EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
 		//noinspection unchecked
 		return wrappedPath.treatAs( treatTarget, alias, fetch );
 	}

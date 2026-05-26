@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
@@ -100,6 +101,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 		return wrappedPath;
 	}
 
+	@Nonnull
 	@Override
 	public TreatableDomainType<S> getTreatTarget() {
 		return treatTarget;
@@ -110,6 +112,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmListPersistentAttribute<O, S> getModel() {
 		return (SqmListPersistentAttribute<O, S>) super.getReferencedPathSource();
@@ -126,34 +129,40 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedListJoin<O, S, S1> treatAs(Class<S1> treatJavaType, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S1 extends S> SqmTreatedListJoin<O, S, S1> treatAs(@Nonnull Class<S1> treatJavaType, @Nullable String alias, boolean fetch) {
 		//noinspection unchecked
 		return (SqmTreatedListJoin<O, S, S1>) wrappedPath.treatAs( treatJavaType, alias, fetch );
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedListJoin<O, S, S1> treatAs(EntityDomainType<S1> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S1 extends S> SqmTreatedListJoin<O, S, S1> treatAs(@Nonnull EntityDomainType<S1> treatTarget, @Nullable String alias, boolean fetch) {
 		//noinspection unchecked
 		return (SqmTreatedListJoin<O, S, S1>) wrappedPath.treatAs( treatTarget, alias, fetch );
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedListJoin<O,T,S> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmTreatedListJoin<O,T,S>) super.on( restriction );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTreatedListJoin<O,T,S> on(@Nullable Expression<Boolean> restriction) {
+	public SqmTreatedListJoin<O,T,S> on(@Nonnull Expression<Boolean> restriction) {
 		return (SqmTreatedListJoin<O, T, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedListJoin<O,T,S> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	public SqmTreatedListJoin<O,T,S> on(@Nullable JpaPredicate... restrictions) {
 		return (SqmTreatedListJoin<O, T, S>) super.on( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTreatedListJoin<O,T,S> on(BooleanExpression... restrictions) {
+	public SqmTreatedListJoin<O,T,S> on(@Nonnull BooleanExpression... restrictions) {
 		return (SqmTreatedListJoin<O,T,S>) super.on( restrictions );
 	}
 

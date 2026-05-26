@@ -4,8 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -100,6 +100,7 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 	}
 
 	@Override
+	@Nonnull
 	public SqmRoot<?> findRoot() {
 		return getRoot();
 	}
@@ -108,8 +109,9 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 		return cte;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmFrom<?,T> getLhs() {
+	public SqmFrom<?,T> getLhs() {
 		// A cte-join has no LHS
 		return null;
 	}
@@ -123,32 +125,38 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 	// JPA
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedCteJoin<T> createCorrelation() {
 		return new SqmCorrelatedCteJoin<>( this );
 	}
 
+	@Nullable
 	@Override
-	public @Nullable PersistentAttribute<? super T, ?> getAttribute() {
+	public PersistentAttribute<? super T, ?> getAttribute() {
 		return null;
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
+	@Nonnull
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched) {
+	@Nonnull
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
@@ -167,12 +175,14 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 	@Override
 	public boolean deepEquals(SqmFrom<?, ?> object) {
 		return super.deepEquals( object )
-			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );
+			&& Objects.equals( cte.getCteTable().getCteName(),
+				((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );
 	}
 
 	@Override
 	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
 		return super.isDeepCompatible( object )
-			&& Objects.equals( cte.getCteTable().getCteName(), ((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );
+			&& Objects.equals( cte.getCteTable().getCteName(),
+				((SqmCteJoin<?>) object).cte.getCteTable().getCteName() );
 	}
 }

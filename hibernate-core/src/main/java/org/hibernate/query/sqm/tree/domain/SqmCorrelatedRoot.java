@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -50,6 +51,7 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<T> getCorrelationParent() {
 		return correlationParent;
@@ -70,8 +72,9 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 		throw new UnsupportedOperationException( "Can't set alias on a correlated root" );
 	}
 
+	@Nonnull
 	@Override
-	public JpaSelection<T> alias(String name) {
+	public JpaSelection<T> alias(@Nonnull String name) {
 		setAlias( name );
 		return this;
 	}

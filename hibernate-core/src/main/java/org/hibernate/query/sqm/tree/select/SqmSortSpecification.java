@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Nulls;
 
 /**
@@ -85,17 +86,20 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public Nulls getNullPrecedence() {
 		return nullPrecedence;
 	}
 
+	@Nonnull
 	@Override
 	public JpaOrder reverse() {
 		SortDirection newSortOrder = this.sortOrder == null ? SortDirection.DESCENDING : sortOrder.reverse();
 		return new SqmSortSpecification( sortExpression, newSortOrder, nullPrecedence, ignoreCase );
 	}
 
+	@Nonnull
 	@Override
 	public JpaExpression<?> getExpression() {
 		return getSortExpression();

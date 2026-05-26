@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -85,13 +86,15 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull Class<S> treatJavaType) {
 		throw new TreatException( "Fk paths cannot be TREAT-ed" );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends T> SqmTreatedPath<T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		throw new TreatException( "Fk paths cannot be TREAT-ed" );
 	}
 

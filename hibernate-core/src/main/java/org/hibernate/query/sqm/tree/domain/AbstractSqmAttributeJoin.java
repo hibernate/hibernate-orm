@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
@@ -87,7 +87,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 
 	@Override
 	@Nonnull
-	public SqmAttributeJoin<L,R> alias(String name) {
+	public SqmAttributeJoin<L,R> alias(@Nonnull String name) {
 		validateFetchAlias( name, fetchJoin, nodeBuilder() );
 		return (SqmAttributeJoin<L, R>) super.alias( name );
 	}
@@ -122,12 +122,14 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	}
 
 	@Override
+	@Nonnull
 	public SqmAttributeJoin<L, R> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmAttributeJoin<L, R>) super.on( restriction );
 	}
 
 	@Override
-	public SqmAttributeJoin<L, R> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	public SqmAttributeJoin<L, R> on(@Nullable JpaPredicate... restrictions) {
 		return (SqmAttributeJoin<L, R>) super.on( restrictions );
 	}
 
@@ -143,23 +145,29 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 		return getSqmJoinType().getCorrespondingJpaJoinType();
 	}
 
+	@Nonnull
 	@Override
-	public abstract <S extends R> SqmTreatedAttributeJoin<L,R,S> treatAs(Class<S> treatJavaType);
+	public abstract <S extends R> SqmTreatedAttributeJoin<L,R,S> treatAs(@Nonnull Class<S> treatJavaType);
+
+	@Nonnull
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(@Nonnull EntityDomainType<S> treatTarget);
 
 	@Override
-	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget);
+	@Nonnull
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias);
 
 	@Override
-	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(Class<S> treatJavaType, @Nullable String alias);
+	@Nonnull
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias);
 
 	@Override
-	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
+	@Nonnull
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetched);
 
 	@Override
-	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched);
-
-	@Override
-	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched);
+	@Nonnull
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched);
 
 	// No need for equals/hashCode or isCompatible/cacheHashCode, because the base implementation using NavigablePath
 	// is fine for the purpose of matching nodes "syntactically".

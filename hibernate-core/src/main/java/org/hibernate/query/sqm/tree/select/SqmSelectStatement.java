@@ -4,15 +4,16 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -171,11 +172,13 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		SqmUtil.validateQueryReturnType( getQueryPart(), resultType );
 	}
 
+	@Nonnull
 	@Override
 	public NodeBuilder getCriteriaBuilder() {
 		return nodeBuilder();
 	}
 
+	@Nonnull
 	@Override
 	public List<Order> getOrderList() {
 		return unmodifiableList( getQueryPart().getSortSpecifications() );
@@ -186,6 +189,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return querySource;
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySpec<T> getQuerySpec() {
 		if ( querySource == CRITERIA ) {
@@ -300,12 +304,14 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
 	public SqmSelectStatement<T> distinct(boolean distinct) {
 		super.distinct( distinct );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public Set<ParameterExpression<?>> getParameters() {
 		// At this level, the number of parameters may still be growing as
@@ -315,14 +321,16 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return SqmUtil.getParameters( this );
 	}
 
+	@Nonnull
 	@Override
-	public <U> SqmSubQuery<U> subquery(EntityType<U> type) {
+	public <U> SqmSubQuery<U> subquery(@Nonnull EntityType<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	public SqmSelectStatement<T> select(Selection<? extends T> selection) {
+	public SqmSelectStatement<T> select(@Nonnull Selection<? extends T> selection) {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			checkSelectionIsJpaCompliant( selection );
 		}
@@ -340,8 +348,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
+	@Nonnull
 	@Override @Deprecated
-	public SqmSelectStatement<T> multiselect(Selection<?>... selections) {
+	public SqmSelectStatement<T> multiselect(@Nonnull Selection<?>... selections) {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			for ( Selection<?> selection : selections ) {
 				checkSelectionIsJpaCompliant( selection );
@@ -352,8 +361,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override @Deprecated
-	public SqmSelectStatement<T> multiselect(List<Selection<?>> selectionList) {
+	public SqmSelectStatement<T> multiselect(@Nonnull List<Selection<?>> selectionList) {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			for ( Selection<?> selection : selectionList ) {
 				checkSelectionIsJpaCompliant( selection );
@@ -393,8 +403,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> orderBy(Order... orders) {
+	public SqmSelectStatement<T> orderBy(@Nonnull Order... orders) {
 		final SqmOrderByClause sqmOrderByClause = new SqmOrderByClause( orders.length );
 		for ( Order order : orders ) {
 			sqmOrderByClause.addSortSpecification( (SqmSortSpecification) order );
@@ -403,8 +414,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> orderBy(List<Order> orders) {
+	public SqmSelectStatement<T> orderBy(@Nonnull List<Order> orders) {
 		final SqmOrderByClause sqmOrderByClause = new SqmOrderByClause( orders.size() );
 		for ( Order order : orders ) {
 			sqmOrderByClause.addSortSpecification( (SqmSortSpecification) order );
@@ -413,55 +425,64 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public <U> SqmSubQuery<U> subquery(Class<U> type) {
+	public <U> SqmSubQuery<U> subquery(@Nonnull Class<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> where(@Nullable Expression<Boolean> restriction) {
+	public SqmSelectStatement<T> where(@Nonnull Expression<Boolean> restriction) {
 		super.where( restriction );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> where(BooleanExpression... restrictions) {
+	public SqmSelectStatement<T> where(@Nonnull BooleanExpression... restrictions) {
 		super.where( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> where(List<? extends Expression<Boolean>> restrictions) {
+	public SqmSelectStatement<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		super.where( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> groupBy(Expression<?>... expressions) {
+	public SqmSelectStatement<T> groupBy(@Nonnull Expression<?>... expressions) {
 		super.groupBy( expressions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> groupBy(List<Expression<?>> grouping) {
+	public SqmSelectStatement<T> groupBy(@Nonnull List<Expression<?>> grouping) {
 		super.groupBy( grouping );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> having(@Nullable Expression<Boolean> booleanExpression) {
+	public SqmSelectStatement<T> having(@Nonnull Expression<Boolean> booleanExpression) {
 		super.having( booleanExpression );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> having(BooleanExpression... restrictions) {
+	public SqmSelectStatement<T> having(@Nonnull BooleanExpression... restrictions) {
 		super.having( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectStatement<T> having(List<? extends Expression<Boolean>> restrictions) {
+	public SqmSelectStatement<T> having(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		super.having( restrictions );
 		return this;
 	}
@@ -472,6 +493,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return (JpaExpression<Number>) getQueryPart().getOffset();
 	}
 
+	@Nonnull
 	@Override
 	public JpaCriteriaQuery<T> offset(@Nullable JpaExpression<? extends Number> offset) {
 		validateComplianceFetchOffset();
@@ -479,6 +501,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public JpaCriteriaQuery<T> offset(@Nullable Number offset) {
 		validateComplianceFetchOffset();
@@ -492,6 +515,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return (JpaExpression<Number>) getQueryPart().getFetch();
 	}
 
+	@Nonnull
 	@Override
 	public JpaCriteriaQuery<T> fetch(@Nullable JpaExpression<? extends Number> fetch) {
 		validateComplianceFetchOffset();
@@ -499,13 +523,17 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<T> fetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+	public JpaCriteriaQuery<T> fetch(
+			@Nullable JpaExpression<? extends Number> fetch,
+			FetchClauseType fetchClauseType) {
 		validateComplianceFetchOffset();
 		getQueryPart().setFetch( fetch, fetchClauseType );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public JpaCriteriaQuery<T> fetch(@Nullable Number fetch) {
 		validateComplianceFetchOffset();
@@ -513,8 +541,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaCriteriaQuery<T> fetch(Number fetch, FetchClauseType fetchClauseType) {
+	public JpaCriteriaQuery<T> fetch(@Nullable Number fetch, FetchClauseType fetchClauseType) {
 		validateComplianceFetchOffset();
 		getQueryPart().setFetch( nodeBuilder().value( fetch ), fetchClauseType );
 		return this;
@@ -534,6 +563,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
+	@Nonnull
 	public SqmSelectStatement<Long> createCountQuery() {
 		final SqmSelectStatement<Long> copy = createCopy( noParamCopyContext(), Long.class );
 		final SqmQueryPart<Long> queryPart = copy.getQueryPart();
@@ -570,6 +600,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
+	@Nonnull
 	public SqmSelectStatement<Boolean> createExistsQuery() {
 		final SqmSelectStatement<?> copy = createCopy( noParamCopyContext(), Object.class );
 		final SqmQueryPart<?> queryPart = copy.getQueryPart();

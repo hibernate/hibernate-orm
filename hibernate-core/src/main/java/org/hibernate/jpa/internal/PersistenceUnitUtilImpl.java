@@ -5,6 +5,8 @@
 package org.hibernate.jpa.internal;
 
 import java.io.Serializable;
+
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.metamodel.Attribute;
 
@@ -35,7 +37,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	}
 
 	@Override
-	public boolean isLoaded(Object entity, String attributeName) {
+	public boolean isLoaded(@Nonnull Object entity, @Nonnull String attributeName) {
 		return switch ( isLoadedWithoutReference( entity, attributeName, cache ) ) {
 			case LOADED -> true;
 			case NOT_LOADED -> false;
@@ -44,42 +46,44 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	}
 
 	@Override
-	public <E> boolean isLoaded(E entity, Attribute<? super E, ?> attribute) {
+	public <E> boolean isLoaded(@Nonnull E entity, @Nonnull Attribute<? super E, ?> attribute) {
 		return Hibernate.isPropertyInitialized( entity, attribute.getName() );
 	}
 
 	@Override
-	public boolean isLoaded(Object entity) {
+	public boolean isLoaded(@Nonnull Object entity) {
 		return getLoadState( entity ) != NOT_LOADED;
 	}
 
 	@Override
-	public void load(Object entity, String attributeName) {
+	public void load(@Nonnull Object entity, @Nonnull String attributeName) {
 		Hibernate.initializeProperty( entity, attributeName );
 	}
 
 	@Override
-	public <E> void load(E entity, Attribute<? super E, ?> attribute) {
+	public <E> void load(@Nonnull E entity, @Nonnull Attribute<? super E, ?> attribute) {
 		load( entity, attribute.getName() );
 	}
 
 	@Override
-	public void load(Object entity) {
+	public void load(@Nonnull Object entity) {
 		Hibernate.initialize( entity );
 	}
 
 	@Override
-	public boolean isInstance(Object entity, Class<?> entityClass) {
+	public boolean isInstance(@Nonnull Object entity, @Nonnull Class<?> entityClass) {
 		return entityClass.isAssignableFrom( Hibernate.getClassLazy( entity ) );
 	}
 
 	@Override
-	public <T> Class<? extends T> getClass(T entity) {
+	@Nonnull
+	public <T> Class<? extends T> getClass(@Nonnull T entity) {
 		return Hibernate.getClassLazy( entity );
 	}
 
 	@Override
-	public Object getIdentifier(Object entity) {
+	public Object getIdentifier(@Nonnull Object entity) {
+		//noinspection ConstantValue
 		if ( entity == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}
@@ -103,7 +107,8 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	}
 
 	@Override
-	public Object getVersion(Object entity) {
+	public Object getVersion(@Nonnull Object entity) {
+		//noinspection ConstantValue
 		if ( entity == null ) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}

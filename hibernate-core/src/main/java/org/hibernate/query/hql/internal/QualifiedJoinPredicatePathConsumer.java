@@ -42,19 +42,19 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 		return new BaseLocalSequencePart() {
 			@Override
 			protected void validateAsRoot(SqmFrom<?, ?> pathRoot) {
-				final SqmRoot<?> root = pathRoot.findRoot();
-				final SqmRoot<?> joinRoot = sqmJoin.findRoot();
+				final var root = pathRoot.findRoot();
+				final var joinRoot = sqmJoin.findRoot();
 				if ( root != joinRoot ) {
 					// The root of a path within a join condition doesn't have the same root as the
 					// current join we are processing.
 					// The aim of this check is to prevent uses of different roots i.e.
 					// `from A a, B b join C c c.id = a.id` would be illegal
-					final SqmCreationProcessingState processingState = getCreationState().getCurrentProcessingState();
+					final var processingState = getCreationState().getCurrentProcessingState();
 					// First, we need to find out if the current join is part of current processing query
-					final SqmQuery<?> currentProcessingQuery = processingState.getProcessingQuery();
+					final var currentProcessingQuery = processingState.getProcessingQuery();
 					if ( currentProcessingQuery instanceof SqmSelectQuery<?> selectQuery ) {
-						final SqmQuerySpec<?> querySpec = selectQuery.getQuerySpec();
-						final SqmFromClause fromClause = querySpec.getFromClause();
+						final var querySpec = selectQuery.getQuerySpec();
+						final var fromClause = querySpec.getFromClause();
 						// If the current processing query contains the root of the current join,
 						// then the root of the processing path must be a root of one of the parent queries
 						if ( fromClause != null && contains( fromClause.getRoots(), joinRoot ) ) {
@@ -91,10 +91,10 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 					SqmRoot<?> root,
 					SqmCreationProcessingState processingState) {
 				while ( processingState != null ) {
-					final SqmQuery<?> processingQuery = processingState.getProcessingQuery();
+					final var processingQuery = processingState.getProcessingQuery();
 					if ( processingQuery instanceof SqmSelectQuery<?> selectQuery ) {
-						final SqmQuerySpec<?> querySpec = selectQuery.getQuerySpec();
-						final SqmFromClause fromClause = querySpec.getFromClause();
+						final var querySpec = selectQuery.getQuerySpec();
+						final var fromClause = querySpec.getFromClause();
 						// If we are in a subquery, the "foreign" from element could be one of the subquery roots,
 						// which is totally fine. The aim of this check is to prevent uses of different "spaces"
 						// i.e. `from A a, B b join b.id = a.id` would be illegal

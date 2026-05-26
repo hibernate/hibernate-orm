@@ -10,6 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
@@ -27,38 +28,50 @@ import jakarta.persistence.metamodel.SingularAttribute;
  * @author Steve Ebersole
  */
 public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T> {
+	@Nonnull
 	@Override
 	JpaFrom<O,T> getCorrelationParent();
 
+	@Nonnull
 	@Override
-	<Y> JpaEntityJoin<T, Y> join(Class<Y> entityClass);
+	<Y> JpaEntityJoin<T, Y> join(@Nonnull Class<Y> entityClass);
 
+	@Nonnull
 	@Override
-	<Y> JpaEntityJoin<T, Y> join(Class<Y> entityClass, JoinType joinType);
+	<Y> JpaEntityJoin<T, Y> join(@Nonnull Class<Y> entityClass, @Nonnull JoinType joinType);
 
-	<X> JpaEntityJoin<T, X> join(Class<X> entityJavaType, org.hibernate.query.common.JoinType joinType);
+	@Nonnull
+	<X> JpaEntityJoin<T, X> join(@Nonnull Class<X> entityJavaType, @Nonnull org.hibernate.query.common.JoinType joinType);
 
+	@Nonnull
 	@Override
-	<Y> JpaJoin<T, Y> join(EntityType<Y> entity);
+	<Y> JpaJoin<T, Y> join(@Nonnull EntityType<Y> entity);
 
+	@Nonnull
 	@Override
-	<Y> JpaJoin<T, Y> join(EntityType<Y> entity, JoinType joinType);
+	<Y> JpaJoin<T, Y> join(@Nonnull EntityType<Y> entity, @Nonnull JoinType joinType);
 
-	<X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity);
+	@Nonnull
+	<X> JpaEntityJoin<T,X> join(@Nonnull EntityDomainType<X> entity);
 
-	<X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity, org.hibernate.query.common.JoinType joinType);
+	@Nonnull
+	<X> JpaEntityJoin<T,X> join(@Nonnull EntityDomainType<X> entity, @Nonnull org.hibernate.query.common.JoinType joinType);
 
 	@Incubating
-	<X> JpaDerivedJoin<X> join(Subquery<X> subquery);
+	@Nonnull
+	<X> JpaDerivedJoin<X> join(@Nonnull Subquery<X> subquery);
 
-	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType);
+	<X> JpaDerivedJoin<X> join(@Nonnull Subquery<X> subquery, @Nonnull org.hibernate.query.common.JoinType joinType);
 
 	@Incubating
-	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery);
+	@Nonnull
+	<X> JpaDerivedJoin<X> joinLateral(@Nonnull Subquery<X> subquery);
 
-	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType);
+	@Nonnull
+	<X> JpaDerivedJoin<X> joinLateral(@Nonnull Subquery<X> subquery, @Nonnull org.hibernate.query.common.JoinType joinType);
 
-	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, org.hibernate.query.common.JoinType joinType, boolean lateral);
+	@Nonnull
+	<X> JpaDerivedJoin<X> join(@Nonnull Subquery<X> subquery, @Nonnull org.hibernate.query.common.JoinType joinType, boolean lateral);
 
 	/**
 	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link SqmJoinType#INNER}.
@@ -67,7 +80,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function);
+	@Nonnull
+	<X> JpaFunctionJoin<X> join(@Nonnull JpaSetReturningFunction<X> function);
 
 	/**
 	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType, boolean)} passing {@code false}
@@ -77,7 +91,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function, SqmJoinType joinType);
+	@Nonnull
+	<X> JpaFunctionJoin<X> join(@Nonnull JpaSetReturningFunction<X> function, @Nonnull SqmJoinType joinType);
 
 	/**
 	 * Like calling the overload {@link #joinLateral(JpaSetReturningFunction, SqmJoinType)} with {@link SqmJoinType#INNER}.
@@ -86,7 +101,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinLateral(JpaSetReturningFunction<X> function);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinLateral(@Nonnull JpaSetReturningFunction<X> function);
 
 	/**
 	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType, boolean)} passing {@code true}
@@ -96,7 +112,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinLateral(JpaSetReturningFunction<X> function, SqmJoinType joinType);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinLateral(@Nonnull JpaSetReturningFunction<X> function, @Nonnull SqmJoinType joinType);
 
 	/**
 	 * Creates and returns a join node for the given set returning function.
@@ -106,7 +123,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> join(JpaSetReturningFunction<X> function, SqmJoinType joinType, boolean lateral);
+	@Nonnull
+	<X> JpaFunctionJoin<X> join(@Nonnull JpaSetReturningFunction<X> function, @Nonnull SqmJoinType joinType, boolean lateral);
 
 	/**
 	 * Like calling the overload {@link #joinArray(String, SqmJoinType)} with {@link SqmJoinType#INNER}.
@@ -115,7 +133,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinArray(String arrayAttributeName);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinArray(@Nonnull String arrayAttributeName);
 
 	/**
 	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link HibernateCriteriaBuilder#unnestArray(Expression)}
@@ -125,7 +144,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinArray(String arrayAttributeName, SqmJoinType joinType);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinArray(@Nonnull String arrayAttributeName, @Nonnull SqmJoinType joinType);
 
 	/**
 	 * Like calling the overload {@link #joinArray(SingularAttribute, SqmJoinType)} with {@link SqmJoinType#INNER}.
@@ -134,7 +154,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinArray(SingularAttribute<? super T, X[]> arrayAttribute);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinArray(@Nonnull SingularAttribute<? super T, X[]> arrayAttribute);
 
 	/**
 	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link HibernateCriteriaBuilder#unnestArray(Expression)}
@@ -144,7 +165,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinArray(SingularAttribute<? super T, X[]> arrayAttribute, SqmJoinType joinType);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinArray(@Nonnull SingularAttribute<? super T, X[]> arrayAttribute, @Nonnull SqmJoinType joinType);
 
 	/**
 	 * Like calling the overload {@link #joinArrayCollection(String, SqmJoinType)} with {@link SqmJoinType#INNER}.
@@ -153,7 +175,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinArrayCollection(String collectionAttributeName);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinArrayCollection(@Nonnull String collectionAttributeName);
 
 	/**
 	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link HibernateCriteriaBuilder#unnestCollection(Expression)}
@@ -163,7 +186,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinArrayCollection(String collectionAttributeName, SqmJoinType joinType);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinArrayCollection(@Nonnull String collectionAttributeName, @Nonnull SqmJoinType joinType);
 
 	/**
 	 * Like calling the overload {@link #joinArrayCollection(SingularAttribute, SqmJoinType)} with {@link SqmJoinType#INNER}.
@@ -172,7 +196,8 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinArrayCollection(SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinArrayCollection(@Nonnull SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute);
 
 	/**
 	 * Like calling the overload {@link #join(JpaSetReturningFunction, SqmJoinType)} with {@link HibernateCriteriaBuilder#unnestCollection(Expression)}
@@ -182,92 +207,121 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @since 7.0
 	 */
 	@Incubating
-	<X> JpaFunctionJoin<X> joinArrayCollection(SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute, SqmJoinType joinType);
+	@Nonnull
+	<X> JpaFunctionJoin<X> joinArrayCollection(@Nonnull SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute, @Nonnull SqmJoinType joinType);
 
 	@Incubating
-	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte);
+	@Nonnull
+	<X> JpaJoin<?, X> join(@Nonnull JpaCteCriteria<X> cte);
 
-	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte, org.hibernate.query.common.JoinType joinType);
+	@Nonnull
+	<X> JpaJoin<?, X> join(@Nonnull JpaCteCriteria<X> cte, @Nonnull org.hibernate.query.common.JoinType joinType);
 
 	@Incubating
-	<X> JpaCrossJoin<X> crossJoin(Class<X> entityJavaType);
+	@Nonnull
+	<X> JpaCrossJoin<X> crossJoin(@Nonnull Class<X> entityJavaType);
 
 	@Incubating
-	<X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity);
+	@Nonnull
+	<X> JpaCrossJoin<X> crossJoin(@Nonnull EntityDomainType<X> entity);
 
 	// Covariant overrides
 
+	@Nonnull
 	@Override
-	<Y> JpaJoin<T, Y> join(SingularAttribute<? super T, Y> attribute);
+	<Y> JpaJoin<T, Y> join(@Nonnull SingularAttribute<? super T, Y> attribute);
+
+	@Nonnull
+	@Override
+	<Y> JpaJoin<T, Y> join(@Nonnull SingularAttribute<? super T, Y> attribute, @Nonnull JoinType jt);
+
+	@Nonnull
+	@Override
+	<Y> JpaCollectionJoin<T, Y> join(@Nonnull CollectionAttribute<? super T, Y> collection);
+
+	@Nonnull
+	@Override
+	<Y> JpaSetJoin<T, Y> join(@Nonnull SetAttribute<? super T, Y> set);
+
+	@Nonnull
+	@Override
+	<Y> JpaListJoin<T, Y> join(@Nonnull ListAttribute<? super T, Y> list);
+
+	@Nonnull
+	@Override
+	<K, V> JpaMapJoin<T, K, V> join(@Nonnull MapAttribute<? super T, K, V> map);
+
+	@Nonnull
+	@Override
+	<Y> JpaCollectionJoin<T, Y> join(@Nonnull CollectionAttribute<? super T, Y> collection, @Nonnull JoinType jt);
+
+	@Nonnull
+	@Override
+	<Y> JpaSetJoin<T, Y> join(@Nonnull SetAttribute<? super T, Y> set, @Nonnull JoinType jt);
+
+	@Nonnull
+	@Override
+	<Y> JpaListJoin<T, Y> join(@Nonnull ListAttribute<? super T, Y> list, @Nonnull JoinType jt);
+
+	@Nonnull
+	@Override
+	<K, V> JpaMapJoin<T, K, V> join(@Nonnull MapAttribute<? super T, K, V> map, @Nonnull JoinType jt);
+
+	@Nonnull
+	@Override
+	<Y> JpaJoin<T, Y> join(@Nonnull String attributeName);
+
+	@Nonnull
+	@Override
+	<Y> JpaCollectionJoin<T, Y> joinCollection(@Nonnull String attributeName);
+
+	@Nonnull
+	@Override
+	<Y> JpaSetJoin<T, Y> joinSet(@Nonnull String attributeName);
+
+	@Nonnull
+	@Override
+	<Y> JpaListJoin<T, Y> joinList(@Nonnull String attributeName);
+
+	@Nonnull
+	@Override
+	<K, V> JpaMapJoin<T, K, V> joinMap(@Nonnull String attributeName);
+
+	@Nonnull
+	@Override
+	<Y> JpaJoin<T, Y> join(@Nonnull String attributeName, @Nonnull JoinType jt);
+
+	@Nonnull
+	@Override
+	<Y> JpaCollectionJoin<T, Y> joinCollection(@Nonnull String attributeName, @Nonnull JoinType jt);
+
+	@Nonnull
+	@Override
+	<Y> JpaSetJoin<T, Y> joinSet(@Nonnull String attributeName, @Nonnull JoinType jt);
+
+	@Nonnull
+	@Override
+	<Y> JpaListJoin<T, Y> joinList(@Nonnull String attributeName, @Nonnull JoinType jt);
+
+	@Nonnull
+	@Override
+	<K, V> JpaMapJoin<T, K, V> joinMap(@Nonnull String attributeName, @Nonnull JoinType jt);
 
 	@Override
-	<Y> JpaJoin<T, Y> join(SingularAttribute<? super T, Y> attribute, JoinType jt);
+	@Nonnull
+	<S extends T> JpaTreatedFrom<O,T,S> treatAs(@Nonnull Class<S> treatJavaType);
 
+	@Nonnull
 	@Override
-	<Y> JpaCollectionJoin<T, Y> join(CollectionAttribute<? super T, Y> collection);
-
-	@Override
-	<Y> JpaSetJoin<T, Y> join(SetAttribute<? super T, Y> set);
-
-	@Override
-	<Y> JpaListJoin<T, Y> join(ListAttribute<? super T, Y> list);
-
-	@Override
-	<K, V> JpaMapJoin<T, K, V> join(MapAttribute<? super T, K, V> map);
-
-	@Override
-	<Y> JpaCollectionJoin<T, Y> join(CollectionAttribute<? super T, Y> collection, JoinType jt);
-
-	@Override
-	<Y> JpaSetJoin<T, Y> join(SetAttribute<? super T, Y> set, JoinType jt);
-
-	@Override
-	<Y> JpaListJoin<T, Y> join(ListAttribute<? super T, Y> list, JoinType jt);
-
-	@Override
-	<K, V> JpaMapJoin<T, K, V> join(MapAttribute<? super T, K, V> map, JoinType jt);
-
-	@Override
-	<Y> JpaJoin<T, Y> join(String attributeName);
-
-	@Override
-	<Y> JpaCollectionJoin<T, Y> joinCollection(String attributeName);
-
-	@Override
-	<Y> JpaSetJoin<T, Y> joinSet(String attributeName);
-
-	@Override
-	<Y> JpaListJoin<T, Y> joinList(String attributeName);
-
-	@Override
-	<K, V> JpaMapJoin<T, K, V> joinMap(String attributeName);
-
-	@Override
-	<Y> JpaJoin<T, Y> join(String attributeName, JoinType jt);
-
-	@Override
-	<Y> JpaCollectionJoin<T, Y> joinCollection(String attributeName, JoinType jt);
-
-	@Override
-	<Y> JpaSetJoin<T, Y> joinSet(String attributeName, JoinType jt);
-
-	@Override
-	<Y> JpaListJoin<T, Y> joinList(String attributeName, JoinType jt);
-
-	@Override
-	<K, V> JpaMapJoin<T, K, V> joinMap(String attributeName, JoinType jt);
-
-	@Override
-	<S extends T> JpaTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType);
-
-	@Override
-	default <S extends T> JpaFrom<?, S> treat(Class<S> treatJavaType) {
+	default <S extends T> JpaFrom<?, S> treat(@Nonnull Class<S> treatJavaType) {
 		return treatAs( treatJavaType );
 	}
 
 	@Override
-	<S extends T> JpaTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatJavaType);
+	@Nonnull
+	<S extends T> JpaTreatedFrom<O,T,S> treatAs(@Nonnull EntityDomainType<S> treatJavaType);
 
 	@Incubating
+	@Nonnull
 	JpaExpression<?> id();
 }

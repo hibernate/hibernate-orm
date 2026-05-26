@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.ParameterExpression;
 
 import static java.util.Collections.emptySet;
@@ -85,6 +86,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 		return SqmUtil.resolveParameters( this );
 	}
 
+	@Nonnull
 	@Override
 	public Set<ParameterExpression<?>> getParameters() {
 		// At this level, the number of parameters may still be growing as

@@ -4,9 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -41,6 +42,7 @@ public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJ
 	@Override
 	SqmPathSource<T> getReferencedPathSource();
 
+	@Nullable
 	@Override
 	JavaType<T> getJavaTypeDescriptor();
 
@@ -63,39 +65,50 @@ public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJ
 	void setJoinPredicate(@Nullable SqmPredicate predicate);
 
 	@Override
+	@Nonnull
 	default SqmJoin<O, T> on(@Nullable JpaExpression<Boolean> restriction) {
 		return SqmJoin.super.on( restriction );
 	}
 
+	@Nonnull
 	@Override
-	default SqmJoin<O, T> on(@Nullable Expression<Boolean> restriction) {
+	default SqmJoin<O, T> on(@Nonnull Expression<Boolean> restriction) {
 		return SqmJoin.super.on( restriction );
 	}
 
 	@Override
-	default SqmJoin<O, T> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	default SqmJoin<O, T> on(@Nullable JpaPredicate... restrictions) {
 		return SqmJoin.super.on( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	default SqmJoin<O, T> on(List<? extends Expression<Boolean>> restrictions) {
+	default SqmJoin<O, T> on(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return SqmJoin.super.on( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(Class<S> treatJavaType);
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(@Nonnull Class<S> treatJavaType);
 
 	@Override
-	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(Class<S> treatJavaType, @Nullable String alias);
+	@Nonnull
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias);
+
+	@Nonnull
+	@Override
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget);
 
 	@Override
-	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget);
+	@Nonnull
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias);
 
-	@Override
-	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias);
+	@Nonnull
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch);
 
-	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch);
-	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(Class<S> treatTarget, @Nullable String alias, boolean fetch);
+	@Nonnull
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(@Nonnull Class<S> treatTarget, @Nullable String alias, boolean fetch);
 
 	@Override
 	SqmAttributeJoin<O, T> copy(SqmCopyContext context);

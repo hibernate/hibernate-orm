@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,9 +22,9 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @since 6.5
@@ -59,6 +60,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		this.updateAction = updateAction;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<T> getExcludedRoot() {
 		return excludedRoot;
@@ -69,6 +71,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return constraintName;
 	}
 
+	@Nonnull
 	@Override
 	public SqmConflictClause<T> conflictOnConstraint(@Nullable String constraintName) {
 		if ( constraintPaths != null && !constraintPaths.isEmpty() ) {
@@ -78,6 +81,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public JpaConflictClause<T> conflictOnConstraintAttributes(String... attributes) {
 		final ArrayList<SqmPath<?>> paths = new ArrayList<>( attributes.length );
@@ -87,8 +91,9 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return conflictOnConstraintPaths( paths );
 	}
 
+	@Nonnull
 	@Override
-	public JpaConflictClause<T> conflictOnConstraintAttributes(SingularAttribute<T, ?>... attributes) {
+	public JpaConflictClause<T> conflictOnConstraintAttributes(@Nonnull SingularAttribute<T, ?>... attributes) {
 		final ArrayList<SqmPath<?>> paths = new ArrayList<>( attributes.length );
 		for ( SingularAttribute<T, ?> attribute : attributes ) {
 			paths.add( insertStatement.getTarget().get( attribute ) );
@@ -96,13 +101,15 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return conflictOnConstraintPaths( paths );
 	}
 
+	@Nonnull
 	@Override
-	public SqmConflictClause<T> conflictOnConstraintPaths(Path<?>... paths) {
+	public SqmConflictClause<T> conflictOnConstraintPaths(@Nonnull Path<?>... paths) {
 		return conflictOnConstraintPaths( Arrays.asList( paths ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmConflictClause<T> conflictOnConstraintPaths(List<? extends Path<?>> paths) {
+	public SqmConflictClause<T> conflictOnConstraintPaths(@Nonnull List<? extends Path<?>> paths) {
 		if ( constraintName != null ) {
 			throw new IllegalStateException( "Constraint name was already set: " + constraintName );
 		}
@@ -111,6 +118,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public List<SqmPath<?>> getConstraintPaths() {
 		return constraintPaths == null
@@ -118,6 +126,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 				: constraintPaths;
 	}
 
+	@Nonnull
 	@Override
 	public SqmConflictUpdateAction<T> createConflictUpdateAction() {
 		return new SqmConflictUpdateAction<>( insertStatement );
@@ -128,12 +137,14 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return updateAction;
 	}
 
+	@Nonnull
 	@Override
 	public JpaConflictClause<T> onConflictDo(@Nullable JpaConflictUpdateAction<T> action) {
 		this.updateAction = (SqmConflictUpdateAction<T>) action;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmConflictUpdateAction<T> onConflictDoUpdate() {
 		final SqmConflictUpdateAction<T> conflictUpdateAction = createConflictUpdateAction();

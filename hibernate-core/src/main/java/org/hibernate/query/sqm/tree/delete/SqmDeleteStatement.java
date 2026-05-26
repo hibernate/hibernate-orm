@@ -4,11 +4,12 @@
  */
 package org.hibernate.query.sqm.tree.delete;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCriteriaDelete;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -107,20 +108,23 @@ public class SqmDeleteStatement<T>
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmDeleteStatement<T> where(@Nullable Expression<Boolean> restriction) {
+	public SqmDeleteStatement<T> where(@Nonnull Expression<Boolean> restriction) {
 		setWhere( restriction );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmDeleteStatement<T> where(BooleanExpression... restrictions) {
+	public SqmDeleteStatement<T> where(@Nonnull BooleanExpression... restrictions) {
 		setWhere( restrictions );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmDeleteStatement<T> where(List<? extends Expression<Boolean>> restrictions) {
+	public SqmDeleteStatement<T> where(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		setWhere( restrictions );
 		return this;
 	}
@@ -142,8 +146,9 @@ public class SqmDeleteStatement<T>
 		super.appendHqlString( hql, context );
 	}
 
+	@Nonnull
 	@Override
-	public <U> Subquery<U> subquery(EntityType<U> type) {
+	public <U> Subquery<U> subquery(@Nonnull EntityType<U> type) {
 		throw new UnsupportedOperationException( "DELETE query cannot be sub-query" );
 	}
 }

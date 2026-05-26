@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaEntityJoin;
@@ -107,6 +107,7 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
+	@Nonnull
 	public SqmRoot<?> findRoot() {
 		return getRoot();
 	}
@@ -123,8 +124,9 @@ public class SqmEntityJoin<L,R>
 		return (SqmEntityDomainType<R>) super.getModel();
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmFrom<?,L> getLhs() {
+	public SqmFrom<?,L> getLhs() {
 		// An entity-join has no LHS
 		return null;
 	}
@@ -139,30 +141,32 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
+	@Nonnull
 	public SqmEntityJoin<L,R> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmEntityJoin<L,R>) super.on( restriction );
 	}
 
 	@Override
 	@Nonnull
-	public SqmEntityJoin<L,R> on(@Nullable Expression<Boolean> restriction) {
+	public SqmEntityJoin<L,R> on(@Nonnull Expression<Boolean> restriction) {
 		return (SqmEntityJoin<L,R>) super.on( restriction );
 	}
 
 	@Override
-	public SqmEntityJoin<L,R> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	public SqmEntityJoin<L,R> on(@Nullable JpaPredicate... restrictions) {
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 
 	@Override
 	@Nonnull
-	public SqmEntityJoin<L, R> on(BooleanExpression... restrictions) {
+	public SqmEntityJoin<L, R> on(@Nonnull BooleanExpression... restrictions) {
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 
 	@Override
 	@Nonnull
-	public SqmEntityJoin<L, R> on(List<? extends Expression<Boolean>> restrictions) {
+	public SqmEntityJoin<L, R> on(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 
@@ -175,13 +179,15 @@ public class SqmEntityJoin<L,R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatAsType) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(@Nonnull Class<S> treatAsType) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(@Nonnull EntityDomainType<S> treatAsType) {
 		final SqmTreatedEntityJoin<L,R,S> treat = findTreat( treatAsType, null );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedEntityJoin<>( this, (SqmEntityDomainType<S>) treatAsType, null ) );
@@ -192,32 +198,38 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
+	@Nonnull
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched) {
+	@Nonnull
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
+	@Nullable
 	@Override
-	public @Nullable PersistentAttribute<? super L, ?> getAttribute() {
+	public PersistentAttribute<? super L, ?> getAttribute() {
 		// there is no attribute
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedEntityJoin<L,R> createCorrelation() {
 		return new SqmCorrelatedEntityJoin<>( this );
 	}

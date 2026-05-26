@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -35,6 +36,7 @@ public interface SqmPredicate
 
 	@NonNull SqmBindableType<Boolean> getNodeType();
 
+	@Nonnull
 	@Override
 	SqmPredicate not();
 

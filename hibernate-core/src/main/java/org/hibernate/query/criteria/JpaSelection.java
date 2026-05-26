@@ -6,6 +6,7 @@ package org.hibernate.query.criteria;
 
 import java.util.Collections;
 import java.util.List;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Selection;
 
 /**
@@ -16,11 +17,13 @@ import jakarta.persistence.criteria.Selection;
 public interface JpaSelection<T> extends JpaTupleElement<T>, Selection<T> {
 	List<? extends JpaSelection<?>> getSelectionItems();
 
+	@Nonnull
 	@Override
 	default List<Selection<?>> getCompoundSelectionItems() {
 		return Collections.unmodifiableList( getSelectionItems() );
 	}
 
+	@Nonnull
 	@Override
-	JpaSelection<T> alias(String name);
+	JpaSelection<T> alias(@Nonnull String name);
 }

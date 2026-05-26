@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
+import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,12 +25,11 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
@@ -93,7 +93,10 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 
 		context.registerCopy( this, sqmInsertSelectStatementCopy );
 
-		sqmInsertSelectStatementCopy.setInsertionTargetPaths( copyInsertionTargetPaths( context ) );
+		final List<SqmPath<?>> insertionTargetPaths = copyInsertionTargetPaths( context );
+		if ( insertionTargetPaths != null ) {
+			sqmInsertSelectStatementCopy.setInsertionTargetPaths( insertionTargetPaths );
+		}
 
 		final var conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
@@ -105,18 +108,16 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 
 	@Override
 	public void validate(@Nullable String hql) {
-		final List<SqmPath<?>> insertionTargetPaths = getInsertionTargetPaths();
-		final List<SqmSelectableNode<?>> selections = getSelectQueryPart()
-				.getFirstQuerySpec()
-				.getSelectClause()
-				.getSelectionItems();
-		verifyInsertTypesMatch( insertionTargetPaths, selections );
+		verifyInsertTypesMatch( getInsertionTargetPaths(),
+				getSelectQueryPart().getFirstQuerySpec()
+						.getSelectClause().getSelectionItems() );
 		getSelectQueryPart().validateQueryStructureAndFetchOwners();
 	}
 
+	@Nonnull
 	@Override
 	public SqmInsertSelectStatement<T> select(CriteriaQuery<Tuple> criteriaQuery) {
-		final SqmSelectStatement<Tuple> selectStatement = (SqmSelectStatement<Tuple>) criteriaQuery;
+		final var selectStatement = (SqmSelectStatement<Tuple>) criteriaQuery;
 		putAllCtes( selectStatement );
 		setSelectQueryPart( selectStatement.getQueryPart() );
 		return this;
@@ -135,29 +136,34 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		return walker.visitInsertSelectStatement( this );
 	}
 
+	@Nonnull
 	@Override
-	public <U> Subquery<U> subquery(EntityType<U> type) {
+	public <U> Subquery<U> subquery(@Nonnull EntityType<U> type) {
 		throw new UnsupportedOperationException( "INSERT cannot be basis for subquery" );
 	}
 
+	@Nullable
 	@Override
-	public @Nullable JpaPredicate getRestriction() {
+	public JpaPredicate getRestriction() {
 		// insert has no predicate
 		return null;
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertSelectStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths) {
+	public SqmInsertSelectStatement<T> setInsertionTargetPaths(@Nonnull Path<?>... insertionTargetPaths) {
 		super.setInsertionTargetPaths( insertionTargetPaths );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertSelectStatement<T> setInsertionTargetPaths(@Nullable List<? extends Path<?>> insertionTargetPaths) {
+	public SqmInsertSelectStatement<T> setInsertionTargetPaths(@Nonnull List<? extends Path<?>> insertionTargetPaths) {
 		super.setInsertionTargetPaths( insertionTargetPaths );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmInsertSelectStatement<T> onConflict(@Nullable JpaConflictClause<T> conflictClause) {
 		super.onConflict( conflictClause );

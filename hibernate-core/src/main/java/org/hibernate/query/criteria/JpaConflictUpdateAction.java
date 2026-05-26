@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 
@@ -26,7 +27,8 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param value  new value
 	 * @return  the modified update query
 	 */
-	<Y, X extends Y> JpaConflictUpdateAction<T> set(SingularAttribute<? super T, Y> attribute, @Nullable X value);
+	@Nonnull
+	<Y, X extends Y> JpaConflictUpdateAction<T> set(@Nonnull SingularAttribute<? super T, Y> attribute, @Nullable X value);
 
 	/**
 	 * Update the value of the specified attribute.
@@ -34,7 +36,8 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param value  new value
 	 * @return  the modified update query
 	 */
-	<Y> JpaConflictUpdateAction<T> set(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value);
+	@Nonnull
+	<Y> JpaConflictUpdateAction<T> set(@Nonnull SingularAttribute<? super T, Y> attribute, @Nonnull Expression<? extends Y> value);
 
 	/**
 	 * Update the value of the specified attribute.
@@ -42,7 +45,8 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param value  new value
 	 * @return  the modified update query
 	 */
-	<Y, X extends Y> JpaConflictUpdateAction<T> set(Path<Y> attribute, @Nullable X value);
+	@Nonnull
+	<Y, X extends Y> JpaConflictUpdateAction<T> set(@Nonnull Path<Y> attribute, @Nullable X value);
 
 	/**
 	 * Update the value of the specified attribute.
@@ -50,7 +54,8 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param value  new value
 	 * @return  the modified update query
 	 */
-	<Y> JpaConflictUpdateAction<T> set(Path<Y> attribute, Expression<? extends Y> value);
+	@Nonnull
+	<Y> JpaConflictUpdateAction<T> set(@Nonnull Path<Y> attribute, @Nonnull Expression<? extends Y> value);
 
 	/**
 	 * Update the value of the specified attribute.
@@ -58,7 +63,8 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param value  new value
 	 * @return  the modified update query
 	 */
-	JpaConflictUpdateAction<T> set(String attributeName, @Nullable Object value);
+	@Nonnull
+	JpaConflictUpdateAction<T> set(@Nonnull String attributeName, @Nullable Object value);
 
 	/**
 	 * Modify the update query to restrict the target of the update
@@ -67,6 +73,7 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param restriction  a simple or compound boolean expression
 	 * @return the modified update query
 	 */
+	@Nonnull
 	JpaConflictUpdateAction<T> where(@Nullable Expression<Boolean> restriction);
 
 	/**
@@ -79,7 +86,8 @@ public interface JpaConflictUpdateAction<T> {
 	 * @param restrictions  zero or more restriction predicates
 	 * @return the modified update query
 	 */
-	JpaConflictUpdateAction<T> where(Predicate @Nullable... restrictions);
+	@Nonnull
+	JpaConflictUpdateAction<T> where(@Nonnull Predicate... restrictions);
 
 	/**
 	 * Return the predicate that corresponds to the where clause

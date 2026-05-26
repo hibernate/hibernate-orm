@@ -6,6 +6,8 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.common.FetchClauseType;
 
 /**
@@ -15,21 +17,26 @@ import org.hibernate.query.common.FetchClauseType;
  */
 public interface JpaQueryGroup<T> extends JpaQueryPart<T> {
 
+	@Nonnull
 	List<? extends JpaQueryPart<T>> getQueryParts();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
 	@Override
-	JpaQueryGroup<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
+	@Nonnull
+	JpaQueryGroup<T> setSortSpecifications(@Nonnull List<? extends JpaOrder> sortSpecifications);
 
 	@Override
-	JpaQueryGroup<T> setOffset(JpaExpression<? extends Number> offset);
+	@Nonnull
+	JpaQueryGroup<T> setOffset(@Nonnull JpaExpression<? extends Number> offset);
 
 	@Override
-	JpaQueryGroup<T> setFetch(JpaExpression<? extends Number> fetch);
+	@Nonnull
+	JpaQueryGroup<T> setFetch(@Nullable JpaExpression<? extends Number> fetch);
 
 	@Override
-	JpaQueryGroup<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+	@Nonnull
+	JpaQueryGroup<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
 }

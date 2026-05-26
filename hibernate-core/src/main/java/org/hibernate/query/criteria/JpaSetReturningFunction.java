@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 
 /**
@@ -15,6 +16,7 @@ public interface JpaSetReturningFunction<T> extends JpaCriteriaNode {
 	/**
 	 * The name of the function.
 	 */
+	@Nonnull
 	String getFunctionName();
 
 }

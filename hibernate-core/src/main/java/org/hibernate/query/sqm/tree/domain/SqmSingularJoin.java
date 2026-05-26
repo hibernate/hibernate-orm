@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import java.util.Locale;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -86,6 +87,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		return getReferencedPathSource().getExpressible();
 	}
 
+	@Nonnull
 	@Override
 	public SqmSingularPersistentAttribute<? super O, T> getModel() {
 		return (SqmSingularPersistentAttribute<? super O, T>) super.getModel();
@@ -96,28 +98,33 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		return getModel();
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedAttributeJoin<O, T, S> treatAs(Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedAttributeJoin<O, T, S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return treatAs( treatJavaType, null );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedAttributeJoin<O, T, S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends T> SqmTreatedAttributeJoin<O, T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		return treatAs( treatTarget, null );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedAttributeJoin<O, T, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	public <S extends T> SqmTreatedAttributeJoin<O, T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( treatJavaType, alias, false );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedAttributeJoin<O, T, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	public <S extends T> SqmTreatedAttributeJoin<O, T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		return treatAs( treatTarget, alias, false );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
 		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
@@ -132,7 +139,8 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
 		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedSingularJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
@@ -141,6 +149,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
+	@Nonnull
 	public SqmCorrelatedSingularJoin<O, T> createCorrelation() {
 		return new SqmCorrelatedSingularJoin<>( this );
 	}

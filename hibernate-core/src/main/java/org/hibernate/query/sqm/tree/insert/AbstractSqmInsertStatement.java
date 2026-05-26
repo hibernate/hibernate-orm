@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.insert;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,8 +31,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Path;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
@@ -118,7 +119,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public void setTarget(JpaRoot<T> root) {
+	public void setTarget(@Nonnull JpaRoot<T> root) {
 		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
 					String.format(
@@ -130,6 +131,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		super.setTarget( root );
 	}
 
+	@Nonnull
 	@Override
 	public List<SqmPath<?>> getInsertionTargetPaths() {
 		return insertionTargetPaths == null
@@ -137,13 +139,15 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 				: Collections.unmodifiableList( insertionTargetPaths );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths) {
+	public SqmInsertStatement<T> setInsertionTargetPaths(@Nonnull Path<?>... insertionTargetPaths) {
 		return setInsertionTargetPaths( Arrays.asList( insertionTargetPaths ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmInsertStatement<T> setInsertionTargetPaths(@Nullable List<? extends Path<?>> insertionTargetPaths) {
+	public SqmInsertStatement<T> setInsertionTargetPaths(@Nonnull List<? extends Path<?>> insertionTargetPaths) {
 		//noinspection unchecked
 		this.insertionTargetPaths = (List<SqmPath<?>>) insertionTargetPaths;
 		return this;
@@ -163,6 +167,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		}
 	}
 
+	@Nonnull
 	@Override
 	public SqmConflictClause<T> createConflictClause() {
 		return new SqmConflictClause<>( this );
@@ -173,11 +178,13 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		return conflictClause;
 	}
 
+	@Nonnull
 	@Override
 	public JpaConflictClause<T> onConflict() {
 		return this.conflictClause = createConflictClause();
 	}
 
+	@Nonnull
 	@Override
 	public JpaCriteriaInsert<T> onConflict(@Nullable JpaConflictClause<T> conflictClause) {
 		this.conflictClause = (SqmConflictClause<T>) conflictClause;

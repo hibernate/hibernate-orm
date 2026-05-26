@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 
 /**
@@ -220,26 +221,30 @@ public class SqmCaseSearched<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
-	public SqmCaseSearched<R> when(Expression<Boolean> condition, @Nullable R result) {
+	public SqmCaseSearched<R> when(@Nonnull Expression<Boolean> condition, @Nullable R result) {
 		when( nodeBuilder().wrap( condition ), nodeBuilder().value( result, otherwise ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCaseSearched<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
+	public SqmCaseSearched<R> when(@Nonnull Expression<Boolean> condition, @Nonnull Expression<? extends R> result) {
 		when( nodeBuilder().wrap( condition ), (SqmExpression<? extends R>) result );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<R> otherwise(@Nullable R result) {
 		otherwise( nodeBuilder().value( result ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<R> otherwise(Expression<? extends R> result) {
+	public SqmExpression<R> otherwise(@Nonnull Expression<? extends R> result) {
 		otherwise( (SqmExpression<? extends R>) result );
 		return this;
 	}

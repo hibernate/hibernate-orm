@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
@@ -19,66 +20,79 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		extends SqmComparableExpressionImplementor<N>, SqmNumericExpression<N> {
 	SqmCriteriaNodeBuilder nodeBuilder();
 
+	@Nonnull
 	@Override
-	default SqmNumericExpression<N> coalesce(Expression<? extends N> y) {
+	default SqmNumericExpression<N> coalesce(@Nonnull Expression<? extends N> y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().coalesce(this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> coalesce(N y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().coalesce(this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	default SqmNumericExpression<N> nullif(Expression<? extends N> y) {
+	default SqmNumericExpression<N> nullif(@Nonnull Expression<? extends N> y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().nullif(this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> nullif(N y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().nullif(this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	default SqmPredicate gt(Expression<? extends Number> y) {
+	default SqmPredicate gt(@Nonnull Expression<? extends Number> y) {
 		return nodeBuilder().gt( this, y );
 	}
 
+	@Nonnull
 	@Override
 	default SqmPredicate gt(Number y) {
 		return nodeBuilder().gt( this, y );
 	}
 
+	@Nonnull
 	@Override
-	default SqmPredicate ge(Expression<? extends Number> y) {
+	default SqmPredicate ge(@Nonnull Expression<? extends Number> y) {
 		return nodeBuilder().ge( this, y );
 	}
 
+	@Nonnull
 	@Override
 	default SqmPredicate ge(Number y) {
 		return nodeBuilder().ge( this, y );
 	}
 
+	@Nonnull
 	@Override
-	default SqmPredicate lt(Expression<? extends Number> y) {
+	default SqmPredicate lt(@Nonnull Expression<? extends Number> y) {
 		return nodeBuilder().lt( this, y );
 	}
 
+	@Nonnull
 	@Override
 	default SqmPredicate lt(Number y) {
 		return nodeBuilder().lt( this, y );
 	}
 
+	@Nonnull
 	@Override
-	default SqmPredicate le(Expression<? extends Number> y) {
+	default SqmPredicate le(@Nonnull Expression<? extends Number> y) {
 		return nodeBuilder().le( this, y );
 	}
 
+	@Nonnull
 	@Override
 	default SqmPredicate le(Number y) {
 		return nodeBuilder().le( this, y );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Integer> sign() {
 		var expr = nodeBuilder().sign( this );
@@ -87,6 +101,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> negated() {
 		var expr = nodeBuilder().neg( this );
@@ -95,6 +110,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> abs() {
 		var expr = nodeBuilder().abs( this );
@@ -103,6 +119,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> ceiling() {
 		var expr = nodeBuilder().ceiling( this );
@@ -111,6 +128,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> floor() {
 		var expr = nodeBuilder().floor( this );
@@ -119,8 +137,9 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
-	default SqmNumericExpression<N> plus(Expression<? extends N> y) {
+	default SqmNumericExpression<N> plus(@Nonnull Expression<? extends N> y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.ADD,
 				this,
@@ -129,6 +148,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> plus(N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
@@ -139,8 +159,9 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
-	default SqmNumericExpression<N> times(Expression<? extends N> y) {
+	default SqmNumericExpression<N> times(@Nonnull Expression<? extends N> y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.MULTIPLY,
 				this,
@@ -149,6 +170,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> times(N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
@@ -159,8 +181,9 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
-	default SqmNumericExpression<N> minus(Expression<? extends N> y) {
+	default SqmNumericExpression<N> minus(@Nonnull Expression<? extends N> y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.SUBTRACT,
 				this,
@@ -169,6 +192,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> minus(N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
@@ -179,8 +203,9 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
-	default SqmNumericExpression<N> dividedBy(Expression<? extends N> y) {
+	default SqmNumericExpression<N> dividedBy(@Nonnull Expression<? extends N> y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
 				BinaryArithmeticOperator.DIVIDE,
 				this,
@@ -189,6 +214,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> dividedBy(N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
@@ -199,6 +225,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> subtractedFrom(N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
@@ -209,6 +236,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> dividedInto(N y) {
 		return new SqmNumericExpressionWrapper<>( new SqmBinaryArithmetic<N>(
@@ -219,6 +247,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		) );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Double> sqrt() {
 		var expr = nodeBuilder().sqrt( this );
@@ -227,6 +256,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Double> exp() {
 		var expr = nodeBuilder().exp( this );
@@ -235,6 +265,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Double> ln() {
 		var expr = nodeBuilder().ln( this );
@@ -243,14 +274,16 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
-	default SqmNumericExpression<Double> power(Expression<? extends Number> y) {
+	default SqmNumericExpression<Double> power(@Nonnull Expression<? extends Number> y) {
 		var expr = nodeBuilder().power( this, y );
 		return expr instanceof SqmNumericExpression<Double> correct
 				? correct
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Double> power(Number y) {
 		var expr = nodeBuilder().power( this, y );
@@ -259,14 +292,16 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
-	default SqmNumericExpression<N> round(Integer n) {
+	default SqmNumericExpression<N> round(@Nonnull Integer n) {
 		var expr = nodeBuilder().round( this, n );
 		return expr instanceof SqmNumericExpression<N> correct
 				? correct
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> max() {
 		var expr = nodeBuilder().max( this );
@@ -275,6 +310,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> min() {
 		var expr = nodeBuilder().min( this );
@@ -283,6 +319,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Double> avg() {
 		var expr = nodeBuilder().avg( this );
@@ -291,6 +328,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<N> sum() {
 		var expr = nodeBuilder().sum( this );
@@ -299,6 +337,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Long> sumAsLong() {
 		var expr = nodeBuilder().sum( this ).asLong();
@@ -307,6 +346,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Double> sumAsDouble() {
 		var expr = nodeBuilder().sum( this ).asDouble();
@@ -315,6 +355,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 				: new SqmNumericExpressionWrapper<>( expr );
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Long> toLong() {
 		if ( Long.class.equals( getJavaType() ) ) {
@@ -326,6 +367,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		}
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Integer> toInteger() {
 		if ( Integer.class.equals( getJavaType() ) ) {
@@ -337,6 +379,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		}
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Float> toFloat() {
 		if ( Float.class.equals( getJavaType() ) ) {
@@ -348,6 +391,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		}
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<Double> toDouble() {
 		if ( Double.class.equals( getJavaType() ) ) {
@@ -359,6 +403,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		}
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<BigDecimal> toBigDecimal() {
 		if ( BigDecimal.class.equals( getJavaType() ) ) {
@@ -370,6 +415,7 @@ public interface SqmNumericExpressionImplementor<N extends Number & Comparable<N
 		}
 	}
 
+	@Nonnull
 	@Override
 	default SqmNumericExpression<BigInteger> toBigInteger() {
 		if ( BigInteger.class.equals( getJavaType() ) ) {

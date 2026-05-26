@@ -4,11 +4,12 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
@@ -127,8 +128,9 @@ public class SqmSelectClause extends AbstractSqmNode
 		return subSelections;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSelection<Object> alias(String name) {
+	public JpaSelection<Object> alias(@Nonnull String name) {
 		throw new UnsupportedOperationException();
 	}
 

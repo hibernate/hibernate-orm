@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -28,21 +29,25 @@ public class SqmComparableExpressionWrapper<C extends Comparable<? super C>>
 		return wrappedExpression;
 	}
 
+	@Nonnull
 	@Override
-	public SqmComparableExpression<C> coalesce(Expression<? extends C> y) {
+	public SqmComparableExpression<C> coalesce(@Nonnull Expression<? extends C> y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmComparableExpression<C> coalesce(C y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmComparableExpression<C> nullif(Expression<? extends C> y) {
+	public SqmComparableExpression<C> nullif(@Nonnull Expression<? extends C> y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmComparableExpression<C> nullif(C y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().nullif( this, y ) );

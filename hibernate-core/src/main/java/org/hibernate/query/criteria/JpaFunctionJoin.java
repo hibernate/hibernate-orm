@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.BooleanExpression;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.Expression;
@@ -26,17 +27,22 @@ public interface JpaFunctionJoin<E> extends JpaFunctionFrom<Object, E>, JpaJoin<
 	boolean isLateral();
 
 	@Override
+	@Nonnull
 	JpaFunctionJoin<E> on(@Nullable JpaExpression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaFunctionJoin<E> on(@Nullable Expression<Boolean> restriction);
+	JpaFunctionJoin<E> on(@Nonnull Expression<Boolean> restriction);
 
 	@Override
-	JpaFunctionJoin<E> on(JpaPredicate @Nullable... restrictions);
+	@Nonnull
+	JpaFunctionJoin<E> on(@Nullable JpaPredicate... restrictions);
 
+	@Nonnull
 	@Override
-	JpaFunctionJoin<E> on(BooleanExpression... restrictions);
+	JpaFunctionJoin<E> on(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaFunctionJoin<E> on(List<? extends Expression<Boolean>> restrictions);
+	JpaFunctionJoin<E> on(@Nonnull List<? extends Expression<Boolean>> restrictions);
 }

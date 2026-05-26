@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Fetch;
@@ -11,7 +13,6 @@ import jakarta.persistence.criteria.Join;
 
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
@@ -22,27 +23,35 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 * @author Steve Ebersole
 */
 public interface JpaJoin<L, R> extends JpaFrom<L,R>, Join<L,R> {
-	@Override
-	@Nullable PersistentAttribute<? super L, ?> getAttribute();
 
+	@Override
+	@Nullable
+	PersistentAttribute<? super L, ?> getAttribute();
+
+	@Nonnull
 	JpaJoin<L, R> on(@Nullable JpaExpression<Boolean> restriction);
 
+	@Nonnull
 	@Override
-	JpaJoin<L, R> on(@Nullable Expression<Boolean> restriction);
+	JpaJoin<L, R> on(@Nonnull Expression<Boolean> restriction);
 
-	JpaJoin<L, R> on(JpaPredicate @Nullable... restrictions);
+	@Nonnull
+	JpaJoin<L, R> on(@Nullable JpaPredicate... restrictions);
 
+	@Nonnull
 	@Override
-	JpaJoin<L, R> on(BooleanExpression... restrictions);
+	JpaJoin<L, R> on(@Nonnull BooleanExpression... restrictions);
 
+	@Nonnull
 	@Override
-	JpaJoin<L, R> on(List<? extends Expression<Boolean>> restrictions);
+	JpaJoin<L, R> on(@Nonnull List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<S extends R> JpaTreatedJoin<L,R,S> treatAs(Class<S> treatAsType);
 
+	@Nonnull
 	@Override
-	default <S extends R> JpaJoin<L, S> treat(Class<S> treatAsType) {
+	default <S extends R> JpaJoin<L, S> treat(@Nonnull Class<S> treatAsType) {
 		return treatAs( treatAsType );
 	}
 

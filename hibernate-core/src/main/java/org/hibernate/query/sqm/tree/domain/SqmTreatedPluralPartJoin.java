@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -81,6 +82,7 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 		return wrappedPath;
 	}
 
+	@Nonnull
 	@Override
 	public EntityDomainType<?> getTreatTarget() {
 		return treatTarget;
@@ -102,13 +104,15 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 	}
 
 	@Override
-	public SqmTreatedPluralPartJoin treatAs(Class treatJavaType, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public SqmTreatedPluralPartJoin treatAs(@Nonnull Class treatJavaType, @Nullable String alias, boolean fetch) {
 		//noinspection unchecked
 		return wrappedPath.treatAs( treatJavaType, alias, fetch );
 	}
 
 	@Override
-	public SqmTreatedPluralPartJoin treatAs(EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public SqmTreatedPluralPartJoin treatAs(@Nonnull EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
 		//noinspection unchecked
 		return wrappedPath.treatAs( treatTarget, alias, fetch );
 	}

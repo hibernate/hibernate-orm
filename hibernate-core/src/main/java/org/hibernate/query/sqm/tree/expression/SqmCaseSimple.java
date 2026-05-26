@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.internal.QueryHelper;
@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
@@ -238,43 +239,50 @@ public class SqmCaseSimple<T, R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
 	public JpaExpression<T> getExpression() {
 		return getFixture();
 	}
 
+	@Nonnull
 	@Override
 	public JpaSimpleCase<T, R> when(T condition, @Nullable R result) {
 		when( nodeBuilder().value( condition ), nodeBuilder().value( result ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSimpleCase<T, R> when(T condition, Expression<? extends R> result) {
+	public JpaSimpleCase<T, R> when(T condition, @Nonnull Expression<? extends R> result) {
 		when( nodeBuilder().value( condition, fixture ), (SqmExpression<? extends R>) result );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSimpleCase<T, R> when(Expression<? extends T> condition, @Nullable R result) {
+	public JpaSimpleCase<T, R> when(@Nonnull Expression<? extends T> condition, @Nullable R result) {
 		when( condition, nodeBuilder().value( result ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSimpleCase<T, R> when(Expression<? extends T> condition, Expression<? extends R> result) {
+	public JpaSimpleCase<T, R> when(@Nonnull Expression<? extends T> condition, @Nonnull Expression<? extends R> result) {
 		when( (SqmExpression<? extends T>) condition, (SqmExpression<? extends R>) result );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public JpaSimpleCase<T, R> otherwise(@Nullable R result) {
 		otherwise( nodeBuilder().value( result ) );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaSimpleCase<T, R> otherwise(Expression<? extends R> result) {
+	public JpaSimpleCase<T, R> otherwise(@Nonnull Expression<? extends R> result) {
 		otherwise( (SqmExpression<? extends R>) result );
 		return this;
 	}

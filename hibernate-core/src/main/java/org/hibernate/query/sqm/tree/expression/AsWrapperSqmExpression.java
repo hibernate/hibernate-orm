@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -38,8 +39,9 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 		hql.append( ")" );
 	}
 
+	@Nonnull
 	@Override
-	public <X> SqmExpression<X> as(Class<X> type) {
+	public <X> SqmExpression<X> as(@Nonnull Class<X> type) {
 		return expression.as( type );
 	}
 

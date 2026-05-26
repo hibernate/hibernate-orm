@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.SqmNumericExpression;
@@ -52,21 +53,25 @@ public class SqmNumericValuedSimplePath<N extends Number & Comparable<N>>
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmNumericExpression<N> coalesce(Expression<? extends N> y) {
+	public SqmNumericExpression<N> coalesce(@Nonnull Expression<? extends N> y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmNumericExpression<N> coalesce(N y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmNumericExpression<N> nullif(Expression<? extends N> y) {
+	public SqmNumericExpression<N> nullif(@Nonnull Expression<? extends N> y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmNumericExpression<N> nullif(N y) {
 		return new SqmNumericExpressionWrapper<>( nodeBuilder().nullif( this, y ) );

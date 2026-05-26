@@ -4,22 +4,27 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
  */
 public interface JpaCoalesce<T> extends JpaExpression<T>, CriteriaBuilder.Coalesce<T> {
+	@Nonnull
 	@Override
 	JpaCoalesce<T> value(@Nullable T value);
 
+	@Nonnull
 	@Override
-	JpaCoalesce<T> value(Expression<? extends T> value);
+	JpaCoalesce<T> value(@Nonnull Expression<? extends T> value);
 
-	JpaCoalesce<T> value(JpaExpression<? extends T> value);
+	@Nonnull
+	JpaCoalesce<T> value(@Nonnull JpaExpression<? extends T> value);
 
+	@Nonnull
 	@SuppressWarnings("unchecked")
 	JpaCoalesce<T> values(T... values);
 }

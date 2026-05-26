@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
@@ -126,6 +127,7 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
 	public SqmCoalesce<T> value(@Nullable T value) {
 		value( nodeBuilder().value( value, firstOrNull() ) );
@@ -142,19 +144,22 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmCoalesce<T> value(Expression<? extends T> value) {
+	public SqmCoalesce<T> value(@Nonnull Expression<? extends T> value) {
 		value( (SqmExpression<? extends T>) value );
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCoalesce<T> value(JpaExpression<? extends T> value) {
+	public SqmCoalesce<T> value(@Nonnull JpaExpression<? extends T> value) {
 		//noinspection unchecked
 		value( (SqmExpression<T>) value );
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmCoalesce<T> values(T... values) {

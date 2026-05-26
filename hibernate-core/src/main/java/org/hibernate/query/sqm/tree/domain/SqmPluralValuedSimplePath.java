@@ -4,9 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
@@ -213,53 +214,63 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 		return join;
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<Class<? extends C>> type() {
 		throw new UnsupportedOperationException( "Cannot access the type of plural valued simple paths" );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends C> SqmTreatedPath<C, S> treatAs(Class<S> treatJavaType) {
+	public <S extends C> SqmTreatedPath<C, S> treatAs(@Nonnull Class<S> treatJavaType) {
 		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
 	}
 
+	@Nonnull
 	@Override
-	public <S extends C> SqmTreatedEntityValuedSimplePath<C, S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends C> SqmTreatedEntityValuedSimplePath<C, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPredicate isEmpty() {
 		return new SqmEmptinessPredicate( this, false, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPredicate isNotEmpty() {
 		return new SqmEmptinessPredicate( this, true, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
 	public SqmNumericExpression<Integer> size() {
 		return new SqmNumericExpressionWrapper<>( new SqmCollectionSize( this, nodeBuilder() ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notContains(Object elem) {
+	public SqmPredicate notContains(@Nonnull Object elem) {
 		return new SqmMemberOfPredicate( nodeBuilder().value( elem ), this, true, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate notContains(Expression elem) {
+	public SqmPredicate notContains(@Nonnull Expression elem) {
 		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, this, true, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate contains(Object elem) {
+	public SqmPredicate contains(@Nonnull Object elem) {
 		return new SqmMemberOfPredicate( nodeBuilder().value( elem ), this, false, nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate contains(Expression elem) {
+	public SqmPredicate contains(@Nonnull Expression elem) {
 		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, this, false, nodeBuilder() );
 	}
 

@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
@@ -100,6 +101,7 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 		return wrappedPath;
 	}
 
+	@Nonnull
 	@Override
 	public TreatableDomainType<S> getTreatTarget() {
 		return treatTarget;
@@ -110,6 +112,7 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmBagPersistentAttribute<L, S> getModel() {
 		return (SqmBagPersistentAttribute<L, S>) super.getReferencedPathSource();
@@ -135,34 +138,40 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedBagJoin<L,R, S> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmTreatedBagJoin<L, R, S>) super.on( restriction );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTreatedBagJoin<L,R, S> on(@Nullable Expression<Boolean> restriction) {
+	public SqmTreatedBagJoin<L,R, S> on(@Nonnull Expression<Boolean> restriction) {
 		return (SqmTreatedBagJoin<L, R, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedBagJoin<L,R, S> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	public SqmTreatedBagJoin<L,R, S> on(@Nullable JpaPredicate... restrictions) {
 		return (SqmTreatedBagJoin<L, R, S>) super.on( restrictions );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTreatedBagJoin<L, R, S> on(BooleanExpression... restrictions) {
+	public SqmTreatedBagJoin<L, R, S> on(@Nonnull BooleanExpression... restrictions) {
 		super.on( restrictions );
 		return this;
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedBagJoin<L, S, S1> treatAs(Class<S1> treatJavaType, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S1 extends S> SqmTreatedBagJoin<L, S, S1> treatAs(@Nonnull Class<S1> treatJavaType, @Nullable String alias, boolean fetch) {
 		//noinspection unchecked
 		return (SqmTreatedBagJoin<L, S, S1>) wrappedPath.treatAs( treatJavaType, alias, fetch );
 	}
 
 	@Override
-	public <S1 extends S> SqmTreatedBagJoin<L, S, S1> treatAs(EntityDomainType<S1> treatTarget, @Nullable String alias, boolean fetch) {
+	@Nonnull
+	public <S1 extends S> SqmTreatedBagJoin<L, S, S1> treatAs(@Nonnull EntityDomainType<S1> treatTarget, @Nullable String alias, boolean fetch) {
 		//noinspection unchecked
 		return (SqmTreatedBagJoin<L, S, S1>) wrappedPath.treatAs( treatTarget, alias, fetch );
 	}

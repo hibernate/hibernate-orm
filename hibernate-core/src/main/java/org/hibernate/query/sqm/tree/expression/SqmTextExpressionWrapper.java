@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 
 /**
@@ -16,21 +17,25 @@ public class SqmTextExpressionWrapper
 		super( wrappedExpression );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTextExpression coalesce(Expression<? extends String> y) {
+	public SqmTextExpression coalesce(@Nonnull Expression<? extends String> y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmTextExpression coalesce(String y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTextExpression nullif(Expression<? extends String> y) {
+	public SqmTextExpression nullif(@Nonnull Expression<? extends String> y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().nullif( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmTextExpression nullif(String y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().nullif( this, y ) );

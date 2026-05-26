@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -134,37 +134,40 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 		return lateral;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable SqmFrom<?, Object> getLhs() {
+	public SqmFrom<?, Object> getLhs() {
 		// A derived-join has no LHS
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public SqmFunctionJoin<E> on(@Nullable JpaExpression<Boolean> restriction) {
 		return (SqmFunctionJoin<E>) super.on( restriction );
 	}
 
 	@Override
 	@Nonnull
-	public SqmFunctionJoin<E> on(@Nullable Expression<Boolean> restriction) {
+	public SqmFunctionJoin<E> on(@Nonnull Expression<Boolean> restriction) {
 		return (SqmFunctionJoin<E>) super.on( restriction );
 	}
 
 	@Override
-	public SqmFunctionJoin<E> on(JpaPredicate @Nullable... restrictions) {
+	@Nonnull
+	public SqmFunctionJoin<E> on(@Nullable JpaPredicate... restrictions) {
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
 
 	@Override
 	@Nonnull
-	public SqmFunctionJoin<E> on(BooleanExpression... restrictions) {
+	public SqmFunctionJoin<E> on(@Nonnull BooleanExpression... restrictions) {
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
 
 	@Override
 	@Nonnull
-	public SqmFunctionJoin<E> on(List<? extends Expression<Boolean>> restrictions) {
+	public SqmFunctionJoin<E> on(@Nonnull List<? extends Expression<Boolean>> restrictions) {
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
 
@@ -178,45 +181,53 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	// JPA
 
 	@Override
+	@Nonnull
 	public SqmCorrelation<Object, E> createCorrelation() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Nonnull
 	@Override
-	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(Class<S> treatTarget) {
+	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(@Nonnull Class<S> treatTarget) {
+		throw new UnsupportedOperationException( "Function joins can not be treated" );
+	}
+
+	@Nonnull
+	@Override
+	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		throw new UnsupportedOperationException( "Function joins can not be treated" );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(EntityDomainType<S> treatTarget) {
+	@Nonnull
+	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Function joins can not be treated" );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(Class<S> treatJavaType, @Nullable String alias) {
+	@Nonnull
+	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
 		throw new UnsupportedOperationException( "Function joins can not be treated" );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(EntityDomainType<S> treatTarget, @Nullable String alias) {
+	@Nonnull
+	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
 		throw new UnsupportedOperationException( "Function joins can not be treated" );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(Class<S> treatJavaType, @Nullable String alias, boolean fetched) {
-		throw new UnsupportedOperationException( "Function joins can not be treated" );
-	}
-
-	@Override
+	@Nonnull
 	public <S extends E> SqmTreatedJoin<Object, E, S> treatAs(
-			EntityDomainType<S> treatTarget,
+			@Nonnull EntityDomainType<S> treatTarget,
 			@Nullable String alias,
 			boolean fetched) {
 		throw new UnsupportedOperationException( "Function joins can not be treated" );
 	}
 
+	@Nullable
 	@Override
-	public @Nullable PersistentAttribute<? super @Nullable Object, ?> getAttribute() {
+	public PersistentAttribute<? super @org.checkerframework.checker.nullness.qual.Nullable Object, ?> getAttribute() {
 		// none
 		return null;
 	}

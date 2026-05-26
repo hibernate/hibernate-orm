@@ -4,8 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.SqmTextExpression;
@@ -52,21 +53,25 @@ public class SqmTextValuedSimplePath
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmTextExpression coalesce(Expression<? extends String> y) {
+	public SqmTextExpression coalesce(@Nonnull Expression<? extends String> y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmTextExpression coalesce(String y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmTextExpression nullif(Expression<? extends String> y) {
+	public SqmTextExpression nullif(@Nonnull Expression<? extends String> y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().nullif( this, y ) );
 	}
 
+	@Nonnull
 	@Override
 	public SqmTextExpression nullif(String y) {
 		return new SqmTextExpressionWrapper( nodeBuilder().nullif( this, y ) );

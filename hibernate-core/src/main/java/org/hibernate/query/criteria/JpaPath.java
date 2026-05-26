@@ -5,11 +5,11 @@
 package org.hibernate.query.criteria;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.spi.NavigablePath;
 
@@ -30,7 +30,8 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	/**
 	 * The source (think "left hand side") of this path
 	 */
-	@Nullable JpaPath<?> getLhs();
+	@Nullable
+	JpaPath<?> getLhs();
 
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
@@ -46,28 +47,35 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
 	 */
-	<S extends T> JpaPath<S> treatAs(EntityDomainType<S> treatJavaType);
+	@Nonnull
+	<S extends T> JpaPath<S> treatAs(@Nonnull EntityDomainType<S> treatJavaType);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
+	@Nullable
 	@Override
-	default @Nullable JpaPath<?> getParentPath() {
+	default JpaPath<?> getParentPath() {
 		return getLhs();
 	}
 
+	@Nonnull
 	@Override
-	<Y> JpaPath<Y> get(SingularAttribute<? super T, Y> attribute);
+	<Y> JpaPath<Y> get(@Nonnull SingularAttribute<? super T, Y> attribute);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<E>> JpaPluralExpression<C,E> get(PluralAttribute<? super T, C, E> collection);
+	<E, C extends Collection<E>> JpaPluralExpression<C,E> get(@Nonnull PluralAttribute<? super T, C, E> collection);
 
+	@Nonnull
 	@Override
-	<K, V, M extends Map<K, V>> JpaPluralExpression<M,V> get(MapAttribute<? super T, K, V> map);
+	<K, V, M extends Map<K, V>> JpaPluralExpression<M,V> get(@Nonnull MapAttribute<? super T, K, V> map);
 
+	@Nonnull
 	@Override
 	JpaExpression<Class<? extends T>> type();
 
+	@Nonnull
 	@Override
-	<Y> JpaPath<Y> get(String attributeName);
+	<Y> JpaPath<Y> get(@Nonnull String attributeName);
 }

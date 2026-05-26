@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 
 /**
@@ -76,6 +77,7 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 		return walker.visitBooleanExpressionPredicate( this );
 	}
 
+	@Nonnull
 	@Override
 	public List<Expression<Boolean>> getExpressions() {
 		final List<Expression<Boolean>> expressions = new ArrayList<>( 1 );

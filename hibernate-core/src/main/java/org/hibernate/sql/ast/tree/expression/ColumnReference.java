@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -39,6 +40,9 @@ public class ColumnReference implements Expression, Assignable {
 	private final boolean isFormula;
 	private final @Nullable String readExpression;
 	private final JdbcMapping jdbcMapping;
+	// For formula columns, the pattern used to swap the alias baked into the formula for the
+	// current render qualifier. Compiled once here instead of on every render. Null otherwise.
+	private final @Nullable Pattern formulaQualifierPattern;
 
 	public ColumnReference(TableReference tableReference, SelectableMapping selectableMapping) {
 		this(
@@ -134,6 +138,9 @@ public class ColumnReference implements Expression, Assignable {
 		this.isFormula = isFormula;
 		this.readExpression = customReadExpression;
 		this.jdbcMapping = jdbcMapping;
+		this.formulaQualifierPattern = isFormula
+				? Pattern.compile( "(\\b)(" + this.qualifier + "\\.)(\\b)" )
+				: null;
 	}
 
 	@Override
@@ -147,6 +154,19 @@ public class ColumnReference implements Expression, Assignable {
 
 	public String getColumnExpression() {
 		return columnExpression;
+	}
+
+	/**
+	 * The column expression of a formula, with the alias that was baked into the formula at
+	 * construction replaced by the {@code renderingQualifier} in use for the current render.
+	 * <p>
+	 * Reuses the {@link Pattern} compiled once per {@code ColumnReference} rather than
+	 * recompiling the regular expression on every render.
+	 */
+	public String getColumnExpression(@Nullable String renderingQualifier) {
+		assert formulaQualifierPattern != null : "Only formula column references support qualifier replacement";
+		return formulaQualifierPattern.matcher( columnExpression )
+				.replaceAll( renderingQualifier != null ? "$1" + renderingQualifier + ".$3" : "$1$3" );
 	}
 
 	public @Nullable String getReadExpression() {

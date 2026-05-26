@@ -7,6 +7,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.Collection;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -63,6 +64,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
+	@Nonnull
 	public CollectionClassification getCollectionClassification() {
 		return classification;
 	}
@@ -74,10 +76,9 @@ public abstract class AbstractPluralAttribute<D, C, E>
 
 	@Override
 	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
-		if ( CollectionPart.Nature.ELEMENT.getName().equals( name ) ) {
-			return elementPathSource;
-		}
-		return elementPathSource.findSubPathSource( name );
+		return CollectionPart.Nature.ELEMENT.getName().equals( name )
+				? elementPathSource
+				: elementPathSource.findSubPathSource( name );
 	}
 
 	@Override
@@ -103,22 +104,26 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
+	@Nonnull
 	public SimpleDomainType<E> getElementType() {
 		return getValueGraphType();
 	}
 
 	@Override
+	@Nonnull
 	public Class<C> getJavaType() {
 		return getAttributeJavaType().getJavaTypeClass();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
+	@Nonnull
 	public SimpleDomainType<E> getValueGraphType() {
 		return (SimpleDomainType<E>) super.getValueGraphType();
 	}
 
 	@Override
+	@Nullable
 	public SimpleDomainType<?> getKeyGraphType() {
 		return null;
 	}
@@ -136,11 +141,13 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
+	@Nonnull
 	public BindableType getBindableType() {
 		return PLURAL_ATTRIBUTE;
 	}
 
 	@Override
+	@Nonnull
 	public Class<E> getBindableJavaType() {
 		return getElementType().getJavaType();
 	}

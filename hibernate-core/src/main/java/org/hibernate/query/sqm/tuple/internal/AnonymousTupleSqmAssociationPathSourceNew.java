@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tuple.internal;
 
 import java.lang.reflect.Member;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.AttributeClassification;
@@ -58,23 +59,27 @@ public class AnonymousTupleSqmAssociationPathSourceNew<O, J>
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getBindableJavaType() {
 		return domainType.getJavaType();
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getJavaType() {
 		return domainType.getJavaType();
 	}
 
 	@Override
+	@Nonnull
 	public SimpleDomainType<J> getType() {
 		return domainType;
 	}
 
 	@Override
+	@Nonnull
 	public ManagedDomainType<O> getDeclaringType() {
-		return null;
+		throw new UnsupportedOperationException( "Anonymous tuple path source does not have a declaring type" );
 	}
 
 	@Override
@@ -98,11 +103,13 @@ public class AnonymousTupleSqmAssociationPathSourceNew<O, J>
 	}
 
 	@Override
+	@Nonnull
 	public JavaType<J> getAttributeJavaType() {
 		return domainType.getExpressibleJavaType();
 	}
 
 	@Override
+	@Nonnull
 	public AttributeClassification getAttributeClassification() {
 		return AttributeClassification.MANY_TO_ONE;
 	}
@@ -113,18 +120,21 @@ public class AnonymousTupleSqmAssociationPathSourceNew<O, J>
 	}
 
 	@Override
+	@Nonnull
 	public String getName() {
 		return getPathName();
 	}
 
 	@Override
+	@Nonnull
 	public PersistentAttributeType getPersistentAttributeType() {
 		return PersistentAttributeType.MANY_TO_ONE;
 	}
 
 	@Override
+	@Nonnull
 	public Member getJavaMember() {
-		return null;
+		throw new UnsupportedOperationException( "Anonymous tuple path source does not have a java member" );
 	}
 
 	@Override

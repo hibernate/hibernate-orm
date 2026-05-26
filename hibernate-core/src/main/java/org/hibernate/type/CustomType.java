@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -368,6 +369,7 @@ public class CustomType<J>
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getJavaType() {
 		return mappedJavaType.getJavaTypeClass();
 	}

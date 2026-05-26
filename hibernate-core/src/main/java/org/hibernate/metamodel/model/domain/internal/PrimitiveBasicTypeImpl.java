@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -17,6 +18,7 @@ public class PrimitiveBasicTypeImpl<J> extends BasicTypeImpl<J> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getJavaType() {
 		return primitiveClass;
 	}

@@ -13,6 +13,7 @@ import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -84,6 +85,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
+	@Nonnull
 	public Class<T> getJavaType() {
 		return BasicType.super.getJavaType();
 	}

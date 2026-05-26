@@ -4,6 +4,7 @@
  */
 package org.hibernate.graph.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
@@ -19,9 +20,11 @@ public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<
 	boolean appliesTo(EntityDomainType<?> entityType);
 
 	@Override
+	@Nonnull
 	RootGraphImplementor<J> makeCopy(boolean mutable);
 
 	@Override
+	@Nonnull
 	RootGraphImplementor<J> makeCopy(boolean mutable, String name);
 
 }

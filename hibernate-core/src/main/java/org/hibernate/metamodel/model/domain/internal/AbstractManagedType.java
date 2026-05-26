@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.CollectionAttribute;
 import jakarta.persistence.metamodel.ListAttribute;
@@ -26,7 +29,6 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -94,37 +96,43 @@ public abstract class AbstractManagedType<J>
 		return new InFlightAccessImpl();
 	}
 
+	@Nonnull
+	@Override
 	public JpaMetamodelImplementor getMetamodel() {
 		return metamodel;
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getJavaType() {
 		return super.getJavaType();
 	}
 
 	@Override
-	public @Nullable SqmManagedDomainType<? super J> getSuperType() {
+	@Nullable
+	public SqmManagedDomainType<? super J> getSuperType() {
 		return supertype;
 	}
 
 	@Override
+	@Nonnull
 	public Collection<? extends SqmManagedDomainType<? extends J>> getSubTypes() {
 		return subtypes;
 	}
 
 	@Override
-	public void addSubType(ManagedDomainType<? extends J> subType){
+	public void addSubType(@Nonnull ManagedDomainType<? extends J> subType){
 		subtypes.add( (SqmManagedDomainType<? extends J>) subType );
 	}
 
 	@Override
+	@Nonnull
 	public RepresentationMode getRepresentationMode() {
 		return representationMode;
 	}
 
 	@Override
-	public void visitAttributes(Consumer<? super PersistentAttribute<? super J, ?>> action) {
+	public void visitAttributes(@Nonnull Consumer<? super PersistentAttribute<? super J, ?>> action) {
 		visitDeclaredAttributes( action );
 		final var superType = getSuperType();
 		if ( superType != null ) {
@@ -133,7 +141,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public void visitDeclaredAttributes(Consumer<? super PersistentAttribute<J, ?>> action) {
+	public void visitDeclaredAttributes(@Nonnull Consumer<? super PersistentAttribute<J, ?>> action) {
 		declaredSingularAttributes.values().forEach( action );
 		if ( declaredPluralAttributes != null ) {
 			declaredPluralAttributes.values().forEach( action );
@@ -141,6 +149,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
+	@Nonnull
 	public Set<Attribute<? super J, ?>> getAttributes() {
 		final Set<Attribute<? super J, ?>> attributes = new LinkedHashSet<>( getDeclaredAttributes() );
 		if ( getSuperType() != null ) {
@@ -150,6 +159,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
+	@Nonnull
 	public Set<Attribute<J, ?>> getDeclaredAttributes() {
 		final boolean isDeclaredSingularAttributesEmpty = isEmpty( declaredSingularAttributes );
 		final boolean isDeclaredPluralAttributes = isEmpty( declaredPluralAttributes );
@@ -170,14 +180,16 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public SqmPersistentAttribute<? super J,?> getAttribute(String name) {
+	@Nonnull
+	public SqmPersistentAttribute<? super J,?> getAttribute(@Nonnull String name) {
 		final var attribute = findAttribute( name );
 		checkNotNull( "Attribute", attribute, name );
 		return attribute;
 	}
 
 	@Override
-	public @Nullable SqmPersistentAttribute<? super J,?> findAttribute(String name) {
+	@Nullable
+	public SqmPersistentAttribute<? super J,?> findAttribute(@Nonnull String name) {
 		final var attribute = findDeclaredAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
@@ -188,7 +200,8 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public @Nullable SqmPersistentAttribute<?, ?> findSubTypesAttribute(String name) {
+	@Nullable
+	public SqmPersistentAttribute<?, ?> findSubTypesAttribute(@Nonnull String name) {
 		final var attribute = findDeclaredAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
@@ -205,7 +218,8 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public @Nullable SqmPersistentAttribute<J,?> findDeclaredAttribute(String name) {
+	@Nullable
+	public SqmPersistentAttribute<J,?> findDeclaredAttribute(@Nonnull String name) {
 		// try singular attribute
 		final var attribute = declaredSingularAttributes.get( name );
 		if ( attribute != null ) {
@@ -221,7 +235,8 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public PersistentAttribute<J,?> getDeclaredAttribute(String name) {
+	@Nonnull
+	public PersistentAttribute<J,?> getDeclaredAttribute(@Nonnull String name) {
 		final var attribute = findDeclaredAttribute( name );
 		checkNotNull( "Attribute", attribute, name );
 		return attribute;
@@ -250,6 +265,7 @@ public abstract class AbstractManagedType<J>
 	// Singular attributes
 
 	@Override
+	@Nonnull
 	public Set<SingularAttribute<? super J, ?>> getSingularAttributes() {
 		final Set<SingularAttribute<? super J, ?>> attributes =
 				new HashSet<>( declaredSingularAttributes.values() );
@@ -260,19 +276,22 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
+	@Nonnull
 	public Set<SingularAttribute<J, ?>> getDeclaredSingularAttributes() {
 		return new HashSet<>( declaredSingularAttributes.values() );
 	}
 
 	@Override
-	public SingularPersistentAttribute<? super J, ?> getSingularAttribute(String name) {
+	@Nonnull
+	public SingularPersistentAttribute<? super J, ?> getSingularAttribute(@Nonnull String name) {
 		final var attribute = findSingularAttribute( name );
 		checkNotNull( "SingularAttribute", attribute, name );
 		return attribute;
 	}
 
 	@Override
-	public @Nullable SqmSingularPersistentAttribute<? super J, ?> findSingularAttribute(String name) {
+	@Nullable
+	public SqmSingularPersistentAttribute<? super J, ?> findSingularAttribute(@Nonnull String name) {
 		final var attribute = findDeclaredSingularAttribute( name );
 		return attribute == null && getSuperType() != null
 				? getSuperType().findSingularAttribute( name )
@@ -280,24 +299,28 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public <Y> SqmSingularPersistentAttribute<? super J, Y> getSingularAttribute(String name, Class<Y> type) {
+	@Nonnull
+	public <Y> SqmSingularPersistentAttribute<? super J, Y> getSingularAttribute(@Nonnull String name, @Nonnull Class<Y> type) {
 		return checkTypeForSingleAttribute( findSingularAttribute( name ), name, type );
 	}
 
 	@Override
-	public SingularAttribute<J, ?> getDeclaredSingularAttribute(String name) {
+	@Nonnull
+	public SingularAttribute<J, ?> getDeclaredSingularAttribute(@Nonnull String name) {
 		final var attribute = findDeclaredSingularAttribute( name );
 		checkNotNull( "SingularAttribute", attribute, name );
 		return attribute;
 	}
 
 	@Override
-	public @Nullable SqmSingularPersistentAttribute<J, ?> findDeclaredSingularAttribute(String name) {
+	@Nullable
+	public SqmSingularPersistentAttribute<J, ?> findDeclaredSingularAttribute(@Nonnull String name) {
 		return declaredSingularAttributes.get( name );
 	}
 
 	@Override
-	public <Y> SingularPersistentAttribute<J, Y> getDeclaredSingularAttribute(String name, Class<Y> javaType) {
+	@Nonnull
+	public <Y> SingularPersistentAttribute<J, Y> getDeclaredSingularAttribute(@Nonnull String name, @Nonnull Class<Y> javaType) {
 		return checkTypeForSingleAttribute( findDeclaredSingularAttribute( name ), name, javaType );
 	}
 
@@ -360,6 +383,7 @@ public abstract class AbstractManagedType<J>
 	// Plural attributes
 
 	@Override
+	@Nonnull
 	public Set<PluralAttribute<? super J, ?, ?>> getPluralAttributes() {
 		final Set<PluralAttribute<? super J, ?, ?>> attributes =
 				declaredPluralAttributes == null
@@ -372,6 +396,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
+	@Nonnull
 	public Set<PluralAttribute<J, ?, ?>> getDeclaredPluralAttributes() {
 		return declaredPluralAttributes == null
 				? emptySet()
@@ -379,7 +404,8 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public @Nullable SqmPluralPersistentAttribute<? super J, ?, ?> findPluralAttribute(String name) {
+	@Nullable
+	public SqmPluralPersistentAttribute<? super J, ?, ?> findPluralAttribute(@Nonnull String name) {
 		var attribute = findDeclaredPluralAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
@@ -393,7 +419,8 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public @Nullable SqmPluralPersistentAttribute<J, ?, ?> findDeclaredPluralAttribute(String name) {
+	@Nullable
+	public SqmPluralPersistentAttribute<J, ?, ?> findDeclaredPluralAttribute(@Nonnull String name) {
 		return declaredPluralAttributes == null ? null : declaredPluralAttributes.get( name );
 	}
 
@@ -419,7 +446,8 @@ public abstract class AbstractManagedType<J>
 	// Generic attributes
 
 	@Override
-	public @Nullable SqmPersistentAttribute<? super J, ?> findConcreteGenericAttribute(String name) {
+	@Nullable
+	public SqmPersistentAttribute<? super J, ?> findConcreteGenericAttribute(@Nonnull String name) {
 		final var attribute = findDeclaredConcreteGenericAttribute( name );
 		return attribute == null && getSuperType() != null
 				? getSuperType().findDeclaredConcreteGenericAttribute( name )
@@ -427,7 +455,8 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public @Nullable SqmPersistentAttribute<J, ?> findDeclaredConcreteGenericAttribute(String name) {
+	@Nullable
+	public SqmPersistentAttribute<J, ?> findDeclaredConcreteGenericAttribute(@Nonnull String name) {
 		return declaredConcreteGenericAttributes == null ? null : declaredConcreteGenericAttributes.get( name );
 	}
 
@@ -437,12 +466,14 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public BagPersistentAttribute<? super J, ?> getCollection(String name) {
+	@Nonnull
+	public BagPersistentAttribute<? super J, ?> getCollection(@Nonnull String name) {
 		var attribute = findPluralAttribute( name );
 		if ( attribute == null && getSuperType() != null ) {
 			attribute = getSuperType().findPluralAttribute( name );
 		}
 		basicCollectionCheck( attribute, name );
+		assert attribute != null;
 		return (BagPersistentAttribute<J, ?>) attribute;
 	}
 
@@ -455,15 +486,18 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings( "unchecked")
-	public CollectionAttribute<J, ?> getDeclaredCollection(String name) {
+	@Nonnull
+	public CollectionAttribute<J, ?> getDeclaredCollection(@Nonnull String name) {
 		final var attribute = findDeclaredPluralAttribute( name );
 		basicCollectionCheck( attribute, name );
+		assert attribute != null;
 		return ( CollectionAttribute<J, ?> ) attribute;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E> BagPersistentAttribute<? super J, E> getCollection(String name, Class<E> elementType) {
+	@Nonnull
+	public <E> BagPersistentAttribute<? super J, E> getCollection(@Nonnull String name, @Nonnull Class<E> elementType) {
 		final var attribute = findPluralAttribute( name );
 		checkCollectionElementType( attribute, name, elementType );
 		return (BagPersistentAttribute<? super J, E>) attribute;
@@ -476,7 +510,8 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E> CollectionAttribute<J, E> getDeclaredCollection(String name, Class<E> elementType) {
+	@Nonnull
+	public <E> CollectionAttribute<J, E> getDeclaredCollection(@Nonnull String name, @Nonnull Class<E> elementType) {
 		final var attribute = findDeclaredPluralAttribute( name );
 		checkCollectionElementType( attribute, name, elementType );
 		return (CollectionAttribute<J, E>) attribute;
@@ -488,9 +523,11 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SetPersistentAttribute<? super J, ?> getSet(String name) {
+	@Nonnull
+	public SetPersistentAttribute<? super J, ?> getSet(@Nonnull String name) {
 		final var attribute = findPluralAttribute( name );
 		basicSetCheck( attribute, name );
+		assert attribute != null;
 		return (SetPersistentAttribute<? super J, ?>) attribute;
 	}
 
@@ -503,15 +540,18 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings( "unchecked")
-	public SetPersistentAttribute<J, ?> getDeclaredSet(String name) {
+	@Nonnull
+	public SetPersistentAttribute<J, ?> getDeclaredSet(@Nonnull String name) {
 		final var attribute = findDeclaredPluralAttribute( name );
 		basicSetCheck( attribute, name );
+		assert attribute != null;
 		return (SetPersistentAttribute<J, ?>) attribute;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E> SetAttribute<? super J, E> getSet(String name, Class<E> elementType) {
+	@Nonnull
+	public <E> SetAttribute<? super J, E> getSet(@Nonnull String name, @Nonnull Class<E> elementType) {
 		final var attribute = findPluralAttribute( name );
 		checkSetElementType( attribute, name, elementType );
 		return (SetAttribute<? super J, E>) attribute;
@@ -524,7 +564,8 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E> SetAttribute<J, E> getDeclaredSet(String name, Class<E> elementType) {
+	@Nonnull
+	public <E> SetAttribute<J, E> getDeclaredSet(@Nonnull String name, @Nonnull Class<E> elementType) {
 		final var attribute = findDeclaredPluralAttribute( name );
 		checkSetElementType( attribute, name, elementType );
 		return (SetAttribute<J, E>) attribute;
@@ -536,9 +577,11 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public ListPersistentAttribute<? super J, ?> getList(String name) {
+	@Nonnull
+	public ListPersistentAttribute<? super J, ?> getList(@Nonnull String name) {
 		final var attribute = findPluralAttribute( name );
 		basicListCheck( attribute, name );
+		assert attribute != null;
 		return (ListPersistentAttribute<? super J, ?>) attribute;
 	}
 
@@ -551,15 +594,18 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public ListPersistentAttribute<J, ?> getDeclaredList(String name) {
+	@Nonnull
+	public ListPersistentAttribute<J, ?> getDeclaredList(@Nonnull String name) {
 		final var attribute = findDeclaredPluralAttribute( name );
 		basicListCheck( attribute, name );
+		assert attribute != null;
 		return (ListPersistentAttribute<J, ?>) attribute;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E> ListAttribute<? super J, E> getList(String name, Class<E> elementType) {
+	@Nonnull
+	public <E> ListAttribute<? super J, E> getList(@Nonnull String name, @Nonnull Class<E> elementType) {
 		final var attribute = findPluralAttribute( name );
 		checkListElementType( attribute, name, elementType );
 		return ( ListAttribute<? super J, E> ) attribute;
@@ -571,7 +617,8 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <E> ListAttribute<J, E> getDeclaredList(String name, Class<E> elementType) {
+	@Nonnull
+	public <E> ListAttribute<J, E> getDeclaredList(@Nonnull String name, @Nonnull Class<E> elementType) {
 		final var attribute = findDeclaredPluralAttribute( name );
 		checkListElementType( attribute, name, elementType );
 		return ( ListAttribute<J, E> ) attribute;
@@ -583,9 +630,11 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public MapPersistentAttribute<? super J, ?, ?> getMap(String name) {
+	@Nonnull
+	public MapPersistentAttribute<? super J, ?, ?> getMap(@Nonnull String name) {
 		final var attribute = findPluralAttribute( name );
 		basicMapCheck( attribute, name );
+		assert attribute != null;
 		return (MapPersistentAttribute<? super J, ?, ?>) attribute;
 	}
 
@@ -598,15 +647,21 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public MapPersistentAttribute<J, ?, ?> getDeclaredMap(String name) {
+	@Nonnull
+	public MapPersistentAttribute<J, ?, ?> getDeclaredMap(@Nonnull String name) {
 		final var attribute = findDeclaredPluralAttribute( name );
 		basicMapCheck( attribute, name );
+		assert attribute != null;
 		return (MapPersistentAttribute<J, ?, ?>) attribute;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <K, V> MapAttribute<? super J, K, V> getMap(String name, Class<K> keyType, Class<V> valueType) {
+	@Nonnull
+	public <K, V> MapAttribute<? super J, K, V> getMap(
+			@Nonnull String name,
+			@Nonnull Class<K> keyType,
+			@Nonnull Class<V> valueType) {
 		final var attribute = findPluralAttribute( name );
 		checkMapValueType( attribute, name, valueType );
 		final var mapAttribute = (MapAttribute<? super J, K, V>) attribute;
@@ -626,7 +681,11 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <K, V> MapAttribute<J, K, V> getDeclaredMap(String name, Class<K> keyType, Class<V> valueType) {
+	@Nonnull
+	public <K, V> MapAttribute<J, K, V> getDeclaredMap(
+			@Nonnull String name,
+			@Nonnull Class<K> keyType,
+			@Nonnull Class<V> valueType) {
 		final var attribute = findDeclaredPluralAttribute( name );
 		checkMapValueType( attribute, name, valueType );
 		final var mapAttribute = (MapAttribute<J, K, V>) attribute;

@@ -20,7 +20,8 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -162,6 +163,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public EntityDomainType<?> entity(String entityName) {
 		final EntityDomainType<?> entityType = findEntityType( entityName );
 		if ( entityType == null ) {
@@ -247,6 +249,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public <X> ManagedDomainType<X> managedType(Class<X> cls) {
 		final var type = findManagedType( cls );
 		if ( type == null ) {
@@ -266,6 +269,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public <X> EntityDomainType<X> entity(Class<X> cls) {
 		final var entityType = findEntityType( cls );
 		if ( entityType == null ) {
@@ -283,6 +287,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public <X> EmbeddableDomainType<X> embeddable(Class<X> cls) {
 		final var embeddableType = findEmbeddableType( cls );
 		if ( embeddableType == null ) {
@@ -301,11 +306,13 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public Set<ManagedType<?>> getManagedTypes() {
 		return new HashSet<>( getAllManagedTypes() );
 	}
 
 	@Override
+	@Nonnull
 	public Set<EntityType<?>> getEntities() {
 		return getAllManagedTypes().stream()
 				.filter( EntityType.class::isInstance )
@@ -314,6 +321,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public Set<EmbeddableType<?>> getEmbeddables() {
 		return getAllManagedTypes().stream()
 				.filter( EmbeddableType.class::isInstance )

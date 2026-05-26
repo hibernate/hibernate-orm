@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -29,6 +30,7 @@ public class CustomMutabilityConvertedPrimitiveBasicTypeImpl<J> extends CustomMu
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getJavaType() {
 		return primitiveClass;
 	}

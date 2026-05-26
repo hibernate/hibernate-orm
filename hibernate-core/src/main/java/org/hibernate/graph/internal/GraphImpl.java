@@ -4,10 +4,13 @@
  */
 package org.hibernate.graph.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.SubGraph;
@@ -24,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -61,10 +65,12 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
+	@Nonnull
 	public final ManagedDomainType<J> getGraphedType() {
 		return managedType;
 	}
 	@Override
+	@Nonnull
 	public List<jakarta.persistence.AttributeNode<?>> getAttributeNodes() {
 		//noinspection unchecked,rawtypes
 		return (List) getAttributeNodeList();
@@ -72,47 +78,65 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 
 	@Override
+	@Nonnull
 	public List<AttributeNodeImplementor<?,?,?>> getAttributeNodeList() {
 		return attributeNodes == null ? emptyList() : new ArrayList<>( attributeNodes.values() );
 	}
 
 	@Override
+	@Nonnull
 	public Map<PersistentAttribute<? super J, ?>, AttributeNodeImplementor<?,?,?>> getNodes() {
 		return attributeNodes == null ? emptyMap() : new HashMap<>( attributeNodes );
 	}
 
 	@Override
-	public <Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(String attributeName) {
+	public boolean hasAttributeNode(@NonNull String attributeName) {
 		final var attribute = findAttributeInSupertypes( attributeName );
 		if ( attribute == null ) {
 			throw new IllegalArgumentException( "Unknown attribute: " + attributeName );
 		}
-		if ( attributeNodes == null ) {
-			return null;
-		}
-		else {
-			final var node = attributeNodes.get( attribute );
-			@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
-			final var castNode = (AttributeNodeImplementor<Y, ?, ?>) node;
-			return castNode;
-		}
+		return attributeNodes != null
+			&& attributeNodes.containsKey( attribute );
 	}
 
 	@Override
-	public <Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(Attribute<? super J, Y> attribute) {
-		if ( attributeNodes == null ) {
-			return null;
-		}
-		else {
-			final var node = attributeNodes.get( (PersistentAttribute<? super J, ?>) attribute );
-			@SuppressWarnings("unchecked")
-			final var castNode = (AttributeNodeImplementor<Y, ?, ?>) node;
-			return castNode;
-		}
+	public boolean hasAttributeNode(@NonNull Attribute<? super J, ?> attribute) {
+		return attributeNodes != null
+			&& attributeNodes.containsKey( (PersistentAttribute<? super J, ?>) attribute );
 	}
 
 	@Override
-	public <AJ> AttributeNodeImplementor<AJ,?,?> addAttributeNode(String attributeName) {
+	@Nonnull
+	public <Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(@Nonnull String attributeName) {
+		final var attribute = findAttributeInSupertypes( attributeName );
+		if ( attribute == null ) {
+			throw new IllegalArgumentException( "Unknown attribute: " + attributeName );
+		}
+		final var node = attributeNodes == null ? null : attributeNodes.get( attribute );
+		if ( node == null ) {
+			throw new NoSuchElementException( "No node for attribute: " + attributeName );
+		}
+		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+		final var castNode = (AttributeNodeImplementor<Y, ?, ?>) node;
+		return castNode;
+	}
+
+	@Override
+	@Nonnull
+	public <Y> AttributeNodeImplementor<Y,?,?> getAttributeNode(@Nonnull Attribute<? super J, Y> attribute) {
+		final var node = attributeNodes == null ? null
+				: attributeNodes.get( (PersistentAttribute<? super J, ?>) attribute );
+		if ( node == null ) {
+			throw new NoSuchElementException( "No node for attribute: " + attribute );
+		}
+		@SuppressWarnings("unchecked")
+		final var castNode = (AttributeNodeImplementor<Y, ?, ?>) node;
+		return castNode;
+	}
+
+	@Override
+	@Nonnull
+	public <AJ> AttributeNodeImplementor<AJ,?,?> addAttributeNode(@Nonnull String attributeName) {
 		// current JPA Javadoc has an error: add can't simply cancel
 		// an existing removal, since this method has to return a node
 		final var node = findOrCreateAttributeNode( attributeName );
@@ -123,7 +147,8 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public <Y> AttributeNodeImplementor<Y,?,?> addAttributeNode(Attribute<? super J, Y> attribute) {
+	@Nonnull
+	public <Y> AttributeNodeImplementor<Y,?,?> addAttributeNode(@Nonnull Attribute<? super J, Y> attribute) {
 		// current JPA Javadoc has an error: add can't simply cancel
 		// an existing removal, since this method has to return a node
 		final var node = findOrCreateAttributeNode( (PersistentAttribute<? super J, Y>) attribute );
@@ -146,7 +171,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public void removeAttributeNode(String attributeName) {
+	public void removeAttributeNode(@Nonnull String attributeName) {
 		verifyMutability();
 		// current JPA Javadoc has an error: remove can't simply cancel
 		// an existing removal, since for a load graph we might need to
@@ -155,13 +180,13 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public void removeAttributeNode(Attribute<? super J, ?> attribute) {
+	public void removeAttributeNode(@Nonnull Attribute<? super J, ?> attribute) {
 		verifyMutability();
 		removeAttributeNode( attribute.getName() );
 	}
 
 	@Override
-	public void removeAttributeNodes(Attribute.PersistentAttributeType nodeType) {
+	public void removeAttributeNodes(@Nonnull Attribute.PersistentAttributeType nodeType) {
 		verifyMutability();
 		for ( var typeAttribute : managedType.getAttributes() ) {
 			if ( typeAttribute.getPersistentAttributeType() == nodeType ) {
@@ -211,7 +236,8 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public AttributeNodeImplementor<?,?,?> findOrCreateAttributeNode(String attributeName) {
+	@Nonnull
+	public AttributeNodeImplementor<?,?,?> findOrCreateAttributeNode(@Nonnull String attributeName) {
 		final var attribute = getAttribute( attributeName );
 		final var persistentAttribute = (PersistentAttribute<? super J, ?>) attribute;
 		return findOrCreateAttributeNode( persistentAttribute );
@@ -232,7 +258,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public AttributeNodeImplementor<?,?,?> findNode(String attributeName) {
+	public AttributeNodeImplementor<?,?,?> findNode(@Nonnull String attributeName) {
 		final var attribute = findAttributeInSupertypes( attributeName );
 		if ( attribute != null ) {
 			final var node = getExistingNode( attribute );
@@ -254,12 +280,12 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public AttributeNodeImplementor<?,?,?> getExistingNode(PersistentAttribute<?, ?> attribute) {
+	public AttributeNodeImplementor<?,?,?> getExistingNode(@Nonnull PersistentAttribute<?, ?> attribute) {
 		return attributeNodes == null ? null : attributeNodes.get( attribute );
 	}
 
 	@Override
-	public AttributeNodeImplementor<?,?,?> getExistingNode(String attributeName) {
+	public AttributeNodeImplementor<?,?,?> getExistingNode(@Nonnull String attributeName) {
 		return attributeNodes == null ? null : attributeNodes.get( managedType.getAttribute( attributeName ) );
 	}
 
@@ -336,7 +362,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public void merge(GraphImplementor<J> graph) {
+	public void merge(@Nullable GraphImplementor<J> graph) {
 		if ( graph != null ) {
 			verifyMutability();
 			mergeInternal( graph );
@@ -344,7 +370,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public void mergeInternal(GraphImplementor<J> graph) {
+	public void mergeInternal(@Nonnull GraphImplementor<J> graph) {
 		// skip verifyMutability()
 		graph.getNodes().forEach( this::mergeNode );
 		graph.getTreatedSubgraphs().values().forEach( this::mergeGraph );
@@ -388,7 +414,8 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 
 
 	@Override
-	public <X> SubGraphImplementor<X> addSubgraph(String attributeName) {
+	@Nonnull
+	public <X> SubGraphImplementor<X> addSubgraph(@Nonnull String attributeName) {
 		final var valueSubgraph = findOrCreateAttributeNode( attributeName ).addValueSubgraph();
 		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
 		final var castSubgraph = (SubGraphImplementor<X>) valueSubgraph;
@@ -396,23 +423,29 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public <X> SubGraphImplementor<X> addSubgraph(String attributeName, Class<X> type) {
+	@Nonnull
+	public <X> SubGraphImplementor<X> addSubgraph(@Nonnull String attributeName, @Nonnull Class<X> type) {
 		return addSubgraph( attributeName ).addTreatedSubgraph( type );
 	}
 
 	@Override
-	public <X> SubGraphImplementor<X> addSubgraph(Attribute<? super J, X> attribute) {
+	@Nonnull
+	public <X> SubGraphImplementor<X> addSubgraph(@Nonnull Attribute<? super J, X> attribute) {
 		return findOrCreateAttributeNode( (PersistentAttribute<? super J, X>) attribute )
 				.addSingularSubgraph();
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addTreatedSubgraph(Attribute<? super J, ? super AJ> attribute, ManagedType<AJ> type) {
+	@Nonnull
+	public <AJ> SubGraphImplementor<AJ> addTreatedSubgraph(
+			@Nonnull Attribute<? super J, ? super AJ> attribute,
+			@Nonnull ManagedType<AJ> type) {
 		return addSubgraph( attribute ).addTreatedSubgraph( type );
 	}
 
 	@Override
-	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName) {
+	@Nonnull
+	public <X> SubGraphImplementor<X> addElementSubgraph(@Nonnull String attributeName) {
 		final var elementSubgraph = findOrCreateAttributeNode( attributeName ).addElementSubgraph();
 		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
 		final var castSubgraph = (SubGraphImplementor<X>) elementSubgraph;
@@ -420,28 +453,37 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName, Class<X> type) {
+	@Nonnull
+	public <X> SubGraphImplementor<X> addElementSubgraph(@Nonnull String attributeName, @Nonnull Class<X> type) {
 		return addElementSubgraph( attributeName ).addTreatedSubgraph( type );
 	}
 
 	@Override
-	public <E> SubGraphImplementor<E> addElementSubgraph(PluralAttribute<? super J, ?, E> attribute) {
+	@Nonnull
+	public <E> SubGraphImplementor<E> addElementSubgraph(@Nonnull PluralAttribute<? super J, ?, E> attribute) {
 		return findOrCreateAttributeNode( (PluralPersistentAttribute<? super J, ?, E>) attribute )
 				.addElementSubgraph();
 	}
 
 	@Override
-	public <E> SubGraphImplementor<E> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super E> attribute, Class<E> type) {
+	@Nonnull
+	public <E> SubGraphImplementor<E> addTreatedElementSubgraph(
+			@Nonnull PluralAttribute<? super J, ?, ? super E> attribute,
+			@Nonnull Class<E> type) {
 		return addElementSubgraph( attribute ).addTreatedSubgraph( type );
 	}
 
 	@Override
-	public <AJ> SubGraph<AJ> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super AJ> attribute, ManagedType<AJ> type) {
+	@Nonnull
+	public <AJ> SubGraph<AJ> addTreatedElementSubgraph(
+			@Nonnull PluralAttribute<? super J, ?, ? super AJ> attribute,
+			@Nonnull ManagedType<AJ> type) {
 		return addElementSubgraph( attribute ).addTreatedSubgraph( type );
 	}
 
 	@Override
-	public <X> SubGraphImplementor<X> addKeySubgraph(String attributeName) {
+	@Nonnull
+	public <X> SubGraphImplementor<X> addKeySubgraph(@Nonnull String attributeName) {
 		final var keySubgraph = findOrCreateAttributeNode( attributeName ).addKeySubgraph();
 		@SuppressWarnings("unchecked") // The API is unsafe by nature
 		final var castSubgraph = (SubGraphImplementor<X>) keySubgraph;
@@ -449,35 +491,45 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public <X> SubGraphImplementor<X> addKeySubgraph(String attributeName, Class<X> type) {
+	@Nonnull
+	public <X> SubGraphImplementor<X> addKeySubgraph(@Nonnull String attributeName, @Nonnull Class<X> type) {
 		return addKeySubgraph( attributeName ).addTreatedSubgraph( type );
 	}
 
 	@Override
-	public <K> SubGraphImplementor<K> addMapKeySubgraph(MapAttribute<? super J, K, ?> attribute) {
+	@Nonnull
+	public <K> SubGraphImplementor<K> addMapKeySubgraph(@Nonnull MapAttribute<? super J, K, ?> attribute) {
 		return findOrCreateAttributeNode( (MapPersistentAttribute<? super J, K, ?>) attribute )
 				.addKeySubgraph();
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super AJ, ?> attribute, ManagedType<AJ> type) {
+	@Nonnull
+	public <AJ> SubGraphImplementor<AJ> addTreatedMapKeySubgraph(
+			@Nonnull MapAttribute<? super J, ? super AJ, ?> attribute,
+			@Nonnull ManagedType<AJ> type) {
 		return addMapKeySubgraph( attribute ).addTreatedSubgraph( type );
 	}
 
 	@Override
+	@Nonnull
 	public <K> SubGraphImplementor<K> addTreatedMapKeySubgraph(
-			MapAttribute<? super J, ? super K, ?> attribute,
-			Class<K> type) {
+			@Nonnull MapAttribute<? super J, ? super K, ?> attribute,
+			@Nonnull Class<K> type) {
 		return addMapKeySubgraph( attribute ).addTreatedSubgraph( type );
 	}
 
 	@Override
-	public <Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
+	@Nonnull
+	public <Y> SubGraphImplementor<Y> addTreatedSubgraph(
+			@Nonnull Attribute<? super J, ? super Y> attribute,
+			@Nonnull Class<Y> type) {
 		return addSubgraph( attribute ).addTreatedSubgraph( type );
 	}
 
 	@Override
-	public <S extends J> SubGraphImplementor<S> addTreatedSubgraph(ManagedType<S> type) {
+	@Nonnull
+	public <S extends J> SubGraphImplementor<S> addTreatedSubgraph(@Nonnull ManagedType<S> type) {
 		verifyMutability();
 		if ( getGraphedType().equals( type ) ) {
 			//noinspection unchecked
@@ -498,11 +550,13 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public <S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> type) {
+	@Nonnull
+	public <S extends J> SubGraphImplementor<S> addTreatedSubgraph(@Nonnull Class<S> type) {
 		return addTreatedSubgraph( getGraphedType().getMetamodel().managedType( type ) );
 	}
 
 	@Override
+	@Nonnull
 	public Map<Class<? extends J>, SubGraphImplementor<? extends J>> getTreatedSubgraphs() {
 		return treatedSubgraphs == null ? emptyMap() : unmodifiableMap( treatedSubgraphs );
 	}

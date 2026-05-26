@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -110,11 +111,13 @@ public class BasicSqmPathSource<J>
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return BASIC;
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getJavaType() {
 		return getExpressibleJavaType().getJavaTypeClass();
 	}

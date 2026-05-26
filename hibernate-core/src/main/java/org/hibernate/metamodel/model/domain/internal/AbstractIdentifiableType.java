@@ -11,11 +11,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -112,6 +113,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
+	@Nonnull
 	public <Y> SqmSingularPersistentAttribute<? super J, Y> getId(Class<Y> javaType) {
 		ensureNoIdClass();
 		final var id = findIdAttribute();
@@ -163,7 +165,8 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public <Y> SqmSingularPersistentAttribute<J, Y> getDeclaredId(Class<Y> javaType) {
+	@Nonnull
+	public <Y> SqmSingularPersistentAttribute<J, Y> getDeclaredId(@Nonnull Class<Y> javaType) {
 		ensureNoIdClass();
 		if ( id == null ) {
 			throw new IllegalArgumentException( "The id attribute is not declared on this type [" + getTypeName() + "]" );
@@ -175,6 +178,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
+	@Nonnull
 	public SimpleDomainType<?> getIdType() {
 		final var id = findIdAttribute();
 		if ( id != null ) {
@@ -190,7 +194,7 @@ public abstract class AbstractIdentifiableType<J>
 					return simpleDomainType;
 				}
 			}
-			return null;
+			throw new IllegalStateException( "Unable to locate id type for type [" + getTypeName() + "]" );
 		}
 	}
 
@@ -211,6 +215,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
+	@Nonnull
 	public Set<SingularAttribute<? super J, ?>> getIdClassAttributes() {
 		if ( !hasIdClass() ) {
 			throw new IllegalArgumentException( "This class [" + getJavaType() + "] does not define an IdClass" );
@@ -225,7 +230,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public void visitIdClassAttributes(Consumer<SingularPersistentAttribute<? super J, ?>> attributeConsumer) {
+	public void visitIdClassAttributes(@Nonnull Consumer<SingularPersistentAttribute<? super J, ?>> attributeConsumer) {
 		if ( nonAggregatedIdAttributes != null ) {
 			nonAggregatedIdAttributes.forEach( attributeConsumer );
 		}
@@ -248,23 +253,25 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public <Y> SingularPersistentAttribute<? super J, Y> getVersion(Class<Y> javaType) {
+	@Nonnull
+	public <Y> SingularPersistentAttribute<? super J, Y> getVersion(@Nonnull Class<Y> javaType) {
 		if ( hasVersionAttribute() ) {
 			final var version = findVersionAttribute();
 			if ( version != null ) {
 				checkType( version, javaType );
+				@SuppressWarnings("unchecked") // safe, we just checked
+				final var castVersion = (SingularPersistentAttribute<? super J, Y>) version;
+				return castVersion;
 			}
-			@SuppressWarnings("unchecked") // safe, we just checked
-			final var castVersion = (SingularPersistentAttribute<? super J, Y>) version;
-			return castVersion;
 		}
-		else {
-			return null;
-		}
+		throw new IllegalArgumentException(
+				"The version attribute is not declared or inherited by this type [" + getJavaType() + "]"
+		);
 	}
 
 	@Override
-	public @Nullable SqmSingularPersistentAttribute<? super J, ?> findVersionAttribute() {
+	@Nullable
+	public SqmSingularPersistentAttribute<? super J, ?> findVersionAttribute() {
 		if ( versionAttribute != null ) {
 			return versionAttribute;
 		}
@@ -277,7 +284,8 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public @Nullable List<? extends PersistentAttribute<? super J, ?>> findNaturalIdAttributes() {
+	@Nullable
+	public List<? extends PersistentAttribute<? super J, ?>> findNaturalIdAttributes() {
 		if ( naturalIdAttributes != null ) {
 			return naturalIdAttributes;
 		}
@@ -290,7 +298,8 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public <Y> SingularPersistentAttribute<J, Y> getDeclaredVersion(Class<Y> javaType) {
+	@Nonnull
+	public <Y> SingularPersistentAttribute<J, Y> getDeclaredVersion(@Nonnull Class<Y> javaType) {
 		checkDeclaredVersion();
 		checkType( versionAttribute, javaType );
 		@SuppressWarnings("unchecked") // safe, we just checked

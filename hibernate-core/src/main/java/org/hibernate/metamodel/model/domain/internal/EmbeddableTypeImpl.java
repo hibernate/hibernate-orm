@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -53,11 +54,13 @@ public class EmbeddableTypeImpl<J>
 	}
 
 	@Override
+	@Nonnull
 	public Class<J> getBindableJavaType() {
 		return getJavaType();
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceType getPersistenceType() {
 		return EMBEDDABLE;
 	}
@@ -77,12 +80,13 @@ public class EmbeddableTypeImpl<J>
 	}
 
 	@Override
+	@Nonnull
 	public Collection<? extends SqmEmbeddableDomainType<? extends J>> getSubTypes() {
 		return subtypes;
 	}
 
 	@Override
-	public void addSubType(ManagedDomainType<? extends J> subType) {
+	public void addSubType(@Nonnull ManagedDomainType<? extends J> subType) {
 		super.addSubType( subType );
 		if ( subType instanceof SqmEmbeddableDomainType<? extends J> entityDomainType ) {
 			subtypes.add( entityDomainType );
@@ -129,6 +133,7 @@ public class EmbeddableTypeImpl<J>
 	}
 
 	@Override
+	@Nonnull
 	public BindableType getBindableType() {
 		return SINGULAR_ATTRIBUTE;
 	}

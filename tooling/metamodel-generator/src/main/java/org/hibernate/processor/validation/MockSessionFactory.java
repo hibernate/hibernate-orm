@@ -955,7 +955,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public @Nullable SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
+		public @Nullable SqmPersistentAttribute<X,?> findDeclaredAttribute(@Nonnull String name) {
 			final String typeName = getTypeName();
 			return isFieldDefined(typeName, name)
 					? createAttribute(name, typeName, propertyType(typeName, name), this)
@@ -1065,7 +1065,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public @Nullable SqmPersistentAttribute<? super X, ?> findAttribute(String name) {
+		public @Nullable SqmPersistentAttribute<? super X, ?> findAttribute(@Nonnull String name) {
 			final var attribute = super.findAttribute(name);
 			if (attribute != null) {
 				return attribute;
@@ -1077,7 +1077,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public @Nullable SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
+		public @Nullable SqmPersistentAttribute<X,?> findDeclaredAttribute(@Nonnull String name) {
 			final String entityName = getHibernateEntityName();
 			return isAttributeDefined(entityName, name)
 					? createAttribute(name, entityName, getReferencedPropertyType(entityName, name), this)
@@ -1244,7 +1244,7 @@ public abstract class MockSessionFactory
 		final JavaType<T> javaType = new UnknownBasicJavaType<>(null, compositeType.getReturnedClassName());
 		return new EmbeddableTypeImpl<>( javaType, null, null, true, metamodel.getJpaMetamodel() ) {
 			@Override
-			public @Nullable SqmPersistentAttribute<T, ?> findAttribute(String name) {
+			public @Nullable SqmPersistentAttribute<T, ?> findAttribute(@Nonnull String name) {
 				return createAttribute(
 						name,
 						entityName,

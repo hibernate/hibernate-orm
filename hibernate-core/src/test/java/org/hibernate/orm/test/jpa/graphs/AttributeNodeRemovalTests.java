@@ -24,9 +24,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 
+import java.util.NoSuchElementException;
+
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Steve Ebersole
@@ -266,8 +269,10 @@ public class AttributeNodeRemovalTests {
 		assertThat( entityGraph.getAttributeNodes() ).isEmpty();
 		assertThat( entityGraph.getAttributeNodeList() ).isEmpty();
 		assertThat( entityGraph.getNodes() ).isEmpty();
-		assertThat( entityGraph.getAttributeNode( "author" ) ).isNull();
-		assertThat( entityGraph.getAttributeNode( "forum" ) ).isNull();
+		assertThatThrownBy( () -> entityGraph.getAttributeNode( "author" ) )
+				.isInstanceOf( NoSuchElementException.class );
+		assertThatThrownBy( () -> entityGraph.getAttributeNode( "forum" ) )
+				.isInstanceOf( NoSuchElementException.class );
 		assertThat( entityGraph.findNode( "author" ) ).isNull();
 		assertThat( entityGraph.findNode( "forum" ) ).isNull();
 
@@ -277,7 +282,8 @@ public class AttributeNodeRemovalTests {
 		assertThat( entityGraph.getAttributeNodeList() ).isNotEmpty();
 		assertThat( entityGraph.getNodes() ).isNotEmpty();
 		assertThat( entityGraph.getAttributeNode( "author" ) ).isNotNull();
-		assertThat( entityGraph.getAttributeNode( "forum" ) ).isNull();
+		assertThatThrownBy( () -> entityGraph.getAttributeNode( "forum" ) )
+				.isInstanceOf( NoSuchElementException.class );
 		assertThat( entityGraph.findNode( "author" ) ).isNotNull();
 		assertThat( entityGraph.findNode( "author" ).isRemoved() ).isFalse();
 		assertThat( entityGraph.findNode( "author" ).getOptions() )
@@ -290,7 +296,8 @@ public class AttributeNodeRemovalTests {
 		assertThat( entityGraph.getAttributeNodeList() ).isNotEmpty();
 		assertThat( entityGraph.getNodes() ).isNotEmpty();
 		assertThat( entityGraph.getAttributeNode( "author" ) ).isNotNull();
-		assertThat( entityGraph.getAttributeNode( "forum" ) ).isNull();
+		assertThatThrownBy( () -> entityGraph.getAttributeNode( "forum" ) )
+				.isInstanceOf( NoSuchElementException.class );
 		assertThat( entityGraph.findNode( "author" ) ).isNotNull();
 		assertThat( entityGraph.findNode( "author" ).isRemoved() ).isTrue();
 		assertThat( entityGraph.findNode( "author" ).getOptions() )

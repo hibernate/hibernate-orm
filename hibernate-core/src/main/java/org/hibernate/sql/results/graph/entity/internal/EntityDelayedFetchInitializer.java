@@ -6,6 +6,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.BiConsumer;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.internal.ManagedTypeHelper;
@@ -300,14 +301,22 @@ public class EntityDelayedFetchInitializer
 
 	private boolean isLazyByGraph(RowProcessingState rowProcessingState) {
 		final var appliedGraph = rowProcessingState.getQueryOptions().getAppliedGraph();
-		if ( appliedGraph != null && appliedGraph.getSemantic() == GraphSemantic.FETCH ) {
-			final var attributeNode = appliedGraph.getGraph().getAttributeNode( navigablePath.getLocalName() );
-			return attributeNode == null
-				|| attributeNode.getAttributeDescriptor() != getInitializedPart().asAttributeMapping();
+		if ( appliedGraph != null ) {
+			final var graph = appliedGraph.getGraph();
+			if ( graph != null ) {
+				final var node = graph.findNode( navigablePath.getLocalName() );
+				if ( node != null && node.getFetchType() == FetchType.LAZY
+						&& node.getAttributeDescriptor() == getInitializedPart().asAttributeMapping() ) {
+					return true;
+				}
+				else {
+					// if a fetch graph has no explicit node for an attribute,
+					// the attribute is considered lazy
+					return appliedGraph.getSemantic() == GraphSemantic.FETCH;
+				}
+			}
 		}
-		else {
-			return false;
-		}
+		return false;
 	}
 
 	@Override

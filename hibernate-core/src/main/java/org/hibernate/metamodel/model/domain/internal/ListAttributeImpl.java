@@ -6,6 +6,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -37,6 +38,7 @@ public class ListAttributeImpl<X, E>
 	}
 
 	@Override
+	@Nonnull
 	public CollectionType getCollectionType() {
 		return CollectionType.LIST;
 	}

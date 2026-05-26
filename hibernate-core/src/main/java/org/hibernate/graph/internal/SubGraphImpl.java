@@ -4,6 +4,7 @@
  */
 package org.hibernate.graph.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
@@ -23,6 +24,7 @@ public class SubGraphImpl<J> extends GraphImpl<J> implements SubGraphImplementor
 	}
 
 	@Override
+	@Nonnull
 	public SubGraphImplementor<J> makeCopy(boolean mutable) {
 		return !mutable && !isMutable() ? this : new SubGraphImpl<>( this, mutable );
 	}

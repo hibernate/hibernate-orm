@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.type.BasicType;
@@ -47,6 +48,7 @@ public class DiscriminatorTypeImpl<O> extends ConvertedBasicTypeImpl<O> implemen
 	}
 
 	@Override
+	@Nonnull
 	public Class<O> getJavaType() {
 		return domainJavaType.getJavaTypeClass();
 	}

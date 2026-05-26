@@ -6,6 +6,7 @@ package org.hibernate.metamodel.model.domain;
 
 import java.util.Collection;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.EntityType;
 
 /**
@@ -14,8 +15,10 @@ import jakarta.persistence.metamodel.EntityType;
  * @author Steve Ebersole
  */
 public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityType<J>, TreatableDomainType<J> {
+	@Nonnull
 	String getHibernateEntityName();
 
 	@Override
+	@Nonnull
 	Collection<? extends EntityDomainType<? extends J>> getSubTypes();
 }

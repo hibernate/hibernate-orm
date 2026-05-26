@@ -6,6 +6,7 @@ package org.hibernate.graph;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
@@ -71,6 +72,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @return the {@code ManagedType} being graphed here.
 	 */
+	@Nonnull
 	ManagedDomainType<J> getGraphedType();
 
 	/**
@@ -80,6 +82,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * simply return this instance.
 	 */
 	@Override
+	@Nonnull
 	Graph<J> makeCopy(boolean mutable);
 
 
@@ -91,6 +94,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @see #getAttributeNodes
 	 */
+	@Nonnull
 	List<? extends AttributeNode<?>> getAttributeNodeList();
 
 	/**
@@ -99,7 +103,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * @since 7.0
 	 */
 	@Override
-	<Y> AttributeNode<Y> getAttributeNode(String attributeName);
+	@Nonnull
+	<Y> AttributeNode<Y> getAttributeNode(@Nonnull String attributeName);
 
 	/**
 	 * Find an existing {@link AttributeNode} by corresponding attribute
@@ -108,14 +113,16 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * @since 7.0
 	 */
 	@Override
-	<Y> AttributeNode<Y> getAttributeNode(Attribute<? super J, Y> attribute);
+	@Nonnull
+	<Y> AttributeNode<Y> getAttributeNode(@Nonnull Attribute<? super J, Y> attribute);
 
 	/**
 	 * Add an {@link AttributeNode} representing the given {@link Attribute} to
 	 * this node of the graph without creating any associated {@link SubGraph}.
 	 */
 	@Override
-	<Y> AttributeNode<Y> addAttributeNode(Attribute<? super J, Y> attribute);
+	@Nonnull
+	<Y> AttributeNode<Y> addAttributeNode(@Nonnull Attribute<? super J, Y> attribute);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

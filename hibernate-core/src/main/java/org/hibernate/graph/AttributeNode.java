@@ -5,6 +5,7 @@
 package org.hibernate.graph;
 
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Subgraph;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
@@ -48,6 +49,7 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	/**
 	 * The {@link PersistentAttribute} represented by this node.
 	 */
+	@Nonnull
 	PersistentAttribute<?, J> getAttributeDescriptor();
 
 	/**
@@ -65,6 +67,7 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 *
 	 * @see jakarta.persistence.AttributeNode#getSubgraphs
 	 */
+	@Nonnull
 	Map<Class<?>, ? extends SubGraph<?>> getSubGraphs();
 
 	/**
@@ -74,6 +77,7 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 *
 	 * @see jakarta.persistence.AttributeNode#getKeySubgraphs
 	 */
+	@Nonnull
 	Map<Class<?>, ? extends SubGraph<?>> getKeySubGraphs();
 
 	/**
@@ -86,6 +90,7 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * @see #getSubGraphs()
 	 */
 	@Override
+	@Nonnull
 	default Map<Class<?>, Subgraph<?>> getSubgraphs() {
 		return unmodifiableMap( getSubGraphs() );
 	}
@@ -100,6 +105,7 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * @see #getKeySubGraphs()
 	 */
 	@Override
+	@Nonnull
 	default Map<Class<?>, Subgraph<?>> getKeySubgraphs() {
 		return unmodifiableMap( getKeySubGraphs() );
 	}

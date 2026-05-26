@@ -17,6 +17,7 @@ import org.hibernate.mapping.IdentifiableTypeClass;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.internal.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -188,7 +189,6 @@ public class MetadataContext {
 			EmbeddableDomainType<?> embeddableType,
 			Component bootDescriptor) {
 		final var javaType = embeddableType.getJavaType();
-		assert javaType != null;
 		assert !Map.class.isAssignableFrom( javaType );
 		embeddablesToProcess.computeIfAbsent( javaType, k -> new ArrayList<>( 1 ) )
 				.add( embeddableType );
@@ -466,7 +466,7 @@ public class MetadataContext {
 	}
 
 	private static <T> boolean isVirtual(PersistentAttribute<T, ?> attribute) {
-		return attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+		return attribute.getAttributeClassification() == AttributeClassification.EMBEDDED
 			&& attribute.getAttributeJavaType() instanceof EntityJavaType<?>;
 	}
 
@@ -840,8 +840,9 @@ public class MetadataContext {
 			//
 			// As a result, in the case of embeddable classes we simply use getField rather than
 			// getDeclaredField
+			final var persistentAttribute = (PersistentAttribute<X, ?>) attribute;
 			final boolean allowNonDeclaredFieldReference =
-					attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+					persistentAttribute.getAttributeClassification() == AttributeClassification.EMBEDDED
 							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
 			injectField( metamodelClass, name, attribute, allowNonDeclaredFieldReference );
 		}

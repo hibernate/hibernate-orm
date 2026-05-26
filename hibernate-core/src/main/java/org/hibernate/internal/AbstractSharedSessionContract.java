@@ -390,6 +390,7 @@ abstract class AbstractSharedSessionContract
 	@Override
 	public void setProperty(@Nonnull String propertyName, @Nullable Object value) {
 		checkOpen();
+		//noinspection ConstantValue
 		if ( propertyName == null ) {
 			SESSION_LOGGER.nullPropertyKey();
 		}
@@ -1492,6 +1493,7 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	public void setCacheMode(@Nonnull CacheMode cacheMode) {
+		//noinspection ConstantValue
 		if ( cacheMode == null ) {
 			throw new IllegalArgumentException( "CacheMode cannot be null" );
 		}
@@ -1963,6 +1965,7 @@ abstract class AbstractSharedSessionContract
 	@Nonnull
 	public <R> SelectionQueryImplementor<R> createNamedQuery(@Nonnull String name, @Nonnull Class<R> resultClass) {
 		checksBeforeQueryCreation();
+		//noinspection ConstantValue
 		if ( resultClass == null ) {
 			throw new IllegalArgumentException( "Result class is null" );
 		}

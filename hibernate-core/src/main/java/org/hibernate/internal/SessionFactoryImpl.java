@@ -821,11 +821,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	public EntityAgent createEntityAgent(Map<?, ?> map) {
 		assert map != null;
 		var agent = createEntityAgent();
-		map.forEach( (key,val) -> {
-			if ( key instanceof String prop ) {
-				agent.setProperty( prop, val );
-			}
-		} );
+		if ( map != null ) {
+			map.forEach( (key,val) -> {
+				if ( key instanceof String prop ) {
+					agent.setProperty( prop, val );
+				}
+			} );
+		}
 		return agent;
 	}
 

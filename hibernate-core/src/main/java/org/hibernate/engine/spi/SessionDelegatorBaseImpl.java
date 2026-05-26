@@ -232,11 +232,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public String bestGuessEntityName(@Nonnull Object object, @Nullable EntityEntry entry) {
-		return delegate.bestGuessEntityName( object, entry );
-	}
-
-	@Override
 	public String guessEntityName(@Nonnull Object entity) throws HibernateException {
 		return delegate.guessEntityName( entity );
 	}

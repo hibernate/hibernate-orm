@@ -11,13 +11,18 @@ import java.util.Set;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityAgent;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedStatement;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
+import jakarta.persistence.RefreshOption;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
@@ -27,6 +32,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(annotatedClasses = Jpa4OptionsTest.Book.class)
@@ -106,6 +112,89 @@ class Jpa4OptionsTest {
 
 			assertTrue( entityAgent.getOptions().contains( CacheRetrieveMode.BYPASS ) );
 			assertTrue( entityAgent.getOptions().contains( CacheStoreMode.BYPASS ) );
+		}
+	}
+
+	@Test
+	void nullVarargOptionArrays(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().runInTransaction( entityManager ->
+				entityManager.persist( new Book( 1L, "before" ) )
+		);
+
+		try ( var entityManager = scope.getEntityManagerFactory()
+				.createEntityManager( (EntityManager.CreationOption[]) null ) ) {
+			entityManager.getTransaction().begin();
+			final var book = entityManager.find( Book.class, 1L, (FindOption[]) null );
+			final var graph = entityManager.createEntityGraph( Book.class );
+
+			assertEquals( "before", book.title );
+			assertEquals( book, entityManager.find( graph, 1L, (FindOption[]) null ) );
+			assertEquals( book, entityManager.get( Book.class, 1L, (FindOption[]) null ) );
+			assertEquals( book, entityManager.get( graph, 1L, (FindOption[]) null ) );
+			assertEquals( List.of( book ), entityManager.findMultiple( Book.class, List.of( 1L ), (FindOption[]) null ) );
+			assertEquals( List.of( book ), entityManager.findMultiple( graph, List.of( 1L ), (FindOption[]) null ) );
+			assertEquals( List.of( book ), entityManager.getMultiple( Book.class, List.of( 1L ), (FindOption[]) null ) );
+			assertEquals( List.of( book ), entityManager.getMultiple( graph, List.of( 1L ), (FindOption[]) null ) );
+
+			entityManager.lock( book, LockModeType.NONE, (LockOption[]) null );
+			entityManager.createStatement( "update Book b set b.title = 'after' where b.id = :id" )
+					.setParameter( "id", 1L )
+					.execute();
+			entityManager.refresh( book, (RefreshOption[]) null );
+			assertEquals( "after", book.title );
+			entityManager.getTransaction().commit();
+		}
+
+		try ( var entityAgent = scope.getEntityManagerFactory()
+				.createEntityAgent( (EntityAgent.CreationOption[]) null ) ) {
+			final var book = entityAgent.find( Book.class, 1L, (FindOption[]) null );
+			final var graph = entityAgent.createEntityGraph( Book.class );
+
+			assertEquals( "after", book.title );
+			assertEquals( "after", entityAgent.find( graph, 1L, (FindOption[]) null ).title );
+			assertEquals( "after", entityAgent.get( Book.class, 1L, (FindOption[]) null ).title );
+			assertEquals( "after", entityAgent.get( graph, 1L, (FindOption[]) null ).title );
+			assertEquals( 1, entityAgent.findMultiple( Book.class, List.of( 1L ), (FindOption[]) null ).size() );
+			assertEquals( 1, entityAgent.findMultiple( graph, List.of( 1L ), (FindOption[]) null ).size() );
+			assertEquals( 1, entityAgent.getMultiple( Book.class, List.of( 1L ), (FindOption[]) null ).size() );
+			assertEquals( 1, entityAgent.getMultiple( graph, List.of( 1L ), (FindOption[]) null ).size() );
+		}
+	}
+
+	@Test
+	void nullHintMaps(EntityManagerFactoryScope scope) {
+		scope.getEntityManagerFactory().runInTransaction( entityManager ->
+				entityManager.persist( new Book( 2L, "before" ) )
+		);
+
+		try ( var entityManager = scope.getEntityManagerFactory()
+				.createEntityManager( (Map<?, ?>) null ) ) {
+			entityManager.getTransaction().begin();
+			final var book = entityManager.find( Book.class, 2L, (Map<String, Object>) null );
+
+			assertEquals( "before", book.title );
+			assertEquals( book, entityManager.find( Book.class, 2L, LockModeType.NONE, (Map<String, Object>) null ) );
+			entityManager.lock( book, LockModeType.NONE, (Map<String, Object>) null );
+
+			entityManager.createStatement( "update Book b set b.title = 'after' where b.id = :id" )
+					.setParameter( "id", 2L )
+					.execute();
+			entityManager.refresh( book, (Map<String, Object>) null );
+			assertEquals( "after", book.title );
+
+			entityManager.createStatement( "update Book b set b.title = 'again' where b.id = :id" )
+					.setParameter( "id", 2L )
+					.execute();
+			entityManager.refresh( book, LockModeType.NONE, (Map<String, Object>) null );
+			assertEquals( "again", book.title );
+			entityManager.getTransaction().commit();
+		}
+
+		try ( var entityAgent = scope.getEntityManagerFactory()
+				.createEntityAgent( (Map<?, ?>) null ) ) {
+			Book book = entityAgent.find( Book.class, 2L );
+			assertNotNull( book );
+			assertEquals( "again", book.title );
 		}
 	}
 
@@ -288,5 +377,15 @@ class Jpa4OptionsTest {
 	public static class Book {
 		@Id
 		private Long id;
+
+		private String title;
+
+		Book() {
+		}
+
+		Book(Long id, String title) {
+			this.id = id;
+			this.title = title;
+		}
 	}
 }

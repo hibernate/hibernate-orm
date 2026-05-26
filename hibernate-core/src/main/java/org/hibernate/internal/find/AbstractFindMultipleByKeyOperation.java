@@ -101,56 +101,58 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 
 		readOnlyMode = defaultReadOnly ? ReadOnlyMode.READ_ONLY : ReadOnlyMode.READ_WRITE;
 
-		for ( FindOption option : findOptions ) {
-			if ( option instanceof KeyType keyType ) {
-				this.keyType = keyType;
-			}
-			else if (  option instanceof BatchSize batchSize ) {
-				this.batchSize = batchSize;
-			}
-			else if ( option instanceof SessionCheckMode sessionCheckMode ) {
-				this.sessionCheckMode = sessionCheckMode;
-			}
-			else if ( option instanceof RemovalsMode removalsMode ) {
-				this.removalsMode = removalsMode;
-			}
-			else if ( option instanceof OrderingMode orderingMode ) {
-				this.orderingMode = orderingMode;
-			}
-			else if ( option instanceof CacheStoreMode cacheStoreMode ) {
-				this.cacheStoreMode = cacheStoreMode;
-				this.refreshSession = false;
-			}
-			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
-				this.cacheRetrieveMode = cacheRetrieveMode;
-				this.refreshSession = false;
-			}
-			else if ( option instanceof CacheMode cacheMode ) {
-				setCacheMode( cacheMode );
-			}
-			else if ( option instanceof LockModeType lockModeType ) {
-				this.lockMode = LockModeTypeHelper.getLockMode( lockModeType );
-			}
-			else if ( option instanceof LockMode lockMode ) {
-				this.lockMode = lockMode;
-			}
-			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
-				this.lockScope = pessimisticLockScope;
-			}
-			else if ( option instanceof Locking.FollowOn followOn ) {
-				this.lockFollowOn = followOn;
-			}
-			else if ( option instanceof Timeout timeout ) {
-				this.lockTimeout = timeout;
-			}
-			else if ( option instanceof ReadOnlyMode readOnlyMode) {
-				this.readOnlyMode = readOnlyMode;
-			}
-			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
-				this.enabledFetchProfile( enabledFetchProfile.profileName() );
-			}
-			else if ( option instanceof NaturalIdSynchronization naturalIdSynchronization ) {
-				this.naturalIdSynchronization = naturalIdSynchronization;
+		if ( findOptions != null ) {
+			for ( var option : findOptions ) {
+				if ( option instanceof KeyType keyType ) {
+					this.keyType = keyType;
+				}
+				else if ( option instanceof BatchSize batchSize ) {
+					this.batchSize = batchSize;
+				}
+				else if ( option instanceof SessionCheckMode sessionCheckMode ) {
+					this.sessionCheckMode = sessionCheckMode;
+				}
+				else if ( option instanceof RemovalsMode removalsMode ) {
+					this.removalsMode = removalsMode;
+				}
+				else if ( option instanceof OrderingMode orderingMode ) {
+					this.orderingMode = orderingMode;
+				}
+				else if ( option instanceof CacheStoreMode cacheStoreMode ) {
+					this.cacheStoreMode = cacheStoreMode;
+					this.refreshSession = false;
+				}
+				else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+					this.cacheRetrieveMode = cacheRetrieveMode;
+					this.refreshSession = false;
+				}
+				else if ( option instanceof CacheMode cacheMode ) {
+					setCacheMode( cacheMode );
+				}
+				else if ( option instanceof LockModeType lockModeType ) {
+					this.lockMode = LockModeTypeHelper.getLockMode( lockModeType );
+				}
+				else if ( option instanceof LockMode lockMode ) {
+					this.lockMode = lockMode;
+				}
+				else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
+					this.lockScope = pessimisticLockScope;
+				}
+				else if ( option instanceof Locking.FollowOn followOn ) {
+					this.lockFollowOn = followOn;
+				}
+				else if ( option instanceof Timeout timeout ) {
+					this.lockTimeout = timeout;
+				}
+				else if ( option instanceof ReadOnlyMode readOnlyMode ) {
+					this.readOnlyMode = readOnlyMode;
+				}
+				else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
+					this.enabledFetchProfile( enabledFetchProfile.profileName() );
+				}
+				else if ( option instanceof NaturalIdSynchronization naturalIdSynchronization ) {
+					this.naturalIdSynchronization = naturalIdSynchronization;
+				}
 			}
 		}
 	}

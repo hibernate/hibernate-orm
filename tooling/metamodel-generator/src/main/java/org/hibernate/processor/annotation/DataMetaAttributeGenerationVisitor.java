@@ -33,6 +33,7 @@ import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.isPluralAttribute;
 import static org.hibernate.processor.util.TypeUtils.isPropertyGetter;
 import static org.hibernate.processor.util.TypeUtils.toArrayTypeString;
+import static org.hibernate.processor.util.TypeUtils.toPrimitiveTypeString;
 
 /**
  * @author Gavin King
@@ -65,7 +66,7 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<DataA
 				element,
 				primitiveType,
 				typeUtils().boxedClass( primitiveType ).asType().toString(),
-				primitiveType.toString()
+				toPrimitiveTypeString( primitiveType )
 		);
 	}
 

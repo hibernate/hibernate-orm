@@ -225,4 +225,18 @@ public interface DomainResultCreationState {
 	default CacheRetrieveMode getFetchCacheRetrieveMode(NavigablePath fetchablePath) {
 		return null;
 	}
+
+	/**
+	 * Register the batch size applied by an entity graph to a fetch path.
+	 */
+	default void registerFetchBatchSize(NavigablePath fetchablePath, Integer batchSize) {
+	}
+
+	/**
+	 * The batch size applied by an entity graph to this fetch path,
+	 * or {@code null} if none was applied.
+	 */
+	default Integer getFetchBatchSize(NavigablePath fetchablePath) {
+		return null;
+	}
 }

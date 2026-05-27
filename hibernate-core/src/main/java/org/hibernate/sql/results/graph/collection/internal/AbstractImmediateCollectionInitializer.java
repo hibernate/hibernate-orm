@@ -76,6 +76,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState) {
 		super(
 				collectionPath,
@@ -85,6 +86,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 		collectionValueKeyResultAssembler =

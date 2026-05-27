@@ -5,6 +5,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
@@ -46,6 +47,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	protected final @Nullable EntityInitializer<InitializerData> owningEntityInitializer;
 	protected final @Nullable CacheStoreMode cacheStoreMode;
 	protected final @Nullable CacheRetrieveMode cacheRetrieveMode;
+	protected final @Nullable Integer batchSize;
 
 	/**
 	 * refers to the collection's container value - which collection-key?
@@ -56,6 +58,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		// per-row state
 		protected @Nullable Object collectionKeyValue;
 		protected @Nullable CollectionKey collectionKey;
+		protected @Nullable Set<PersistentCollection<?>> nonLazyCollections;
 
 		public CollectionInitializerData(RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
@@ -78,6 +81,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.collectionPath = collectionPath;
@@ -89,6 +93,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		this.parent = parent;
 		this.cacheStoreMode = cacheStoreMode;
 		this.cacheRetrieveMode = cacheRetrieveMode;
+		this.batchSize = batchSize;
 		//noinspection unchecked
 		this.owningEntityInitializer = (EntityInitializer<InitializerData>) Initializer.findOwningEntityInitializer( parent );
 		this.collectionKeyResultAssembler = collectionKeyResult == null
@@ -263,6 +268,16 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	@Override
 	public @Nullable CacheRetrieveMode getCacheRetrieveMode() {
 		return cacheRetrieveMode;
+	}
+
+	@Override
+	public @Nullable Integer getBatchSize() {
+		return batchSize;
+	}
+
+	protected <T> T withFetchOptions(SharedSessionContractImplementor session, Supplier<T> action) {
+		return session.getLoadQueryInfluencers()
+				.fromBatchSize( batchSize, () -> withCacheModes( session, action ) );
 	}
 
 	protected <T> T withCacheModes(SharedSessionContractImplementor session, Supplier<T> action) {

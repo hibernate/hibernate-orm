@@ -35,8 +35,9 @@ public class DelayedCollectionFetch extends CollectionFetch {
 			DomainResult<?> collectionKeyResult,
 			boolean unfetched,
 			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode) {
-		super( fetchedPath, fetchedAttribute, fetchParent, cacheStoreMode, cacheRetrieveMode );
+			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize) {
+		super( fetchedPath, fetchedAttribute, fetchParent, cacheStoreMode, cacheRetrieveMode, batchSize );
 		this.collectionKeyResult = collectionKeyResult;
 		this.unfetched = unfetched;
 	}
@@ -59,6 +60,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 				collectionKeyResult,
 				getCacheStoreMode(),
 				getCacheRetrieveMode(),
+				getBatchSize(),
 				creationState
 		);
 	}

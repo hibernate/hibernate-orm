@@ -50,6 +50,7 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState,
 			Fetch listIndexFetch,
 			Fetch elementFetch) {
@@ -63,6 +64,7 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 		//noinspection unchecked

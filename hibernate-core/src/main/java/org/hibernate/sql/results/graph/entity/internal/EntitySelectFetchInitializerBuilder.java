@@ -36,6 +36,7 @@ public class EntitySelectFetchInitializerBuilder {
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		if ( selectByUniqueKey ) {
 			return new EntitySelectFetchByUniqueKeyInitializer(
@@ -47,6 +48,7 @@ public class EntitySelectFetchInitializerBuilder {
 					affectedByFilter,
 					cacheStoreMode,
 					cacheRetrieveMode,
+					batchSize,
 					creationState
 			);
 		}
@@ -61,10 +63,11 @@ public class EntitySelectFetchInitializerBuilder {
 					affectedByFilter,
 					cacheStoreMode,
 					cacheRetrieveMode,
+					batchSize,
 					creationState
 			);
 		}
-		final BatchMode batchMode = determineBatchMode( entityPersister, parent, creationState );
+		final BatchMode batchMode = determineBatchMode( entityPersister, parent, batchSize, creationState );
 		switch ( batchMode ) {
 			case NONE:
 				return new EntitySelectFetchInitializer<>(
@@ -76,6 +79,7 @@ public class EntitySelectFetchInitializerBuilder {
 						affectedByFilter,
 						cacheStoreMode,
 						cacheRetrieveMode,
+						batchSize,
 						creationState
 				);
 			case BATCH_LOAD:
@@ -89,6 +93,7 @@ public class EntitySelectFetchInitializerBuilder {
 							affectedByFilter,
 							cacheStoreMode,
 							cacheRetrieveMode,
+							batchSize,
 							creationState
 					);
 				}
@@ -102,6 +107,7 @@ public class EntitySelectFetchInitializerBuilder {
 							affectedByFilter,
 							cacheStoreMode,
 							cacheRetrieveMode,
+							batchSize,
 							creationState
 					);
 				}
@@ -115,6 +121,7 @@ public class EntitySelectFetchInitializerBuilder {
 						affectedByFilter,
 						cacheStoreMode,
 						cacheRetrieveMode,
+						batchSize,
 						creationState
 				);
 		}
@@ -124,8 +131,12 @@ public class EntitySelectFetchInitializerBuilder {
 	private static BatchMode determineBatchMode(
 			EntityPersister entityPersister,
 			InitializerParent<?> parent,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
-		if ( !entityPersister.isBatchLoadable() ) {
+		if ( batchSize != null && batchSize <= 1 ) {
+			return NONE;
+		}
+		if ( batchSize == null && !entityPersister.isBatchLoadable() ) {
 			return NONE;
 		}
 		if ( creationState.isDynamicInstantiation() ) {

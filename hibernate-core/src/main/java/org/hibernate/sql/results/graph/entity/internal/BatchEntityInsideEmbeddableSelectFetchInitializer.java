@@ -70,9 +70,10 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, cacheRetrieveMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, batchSize, creationState );
 
 		referencedModelPartSetter = referencedModelPart.getAttributeMetadata().getPropertyAccess().getSetter();
 		final String rootEmbeddablePropertyName =

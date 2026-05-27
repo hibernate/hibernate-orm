@@ -688,6 +688,7 @@ public class PluralAttributeMappingImpl
 				collectionKeyResult,
 				unfetched,
 				null,
+				null,
 				null
 		);
 	}
@@ -699,7 +700,8 @@ public class PluralAttributeMappingImpl
 			DomainResult<?> collectionKeyResult,
 			boolean unfetched,
 			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode) {
+			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize) {
 		return new DelayedCollectionFetch(
 				fetchedPath,
 				fetchedAttribute,
@@ -707,7 +709,8 @@ public class PluralAttributeMappingImpl
 				collectionKeyResult,
 				unfetched,
 				cacheStoreMode,
-				cacheRetrieveMode
+				cacheRetrieveMode,
+				batchSize
 		);
 	}
 
@@ -725,6 +728,7 @@ public class PluralAttributeMappingImpl
 				collectionKeyDomainResult,
 				fetchParent,
 				null,
+				null,
 				null
 		);
 	}
@@ -735,14 +739,16 @@ public class PluralAttributeMappingImpl
 			DomainResult<?> collectionKeyDomainResult,
 			FetchParent fetchParent,
 			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode) {
+			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize) {
 		return new SelectEagerCollectionFetch(
 				fetchedPath,
 				fetchedAttribute,
 				collectionKeyDomainResult,
 				fetchParent,
 				cacheStoreMode,
-				cacheRetrieveMode
+				cacheRetrieveMode,
+				batchSize
 		);
 	}
 
@@ -796,7 +802,8 @@ public class PluralAttributeMappingImpl
 				collectionKeyDomainResult( fetchParent, fetchablePath, creationState, sqlAstCreationState ),
 				fetchParent,
 				creationState.getFetchCacheStoreMode( fetchablePath ),
-				creationState.getFetchCacheRetrieveMode( fetchablePath ) );
+				creationState.getFetchCacheRetrieveMode( fetchablePath ),
+				creationState.getFetchBatchSize( fetchablePath ) );
 	}
 
 	private @Nullable DomainResult<?> collectionKeyDomainResult(
@@ -881,7 +888,8 @@ public class PluralAttributeMappingImpl
 				collectionKeyDomainResult,
 				unfetched,
 				creationState.getFetchCacheStoreMode( fetchablePath ),
-				creationState.getFetchCacheRetrieveMode( fetchablePath )
+				creationState.getFetchCacheRetrieveMode( fetchablePath ),
+				creationState.getFetchBatchSize( fetchablePath )
 		);
 	}
 

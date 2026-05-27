@@ -28,20 +28,23 @@ public interface EntityGraphTraversalState {
 		private final FetchStrategy fetchStrategy;
 		private final CacheStoreMode cacheStoreMode;
 		private final CacheRetrieveMode cacheRetrieveMode;
+		private final Integer batchSize;
 
 		public TraversalResult(GraphImplementor<?> previousContext, FetchStrategy fetchStrategy) {
-			this( previousContext, fetchStrategy, null, null );
+			this( previousContext, fetchStrategy, null, null, null );
 		}
 
 		public TraversalResult(
 				GraphImplementor<?> previousContext,
 				FetchStrategy fetchStrategy,
 				CacheStoreMode cacheStoreMode,
-				CacheRetrieveMode cacheRetrieveMode) {
+				CacheRetrieveMode cacheRetrieveMode,
+				Integer batchSize) {
 			this.previousContext = previousContext;
 			this.fetchStrategy = fetchStrategy;
 			this.cacheStoreMode = cacheStoreMode;
 			this.cacheRetrieveMode = cacheRetrieveMode;
+			this.batchSize = batchSize;
 		}
 
 		public GraphImplementor<?> getGraph() {
@@ -58,6 +61,10 @@ public interface EntityGraphTraversalState {
 
 		public CacheRetrieveMode getCacheRetrieveMode() {
 			return cacheRetrieveMode;
+		}
+
+		public Integer getBatchSize() {
+			return batchSize;
 		}
 	}
 

@@ -50,6 +50,7 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState,
 			Fetch elementFetch,
 			@Nullable Fetch collectionIdFetch) {
@@ -63,6 +64,7 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 		elementAssembler = elementFetch.createAssembler( this, creationState );

@@ -51,9 +51,15 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		private static boolean isBatchDisabled(
 				AbstractBatchEntitySelectFetchInitializer<?> initializer,
 				RowProcessingState rowProcessingState) {
-			return rowProcessingState.isScrollResult()
-				|| !rowProcessingState.getLoadQueryInfluencers()
-					.effectivelyBatchLoadable( initializer.toOneMapping.getEntityMappingType().getEntityPersister() );
+			if ( rowProcessingState.isScrollResult() ) {
+				return true;
+			}
+			return initializer.batchSize != null
+					? initializer.batchSize <= 1
+					: !rowProcessingState.getLoadQueryInfluencers()
+							.effectivelyBatchLoadable(
+									initializer.toOneMapping.getEntityMappingType().getEntityPersister()
+							);
 		}
 	}
 
@@ -66,9 +72,10 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		super( parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, cacheRetrieveMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, batchSize, creationState );
 		//noinspection unchecked
 		owningEntityInitializer =
 				(EntityInitializer<InitializerData>)
@@ -264,8 +271,15 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 
 	protected void registerToBatchFetchQueue(Data data) {
 		assert data.entityKey != null;
-		data.getRowProcessingState().getSession().getPersistenceContextInternal()
-				.getBatchFetchQueue().addBatchLoadableEntityKey( data.entityKey );
+		final var session = data.getRowProcessingState().getSession();
+		withFetchOptions(
+				session,
+				() -> {
+					session.getPersistenceContextInternal()
+							.getBatchFetchQueue().addBatchLoadableEntityKey( data.entityKey );
+					return null;
+				}
+		);
 	}
 
 	@Override
@@ -295,7 +309,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 	protected Object loadInstance(EntityKey entityKey, SharedSessionContractImplementor session) {
 		final String entityName = entityKey.getEntityName();
 		final Object identifier = entityKey.getIdentifier();
-		final Object instance = withCacheModes(
+		final Object instance = withFetchOptions(
 				session,
 				() -> session.internalLoad( entityName, identifier, true,
 						toOneMapping.isInternalLoadNullable() )

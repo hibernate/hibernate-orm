@@ -46,9 +46,10 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, cacheRetrieveMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, batchSize, creationState );
 	}
 
 	@Override
@@ -66,9 +67,11 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 		super.registerToBatchFetchQueue( data );
 		// Force creating a proxy
 		final var entityKey = data.entityKey;
-		final Object instance =
-				data.getRowProcessingState().getSession()
-						.internalLoad( entityKey.getEntityName(), entityKey.getIdentifier(), false, false );
+		final var session = data.getRowProcessingState().getSession();
+		final Object instance = withFetchOptions(
+				session,
+				() -> session.internalLoad( entityKey.getEntityName(), entityKey.getIdentifier(), false, false )
+		);
 		data.setInstance( instance );
 		var toBatchLoad = data.toBatchLoad;
 		if ( toBatchLoad == null ) {

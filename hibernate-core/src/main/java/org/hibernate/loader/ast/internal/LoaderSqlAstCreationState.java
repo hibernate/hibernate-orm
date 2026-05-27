@@ -71,6 +71,7 @@ public class LoaderSqlAstCreationState
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 	private Map<NavigablePath, CacheStoreMode> fetchCacheStoreModes;
 	private Map<NavigablePath, CacheRetrieveMode> fetchCacheRetrieveModes;
+	private Map<NavigablePath, Integer> fetchBatchSizes;
 
 	public LoaderSqlAstCreationState(
 			QueryPart queryPart,
@@ -236,6 +237,21 @@ public class LoaderSqlAstCreationState
 	@Override
 	public CacheRetrieveMode getFetchCacheRetrieveMode(NavigablePath fetchablePath) {
 		return fetchCacheRetrieveModes == null ? null : fetchCacheRetrieveModes.get( fetchablePath );
+	}
+
+	@Override
+	public void registerFetchBatchSize(NavigablePath fetchablePath, Integer batchSize) {
+		if ( batchSize != null ) {
+			if ( fetchBatchSizes == null ) {
+				fetchBatchSizes = new HashMap<>();
+			}
+			fetchBatchSizes.put( fetchablePath, batchSize );
+		}
+	}
+
+	@Override
+	public Integer getFetchBatchSize(NavigablePath fetchablePath) {
+		return fetchBatchSizes == null ? null : fetchBatchSizes.get( fetchablePath );
 	}
 
 	@Override

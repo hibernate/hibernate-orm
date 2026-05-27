@@ -4,9 +4,14 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -31,6 +36,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState) {
 		super(
 				collectionPath,
@@ -40,6 +46,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 	}
@@ -56,7 +63,18 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 				if ( owningEntityData.getState() == State.INITIALIZED ) {
 					// It doesn't matter if it's eager or lazy, the collection object can not be referred to,
 					// so it doesn't make sense to create or initialize it
-					data.setState( State.MISSING );
+					if ( isEager && hasLocalFetchOptions() ) {
+						final Object targetInstance = owningEntityInitializer.getTargetInstance( owningEntityData );
+						if ( targetInstance == null ) {
+							data.setState( State.MISSING );
+						}
+						else {
+							resolveInstance( getInitializedPart().getValue( targetInstance ), data, true );
+						}
+					}
+					else {
+						data.setState( State.MISSING );
+					}
 				}
 				else {
 					// This initializer is done initializing, since this is only invoked for delayed or select initializers
@@ -98,10 +116,16 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 							final Object targetInstance = owningEntityInitializer.getTargetInstance( owningEntityData );
 							assert targetInstance != null;
 							collection.setOwner( targetInstance );
-							persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key,
-									isReadOnly( collectionKey, rowProcessingState, session ) );
+							withFetchOptions(
+									session,
+									() -> {
+										persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key,
+												isReadOnly( collectionKey, rowProcessingState, session ) );
+										return null;
+									}
+							);
 							if ( isEager ) {
-								persistenceContext.addNonLazyCollection( collection );
+								addNonLazyCollection( data, collection );
 							}
 							if ( collectionDescriptor.isArray() ) {
 								persistenceContext.addCollectionHolder( collection );
@@ -127,13 +151,72 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 			// This initializer is done initializing, since this is only invoked for delayed or select initializers
 			data.setState( State.INITIALIZED );
 			if ( isEager && !persistentCollection.wasInitialized() ) {
-				rowProcessingState.getSession().getPersistenceContextInternal()
-						.addNonLazyCollection( persistentCollection );
+				addBatchLoadableCollection( persistentCollection, rowProcessingState.getSession() );
+				addNonLazyCollection( data, persistentCollection );
 			}
 			if ( collectionKeyResultAssembler != null && rowProcessingState.needsResolveState() ) {
 				// Resolve the state of the identifier if result caching is enabled, and this is not a query cache hit
 				collectionKeyResultAssembler.resolveState( rowProcessingState );
 			}
+		}
+	}
+
+	private void addBatchLoadableCollection(
+			PersistentCollection<?> collection,
+			SharedSessionContractImplementor session) {
+		withFetchOptions(
+				session,
+				() -> {
+					final var persistenceContext = session.getPersistenceContextInternal();
+					final var collectionEntry = persistenceContext.getCollectionEntry( collection );
+					if ( collectionEntry != null ) {
+						final var persister = collectionEntry.getLoadedPersister();
+						if ( persister != null
+								&& session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
+							persistenceContext.getBatchFetchQueue()
+									.addBatchLoadableCollection( collection, collectionEntry );
+						}
+					}
+					return null;
+				}
+		);
+	}
+
+	protected void addNonLazyCollection(Data data, PersistentCollection<?> collection) {
+		if ( hasLocalFetchOptions() ) {
+			var nonLazyCollections = data.nonLazyCollections;
+			if ( nonLazyCollections == null ) {
+				nonLazyCollections = data.nonLazyCollections = Collections.newSetFromMap( new IdentityHashMap<>() );
+			}
+			nonLazyCollections.add( collection );
+		}
+		else {
+			data.getRowProcessingState().getSession().getPersistenceContextInternal()
+					.addNonLazyCollection( collection );
+		}
+	}
+
+	private boolean hasLocalFetchOptions() {
+		return cacheStoreMode != null || cacheRetrieveMode != null || batchSize != null;
+	}
+
+	@Override
+	public void endLoading(Data data) {
+		super.endLoading( data );
+		final var nonLazyCollections = data.nonLazyCollections;
+		if ( nonLazyCollections != null ) {
+			final var session = data.getRowProcessingState().getSession();
+			withFetchOptions(
+					session,
+					() -> {
+						for ( var collection : nonLazyCollections ) {
+							collection.forceInitialization();
+						}
+						return null;
+					}
+			);
+			nonLazyCollections.clear();
+			data.nonLazyCollections = null;
 		}
 	}
 

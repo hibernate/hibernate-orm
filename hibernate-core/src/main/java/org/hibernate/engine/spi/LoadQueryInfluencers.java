@@ -57,6 +57,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private boolean subselectFetchEnabled;
 
 	private int batchSize;
+	private @Nullable Integer batchSizeOverride;
 
 	private final EffectiveEntityGraph effectiveEntityGraph;
 
@@ -301,7 +302,28 @@ public class LoadQueryInfluencers implements Serializable {
 		this.batchSize = batchSize;
 	}
 
+	public boolean hasBatchSizeOverride() {
+		return batchSizeOverride != null;
+	}
+
+	public <T> T fromBatchSize(@Nullable Integer batchSize, Supplier<T> supplier) {
+		if ( batchSize == null ) {
+			return supplier.get();
+		}
+		final var previous = batchSizeOverride;
+		batchSizeOverride = batchSize;
+		try {
+			return supplier.get();
+		}
+		finally {
+			batchSizeOverride = previous;
+		}
+	}
+
 	public int effectiveBatchSize(CollectionPersister persister) {
+		if ( batchSizeOverride != null ) {
+			return batchSizeOverride;
+		}
 		final int persisterBatchSize = persister.getBatchSize();
 		// persister-specific batch size overrides global setting
 		// (note that due to legacy, -1 means no explicit setting)
@@ -309,10 +331,16 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public boolean effectivelyBatchLoadable(CollectionPersister persister) {
+		if ( batchSizeOverride != null ) {
+			return batchSizeOverride > 1;
+		}
 		return persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1;
 	}
 
 	public int effectiveBatchSize(EntityPersister persister) {
+		if ( batchSizeOverride != null ) {
+			return batchSizeOverride;
+		}
 		final int persisterBatchSize = persister.getBatchSize();
 		// persister-specific batch size overrides global setting
 		// (note that due to legacy, -1 means no explicit setting)
@@ -320,6 +348,9 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public boolean effectivelyBatchLoadable(EntityPersister persister) {
+		if ( batchSizeOverride != null ) {
+			return batchSizeOverride > 1;
+		}
 		return persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1;
 	}
 

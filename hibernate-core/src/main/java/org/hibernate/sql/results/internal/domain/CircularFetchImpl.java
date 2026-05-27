@@ -76,7 +76,8 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 				original.getDiscriminatorFetch(),
 				original.isSelectByUniqueKey(),
 				original.getCacheStoreMode(),
-				original.getCacheRetrieveMode()
+				original.getCacheRetrieveMode(),
+				original.getBatchSize()
 		);
 		this.timing = original.timing;
 		this.referencedNavigablePath = original.referencedNavigablePath;
@@ -119,6 +120,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 				isSelectByUniqueKey(),
 				getCacheStoreMode(),
 				getCacheRetrieveMode(),
+				getBatchSize(),
 				creationState
 			);
 		}
@@ -144,6 +146,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 			boolean selectByUniqueKey,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		return EntitySelectFetchInitializerBuilder.createInitializer(
 				parent,
@@ -155,6 +158,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 				false,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 	}

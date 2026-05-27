@@ -56,6 +56,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected final boolean hasLazySubInitializer;
 	protected final CacheStoreMode cacheStoreMode;
 	protected final CacheRetrieveMode cacheRetrieveMode;
+	protected final @Nullable Integer batchSize;
 
 	public static class EntitySelectFetchInitializerData extends InitializerData {
 		// per-row state
@@ -83,6 +84,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.parent = parent;
@@ -92,6 +94,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		this.affectedByFilter = affectedByFilter;
 		this.cacheStoreMode = cacheStoreMode;
 		this.cacheRetrieveMode = cacheRetrieveMode;
+		this.batchSize = batchSize;
 
 		isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
 		keyAssembler = keyResult.createResultAssembler( this, creationState );
@@ -257,7 +260,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		data.setState( State.INITIALIZED );
 		final String entityName = concreteDescriptor.getEntityName();
 
-		final Object instance = withCacheModes(
+		final Object instance = withFetchOptions(
 				session,
 				() -> session.internalLoad(
 						entityName,
@@ -384,6 +387,11 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	public DomainResultAssembler<?> getKeyAssembler() {
 		return keyAssembler;
+	}
+
+	protected <T> T withFetchOptions(SharedSessionContractImplementor session, Supplier<T> action) {
+		return session.getLoadQueryInfluencers()
+				.fromBatchSize( batchSize, () -> withCacheModes( session, action ) );
 	}
 
 	protected <T> T withCacheModes(SharedSessionContractImplementor session, Supplier<T> action) {

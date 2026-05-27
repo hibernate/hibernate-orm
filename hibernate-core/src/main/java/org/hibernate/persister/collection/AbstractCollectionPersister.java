@@ -829,9 +829,9 @@ public abstract class AbstractCollectionPersister
 					return subSelectLoader;
 				}
 			}
-			return attributeMapping.isAffectedByInfluencers( influencers, true )
-					? createCollectionLoader( influencers )
-					: getCollectionLoader();
+				return attributeMapping.isAffectedByInfluencers( influencers, true )
+						? createCollectionLoader( influencers )
+						: getCollectionLoader();
 		}
 	}
 

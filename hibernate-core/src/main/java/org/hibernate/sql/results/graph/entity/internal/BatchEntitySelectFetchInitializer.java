@@ -50,9 +50,10 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, cacheRetrieveMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, batchSize, creationState );
 		parentAttributes = getParentEntityAttributes( referencedModelPart.getAttributeName() );
 		referencedModelPartSetter = referencedModelPart.getPropertyAccess().getSetter();
 		referencedModelPartType =

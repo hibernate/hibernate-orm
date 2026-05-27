@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/orphan/one2one/fk/bidirectional/Mapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/orphan/one2one/fk/bidirectional/Mapping.orm.xml"
 )
 @SessionFactory
 public class DeleteOneToOneOrphansTest {

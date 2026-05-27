@@ -119,7 +119,6 @@ kotlin = "2.3.21"
 mavenPluginDev = "1.0.3"
 hibernateBuild = "2.3.0"
 bnd = "7.2.3"
-checkerPlugin = "1.0.2"
 nexusPublish = "2.0.0"
 ideaExt = "1.4.1"
 taskTree = "4.0.1"
@@ -132,7 +131,6 @@ antlrRuntime = { group = "org.antlr", name = "antlr4-runtime", version.ref = "an
 byteBuddy = { group = "net.bytebuddy", name = "byte-buddy", version.ref = "byteBuddy" }
 byteBuddyAgent = { group = "net.bytebuddy", name = "byte-buddy-agent", version.ref = "byteBuddy" }
 checkerFramework = { group = "org.checkerframework", name = "checker-qual-android", version.ref = "checkerFramework" }
-checkerFrameworkChecker = { group = "org.checkerframework", name = "checker", version.ref = "checkerFramework" }
 logging = { group = "org.jboss.logging", name = "jboss-logging", version.ref = "jbossLogging" }
 loggingAnnotations = { group = "org.jboss.logging", name = "jboss-logging-annotations", version.ref = "jbossLoggingTool" }
 loggingProcessor = { group = "org.jboss.logging", name = "jboss-logging-processor", version.ref = "jbossLoggingTool" }
@@ -272,7 +270,6 @@ versionInjection = { id = "org.hibernate.build.version-injection", version.ref =
 bndPlugin = { id = "biz.aQute.bnd", version.ref = "bnd" }
 bndBuilder = { id = "biz.aQute.bnd.builder", version.ref = "bnd" }
 
-checkerFramework = { id = "org.checkerframework", version.ref = "checkerPlugin" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublish" }
 ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExt" }
 taskTree = { id = "com.dorongold.task-tree", version.ref = "taskTree" }

@@ -42,22 +42,22 @@ dependencyResolutionManagement {
         }
         else {
             mavenCentral()
-        }
 
-        // temporary for 4.0 snapshot testing
-        maven {
-            url "https://central.sonatype.com/repository/maven-snapshots/"
-        }
-
-        if (System.getProperty('JPA_PREVIEW') != null) {
-			maven {
-				url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
-			}
-            // Needed for the SNAPSHOT versions of Jakarta Persistence
+            // temporary for 4.0 snapshot testing
             maven {
                 url "https://central.sonatype.com/repository/maven-snapshots/"
             }
-		}
+
+            if (System.getProperty('JPA_PREVIEW') != null) {
+                maven {
+                    url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
+                }
+                // Needed for the SNAPSHOT versions of Jakarta Persistence
+                maven {
+                    url "https://central.sonatype.com/repository/maven-snapshots/"
+                }
+            }
+        }
 
         //Allow loading additional dependencies from a local path;
         //useful to load JDBC drivers which can not be distributed in public.

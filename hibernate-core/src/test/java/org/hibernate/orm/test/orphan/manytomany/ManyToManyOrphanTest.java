@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/orphan/manytomany/UserGroup.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/orphan/manytomany/UserGroup.orm.xml"
 )
 @SessionFactory
 public class ManyToManyOrphanTest {

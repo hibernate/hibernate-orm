@@ -20,7 +20,6 @@ import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -1174,7 +1173,6 @@ public class SqmUtil {
 	}
 
 	private static void checkQueryReturnType(SqmQuerySpec<?> querySpec, Class<?> expectedResultClass) {
-		final var jpaCompliance = querySpec.nodeBuilder().getJpaCompliance();
 		final var selections = querySpec.getSelectClause().getSelections();
 		if ( selections == null || selections.isEmpty() ) {
 			// make sure there is at least one root
@@ -1184,7 +1182,7 @@ public class SqmUtil {
 			}
 			// if there is a single root, use that as the selection
 			if ( sqmRoots.size() == 1 ) {
-				verifySingularSelectionType( expectedResultClass, jpaCompliance, sqmRoots.get( 0 ) );
+				verifySingularSelectionType( expectedResultClass, sqmRoots.get( 0 ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Criteria has multiple query roots" );
@@ -1199,17 +1197,17 @@ public class SqmUtil {
 								? expectedResultClass.getComponentType()
 								: expectedResultClass;
 				for ( var selection : selectableNode.getSelectionItems() ) {
-					verifySelectionType( expectedSelectItemType, jpaCompliance, (SqmSelectableNode<?>) selection );
+					verifySelectionType( expectedSelectItemType, (SqmSelectableNode<?>) selection );
 				}
 			}
 			else {
-				verifySingularSelectionType( expectedResultClass, jpaCompliance, sqmSelection.getSelectableNode() );
+				verifySingularSelectionType( expectedResultClass, sqmSelection.getSelectableNode() );
 			}
 		}
 		else if ( expectedResultClass.isArray() ) {
 			final var componentType = expectedResultClass.getComponentType();
 			for ( var selection : selections ) {
-				verifySelectionType( componentType, jpaCompliance, selection.getSelectableNode() );
+				verifySelectionType( componentType, selection.getSelectableNode() );
 			}
 		}
 		//TODO: else check that the expectedResultClass has an appropriate constructor
@@ -1227,10 +1225,9 @@ public class SqmUtil {
 	 */
 	private static void verifySingularSelectionType(
 			Class<?> expectedResultClass,
-			JpaCompliance jpaCompliance,
 			SqmSelectableNode<?> selectableNode) {
 		try {
-			verifySelectionType( expectedResultClass, jpaCompliance, selectableNode );
+			verifySelectionType( expectedResultClass, selectableNode );
 		}
 		catch (QueryTypeMismatchException mismatchException) {
 			// Check for special case of a single selection item and implicit instantiation.
@@ -1260,21 +1257,23 @@ public class SqmUtil {
 
 	private static <T> void verifySelectionType(
 			Class<T> expectedResultClass,
-			JpaCompliance jpaCompliance,
 			SqmSelectableNode<?> selection) {
-		// special case for parameters in the select list
+		if ( !selectionIsParameter( selection ) ) {
+			verifyResultType( expectedResultClass, selection );
+		}
+	}
+
+	private static boolean selectionIsParameter(SqmSelectableNode<?> selection) {
 		if ( selection instanceof SqmParameter<?> sqmParameter ) {
+			// special case for parameters in the select list
 			final var nodeType = sqmParameter.getExpressible();
 			// we may not yet know a selection type
 			if ( nodeType == null || nodeType.getExpressibleJavaType() == null ) {
 				// we can't verify the result type up front
-				return;
+				return true;
 			}
 		}
-
-		if ( !jpaCompliance.isJpaQueryComplianceEnabled() ) {
-			verifyResultType( expectedResultClass, selection );
-		}
+		return false;
 	}
 
 	/**

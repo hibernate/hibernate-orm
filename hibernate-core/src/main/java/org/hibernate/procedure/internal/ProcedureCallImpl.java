@@ -1210,6 +1210,7 @@ public class ProcedureCallImpl<R>
 
 	@Override @SuppressWarnings("removal")
 	public int executeUpdate() {
+		session.checkTransactionNeededForUpdateOperation( "No active transaction for stored procedure call" );
 		try {
 			execute();
 			// The expectation is that there is just one Output,

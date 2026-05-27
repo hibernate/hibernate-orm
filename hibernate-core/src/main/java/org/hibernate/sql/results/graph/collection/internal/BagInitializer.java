@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.AssertionFailure;
@@ -48,6 +49,7 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
+			@Nullable CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState,
 			Fetch elementFetch,
 			@Nullable Fetch collectionIdFetch) {
@@ -60,6 +62,7 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 				collectionValueKeyResult,
 				isResultInitializer,
 				cacheStoreMode,
+				cacheRetrieveMode,
 				creationState
 		);
 		elementAssembler = elementFetch.createAssembler( this, creationState );

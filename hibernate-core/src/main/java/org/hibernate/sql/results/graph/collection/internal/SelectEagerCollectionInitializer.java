@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -28,8 +29,18 @@ public class SelectEagerCollectionInitializer
 			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			@Nullable CacheStoreMode cacheStoreMode,
+			@Nullable CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
-		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, cacheStoreMode, creationState );
+		super(
+				fetchedPath,
+				fetchedMapping,
+				parent,
+				collectionKeyResult,
+				false,
+				cacheStoreMode,
+				cacheRetrieveMode,
+				creationState
+		);
 	}
 
 	@Override
@@ -52,7 +63,13 @@ public class SelectEagerCollectionInitializer
 			final var collection = getCollection( data, instance );
 			data.setState( State.INITIALIZED );
 			data.setCollectionInstance( collection );
-			collection.forceInitialization();
+			withCacheModes(
+					data.getRowProcessingState().getSession(),
+					() -> {
+						collection.forceInitialization();
+						return null;
+					}
+			);
 		}
 	}
 

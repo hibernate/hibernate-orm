@@ -6,6 +6,7 @@ package org.hibernate.sql.results.internal.domain;
 
 import java.util.function.BiConsumer;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.engine.FetchTiming;
@@ -74,7 +75,8 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 				original.getKeyResult(),
 				original.getDiscriminatorFetch(),
 				original.isSelectByUniqueKey(),
-				original.getCacheStoreMode()
+				original.getCacheStoreMode(),
+				original.getCacheRetrieveMode()
 		);
 		this.timing = original.timing;
 		this.referencedNavigablePath = original.referencedNavigablePath;
@@ -116,6 +118,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 				getNavigablePath(),
 				isSelectByUniqueKey(),
 				getCacheStoreMode(),
+				getCacheRetrieveMode(),
 				creationState
 			);
 		}
@@ -140,6 +143,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 			NavigablePath navigablePath,
 			boolean selectByUniqueKey,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		return EntitySelectFetchInitializerBuilder.createInitializer(
 				parent,
@@ -150,6 +154,7 @@ public class CircularFetchImpl extends AbstractNonJoinedEntityFetch implements B
 				selectByUniqueKey,
 				false,
 				cacheStoreMode,
+				cacheRetrieveMode,
 				creationState
 		);
 	}

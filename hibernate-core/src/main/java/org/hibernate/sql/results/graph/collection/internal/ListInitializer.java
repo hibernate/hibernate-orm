@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.HibernateException;
@@ -48,6 +49,7 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
+			@Nullable CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState,
 			Fetch listIndexFetch,
 			Fetch elementFetch) {
@@ -60,6 +62,7 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 				collectionValueKeyResult,
 				isResultInitializer,
 				cacheStoreMode,
+				cacheRetrieveMode,
 				creationState
 		);
 		//noinspection unchecked

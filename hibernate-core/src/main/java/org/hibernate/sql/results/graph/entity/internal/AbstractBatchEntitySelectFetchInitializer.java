@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.Hibernate;
@@ -64,9 +65,10 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		super( parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, creationState );
 		//noinspection unchecked
 		owningEntityInitializer =
 				(EntityInitializer<InitializerData>)
@@ -293,7 +295,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 	protected Object loadInstance(EntityKey entityKey, SharedSessionContractImplementor session) {
 		final String entityName = entityKey.getEntityName();
 		final Object identifier = entityKey.getIdentifier();
-		final Object instance = withCacheStoreMode(
+		final Object instance = withCacheModes(
 				session,
 				() -> session.internalLoad( entityName, identifier, true,
 						toOneMapping.isInternalLoadNullable() )

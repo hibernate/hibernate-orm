@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.LockMode;
@@ -40,6 +41,7 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		return new SetInitializer(
 				navigablePath,
@@ -50,6 +52,7 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 				collectionValueKeyResult,
 				isResultInitializer,
 				cacheStoreMode,
+				cacheRetrieveMode,
 				creationState,
 				elementFetch
 		);

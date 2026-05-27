@@ -6,6 +6,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.BitSet;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.annotations.NotFoundAction;
@@ -41,6 +42,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	private final NotFoundAction notFoundAction;
 	private final boolean isAffectedByFilter;
 	private final CacheStoreMode cacheStoreMode;
+	private final CacheRetrieveMode cacheRetrieveMode;
 
 	private final String sourceAlias;
 
@@ -59,6 +61,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.sourceAlias = tableGroup.getSourceAlias();
 		this.isAffectedByFilter = isAffectedByFilter;
 		this.cacheStoreMode = creationState.getFetchCacheStoreMode( navigablePath );
+		this.cacheRetrieveMode = creationState.getFetchCacheRetrieveMode( navigablePath );
 		this.entityResult = new EntityResultImpl<>(
 				navigablePath,
 				toOneMapping,
@@ -81,6 +84,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.sourceAlias = tableGroup.getSourceAlias();
 		this.isAffectedByFilter = false;
 		this.cacheStoreMode = creationState.getFetchCacheStoreMode( navigablePath );
+		this.cacheRetrieveMode = creationState.getFetchCacheRetrieveMode( navigablePath );
 		this.entityResult = new EntityResultImpl<>(
 				navigablePath,
 				collectionPart,
@@ -102,6 +106,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.isAffectedByFilter = original.isAffectedByFilter;
 		this.sourceAlias = original.sourceAlias;
 		this.cacheStoreMode = original.cacheStoreMode;
+		this.cacheRetrieveMode = original.cacheRetrieveMode;
 	}
 
 	@Override
@@ -127,6 +132,11 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	@Override
 	public CacheStoreMode getCacheStoreMode() {
 		return cacheStoreMode;
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return cacheRetrieveMode;
 	}
 
 	@Override

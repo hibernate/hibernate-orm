@@ -6,6 +6,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.HashSet;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.engine.spi.EntityKey;
@@ -44,9 +45,10 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, creationState );
 	}
 
 	@Override

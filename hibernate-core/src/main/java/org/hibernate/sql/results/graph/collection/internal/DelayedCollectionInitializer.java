@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -27,8 +28,18 @@ public class DelayedCollectionInitializer extends AbstractNonJoinCollectionIniti
 			InitializerParent<?> parent,
 			DomainResult<?> collectionKeyResult,
 			@Nullable CacheStoreMode cacheStoreMode,
+			@Nullable CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
-		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, cacheStoreMode, creationState );
+		super(
+				fetchedPath,
+				fetchedMapping,
+				parent,
+				collectionKeyResult,
+				false,
+				cacheStoreMode,
+				cacheRetrieveMode,
+				creationState
+		);
 	}
 
 	@Override

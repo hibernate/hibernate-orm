@@ -6,9 +6,12 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
+import org.hibernate.CacheMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -42,6 +45,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	protected final @Nullable InitializerParent<?> parent;
 	protected final @Nullable EntityInitializer<InitializerData> owningEntityInitializer;
 	protected final @Nullable CacheStoreMode cacheStoreMode;
+	protected final @Nullable CacheRetrieveMode cacheRetrieveMode;
 
 	/**
 	 * refers to the collection's container value - which collection-key?
@@ -73,6 +77,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 			@Nullable DomainResult<?> collectionKeyResult,
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
+			@Nullable CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.collectionPath = collectionPath;
@@ -83,6 +88,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		this.isResultInitializer = isResultInitializer;
 		this.parent = parent;
 		this.cacheStoreMode = cacheStoreMode;
+		this.cacheRetrieveMode = cacheRetrieveMode;
 		//noinspection unchecked
 		this.owningEntityInitializer = (EntityInitializer<InitializerData>) Initializer.findOwningEntityInitializer( parent );
 		this.collectionKeyResultAssembler = collectionKeyResult == null
@@ -252,6 +258,32 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	@Override
 	public @Nullable CacheStoreMode getCacheStoreMode() {
 		return cacheStoreMode;
+	}
+
+	@Override
+	public @Nullable CacheRetrieveMode getCacheRetrieveMode() {
+		return cacheRetrieveMode;
+	}
+
+	protected <T> T withCacheModes(SharedSessionContractImplementor session, Supplier<T> action) {
+		if ( cacheRetrieveMode == null && cacheStoreMode == null ) {
+			return action.get();
+		}
+		final var previousCacheMode = session.getCacheMode();
+		final var effectiveCacheMode = CacheMode.fromJpaModes(
+				cacheRetrieveMode == null ? previousCacheMode.getJpaRetrieveMode() : cacheRetrieveMode,
+				cacheStoreMode == null ? previousCacheMode.getJpaStoreMode() : cacheStoreMode
+		);
+		if ( effectiveCacheMode == previousCacheMode ) {
+			return action.get();
+		}
+		session.setCacheMode( effectiveCacheMode );
+		try {
+			return action.get();
+		}
+		finally {
+			session.setCacheMode( previousCacheMode );
+		}
 	}
 
 	@Override

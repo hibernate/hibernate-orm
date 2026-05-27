@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
@@ -54,6 +55,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected final boolean keyIsEager;
 	protected final boolean hasLazySubInitializer;
 	protected final CacheStoreMode cacheStoreMode;
+	protected final CacheRetrieveMode cacheRetrieveMode;
 
 	public static class EntitySelectFetchInitializerData extends InitializerData {
 		// per-row state
@@ -80,6 +82,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.parent = parent;
@@ -88,6 +91,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		this.concreteDescriptor = concreteDescriptor;
 		this.affectedByFilter = affectedByFilter;
 		this.cacheStoreMode = cacheStoreMode;
+		this.cacheRetrieveMode = cacheRetrieveMode;
 
 		isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
 		keyAssembler = keyResult.createResultAssembler( this, creationState );
@@ -253,7 +257,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		data.setState( State.INITIALIZED );
 		final String entityName = concreteDescriptor.getEntityName();
 
-		final Object instance = withCacheStoreMode(
+		final Object instance = withCacheModes(
 				session,
 				() -> session.internalLoad(
 						entityName,
@@ -382,12 +386,15 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		return keyAssembler;
 	}
 
-	protected <T> T withCacheStoreMode(SharedSessionContractImplementor session, Supplier<T> action) {
-		if ( cacheStoreMode == null ) {
+	protected <T> T withCacheModes(SharedSessionContractImplementor session, Supplier<T> action) {
+		if ( cacheRetrieveMode == null && cacheStoreMode == null ) {
 			return action.get();
 		}
 		final var previousCacheMode = session.getCacheMode();
-		final var effectiveCacheMode = CacheMode.fromJpaModes( previousCacheMode.getJpaRetrieveMode(), cacheStoreMode );
+		final var effectiveCacheMode = CacheMode.fromJpaModes(
+				cacheRetrieveMode == null ? previousCacheMode.getJpaRetrieveMode() : cacheRetrieveMode,
+				cacheStoreMode == null ? previousCacheMode.getJpaStoreMode() : cacheStoreMode
+		);
 		if ( effectiveCacheMode == previousCacheMode ) {
 			return action.get();
 		}

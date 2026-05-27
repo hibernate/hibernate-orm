@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -29,6 +30,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 			@Nullable DomainResult<?> collectionKeyResult,
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
+			@Nullable CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		super(
 				collectionPath,
@@ -37,6 +39,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 				collectionKeyResult,
 				isResultInitializer,
 				cacheStoreMode,
+				cacheRetrieveMode,
 				creationState
 		);
 	}

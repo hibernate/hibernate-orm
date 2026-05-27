@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.engine.spi.EntityUniqueKey;
@@ -31,9 +32,10 @@ public class EntitySelectFetchByUniqueKeyInitializer
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		super( parent, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, creationState );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 
@@ -55,7 +57,7 @@ public class EntitySelectFetchByUniqueKeyInitializer
 				);
 		data.setInstance( persistenceContext.getEntity( entityUniqueKey ) );
 		if ( data.getInstance() == null ) {
-			final Object instance = withCacheStoreMode(
+			final Object instance = withCacheModes(
 					session,
 					() -> concreteDescriptor.loadByUniqueKey( uniqueKeyPropertyName, data.entityIdentifier, session )
 			);

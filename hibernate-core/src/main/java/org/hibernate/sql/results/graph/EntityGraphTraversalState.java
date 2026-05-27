@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.Incubating;
@@ -26,18 +27,21 @@ public interface EntityGraphTraversalState {
 		private final GraphImplementor<?> previousContext;
 		private final FetchStrategy fetchStrategy;
 		private final CacheStoreMode cacheStoreMode;
+		private final CacheRetrieveMode cacheRetrieveMode;
 
 		public TraversalResult(GraphImplementor<?> previousContext, FetchStrategy fetchStrategy) {
-			this( previousContext, fetchStrategy, null );
+			this( previousContext, fetchStrategy, null, null );
 		}
 
 		public TraversalResult(
 				GraphImplementor<?> previousContext,
 				FetchStrategy fetchStrategy,
-				CacheStoreMode cacheStoreMode) {
+				CacheStoreMode cacheStoreMode,
+				CacheRetrieveMode cacheRetrieveMode) {
 			this.previousContext = previousContext;
 			this.fetchStrategy = fetchStrategy;
 			this.cacheStoreMode = cacheStoreMode;
+			this.cacheRetrieveMode = cacheRetrieveMode;
 		}
 
 		public GraphImplementor<?> getGraph() {
@@ -50,6 +54,10 @@ public interface EntityGraphTraversalState {
 
 		public CacheStoreMode getCacheStoreMode() {
 			return cacheStoreMode;
+		}
+
+		public CacheRetrieveMode getCacheRetrieveMode() {
+			return cacheRetrieveMode;
 		}
 	}
 

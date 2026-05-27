@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.collection;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.collection.spi.PersistentCollection;
@@ -35,6 +36,10 @@ public interface CollectionInitializer<Data extends InitializerData> extends Ini
 	}
 
 	default @Nullable CacheStoreMode getCacheStoreMode() {
+		return null;
+	}
+
+	default @Nullable CacheRetrieveMode getCacheRetrieveMode() {
 		return null;
 	}
 

@@ -468,9 +468,11 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Obtain direct access to the underlying cache regions.
 	 *
-	 * @return The direct cache access API.
+	 * @return The direct cache access API, which is never null,
+	 * not even when the second-level cache is disabled.
 	 */
 	@Override
+	@Nonnull
 	Cache getCache();
 
 	/**

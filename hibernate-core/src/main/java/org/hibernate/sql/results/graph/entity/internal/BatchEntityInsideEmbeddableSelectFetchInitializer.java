@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.engine.spi.EntityKey;
@@ -68,9 +69,10 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, creationState );
 
 		referencedModelPartSetter = referencedModelPart.getAttributeMetadata().getPropertyAccess().getSetter();
 		final String rootEmbeddablePropertyName =

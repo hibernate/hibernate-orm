@@ -22,7 +22,6 @@ import org.hibernate.orm.tooling.gradle.enhance.EnhancementHelper;
 import org.hibernate.orm.tooling.gradle.reveng.RevengTask;
 import org.hibernate.orm.tooling.gradle.reveng.GenerateCfgTask;
 import org.hibernate.orm.tooling.gradle.reveng.GenerateDaoTask;
-import org.hibernate.orm.tooling.gradle.reveng.GenerateHbmTask;
 import org.hibernate.orm.tooling.gradle.reveng.GenerateJavaTask;
 import org.hibernate.orm.tooling.gradle.reveng.RunSqlTask;
 
@@ -35,7 +34,6 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 			"runSql", RunSqlTask.class,
 			"generateJava", GenerateJavaTask.class,
 			"generateCfg", GenerateCfgTask.class,
-			"generateHbm", GenerateHbmTask.class,
 			"generateDao", GenerateDaoTask.class
 	);
 
@@ -50,7 +48,6 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 			);
 
 			prepareEnhancement( ormDsl, project );
-			prepareHbmTransformation( ormDsl, project );
 			prepareReveng( ormDsl, project );
 
 			project
@@ -113,10 +110,6 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 	private SourceSet resolveSourceSet(String name, Project project) {
 		final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType( JavaPluginExtension.class );
 		return javaPluginExtension.getSourceSets().getByName( name );
-	}
-
-	private void prepareHbmTransformation(HibernateOrmSpec ormDsl, Project project) {
-
 	}
 
 	@SuppressWarnings("unchecked")

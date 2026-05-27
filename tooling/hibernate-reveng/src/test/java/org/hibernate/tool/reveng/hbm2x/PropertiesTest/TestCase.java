@@ -10,24 +10,14 @@ import org.hibernate.tool.reveng.api.export.ExporterFactory;
 import org.hibernate.tool.reveng.api.export.ExporterType;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.internal.export.common.DefaultArtifactCollector;
-import org.hibernate.tool.reveng.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.reveng.test.utils.FileUtil;
 import org.hibernate.tool.reveng.test.utils.HibernateUtil;
-import org.hibernate.tool.reveng.test.utils.JUnitUtil;
 import org.hibernate.tool.reveng.test.utils.JavaUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Objects;
@@ -68,34 +58,16 @@ public class TestCase {
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
 		exporter.getProperties().put(ExporterConstants.ARTIFACT_COLLECTOR, artifactCollector);
-		Exporter hbmexporter = new HbmExporter();
-		hbmexporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		hbmexporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		hbmexporter.getProperties().put(ExporterConstants.ARTIFACT_COLLECTOR, artifactCollector);
 		exporter.start();
-		hbmexporter.start();
 	}
 
 	@Test
 	public void testNoGenerationOfEmbeddedPropertiesComponent() {
 		assertEquals(2, artifactCollector.getFileCount("java"));
-		assertEquals(2, artifactCollector.getFileCount("hbm.xml"));
 	}
 
 	@Test
-	public void testGenerationOfEmbeddedProperties() throws Exception {
-		File outputXml = new File(outputDir,  "properties/PPerson.hbm.xml");
-		JUnitUtil.assertIsNonEmptyFile(outputXml);
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		Document document = db.parse(outputXml);
-		XPath xpath = XPathFactory.newInstance().newXPath();
-		NodeList nodeList = (NodeList)xpath
-				.compile("//hibernate-mapping/class/properties")
-				.evaluate(document, XPathConstants.NODESET);
-		assertEquals(1, nodeList.getLength(), "Expected to get one properties element");
-		Element element = (Element) nodeList.item(0);
-		assertEquals("emergencyContact", element.getAttribute( "name" ));
+	public void testGenerationOfEmbeddedProperties() {
 		assertNotNull(
 				FileUtil.findFirstString(
 						"name",

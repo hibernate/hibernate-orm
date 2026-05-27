@@ -195,4 +195,3 @@ Once the release series (e.g. 7.3) is branched out and goes into maintenance mod
 * Update main build [Jenkinsfile](Jenkinsfile) (for the branch)
   - Enable JDK testing in the build by removing the conditions under `Don't build environments for newer JDKs`
   - Stop running this build for pushes to the branch
-* Update TCK job [jpa-3.2-tck.Jenkinsfile](ci/jpa-3.2-tck.Jenkinsfile) to always run for PRs and not for the pushes to the branch

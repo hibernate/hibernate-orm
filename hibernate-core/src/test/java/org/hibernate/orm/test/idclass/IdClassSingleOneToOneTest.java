@@ -125,7 +125,7 @@ public class IdClassSingleOneToOneTest {
 	}
 
 	static class EntityBId {
-		private final Integer entityA;
+		private Integer entityA;
 
 		EntityBId() {
 			entityA = null;
@@ -147,7 +147,7 @@ public class IdClassSingleOneToOneTest {
 	}
 
 	static class EntityCId {
-		private final Integer entityA;
+		private Integer entityA;
 
 		EntityCId() {
 			entityA = null;

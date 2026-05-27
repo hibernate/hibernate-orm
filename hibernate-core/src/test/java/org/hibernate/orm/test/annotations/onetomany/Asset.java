@@ -13,11 +13,11 @@ public class Asset implements Serializable {
 
 	@Id
 	@Column(name = "id_asset")
-	private final Integer idAsset;
+	private Integer idAsset;
 
 	@Id
 	@Column(name = "id_test")
-	private final Integer test;
+	private Integer test;
 
 	@ManyToOne(cascade = { CascadeType.ALL })
 	@JoinColumn(nullable = false)

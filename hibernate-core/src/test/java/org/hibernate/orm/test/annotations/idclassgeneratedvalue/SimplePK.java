@@ -11,8 +11,8 @@ import java.io.Serializable;
  * @author Stale W. Pedersen
  */
 public class SimplePK implements Serializable {
-	private final Long id1;
-	private final Long id2;
+	private Long id1;
+	private Long id2;
 
 	private SimplePK() {
 		id1 = null;

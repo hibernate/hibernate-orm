@@ -87,7 +87,7 @@ public class OneToOneEmbeddedIdWithGenericsTest {
 	@MappedSuperclass
 	public abstract static class DomainEntityId implements Serializable {
 		@Column(name = "id_value")
-		private final Long value;
+		private Long value;
 
 		protected DomainEntityId() {
 			Random random = new Random();
@@ -102,7 +102,7 @@ public class OneToOneEmbeddedIdWithGenericsTest {
 	@MappedSuperclass
 	public abstract static class DomainEntityModel<ID extends DomainEntityId> {
 		@EmbeddedId
-		private final ID id;
+		private ID id;
 
 		protected DomainEntityModel(ID id) {
 			this.id = id;

@@ -28,7 +28,7 @@ public class Person {
 	private String name;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "person")
-	private final List<Address> addresses = new ArrayList<>();
+	private List<Address> addresses = new ArrayList<>();
 
 	@OneToOne(cascade = { CascadeType.ALL })
 	private Address currentAddress;

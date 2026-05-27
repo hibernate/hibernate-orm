@@ -37,7 +37,7 @@ class CodedPairSetHolder implements Serializable {
 			joinColumns = @JoinColumn(name = "CODED_PAIR_HOLDER_ID"),
 			foreignKey = @ForeignKey(name = "FK_PAIR_SET"))
 
-	private final Set<PersonPair> pairs = new HashSet<PersonPair>(0);
+	private Set<PersonPair> pairs = new HashSet<PersonPair>(0);
 
 	CodedPairSetHolder() {
 		super();

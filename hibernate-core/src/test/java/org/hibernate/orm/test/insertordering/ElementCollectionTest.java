@@ -66,7 +66,7 @@ public class ElementCollectionTest extends BaseInsertOrderingTest {
 		@ElementCollection(targetClass = Category.class)
 		@CollectionTable(name = "TASK_CATEGORY", joinColumns = { @JoinColumn(name = "TASK_ID") })
 		@Enumerated(EnumType.STRING)
-		private final Set<Category> categories = new HashSet<>();
+		private Set<Category> categories = new HashSet<>();
 
 		public void addCategory(Category c) {
 			categories.add( c );

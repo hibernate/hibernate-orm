@@ -172,7 +172,7 @@ public class BatchUpdateAndVersionTest {
 
 		@ManyToMany
 		@JoinTable(name = "ENTITY_A_TO_ENTITY_A", inverseJoinColumns = @JoinColumn(name = "SIDE_B"), joinColumns = @JoinColumn(name = "SIDE_A"))
-		final List<EntityA> owners = new ArrayList<>();
+		List<EntityA> owners = new ArrayList<>();
 
 		public EntityA() {
 		}

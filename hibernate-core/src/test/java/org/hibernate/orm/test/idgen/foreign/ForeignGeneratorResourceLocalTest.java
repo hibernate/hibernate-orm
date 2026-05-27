@@ -190,7 +190,7 @@ public class ForeignGeneratorResourceLocalTest {
 	public static class Customer {
 		@OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE },
 				orphanRemoval = true, targetEntity = CustomerContractRelation.class)
-		private final Set<CustomerContractRelation> contractRelations = new HashSet<>();
+		private Set<CustomerContractRelation> contractRelations = new HashSet<>();
 		@Id
 		@GeneratedValue
 		private Long id;
@@ -287,7 +287,7 @@ public class ForeignGeneratorResourceLocalTest {
 	@Table(name = "CUSTOMER_CONTRACT_RELATION")
 	public static class CustomerContractRelation {
 		@EmbeddedId
-		private final CustomerContractId id = new CustomerContractId();
+		private CustomerContractId id = new CustomerContractId();
 
 		@Temporal(TemporalType.TIMESTAMP)
 		@Column(nullable = true, name = "SIGNEDONDATE")

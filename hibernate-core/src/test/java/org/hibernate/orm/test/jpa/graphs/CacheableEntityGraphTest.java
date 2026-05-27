@@ -103,7 +103,7 @@ public class CacheableEntityGraphTest {
 		@Enumerated(EnumType.STRING)
 		@ElementCollection(fetch = FetchType.EAGER)
 		@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-		public final Set<TagType> types = new LinkedHashSet<>();
+		public Set<TagType> types = new LinkedHashSet<>();
 
 		public Tag() {
 		}

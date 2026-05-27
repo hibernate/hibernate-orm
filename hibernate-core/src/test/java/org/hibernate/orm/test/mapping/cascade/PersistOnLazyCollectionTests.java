@@ -135,7 +135,7 @@ public class PersistOnLazyCollectionTests {
 
 		@OneToMany( cascade = CascadeType.PERSIST )
 		@JoinColumn(name = "order_fk")
-		private final Set<LineItem> lineItems = new HashSet<>();
+		private Set<LineItem> lineItems = new HashSet<>();
 
 		public Order() {
 			super();

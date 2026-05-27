@@ -87,7 +87,7 @@ public class ManyToManyGenericTest {
 				joinColumns = {@JoinColumn(name = "TREE_ID", referencedColumnName = "TREE_ID"), @JoinColumn(name = "NODE_ID", referencedColumnName = "ID")},
 				inverseJoinColumns = {@JoinColumn(name = "CHILD_ID", referencedColumnName = "ID")}
 		)
-		private final Set<GenericNode<?>> children = new HashSet<>();
+		private Set<GenericNode<?>> children = new HashSet<>();
 
 		public Set<GenericNode<?>> getChildren() {
 			return children;

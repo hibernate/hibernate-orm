@@ -17,6 +17,7 @@ import org.hibernate.ReadOnlyMode;
 import org.hibernate.RemovalsMode;
 import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -54,25 +55,24 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 			List<?> keys,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph) {
-		checkFindRequirements( keys, loadAccessContext.getSession() );
-
+		final var session = loadAccessContext.getSession();
+		checkFindRequirements( keys, session );
 		// todo (natural-id-class) : these impls are temporary
 		//		longer term, move the logic here as much of it can be shared
 		return getKeyType() == KeyType.NATURAL
-				? findByNaturalIds( keys, graphSemantic, rootGraph, loadAccessContext )
-				: findByIds( keys, graphSemantic, rootGraph, loadAccessContext );
+				? findByNaturalIds( keys, graphSemantic, rootGraph )
+				: findByIds( keys, graphSemantic, rootGraph );
 	}
 
-	private List<T> findByNaturalIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, StatefulLoadAccessContext loadAccessContext) {
-		final var naturalIdMapping = getEntityDescriptor().requireNaturalIdMapping();
+	private List<T> findByNaturalIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph) {
+		final var entityDescriptor = getEntityDescriptor();
+		final var naturalIdMapping = entityDescriptor.requireNaturalIdMapping();
 		final var session = loadAccessContext.getSession();
-
 		performAnyNeededCrossReferenceSynchronizations(
 				getNaturalIdSynchronization() != NaturalIdSynchronization.DISABLED,
-				getEntityDescriptor(),
+				entityDescriptor,
 				session
 		);
-
 		return withOptions( loadAccessContext, graphSemantic, rootGraph, () -> {
 			// normalize the incoming natural-id values and get them in array form as needed
 			// by MultiNaturalIdLoader
@@ -81,9 +81,8 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 				final Object key = keys.get( i );
 				naturalIds[i] = naturalIdMapping.normalizeInput( key );
 			}
-
 			//noinspection unchecked
-			return (List<T>)getEntityDescriptor().getMultiNaturalIdLoader()
+			return (List<T>) entityDescriptor.getMultiNaturalIdLoader()
 					.multiLoad( naturalIds, this, session );
 		} );
 	}
@@ -133,11 +132,15 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 				.findCachedIdByNaturalId( normalizedNaturalIdValue, getEntityDescriptor() );
 	}
 
-	private List<T> findByIds(List<?> keys, GraphSemantic graphSemantic, RootGraphImplementor<T> rootGraph, StatefulLoadAccessContext loadAccessContext) {
-		final Object[] ids = keys.toArray( new Object[0] );
+	private List<T> findByIds(
+			List<?> keys,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<T> rootGraph) {
+		final var session = loadAccessContext.getSession();
+		final var ids = Helper.coerceIds( getEntityDescriptor(),keys, session );
 		//noinspection unchecked
 		return withOptions( loadAccessContext, graphSemantic, rootGraph,
-				() -> (List<T>) getEntityDescriptor().multiLoad( ids, loadAccessContext.getSession(), this ) );
+				() -> (List<T>) getEntityDescriptor().multiLoad( ids, session, this ) );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

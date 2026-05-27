@@ -53,7 +53,6 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph) {
 		checkFindRequirements( keys, loadAccessContext.getStatelessSession() );
-
 		return getKeyType() == KeyType.NATURAL
 				? findByNaturalIds( keys, graphSemantic, rootGraph )
 				: findByIds( keys, graphSemantic, rootGraph );
@@ -71,9 +70,10 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 			GraphSemantic graphSemantic,
 			RootGraphImplementor<T> rootGraph) {
 		var session = loadAccessContext.getStatelessSession();
+		final var ids = Helper.coerceIds( getEntityDescriptor(), keys, session );
 		return withOptions( session, graphSemantic, rootGraph, () -> {
 			// todo (jpa4) : make sure loading from cache happens inside here
-			final var results = getEntityDescriptor().multiLoad( keys.toArray(), session, multiLoadOptions( getLockMode() ) );
+			final var results = getEntityDescriptor().multiLoad( ids, session, multiLoadOptions( getLockMode() ) );
 			//noinspection unchecked
 			return (List<T>) results;
 		} );

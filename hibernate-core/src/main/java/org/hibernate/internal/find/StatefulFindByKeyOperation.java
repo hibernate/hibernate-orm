@@ -5,8 +5,8 @@
 package org.hibernate.internal.find;
 
 import jakarta.persistence.FindOption;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.KeyType;
 import org.hibernate.LockOptions;
@@ -47,14 +47,14 @@ public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T>
 	// options
 
 	public StatefulFindByKeyOperation(
-			@NonNull EntityPersister entityDescriptor,
-			@NonNull StatefulLoadAccessContext loadAccessContext,
+			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<?> rootGraph,
 			@Nullable LockOptions defaultLockOptions,
 			@Nullable CacheMode defaultCacheMode,
 			boolean defaultReadOnly,
-			@NonNull SessionFactoryImplementor sessionFactory,
+			@Nonnull SessionFactoryImplementor sessionFactory,
 			FindOption... findOptions) {
 		super( entityDescriptor, graphSemantic, rootGraph,
 				defaultLockOptions, defaultCacheMode, defaultReadOnly,

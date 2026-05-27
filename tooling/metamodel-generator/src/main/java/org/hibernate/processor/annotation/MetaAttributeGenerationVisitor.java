@@ -5,7 +5,7 @@
 package org.hibernate.processor.annotation;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
@@ -58,7 +58,7 @@ import static org.hibernate.processor.util.TypeUtils.toTypeString;
 /**
  * @author Hardy Ferentschik
  */
-public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable AnnotationMetaAttribute, Element> {
+public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<AnnotationMetaAttribute, Element> {
 
 	private final AnnotationMetaEntity entity;
 	private final Context context;

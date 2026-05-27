@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.internal.QueryParameterIdentifiedImpl;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
@@ -92,7 +92,7 @@ public class DomainParameterXref {
 		}
 	}
 
-	private static @NonNull QueryParameterImplementor<?> fromSqm(SqmParameter<?> sqmParameter) {
+	private static @Nonnull QueryParameterImplementor<?> fromSqm(SqmParameter<?> sqmParameter) {
 		if ( sqmParameter.getName() != null ) {
 			return QueryParameterNamedImpl.fromSqm( sqmParameter );
 		}

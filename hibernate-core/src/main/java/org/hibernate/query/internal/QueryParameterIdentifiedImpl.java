@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;

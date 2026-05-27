@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;

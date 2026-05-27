@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -144,7 +144,7 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 		for ( SqmJoin<?, ?> sqmJoin : joins ) {
 			appendJoinType( sb, sqmJoin.getSqmJoinType() );
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
-				final List<SqmTreatedFrom<?, ?, @Nullable?>> sqmTreats = attributeJoin.getSqmTreats();
+				final List<SqmTreatedFrom<?, ?, ?>> sqmTreats = attributeJoin.getSqmTreats();
 				if ( attributeJoin.isImplicitJoin() && !sqmTreats.isEmpty() ) {
 					for ( int i = 0; i < sqmTreats.size(); i++ ) {
 						final var treatJoin = (SqmTreatedAttributeJoin<?, ?, ?>) sqmTreats.get( i );

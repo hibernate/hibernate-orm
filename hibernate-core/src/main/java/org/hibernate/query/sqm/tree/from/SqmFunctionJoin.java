@@ -227,7 +227,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 
 	@Nullable
 	@Override
-	public PersistentAttribute<? super @org.checkerframework.checker.nullness.qual.Nullable Object, ?> getAttribute() {
+	public PersistentAttribute<? super Object, ?> getAttribute() {
 		// none
 		return null;
 	}

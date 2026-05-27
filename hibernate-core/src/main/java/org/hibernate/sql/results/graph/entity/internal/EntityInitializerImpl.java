@@ -74,8 +74,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
@@ -859,8 +858,6 @@ public class EntityInitializerImpl
 			}
 		}
 	}
-
-	@EnsuresNonNull( "data.entityKey" )
 	protected void resolveEntityKey(EntityInitializerData data, Object id) {
 		var concreteDescriptor = data.concreteDescriptor;
 		if ( concreteDescriptor == null ) {

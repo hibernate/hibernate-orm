@@ -4,7 +4,7 @@
  */
 package org.hibernate.dialect.function.json;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;

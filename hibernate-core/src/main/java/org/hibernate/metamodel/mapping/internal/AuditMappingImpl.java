@@ -53,7 +53,7 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.util.Collections.singletonList;
 import static org.hibernate.audit.AuditStrategy.VALIDITY;

@@ -48,7 +48,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 
 import jakarta.persistence.criteria.Selection;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.query.sqm.internal.SqmUtil.determineAffectedTableName;
 

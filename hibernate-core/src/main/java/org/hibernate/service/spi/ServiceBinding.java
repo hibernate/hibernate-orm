@@ -7,7 +7,7 @@ package org.hibernate.service.spi;
 import org.hibernate.service.Service;
 
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 

@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -20,21 +19,21 @@ import org.hibernate.type.descriptor.java.JavaType;
 public interface SqmPredicate
 		extends SqmVisitableNode, JpaPredicate, SqmBooleanExpression {
 	@Override
-	default @NonNull JavaType<Boolean> getJavaTypeDescriptor(){
+	default @Nonnull JavaType<Boolean> getJavaTypeDescriptor(){
 		return BooleanJavaType.INSTANCE;
 	}
 
 	@Override
-	default @NonNull JavaType<Boolean> getNodeJavaType() {
+	default @Nonnull JavaType<Boolean> getNodeJavaType() {
 		return getNodeType().getExpressibleJavaType();
 	}
 
 	@Override
-	default @NonNull SqmBindableType<Boolean> getExpressible() {
+	default @Nonnull SqmBindableType<Boolean> getExpressible() {
 		return getNodeType();
 	}
 
-	@NonNull SqmBindableType<Boolean> getNodeType();
+	@Nonnull SqmBindableType<Boolean> getNodeType();
 
 	@Nonnull
 	@Override

@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.jdbc.DelegatingJdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A {@link FunctionReturnTypeResolver} that resolves a JSON encoded array type based on the arguments,

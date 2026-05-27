@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.regex.Pattern;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -55,12 +55,12 @@ public class SqmFormat extends SqmLiteral<String> {
 	}
 
 	@Override
-	public @NonNull SqmBindableType<String> getNodeType() {
+	public @Nonnull SqmBindableType<String> getNodeType() {
 		return castNonNull( super.getNodeType() );
 	}
 
 	@Override
-	public @NonNull String getLiteralValue() {
+	public @Nonnull String getLiteralValue() {
 		return castNonNull( super.getLiteralValue() );
 	}
 

@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Simplified API allowing users to contribute

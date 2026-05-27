@@ -4,7 +4,7 @@
  */
 package org.hibernate.internal.util.collections;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.InstanceIdentity;
 
 import java.util.ConcurrentModificationException;

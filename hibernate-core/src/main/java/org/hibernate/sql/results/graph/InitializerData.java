@@ -7,7 +7,7 @@ package org.hibernate.sql.results.graph;
 
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.util.Objects.requireNonNull;
 

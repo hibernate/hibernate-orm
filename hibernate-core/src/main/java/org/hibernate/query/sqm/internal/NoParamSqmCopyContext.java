@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.internal;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Marco Belladelli

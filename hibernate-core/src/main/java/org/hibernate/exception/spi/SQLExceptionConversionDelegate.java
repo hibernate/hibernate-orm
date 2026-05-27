@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Allow a {@link SQLExceptionConverter} to work by chaining together

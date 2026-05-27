@@ -12,7 +12,7 @@ import jakarta.persistence.spi.LoadState;
 import jakarta.persistence.spi.PersistenceProvider;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.ProviderUtil;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;

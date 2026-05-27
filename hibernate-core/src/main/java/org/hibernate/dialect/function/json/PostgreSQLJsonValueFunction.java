@@ -6,7 +6,7 @@ package org.hibernate.dialect.function.json;
 
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;

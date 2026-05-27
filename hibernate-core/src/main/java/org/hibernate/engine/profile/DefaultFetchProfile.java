@@ -13,7 +13,7 @@ import org.hibernate.sql.results.graph.FetchOptions;
 
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.engine.FetchStyle.SUBSELECT;
 import static org.hibernate.engine.FetchTiming.IMMEDIATE;

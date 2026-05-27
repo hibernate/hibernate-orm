@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.archive.spi;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 import java.net.URL;
 import java.util.function.Consumer;
@@ -39,5 +39,5 @@ public interface ArchiveDescriptor {
 	/// using `<jar-file/>`.
 	///
 	/// @param jarFileReference The name given in `persistence.xml` via `<jar-file/>`
-	@NonNull ArchiveDescriptor resolveJarFileReference(@NonNull String jarFileReference);
+	@Nonnull ArchiveDescriptor resolveJarFileReference(@Nonnull String jarFileReference);
 }

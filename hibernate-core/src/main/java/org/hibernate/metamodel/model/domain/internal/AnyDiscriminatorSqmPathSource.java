@@ -5,7 +5,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;

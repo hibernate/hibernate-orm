@@ -79,7 +79,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	private @Nullable String alias;
 
 	private @Nullable List<SqmJoin<T, ?>> joins;
-	private @Nullable List<SqmTreatedFrom<?,?,@org.checkerframework.checker.nullness.qual.Nullable ?>> treats;
+	private @Nullable List<SqmTreatedFrom<?,?,?>> treats;
 
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
@@ -145,11 +145,11 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 	}
 
-	private static ArrayList<SqmTreatedFrom<?, ?, @org.checkerframework.checker.nullness.qual.Nullable ?>> copyTreats(
-			SqmCopyContext context, List<SqmTreatedFrom<?, ?, @org.checkerframework.checker.nullness.qual.Nullable ?>> treats) {
-		final ArrayList<SqmTreatedFrom<?, ?, @org.checkerframework.checker.nullness.qual.Nullable ?>> newTreats =
+	private static ArrayList<SqmTreatedFrom<?, ?, ?>> copyTreats(
+			SqmCopyContext context, List<SqmTreatedFrom<?, ?, ?>> treats) {
+		final ArrayList<SqmTreatedFrom<?, ?, ?>> newTreats =
 				new ArrayList<>( treats.size() );
-		for ( SqmTreatedFrom<?,?,@org.checkerframework.checker.nullness.qual.Nullable ?> treat : treats ) {
+		for ( SqmTreatedFrom<?,?,?> treat : treats ) {
 			newTreats.add( treat.copy( context ) );
 		}
 		return newTreats;
@@ -274,7 +274,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public List<SqmTreatedFrom<?,?,@org.checkerframework.checker.nullness.qual.Nullable ?>> getSqmTreats() {
+	public List<SqmTreatedFrom<?,?,?>> getSqmTreats() {
 		return treats == null ? emptyList() : treats;
 	}
 
@@ -297,8 +297,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		if ( treats == null ) {
 			treats = new ArrayList<>();
 		}
-		// Cast needed for Checker Framework
-		treats.add( (SqmTreatedFrom<?, ?, @org.checkerframework.checker.nullness.qual.Nullable ?>) treat );
+		// Cast needed for static nullness analysis.
+		treats.add( (SqmTreatedFrom<?, ?, ?>) treat );
 		return treat;
 	}
 

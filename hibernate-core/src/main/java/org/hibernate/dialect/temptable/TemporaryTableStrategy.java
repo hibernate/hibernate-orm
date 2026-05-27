@@ -4,7 +4,7 @@
  */
 package org.hibernate.dialect.temptable;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 

@@ -7,7 +7,7 @@ package org.hibernate.engine.spi;
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorHelper;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 

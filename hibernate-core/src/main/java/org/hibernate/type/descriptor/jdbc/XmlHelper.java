@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.CharSequenceHelper;

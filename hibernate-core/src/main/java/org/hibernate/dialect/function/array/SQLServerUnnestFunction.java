@@ -16,7 +16,7 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * SQL Server unnest function.

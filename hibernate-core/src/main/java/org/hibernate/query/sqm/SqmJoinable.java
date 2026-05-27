@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;

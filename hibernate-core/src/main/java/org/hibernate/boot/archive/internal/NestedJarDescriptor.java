@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.archive.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveException;
@@ -117,8 +117,8 @@ public class NestedJarDescriptor implements ArchiveDescriptor {
 		return null;
 	}
 
-	@Override @NonNull
-	public ArchiveDescriptor resolveJarFileReference(@NonNull String jarFileReference) {
+	@Override @Nonnull
+	public ArchiveDescriptor resolveJarFileReference(@Nonnull String jarFileReference) {
 		throw new UnsupportedOperationException( "Not supported." );
 	}
 }

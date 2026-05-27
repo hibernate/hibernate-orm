@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.BindableType;

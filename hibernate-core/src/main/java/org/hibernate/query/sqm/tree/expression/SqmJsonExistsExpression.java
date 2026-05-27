@@ -26,7 +26,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Special expression for the json_exists function that also captures special syntax elements like error behavior and passing variables.

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.spi.MetadataBuildingOptions;

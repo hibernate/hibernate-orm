@@ -6,7 +6,7 @@ package org.hibernate.query.internal;
 
 import jakarta.persistence.TupleElement;
 import jakarta.persistence.criteria.CompoundSelection;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.results.spi.ResultSetMapping;

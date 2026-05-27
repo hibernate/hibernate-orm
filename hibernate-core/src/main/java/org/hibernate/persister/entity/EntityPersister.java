@@ -5,8 +5,8 @@
 package org.hibernate.persister.entity;
 
 import jakarta.persistence.Entity;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -878,7 +878,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Nullable
 	CacheEntryStructure getCacheEntryStructure();
 
-	@NonNull
+	@Nonnull
 	CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session);
 
 	/**

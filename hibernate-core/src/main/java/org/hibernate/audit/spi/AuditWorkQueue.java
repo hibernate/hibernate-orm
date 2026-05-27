@@ -7,7 +7,7 @@ package org.hibernate.audit.spi;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Changelog;

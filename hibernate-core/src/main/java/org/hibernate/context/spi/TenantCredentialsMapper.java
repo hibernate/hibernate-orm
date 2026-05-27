@@ -4,7 +4,7 @@
  */
 package org.hibernate.context.spi;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 
 /**
@@ -37,7 +37,7 @@ public interface TenantCredentialsMapper<T> {
 	 * @param tenantIdentifier The tenant identifier
 	 * @return The name of the database schema belonging to that tenant
 	 */
-	@NonNull String user(@NonNull T tenantIdentifier);
+	@Nonnull String user(@Nonnull T tenantIdentifier);
 
 	/**
 	 * The password of the database user for data belonging to the tenant
@@ -46,5 +46,5 @@ public interface TenantCredentialsMapper<T> {
 	 * @param tenantIdentifier The tenant identifier
 	 * @return The name of the database schema belonging to that tenant
 	 */
-	@NonNull String password(@NonNull T tenantIdentifier);
+	@Nonnull String password(@Nonnull T tenantIdentifier);
 }

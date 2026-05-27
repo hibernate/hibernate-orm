@@ -14,7 +14,7 @@ import org.hibernate.stat.spi.StatisticsFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 
 import static org.hibernate.cfg.StatisticsSettings.STATS_BUILDER;

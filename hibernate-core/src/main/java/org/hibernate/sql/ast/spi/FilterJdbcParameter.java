@@ -7,7 +7,7 @@ package org.hibernate.sql.ast.spi;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;

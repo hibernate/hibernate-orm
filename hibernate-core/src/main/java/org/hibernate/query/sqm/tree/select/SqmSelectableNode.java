@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.function.Consumer;
 import jakarta.persistence.criteria.Selection;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;

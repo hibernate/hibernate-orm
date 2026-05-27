@@ -22,7 +22,7 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName;
 import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;

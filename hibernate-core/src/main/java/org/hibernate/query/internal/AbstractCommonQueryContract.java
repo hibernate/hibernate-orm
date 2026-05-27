@@ -16,7 +16,6 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -992,7 +991,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	private @NonNull QueryParameterBinding<?> locateBinding(String name, Integer position) {
+	private @Nonnull QueryParameterBinding<?> locateBinding(String name, Integer position) {
 		final var bindings = getQueryParameterBindings();
 		if ( name != null ) {
 			final var binding = bindings.getBinding( name );

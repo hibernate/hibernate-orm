@@ -9,7 +9,7 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.dialect.Dialect;

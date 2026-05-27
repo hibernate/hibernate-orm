@@ -10,7 +10,7 @@ import java.time.Duration;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.internal.CurrentTimestampGeneration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Helper for determining the correct clock for precision

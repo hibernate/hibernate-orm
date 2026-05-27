@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.ParameterCollector;

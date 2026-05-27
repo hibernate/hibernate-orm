@@ -5,8 +5,8 @@
 package org.hibernate.boot.query.internal;
 
 import jakarta.persistence.Timeout;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.FlushMode;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedMutationDefinition;
@@ -30,7 +30,7 @@ public class NamedHqlMutationDefinitionImpl<T>
 
 	public NamedHqlMutationDefinitionImpl(
 			String name, String location,
-			@NonNull String hql, @Nullable Class<T> targetType,
+			@Nonnull String hql, @Nullable Class<T> targetType,
 			FlushMode flushMode, Timeout timeout, String comment, Map<String, Object> hints) {
 		super( name, location, flushMode, timeout, comment, hints );
 		this.hql = hql;

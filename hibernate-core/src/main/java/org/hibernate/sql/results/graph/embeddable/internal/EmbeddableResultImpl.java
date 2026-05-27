@@ -7,7 +7,7 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 import java.util.ArrayList;
 import java.util.BitSet;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;

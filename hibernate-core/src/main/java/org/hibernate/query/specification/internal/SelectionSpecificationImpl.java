@@ -10,7 +10,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
@@ -217,7 +217,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		return query;
 	}
 
-	private @NonNull SelectionQueryImplementor<T> createSelectionQuery
+	private @Nonnull SelectionQueryImplementor<T> createSelectionQuery
 			(SqmBuildResult<T> buildResult, SharedSessionContractImplementor session) {
 		return buildResult.sqmMemento == null
 				? new SelectionQueryImpl<>( buildResult.sqmStatement, false, resultType, session )

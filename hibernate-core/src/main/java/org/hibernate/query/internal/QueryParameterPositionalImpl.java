@@ -6,7 +6,7 @@ package org.hibernate.query.internal;
 
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.named.NamedQueryMemento;

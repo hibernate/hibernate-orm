@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.spi;
 
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;

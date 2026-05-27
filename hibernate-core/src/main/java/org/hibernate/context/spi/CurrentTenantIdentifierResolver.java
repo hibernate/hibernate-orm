@@ -5,7 +5,7 @@
 package org.hibernate.context.spi;
 
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A callback registered with the {@link org.hibernate.SessionFactory} that is

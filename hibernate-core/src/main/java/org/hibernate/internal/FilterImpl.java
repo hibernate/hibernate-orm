@@ -16,7 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;

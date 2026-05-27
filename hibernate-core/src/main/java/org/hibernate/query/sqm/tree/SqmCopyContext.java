@@ -9,7 +9,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.NoParamSqmCopyContext;
 import org.hibernate.query.sqm.internal.SimpleSqmCopyContext;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  *

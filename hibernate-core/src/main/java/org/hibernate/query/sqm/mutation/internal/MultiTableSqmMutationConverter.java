@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.EntityMappingType;

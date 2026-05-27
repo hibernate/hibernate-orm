@@ -8,7 +8,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Specialized EmbeddableResultGraphNode for cases where we have an actual embeddable class.

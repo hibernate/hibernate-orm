@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataCachingConfig;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;

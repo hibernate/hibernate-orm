@@ -50,7 +50,7 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.MethodCall;
 import net.bytebuddy.jar.asm.Opcodes;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 

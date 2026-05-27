@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.internal.cyclebreak;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

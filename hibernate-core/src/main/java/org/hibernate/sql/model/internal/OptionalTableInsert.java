@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.model.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.ColumnValueBinding;

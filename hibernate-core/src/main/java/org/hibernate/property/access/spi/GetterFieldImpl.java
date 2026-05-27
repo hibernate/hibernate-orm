@@ -18,7 +18,7 @@ import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.util.ReflectHelper.findGetterMethodForFieldAccess;
 

@@ -4,7 +4,7 @@
  */
 package org.hibernate.service;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A registry of {@linkplain Service services}. This interface abstracts

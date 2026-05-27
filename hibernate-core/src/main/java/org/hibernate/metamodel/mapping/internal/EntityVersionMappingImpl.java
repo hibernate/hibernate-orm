@@ -7,7 +7,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;

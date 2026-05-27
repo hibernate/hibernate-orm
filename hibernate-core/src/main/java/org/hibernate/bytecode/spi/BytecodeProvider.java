@@ -12,7 +12,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.Service;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Contract for providers of bytecode services to Hibernate.

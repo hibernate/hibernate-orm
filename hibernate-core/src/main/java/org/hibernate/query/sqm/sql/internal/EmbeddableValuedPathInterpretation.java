@@ -25,7 +25,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static org.hibernate.query.sqm.internal.SqmUtil.determineAffectedTableName;

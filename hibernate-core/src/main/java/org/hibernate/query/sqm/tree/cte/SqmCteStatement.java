@@ -55,7 +55,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	private @Nullable SqmLiteral<Object> cycleValue;
 	private @Nullable SqmLiteral<Object> noCycleValue;
 
-	// Need to suppress some Checker Framework errors, because passing the `this` reference is unsafe,
+	// Need to suppress static analysis errors because passing the `this` reference is unsafe,
 	// though we make it safe by not calling any methods on it until initialization finishes
 	@SuppressWarnings({"uninitialized", "argument"})
 	public SqmCteStatement(
@@ -72,7 +72,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		this.cteTable = SqmCteTable.createStatementTable( name, this, cteDefinition );
 	}
 
-	// Need to suppress some Checker Framework errors, because passing the `this` reference is unsafe,
+	// Need to suppress static analysis errors because passing the `this` reference is unsafe,
 	// though we make it safe by not calling any methods on it until initialization finishes
 	@SuppressWarnings({"uninitialized", "argument"})
 	public SqmCteStatement(

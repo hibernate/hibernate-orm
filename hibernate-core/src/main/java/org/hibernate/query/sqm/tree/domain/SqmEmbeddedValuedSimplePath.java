@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -71,7 +70,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public @NonNull SqmBindableType<T> getExpressible() {
+	public @Nonnull SqmBindableType<T> getExpressible() {
 		return this;
 	}
 
@@ -116,7 +115,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public @NonNull Class<T> getJavaType() {
+	public @Nonnull Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 

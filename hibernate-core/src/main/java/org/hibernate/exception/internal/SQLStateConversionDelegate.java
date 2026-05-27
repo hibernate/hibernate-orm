@@ -17,7 +17,7 @@ import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.AbstractSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ConversionContext;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.util.JdbcExceptionHelper.determineSqlStateClassCode;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;

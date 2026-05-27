@@ -31,8 +31,6 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -83,7 +81,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Expected type: %s, actual value: %s", id = 91)
 	void expectedType(String name,
-			@Nullable String string);
+			String string);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "an assertion failure occurred" + " (this may indicate a bug in Hibernate, but is more likely due"
@@ -329,12 +327,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The query [%s] updates an immutable entity: %s",
 			id = 487)
-	void immutableEntityUpdateQuery(@Nullable String sourceQuery, String querySpaces);
+	void immutableEntityUpdateQuery(String sourceQuery, String querySpaces);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "The query [%s] updates an immutable entity: %s",
 			id = 488)
-	void immutableEntityUpdateQueryAllowed(@Nullable String sourceQuery, String querySpaces);
+	void immutableEntityUpdateQueryAllowed(String sourceQuery, String querySpaces);
 
 	@LogMessage(level = INFO)
 	@Message(value = "No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)", id = 489)
@@ -626,7 +624,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = TRACE)
 	@Message(id = 6592, value = "Identifier unsaved-value [%s]")
-	void idUnsavedValue(@Nullable Object value);
+	void idUnsavedValue(Object value);
 
 	@LogMessage(level = TRACE)
 	@Message(id = 6593, value = "Version unsaved-value strategy %s")
@@ -634,7 +632,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = TRACE)
 	@Message(id = 6594, value = "Version unsaved-value [%s]")
-	void versionUnsavedValue(@Nullable Object value);
+	void versionUnsavedValue(Object value);
 
 	@LogMessage(level = TRACE)
 	@Message(id = 601, value = "Attempting to resolve script source setting: %s")

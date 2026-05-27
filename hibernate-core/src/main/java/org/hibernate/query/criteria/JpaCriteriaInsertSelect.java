@@ -5,7 +5,7 @@
 package org.hibernate.query.criteria;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.Tuple;

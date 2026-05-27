@@ -37,7 +37,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.ENTITY_TYPE;
 import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;

@@ -4,8 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -56,7 +56,7 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public @NonNull Integer getPosition() {
+	public @Nonnull Integer getPosition() {
 		return position;
 	}
 

@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -43,7 +42,7 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 	}
 
 	@Override
-	public @NonNull SqmPath<?> getLhs() {
+	public @Nonnull SqmPath<?> getLhs() {
 		return pluralDomainPath;
 	}
 

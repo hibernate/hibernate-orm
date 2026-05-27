@@ -4,7 +4,7 @@
  */
 package org.hibernate.vector.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;

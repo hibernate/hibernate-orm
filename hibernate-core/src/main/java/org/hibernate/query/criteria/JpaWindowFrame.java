@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.common.FrameKind;
 

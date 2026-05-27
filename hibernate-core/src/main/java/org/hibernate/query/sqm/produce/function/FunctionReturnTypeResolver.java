@@ -16,7 +16,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.List;
 import java.util.function.Supplier;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Pluggable strategy for resolving a function return type for a specific call.

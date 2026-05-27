@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.spi.meta;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;

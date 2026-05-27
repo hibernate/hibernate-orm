@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tuple.internal;
 import java.lang.reflect.Member;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;

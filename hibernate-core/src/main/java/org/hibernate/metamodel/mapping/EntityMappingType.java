@@ -5,8 +5,8 @@
 package org.hibernate.metamodel.mapping;
 
 import jakarta.persistence.Entity;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
@@ -390,7 +390,7 @@ public interface EntityMappingType
 	 */
 	@Nullable NaturalIdMapping getNaturalIdMapping();
 
-	@NonNull
+	@Nonnull
 	default NaturalIdMapping requireNaturalIdMapping() {
 		var mapping = getNaturalIdMapping();
 		if ( mapping == null ) {

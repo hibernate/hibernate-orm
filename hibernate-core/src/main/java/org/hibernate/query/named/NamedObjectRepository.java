@@ -12,8 +12,8 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Statement;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.TypedQuery;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
@@ -93,7 +93,7 @@ public interface NamedObjectRepository {
 	 * @see org.hibernate.SessionFactory#addNamedStatement(String, Statement)
 	 * @see org.hibernate.Session#createStatement(StatementReference)
 	 */
-	@NonNull StatementReference registerNamedMutation(String name, Statement statement);
+	@Nonnull StatementReference registerNamedMutation(String name, Statement statement);
 
 	/**
 	 * Find a query registration by name, regardless of query type.
@@ -110,7 +110,7 @@ public interface NamedObjectRepository {
 	 *
 	 * @throws UnknownNamedQueryException If one could not be found under that name.
 	 */
-	<R> @NonNull NamedQueryMemento<R> getQueryMementoByName(String name, boolean includeProcedureCalls);
+	<R> @Nonnull NamedQueryMemento<R> getQueryMementoByName(String name, boolean includeProcedureCalls);
 
 	<R> NamedSelectionMemento<R> getSelectionQueryMemento(String name);
 	<R> NamedMutationMemento<R> getMutationQueryMemento(String name);

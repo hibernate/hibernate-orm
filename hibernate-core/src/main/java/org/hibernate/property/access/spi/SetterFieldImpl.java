@@ -14,7 +14,7 @@ import org.hibernate.Internal;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.util.ReflectHelper.setterMethodOrNull;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;

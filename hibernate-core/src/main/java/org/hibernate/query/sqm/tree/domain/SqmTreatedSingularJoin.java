@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
@@ -111,7 +110,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	@Override
-	public @NonNull SqmBindableType<S> getNodeType() {
+	public @Nonnull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 

@@ -5,7 +5,7 @@
 package org.hibernate.processor.util;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.MetaModelGenerationException;
 import org.hibernate.processor.model.Metamodel;
@@ -746,7 +746,7 @@ public final class TypeUtils {
 		return builder.toString();
 	}
 
-	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable TypeElement, Element> {
+	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<TypeElement, Element> {
 		private final Context context;
 
 		EmbeddedAttributeVisitor(Context context) {

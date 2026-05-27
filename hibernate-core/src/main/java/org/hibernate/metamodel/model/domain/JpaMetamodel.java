@@ -8,7 +8,7 @@ import java.util.Set;
 
 
 import jakarta.persistence.metamodel.Metamodel;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.type.descriptor.java.EnumJavaType;

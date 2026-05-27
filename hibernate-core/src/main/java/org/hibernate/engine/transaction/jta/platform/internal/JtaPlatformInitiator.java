@@ -14,7 +14,7 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 

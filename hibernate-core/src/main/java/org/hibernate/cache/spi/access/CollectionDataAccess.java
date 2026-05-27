@@ -4,8 +4,8 @@
  */
 package org.hibernate.cache.spi.access;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -33,7 +33,7 @@ public interface CollectionDataAccess extends CachedDomainDataAccess {
 	 *
 	 * @return a key which can be used to identify this collection on this same region
 	 */
-	@NonNull
+	@Nonnull
 	Object generateCacheKey(
 			Object id,
 			CollectionPersister collectionDescriptor,

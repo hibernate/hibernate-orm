@@ -17,7 +17,7 @@ import org.hibernate.proxy.HibernateProxy;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * This is a helper to encapsulate an optimal strategy to execute type checks

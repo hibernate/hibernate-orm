@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
 

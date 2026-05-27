@@ -6,7 +6,7 @@ package org.hibernate.action.queue.internal.cyclebreak;
 
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;

@@ -9,7 +9,6 @@ import java.util.Map;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -300,7 +299,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	/**
 	 * Access to the StatementObserver associated with this factory.
 	 */
-	@NonNull
+	@Nonnull
 	StatementObserver getStatementObserver();
 
 	/**

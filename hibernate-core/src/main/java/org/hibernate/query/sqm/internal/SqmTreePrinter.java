@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.internal;
 import java.util.List;
 import java.util.Locale;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.QueryLogging;
@@ -778,7 +778,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitTreatedPath(SqmTreatedPath<?, @Nullable ?> sqmTreatedPath) {
+	public Object visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath) {
 		return null;
 	}
 

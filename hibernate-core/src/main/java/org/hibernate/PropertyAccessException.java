@@ -6,7 +6,7 @@ package org.hibernate;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A problem occurred accessing a property of an instance of a

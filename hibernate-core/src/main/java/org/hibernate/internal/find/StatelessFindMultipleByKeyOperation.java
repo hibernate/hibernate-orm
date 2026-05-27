@@ -5,8 +5,8 @@
 package org.hibernate.internal.find;
 
 import jakarta.persistence.FindOption;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.KeyType;
 import org.hibernate.LockMode;
@@ -31,16 +31,16 @@ import java.util.function.Supplier;
 public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultipleByKeyOperation<T> {
 
 	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiLoadOptions();
-	@NonNull
+	@Nonnull
 	private final StatelessLoadAccessContext loadAccessContext;
 
 	public StatelessFindMultipleByKeyOperation(
-			@NonNull EntityPersister entityDescriptor,
-			@NonNull StatelessLoadAccessContext loadAccessContext,
+			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull StatelessLoadAccessContext loadAccessContext,
 			@Nullable LockOptions defaultLockOptions,
 			@Nullable CacheMode defaultCacheMode,
 			boolean defaultReadOnly,
-			@NonNull SessionFactoryImplementor sessionFactory,
+			@Nonnull SessionFactoryImplementor sessionFactory,
 			FindOption... findOptions) {
 		super( entityDescriptor,
 				defaultLockOptions, defaultCacheMode, defaultReadOnly,

@@ -10,7 +10,7 @@ import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.Path;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * The commonalities between insert-select and insert-values.

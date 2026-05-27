@@ -16,8 +16,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
@@ -195,7 +195,7 @@ public class BatchFetchQueue {
 	public <T> void collectBatchLoadableEntityIds(
 			final int domainBatchSize,
 			IndexedConsumer<T> collector,
-			final @NonNull T loadingId,
+			final @Nonnull T loadingId,
 			final EntityMappingType entityDescriptor) {
 		// make sure we load the id being loaded in the batch!
 		collector.accept( 0, loadingId );
@@ -327,7 +327,7 @@ public class BatchFetchQueue {
 	public <T> void collectBatchLoadableCollectionKeys(
 			int batchSize,
 			IndexedConsumer<T> collector,
-			@NonNull T keyBeingLoaded,
+			@Nonnull T keyBeingLoaded,
 			PluralAttributeMapping pluralAttributeMapping) {
 		collector.accept( 0, keyBeingLoaded );
 

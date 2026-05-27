@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 

@@ -8,7 +8,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -96,7 +95,7 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	}
 
 	@Override
-	public @NonNull SqmBindableType<S> getNodeType() {
+	public @Nonnull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 

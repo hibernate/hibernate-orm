@@ -4,7 +4,7 @@
  */
 package org.hibernate.engine.jdbc.mutation.spi;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 

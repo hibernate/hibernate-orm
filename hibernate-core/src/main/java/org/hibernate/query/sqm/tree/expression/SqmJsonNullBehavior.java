@@ -12,7 +12,7 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Describes how a {@code null} should be treated in a JSON document.

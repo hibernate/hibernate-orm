@@ -22,7 +22,7 @@ import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A SQM function

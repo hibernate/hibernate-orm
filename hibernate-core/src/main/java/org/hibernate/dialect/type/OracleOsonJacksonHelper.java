@@ -6,7 +6,7 @@ package org.hibernate.dialect.type;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import oracle.jdbc.provider.oson.OsonFactory;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.type.format.jackson.JacksonIntegration;
 
 import java.io.Closeable;

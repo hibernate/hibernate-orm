@@ -19,7 +19,7 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 

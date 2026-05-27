@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -338,7 +338,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	}
 
 	private <A> void checkClarifiedType(
-			@NonNull BindableType<A> clarifiedType,
+			@Nonnull BindableType<A> clarifiedType,
 			Object valueOrValues) {
 		final var parameterType = queryParameter.getParameterType();
 		if ( parameterType != null ) {

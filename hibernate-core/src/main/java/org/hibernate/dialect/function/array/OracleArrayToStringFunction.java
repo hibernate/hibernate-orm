@@ -20,7 +20,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Oracle array_to_string function.

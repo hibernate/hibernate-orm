@@ -36,7 +36,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	private final SqmCteStatement<T> cteStatement;
 	private final List<SqmCteTableColumn> columns;
 
-	// Need to suppress some Checker Framework errors, because passing the `this` reference is unsafe,
+	// Need to suppress static analysis errors because passing the `this` reference is unsafe,
 	// though we make it safe by not calling any methods on it until initialization finishes
 	@SuppressWarnings({"uninitialized", "method.invocation", "argument"})
 	private SqmCteTable(

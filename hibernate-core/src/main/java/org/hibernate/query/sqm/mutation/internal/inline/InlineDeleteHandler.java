@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.mutation.internal.inline;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableInteger;

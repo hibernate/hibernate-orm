@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
@@ -41,11 +40,11 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public @NonNull SqmPath<?> getLhs() {
+	public @Nonnull SqmPath<?> getLhs() {
 		return castNonNull( super.getLhs() );
 	}
 
-	protected @NonNull NavigablePath getParentNavigablePath() {
+	protected @Nonnull NavigablePath getParentNavigablePath() {
 		// Since the LHS is non-null, we know that the navigable path must have a parent
 		return castNonNull( getNavigablePath().getParent() );
 	}
@@ -58,7 +57,7 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public @NonNull SqmBindableType<T> getNodeType() {
+	public @Nonnull SqmBindableType<T> getNodeType() {
 		return getReferencedPathSource().getExpressible();
 	}
 

@@ -7,7 +7,7 @@ package org.hibernate.boot.model.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.model.naming.Identifier;

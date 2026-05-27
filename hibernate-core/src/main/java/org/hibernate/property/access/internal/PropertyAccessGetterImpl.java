@@ -4,7 +4,7 @@
  */
 package org.hibernate.property.access.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;

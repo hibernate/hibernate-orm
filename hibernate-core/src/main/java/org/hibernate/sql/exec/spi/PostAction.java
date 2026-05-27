@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 
 import java.sql.Connection;

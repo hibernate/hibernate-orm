@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -201,7 +201,7 @@ public sealed class Column
 		return qualifyAlias( dialect, suffix, aliasRoot() );
 	}
 
-	private @NonNull String aliasRoot() {
+	private @Nonnull String aliasRoot() {
 		final int lastLetter = lastIndexOfLetter( name );
 		if ( lastLetter == -1 ) {
 			return "column";
@@ -214,7 +214,7 @@ public sealed class Column
 		}
 	}
 
-	private @NonNull String qualifyAlias(Dialect dialect, String suffix, String alias) {
+	private @Nonnull String qualifyAlias(Dialect dialect, String suffix, String alias) {
 		final int suffixLength = suffix.length();
 		final int maxAliasLength = dialect.getMaxAliasLength();
 		final int freeLength = maxAliasLength - suffixLength;

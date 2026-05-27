@@ -4,7 +4,7 @@
  */
 package org.hibernate.processor;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.annotation.AnnotationMetaPackage;
 import org.hibernate.processor.annotation.NonManagedMetamodel;
@@ -466,7 +466,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private @Nullable AnnotationMetaEntity parentMetadata(
-			@Nullable Element parent, Function<String, @Nullable Object> metamodel) {
+			@Nullable Element parent, Function<String, Object> metamodel) {
 		if ( parent instanceof TypeElement parentElement
 				&& metamodel.apply( parentElement.getQualifiedName().toString() )
 						instanceof AnnotationMetaEntity parentMetaEntity ) {

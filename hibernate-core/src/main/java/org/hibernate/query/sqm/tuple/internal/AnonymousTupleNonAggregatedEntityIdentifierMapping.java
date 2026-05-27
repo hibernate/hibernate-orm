@@ -21,7 +21,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmExpressible;
 
 import jakarta.persistence.metamodel.Attribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Christian Beikov

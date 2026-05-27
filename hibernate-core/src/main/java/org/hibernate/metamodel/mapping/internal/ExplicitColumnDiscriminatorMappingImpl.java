@@ -4,7 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;

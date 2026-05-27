@@ -6,7 +6,7 @@ package org.hibernate.query.criteria;
 
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Steve Ebersole

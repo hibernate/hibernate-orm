@@ -5,7 +5,7 @@
 package org.hibernate.engine.transaction.internal;
 
 import jakarta.transaction.Synchronization;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;

@@ -13,7 +13,6 @@ import java.util.function.Function;
 
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -141,7 +140,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	@Internal
 	public <X> SqmSelectStatement<X> createCopy(SqmCopyContext context, Class<X> resultType) {
 		final Set<SqmParameter<?>> hqlParameters = this.parameters;
-		final Set<@NonNull SqmParameter<?>> parameters;
+		final Set<SqmParameter<?>> parameters;
 		if ( hqlParameters == null ) {
 			parameters = null;
 		}

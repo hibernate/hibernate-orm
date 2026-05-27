@@ -4,8 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -59,7 +59,7 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	}
 
 	@Override
-	public @NonNull SqmBindableType<Long> getNodeType() {
+	public @Nonnull SqmBindableType<Long> getNodeType() {
 		return castNonNull( super.getNodeType() );
 	}
 

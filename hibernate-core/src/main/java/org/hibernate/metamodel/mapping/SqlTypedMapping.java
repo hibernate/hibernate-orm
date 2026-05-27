@@ -6,7 +6,7 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.jdbc.Size;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Models the type of a thing that can be used as an expression in a SQL query

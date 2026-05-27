@@ -22,7 +22,7 @@ import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 

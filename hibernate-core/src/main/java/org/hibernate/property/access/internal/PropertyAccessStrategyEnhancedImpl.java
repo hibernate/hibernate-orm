@@ -8,7 +8,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Defines a strategy for accessing property values via a get/set pair, which may be nonpublic.  This

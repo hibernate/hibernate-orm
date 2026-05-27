@@ -8,8 +8,8 @@ import java.util.Locale;
 
 import jakarta.persistence.metamodel.Bindable;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
@@ -116,7 +116,7 @@ public interface SqmPathSource<J>
 	SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource);
 
 	@Override
-	default @NonNull SqmBindableType<J> getExpressible() {
+	default @Nonnull SqmBindableType<J> getExpressible() {
 		return getPathType();
 	}
 

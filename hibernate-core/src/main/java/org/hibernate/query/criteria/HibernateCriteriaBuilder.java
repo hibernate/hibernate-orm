@@ -21,7 +21,7 @@ import java.util.Set;
 
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.common.FrameKind;

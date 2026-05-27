@@ -6,7 +6,7 @@ package org.hibernate.property.access.spi;
 
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Defines how a given persistent attribute is accessed by exposing

@@ -4,7 +4,7 @@
  */
 package org.hibernate.processor.annotation;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 
 import javax.lang.model.element.AnnotationMirror;

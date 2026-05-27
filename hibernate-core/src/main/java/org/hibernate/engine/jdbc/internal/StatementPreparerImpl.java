@@ -19,7 +19,7 @@ import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 

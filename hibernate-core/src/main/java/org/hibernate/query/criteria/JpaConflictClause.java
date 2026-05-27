@@ -11,7 +11,7 @@ import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A conflict clause for insert statements.

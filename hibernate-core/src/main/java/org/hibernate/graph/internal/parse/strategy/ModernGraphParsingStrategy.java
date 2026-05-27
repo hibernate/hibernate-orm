@@ -16,7 +16,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 public class ModernGraphParsingStrategy implements GraphParsingStrategy {
 

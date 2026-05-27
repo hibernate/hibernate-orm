@@ -32,7 +32,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 import static org.hibernate.cfg.AvailableSettings.VALIDATE_XML;

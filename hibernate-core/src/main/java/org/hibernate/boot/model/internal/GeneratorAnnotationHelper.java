@@ -6,7 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.GenericGenerator;

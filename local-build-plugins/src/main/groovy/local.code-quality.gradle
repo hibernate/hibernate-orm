@@ -105,8 +105,8 @@ spotless {
 tasks.compileJava.dependsOn tasks.spotlessJavaApply
 
 dependencies {
-    compileOnly libs.checkerFramework
-    testCompileOnly libs.checkerFramework
+    compileOnly libs.jakarta.annotation
+    testCompileOnly libs.jakarta.annotation
 }
 
 tasks.forbiddenApisMain {

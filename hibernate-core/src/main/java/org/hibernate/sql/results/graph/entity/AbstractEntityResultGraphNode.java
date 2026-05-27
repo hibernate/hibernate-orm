@@ -21,7 +21,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * AbstractFetchParent sub-class for entity-valued graph nodes

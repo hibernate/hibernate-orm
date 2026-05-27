@@ -15,7 +15,7 @@ import net.bytebuddy.jar.asm.Label;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
@@ -345,7 +345,7 @@ public class SetPropertyValues implements ByteCodeAppender {
 		}
 	}
 
-	private static @NonNull Class<?> setterTypee(Member setterMember) {
+	private static @Nonnull Class<?> setterTypee(Member setterMember) {
 		if ( setterMember instanceof Method setter ) {
 			return setter.getParameterTypes()[0];
 		}

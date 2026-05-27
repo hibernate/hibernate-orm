@@ -7,7 +7,7 @@ package org.hibernate.property.access.spi;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * The contract for setting the value of a persistent attribute on its container/owner.

@@ -27,7 +27,7 @@ import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Base support for CollectionInitializer implementations

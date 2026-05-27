@@ -5,7 +5,6 @@ antlr = "4.13.2"
 # WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
 # make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
 byteBuddy = "1.18.8"
-checkerFramework = "4.1.0"
 geolatte = "1.12"
 hibernateModels = "1.1.1"
 jandex = "3.5.3"
@@ -130,7 +129,6 @@ antlr = { group = "org.antlr", name = "antlr4", version.ref = "antlr" }
 antlrRuntime = { group = "org.antlr", name = "antlr4-runtime", version.ref = "antlr" }
 byteBuddy = { group = "net.bytebuddy", name = "byte-buddy", version.ref = "byteBuddy" }
 byteBuddyAgent = { group = "net.bytebuddy", name = "byte-buddy-agent", version.ref = "byteBuddy" }
-checkerFramework = { group = "org.checkerframework", name = "checker-qual-android", version.ref = "checkerFramework" }
 logging = { group = "org.jboss.logging", name = "jboss-logging", version.ref = "jbossLogging" }
 loggingAnnotations = { group = "org.jboss.logging", name = "jboss-logging-annotations", version.ref = "jbossLoggingTool" }
 loggingProcessor = { group = "org.jboss.logging", name = "jboss-logging-processor", version.ref = "jbossLoggingTool" }

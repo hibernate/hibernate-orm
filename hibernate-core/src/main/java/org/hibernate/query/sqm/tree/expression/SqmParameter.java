@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;

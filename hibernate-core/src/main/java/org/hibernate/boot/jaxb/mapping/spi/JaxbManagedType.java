@@ -5,7 +5,7 @@
 package org.hibernate.boot.jaxb.mapping.spi;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Common interface for JAXB bindings representing entities, mapped-superclasses and embeddables (JPA collective

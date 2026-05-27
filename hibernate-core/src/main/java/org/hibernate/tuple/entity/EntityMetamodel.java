@@ -51,7 +51,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.util.Collections.singleton;
 import static java.util.Collections.unmodifiableSet;

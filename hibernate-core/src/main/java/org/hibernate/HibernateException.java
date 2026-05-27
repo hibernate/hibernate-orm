@@ -5,7 +5,7 @@
 package org.hibernate;
 
 import jakarta.persistence.PersistenceException;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * The base type for exceptions thrown by Hibernate.

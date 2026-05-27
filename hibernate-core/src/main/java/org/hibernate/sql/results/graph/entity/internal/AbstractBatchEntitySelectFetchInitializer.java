@@ -22,7 +22,7 @@ import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;

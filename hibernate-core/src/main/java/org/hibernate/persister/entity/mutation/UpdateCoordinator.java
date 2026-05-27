@@ -7,7 +7,7 @@ package org.hibernate.persister.entity.mutation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Coordinates the updating of an entity.

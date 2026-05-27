@@ -7,7 +7,7 @@ package org.hibernate.service.spi;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Additional integration contracts for a service registry.

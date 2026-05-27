@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * ResultsConsumer for creating a List of results
@@ -286,7 +286,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	@SuppressWarnings("unchecked") //TODO: fix the unchecked casts
 	private JavaType<R> resolveDomainResultJavaType(
 			Class<R> domainResultResultJavaType,
-			List<@Nullable JavaType<?>> resultJavaTypes,
+			List<JavaType<?>> resultJavaTypes,
 			TypeConfiguration typeConfiguration) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 

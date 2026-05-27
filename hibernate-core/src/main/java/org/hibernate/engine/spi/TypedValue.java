@@ -12,7 +12,7 @@ import java.io.Serializable;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * An ordered pair of a value and its Hibernate type.

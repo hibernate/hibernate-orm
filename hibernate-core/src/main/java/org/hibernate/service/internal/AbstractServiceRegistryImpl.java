@@ -30,7 +30,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.service.internal.ServiceLogger.SERVICE_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;

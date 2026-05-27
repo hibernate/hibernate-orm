@@ -4,7 +4,7 @@
  */
 package org.hibernate.vector.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.SqlTypes;

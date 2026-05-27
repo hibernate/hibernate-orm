@@ -4,8 +4,8 @@
  */
 package org.hibernate.internal.util.collections;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.InstanceIdentity;
 import org.hibernate.internal.build.AllowReflection;
 
@@ -235,17 +235,17 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 	}
 
 	@Override
-	public @NonNull Set<K> keySet() {
+	public @Nonnull Set<K> keySet() {
 		return new KeySet();
 	}
 
 	@Override
-	public @NonNull Collection<V> values() {
+	public @Nonnull Collection<V> values() {
 		return new Values();
 	}
 
 	@Override
-	public @NonNull Set<Map.Entry<K, V>> entrySet() {
+	public @Nonnull Set<Map.Entry<K, V>> entrySet() {
 		return new EntrySet();
 	}
 
@@ -331,7 +331,7 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 
 	private class KeySet extends AbstractSet<K> {
 		@Override
-		public @NonNull Iterator<K> iterator() {
+		public @Nonnull Iterator<K> iterator() {
 			return new KeyIterator();
 		}
 
@@ -348,7 +348,7 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 
 	private class Values extends AbstractCollection<V> {
 		@Override
-		public @NonNull Iterator<V> iterator() {
+		public @Nonnull Iterator<V> iterator() {
 			return new ValueIterator();
 		}
 
@@ -360,7 +360,7 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 
 	private class EntrySet extends AbstractSet<Entry<K, V>> {
 		@Override
-		public @NonNull Iterator<Entry<K, V>> iterator() {
+		public @Nonnull Iterator<Entry<K, V>> iterator() {
 			return new EntryIterator();
 		}
 
@@ -376,14 +376,14 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 		}
 
 		@Override
-		public @NonNull Object @NonNull [] toArray() {
+		public @Nonnull Object[] toArray() {
 			return toArray( new Object[0] );
 		}
 
 		@Override
 		@AllowReflection
 		@SuppressWarnings("unchecked")
-		public <T> @NonNull T @NonNull [] toArray(T[] a) {
+		public <T> @Nonnull T[] toArray(T[] a) {
 			int size = size();
 			if ( a.length < size ) {
 				a = (T[]) Array.newInstance( a.getClass().getComponentType(), size );

@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.XmlAttributes;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 

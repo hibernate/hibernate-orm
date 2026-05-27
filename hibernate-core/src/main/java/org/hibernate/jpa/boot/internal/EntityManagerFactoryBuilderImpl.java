@@ -8,7 +8,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitTransactionType;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactoryObserver;
@@ -225,8 +225,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private MergedSettings createMergedSettings(
-			@NonNull HibernatePersistenceConfiguration cfg,
-			@NonNull StandardServiceRegistryBuilder standardRegistryBuilder) {
+			@Nonnull HibernatePersistenceConfiguration cfg,
+			@Nonnull StandardServiceRegistryBuilder standardRegistryBuilder) {
 		var mergedSettings = new MergedSettings();
 
 		mergedSettings.getConfigurationValues().putAll( cfg.properties() );

@@ -4,7 +4,7 @@
  */
 package org.hibernate.processor.model;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.processor.Context;
 
 import java.util.List;

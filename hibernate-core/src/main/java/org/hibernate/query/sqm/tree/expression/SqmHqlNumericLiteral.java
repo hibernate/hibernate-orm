@@ -8,8 +8,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -65,7 +65,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	}
 
 	@Override
-	public @NonNull N getLiteralValue() {
+	public @Nonnull N getLiteralValue() {
 		return typeCategory.parseLiteralValue( literalValue );
 	}
 

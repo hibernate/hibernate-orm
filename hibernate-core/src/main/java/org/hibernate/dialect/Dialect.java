@@ -8,7 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;

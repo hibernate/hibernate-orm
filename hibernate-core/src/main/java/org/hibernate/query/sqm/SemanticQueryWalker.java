@@ -6,7 +6,7 @@ package org.hibernate.query.sqm;
 
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -266,7 +266,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitFunctionPath(SqmFunctionPath<?> functionPath);
 
-	T visitTreatedPath(SqmTreatedPath<?, @Nullable ?> sqmTreatedPath);
+	T visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath);
 
 	T visitCorrelation(SqmCorrelation<?, ?> correlation);
 

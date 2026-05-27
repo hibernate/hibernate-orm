@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Steve Ebersole

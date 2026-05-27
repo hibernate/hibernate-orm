@@ -24,7 +24,6 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.criteria.JpaCrossJoin;
@@ -800,7 +799,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		expressibleType = (SqmBindableType<T>) type;
 	}
 
-	private void applyInferableType(@UnknownInitialization SqmSubQuery<T> this, Class<T> type, NodeBuilder nodeBuilder) {
+	private void applyInferableType(SqmSubQuery<T> this, Class<T> type, NodeBuilder nodeBuilder) {
 		if ( type != null ) {
 			final EntityDomainType<T> entityDescriptor = nodeBuilder.getDomainModel().findEntityType( type );
 			expressibleType =

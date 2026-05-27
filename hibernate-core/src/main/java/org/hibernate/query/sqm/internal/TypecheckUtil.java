@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.internal;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.metamodel.EntityType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;

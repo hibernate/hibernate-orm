@@ -6,7 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;

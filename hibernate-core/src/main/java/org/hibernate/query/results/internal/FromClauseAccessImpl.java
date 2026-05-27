@@ -12,7 +12,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * FromClauseAccess implementation used while building

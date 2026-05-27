@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import tools.jackson.databind.JacksonModule;
 import tools.jackson.databind.cfg.MapperBuilder;
 

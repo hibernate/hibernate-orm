@@ -11,7 +11,7 @@ import org.hibernate.cache.spi.Region;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.stat.CacheableDataStatistics;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +23,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 	private final @Nullable LongAdder cachePutCount;
 	private final @Nullable LongAdder cacheRemoveCount;
 
-	public AbstractCacheableDataStatistics(Supplier<@Nullable Region> regionSupplier) {
+	public AbstractCacheableDataStatistics(Supplier<Region> regionSupplier) {
 		final var region = regionSupplier.get();
 		if ( region == null ) {
 			cacheRegionName = null;

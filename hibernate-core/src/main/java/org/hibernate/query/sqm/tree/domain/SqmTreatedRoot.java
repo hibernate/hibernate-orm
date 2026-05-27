@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -93,7 +92,7 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	}
 
 	@Override
-	public @NonNull SqmBindableType getNodeType() {
+	public @Nonnull SqmBindableType getNodeType() {
 		return treatTarget;
 	}
 
@@ -111,7 +110,7 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object accept(SemanticQueryWalker walker) {
-		// Cast needed for Checker Framework, because the class uses raw types
+		// Cast needed for static nullness analysis because the class uses raw types.
 		return castNonNull( walker.visitTreatedPath( this ) );
 	}
 

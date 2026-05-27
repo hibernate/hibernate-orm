@@ -43,7 +43,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ClockHelper;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.sql.Types.TIMESTAMP;

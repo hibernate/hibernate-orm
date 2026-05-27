@@ -4,7 +4,7 @@
  */
 package org.hibernate.processor.annotation;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.processor.Context;
 
 import javax.lang.model.element.Element;
@@ -37,7 +37,7 @@ import static org.hibernate.processor.util.TypeUtils.toArrayTypeString;
 /**
  * @author Gavin King
  */
-public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable DataAnnotationMetaAttribute, Element> {
+public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<DataAnnotationMetaAttribute, Element> {
 
 	private final AnnotationMetaEntity entity;
 	private final Context context;

@@ -10,7 +10,7 @@ import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Contract for an initiator of services that target the standard {@link org.hibernate.service.ServiceRegistry}.

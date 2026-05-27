@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * The contract for getting the value of a persistent attribute from its container/owner.

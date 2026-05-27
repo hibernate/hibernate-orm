@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.internal.support;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;

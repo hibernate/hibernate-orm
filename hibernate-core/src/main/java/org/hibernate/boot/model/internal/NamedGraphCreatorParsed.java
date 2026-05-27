@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.model.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.GraphParserMode;
 import org.hibernate.UnknownEntityTypeException;
@@ -65,7 +65,7 @@ class NamedGraphCreatorParsed implements NamedGraphCreator {
 		return parseGraphForLegacyParsingMode( entityDomainClassResolver, entityDomainNameResolver );
 	}
 
-	private static @NonNull EntityDomainType<?> resolve(
+	private static @Nonnull EntityDomainType<?> resolve(
 			String entityName, GraphParserEntityNameResolver entityDomainNameResolver) {
 		final var entityDomainType =
 				(EntityDomainType<?>)

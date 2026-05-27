@@ -6,7 +6,7 @@ package org.hibernate.query.internal;
 
 import java.util.Collection;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.QueryArgumentException;
 import org.hibernate.query.QueryParameter;
@@ -70,7 +70,7 @@ class QueryParameterBindingValidator {
 						.getJavaType();
 	}
 
-	private static @NonNull QueryArgumentException queryArgumentException(
+	private static @Nonnull QueryArgumentException queryArgumentException(
 			String messagePattern, Class<?> parameterJavaType, Object value, QueryParameter<?> parameter) {
 		final String message = String.format( messagePattern,
 				parameter.isNamed() ? "named '" + parameter.getName() + "'"

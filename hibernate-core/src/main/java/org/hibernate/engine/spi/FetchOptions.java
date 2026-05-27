@@ -13,7 +13,7 @@ import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * {@linkplain jakarta.persistence.FetchOption Fetch options}

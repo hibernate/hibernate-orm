@@ -48,7 +48,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.lang.System.arraycopy;
 import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
@@ -684,7 +684,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	 *
 	 * @param spaces The spaces to invalidate
 	 */
-	private void invalidateSpaces(String @Nullable [] spaces) {
+	private void invalidateSpaces(@Nullable String[] spaces) {
 		if ( spaces != null && spaces.length > 0 ) {
 			for ( var space : spaces ) {
 				transactionCompletionCallbacks.addSpaceToInvalidate( space );

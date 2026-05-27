@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
 import org.hibernate.Internal;
 import org.hibernate.property.access.internal.AbstractSetterMethodSerialForm;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.property.access.internal.AccessStrategyHelper.determineEnhancementState;
 import static org.hibernate.property.access.internal.AccessStrategyHelper.handleEnhancedInjection;

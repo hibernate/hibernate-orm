@@ -80,7 +80,7 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	/**
 	 * The treats associated with this SqmFrom
 	 */
-	List<SqmTreatedFrom<?,?,@org.checkerframework.checker.nullness.qual.Nullable ?>> getSqmTreats();
+	List<SqmTreatedFrom<?,?,?>> getSqmTreats();
 
 	default boolean hasTreats() {
 		return !isEmpty( getSqmTreats() );

@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.SemanticException;

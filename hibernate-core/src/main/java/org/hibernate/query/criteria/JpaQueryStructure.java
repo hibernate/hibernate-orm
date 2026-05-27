@@ -12,7 +12,7 @@ import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.common.FetchClauseType;
 
 /**

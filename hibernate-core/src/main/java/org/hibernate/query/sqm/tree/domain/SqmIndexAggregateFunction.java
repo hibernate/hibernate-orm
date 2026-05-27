@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.annotation.Nullable;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -66,21 +66,21 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 	}
 
 	@Override
-	public @NonNull SqmBindableType<T> getExpressible() {
+	public @Nonnull SqmBindableType<T> getExpressible() {
 		return returnableType == null
 				? super.getExpressible()
 				: castNonNull( nodeBuilder().resolveExpressible( returnableType ) );
 	}
 
 	@Override
-	public @NonNull JavaType<T> getJavaTypeDescriptor() {
+	public @Nonnull JavaType<T> getJavaTypeDescriptor() {
 		return returnableType == null
 				? super.getJavaTypeDescriptor()
 				: returnableType.getExpressibleJavaType();
 	}
 
 	@Override
-	public @NonNull JavaType<T> getNodeJavaType() {
+	public @Nonnull JavaType<T> getNodeJavaType() {
 		return returnableType == null ? super.getNodeJavaType() : returnableType.getExpressibleJavaType();
 	}
 

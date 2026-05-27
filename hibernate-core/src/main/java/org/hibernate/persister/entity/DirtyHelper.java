@@ -11,7 +11,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Operations for searching an array of property values for modified elements.

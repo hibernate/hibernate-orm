@@ -6,7 +6,7 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 import org.hibernate.action.queue.spi.decompose.entity.UpdateCacheHandling;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;

@@ -5,7 +5,7 @@
 package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TrimFunction;

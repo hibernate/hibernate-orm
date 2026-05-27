@@ -15,7 +15,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collection;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;

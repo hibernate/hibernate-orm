@@ -13,7 +13,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Information about the current state of a managed entity instance with respect

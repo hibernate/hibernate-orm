@@ -5,7 +5,7 @@
 package org.hibernate.jdbc;
 import org.hibernate.HibernateException;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Indicates a failed batch entry (-3 return).

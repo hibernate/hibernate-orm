@@ -23,7 +23,7 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Andrea Boriero

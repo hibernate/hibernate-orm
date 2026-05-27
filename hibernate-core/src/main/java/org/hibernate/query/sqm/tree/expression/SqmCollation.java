@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -36,12 +36,12 @@ public class SqmCollation extends SqmLiteral<String> {
 	}
 
 	@Override
-	public @NonNull String getLiteralValue() {
+	public @Nonnull String getLiteralValue() {
 		return castNonNull( super.getLiteralValue() );
 	}
 
 	@Override
-	public @NonNull SqmBindableType<String> getNodeType() {
+	public @Nonnull SqmBindableType<String> getNodeType() {
 		return castNonNull( super.getNodeType() );
 	}
 

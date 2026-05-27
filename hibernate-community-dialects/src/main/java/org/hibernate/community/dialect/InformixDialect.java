@@ -11,7 +11,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.TimeZone;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;

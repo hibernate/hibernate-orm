@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcTypeBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.type.descriptor.JdbcTypeNameMapper.isStandardTypeCode;
 

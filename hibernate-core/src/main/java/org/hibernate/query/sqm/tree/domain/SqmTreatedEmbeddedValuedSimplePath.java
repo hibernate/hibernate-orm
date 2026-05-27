@@ -5,8 +5,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -84,7 +82,7 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 	}
 
 	@Override
-	public @NonNull SqmBindableType<S> getNodeType() {
+	public @Nonnull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 
@@ -100,8 +98,8 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		// Cast needed for Checker Framework
-		return walker.visitTreatedPath( (SqmTreatedPath<?, @Nullable ?>) this );
+		// Cast needed for static nullness analysis.
+		return walker.visitTreatedPath( (SqmTreatedPath<?, ?>) this );
 	}
 
 	@Override

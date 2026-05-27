@@ -26,7 +26,7 @@ import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.IMPLICIT_JSON;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.JSON;

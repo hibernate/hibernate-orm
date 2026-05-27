@@ -7,7 +7,7 @@ package org.hibernate.query.named.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;

@@ -10,7 +10,7 @@ import java.util.Map;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.models.spi.AnnotationTarget;
 import jakarta.persistence.QueryFlushMode;
 

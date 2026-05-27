@@ -10,7 +10,7 @@ import jakarta.transaction.Synchronization;
 import jakarta.transaction.Transaction;
 
 import jakarta.transaction.TransactionManager;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -95,7 +95,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 		}
 	}
 
-	private static @NonNull Transaction getTransaction(TransactionManager transactionManager) {
+	private static @Nonnull Transaction getTransaction(TransactionManager transactionManager) {
 		try {
 			final var transaction = transactionManager.getTransaction();
 			if ( transaction == null ) {

@@ -6,7 +6,7 @@ package org.hibernate;
 
 import jakarta.persistence.EntityTransaction;
 import jakarta.transaction.Synchronization;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 

@@ -4,7 +4,7 @@
  */
 package org.hibernate.property.access.spi;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.Internal;
 
 import java.lang.reflect.Field;
@@ -30,7 +30,7 @@ public class EnhancedGetterFieldImpl extends GetterFieldImpl {
 	}
 
 	@Override
-	public @NonNull Method getMethod() {
+	public @Nonnull Method getMethod() {
 		return castNonNull( super.getMethod() );
 	}
 

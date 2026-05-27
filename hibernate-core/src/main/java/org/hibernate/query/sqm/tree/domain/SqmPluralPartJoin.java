@@ -8,7 +8,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import java.util.Locale;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -89,7 +88,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	}
 
 	@Override
-	public @NonNull SqmFrom<?, O> getLhs() {
+	public @Nonnull SqmFrom<?, O> getLhs() {
 		return castNonNull( super.getLhs() );
 	}
 

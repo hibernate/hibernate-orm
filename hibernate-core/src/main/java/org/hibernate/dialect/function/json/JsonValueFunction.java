@@ -28,7 +28,7 @@ import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.IMPLICIT_JSON;

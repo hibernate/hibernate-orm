@@ -8,7 +8,7 @@ import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Timeout;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.MappingException;

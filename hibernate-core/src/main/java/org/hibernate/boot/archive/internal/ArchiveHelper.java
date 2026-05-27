@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.archive.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
@@ -243,7 +243,7 @@ public class ArchiveHelper {
 
 	@Nullable
 	public static ArchiveDescriptor standardJarFileReferenceResolution(
-			@NonNull String jarFileReference,
+			@Nonnull String jarFileReference,
 			ArchiveDescriptorFactory archiveDescriptorFactory) {
 
 		// try it as a URL

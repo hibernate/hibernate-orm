@@ -4,8 +4,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -62,14 +61,14 @@ public interface SqmCacheable {
 		return false;
 	}
 
-	static <K> boolean areCompatible(@Nullable Map<@NonNull K, @NonNull ? extends SqmCacheable> collection1, @Nullable Map<@NonNull K, @NonNull ? extends SqmCacheable> collection2) {
+	static <K> boolean areCompatible(@Nullable Map<K, ? extends SqmCacheable> collection1, @Nullable Map<K, ? extends SqmCacheable> collection2) {
 		if ( collection1 == null ) {
 			return collection2 == null;
 		}
 		if ( collection2 != null ) {
 			final int size = collection1.size();
 			if ( size == collection2.size() ) {
-				for ( Map.Entry<@NonNull K, @NonNull ? extends SqmCacheable> entry : collection1.entrySet() ) {
+				for ( Map.Entry<K, ? extends SqmCacheable> entry : collection1.entrySet() ) {
 					final SqmCacheable otherValue = collection2.get( entry.getKey() );
 					if ( otherValue != null && !entry.getValue().isCompatible( otherValue ) ) {
 						return false;
@@ -85,7 +84,7 @@ public interface SqmCacheable {
 		return e1 == null ? 0 : e1.cacheHashCode();
 	}
 
-	static int cacheHashCode(@Nullable Collection<@NonNull ? extends SqmCacheable> collection) {
+	static int cacheHashCode(@Nullable Collection<? extends SqmCacheable> collection) {
 		if ( collection == null ) {
 			return 0;
 		}
@@ -96,12 +95,12 @@ public interface SqmCacheable {
 		return result;
 	}
 
-	static int cacheHashCode(@Nullable Map<@NonNull ?, @NonNull ? extends SqmCacheable> map) {
+	static int cacheHashCode(@Nullable Map<?, ? extends SqmCacheable> map) {
 		if ( map == null ) {
 			return 0;
 		}
 		int result = 0;
-		for ( Map.Entry<@NonNull ?, @NonNull ? extends SqmCacheable> entry : map.entrySet() ) {
+		for ( Map.Entry<?, ? extends SqmCacheable> entry : map.entrySet() ) {
 			result = entry.getKey().hashCode() ^ entry.getValue().cacheHashCode();
 		}
 		return result;

@@ -4,7 +4,7 @@
  */
 package org.hibernate.query;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 
 /**

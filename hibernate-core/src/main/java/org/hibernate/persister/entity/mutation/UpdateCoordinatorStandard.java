@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
@@ -136,7 +136,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		doVersionUpdate( null, id, nextVersion, currentVersion, getLoadedState( id, session ), session );
 	}
 
-	private Object @Nullable [] getLoadedState(Object id, SharedSessionContractImplementor session) {
+	private @Nullable Object[] getLoadedState(Object id, SharedSessionContractImplementor session) {
 		return entityPersister.hasPartitionedSelectionMapping()
 				? session.getPersistenceContextInternal()
 				.getEntityHolder( session.generateEntityKey( id, entityPersister ) ).getEntityEntry().getLoadedState()

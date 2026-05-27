@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.archive.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveEntry;
@@ -245,8 +245,8 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 		return null;
 	}
 
-	@Override @NonNull
-	public ArchiveDescriptor resolveJarFileReference(@NonNull String jarFileReference) {
+	@Override @Nonnull
+	public ArchiveDescriptor resolveJarFileReference(@Nonnull String jarFileReference) {
 		// try it as a relative reference
 		final ArchiveEntry entry = findEntry( jarFileReference );
 		if ( entry != null ) {

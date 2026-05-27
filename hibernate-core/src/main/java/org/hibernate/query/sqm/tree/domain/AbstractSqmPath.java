@@ -22,7 +22,6 @@ import jakarta.persistence.metamodel.ComparableAttribute;
 import jakarta.persistence.metamodel.NumericAttribute;
 import jakarta.persistence.metamodel.TemporalAttribute;
 import jakarta.persistence.metamodel.TextAttribute;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -123,7 +122,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public @NonNull SqmBindableType<T> getNodeType() {
+	public @Nonnull SqmBindableType<T> getNodeType() {
 		return referencedPathSource.getPathType();
 	}
 
@@ -206,17 +205,17 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public @NonNull SqmBindableType<T> getExpressible() {
+	public @Nonnull SqmBindableType<T> getExpressible() {
 		return getResolvedModel().getExpressible();
 	}
 
 	@Override
-	public @NonNull JavaType<T> getJavaTypeDescriptor() {
+	public @Nonnull JavaType<T> getJavaTypeDescriptor() {
 		return castNonNull( super.getJavaTypeDescriptor() );
 	}
 
 	@Override
-	public @NonNull JavaType<T> getNodeJavaType() {
+	public @Nonnull JavaType<T> getNodeJavaType() {
 		return castNonNull( super.getNodeJavaType() );
 	}
 

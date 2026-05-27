@@ -62,7 +62,7 @@ import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.metamodel.Attribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.util.Objects.requireNonNullElse;
 

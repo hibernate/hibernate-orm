@@ -8,9 +8,8 @@ import java.util.Map;
 
 import org.hibernate.service.Service;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.PolyNull;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Provides access to the initial user-provided configuration values.  Generally speaking
@@ -54,7 +53,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  Will be the defaultValue if no such setting was defined.
 	 */
-	<T> @PolyNull T getSetting(String name, Converter<T> converter, @PolyNull T defaultValue);
+	<T> @Nullable T getSetting(String name, Converter<T> converter, @Nullable T defaultValue);
 
 	/**
 	 * Get the named setting.  Differs from the form taking a Converter in that here we expect to have a simple
@@ -71,7 +70,7 @@ public interface ConfigurationService extends Service {
 	 *             This method does not report errors correctly.
 	 */
 	@Deprecated(since = "7.2")
-	<T> @PolyNull T getSetting(String name, Class<T> expected, @PolyNull T defaultValue);
+	<T> @Nullable T getSetting(String name, Class<T> expected, @Nullable T defaultValue);
 
 	/**
 	 * Simple conversion contract for converting an untyped object to a specified type.
@@ -86,6 +85,6 @@ public interface ConfigurationService extends Service {
 		 *
 		 * @return The converted (typed) value.
 		 */
-		@NonNull T convert(Object value);
+		@Nonnull T convert(Object value);
 	}
 }

@@ -13,7 +13,7 @@ import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.engine.FetchStyle.JOIN;
 import static org.hibernate.engine.FetchStyle.SUBSELECT;

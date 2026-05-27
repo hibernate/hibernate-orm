@@ -6,7 +6,7 @@ package org.hibernate.stat;
 
 import java.io.Serializable;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Steve Ebersole

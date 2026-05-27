@@ -97,6 +97,12 @@ integrationTest {
     if ( project.hasProperty( 'MAVEN_MIRROR' ) ) {
         environment "MAVEN_MIRROR", project.property( 'MAVEN_MIRROR' )
     }
+    if ( project.hasProperty( 'MAVEN_MIRROR_USERNAME' ) ) {
+        environment "MAVEN_MIRROR_USERNAME", project.property( 'MAVEN_MIRROR_USERNAME' )
+    }
+    if ( project.hasProperty( 'MAVEN_MIRROR_PASSWORD' ) ) {
+        environment "MAVEN_MIRROR_PASSWORD", project.property( 'MAVEN_MIRROR_PASSWORD' )
+    }
     testLogging {
         exceptionFormat = 'full'
     }

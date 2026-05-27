@@ -30,6 +30,7 @@ public abstract class AbstractMavenTestIT {
 		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
 		mavenCli = new MavenCli( classWorld );
 		String mavenMirror = System.getenv( "MAVEN_MIRROR" );
+		String mavenMirrorUsername = System.getenv( "MAVEN_MIRROR_USERNAME" );
 		if ( mavenMirror != null && !mavenMirror.isEmpty() ) {
 			mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
 			Files.writeString( mavenSettingsFile,
@@ -41,6 +42,14 @@ public abstract class AbstractMavenTestIT {
 					"      <url>${env.MAVEN_MIRROR}</url>\n" +
 					"    </mirror>\n" +
 					"  </mirrors>\n" +
+					( mavenMirrorUsername == null ? "" :
+							"  <servers>\n" +
+							"    <server>\n" +
+							"      <id>ci-mirror</id>\n" +
+							"      <username>${env.MAVEN_MIRROR_USERNAME}</username>\n" +
+							"      <password>${env.MAVEN_MIRROR_PASSWORD}</password>\n" +
+							"    </server>\n" +
+							"  </servers>" ) +
 					"</settings>\n" );
 		}
 	}

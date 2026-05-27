@@ -1902,7 +1902,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( isNative ) {
 					validateSql( method, mirror, queryString, paramNames, value );
 				}
-				else {
+				else if ( processedQuery != null ) {
 					validateHql( method, queryReturnType.validationReturnType,
 							mirror, value, processedQuery, paramNames, paramTypes );
 				}
@@ -1929,7 +1929,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private String staticQueryValidationString(
+	private @Nullable String staticQueryValidationString(
 			ExecutableElement method,
 			@Nullable TypeMirror returnType,
 			AnnotationMirror mirror,
@@ -1944,7 +1944,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					returnType != null && returnType.getKind() == TypeKind.DECLARED
 							? (DeclaredType) returnType
 							: null;
-			return addFromClauseIfNecessary( selectedQueryString, implicitEntityName( declaredReturnType ) );
+			final String entityName = implicitEntityName( declaredReturnType );
+			if ( entityName == null && needsFromClause( selectedQueryString ) ) {
+				return null;
+			}
+			return addFromClauseIfNecessary( selectedQueryString, entityName );
 		}
 		else {
 			return queryString;
@@ -4736,6 +4740,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			return hql + " from " + entityType;
 		}
+	}
+
+	private static boolean needsFromClause(String hql) {
+		if ( isInsertUpdateDelete( hql ) ) {
+			return false;
+		}
+		final var hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
+		for ( final var token : hqlLexer.getAllTokens() ) {
+			if ( token.getChannel() == DEFAULT_CHANNEL && token.getType() == FROM ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private @Nullable DeclaredType resultType(

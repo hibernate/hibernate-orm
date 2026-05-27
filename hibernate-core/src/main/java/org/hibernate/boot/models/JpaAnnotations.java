@@ -49,6 +49,8 @@ import org.hibernate.boot.models.annotations.internal.EnumeratedValueJpaAnnotati
 import org.hibernate.boot.models.annotations.internal.ExcludeDefaultListenersJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ExcludeSuperclassListenersJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ExcludedFromVersioningJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FieldResultJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ForeignKeyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
@@ -147,6 +149,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumeratedValue;
 import jakarta.persistence.ExcludeDefaultListeners;
 import jakarta.persistence.ExcludeSuperclassListeners;
+import jakarta.persistence.Fetch;
 import jakarta.persistence.FieldResult;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
@@ -452,6 +455,21 @@ public interface JpaAnnotations {
 			ExcludeSuperclassListenersJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
+	);
+
+	OrmAnnotationDescriptor<Fetch.Fetches,FetchesJpaAnnotation> FETCHES = new OrmAnnotationDescriptor<>(
+			Fetch.Fetches.class,
+			FetchesJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD ),
+			false
+	);
+
+	OrmAnnotationDescriptor<Fetch,FetchJpaAnnotation> FETCH = new OrmAnnotationDescriptor<>(
+			Fetch.class,
+			FetchJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD ),
+			false,
+			FETCHES
 	);
 
 	OrmAnnotationDescriptor<FieldResult,FieldResultJpaAnnotation> FIELD_RESULT = new OrmAnnotationDescriptor<>(

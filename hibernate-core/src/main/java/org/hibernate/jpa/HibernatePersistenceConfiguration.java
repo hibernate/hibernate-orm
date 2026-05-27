@@ -8,6 +8,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SchemaManagementAction;
@@ -763,6 +764,13 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	@Nonnull
 	public HibernatePersistenceConfiguration validationMode(@Nonnull ValidationMode validationMode) {
 		super.validationMode( validationMode );
+		return this;
+	}
+
+	@Override
+	@Nonnull
+	public HibernatePersistenceConfiguration defaultToOneFetchType(@Nonnull FetchType defaultToOneFetchType) {
+		super.defaultToOneFetchType( defaultToOneFetchType );
 		return this;
 	}
 

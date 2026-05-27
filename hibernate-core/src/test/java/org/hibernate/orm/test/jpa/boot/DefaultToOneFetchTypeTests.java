@@ -91,6 +91,15 @@ public class DefaultToOneFetchTypeTests {
 	}
 
 	@Test
+	void testCovariantPersistenceConfiguration() {
+		final HibernatePersistenceConfiguration configuration = new HibernatePersistenceConfiguration( "unit" )
+				.defaultToOneFetchType( FetchType.LAZY )
+				.jdbcUrl( "jdbc:h2:mem:db_covariant_persistence_configuration" );
+
+		assertThat( configuration.defaultToOneFetchType() ).isEqualTo( FetchType.LAZY );
+	}
+
+	@Test
 	void testEagerPersistenceConfiguration() {
 		try( final EntityManagerFactory emf = new HibernatePersistenceConfiguration( "unit" )
 				.defaultToOneFetchType( FetchType.EAGER )

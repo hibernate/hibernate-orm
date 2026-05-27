@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tuple.internal;
 
 import java.util.function.BiConsumer;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;

@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -71,7 +70,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
-	public @NonNull SqmBindableType<E> getNodeType() {
+	public @Nonnull SqmBindableType<E> getNodeType() {
 		return this;
 	}
 

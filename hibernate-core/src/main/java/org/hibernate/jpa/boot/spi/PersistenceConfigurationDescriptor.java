@@ -10,7 +10,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SchemaManagementAction;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
@@ -61,8 +61,8 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 	private final List<String> discoveredClassNames;
 
 	public PersistenceConfigurationDescriptor(
-			@NonNull HibernatePersistenceConfiguration persistenceConfiguration,
-			@NonNull StandardServiceRegistry standardServiceRegistry) {
+			@Nonnull HibernatePersistenceConfiguration persistenceConfiguration,
+			@Nonnull StandardServiceRegistry standardServiceRegistry) {
 		this.persistenceConfiguration = persistenceConfiguration;
 		this.properties = persistenceConfigurationProperties( persistenceConfiguration );
 		this.managedClassNames = persistenceConfiguration.managedClasses().stream().map( Class::getName ).toList();
@@ -77,7 +77,7 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 		return names;
 	}
 
-	public PersistenceConfigurationDescriptor(@NonNull PersistenceConfiguration persistenceConfiguration) {
+	public PersistenceConfigurationDescriptor(@Nonnull PersistenceConfiguration persistenceConfiguration) {
 		this.persistenceConfiguration = persistenceConfiguration;
 		this.properties = persistenceConfigurationProperties( persistenceConfiguration );
 		this.managedClassNames = persistenceConfiguration.managedClasses().stream().map( Class::getName ).toList();
@@ -269,8 +269,8 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 	}
 
 	private static ScanningProvider determineScanningProvider(
-			@NonNull ConfigurationService configurationService,
-			@NonNull ClassLoaderService classLoaderService) {
+			@Nonnull ConfigurationService configurationService,
+			@Nonnull ClassLoaderService classLoaderService) {
 		var configuredProvider = determineScanningProviderFromSetting( configurationService, classLoaderService );
 		if ( configuredProvider != null ) {
 			return configuredProvider;
@@ -296,8 +296,8 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 	}
 
 	private static ScanningProvider determineScanningProviderFromSetting(
-			@NonNull ConfigurationService configurationService,
-			@NonNull ClassLoaderService classLoaderService) {
+			@Nonnull ConfigurationService configurationService,
+			@Nonnull ClassLoaderService classLoaderService) {
 		var providerSetting = configurationService.getSettings().get( PersistenceSettings.SCANNING );
 		if ( providerSetting == null ) {
 			return null;
@@ -340,8 +340,8 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 	}
 
 	private static Scanner determineScannerFromSetting(
-			@NonNull ConfigurationService configurationService,
-			@NonNull ClassLoaderService classLoaderService) {
+			@Nonnull ConfigurationService configurationService,
+			@Nonnull ClassLoaderService classLoaderService) {
 		var setting = configurationService.getSettings().get( PersistenceSettings.SCANNER );
 		if ( setting == null ) {
 			return null;
@@ -384,8 +384,8 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 	}
 
 	private static ArchiveDescriptorFactory determineArchiveDescriptorFactory(
-			@NonNull ConfigurationService configurationService,
-			@NonNull ClassLoaderService classLoaderService) {
+			@Nonnull ConfigurationService configurationService,
+			@Nonnull ClassLoaderService classLoaderService) {
 		final Object setting = configurationService.getSettings().get( PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER );
 		if ( setting instanceof ArchiveDescriptorFactory ref ) {
 			return ref;

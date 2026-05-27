@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.internal.cyclebreak.CycleBreakPatcher;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.Checkers;

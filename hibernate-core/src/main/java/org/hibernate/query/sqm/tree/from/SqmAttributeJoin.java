@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.from;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -29,10 +28,10 @@ import java.util.List;
  */
 public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJoin<O,T> {
 	@Override
-	@NonNull PersistentAttribute<? super O, ?> getAttribute();
+	@Nonnull PersistentAttribute<? super O, ?> getAttribute();
 
 	@Override
-	@NonNull SqmFrom<?,O> getLhs();
+	@Nonnull SqmFrom<?,O> getLhs();
 
 	@Override
 	default boolean isImplicitlySelectable() {

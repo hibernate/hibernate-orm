@@ -4,7 +4,7 @@
  */
 package org.hibernate.dialect.function.array;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.aggregate.AggregateSupport;

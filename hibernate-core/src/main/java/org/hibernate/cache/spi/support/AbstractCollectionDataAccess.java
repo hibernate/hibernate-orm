@@ -4,7 +4,7 @@
  */
 package org.hibernate.cache.spi.support;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -33,7 +33,7 @@ public abstract class AbstractCollectionDataAccess
 	}
 
 	@Override
-	@NonNull
+	@Nonnull
 	public Object generateCacheKey(Object id, CollectionPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		return keysFactory.createCollectionKey( id, persister, factory, tenantIdentifier );
 	}

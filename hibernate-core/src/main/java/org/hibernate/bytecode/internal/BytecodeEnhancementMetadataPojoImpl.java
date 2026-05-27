@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.CompositeType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;

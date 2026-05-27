@@ -11,7 +11,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 public class StandardStatementCreator implements JdbcSelectExecutor.StatementCreator {
 

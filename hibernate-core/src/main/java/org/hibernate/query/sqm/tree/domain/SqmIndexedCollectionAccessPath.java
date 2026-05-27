@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -41,7 +40,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public @NonNull SqmAttributeJoin<?, ?> getLhs() {
+	public @Nonnull SqmAttributeJoin<?, ?> getLhs() {
 		return (SqmAttributeJoin<?, ?>) castNonNull( super.getLhs() );
 	}
 

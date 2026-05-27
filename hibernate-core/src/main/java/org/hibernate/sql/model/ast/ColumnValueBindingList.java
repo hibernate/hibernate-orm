@@ -6,7 +6,7 @@ package org.hibernate.sql.model.ast;
 
 import java.util.ArrayList;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;

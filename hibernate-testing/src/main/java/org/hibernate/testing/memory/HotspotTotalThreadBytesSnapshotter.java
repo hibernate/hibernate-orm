@@ -4,7 +4,7 @@
  */
 package org.hibernate.testing.memory;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;

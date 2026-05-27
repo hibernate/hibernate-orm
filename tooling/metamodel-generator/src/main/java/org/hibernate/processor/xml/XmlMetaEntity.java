@@ -44,7 +44,7 @@ import org.hibernate.processor.util.StringUtil;
 import org.hibernate.processor.util.TypeUtils;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static jakarta.persistence.AccessType.FIELD;
 import static java.util.Collections.emptyList;
@@ -214,7 +214,7 @@ public class XmlMetaEntity implements Metamodel {
 		return context.isFullyXmlConfigured() || Boolean.TRUE.equals( metadataComplete );
 	}
 
-	private @Nullable String @Nullable[] getCollectionTypes(String propertyName, String explicitTargetEntity, @Nullable String explicitMapKeyClass, ElementKind expectedElementKind) {
+	private @Nullable String[] getCollectionTypes(String propertyName, String explicitTargetEntity, @Nullable String explicitMapKeyClass, ElementKind expectedElementKind) {
 		for ( Element elem : element.getEnclosedElements() ) {
 			if ( !expectedElementKind.equals( elem.getKind() ) ) {
 				continue;
@@ -459,7 +459,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private boolean parseElementCollection(JaxbElementCollectionImpl collection) {
-		@Nullable String @Nullable[] types;
+		@Nullable String[] types;
 		XmlMetaCollection metaCollection;
 		ElementKind elementKind = getElementKind( collection.getAccess() );
 		String explicitTargetClass = determineExplicitTargetEntity( collection.getTargetClass() );
@@ -515,7 +515,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private boolean parseOneToMany(JaxbOneToManyImpl oneToMany) {
-		@Nullable String @Nullable [] types;
+		@Nullable String[] types;
 		XmlMetaCollection metaCollection;
 		ElementKind elementKind = getElementKind( oneToMany.getAccess() );
 		String explicitTargetClass = determineExplicitTargetEntity( oneToMany.getTargetEntity() );
@@ -543,7 +543,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private boolean parseManyToMany(JaxbManyToManyImpl manyToMany) {
-		@Nullable String @Nullable [] types;
+		@Nullable String[] types;
 		XmlMetaCollection metaCollection;
 		ElementKind elementKind = getElementKind( manyToMany.getAccess() );
 		String explicitTargetClass = determineExplicitTargetEntity( manyToMany.getTargetEntity() );

@@ -4,7 +4,7 @@
  */
 package org.hibernate.dialect.function;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;

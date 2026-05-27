@@ -4,7 +4,7 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.EntityInsertBatchKey;

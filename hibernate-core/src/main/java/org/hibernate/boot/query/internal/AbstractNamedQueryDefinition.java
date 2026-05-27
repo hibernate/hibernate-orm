@@ -5,7 +5,7 @@
 package org.hibernate.boot.query.internal;
 
 import jakarta.persistence.Timeout;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.FlushMode;
 import org.hibernate.boot.query.NamedQueryDefinition;
 

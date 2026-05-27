@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
 

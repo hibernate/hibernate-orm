@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.model.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.mapping.Join;

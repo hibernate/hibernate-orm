@@ -4,8 +4,8 @@
  */
 package org.hibernate.processor.annotation;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -834,12 +834,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static @NonNull String panacheRepositorySuperType(
-			@NonNull TypeMirror idType, String repositorySuperType, TypeElement finalPrimaryEntity) {
+	private static @Nonnull String panacheRepositorySuperType(
+			@Nonnull TypeMirror idType, String repositorySuperType, TypeElement finalPrimaryEntity) {
 		return repositorySuperType + "<" + finalPrimaryEntity.getSimpleName() + ", " + idType + ">";
 	}
 
-	private @NonNull String panacheRepositoryTypeName(String repositoryAccessor, List<String> nestedRepositories) {
+	private @Nonnull String panacheRepositoryTypeName(String repositoryAccessor, List<String> nestedRepositories) {
 		final String repositoryTypeName =
 				"Panache"
 						+ toUpperCase( repositoryAccessor.charAt( 0 ) )
@@ -1399,16 +1399,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return context.usesQuarkusOrm();
 	}
 
-	private static boolean isPanache2BlockingRepository(@NonNull TypeElement element) {
+	private static boolean isPanache2BlockingRepository(@Nonnull TypeElement element) {
 		return implementsInterface( element, PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE )
 			|| implementsInterface( element, PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE );
 	}
 
-	private static boolean isPanache2StatelessReactiveRepository(@NonNull TypeElement element) {
+	private static boolean isPanache2StatelessReactiveRepository(@Nonnull TypeElement element) {
 		return implementsInterface( element, PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE );
 	}
 
-	private static boolean isPanache2StatelessBlockingRepository(@NonNull TypeElement element) {
+	private static boolean isPanache2StatelessBlockingRepository(@Nonnull TypeElement element) {
 		return implementsInterface( element, PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE );
 	}
 
@@ -3445,7 +3445,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
 		final List<ParameterConstraint> parameterConstraints = new ArrayList<>();
-		final List<@Nullable FieldType> fieldTypes = new ArrayList<>();
+		final List<FieldType> fieldTypes = new ArrayList<>();
 		boolean equalityOnly = true;
 		for ( VariableElement parameter : method.getParameters() ) {
 			if ( isFinderParameterMappingToAttribute( parameter ) ) {
@@ -3646,7 +3646,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private boolean matchesNaturalKey(TypeElement entity, List<@Nullable FieldType> fieldTypes) {
+	private boolean matchesNaturalKey(TypeElement entity, List<FieldType> fieldTypes) {
 		return fieldTypes.stream().allMatch( type -> type == FieldType.NATURAL_ID )
 			&& entity.getEnclosedElements().stream()
 						.filter( member -> hasAnnotation( member, NATURAL_ID ) )
@@ -4847,7 +4847,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean isReturnTypeCorrect(
 			ExecutableElement method,
-			@NonNull TypeMirror returnType,
+			@Nonnull TypeMirror returnType,
 			AnnotationMirror mirror,
 			AnnotationValue value,
 			JpaSelection<?> selection) {

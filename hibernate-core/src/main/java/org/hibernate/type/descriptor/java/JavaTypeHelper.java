@@ -4,7 +4,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 

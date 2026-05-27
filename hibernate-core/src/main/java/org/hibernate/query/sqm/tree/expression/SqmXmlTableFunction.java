@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.criteria.JpaXmlTableColumnNode;
@@ -70,7 +70,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		);
 	}
 
-	// Need to suppress some Checker Framework errors, because passing the `this` reference is unsafe,
+	// Need to suppress static analysis errors because passing the `this` reference is unsafe,
 	// though we make it safe by not calling any methods on it until initialization finishes
 	@SuppressWarnings({"uninitialized", "assignment", "argument"})
 	private SqmXmlTableFunction(

@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tuple;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmBindableType;
 

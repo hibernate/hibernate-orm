@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.results.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.sql.ast.spi.SqlSelection;

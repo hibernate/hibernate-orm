@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.mapping.type.java;
 
 import jakarta.persistence.AttributeConverter;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.annotations.processing.GenericDialect;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;

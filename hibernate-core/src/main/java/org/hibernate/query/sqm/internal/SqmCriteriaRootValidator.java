@@ -41,7 +41,7 @@ import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Validates that an SQM tree constructed via the criteria API tree does
@@ -255,7 +255,7 @@ final class SqmCriteriaRootValidator extends BaseSemanticQueryWalker {
 	}
 
 	@Override
-	public Object visitTreatedPath(SqmTreatedPath<?, @Nullable ?> sqmTreatedPath) {
+	public Object visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath) {
 		validatePath( sqmTreatedPath );
 		return super.visitTreatedPath( sqmTreatedPath );
 	}

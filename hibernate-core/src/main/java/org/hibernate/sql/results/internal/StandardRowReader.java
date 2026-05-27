@@ -19,7 +19,7 @@ import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -98,7 +98,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	@Override
-	public List<@Nullable JavaType<?>> getResultJavaTypes() {
+	public List<JavaType<?>> getResultJavaTypes() {
 		final List<JavaType<?>> javaTypes = new ArrayList<>( resultAssemblers.length );
 		for ( var resultAssembler : resultAssemblers ) {
 			javaTypes.add( resultAssembler.getAssembledJavaType() );

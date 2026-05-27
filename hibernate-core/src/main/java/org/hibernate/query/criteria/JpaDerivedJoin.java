@@ -10,7 +10,7 @@ import jakarta.persistence.criteria.Expression;
 
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 
 /**
@@ -36,7 +36,7 @@ public interface JpaDerivedJoin<T> extends JpaDerivedFrom<T>, JpaJoin<T,T> {
 
 	@Override
 	@Nonnull
-	JpaDerivedJoin<T> on(JpaPredicate @Nullable... restrictions);
+	JpaDerivedJoin<T> on(@Nullable JpaPredicate... restrictions);
 
 	@Nonnull
 	@Override

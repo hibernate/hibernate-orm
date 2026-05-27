@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -537,7 +537,7 @@ public class InferredBasicValueResolver {
 		);
 	}
 
-	private static <T> @NonNull InferredBasicValueResolution<T, T> fromTemporalImplicit(
+	private static <T> @Nonnull InferredBasicValueResolution<T, T> fromTemporalImplicit(
 			TemporalJavaType<T> reflectedJtd,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
 			JdbcTypeIndicators stdIndicators) {
@@ -570,7 +570,7 @@ public class InferredBasicValueResolver {
 		);
 	}
 
-	private static <T> @NonNull InferredBasicValueResolution<T, T> fromTemporalExplicitJdbcType(
+	private static <T> @Nonnull InferredBasicValueResolution<T, T> fromTemporalExplicitJdbcType(
 			TemporalJavaType<T> reflectedJtd,
 			JdbcType explicitJdbcType,
 			JdbcTypeIndicators stdIndicators) {
@@ -593,7 +593,7 @@ public class InferredBasicValueResolver {
 		);
 	}
 
-	private static <T> @NonNull InferredBasicValueResolution<T, T> fromTemporalExplicitJavaType(
+	private static <T> @Nonnull InferredBasicValueResolution<T, T> fromTemporalExplicitJavaType(
 			BasicJavaType<?> explicitJavaType,
 			JdbcType explicitJdbcType,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,

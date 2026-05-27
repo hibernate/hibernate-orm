@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.internal.util.beans.BeanInfo;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.internal.util.beans.PropertyDescriptor;

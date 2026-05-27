@@ -8,7 +8,7 @@ import jakarta.annotation.Nullable;
 import java.util.Locale;
 import java.util.Objects;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -76,7 +76,7 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public @NonNull SqmBindableType<T> getNodeType() {
+	public @Nonnull SqmBindableType<T> getNodeType() {
 		return this;
 	}
 
@@ -85,17 +85,17 @@ public class SqmFieldLiteral<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public @NonNull JavaType<T> getExpressibleJavaType() {
+	public @Nonnull JavaType<T> getExpressibleJavaType() {
 		return fieldJavaType;
 	}
 
 	@Override
-	public @NonNull JavaType<T> getJavaTypeDescriptor() {
+	public @Nonnull JavaType<T> getJavaTypeDescriptor() {
 		return getExpressibleJavaType();
 	}
 
 	@Override
-	public @NonNull Class<T> getJavaType() {
+	public @Nonnull Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 

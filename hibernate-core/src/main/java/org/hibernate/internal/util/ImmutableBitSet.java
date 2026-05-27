@@ -4,7 +4,7 @@
  */
 package org.hibernate.internal.util;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import java.util.Arrays;
 import java.util.BitSet;

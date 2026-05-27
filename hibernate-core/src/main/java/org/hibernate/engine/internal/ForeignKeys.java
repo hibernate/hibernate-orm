@@ -4,7 +4,7 @@
  */
 package org.hibernate.engine.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;

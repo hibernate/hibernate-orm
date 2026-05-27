@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
@@ -71,12 +70,12 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	}
 
 	@Override
-	public @NonNull SqmFrom<?, L> getLhs() {
+	public @Nonnull SqmFrom<?, L> getLhs() {
 		return castNonNull( super.getLhs() );
 	}
 
 	@Override
-	public @NonNull JavaType<R> getNodeJavaType() {
+	public @Nonnull JavaType<R> getNodeJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
@@ -116,7 +115,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	// JPA
 
 	@Override
-	public @NonNull PersistentAttribute<? super L, ?> getAttribute() {
+	public @Nonnull PersistentAttribute<? super L, ?> getAttribute() {
 		//noinspection unchecked
 		return (PersistentAttribute<? super L, ?>) getModel();
 	}

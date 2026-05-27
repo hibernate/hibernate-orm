@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -81,7 +81,7 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The value.
 	 */
-	public static @NonNull String getString(String name, Map<?,?> values, @NonNull String defaultValue) {
+	public static @Nonnull String getString(String name, Map<?,?> values, @Nonnull String defaultValue) {
 		return getString( name, values, () -> defaultValue );
 	}
 
@@ -476,7 +476,7 @@ public final class ConfigurationHelper {
 		public static final TypeCodeConverter INSTANCE = new TypeCodeConverter();
 
 		@Override
-		@NonNull
+		@Nonnull
 		public Integer convert(Object value) {
 			if ( value instanceof Number number ) {
 				return number.intValue();

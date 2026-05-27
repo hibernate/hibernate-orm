@@ -35,7 +35,7 @@ import org.hibernate.processor.util.FileTimeStampChecker;
 import org.hibernate.processor.util.xml.XmlParserHelper;
 
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.processor.util.StringUtil.determineFullyQualifiedClassName;
 import static org.hibernate.processor.util.StringUtil.packageNameFromFullyQualifiedName;

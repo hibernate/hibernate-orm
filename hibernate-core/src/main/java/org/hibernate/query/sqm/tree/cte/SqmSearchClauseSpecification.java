@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.cte;
 
 import jakarta.persistence.criteria.Nulls;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaSearchOrder;

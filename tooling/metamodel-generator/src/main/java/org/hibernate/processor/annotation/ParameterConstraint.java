@@ -4,7 +4,7 @@
  */
 package org.hibernate.processor.annotation;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.processor.util.Constants.JD_AT_LEAST;
 import static org.hibernate.processor.util.Constants.JD_AT_MOST;

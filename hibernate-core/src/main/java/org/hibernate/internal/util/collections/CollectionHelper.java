@@ -4,7 +4,7 @@
  */
 package org.hibernate.internal.util.collections;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;

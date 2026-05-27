@@ -6,7 +6,7 @@ package org.hibernate.query.hql.spi;
 
 import java.util.function.Function;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.sqm.tree.domain.SqmPath;

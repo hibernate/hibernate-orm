@@ -8,7 +8,7 @@ import java.util.Collection;
 
 import jakarta.persistence.TemporalType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.QueryArgumentException;

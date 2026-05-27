@@ -4,7 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.sql.ast.spi.SqlAppender;

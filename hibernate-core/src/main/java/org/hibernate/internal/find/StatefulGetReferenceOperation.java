@@ -4,7 +4,7 @@
  */
 package org.hibernate.internal.find;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.KeyType;
 import org.hibernate.LockOptions;
@@ -25,8 +25,8 @@ public class StatefulGetReferenceOperation<T> implements GetReferenceOperation<T
 	private final KeyType keyType;
 
 	public StatefulGetReferenceOperation(
-			@NonNull EntityPersister entityDescriptor,
-			@NonNull StatefulLoadAccessContext loadAccessContext,
+			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			KeyType keyType) {
 		this.entityDescriptor = entityDescriptor;
 		this.loadAccessContext = loadAccessContext;

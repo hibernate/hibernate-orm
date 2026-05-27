@@ -17,7 +17,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.Parameter;

@@ -8,7 +8,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import java.util.Collection;
@@ -31,7 +31,7 @@ public interface JpaCollectionJoin<O, T> extends JpaPluralJoin<O, Collection<T>,
 
 	@Nonnull
 	@Override
-	JpaCollectionJoin<O, T> on(JpaPredicate @Nullable... restrictions);
+	JpaCollectionJoin<O, T> on(@Nullable JpaPredicate... restrictions);
 
 	@Nonnull
 	@Override

@@ -4,7 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -46,12 +46,12 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements Di
 	}
 
 	@Override
-	public @NonNull SqmPath<?> getLhs() {
+	public @Nonnull SqmPath<?> getLhs() {
 		return castNonNull( super.getLhs() );
 	}
 
 	@Override
-	public @NonNull AnyDiscriminatorSqmPathSource<T> getExpressible() {
+	public @Nonnull AnyDiscriminatorSqmPathSource<T> getExpressible() {
 //		return (AnyDiscriminatorSqmPathSource<T>) getNodeType();
 		return (AnyDiscriminatorSqmPathSource<T>) getReferencedPathSource();
 	}

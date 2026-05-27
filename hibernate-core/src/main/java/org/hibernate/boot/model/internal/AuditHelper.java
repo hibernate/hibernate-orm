@@ -45,7 +45,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.annotations.Audited.Table.DEFAULT_CHANGESET_ID_COLUMN_NAME;
 import static org.hibernate.annotations.Audited.Table.DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME;
@@ -69,7 +69,7 @@ public final class AuditHelper {
 	}
 
 	static void bindAuditTable(
-			Audited.@Nullable Table auditTable,
+			@Nullable Audited.Table auditTable,
 			RootClass rootClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
@@ -79,14 +79,14 @@ public final class AuditHelper {
 	}
 
 	static void bindAuditTable(
-			Audited.@Nullable Table auditTable,
+			@Nullable Audited.Table auditTable,
 			Collection collection,
 			MetadataBuildingContext context) {
 		bindAuditTable( auditTable, (Stateful) collection, context );
 	}
 
 	private static void bindAuditTable(
-			Audited.@Nullable Table auditTable,
+			@Nullable Audited.Table auditTable,
 			Stateful auditable,
 			MetadataBuildingContext context) {
 		final var collector = context.getMetadataCollector();
@@ -163,7 +163,7 @@ public final class AuditHelper {
 	}
 
 	private static void bindSecondaryAuditTables(
-			Audited.@Nullable Table auditTable,
+			@Nullable Audited.Table auditTable,
 			RootClass rootClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
@@ -208,7 +208,7 @@ public final class AuditHelper {
 	}
 
 	private static void bindSubclassAuditTables(
-			Audited.@Nullable Table auditTable,
+			@Nullable Audited.Table auditTable,
 			RootClass rootClass,
 			MetadataBuildingContext context) {
 		final String csIdColumnName;
@@ -239,7 +239,7 @@ public final class AuditHelper {
 	 */
 	private static void bindSubclassAuditTables(
 			PersistentClass parent,
-			Audited.@Nullable Table auditTable,
+			@Nullable Audited.Table auditTable,
 			String csIdColumnName,
 			String modTypeColumnName,
 			MetadataBuildingContext context) {
@@ -302,10 +302,10 @@ public final class AuditHelper {
 	 * perspective the collection is part of the parent entity's state.
 	 */
 	static void bindOneToManyAuditTable(
-			Audited.@Nullable Table auditTable,
+			@Nullable Audited.Table auditTable,
 			Collection collection,
 			String referencedEntityName,
-			Audited.@Nullable CollectionTable collectionAuditTable,
+			@Nullable Audited.CollectionTable collectionAuditTable,
 			MetadataBuildingContext context) {
 		final var collector = context.getMetadataCollector();
 		final var ownerTable = collection.getOwner().getTable();
@@ -689,7 +689,7 @@ public final class AuditHelper {
 	}
 
 	private static void addTransactionEndColumns(
-			Audited.@Nullable Table auditTableAnnotation,
+			@Nullable Audited.Table auditTableAnnotation,
 			AuxiliaryTableHolder holder,
 			Table auditTable,
 			MetadataBuildingContext context) {

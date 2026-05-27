@@ -6,7 +6,7 @@ package org.hibernate.engine.spi;
 
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * An {@link EntityKey} for a temporal (historical) snapshot of an entity,

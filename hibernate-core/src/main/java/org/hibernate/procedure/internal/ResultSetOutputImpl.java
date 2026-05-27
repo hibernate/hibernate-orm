@@ -4,7 +4,7 @@
  */
 package org.hibernate.procedure.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.ResultSetOutput;
@@ -28,7 +28,7 @@ public class ResultSetOutputImpl<T> implements ResultSetOutput<T> {
 	private List<T> resultList;
 
 	public ResultSetOutputImpl(
-			@NonNull Function<ResultSetMapping,List<T>> resultSetSupplier,
+			@Nonnull Function<ResultSetMapping,List<T>> resultSetSupplier,
 			ResultSetMapping declaredMapping,
 			SessionFactoryImplementor sessionFactory) {
 		this.resultSetSupplier = resultSetSupplier;

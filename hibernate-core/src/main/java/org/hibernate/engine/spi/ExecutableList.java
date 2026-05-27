@@ -20,7 +20,7 @@ import org.hibernate.Internal;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.event.spi.EventSource;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.util.Collections.addAll;
 import static java.util.Collections.emptySet;

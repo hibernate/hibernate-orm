@@ -4,7 +4,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.OrderingMode;
@@ -297,8 +297,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 	private <R> Object[] resolveInCachesIfEnabled(
 			Object[] ids,
-			@NonNull MultiIdLoadOptions loadOptions,
-			@NonNull LockOptions lockOptions,
+			@Nonnull MultiIdLoadOptions loadOptions,
+			@Nonnull LockOptions lockOptions,
 			SharedSessionContractImplementor session,
 			ResolutionConsumer<R> resolutionConsumer) {
 		return loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED

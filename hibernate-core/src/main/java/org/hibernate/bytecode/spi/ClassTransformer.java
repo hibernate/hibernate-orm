@@ -9,7 +9,7 @@ import java.util.Map;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.TransformerException;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
 /**

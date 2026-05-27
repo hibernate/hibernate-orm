@@ -8,7 +8,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import java.util.Locale;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -83,7 +82,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public @NonNull SqmBindableType<T> getNodeType() {
+	public @Nonnull SqmBindableType<T> getNodeType() {
 		return getReferencedPathSource().getExpressible();
 	}
 
@@ -94,7 +93,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public @NonNull SqmSingularPersistentAttribute<? super O, T> getAttribute() {
+	public @Nonnull SqmSingularPersistentAttribute<? super O, T> getAttribute() {
 		return getModel();
 	}
 

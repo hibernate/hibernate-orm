@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 
@@ -167,7 +167,7 @@ class ByteBuddyEnhancementContext {
 		}
 	}
 
-	private @NonNull Map<String, MethodDescription> getGetters(TypeDescription erasure) {
+	private @Nonnull Map<String, MethodDescription> getGetters(TypeDescription erasure) {
 		//Always try to get with a simple "get" before doing a "computeIfAbsent" operation,
 		//otherwise large models might exhibit significant contention on the map.
 		var getters = getterByTypeMap.get( erasure );

@@ -52,7 +52,7 @@ import org.hibernate.persister.state.spi.StateManagementGraphIntegration;
 import org.hibernate.persister.state.spi.StateManagementLegacyIntegration;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.boot.model.internal.AuditHelper.MODIFICATION_TYPE;
 import static org.hibernate.boot.model.internal.AuditHelper.INVALIDATING_CHANGESET_ID;

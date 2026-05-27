@@ -103,7 +103,7 @@ import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.metamodel.Type;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;

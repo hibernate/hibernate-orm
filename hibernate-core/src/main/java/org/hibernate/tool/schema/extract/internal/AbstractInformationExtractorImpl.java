@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;

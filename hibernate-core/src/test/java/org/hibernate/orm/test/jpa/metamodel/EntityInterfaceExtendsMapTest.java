@@ -26,7 +26,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -177,19 +177,19 @@ public class EntityInterfaceExtendsMapTest {
 		}
 
 		@Override
-		@NonNull
+		@Nonnull
 		public Set<String> keySet() {
 			return books.stream().map( BookEntity::getTitle ).collect( Collectors.toUnmodifiableSet() );
 		}
 
 		@Override
-		@NonNull
+		@Nonnull
 		public Collection<BookEntity> values() {
 			return Collections.unmodifiableSet( books );
 		}
 
 		@Override
-		@NonNull
+		@Nonnull
 		public Set<Entry<String, BookEntity>> entrySet() {
 			return books.stream()
 					.map( b -> new AbstractMap.SimpleEntry<>( b.getTitle(), b ) )

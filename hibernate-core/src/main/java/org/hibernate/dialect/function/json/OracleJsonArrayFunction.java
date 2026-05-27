@@ -6,7 +6,7 @@ package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;

@@ -24,14 +24,14 @@ import javax.lang.model.type.UnionType;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 
 /**
  * @author Christian Beikov
  */
-public final class TypeRenderingVisitor extends SimpleTypeVisitor8<@Nullable Object, @Nullable Object> {
+public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Object> {
 
 	private final StringBuilder sb = new StringBuilder();
 	private final Set<TypeVariable> visitedTypeVariables = new HashSet<>();

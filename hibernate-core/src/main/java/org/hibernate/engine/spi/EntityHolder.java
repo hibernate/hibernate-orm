@@ -10,7 +10,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Holder for an entry in the {@link PersistenceContext} for an {@link EntityKey}.

@@ -8,7 +8,7 @@ import jakarta.persistence.Statement;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.boot.Metadata;
@@ -81,7 +81,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public <R> @NonNull NamedQueryMemento<R> getQueryMementoByName(String name, boolean includeProcedureCalls) {
+	public <R> @Nonnull NamedQueryMemento<R> getQueryMementoByName(String name, boolean includeProcedureCalls) {
 		final var match = findQueryMementoByName( name, includeProcedureCalls );
 		if ( match == null ) {
 			throw new UnknownNamedQueryException( name );
@@ -139,7 +139,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	}
 
 	@Override
-	public @NonNull StatementReference registerNamedMutation(String name, Statement statement) {
+	public @Nonnull StatementReference registerNamedMutation(String name, Statement statement) {
 		try {
 			final var refProducer = statement.unwrap( StatementReferenceProducer.class );
 			final var ref = refProducer.toMutationMemento( name );

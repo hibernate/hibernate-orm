@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Unified contract for things that can contain a SqmWhereClause.

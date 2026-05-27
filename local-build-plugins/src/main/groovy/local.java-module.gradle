@@ -161,11 +161,6 @@ tasks.withType( JavaCompile ).configureEach {
             "-Aorg.jboss.logging.tools.addGeneratedAnnotation=false"
     ]
 
-    // stubs argument needs to be passed as an absolute path, JavaCompile uses the Worker API which changes the current
-    // working directory and prevents from using a relative path to locate a project file.
-    // Using a CommandLineArgumentProvider allows build cache hits when the build cache is relocated.
-    options.compilerArgumentProviders.add(new CompilerStubsArgumentProvider(stubsDir: new File(project.rootDir, "checkerstubs")))
-
     if (System.getProperty('APT_DEBUG', 'false') == 'true') {
         options.forkOptions.jvmArgs += ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9099']
     }
@@ -369,11 +364,6 @@ configurations.configureEach {
         // we use, as Mockito might pull in a mismatched version transitively
         if (details.requested.group == "net.bytebuddy" && details.requested.name == 'byte-buddy-agent') {
             details.useVersion libs.versions.byteBuddy.get()
-        }
-
-        // Force all 'checker-qual' (RUNTIME) requests to instead use 'checker-qual-android' (CLASS)
-        if (details.requested.group == 'org.checkerframework' && details.requested.name == 'checker-qual') {
-            details.useTarget("org.checkerframework:checker-qual-android:${details.requested.version}")
         }
     }
 }

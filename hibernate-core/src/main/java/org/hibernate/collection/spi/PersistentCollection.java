@@ -19,7 +19,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Persistent collections are treated as value objects by Hibernate.

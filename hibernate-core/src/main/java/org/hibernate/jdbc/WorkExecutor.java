@@ -7,7 +7,7 @@ package org.hibernate.jdbc;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A visitor used for executing a discrete piece of work encapsulated in a

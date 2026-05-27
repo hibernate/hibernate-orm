@@ -4,13 +4,13 @@
  */
 package org.hibernate.cache.cfg.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.type.BasicType;
 
 import java.util.Comparator;
 
 class ComparatorUtil {
-	@NonNull
+	@Nonnull
 	static <T> Comparator<Object> versionComparator(BasicType<T> type) {
 		return (u, v) -> {
 			final var descriptor = type.getJavaTypeDescriptor();

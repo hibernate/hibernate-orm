@@ -6,7 +6,7 @@ package org.hibernate.cache.spi.access;
 
 import java.util.Locale;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Enumerates the policies for managing concurrent access to the shared

@@ -6,7 +6,7 @@ package org.hibernate.community.dialect;
 
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;

@@ -6,8 +6,8 @@ package org.hibernate.query.sqm.sql;
 
 import jakarta.persistence.criteria.Predicate.BooleanOperator;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -5019,7 +5019,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Expression visitTreatedPath(SqmTreatedPath<?, @Nullable ?> sqmTreatedPath) {
+	public Expression visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath) {
 		prepareReusablePath( sqmTreatedPath, () -> null );
 		final var resolved = getFromClauseAccess().findTableGroup( sqmTreatedPath.getNavigablePath() );
 		if ( resolved != null ) {
@@ -5848,7 +5848,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private static @NonNull QueryLiteral<Object> discriminatorValueLiteral(
+	private static @Nonnull QueryLiteral<Object> discriminatorValueLiteral(
 			DiscriminatorMapping discriminatorMapping, String entityName) {
 		return new QueryLiteral<>(
 				discriminatorMapping.getValueConverter()

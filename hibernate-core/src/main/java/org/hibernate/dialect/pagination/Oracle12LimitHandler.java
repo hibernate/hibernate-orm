@@ -4,7 +4,7 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.LockOptions;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;

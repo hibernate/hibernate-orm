@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.scan.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
@@ -69,8 +69,8 @@ public class ScanningHelper {
 	}
 
 	private static ScanningProvider determineScanningProvider(
-			@NonNull ConfigurationService configurationService,
-			@NonNull ClassLoaderService classLoaderService) {
+			@Nonnull ConfigurationService configurationService,
+			@Nonnull ClassLoaderService classLoaderService) {
 		var configuredProvider = determineScanningProviderFromSetting( configurationService, classLoaderService );
 		if ( configuredProvider != null ) {
 			return configuredProvider;
@@ -96,8 +96,8 @@ public class ScanningHelper {
 	}
 
 	private static ScanningProvider determineScanningProviderFromSetting(
-			@NonNull ConfigurationService configurationService,
-			@NonNull ClassLoaderService classLoaderService) {
+			@Nonnull ConfigurationService configurationService,
+			@Nonnull ClassLoaderService classLoaderService) {
 		var providerSetting = configurationService.getSettings().get( PersistenceSettings.SCANNING );
 		if ( providerSetting == null ) {
 			return null;
@@ -140,8 +140,8 @@ public class ScanningHelper {
 	}
 
 	private static Scanner determineScannerFromSetting(
-			@NonNull ConfigurationService configurationService,
-			@NonNull ClassLoaderService classLoaderService) {
+			@Nonnull ConfigurationService configurationService,
+			@Nonnull ClassLoaderService classLoaderService) {
 		var setting = configurationService.getSettings().get( PersistenceSettings.SCANNER );
 		if ( setting == null ) {
 			return null;
@@ -184,8 +184,8 @@ public class ScanningHelper {
 	}
 
 	private static ArchiveDescriptorFactory determineArchiveDescriptorFactory(
-			@NonNull ConfigurationService configurationService,
-			@NonNull ClassLoaderService classLoaderService) {
+			@Nonnull ConfigurationService configurationService,
+			@Nonnull ClassLoaderService classLoaderService) {
 		final Object setting = configurationService.getSettings().get( PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER );
 		if ( setting instanceof ArchiveDescriptorFactory ref ) {
 			return ref;

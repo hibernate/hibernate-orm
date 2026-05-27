@@ -4,7 +4,7 @@
  */
 package org.hibernate.audit.spi;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Session;

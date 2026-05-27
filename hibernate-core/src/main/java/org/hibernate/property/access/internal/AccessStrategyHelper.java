@@ -16,7 +16,7 @@ import org.hibernate.internal.util.NullnessUtil;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Transient;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static java.lang.reflect.Modifier.isStatic;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asCompositeOwner;

@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree.cte;
 import java.util.Collection;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.query.criteria.JpaCteContainer;
 import org.hibernate.query.sqm.tree.SqmNode;
 

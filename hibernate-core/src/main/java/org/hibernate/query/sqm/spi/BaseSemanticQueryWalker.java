@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.spi;
 
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
@@ -891,7 +891,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 
 	@Override
-	public Object visitTreatedPath(SqmTreatedPath<?, @Nullable ?> sqmTreatedPath) {
+	public Object visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath) {
 		return sqmTreatedPath;
 	}
 

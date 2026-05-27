@@ -10,7 +10,7 @@ import java.sql.Statement;
 
 import org.hibernate.ScrollMode;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Interface to the object that prepares JDBC {@link Statement}s and {@link PreparedStatement}s

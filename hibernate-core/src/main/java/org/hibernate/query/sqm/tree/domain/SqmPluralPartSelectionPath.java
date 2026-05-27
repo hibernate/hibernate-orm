@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.annotation.Nullable;
 import java.util.Set;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -23,14 +23,14 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Gavin King
  */
 public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> {
-	private final CollectionPart.@org.checkerframework.checker.nullness.qual.Nullable Nature selectedPartNature;
+	private final @jakarta.annotation.Nullable CollectionPart.Nature selectedPartNature;
 	private final JavaType<C> javaType;
 	private final SqmBindableType<C> selectionType;
 
 	@SuppressWarnings("unchecked")
 	public SqmPluralPartSelectionPath(
 			SqmPluralValuedSimplePath<C> pluralPath,
-			CollectionPart.@org.checkerframework.checker.nullness.qual.Nullable Nature selectedPartNature) {
+			@jakarta.annotation.Nullable CollectionPart.Nature selectedPartNature) {
 		this(
 				pluralPath.getNavigablePath(),
 				(SqmPluralPersistentAttribute<?, C, ?>) pluralPath.getModel(),
@@ -48,7 +48,7 @@ public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> 
 			SqmPath<?> lhs,
 			@Nullable String explicitAlias,
 			NodeBuilder nodeBuilder,
-			CollectionPart.@org.checkerframework.checker.nullness.qual.Nullable Nature selectedPartNature) {
+			@jakarta.annotation.Nullable CollectionPart.Nature selectedPartNature) {
 		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
 		this.selectedPartNature = selectedPartNature;
 		this.javaType = selectedPartNature == null
@@ -59,7 +59,7 @@ public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> 
 		this.selectionType = new PluralAttributeCollectionType<>( javaType );
 	}
 
-	public CollectionPart.@org.checkerframework.checker.nullness.qual.Nullable Nature getSelectedPartNature() {
+	public @jakarta.annotation.Nullable CollectionPart.Nature getSelectedPartNature() {
 		return selectedPartNature;
 	}
 
@@ -87,22 +87,22 @@ public class SqmPluralPartSelectionPath<C> extends SqmPluralValuedSimplePath<C> 
 	}
 
 	@Override
-	public @NonNull JavaType<C> getJavaTypeDescriptor() {
+	public @Nonnull JavaType<C> getJavaTypeDescriptor() {
 		return javaType;
 	}
 
 	@Override
-	public @NonNull JavaType<C> getNodeJavaType() {
+	public @Nonnull JavaType<C> getNodeJavaType() {
 		return javaType;
 	}
 
 	@Override
-	public @NonNull SqmBindableType<C> getExpressible() {
+	public @Nonnull SqmBindableType<C> getExpressible() {
 		return selectionType;
 	}
 
 	@Override
-	public @NonNull SqmBindableType<C> getNodeType() {
+	public @Nonnull SqmBindableType<C> getNodeType() {
 		return selectionType;
 	}
 

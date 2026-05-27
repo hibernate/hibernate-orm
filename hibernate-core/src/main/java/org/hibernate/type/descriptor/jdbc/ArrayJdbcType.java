@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -186,7 +186,7 @@ public class ArrayJdbcType implements JdbcType {
 				: javaType.wrap( array, options );
 	}
 
-	private static Object @NonNull [] toJavaArray(
+	private static @Nonnull Object[] toJavaArray(
 			java.sql.Array array,
 			WrapperOptions options,
 			AggregateJdbcType aggregateJdbcType)

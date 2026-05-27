@@ -6,7 +6,7 @@ package org.hibernate.internal.util.beans;
 
 import java.lang.reflect.Method;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Describes a single property of a JavaBean.

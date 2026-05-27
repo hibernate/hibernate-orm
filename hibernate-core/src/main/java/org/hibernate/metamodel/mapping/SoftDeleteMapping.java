@@ -4,7 +4,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;

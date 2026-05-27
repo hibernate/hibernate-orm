@@ -4,7 +4,7 @@
  */
 package org.hibernate.cache.spi.support;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -31,7 +31,7 @@ public abstract class AbstractEntityDataAccess
 	}
 
 	@Override
-	@NonNull
+	@Nonnull
 	public Object generateCacheKey(
 			Object id,
 			EntityPersister rootEntityDescriptor,

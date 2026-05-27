@@ -8,7 +8,6 @@ import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PathSource;
@@ -88,7 +87,7 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
-	public @NonNull SqmListPersistentAttribute<O,E> getAttribute() {
+	public @Nonnull SqmListPersistentAttribute<O,E> getAttribute() {
 		return getModel();
 	}
 

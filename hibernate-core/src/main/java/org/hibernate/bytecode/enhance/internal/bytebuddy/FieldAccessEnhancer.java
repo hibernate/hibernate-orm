@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.utility.OpenedClassReader;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
@@ -137,7 +137,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 		return new AnnotatedFieldDescription( enhancementContext, fields.getOnly() );
 	}
 
-	private static @NonNull FieldList<?> findFields(TypeDescription declaredOwnedType, String name, String desc) {
+	private static @Nonnull FieldList<?> findFields(TypeDescription declaredOwnedType, String name, String desc) {
 		TypeDefinition ownerType = declaredOwnedType;
 		final var fieldFilter = named( name ).and( hasDescriptor( desc ) );
 		FieldList<?> fields = ownerType.getDeclaredFields().filter( fieldFilter );

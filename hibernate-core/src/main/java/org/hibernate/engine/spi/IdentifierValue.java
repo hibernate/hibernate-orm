@@ -6,7 +6,7 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 

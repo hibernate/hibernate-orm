@@ -6,7 +6,7 @@ package org.hibernate.exception.spi;
 
 import java.sql.SQLException;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * An object that can extract the name of a violated database constraint

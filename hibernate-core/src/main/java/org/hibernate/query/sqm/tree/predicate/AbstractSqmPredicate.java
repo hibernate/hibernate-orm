@@ -8,12 +8,11 @@ import jakarta.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.criteria.JpaNumericExpression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 
-import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmBooleanExpression;
@@ -34,22 +33,22 @@ public abstract class AbstractSqmPredicate
 	}
 
 	@Override
-	public @NonNull JavaType<Boolean> getJavaTypeDescriptor(){
+	public @Nonnull JavaType<Boolean> getJavaTypeDescriptor(){
 		return castNonNull( super.getJavaTypeDescriptor() );
 	}
 
 	@Override
-	public @NonNull JavaType<Boolean> getNodeJavaType() {
+	public @Nonnull JavaType<Boolean> getNodeJavaType() {
 		return castNonNull( super.getNodeJavaType() );
 	}
 
 	@Override
-	public @NonNull SqmBindableType<Boolean> getExpressible() {
+	public @Nonnull SqmBindableType<Boolean> getExpressible() {
 		return castNonNull( super.getExpressible() );
 	}
 
 	@Override
-	public @NonNull SqmBindableType<Boolean> getNodeType() {
+	public @Nonnull SqmBindableType<Boolean> getNodeType() {
 		return castNonNull( super.getNodeType() );
 	}
 

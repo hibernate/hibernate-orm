@@ -5,7 +5,7 @@
 package org.hibernate.sql.exec.internal;
 
 import jakarta.persistence.PessimisticLockScope;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;

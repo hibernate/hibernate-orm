@@ -4,7 +4,7 @@
  */
 package org.hibernate.engine.jdbc.batch.spi;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.StaleStateException;
 

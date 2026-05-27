@@ -5,7 +5,7 @@
 package org.hibernate.query.spi;
 
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.type.BindableType;
 

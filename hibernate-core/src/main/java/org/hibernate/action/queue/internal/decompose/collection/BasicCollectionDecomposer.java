@@ -8,7 +8,7 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionDecomposer;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionRecreateAction;
@@ -201,7 +201,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 	}
 
-	private @NonNull List<FlushOperation> planRecreateOperation(
+	private @Nonnull List<FlushOperation> planRecreateOperation(
 			PersistentCollection<?> collection,
 			Object key,
 			int ordinalBase,

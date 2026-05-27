@@ -4,7 +4,7 @@
  */
 package org.hibernate.proxy;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.audit.AuditLog;

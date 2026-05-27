@@ -7,7 +7,7 @@ package org.hibernate.query.internal;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Timeout;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

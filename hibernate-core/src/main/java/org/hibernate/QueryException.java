@@ -4,7 +4,7 @@
  */
 package org.hibernate;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A problem occurred translating a Hibernate query to SQL due to illegal query

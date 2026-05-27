@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

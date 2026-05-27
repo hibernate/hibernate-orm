@@ -7,7 +7,7 @@ package org.hibernate.engine.spi;
 import java.util.Iterator;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.event.spi.EventSource;

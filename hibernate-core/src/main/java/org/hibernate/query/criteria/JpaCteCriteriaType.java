@@ -7,7 +7,7 @@ package org.hibernate.query.criteria;
 import java.util.List;
 
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.DomainType;
 

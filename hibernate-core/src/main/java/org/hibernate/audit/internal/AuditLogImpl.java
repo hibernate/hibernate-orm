@@ -4,7 +4,7 @@
  */
 package org.hibernate.audit.internal;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.audit.AuditEntry;
 import org.hibernate.audit.AuditException;

@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.spi.bind;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.internal.constraint.UniqueConstraint;
 import org.hibernate.action.queue.spi.plan.FlushOperation;

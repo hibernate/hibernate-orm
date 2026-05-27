@@ -8,7 +8,7 @@ import java.util.Collection;
 
 import org.hibernate.proxy.HibernateProxy;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Thrown when an {@link IllegalArgumentException} occurs calling a property setter method.

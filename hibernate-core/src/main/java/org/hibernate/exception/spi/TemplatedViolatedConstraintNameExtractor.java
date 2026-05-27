@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.function.Function;
 
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 
 /**

@@ -14,8 +14,7 @@ import jakarta.persistence.metamodel.ComparableAttribute;
 import jakarta.persistence.metamodel.NumericAttribute;
 import jakarta.persistence.metamodel.TemporalAttribute;
 import jakarta.persistence.metamodel.TextAttribute;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -335,7 +334,7 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public @NonNull SqmBindableType<J> getExpressible() {
+	public @Nonnull SqmBindableType<J> getExpressible() {
 		return sqmPathSource.getExpressible();
 	}
 

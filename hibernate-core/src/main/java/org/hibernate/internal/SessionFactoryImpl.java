@@ -21,7 +21,6 @@ import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.sql.ResultSetMapping;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -923,7 +922,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public @NonNull StatementObserver getStatementObserver() {
+	public @Nonnull StatementObserver getStatementObserver() {
 		return statementObserver;
 	}
 

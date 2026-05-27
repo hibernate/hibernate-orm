@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;

@@ -5,8 +5,8 @@
 package org.hibernate.internal.find;
 
 import jakarta.persistence.FindOption;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.KeyType;
@@ -37,12 +37,12 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 	private final StatefulLoadAccessContext loadAccessContext;
 
 	public StatefulFindMultipleByKeyOperation(
-			@NonNull EntityPersister entityDescriptor,
-			@NonNull StatefulLoadAccessContext loadAccessContext,
+			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			@Nullable LockOptions defaultLockOptions,
 			@Nullable CacheMode defaultCacheMode,
 			boolean defaultReadOnly,
-			@NonNull SessionFactoryImplementor sessionFactory,
+			@Nonnull SessionFactoryImplementor sessionFactory,
 			FindOption... findOptions) {
 		super( entityDescriptor,
 				defaultLockOptions, defaultCacheMode, defaultReadOnly,
@@ -151,8 +151,8 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 	/// are both also deprecated.
 	@Deprecated
 	public StatefulFindMultipleByKeyOperation(
-			@NonNull EntityPersister entityDescriptor,
-			@NonNull StatefulLoadAccessContext loadAccessContext,
+			@Nonnull EntityPersister entityDescriptor,
+			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			KeyType keyType,
 			BatchSize batchSize,
 			SessionCheckMode sessionCheckMode,

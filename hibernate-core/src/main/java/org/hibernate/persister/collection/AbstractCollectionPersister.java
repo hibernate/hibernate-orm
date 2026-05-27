@@ -5,8 +5,8 @@
 package org.hibernate.persister.collection;
 
 import jakarta.persistence.metamodel.PluralAttribute;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
@@ -227,7 +227,7 @@ public abstract class AbstractCollectionPersister
 	private final BeforeExecutionGenerator identifierGenerator;
 	private final EntityPersister elementPersister;
 	private final @Nullable CollectionDataAccess cacheAccessStrategy;
-	private final @NonNull CacheEntryStructure cacheEntryStructure;
+	private final @Nonnull CacheEntryStructure cacheEntryStructure;
 	private final boolean useShallowQueryCacheLayout;
 
 	// dynamic filters for the collection
@@ -1377,7 +1377,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	@NonNull
+	@Nonnull
 	public CacheEntryStructure getCacheEntryStructure() {
 		return cacheEntryStructure;
 	}

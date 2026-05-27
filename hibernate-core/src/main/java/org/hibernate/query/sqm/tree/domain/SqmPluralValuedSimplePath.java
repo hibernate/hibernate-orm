@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
@@ -110,7 +109,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 	}
 
 	@Override
-	public @NonNull JavaType<C> getJavaTypeDescriptor() {
+	public @Nonnull JavaType<C> getJavaTypeDescriptor() {
 		return getPluralAttribute().getAttributeJavaType();
 	}
 
@@ -160,7 +159,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 		}
 	}
 
-	private @NonNull SqmAttributeJoin<?, ?> join(
+	private @Nonnull SqmAttributeJoin<?, ?> join(
 			SqmExpression<?> selector,
 			@Nullable SqmFrom<?, ?> path,
 			SqmPathRegistry pathRegistry,
@@ -176,7 +175,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 		}
 	}
 
-	private <P> @NonNull SqmAttributeJoin<?, ?> joinAttribute(
+	private <P> @Nonnull SqmAttributeJoin<?, ?> joinAttribute(
 			SqmFrom<?, P> parent,
 			String alias,
 			SqmExpression<?> selector) {

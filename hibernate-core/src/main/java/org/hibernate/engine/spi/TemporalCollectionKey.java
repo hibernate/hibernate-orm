@@ -7,7 +7,7 @@ package org.hibernate.engine.spi;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A {@link CollectionKey} for a temporal (historical) snapshot of a collection,

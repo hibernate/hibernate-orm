@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.expression;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -55,7 +54,7 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public @NonNull BasicType<T> getNodeType() {
+	public @Nonnull BasicType<T> getNodeType() {
 		return (BasicType<T>) castNonNull( super.getNodeType() );
 	}
 

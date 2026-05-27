@@ -6,8 +6,8 @@ package org.hibernate.graph.internal.parse;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.GraphParserMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -79,13 +79,13 @@ public class GraphParsing {
 	}
 
 	@Deprecated(forRemoval = true)
-	public static LegacyGraphLanguageParser.@NonNull GraphContext parseLegacyGraphText(String graphText) {
+	public static @Nonnull LegacyGraphLanguageParser.GraphContext parseLegacyGraphText(String graphText) {
 		final var lexer = new GraphLanguageLexer( CharStreams.fromString( graphText ) );
 		final var parser = new LegacyGraphLanguageParser( new CommonTokenStream( lexer ) );
 		return parser.graph();
 	}
 
-	public static GraphLanguageParser.@NonNull GraphContext parseText(String graphText) {
+	public static @Nonnull GraphLanguageParser.GraphContext parseText(String graphText) {
 		final var lexer = new GraphLanguageLexer( CharStreams.fromString( graphText ) );
 		final var parser = new GraphLanguageParser( new CommonTokenStream( lexer ) );
 		return parser.graph();

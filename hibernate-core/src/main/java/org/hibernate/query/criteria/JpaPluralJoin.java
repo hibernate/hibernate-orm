@@ -8,8 +8,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 
@@ -23,7 +22,7 @@ import jakarta.persistence.criteria.PluralJoin;
  */
 public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, E> {
 	@Override
-	@NonNull
+	@Nonnull
 	PluralPersistentAttribute<? super O, C, E> getAttribute();
 
 	@Nonnull
@@ -36,7 +35,7 @@ public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, 
 
 	@Override
 	@Nonnull
-	JpaPluralJoin<O, ? extends C, E> on(JpaPredicate @Nullable... restrictions);
+	JpaPluralJoin<O, ? extends C, E> on(@Nullable JpaPredicate... restrictions);
 
 	@Nonnull
 	@Override

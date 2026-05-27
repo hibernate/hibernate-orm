@@ -30,8 +30,8 @@ import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
@@ -728,7 +728,7 @@ public class EnhancerImpl implements Enhancer {
 		return getJavaBeansFieldName( trimGetterName( methodDescription.getActualName() ) );
 	}
 
-	private static @NonNull String trimGetterName(String methodName) {
+	private static @Nonnull String trimGetterName(String methodName) {
 		if ( methodName.startsWith( "get" ) || methodName.startsWith( "set" ) ) {
 			return methodName.substring( 3 );
 		}

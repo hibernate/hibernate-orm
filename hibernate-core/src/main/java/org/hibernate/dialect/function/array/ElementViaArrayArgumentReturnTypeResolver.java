@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * A {@link FunctionReturnTypeResolver} that resolves the array element type based on an argument.

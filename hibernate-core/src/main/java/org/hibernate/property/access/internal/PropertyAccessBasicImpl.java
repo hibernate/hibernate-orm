@@ -12,7 +12,7 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterMethodImpl;
 
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.util.ReflectHelper.findGetterMethod;
 import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;

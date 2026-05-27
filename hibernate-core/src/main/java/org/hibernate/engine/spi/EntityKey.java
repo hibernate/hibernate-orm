@@ -13,7 +13,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.pretty.MessageHelper.infoString;
 

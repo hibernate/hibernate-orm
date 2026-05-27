@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Represents the definition of a {@link org.hibernate.Filter filter}.
@@ -80,7 +80,7 @@ public class FilterDefinition implements Serializable {
 	 * @return The parameters named by this configuration.
 	 */
 	public Set<String> getParameterNames() {
-		// local variable instantiated for checkerframework nullness inference reasons
+		// Local variable helps static nullness inference.
 		Set<String> keys = explicitParamJaMappings.keySet();
 		return keys;
 	}

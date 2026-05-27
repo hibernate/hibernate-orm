@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -102,7 +101,7 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public @NonNull SqmBindableType getNodeType() {
+	public @Nonnull SqmBindableType getNodeType() {
 		return treatTarget;
 	}
 

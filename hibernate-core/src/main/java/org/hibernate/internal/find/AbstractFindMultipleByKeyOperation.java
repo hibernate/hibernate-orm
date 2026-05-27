@@ -10,8 +10,8 @@ import jakarta.persistence.FindOption;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.EnabledFetchProfile;
@@ -74,11 +74,11 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 
 	@SuppressWarnings("PatternVariableHidesField")
 	public AbstractFindMultipleByKeyOperation(
-			@NonNull EntityPersister entityDescriptor,
+			@Nonnull EntityPersister entityDescriptor,
 			@Nullable LockOptions defaultLockOptions,
 			@Nullable CacheMode defaultCacheMode,
 			boolean defaultReadOnly,
-			@NonNull SessionFactoryImplementor sessionFactory,
+			@Nonnull SessionFactoryImplementor sessionFactory,
 			FindOption... findOptions) {
 		this.entityDescriptor = entityDescriptor;
 

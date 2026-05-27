@@ -6,7 +6,7 @@ package org.hibernate.orm.test.multitenancy;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
@@ -65,7 +65,7 @@ public class CredentialsBasedMultitenancyTest {
 
 	public static class MyResolver implements CurrentTenantIdentifierResolver<String> {
 		@Override
-		public @NonNull String resolveCurrentTenantIdentifier() {
+		public @Nonnull String resolveCurrentTenantIdentifier() {
 			return currentTenantIdentifier;
 		}
 
@@ -77,12 +77,12 @@ public class CredentialsBasedMultitenancyTest {
 
 	public static class MyMapper implements TenantCredentialsMapper<String> {
 		@Override
-		public @NonNull String user(@NonNull String tenantIdentifier) {
+		public @Nonnull String user(@Nonnull String tenantIdentifier) {
 			return tenantIdentifier;
 		}
 
 		@Override
-		public @NonNull String password(@NonNull String tenantIdentifier) {
+		public @Nonnull String password(@Nonnull String tenantIdentifier) {
 			return tenantIdentifier;
 		}
 	}

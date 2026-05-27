@@ -4,8 +4,7 @@
  */
 package org.hibernate.engine.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks.CompletionCallback;
 
@@ -20,7 +19,7 @@ abstract class AbstractTransactionCompletionProcessQueue<T extends CompletionCal
 	SharedSessionContractImplementor session;
 	// Concurrency handling required when the transaction completion process
 	// is dynamically registered inside an event listener (HHH-7478).
-	ConcurrentLinkedQueue<@NonNull T> processes = new ConcurrentLinkedQueue<>();
+	ConcurrentLinkedQueue<T> processes = new ConcurrentLinkedQueue<>();
 
 	AbstractTransactionCompletionProcessQueue(SharedSessionContractImplementor session) {
 		this.session = session;

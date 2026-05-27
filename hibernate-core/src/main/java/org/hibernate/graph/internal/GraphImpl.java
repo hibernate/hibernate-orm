@@ -10,7 +10,6 @@ import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.SubGraph;
@@ -90,7 +89,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public boolean hasAttributeNode(@NonNull String attributeName) {
+	public boolean hasAttributeNode(@Nonnull String attributeName) {
 		final var attribute = findAttributeInSupertypes( attributeName );
 		if ( attribute == null ) {
 			throw new IllegalArgumentException( "Unknown attribute: " + attributeName );
@@ -100,7 +99,7 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	}
 
 	@Override
-	public boolean hasAttributeNode(@NonNull Attribute<? super J, ?> attribute) {
+	public boolean hasAttributeNode(@Nonnull Attribute<? super J, ?> attribute) {
 		return attributeNodes != null
 			&& attributeNodes.containsKey( (PersistentAttribute<? super J, ?>) attribute );
 	}

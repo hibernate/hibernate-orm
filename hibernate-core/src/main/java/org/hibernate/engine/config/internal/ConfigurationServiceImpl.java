@@ -14,8 +14,7 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.PolyNull;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
@@ -54,13 +53,13 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	}
 
 	@Override
-	public <T> @PolyNull T getSetting(String name, Converter<T> converter, @PolyNull T defaultValue) {
+	public <T> @Nullable T getSetting(String name, Converter<T> converter, @Nullable T defaultValue) {
 		final Object value = settings.get( name );
 		return value == null ? defaultValue : converter.convert( value );
 	}
 
 	@Override
-	public <T> @PolyNull T getSetting(String name, Class<T> expected, @PolyNull T defaultValue) {
+	public <T> @Nullable T getSetting(String name, Class<T> expected, @Nullable T defaultValue) {
 		final Object value = settings.get( name );
 		final T target = cast( expected, value );
 		return target !=null ? target : defaultValue;

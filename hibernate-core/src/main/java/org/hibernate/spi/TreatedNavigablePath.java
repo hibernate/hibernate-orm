@@ -6,7 +6,7 @@ package org.hibernate.spi;
 
 import org.hibernate.Incubating;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 

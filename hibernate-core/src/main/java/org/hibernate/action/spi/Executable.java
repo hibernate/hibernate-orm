@@ -7,7 +7,7 @@ package org.hibernate.action.spi;
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * An operation which may be scheduled for later execution. Usually, the

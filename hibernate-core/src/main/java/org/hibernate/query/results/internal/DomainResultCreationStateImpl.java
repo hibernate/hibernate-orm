@@ -4,8 +4,8 @@
  */
 package org.hibernate.query.results.internal;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
@@ -335,7 +335,7 @@ public class DomainResultCreationStateImpl
 		return result;
 	}
 
-	private @NonNull FetchBuilder fetchBuilder(
+	private @Nonnull FetchBuilder fetchBuilder(
 			Fetchable fetchable,
 			FetchBuilder explicitFetchBuilder,
 			LegacyFetchBuilder fetchBuilderLegacy,

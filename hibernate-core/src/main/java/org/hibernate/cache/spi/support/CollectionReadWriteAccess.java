@@ -6,7 +6,7 @@ package org.hibernate.cache.spi.support;
 
 import java.util.Comparator;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -49,7 +49,7 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 	}
 
 	@Override
-	@NonNull
+	@Nonnull
 	public Object generateCacheKey(
 			Object id,
 			CollectionPersister collectionDescriptor,

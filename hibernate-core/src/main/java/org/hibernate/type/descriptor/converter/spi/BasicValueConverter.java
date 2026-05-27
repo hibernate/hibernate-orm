@@ -7,7 +7,7 @@ package org.hibernate.type.descriptor.converter.spi;
 import org.hibernate.Incubating;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Support for {@linkplain org.hibernate.type basic-typed} value conversions.

@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.util.collections.BoundedConcurrentHashMap.Eviction.LRU;
 

@@ -5,7 +5,7 @@
 package org.hibernate.boot.models.xml.internal;
 
 import jakarta.persistence.TemporalType;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMapping;
@@ -736,7 +736,7 @@ public class DynamicModelHelper {
 		return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 	}
 
-	@NonNull
+	@Nonnull
 	private static <T> T createInstance(ClassDetails classDetails) {
 		try {
 			//noinspection unchecked

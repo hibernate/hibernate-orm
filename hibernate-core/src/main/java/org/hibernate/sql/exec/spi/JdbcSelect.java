@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;

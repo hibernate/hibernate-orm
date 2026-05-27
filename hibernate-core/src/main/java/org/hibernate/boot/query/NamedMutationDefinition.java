@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.query;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.JpaStatementReference;

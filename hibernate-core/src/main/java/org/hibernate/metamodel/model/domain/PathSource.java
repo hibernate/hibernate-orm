@@ -4,7 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.spi.NavigablePath;
 
 /**

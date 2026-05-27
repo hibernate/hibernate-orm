@@ -10,7 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.dialect.Dialect;

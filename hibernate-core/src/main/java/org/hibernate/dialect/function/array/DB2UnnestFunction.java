@@ -4,7 +4,7 @@
  */
 package org.hibernate.dialect.function.array;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CteGenerateSeriesFunction;
 import org.hibernate.dialect.function.json.DB2JsonTableFunction;

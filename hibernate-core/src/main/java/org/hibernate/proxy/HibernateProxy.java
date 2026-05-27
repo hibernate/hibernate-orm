@@ -10,7 +10,7 @@ import java.io.Serializable;
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Interface implemented directly by entity proxies, exposing

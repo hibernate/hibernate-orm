@@ -5,7 +5,7 @@
 package org.hibernate.query.criteria;
 
 import jakarta.persistence.metamodel.Type;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 
 /**

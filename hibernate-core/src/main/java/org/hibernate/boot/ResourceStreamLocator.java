@@ -6,7 +6,7 @@ package org.hibernate.boot;
 
 import java.io.InputStream;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Abstraction for locating class-path resources

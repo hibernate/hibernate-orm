@@ -6,9 +6,9 @@ package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.BatchSize;
 import jakarta.persistence.FetchOption;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.NamedGraphCreator;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -72,7 +72,7 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 				entityDomainNameResolver.resolveEntityName( jpaEntityName ) );
 	}
 
-	private <T> @NonNull RootGraphImplementor<T> createGraph(EntityDomainType<T> rootEntityType) {
+	private <T> @Nonnull RootGraphImplementor<T> createGraph(EntityDomainType<T> rootEntityType) {
 		validateFetchContributions();
 		final var entityGraph =
 				createRootGraph( name, rootEntityType, annotation.includeAllAttributes() );

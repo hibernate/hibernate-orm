@@ -6,7 +6,7 @@ package org.hibernate.query.sqm;
 
 import org.hibernate.HibernateException;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 
 /**
  * Indicates a problem with a TREAT usage

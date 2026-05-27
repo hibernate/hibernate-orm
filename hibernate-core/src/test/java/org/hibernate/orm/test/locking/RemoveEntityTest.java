@@ -120,7 +120,7 @@ public class RemoveEntityTest {
 		private String email;
 
 		@OneToMany(targetEntity = LinkEntity.class, mappedBy = "employee")
-		final Set<LinkEntity> folderLink = new HashSet<>();
+		Set<LinkEntity> folderLink = new HashSet<>();
 
 		public Collection<LinkEntity> getFolderLink() {
 			return folderLink;

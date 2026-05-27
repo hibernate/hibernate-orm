@@ -83,11 +83,11 @@ public class SingleTableInheritanceEagerAssociationTest {
 	public static class Message {
 
 		@Id
-		private final String messageId;
+		private String messageId;
 
 		@ManyToOne( cascade = CascadeType.ALL)
 		@JoinColumn(name = "SENDER_ADDRESS_ID")
-		private final Address address;
+		private Address address;
 
 		private int version;
 
@@ -192,7 +192,7 @@ public class SingleTableInheritanceEagerAssociationTest {
 	public static abstract class User {
 
 		@Id
-		private final String userId;
+		private String userId;
 
 		@Version
 		private int version;

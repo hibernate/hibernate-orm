@@ -64,7 +64,7 @@ public class EmptyMapTest {
 				cascade = CascadeType.ALL,
 				orphanRemoval = true)
 		@MapKeyJoinColumn
-		private final Map<Identity, UserIdentity> userIdentityByIdentity = new HashMap<>();
+		private Map<Identity, UserIdentity> userIdentityByIdentity = new HashMap<>();
 
 		public User() {
 		}

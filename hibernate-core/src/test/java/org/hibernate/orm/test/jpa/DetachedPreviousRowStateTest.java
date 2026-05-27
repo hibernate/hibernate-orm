@@ -126,7 +126,7 @@ class DetachedPreviousRowStateTest {
 		private String description;
 
 		@OneToMany(mappedBy = "product")
-		private final List<Version> versions = new ArrayList<>();
+		private List<Version> versions = new ArrayList<>();
 	}
 
 	@Entity(name = "Description")

@@ -138,7 +138,7 @@ public class PersistAndQueryingInSameTransactionTest {
 		private String id;
 
 		@OneToMany(orphanRemoval = true, mappedBy = "parent", cascade = CascadeType.ALL)
-		private final List<Child> children = new ArrayList<>();
+		private List<Child> children = new ArrayList<>();
 
 		public Parent() {
 		}

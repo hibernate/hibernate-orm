@@ -320,7 +320,7 @@ public class EmbeddableAndFetchModeSelectTest {
 		String name;
 
 		@OneToMany(mappedBy = "entityB")
-		final List<EntityA> listOfEntityA = new ArrayList<>();
+		List<EntityA> listOfEntityA = new ArrayList<>();
 
 		public EntityB() {
 		}

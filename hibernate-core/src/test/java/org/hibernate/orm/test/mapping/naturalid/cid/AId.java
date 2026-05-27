@@ -12,7 +12,7 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class AId implements java.io.Serializable {
-	private final int id;
+	private int id;
 
 	protected AId() {
 		this.id = 0;

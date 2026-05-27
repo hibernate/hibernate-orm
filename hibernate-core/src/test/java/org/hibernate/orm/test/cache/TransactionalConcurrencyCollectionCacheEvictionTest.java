@@ -153,7 +153,7 @@ public class TransactionalConcurrencyCollectionCacheEvictionTest {
 
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "person")
 		@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
-		private final Set<Phone> phones = new HashSet<>();
+		private Set<Phone> phones = new HashSet<>();
 
 		public Person() {
 		}

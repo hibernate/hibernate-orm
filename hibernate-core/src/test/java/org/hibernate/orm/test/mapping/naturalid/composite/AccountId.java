@@ -11,7 +11,7 @@ import jakarta.persistence.Embeddable;
  */
 @Embeddable
 public class AccountId implements java.io.Serializable {
-	private final int id;
+	private int id;
 
 	protected AccountId() {
 		this.id = 0;

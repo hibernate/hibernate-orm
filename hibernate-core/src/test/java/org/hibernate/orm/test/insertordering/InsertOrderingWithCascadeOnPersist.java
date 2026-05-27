@@ -117,7 +117,7 @@ public class InsertOrderingWithCascadeOnPersist {
 		private String bidGroup;
 
 		@OneToMany(mappedBy = "group")
-		private final Set<MarketBid> marketBids = new HashSet<>();
+		private Set<MarketBid> marketBids = new HashSet<>();
 
 		public void addMarketBid(MarketBid marketBid) {
 			this.marketBids.add( marketBid );

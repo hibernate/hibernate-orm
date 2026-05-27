@@ -91,7 +91,7 @@ public class OneToManyLazyAndEagerProxyTest {
 		private String id;
 
 		@OneToMany(targetEntity = OrderItem.class, mappedBy = "order", fetch = FetchType.EAGER)
-		private final Set<OrderItem> orderItems = new HashSet<>();
+		private Set<OrderItem> orderItems = new HashSet<>();
 
 		@ManyToOne(fetch = FetchType.EAGER)
 		private User user;

@@ -77,7 +77,7 @@ public class ElementCollectionMapUpdateTest {
 
 		@ElementCollection
 		@MapKeyColumn( name = "name", insertable = false, updatable = false )
-		private final Map<String, MarketData> data = new HashMap<>();
+		private Map<String, MarketData> data = new HashMap<>();
 
 		public Company() {
 		}

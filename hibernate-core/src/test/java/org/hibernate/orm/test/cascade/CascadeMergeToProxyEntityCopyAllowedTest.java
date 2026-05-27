@@ -170,7 +170,7 @@ public class CascadeMergeToProxyEntityCopyAllowedTest {
 		private int version;
 
 		@Column(nullable = false, unique = true, length = 36)
-		private final String bID;
+		private String bID;
 
 		protected AbstractEntity() {
 			bID = UUID.nameUUIDFromBytes(

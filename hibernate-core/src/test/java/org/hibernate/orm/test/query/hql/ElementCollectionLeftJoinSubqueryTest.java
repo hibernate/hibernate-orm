@@ -126,7 +126,7 @@ public class ElementCollectionLeftJoinSubqueryTest {
 
 		@ElementCollection
 		@CollectionTable( name = "c_embeddables", joinColumns = { @JoinColumn( name = "id" ) } )
-		private final Set<EmbeddableC> cCollection = new HashSet<>();
+		private Set<EmbeddableC> cCollection = new HashSet<>();
 
 		public EntityA getA() {
 			return a;

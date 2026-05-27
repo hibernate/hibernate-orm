@@ -162,7 +162,7 @@ public class CacheModeGetUpdateTest {
 		private String name;
 
 		@OneToMany( fetch = FetchType.LAZY, mappedBy = "person" )
-		private final Set<Phone> phones = new HashSet<>();
+		private Set<Phone> phones = new HashSet<>();
 
 		public Person() {
 		}

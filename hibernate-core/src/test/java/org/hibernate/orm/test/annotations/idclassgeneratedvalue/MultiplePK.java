@@ -12,11 +12,11 @@ import java.io.Serializable;
  */
 public class MultiplePK implements Serializable
 {
-private final Long id1;
-private final Long id2;
-private final Long id3;
+private Long id1;
+private Long id2;
+private Long id3;
 // AnnotationSourceProcessor (incorrectly) requires this to be transient; see HHH-4819 and HHH-4820
-private final transient int cachedHashCode;
+private transient int cachedHashCode;
 
 private MultiplePK()
 {

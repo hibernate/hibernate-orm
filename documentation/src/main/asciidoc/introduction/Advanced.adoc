@@ -261,7 +261,7 @@ For this we need an audit log.
 
 An _audited entity_ is quite similar to a temporal entity with a separate history table.
 But whereas a history table only tracks the timestamp at which a version became effective, an _audit log_ keeps a record of each changeset and something about the nature of the change.
-The link:{doc-javadoc-url}org/hibernate/annotations/Audited.html[`@Audited`] annotation declares a temporal entity.
+The link:{doc-javadoc-url}org/hibernate/annotations/Audited.html[`@Audited`] annotation declares an audited entity.
 
 [source,java]
 ----
@@ -283,12 +283,13 @@ class Document {
 }
 ----
 
-An audit log has columns holding:
+An audit log is organized around changeset identifiers instead of timestamps.
+Each audit log table has columns holding:
 
-- an identifier of the changeset at which a revision of the entity became effective,
+- an id of the changeset at which a revision of the entity became effective,
 - the nature of the change to entity that resulted in the revision being created--that is, the `ModificationType`,
 and
-- optionally, an identifier of the changeset which resulted in the revision being superseded.
+- optionally, an id of the changeset which resulted in the revision being superseded.
 
 [source,java]
 ----
@@ -296,7 +297,7 @@ and
 @Table(name="documents")
 @Audited.Table(
         name="document_aud_log",
-        transactionIdColumn="REV",
+        changesetIdColumn="REV",
         modificationTypeColumn="REVTYPE")
 class Document {
 	...
@@ -304,7 +305,7 @@ class Document {
 ----
 
 NOTE: In the past, audit logging was provided by {envers}[Envers].
-The functionality provided by the `@Audited` annotation is completely new, but is backward compatible with the format of Envers audit logs.
+The functionality underlying the `@Audited` annotation is completely new, but is backward compatible with the format of Envers audit logs.
 
 To make use of audited entities, we need a source of changeset ids.
 There are two approaches we could take:
@@ -334,7 +335,10 @@ static class ChangesetInfo {
 }
 ----
 
+Notice that the changelog entity is much more than a source of ids.
+It also stores information about each changeset, including the moment at which the change occurred.
 For those familiar with Envers, the changelog entity fills the role of the Envers "revision entity".
+A typical custom changelog entity helps answer questions like "who?", "why?", and "when?".
 
 .Audit log configuration
 [%breakable,cols="36,~"]

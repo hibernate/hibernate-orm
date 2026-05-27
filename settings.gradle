@@ -27,9 +27,9 @@ dependencyResolutionManagement {
         // See MAINTAINERS.md for documentation.
         // TODO Move to infra overrides instead;
         //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
-        if ( System.env['MAVEN_MIRROR'] ) {
+        if ( System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR'] ) {
             maven {
-                url System.env['MAVEN_MIRROR']
+                url System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR']
             }
         }
         else {

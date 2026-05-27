@@ -15,7 +15,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.tool.reveng.internal.export.hbm.Cfg2HbmTool;
+import org.hibernate.tool.reveng.internal.export.common.MappingTemplateHelper;
 import org.hibernate.tool.reveng.internal.core.util.EnhancedValue;
 import org.hibernate.tool.reveng.internal.util.NameConverter;
 import org.hibernate.tool.reveng.internal.util.StringUtil;
@@ -241,7 +241,7 @@ public class Cfg2JavaTool {
 
 	public Properties getFilteredIdentifierGeneratorProperties(SimpleValue simpleValue) {
 		Properties p = ((EnhancedValue)simpleValue).getIdentifierGeneratorProperties();
-		return Cfg2HbmTool.getFilteredIdentifierGeneratorProperties(p, new Properties());
+		return MappingTemplateHelper.getFilteredIdentifierGeneratorProperties(p, new Properties());
 	}
 
 	private String getJavaTypeName(Value value) {

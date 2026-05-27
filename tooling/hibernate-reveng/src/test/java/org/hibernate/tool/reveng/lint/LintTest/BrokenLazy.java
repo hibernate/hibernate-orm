@@ -2,16 +2,18 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.reveng.hbmlint.HbmLintTest;
+package org.hibernate.tool.reveng.lint.LintTest;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 @Entity
-public class FakeNonLazy {
+public class BrokenLazy {
 
 	@Id
-	@GeneratedValue
-	private long id;
+	long id;
+
+	public BrokenLazy(long id) {
+		this.id = id;
+	}
 }

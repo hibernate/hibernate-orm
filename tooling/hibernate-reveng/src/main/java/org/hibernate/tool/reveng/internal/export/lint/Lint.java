@@ -9,12 +9,12 @@ import org.hibernate.boot.Metadata;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HbmLint implements IssueCollector {
+public class Lint implements IssueCollector {
 
 
 	final Detector[] detectors;
 
-	public HbmLint(Detector[] detectors) {
+	public Lint(Detector[] detectors) {
 		this.detectors = detectors;
 	}
 
@@ -28,9 +28,6 @@ public class HbmLint implements IssueCollector {
 
 	}
 
-	/* (non-Javadoc)
-	 * @see org.hibernate.tool.hbmlint.IssueCollector#reportProblem(org.hibernate.tool.hbmlint.Issue)
-	 */
 	public void reportIssue(Issue analyze) {
 		results.add(analyze);
 	}
@@ -39,8 +36,8 @@ public class HbmLint implements IssueCollector {
 		return results;
 	}
 
-	public static HbmLint createInstance() {
-		return new HbmLint(
+	public static Lint createInstance() {
+		return new Lint(
 			new Detector[] {
 					new BadCachingDetector(),
 					new InstrumentationDetector(),

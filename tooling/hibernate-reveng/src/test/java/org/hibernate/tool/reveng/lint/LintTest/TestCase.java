@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.reveng.hbmlint.HbmLintTest;
+package org.hibernate.tool.reveng.lint.LintTest;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.reveng.api.export.ExporterConstants;
@@ -43,7 +43,7 @@ public class TestCase {
 
 	@Test
 	public void testExporter() {
-		HbmLintExporter exporter = new HbmLintExporter();
+		LintExporter exporter = new LintExporter();
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
 		exporter.start();
@@ -51,21 +51,21 @@ public class TestCase {
 
 	@Test
 	public void testValidateCache() {
-		HbmLint analyzer = new HbmLint(new Detector[] { new BadCachingDetector() });
+		Lint analyzer = new Lint(new Detector[] { new BadCachingDetector() });
 		analyzer.analyze(metadataDescriptor.createMetadata());
 		assertEquals(1, analyzer.getResults().size());
 	}
 
 	@Test
 	public void testValidateIdentifier() {
-		HbmLint analyzer = new HbmLint(new Detector[] { new ShadowedIdentifierDetector() });
+		Lint analyzer = new Lint(new Detector[] { new ShadowedIdentifierDetector() });
 		analyzer.analyze(metadataDescriptor.createMetadata());
 		assertEquals(1, analyzer.getResults().size());
 	}
 
 	@Test
 	public void testBytecodeRestrictions() {
-		HbmLint analyzer = new HbmLint(new Detector[] { new InstrumentationDetector() });
+		Lint analyzer = new Lint(new Detector[] { new InstrumentationDetector() });
 		analyzer.analyze(metadataDescriptor.createMetadata());
 		assertEquals(2, analyzer.getResults().size(), analyzer.getResults().toString());
 	}

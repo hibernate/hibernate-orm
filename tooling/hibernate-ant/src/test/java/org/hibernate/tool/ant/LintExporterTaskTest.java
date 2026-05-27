@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class HbmLintExporterTaskTest {
+public class LintExporterTaskTest {
 
 	@Test
 	public void testGetName() {
 		HibernateToolTask parent = new HibernateToolTask();
-		HbmLintExporterTask task = new HbmLintExporterTask(parent);
-		assertEquals("hbmlint (scans mapping for errors)", task.getName());
+		LintExporterTask task = new LintExporterTask(parent);
+		assertEquals("lint (scans mapping for errors)", task.getName());
 	}
 }

@@ -8,19 +8,19 @@ import org.hibernate.tool.reveng.api.export.Exporter;
 import org.hibernate.tool.reveng.api.export.ExporterFactory;
 import org.hibernate.tool.reveng.api.export.ExporterType;
 
-public class HbmLintExporterTask extends ExporterTask {
+public class LintExporterTask extends ExporterTask {
 
-	public HbmLintExporterTask(HibernateToolTask parent) {
+	public LintExporterTask(HibernateToolTask parent) {
 		super( parent );
 	}
 
 	protected Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.HBM_LINT);
+		return ExporterFactory.createExporter(ExporterType.LINT);
 	}
 
 
 	String getName() {
-		return "hbmlint (scans mapping for errors)";
+		return "lint (scans mapping for errors)";
 	}
 
 }

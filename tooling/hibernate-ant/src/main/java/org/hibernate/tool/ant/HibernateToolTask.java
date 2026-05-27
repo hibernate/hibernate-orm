@@ -117,8 +117,8 @@ public class HibernateToolTask extends Task {
 		return generator;
 	}
 
-	public HbmLintExporterTask createHbmLint() {
-		HbmLintExporterTask generator = new HbmLintExporterTask(this);
+	public LintExporterTask createLint() {
+		LintExporterTask generator = new LintExporterTask(this);
 		generators.add(generator);
 		return generator;
 	}

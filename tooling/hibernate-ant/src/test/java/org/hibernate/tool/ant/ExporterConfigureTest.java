@@ -257,8 +257,8 @@ public class ExporterConfigureTest {
 	}
 
 	@Test
-	public void testHbmLintExporterCreateExporter() {
-		HbmLintExporterTask task = new HbmLintExporterTask(parent);
+	public void testLintExporterCreateExporter() {
+		LintExporterTask task = new LintExporterTask(parent);
 		Exporter exporter = task.createExporter();
 		assertNotNull(exporter);
 	}

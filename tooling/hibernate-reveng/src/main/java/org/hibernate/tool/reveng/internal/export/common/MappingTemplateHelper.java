@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.reveng.internal.export.hbm;
+package org.hibernate.tool.reveng.internal.export.common;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
@@ -10,12 +10,11 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-import org.hibernate.tool.reveng.internal.export.common.EntityNameFromValueVisitor;
 
 import java.util.Objects;
 import java.util.Properties;
 
-public class Cfg2HbmTool {
+public class MappingTemplateHelper {
 
 	public static Properties getFilteredIdentifierGeneratorProperties(Properties properties, Properties environmentProperties) {
 		if (properties != null){

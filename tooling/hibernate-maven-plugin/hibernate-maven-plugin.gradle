@@ -97,6 +97,9 @@ publishingExtension.publications.named("publishedArtifacts") {
 integrationTest {
     environment "hibernateVersion", project.version
     environment "h2Version", libs.versions.h2.get()
+    if ( project.hasProperty( 'MAVEN_MIRROR' ) ) {
+        environment "MAVEN_MIRROR", project.property( 'MAVEN_MIRROR' )
+    }
     testLogging {
         exceptionFormat = 'full'
     }

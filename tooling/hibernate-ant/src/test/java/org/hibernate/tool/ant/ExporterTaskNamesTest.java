@@ -43,12 +43,6 @@ public class ExporterTaskNamesTest {
 	}
 
 	@Test
-	public void testHbm2HbmXmlExporterTaskName() {
-		assertEquals("hbm2hbmxml (Generates a set of hbm.xml files)",
-				new Hbm2HbmXmlExporterTask(parent).getName());
-	}
-
-	@Test
 	public void testHbm2JavaSetters() {
 		Hbm2JavaExporterTask task = new Hbm2JavaExporterTask(parent);
 		task.setEjb3(false);

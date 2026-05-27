@@ -57,6 +57,23 @@ public class Helper {
 		}
 	}
 
+	public static Object[] coerceIds(EntityPersister entityPersister, List<?> keys, SharedSessionContractImplementor session) {
+		Object[] ids = null;
+		final int size = keys.size();
+		for ( int i = 0; i < size; i++ ) {
+			final var factory = session.getFactory();
+			final Object key = keys.get( i );
+			final Object coerced = coerceId( entityPersister, key, factory );
+			if ( coerced != key ) {
+				if ( ids == null ) {
+					ids = new Object[size];
+				}
+				ids[i] = coerced;
+			}
+		}
+		return ids == null ? keys.toArray() : ids;
+	}
+
 	public static Object coerceNaturalId(EntityPersister entityPersister, Object key) {
 		var naturalIdMapping = entityPersister.getNaturalIdMapping();
 		assert naturalIdMapping != null;

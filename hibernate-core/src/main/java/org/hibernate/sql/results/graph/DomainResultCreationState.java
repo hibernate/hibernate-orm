@@ -6,9 +6,6 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Function;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AssociationKey;
@@ -199,44 +196,17 @@ public interface DomainResultCreationState {
 	void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide);
 
 	/**
-	 * Register the {@link CacheStoreMode} applied by an entity graph to a fetch path.
+	 * Register the fetch options applied by an entity graph to a fetch path.
 	 */
-	default void registerFetchCacheStoreMode(NavigablePath fetchablePath, CacheStoreMode cacheStoreMode) {
+	default void registerFetchOptions(
+			NavigablePath fetchablePath,
+			org.hibernate.engine.spi.FetchOptions fetchOptions) {
 	}
 
 	/**
-	 * The {@link CacheStoreMode} applied by an entity graph to this fetch path,
-	 * or {@code null} when the fetch should use the session/query cache mode.
+	 * The fetch options applied by an entity graph to this fetch path.
 	 */
-	default CacheStoreMode getFetchCacheStoreMode(NavigablePath fetchablePath) {
-		return null;
-	}
-
-	/**
-	 * Register the {@link CacheRetrieveMode} applied by an entity graph to a fetch path.
-	 */
-	default void registerFetchCacheRetrieveMode(NavigablePath fetchablePath, CacheRetrieveMode cacheRetrieveMode) {
-	}
-
-	/**
-	 * The {@link CacheRetrieveMode} applied by an entity graph to this fetch path,
-	 * or {@code null} when the fetch should use the session/query cache mode.
-	 */
-	default CacheRetrieveMode getFetchCacheRetrieveMode(NavigablePath fetchablePath) {
-		return null;
-	}
-
-	/**
-	 * Register the batch size applied by an entity graph to a fetch path.
-	 */
-	default void registerFetchBatchSize(NavigablePath fetchablePath, Integer batchSize) {
-	}
-
-	/**
-	 * The batch size applied by an entity graph to this fetch path,
-	 * or {@code null} if none was applied.
-	 */
-	default Integer getFetchBatchSize(NavigablePath fetchablePath) {
-		return null;
+	default org.hibernate.engine.spi.FetchOptions getFetchOptions(NavigablePath fetchablePath) {
+		return org.hibernate.engine.spi.FetchOptions.NONE;
 	}
 }

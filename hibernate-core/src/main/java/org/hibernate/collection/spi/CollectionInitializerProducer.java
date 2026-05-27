@@ -4,11 +4,9 @@
  */
 package org.hibernate.collection.spi;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -49,10 +47,8 @@ public interface CollectionInitializerProducer {
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
-				DomainResult<?> collectionValueKeyResult,
-				boolean isResultInitializer,
-				CacheStoreMode cacheStoreMode,
-				CacheRetrieveMode cacheRetrieveMode,
-				Integer batchSize,
-				AssemblerCreationState creationState);
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			FetchOptions fetchOptions,
+			AssemblerCreationState creationState);
 }

@@ -6,11 +6,9 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.BitSet;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -37,12 +35,11 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, InitializerProducer<EntityFetchJoinedImpl> {
 	private final FetchParent fetchParent;
 	private final EntityValuedFetchable fetchContainer;
-	private final EntityResultImpl entityResult;
+	private final EntityResultImpl<?> entityResult;
 	private final DomainResult<?> keyResult;
 	private final NotFoundAction notFoundAction;
 	private final boolean isAffectedByFilter;
-	private final CacheStoreMode cacheStoreMode;
-	private final CacheRetrieveMode cacheRetrieveMode;
+	private final FetchOptions fetchOptions;
 
 	private final String sourceAlias;
 
@@ -60,8 +57,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.notFoundAction = toOneMapping.getNotFoundAction();
 		this.sourceAlias = tableGroup.getSourceAlias();
 		this.isAffectedByFilter = isAffectedByFilter;
-		this.cacheStoreMode = creationState.getFetchCacheStoreMode( navigablePath );
-		this.cacheRetrieveMode = creationState.getFetchCacheRetrieveMode( navigablePath );
+		this.fetchOptions = creationState.getFetchOptions( navigablePath );
 		this.entityResult = new EntityResultImpl<>(
 				navigablePath,
 				toOneMapping,
@@ -83,8 +79,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.keyResult = null;
 		this.sourceAlias = tableGroup.getSourceAlias();
 		this.isAffectedByFilter = false;
-		this.cacheStoreMode = creationState.getFetchCacheStoreMode( navigablePath );
-		this.cacheRetrieveMode = creationState.getFetchCacheRetrieveMode( navigablePath );
+		this.fetchOptions = creationState.getFetchOptions( navigablePath );
 		this.entityResult = new EntityResultImpl<>(
 				navigablePath,
 				collectionPart,
@@ -105,8 +100,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.notFoundAction = original.notFoundAction;
 		this.isAffectedByFilter = original.isAffectedByFilter;
 		this.sourceAlias = original.sourceAlias;
-		this.cacheStoreMode = original.cacheStoreMode;
-		this.cacheRetrieveMode = original.cacheRetrieveMode;
+		this.fetchOptions = original.fetchOptions;
 	}
 
 	@Override
@@ -130,13 +124,8 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	}
 
 	@Override
-	public CacheStoreMode getCacheStoreMode() {
-		return cacheStoreMode;
-	}
-
-	@Override
-	public CacheRetrieveMode getCacheRetrieveMode() {
-		return cacheRetrieveMode;
+	public FetchOptions getFetchOptions() {
+		return fetchOptions;
 	}
 
 	@Override

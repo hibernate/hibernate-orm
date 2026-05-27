@@ -4,9 +4,7 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -28,16 +26,8 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 
 	EntityValuedModelPart getEntityValuedModelPart();
 
-	default CacheStoreMode getCacheStoreMode() {
-		return null;
-	}
-
-	default CacheRetrieveMode getCacheRetrieveMode() {
-		return null;
-	}
-
-	default Integer getBatchSize() {
-		return null;
+	default FetchOptions getFetchOptions() {
+		return FetchOptions.NONE;
 	}
 
 	@Override

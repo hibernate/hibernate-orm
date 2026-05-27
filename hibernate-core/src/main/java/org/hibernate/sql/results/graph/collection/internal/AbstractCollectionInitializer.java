@@ -9,12 +9,9 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
-import org.hibernate.CacheMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -45,9 +42,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	protected final boolean isResultInitializer;
 	protected final @Nullable InitializerParent<?> parent;
 	protected final @Nullable EntityInitializer<InitializerData> owningEntityInitializer;
-	protected final @Nullable CacheStoreMode cacheStoreMode;
-	protected final @Nullable CacheRetrieveMode cacheRetrieveMode;
-	protected final @Nullable Integer batchSize;
+	protected final FetchOptions fetchOptions;
 
 	/**
 	 * refers to the collection's container value - which collection-key?
@@ -76,26 +71,24 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	protected AbstractCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
-			InitializerParent<?> parent,
+			@Nullable InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			boolean isResultInitializer,
-			@Nullable CacheStoreMode cacheStoreMode,
-			@Nullable CacheRetrieveMode cacheRetrieveMode,
-			@Nullable Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.collectionPath = collectionPath;
 		this.collectionAttributeMapping = collectionAttributeMapping;
-		this.keyTypeForEqualsHashCode = collectionAttributeMapping.getCollectionDescriptor()
-				.getKeyType()
-				.getTypeForEqualsHashCode();
+		this.keyTypeForEqualsHashCode =
+				collectionAttributeMapping.getCollectionDescriptor()
+						.getKeyType().getTypeForEqualsHashCode();
 		this.isResultInitializer = isResultInitializer;
 		this.parent = parent;
-		this.cacheStoreMode = cacheStoreMode;
-		this.cacheRetrieveMode = cacheRetrieveMode;
-		this.batchSize = batchSize;
+		this.fetchOptions = fetchOptions;
 		//noinspection unchecked
-		this.owningEntityInitializer = (EntityInitializer<InitializerData>) Initializer.findOwningEntityInitializer( parent );
+		this.owningEntityInitializer =
+				(EntityInitializer<InitializerData>)
+						Initializer.findOwningEntityInitializer( parent );
 		this.collectionKeyResultAssembler = collectionKeyResult == null
 				? null
 				: collectionKeyResult.createResultAssembler( this, creationState );
@@ -116,7 +109,9 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		data.collectionKeyValue = null;
 		if ( collectionKeyResultAssembler != null ) {
 			//noinspection unchecked
-			final Initializer<InitializerData> initializer = (Initializer<InitializerData>) collectionKeyResultAssembler.getInitializer();
+			final Initializer<InitializerData> initializer =
+					(Initializer<InitializerData>)
+							collectionKeyResultAssembler.getInitializer();
 			final RowProcessingState rowProcessingState = data.getRowProcessingState();
 			if ( initializer != null ) {
 				final InitializerData subData = initializer.getData( rowProcessingState );
@@ -172,13 +167,14 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		data.collectionKey = null;
 		data.setCollectionInstance( null );
 
+		final var rowProcessingState = data.getRowProcessingState();
 		if ( data.collectionKeyValue == null ) {
 			if ( collectionKeyResultAssembler == null ) {
 				assert owningEntityInitializer != null;
-				data.collectionKeyValue = owningEntityInitializer.getEntityIdentifier( data.getRowProcessingState() );
+				data.collectionKeyValue = owningEntityInitializer.getEntityIdentifier( rowProcessingState );
 			}
 			else {
-				data.collectionKeyValue = collectionKeyResultAssembler.assemble( data.getRowProcessingState() );
+				data.collectionKeyValue = collectionKeyResultAssembler.assemble( rowProcessingState );
 			}
 			if ( data.collectionKeyValue == null ) {
 				data.setState( State.MISSING );
@@ -195,7 +191,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		}
 		else {
 			final var persister = collectionAttributeMapping.getCollectionDescriptor();
-			final var session = data.getRowProcessingState().getSession();
+			final var session = rowProcessingState.getSession();
 			data.collectionKey = session.generateCollectionKey( persister, data.collectionKeyValue );
 			data.setState( State.KEY_RESOLVED );
 		}
@@ -261,44 +257,13 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	}
 
 	@Override
-	public @Nullable CacheStoreMode getCacheStoreMode() {
-		return cacheStoreMode;
+	public FetchOptions getFetchOptions() {
+		return fetchOptions;
 	}
 
-	@Override
-	public @Nullable CacheRetrieveMode getCacheRetrieveMode() {
-		return cacheRetrieveMode;
-	}
-
-	@Override
-	public @Nullable Integer getBatchSize() {
-		return batchSize;
-	}
-
-	protected <T> T withFetchOptions(SharedSessionContractImplementor session, Supplier<T> action) {
-		return session.getLoadQueryInfluencers()
-				.fromBatchSize( batchSize, () -> withCacheModes( session, action ) );
-	}
-
-	protected <T> T withCacheModes(SharedSessionContractImplementor session, Supplier<T> action) {
-		if ( cacheRetrieveMode == null && cacheStoreMode == null ) {
-			return action.get();
-		}
-		final var previousCacheMode = session.getCacheMode();
-		final var effectiveCacheMode = CacheMode.fromJpaModes(
-				cacheRetrieveMode == null ? previousCacheMode.getJpaRetrieveMode() : cacheRetrieveMode,
-				cacheStoreMode == null ? previousCacheMode.getJpaStoreMode() : cacheStoreMode
-		);
-		if ( effectiveCacheMode == previousCacheMode ) {
-			return action.get();
-		}
-		session.setCacheMode( effectiveCacheMode );
-		try {
-			return action.get();
-		}
-		finally {
-			session.setCacheMode( previousCacheMode );
-		}
+	protected void withFetchOptions(SharedSessionContractImplementor session, Supplier<?> action) {
+		session.getLoadQueryInfluencers()
+				.withFetchOptions( session, fetchOptions, action );
 	}
 
 	@Override
@@ -322,12 +287,17 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 		return isResultInitializer;
 	}
 
-	boolean isReadOnly(CollectionKey collectionKey, RowProcessingState rowProcessingState, SharedSessionContractImplementor session) {
+	boolean isReadOnly(
+			CollectionKey collectionKey,
+			RowProcessingState rowProcessingState,
+			SharedSessionContractImplementor session) {
 		if ( collectionKey.isTemporal() ) {
 			return true;
 		}
-		final Boolean readOnly = rowProcessingState.getQueryOptions().isReadOnly();
-		return readOnly == null ? session.isDefaultReadOnly() : readOnly;
+		else {
+			final Boolean readOnly = rowProcessingState.getQueryOptions().isReadOnly();
+			return readOnly == null ? session.isDefaultReadOnly() : readOnly;
+		}
 	}
 
 }

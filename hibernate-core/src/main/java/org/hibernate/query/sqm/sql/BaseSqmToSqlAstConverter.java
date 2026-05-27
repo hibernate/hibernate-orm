@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.sqm.sql;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.criteria.Predicate.BooleanOperator;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -20,6 +18,7 @@ import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -481,9 +480,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean resolvingCircularFetch;
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
-	private Map<NavigablePath, CacheStoreMode> fetchCacheStoreModes;
-	private Map<NavigablePath, CacheRetrieveMode> fetchCacheRetrieveModes;
-	private Map<NavigablePath, Integer> fetchBatchSizes;
+	private Map<NavigablePath, FetchOptions> fetchOptions;
 	private SqmStatement<?> currentSqmStatement;
 	private final Stack<SqmQueryPart<?>> sqmQueryPartStack = new StandardStack<>();
 	private CteContainer cteContainer;
@@ -8883,18 +8880,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						fetchable,
 						isKeyFetchable
 				);
-				registerFetchCacheStoreMode(
-						fetchablePath,
-						traversalResult.getCacheStoreMode()
-				);
-				registerFetchCacheRetrieveMode(
-						fetchablePath,
-						traversalResult.getCacheRetrieveMode()
-				);
-				registerFetchBatchSize(
-						fetchablePath,
-						traversalResult.getBatchSize()
-				);
+				registerFetchOptions( fetchablePath, traversalResult.getFetchOptions() );
 			}
 		}
 		else {
@@ -8906,18 +8892,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
 					final var fetchStrategy = traversalResult.getFetchStrategy();
-					registerFetchCacheStoreMode(
-							fetchablePath,
-							traversalResult.getCacheStoreMode()
-					);
-					registerFetchCacheRetrieveMode(
-							fetchablePath,
-							traversalResult.getCacheRetrieveMode()
-					);
-					registerFetchBatchSize(
-							fetchablePath,
-							traversalResult.getBatchSize()
-					);
+					registerFetchOptions( fetchablePath, traversalResult.getFetchOptions() );
 					if ( fetchStrategy != null ) {
 						fetchTiming = fetchStrategy.getFetchTiming();
 						joined = fetchStrategy.isJoined();
@@ -9259,48 +9234,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public void registerFetchCacheStoreMode(NavigablePath fetchablePath, CacheStoreMode cacheStoreMode) {
-		if ( cacheStoreMode != null ) {
-			if ( fetchCacheStoreModes == null ) {
-				fetchCacheStoreModes = new HashMap<>();
+	public void registerFetchOptions(NavigablePath fetchablePath, FetchOptions fetchOptions) {
+		if ( fetchOptions.hasOptions() ) {
+			if ( this.fetchOptions == null ) {
+				this.fetchOptions = new HashMap<>();
 			}
-			fetchCacheStoreModes.put( fetchablePath, cacheStoreMode );
+			this.fetchOptions.put( fetchablePath, fetchOptions );
 		}
 	}
 
 	@Override
-	public CacheStoreMode getFetchCacheStoreMode(NavigablePath fetchablePath) {
-		return fetchCacheStoreModes == null ? null : fetchCacheStoreModes.get( fetchablePath );
-	}
-
-	@Override
-	public void registerFetchCacheRetrieveMode(NavigablePath fetchablePath, CacheRetrieveMode cacheRetrieveMode) {
-		if ( cacheRetrieveMode != null ) {
-			if ( fetchCacheRetrieveModes == null ) {
-				fetchCacheRetrieveModes = new HashMap<>();
-			}
-			fetchCacheRetrieveModes.put( fetchablePath, cacheRetrieveMode );
-		}
-	}
-
-	@Override
-	public CacheRetrieveMode getFetchCacheRetrieveMode(NavigablePath fetchablePath) {
-		return fetchCacheRetrieveModes == null ? null : fetchCacheRetrieveModes.get( fetchablePath );
-	}
-
-	@Override
-	public void registerFetchBatchSize(NavigablePath fetchablePath, Integer batchSize) {
-		if ( batchSize != null ) {
-			if ( fetchBatchSizes == null ) {
-				fetchBatchSizes = new HashMap<>();
-			}
-			fetchBatchSizes.put( fetchablePath, batchSize );
-		}
-	}
-
-	@Override
-	public Integer getFetchBatchSize(NavigablePath fetchablePath) {
-		return fetchBatchSizes == null ? null : fetchBatchSizes.get( fetchablePath );
+	public FetchOptions getFetchOptions(NavigablePath fetchablePath) {
+		return fetchOptions == null ? FetchOptions.NONE : fetchOptions.getOrDefault( fetchablePath, FetchOptions.NONE );
 	}
 
 	@Internal

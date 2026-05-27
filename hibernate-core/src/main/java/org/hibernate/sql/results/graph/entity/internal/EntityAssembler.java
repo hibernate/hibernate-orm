@@ -35,9 +35,8 @@ public class EntityAssembler<T> implements DomainResultAssembler<T> {
 		// Ensure that the instance really is initialized
 		// This is important for key-many-to-ones that are part of a collection key fk,
 		// as the instance is needed for resolveKey before initializing the instance in RowReader
-		final InitializerData data = initializer.getData( rowProcessingState );
-		final Initializer.State state = data.getState();
-		if ( state == Initializer.State.KEY_RESOLVED ) {
+		final var data = initializer.getData( rowProcessingState );
+		if ( data.getState() == Initializer.State.KEY_RESOLVED ) {
 			initializer.resolveInstance( data );
 		}
 		//noinspection unchecked

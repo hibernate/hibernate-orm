@@ -4,9 +4,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -687,9 +684,7 @@ public class PluralAttributeMappingImpl
 				fetchParent,
 				collectionKeyResult,
 				unfetched,
-				null,
-				null,
-				null
+				org.hibernate.engine.spi.FetchOptions.NONE
 		);
 	}
 
@@ -699,18 +694,14 @@ public class PluralAttributeMappingImpl
 			FetchParent fetchParent,
 			DomainResult<?> collectionKeyResult,
 			boolean unfetched,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			Integer batchSize) {
+			org.hibernate.engine.spi.FetchOptions fetchOptions) {
 		return new DelayedCollectionFetch(
 				fetchedPath,
 				fetchedAttribute,
 				fetchParent,
 				collectionKeyResult,
 				unfetched,
-				cacheStoreMode,
-				cacheRetrieveMode,
-				batchSize
+				fetchOptions
 		);
 	}
 
@@ -727,9 +718,7 @@ public class PluralAttributeMappingImpl
 				fetchedAttribute,
 				collectionKeyDomainResult,
 				fetchParent,
-				null,
-				null,
-				null
+				org.hibernate.engine.spi.FetchOptions.NONE
 		);
 	}
 
@@ -738,17 +727,13 @@ public class PluralAttributeMappingImpl
 			PluralAttributeMapping fetchedAttribute,
 			DomainResult<?> collectionKeyDomainResult,
 			FetchParent fetchParent,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			Integer batchSize) {
+			org.hibernate.engine.spi.FetchOptions fetchOptions) {
 		return new SelectEagerCollectionFetch(
 				fetchedPath,
 				fetchedAttribute,
 				collectionKeyDomainResult,
 				fetchParent,
-				cacheStoreMode,
-				cacheRetrieveMode,
-				batchSize
+				fetchOptions
 		);
 	}
 
@@ -801,9 +786,7 @@ public class PluralAttributeMappingImpl
 		return buildSelectEagerCollectionFetch( fetchablePath, this,
 				collectionKeyDomainResult( fetchParent, fetchablePath, creationState, sqlAstCreationState ),
 				fetchParent,
-				creationState.getFetchCacheStoreMode( fetchablePath ),
-				creationState.getFetchCacheRetrieveMode( fetchablePath ),
-				creationState.getFetchBatchSize( fetchablePath ) );
+				creationState.getFetchOptions( fetchablePath ) );
 	}
 
 	private @Nullable DomainResult<?> collectionKeyDomainResult(
@@ -887,9 +870,7 @@ public class PluralAttributeMappingImpl
 				fetchParent,
 				collectionKeyDomainResult,
 				unfetched,
-				creationState.getFetchCacheStoreMode( fetchablePath ),
-				creationState.getFetchCacheRetrieveMode( fetchablePath ),
-				creationState.getFetchBatchSize( fetchablePath )
+				creationState.getFetchOptions( fetchablePath )
 		);
 	}
 

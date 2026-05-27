@@ -4,12 +4,8 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
-import org.hibernate.cache.spi.access.EntityDataAccess;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -17,7 +13,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.InitializerParent;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.BATCH_INITIALIZE;
@@ -34,9 +29,7 @@ public class EntitySelectFetchInitializerBuilder {
 			NavigablePath navigablePath,
 			boolean selectByUniqueKey,
 			boolean affectedByFilter,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		if ( selectByUniqueKey ) {
 			return new EntitySelectFetchByUniqueKeyInitializer(
@@ -46,9 +39,7 @@ public class EntitySelectFetchInitializerBuilder {
 					entityPersister,
 					keyResult,
 					affectedByFilter,
-					cacheStoreMode,
-					cacheRetrieveMode,
-					batchSize,
+					fetchOptions,
 					creationState
 			);
 		}
@@ -61,14 +52,11 @@ public class EntitySelectFetchInitializerBuilder {
 					entityPersister,
 					keyResult,
 					affectedByFilter,
-					cacheStoreMode,
-					cacheRetrieveMode,
-					batchSize,
+					fetchOptions,
 					creationState
 			);
 		}
-		final BatchMode batchMode = determineBatchMode( entityPersister, parent, batchSize, creationState );
-		switch ( batchMode ) {
+		switch ( determineBatchMode( entityPersister, parent, fetchOptions, creationState ) ) {
 			case NONE:
 				return new EntitySelectFetchInitializer<>(
 						parent,
@@ -77,9 +65,7 @@ public class EntitySelectFetchInitializerBuilder {
 						entityPersister,
 						keyResult,
 						affectedByFilter,
-						cacheStoreMode,
-						cacheRetrieveMode,
-						batchSize,
+						fetchOptions,
 						creationState
 				);
 			case BATCH_LOAD:
@@ -91,9 +77,7 @@ public class EntitySelectFetchInitializerBuilder {
 							entityPersister,
 							keyResult,
 							affectedByFilter,
-							cacheStoreMode,
-							cacheRetrieveMode,
-							batchSize,
+							fetchOptions,
 							creationState
 					);
 				}
@@ -105,9 +89,7 @@ public class EntitySelectFetchInitializerBuilder {
 							entityPersister,
 							keyResult,
 							affectedByFilter,
-							cacheStoreMode,
-							cacheRetrieveMode,
-							batchSize,
+							fetchOptions,
 							creationState
 					);
 				}
@@ -119,9 +101,7 @@ public class EntitySelectFetchInitializerBuilder {
 						entityPersister,
 						keyResult,
 						affectedByFilter,
-						cacheStoreMode,
-						cacheRetrieveMode,
-						batchSize,
+						fetchOptions,
 						creationState
 				);
 		}
@@ -131,23 +111,22 @@ public class EntitySelectFetchInitializerBuilder {
 	private static BatchMode determineBatchMode(
 			EntityPersister entityPersister,
 			InitializerParent<?> parent,
-			Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
+		final var batchSize = fetchOptions.batchSize();
 		if ( batchSize != null && batchSize <= 1 ) {
 			return NONE;
 		}
-		if ( batchSize == null && !entityPersister.isBatchLoadable() ) {
+		else if ( batchSize == null && !entityPersister.isBatchLoadable() ) {
 			return NONE;
 		}
-		if ( creationState.isDynamicInstantiation() ) {
-			if ( canBatchInitializeBeUsed( entityPersister ) ) {
-				return BatchMode.BATCH_INITIALIZE;
-			}
-			return NONE;
+		else if ( creationState.isDynamicInstantiation() ) {
+			return canBatchInitializeBeUsed( entityPersister )
+					? BATCH_INITIALIZE
+					: NONE;
 		}
 		while ( parent.isEmbeddableInitializer() ) {
-			final EmbeddableInitializer<?> embeddableInitializer = parent.asEmbeddableInitializer();
-			final EmbeddableValuedModelPart initializedPart = embeddableInitializer.getInitializedPart();
+			final var initializedPart = parent.asEmbeddableInitializer().getInitializedPart();
 			// For entity identifier mappings we can't batch load,
 			// because the entity identifier needs the instance in the resolveKey phase,
 			// but batch loading is inherently executed out of order
@@ -168,15 +147,14 @@ public class EntitySelectFetchInitializerBuilder {
 		}
 		if ( parent != null ) {
 			assert parent.getInitializedPart() instanceof EntityValuedModelPart;
-			final EntityPersister parentPersister = parent.asEntityInitializer().getEntityDescriptor();
-			final EntityDataAccess cacheAccess = parentPersister.getCacheAccessStrategy();
+			final var parentPersister = parent.asEntityInitializer().getEntityDescriptor();
+			final var cacheAccess = parentPersister.getCacheAccessStrategy();
 			if ( cacheAccess != null ) {
 				// Do batch initialization instead of batch loading if the parent entity is cacheable
 				// to avoid putting entity state into the cache at a point when the association is not yet set
-				if ( canBatchInitializeBeUsed( entityPersister ) ) {
-					return BATCH_INITIALIZE;
-				}
-				return NONE;
+				return canBatchInitializeBeUsed( entityPersister )
+						? BATCH_INITIALIZE
+						: NONE;
 			}
 		}
 		return BATCH_LOAD;

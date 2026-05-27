@@ -181,7 +181,7 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	 * The {@link jakarta.persistence.PostRemove} callback will be
 	 * triggered if the operation is successful.
 	 *
-	 * @param entityName The entityName for the entity to be deleted
+	 * @param entityName The entity name for the entity to be deleted
 	 * @param entity a detached entity instance
 	 */
 	void delete(@Nonnull String entityName, @Nonnull Object entity);
@@ -226,7 +226,7 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	/**
 	 * Use a SQL {@code merge into} statement to perform an upsert.
 	 *
-	 * @param entityName The entityName for the entity to be merged
+	 * @param entityName The entity name for the entity to be merged
 	 * @param entity a detached entity instance
 	 * @throws TransientObjectException if the entity has a null id
 	 *
@@ -319,7 +319,7 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	/**
 	 * Refresh the entity instance state from the database.
 	 *
-	 * @param entityName The entityName for the entity to be refreshed.
+	 * @param entityName The entity name for the entity to be refreshed.
 	 * @param entity The entity to be refreshed.
 	 */
 	void refresh(@Nonnull String entityName, @Nonnull Object entity);
@@ -335,7 +335,7 @@ public interface StatelessSession extends SharedSessionContract, EntityAgent {
 	/**
 	 * Refresh the entity instance state from the database.
 	 *
-	 * @param entityName The entityName for the entity to be refreshed.
+	 * @param entityName The entity name for the entity to be refreshed.
 	 * @param entity The entity to be refreshed.
 	 * @param lockMode The LockMode to be applied.
 	 */

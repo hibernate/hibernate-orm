@@ -1672,8 +1672,12 @@ public class EntityBinder {
 
 	private void processNamedEntityGraph(NamedEntityGraph annotation, List<FetchGraphContribution> fetchGraphContributions) {
 		if ( annotation != null ) {
-			getMetadataCollector()
-					.addNamedEntityGraph( namedEntityGraphDefinition( annotation, fetchGraphContributions ) );
+			final var definition = namedEntityGraphDefinition( annotation, fetchGraphContributions );
+			final var existing = getMetadataCollector().getNamedEntityGraph( definition.name() );
+			if ( existing != null && !existing.entityName().equals( definition.entityName() ) ) {
+				return;
+			}
+			getMetadataCollector().addNamedEntityGraph( definition );
 		}
 	}
 
@@ -1685,7 +1689,7 @@ public class EntityBinder {
 				StringHelper.isNotEmpty( explicitName ) ? explicitName : name,
 				persistentClass.getEntityName(),
 				NamedEntityGraphDefinition.Source.JPA,
-				new NamedGraphCreatorJpa( annotation, name, fetchGraphContributions ) );
+				new NamedGraphCreatorJpa( annotation, name, fetchGraphContributions, modelsContext() ) );
 	}
 
 	private List<FetchGraphContribution> collectFetchGraphContributions() {
@@ -1703,15 +1707,18 @@ public class EntityBinder {
 			member.forEachRepeatedAnnotationUsages(
 					JpaAnnotations.FETCH,
 					modelsContext(),
-					usage -> contributions.add( fetchGraphContribution( member, usage ) )
+					usage -> {
+						if ( StringHelper.isNotEmpty( usage.graph() ) ) {
+							contributions.add( fetchGraphContribution( member, usage ) );
+						}
+					}
 			);
 		}
 	}
 
 	private FetchGraphContribution fetchGraphContribution(MemberDetails member, jakarta.persistence.Fetch fetch) {
-		final String graphName = StringHelper.isNotEmpty( fetch.graph() ) ? fetch.graph() : name;
 		return new FetchGraphContribution(
-				graphName,
+				fetch.graph(),
 				member.resolveAttributeName(),
 				nonEmptySubgraphNames( fetch.subgraph() ),
 				fetchOptions( fetch )

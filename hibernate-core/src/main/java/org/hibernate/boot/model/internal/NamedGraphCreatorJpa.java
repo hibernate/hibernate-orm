@@ -6,9 +6,12 @@ package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.BatchSize;
+import jakarta.persistence.FetchOption;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.NamedGraphCreator;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphParserEntityClassResolver;
@@ -17,8 +20,11 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.service.ServiceRegistry;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,17 +40,27 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 	private final NamedEntityGraph annotation;
 	private final String jpaEntityName;
 	private final List<FetchGraphContribution> fetchContributions;
+	private final ModelsContext modelsContext;
 
 	NamedGraphCreatorJpa(NamedEntityGraph annotation, String jpaEntityName) {
-		this( annotation, jpaEntityName, emptyList() );
+		this( annotation, jpaEntityName, emptyList(), null );
 	}
 
 	NamedGraphCreatorJpa(NamedEntityGraph annotation, String jpaEntityName, List<FetchGraphContribution> fetchContributions) {
+		this( annotation, jpaEntityName, fetchContributions, null );
+	}
+
+	NamedGraphCreatorJpa(
+			NamedEntityGraph annotation,
+			String jpaEntityName,
+			List<FetchGraphContribution> fetchContributions,
+			ModelsContext modelsContext) {
 		final String name = nullIfEmpty( annotation.name() );
 		this.name = name == null ? jpaEntityName : name;
 		this.annotation = annotation;
 		this.jpaEntityName = jpaEntityName;
 		this.fetchContributions = fetchContributions;
+		this.modelsContext = modelsContext;
 	}
 
 	@Override
@@ -70,14 +86,14 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 								+ "' is not a subtype of the graph type '" + graphJavaType.getName() + "'" );
 				}
 				applyNamedAttributeNodes( subclassSubgraph.attributeNodes(), annotation,
-						entityGraph.addTreatedSubgraph( subgraphType.asSubclass( graphJavaType ) ), "" );
+						entityGraph.addTreatedSubgraph( subgraphType.asSubclass( graphJavaType ) ), "", fetchContributions );
 			}
 		}
 		if ( annotation.attributeNodes() != null ) {
-			applyNamedAttributeNodes( annotation.attributeNodes(), annotation, entityGraph, null );
+			applyNamedAttributeNodes( annotation.attributeNodes(), annotation, entityGraph, null, fetchContributions );
 		}
 		else {
-			applyFetchContributions( entityGraph, null );
+			applyFetchContributions( entityGraph, null, fetchContributions, name );
 		}
 		return entityGraph;
 	}
@@ -99,32 +115,34 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 			NamedAttributeNode[] namedAttributeNodes,
 			NamedEntityGraph namedEntityGraph,
 			GraphImplementor<?> graphNode,
-			String graphNodeName) {
+			String graphNodeName,
+			List<FetchGraphContribution> fetchContributions) {
 		for ( var namedAttributeNode : namedAttributeNodes ) {
 			final var attributeNode =
 					(AttributeNodeImplementor<?,?,?>)
 							graphNode.addAttributeNode( namedAttributeNode.value() );
 			final String subgraph = namedAttributeNode.subgraph();
 			if ( isNotEmpty( subgraph ) ) {
-				applyNamedSubgraphs( namedEntityGraph, subgraph, attributeNode, false );
+				applyNamedSubgraphs( namedEntityGraph, subgraph, attributeNode, false, fetchContributions );
 			}
 			final String keySubgraph = namedAttributeNode.keySubgraph();
 			if ( isNotEmpty( keySubgraph ) ) {
-				applyNamedSubgraphs( namedEntityGraph, keySubgraph, attributeNode, true );
+				applyNamedSubgraphs( namedEntityGraph, keySubgraph, attributeNode, true, fetchContributions );
 			}
 		}
-		applyFetchContributions( graphNode, graphNodeName );
+		applyFetchContributions( graphNode, graphNodeName, fetchContributions, name );
 	}
 
 	private <T,E,K> void applyNamedSubgraphs(
 			NamedEntityGraph namedEntityGraph,
 			String subgraphName,
 			AttributeNodeImplementor<T,E,K> attributeNode,
-			boolean isKeySubGraph) {
+			boolean isKeySubGraph,
+			List<FetchGraphContribution> fetchContributions) {
 		for ( var namedSubgraph : namedEntityGraph.subgraphs() ) {
 			if ( subgraphName.equals( namedSubgraph.name() ) ) {
 				applyNamedAttributeNodes( namedSubgraph.attributeNodes(), namedEntityGraph,
-						createSubgraph( attributeNode, isKeySubGraph, namedSubgraph.type() ), subgraphName );
+						createSubgraph( attributeNode, isKeySubGraph, namedSubgraph.type() ), subgraphName, fetchContributions );
 			}
 		}
 	}
@@ -134,7 +152,7 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 		for ( var fetchContribution : fetchContributions ) {
 			if ( fetchContribution.appliesTo( name ) ) {
 				for ( var subgraphName : fetchContribution.subgraphNames() ) {
-					if ( !isNamedSubgraph( subgraphName ) ) {
+					if ( !isNamedSubgraph( subgraphName ) && modelsContext == null ) {
 						throw new AnnotationException(
 								"Attribute '" + fetchContribution.attributeName()
 										+ "' is annotated '@Fetch' for graph '" + name
@@ -195,15 +213,136 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 		return false;
 	}
 
-	private void applyFetchContributions(GraphImplementor<?> graphNode, String subgraphName) {
+	private void applyFetchContributions(
+			GraphImplementor<?> graphNode,
+			String subgraphName,
+			List<FetchGraphContribution> fetchContributions,
+			String activeGraphName) {
 		for ( var fetchContribution : fetchContributions ) {
-			if ( fetchContribution.appliesTo( name ) && fetchContribution.appliesToSubgraph( subgraphName ) ) {
+			if ( fetchContribution.appliesTo( activeGraphName ) && fetchContribution.appliesToSubgraph( subgraphName ) ) {
 				final var attributeNode =
 						(AttributeNodeImplementor<?, ?, ?>)
 								graphNode.addAttributeNode( fetchContribution.attributeName() );
 				applyFetchOptions( attributeNode, fetchContribution );
 			}
+			else if ( subgraphName == null && fetchContribution.appliesTo( activeGraphName ) ) {
+				applyAssociatedEntityGraphSubgraphs( graphNode, fetchContribution );
+			}
 		}
+	}
+
+	private void applyAssociatedEntityGraphSubgraphs(
+			GraphImplementor<?> graphNode,
+			FetchGraphContribution fetchContribution) {
+		for ( var subgraphName : fetchContribution.subgraphNames() ) {
+			if ( isNamedSubgraph( subgraphName ) ) {
+				continue;
+			}
+			final var attributeNode =
+					(AttributeNodeImplementor<?, ?, ?>)
+							graphNode.addAttributeNode( fetchContribution.attributeName() );
+			applyFetchOptions( attributeNode, fetchContribution );
+			final var subgraph = createSubgraph( attributeNode, false, void.class );
+			final var namedEntityGraph = findNamedEntityGraph( attributeNode, subgraphName );
+			final var subgraphFetchContributions = collectFetchGraphContributions( attributeNode, subgraphName );
+			applyNamedAttributeNodes( namedEntityGraph.attributeNodes(), namedEntityGraph,
+					subgraph, null, subgraphFetchContributions, subgraphName );
+		}
+	}
+
+	private void applyNamedAttributeNodes(
+			NamedAttributeNode[] namedAttributeNodes,
+			NamedEntityGraph namedEntityGraph,
+			GraphImplementor<?> graphNode,
+			String graphNodeName,
+			List<FetchGraphContribution> fetchContributions,
+			String activeGraphName) {
+		for ( var namedAttributeNode : namedAttributeNodes ) {
+			final var attributeNode =
+					(AttributeNodeImplementor<?,?,?>)
+							graphNode.addAttributeNode( namedAttributeNode.value() );
+			final String subgraph = namedAttributeNode.subgraph();
+			if ( isNotEmpty( subgraph ) ) {
+				applyNamedSubgraphs( namedEntityGraph, subgraph, attributeNode, false, fetchContributions );
+			}
+			final String keySubgraph = namedAttributeNode.keySubgraph();
+			if ( isNotEmpty( keySubgraph ) ) {
+				applyNamedSubgraphs( namedEntityGraph, keySubgraph, attributeNode, true, fetchContributions );
+			}
+		}
+		applyFetchContributions( graphNode, graphNodeName, fetchContributions, activeGraphName );
+	}
+
+	private NamedEntityGraph findNamedEntityGraph(
+			AttributeNodeImplementor<?, ?, ?> attributeNode,
+			String subgraphName) {
+		final var graphType = attributeNode.getAttributeDescriptor().getValueGraphType().getJavaType();
+		final var classDetails = modelsContext.getClassDetailsRegistry().resolveClassDetails( graphType.getName() );
+		final var result = new NamedEntityGraph[1];
+		classDetails.forEachAnnotationUsage(
+				NamedEntityGraph.class,
+				modelsContext,
+				usage -> {
+					if ( result[0] == null && subgraphName.equals( nullIfEmpty( usage.name() ) ) ) {
+						result[0] = usage;
+					}
+				}
+		);
+		if ( result[0] == null ) {
+			throw new AnnotationException(
+					"Attribute '" + attributeNode.getAttributeDescriptor().getName()
+							+ "' is annotated '@Fetch' for graph '" + name
+							+ "' with an unknown subgraph '" + subgraphName + "'" );
+		}
+		return result[0];
+	}
+
+	private List<FetchGraphContribution> collectFetchGraphContributions(
+			AttributeNodeImplementor<?, ?, ?> attributeNode,
+			String graphName) {
+		final var graphType = attributeNode.getAttributeDescriptor().getValueGraphType().getJavaType();
+		final var classDetails = modelsContext.getClassDetailsRegistry().resolveClassDetails( graphType.getName() );
+		final var contributions = new ArrayList<FetchGraphContribution>();
+		collectFetchGraphContributions( classDetails.getFields(), graphName, contributions );
+		collectFetchGraphContributions( classDetails.getMethods(), graphName, contributions );
+		collectFetchGraphContributions( classDetails.getRecordComponents(), graphName, contributions );
+		return contributions;
+	}
+
+	private void collectFetchGraphContributions(
+			List<? extends MemberDetails> members,
+			String graphName,
+			List<FetchGraphContribution> contributions) {
+		for ( var member : members ) {
+			member.forEachRepeatedAnnotationUsages(
+					JpaAnnotations.FETCH,
+					modelsContext,
+					usage -> {
+						if ( graphName.equals( usage.graph() ) ) {
+							contributions.add( new FetchGraphContribution(
+									graphName,
+									member.resolveAttributeName(),
+									usage.subgraph(),
+									fetchOptions( usage )
+							) );
+						}
+					}
+			);
+		}
+	}
+
+	private static List<FetchOption> fetchOptions(jakarta.persistence.Fetch fetch) {
+		final var options = new ArrayList<FetchOption>();
+		options.add( fetch.type() );
+		if ( fetch.batchSize() >= 0 ) {
+			options.add( new BatchSize( fetch.batchSize() ) );
+		}
+		options.add( fetch.cacheStoreMode() );
+		options.add( fetch.cacheRetrieveMode() );
+		if ( fetch.hints().length > 0 ) {
+			options.add( FetchHintOptions.from( fetch.hints() ) );
+		}
+		return options;
 	}
 
 	private static void applyFetchOptions(

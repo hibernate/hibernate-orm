@@ -16,6 +16,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.SimpleValue;
@@ -402,6 +403,11 @@ public class ToOneBinder {
 	}
 
 	private static FetchType getJpaFetchType(MemberDetails property, MetadataBuildingContext context) {
+		final var jpaFetch = getGraphlessJpaFetch( property, context );
+		if ( jpaFetch != null ) {
+			return handlingDefault( jpaFetch.type(), context );
+		}
+
 		final var manyToOne = property.getDirectAnnotationUsage( ManyToOne.class );
 		if ( manyToOne != null ) {
 			return handlingDefault( manyToOne.fetch(), context );
@@ -413,6 +419,22 @@ public class ToOneBinder {
 		}
 
 		throw new AssertionFailure("Define fetch strategy on a property not annotated with @OneToMany nor @OneToOne");
+	}
+
+	private static jakarta.persistence.Fetch getGraphlessJpaFetch(MemberDetails property, MetadataBuildingContext context) {
+		final var result = new jakarta.persistence.Fetch[1];
+		property.forEachRepeatedAnnotationUsages(
+				JpaAnnotations.FETCH,
+				context.getBootstrapContext().getModelsContext(),
+				usage -> {
+					if ( result[0] == null
+							&& nullIfEmpty( usage.graph() ) == null
+							&& usage.subgraph().length == 0 ) {
+						result[0] = usage;
+					}
+				}
+		);
+		return result[0];
 	}
 
 	private static FetchType handlingDefault(FetchType specifiedType, MetadataBuildingContext context) {

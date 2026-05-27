@@ -89,17 +89,6 @@ class JpaFetchAnnotationGraphTest {
 	}
 
 	@Test
-	void contributesDefaultNamedGraph(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			final var book = session.createQuery( "from FetchBook where id = 1", Book.class )
-					.setEntityGraph( (EntityGraph<? super Book>) session.getEntityGraph( "FetchBook" ), GraphSemantic.FETCH )
-					.getSingleResult();
-
-			assertThat( Hibernate.isInitialized( book.publisher ) ).isTrue();
-		} );
-	}
-
-	@Test
 	void lazyFetchTypeOverridesExistingGraphNode(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var book = session.createQuery( "from FetchBook where id = 1", Book.class )
@@ -179,7 +168,6 @@ class JpaFetchAnnotationGraphTest {
 
 	@Entity(name = "FetchBook")
 	@NamedEntityGraph(name = DETAIL_GRAPH)
-	@NamedEntityGraph
 	@NamedEntityGraph(name = LAZY_GRAPH, attributeNodes = @NamedAttributeNode("editor"))
 	@NamedEntityGraph(
 			name = RELATED_GRAPH,
@@ -201,7 +189,6 @@ class JpaFetchAnnotationGraphTest {
 		private Author author;
 
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-		@Fetch(graph = "", type = FetchType.EAGER)
 		@Fetch(graph = RELATED_GRAPH, subgraph = "bookDetails", type = FetchType.EAGER)
 		private Publisher publisher;
 

@@ -30,7 +30,6 @@ dependencyResolutionManagement {
         if ( System.env['MAVEN_MIRROR'] ) {
             maven {
                 url System.env['MAVEN_MIRROR']
-                allowInsecureProtocol = true
             }
         }
         else {

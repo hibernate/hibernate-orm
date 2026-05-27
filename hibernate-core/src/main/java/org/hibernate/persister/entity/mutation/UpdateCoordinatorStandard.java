@@ -85,14 +85,16 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private final MutationOperationGroup versionUpdateGroup;
 	private final BatchKey versionUpdateBatchkey;
+	private final boolean hasCustomVersionUpdateSql;
 
 	public UpdateCoordinatorStandard(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 
 		// NOTE : even given dynamic-update and/or dirty optimistic locking
 		// there are cases where we need the full static updates.
-		this.staticUpdateGroup = buildStaticUpdateGroup();
-		this.versionUpdateGroup = buildVersionUpdateGroup();
+		staticUpdateGroup = buildStaticUpdateGroup();
+		versionUpdateGroup = buildVersionUpdateGroup();
+		hasCustomVersionUpdateSql = hasCustomVersionUpdateSql( versionUpdateGroup );
 		if ( entityPersister.hasUpdateGeneratedProperties() ) {
 			// disable batching in case of update generated properties
 			this.batchKey = null;
@@ -123,6 +125,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		this.batchKey = batchKey;
 		this.versionUpdateGroup = versionUpdateGroup;
 		this.versionUpdateBatchkey = versionUpdateBatchkey;
+		this.hasCustomVersionUpdateSql = hasCustomVersionUpdateSql( versionUpdateGroup );
 	}
 
 	@Override
@@ -423,7 +426,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final boolean isSimpleVersionUpdate;
 		final Object newVersion;
 
-		if ( incomingDirtyAttributeIndexes != null ) {
+		if ( hasCustomVersionUpdateSql ) {
+			// Can't use the version-only update:
+			// a custom update SQL is defined which would
+			// be bypassed by the version-only update path
+			return null;
+		}
+		else if ( incomingDirtyAttributeIndexes != null ) {
 			if ( incomingDirtyAttributeIndexes.length == 1
 					&& versionMapping.getVersionAttribute() == entityPersister().getAttributeMapping( incomingDirtyAttributeIndexes[0] ) ) {
 				// special case of only the version attribute itself as dirty
@@ -464,6 +473,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		else {
 			return null;
 		}
+	}
+
+	private static boolean hasCustomVersionUpdateSql(MutationOperationGroup versionUpdateGroup) {
+		return versionUpdateGroup != null
+				&& versionUpdateGroup.getSingleOperation().getTableDetails().getUpdateDetails().getCustomSql() != null;
 	}
 
 	private static boolean isValueGenerated(Generator generator) {

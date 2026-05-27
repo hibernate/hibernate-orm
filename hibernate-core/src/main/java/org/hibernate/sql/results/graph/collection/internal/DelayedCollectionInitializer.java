@@ -4,16 +4,13 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.InitializerParent;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
@@ -27,9 +24,7 @@ public class DelayedCollectionInitializer extends AbstractNonJoinCollectionIniti
 			PluralAttributeMapping fetchedMapping,
 			InitializerParent<?> parent,
 			DomainResult<?> collectionKeyResult,
-			@Nullable CacheStoreMode cacheStoreMode,
-			@Nullable CacheRetrieveMode cacheRetrieveMode,
-			@Nullable Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		super(
 				fetchedPath,
@@ -37,9 +32,7 @@ public class DelayedCollectionInitializer extends AbstractNonJoinCollectionIniti
 				parent,
 				collectionKeyResult,
 				false,
-				cacheStoreMode,
-				cacheRetrieveMode,
-				batchSize,
+				fetchOptions,
 				creationState
 		);
 	}

@@ -4,9 +4,6 @@
  */
 package org.hibernate.sql.results.graph;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.spi.GraphImplementor;
@@ -26,25 +23,19 @@ public interface EntityGraphTraversalState {
 	class TraversalResult {
 		private final GraphImplementor<?> previousContext;
 		private final FetchStrategy fetchStrategy;
-		private final CacheStoreMode cacheStoreMode;
-		private final CacheRetrieveMode cacheRetrieveMode;
-		private final Integer batchSize;
+		private final org.hibernate.engine.spi.FetchOptions fetchOptions;
 
 		public TraversalResult(GraphImplementor<?> previousContext, FetchStrategy fetchStrategy) {
-			this( previousContext, fetchStrategy, null, null, null );
+			this( previousContext, fetchStrategy, org.hibernate.engine.spi.FetchOptions.NONE );
 		}
 
 		public TraversalResult(
 				GraphImplementor<?> previousContext,
 				FetchStrategy fetchStrategy,
-				CacheStoreMode cacheStoreMode,
-				CacheRetrieveMode cacheRetrieveMode,
-				Integer batchSize) {
+				org.hibernate.engine.spi.FetchOptions fetchOptions) {
 			this.previousContext = previousContext;
 			this.fetchStrategy = fetchStrategy;
-			this.cacheStoreMode = cacheStoreMode;
-			this.cacheRetrieveMode = cacheRetrieveMode;
-			this.batchSize = batchSize;
+			this.fetchOptions = fetchOptions;
 		}
 
 		public GraphImplementor<?> getGraph() {
@@ -55,16 +46,8 @@ public interface EntityGraphTraversalState {
 			return fetchStrategy;
 		}
 
-		public CacheStoreMode getCacheStoreMode() {
-			return cacheStoreMode;
-		}
-
-		public CacheRetrieveMode getCacheRetrieveMode() {
-			return cacheRetrieveMode;
-		}
-
-		public Integer getBatchSize() {
-			return batchSize;
+		public org.hibernate.engine.spi.FetchOptions getFetchOptions() {
+			return fetchOptions;
 		}
 	}
 

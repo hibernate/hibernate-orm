@@ -9,6 +9,7 @@ import java.util.BitSet;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -55,9 +56,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 				fetchedPath,
 				fetchedAttribute,
 				fetchParent,
-				creationState.getFetchCacheStoreMode( fetchedPath ),
-				creationState.getFetchCacheRetrieveMode( fetchedPath ),
-				creationState.getFetchBatchSize( fetchedPath )
+				creationState.getFetchOptions( fetchedPath )
 		);
 		this.collectionTableGroup = (PluralTableGroup) collectionTableGroup;
 
@@ -120,29 +119,21 @@ public class EagerCollectionFetch extends CollectionFetch {
 				creationState
 		);
 
-		final var cacheStoreMode = creationState.getFetchCacheStoreMode( fetchedPath );
-		if ( cacheStoreMode != null ) {
-			creationState.registerFetchCacheStoreMode(
+		final var fetchOptions = creationState.getFetchOptions( fetchedPath );
+		final var nestedFetchOptions = FetchOptions.of(
+				fetchOptions.cacheStoreMode(),
+				fetchOptions.cacheRetrieveMode(),
+				null
+		);
+		if ( nestedFetchOptions.hasOptions() ) {
+			creationState.registerFetchOptions(
 					fetchedPath.append( CollectionPart.Nature.ELEMENT.getName() ),
-					cacheStoreMode
+					nestedFetchOptions
 			);
 			if ( fetchedAttribute.getIndexDescriptor() != null ) {
-				creationState.registerFetchCacheStoreMode(
+				creationState.registerFetchOptions(
 						fetchedPath.append( CollectionPart.Nature.INDEX.getName() ),
-						cacheStoreMode
-				);
-			}
-		}
-		final var cacheRetrieveMode = creationState.getFetchCacheRetrieveMode( fetchedPath );
-		if ( cacheRetrieveMode != null ) {
-			creationState.registerFetchCacheRetrieveMode(
-					fetchedPath.append( CollectionPart.Nature.ELEMENT.getName() ),
-					cacheRetrieveMode
-			);
-			if ( fetchedAttribute.getIndexDescriptor() != null ) {
-				creationState.registerFetchCacheRetrieveMode(
-						fetchedPath.append( CollectionPart.Nature.INDEX.getName() ),
-						cacheRetrieveMode
+						nestedFetchOptions
 				);
 			}
 		}
@@ -194,9 +185,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 				collectionKeyResult,
 				collectionValueKeyResult,
 				false,
-				getCacheStoreMode(),
-				getCacheRetrieveMode(),
-				getBatchSize(),
+				getFetchOptions(),
 				creationState
 		);
 	}

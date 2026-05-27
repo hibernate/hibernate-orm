@@ -57,7 +57,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private boolean subselectFetchEnabled;
 
 	private int batchSize;
-	private @Nullable Integer batchSizeOverride;
+	private FetchOptions fetchOptions = FetchOptions.NONE;
 
 	private final EffectiveEntityGraph effectiveEntityGraph;
 
@@ -303,55 +303,81 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public boolean hasBatchSizeOverride() {
-		return batchSizeOverride != null;
+		return fetchOptions.hasBatchSize();
 	}
 
-	public <T> T fromBatchSize(@Nullable Integer batchSize, Supplier<T> supplier) {
-		if ( batchSize == null ) {
+	public <T> T withFetchOptions(SharedSessionContractImplementor session, FetchOptions options, Supplier<T> supplier) {
+		if ( !options.hasOptions() && !fetchOptions.hasOptions() ) {
 			return supplier.get();
 		}
-		final var previous = batchSizeOverride;
-		batchSizeOverride = batchSize;
-		try {
-			return supplier.get();
-		}
-		finally {
-			batchSizeOverride = previous;
+		else {
+			final var previousOptions = fetchOptions;
+			fetchOptions = options;
+			try {
+				if ( fetchOptions.hasCacheModes() ) {
+					final var previousCacheMode = session.getCacheMode();
+					final var effectiveCacheMode = fetchOptions.overrideCacheMode( previousCacheMode );
+					final boolean overrideCacheMode = effectiveCacheMode != previousCacheMode;
+					if ( overrideCacheMode ) {
+						session.setCacheMode( effectiveCacheMode );
+					}
+					try {
+						return supplier.get();
+					}
+					finally {
+						if ( overrideCacheMode ) {
+							session.setCacheMode( previousCacheMode );
+						}
+					}
+				}
+				else {
+					return supplier.get();
+				}
+			}
+			finally {
+				this.fetchOptions = previousOptions;
+			}
 		}
 	}
 
 	public int effectiveBatchSize(CollectionPersister persister) {
+		final var batchSizeOverride = fetchOptions.batchSize();
 		if ( batchSizeOverride != null ) {
 			return batchSizeOverride;
 		}
-		final int persisterBatchSize = persister.getBatchSize();
-		// persister-specific batch size overrides global setting
-		// (note that due to legacy, -1 means no explicit setting)
-		return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
+		else {
+			final int persisterBatchSize = persister.getBatchSize();
+			// persister-specific batch size overrides global setting
+			// (note that due to legacy, -1 means no explicit setting)
+			return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
+		}
 	}
 
 	public boolean effectivelyBatchLoadable(CollectionPersister persister) {
-		if ( batchSizeOverride != null ) {
-			return batchSizeOverride > 1;
-		}
-		return persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1;
+		final var batchSizeOverride = fetchOptions.batchSize();
+		return batchSizeOverride == null
+				? persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1
+				: batchSizeOverride > 1;
 	}
 
 	public int effectiveBatchSize(EntityPersister persister) {
+		final var batchSizeOverride = fetchOptions.batchSize();
 		if ( batchSizeOverride != null ) {
 			return batchSizeOverride;
 		}
-		final int persisterBatchSize = persister.getBatchSize();
-		// persister-specific batch size overrides global setting
-		// (note that due to legacy, -1 means no explicit setting)
-		return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
+		else {
+			final int persisterBatchSize = persister.getBatchSize();
+			// persister-specific batch size overrides global setting
+			// (note that due to legacy, -1 means no explicit setting)
+			return persisterBatchSize >= 0 ? persisterBatchSize : batchSize;
+		}
 	}
 
 	public boolean effectivelyBatchLoadable(EntityPersister persister) {
-		if ( batchSizeOverride != null ) {
-			return batchSizeOverride > 1;
-		}
-		return persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1;
+		final var batchSizeOverride = fetchOptions.batchSize();
+		return batchSizeOverride == null
+				? persister.isBatchLoadable() || effectiveBatchSize( persister ) > 1
+				: batchSizeOverride > 1;
 	}
 
 	public boolean getSubselectFetchEnabled() {

@@ -7,12 +7,10 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentArrayHolder;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -46,9 +44,7 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
-			@Nullable CacheStoreMode cacheStoreMode,
-			@Nullable CacheRetrieveMode cacheRetrieveMode,
-			@Nullable Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState,
 			Fetch listIndexFetch,
 			Fetch elementFetch) {
@@ -56,13 +52,10 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 				navigablePath,
 				arrayDescriptor,
 				parent,
-				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
 				isResultInitializer,
-				cacheStoreMode,
-				cacheRetrieveMode,
-				batchSize,
+				fetchOptions,
 				creationState
 		);
 		//noinspection unchecked
@@ -141,14 +134,15 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 		final var initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
 			final var rowProcessingState = data.getRowProcessingState();
-			Integer index = listIndexAssembler.assemble( rowProcessingState );
+			final Integer index = listIndexAssembler.assemble( rowProcessingState );
 			if ( index != null ) {
+				int i = index;
 				final var arrayHolder = getCollectionInstance( data );
 				assert arrayHolder != null;
 				if ( indexBase != 0 ) {
-					index -= indexBase;
+					i -= indexBase;
 				}
-				initializer.resolveInstance( get( arrayHolder.getArray(), index ), rowProcessingState );
+				initializer.resolveInstance( get( arrayHolder.getArray(), i ), rowProcessingState );
 			}
 		}
 	}

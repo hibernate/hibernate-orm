@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -111,9 +112,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 				fkResult,
 				fkResult,
 				true,
-				null,
-				null,
-				null,
+				FetchOptions.NONE,
 				creationState
 		);
 	}

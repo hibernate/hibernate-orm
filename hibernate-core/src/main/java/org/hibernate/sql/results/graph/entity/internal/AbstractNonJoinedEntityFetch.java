@@ -6,9 +6,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.BitSet;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -37,9 +35,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	private final DomainResult<?> keyResult;
 	private final BasicFetch<?> discriminatorFetch;
 	private final boolean selectByUniqueKey;
-	private final CacheStoreMode cacheStoreMode;
-	private final CacheRetrieveMode cacheRetrieveMode;
-	private final Integer batchSize;
+	private final FetchOptions fetchOptions;
 
 	public AbstractNonJoinedEntityFetch(
 			NavigablePath navigablePath,
@@ -55,9 +51,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 		this.keyResult = keyResult;
 		this.discriminatorFetch = selectDiscriminator ? creationState.visitDiscriminatorFetch( this ) : null;
 		this.selectByUniqueKey = selectByUniqueKey;
-		this.cacheStoreMode = creationState.getFetchCacheStoreMode( navigablePath );
-		this.cacheRetrieveMode = creationState.getFetchCacheRetrieveMode( navigablePath );
-		this.batchSize = creationState.getFetchBatchSize( navigablePath );
+		this.fetchOptions = creationState.getFetchOptions( navigablePath );
 	}
 
 	protected AbstractNonJoinedEntityFetch(
@@ -67,18 +61,14 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 			DomainResult<?> keyResult,
 			BasicFetch<?> discriminatorFetch,
 			boolean selectByUniqueKey,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			Integer batchSize) {
+			FetchOptions fetchOptions) {
 		this.navigablePath = navigablePath;
 		this.fetchedModelPart = fetchedModelPart;
 		this.fetchParent = fetchParent;
 		this.keyResult = keyResult;
 		this.discriminatorFetch = discriminatorFetch;
 		this.selectByUniqueKey = selectByUniqueKey;
-		this.cacheStoreMode = cacheStoreMode;
-		this.cacheRetrieveMode = cacheRetrieveMode;
-		this.batchSize = batchSize;
+		this.fetchOptions = fetchOptions;
 	}
 
 	@Override
@@ -97,18 +87,8 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	}
 
 	@Override
-	public CacheStoreMode getCacheStoreMode() {
-		return cacheStoreMode;
-	}
-
-	@Override
-	public CacheRetrieveMode getCacheRetrieveMode() {
-		return cacheRetrieveMode;
-	}
-
-	@Override
-	public Integer getBatchSize() {
-		return batchSize;
+	public FetchOptions getFetchOptions() {
+		return fetchOptions;
 	}
 
 	@Override

@@ -7,11 +7,9 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentMap;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -48,9 +46,7 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
-			@Nullable CacheStoreMode cacheStoreMode,
-			@Nullable CacheRetrieveMode cacheRetrieveMode,
-			@Nullable Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState,
 			Fetch mapKeyFetch,
 			Fetch mapValueFetch) {
@@ -58,13 +54,10 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 				navigablePath,
 				attributeMapping,
 				parent,
-				lockMode,
 				collectionKeyResult,
 				collectionValueKeyResult,
 				isResultInitializer,
-				cacheStoreMode,
-				cacheRetrieveMode,
-				batchSize,
+				fetchOptions,
 				creationState
 		);
 		mapKeyAssembler = mapKeyFetch.createAssembler( this, creationState );
@@ -136,7 +129,7 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 			//   which violate this same requirement (recursion)
 			final Object key = mapKeyAssembler.assemble( rowProcessingState );
 			if ( key != null ) {
-				final PersistentMap<?, ?> map = getCollectionInstance( data );
+				final var map = getCollectionInstance( data );
 				assert map != null;
 				valueInitializer.resolveInstance( map.get( key ), rowProcessingState );
 			}

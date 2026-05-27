@@ -4,12 +4,10 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -54,12 +52,16 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			if ( rowProcessingState.isScrollResult() ) {
 				return true;
 			}
-			return initializer.batchSize != null
-					? initializer.batchSize <= 1
-					: !rowProcessingState.getLoadQueryInfluencers()
-							.effectivelyBatchLoadable(
-									initializer.toOneMapping.getEntityMappingType().getEntityPersister()
-							);
+			else {
+				final var batchSize = initializer.fetchOptions.batchSize();
+				return batchSize != null
+						? batchSize <= 1
+						: !rowProcessingState.getLoadQueryInfluencers()
+								.effectivelyBatchLoadable(
+										initializer.toOneMapping.getEntityMappingType()
+												.getEntityPersister()
+								);
+			}
 		}
 	}
 
@@ -70,12 +72,10 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		super( parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, cacheRetrieveMode, batchSize, creationState );
+				fetchOptions, creationState );
 		//noinspection unchecked
 		owningEntityInitializer =
 				(EntityInitializer<InitializerData>)
@@ -130,7 +130,9 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			initialize( data );
 		}
 		else {
-			data.entityKey = data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor );
+			data.entityKey =
+					data.getRowProcessingState().getSession()
+							.generateEntityKey( data.entityIdentifier, concreteDescriptor );
 			data.setInstance( getExistingInitializedInstance( data ) );
 			if ( data.getInstance() == null ) {
 				// need to add the key to the batch queue only when the entity has not been already loaded or
@@ -195,11 +197,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			data.setInstance( lazyInitializer.getImplementation() );
 		}
 
-		data.entityKey = data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor );
-		final var entityHolder = persistenceContext.getEntityHolder(
-				data.entityKey
-		);
-
+		data.entityKey = session.generateEntityKey( data.entityIdentifier, concreteDescriptor );
+		final var entityHolder = persistenceContext.getEntityHolder( data.entityKey );
 		if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
 			// the existing entity instance is detached or transient
 			if ( entityHolder != null ) {
@@ -275,8 +274,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		withFetchOptions(
 				session,
 				() -> {
-					session.getPersistenceContextInternal()
-							.getBatchFetchQueue().addBatchLoadableEntityKey( data.entityKey );
+					session.getPersistenceContextInternal().getBatchFetchQueue()
+							.addBatchLoadableEntityKey( data.entityKey );
 					return null;
 				}
 		);
@@ -299,7 +298,9 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		else {
 			final var lazyInitializer = extractLazyInitializer( instance );
 			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
-				data.entityKey = data.getRowProcessingState().getSession().generateEntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
+				data.entityKey =
+						data.getRowProcessingState().getSession()
+								.generateEntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
 				registerToBatchFetchQueue( data );
 			}
 			data.setState( State.INITIALIZED );
@@ -309,11 +310,16 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 	protected Object loadInstance(EntityKey entityKey, SharedSessionContractImplementor session) {
 		final String entityName = entityKey.getEntityName();
 		final Object identifier = entityKey.getIdentifier();
-		final Object instance = withFetchOptions(
-				session,
-				() -> session.internalLoad( entityName, identifier, true,
-						toOneMapping.isInternalLoadNullable() )
-		);
+		final Object instance =
+				withFetchOptions(
+						session,
+						() -> session.internalLoad(
+								entityName,
+								identifier,
+								true,
+								toOneMapping.isInternalLoadNullable()
+						)
+				);
 		if ( instance == null ) {
 			checkNotFound( toOneMapping, affectedByFilter, entityName, identifier );
 		}
@@ -328,7 +334,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		final var parentEntityAttributes = new AttributeMapping[size];
 		parentEntityAttributes[ entityDescriptor.getSubclassId() ] =
 				getParentEntityAttribute( entityDescriptor, toOneMapping, attributeName );
-		for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
+		for ( var subMappingType : entityDescriptor.getSubMappingTypes() ) {
 			parentEntityAttributes[ subMappingType.getSubclassId() ] =
 					getParentEntityAttribute( subMappingType, toOneMapping, attributeName );
 		}

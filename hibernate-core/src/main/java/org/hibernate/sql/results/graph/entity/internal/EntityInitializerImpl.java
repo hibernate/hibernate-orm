@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.EntityFilterException;
@@ -35,6 +34,7 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.TemporalEntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -113,8 +113,7 @@ public class EntityInitializerImpl
 	private final boolean isPartOfKey;
 	private final boolean isResultInitializer;
 	private final boolean hasKeyManyToOne;
-	private final CacheStoreMode cacheStoreMode;
-	private final CacheRetrieveMode cacheRetrieveMode;
+	private final FetchOptions fetchOptions;
 	/**
 	 * Indicates whether there is a high chance of the previous row to have the same entity key as the current row
 	 * and hence enable a check in the {@link #resolveKey(RowProcessingState)} phase which compare the previously read
@@ -253,8 +252,7 @@ public class EntityInitializerImpl
 						&& !composite.hasContainingClass();
 
 		navigablePath = resultDescriptor.getNavigablePath();
-		cacheStoreMode = resultDescriptor.getCacheStoreMode();
-		cacheRetrieveMode = resultDescriptor.getCacheRetrieveMode();
+		fetchOptions = resultDescriptor.getFetchOptions();
 		isPartOfKey = Initializer.isPartOfKey( navigablePath, parent );
 		// If the parent already has previous row reuse enabled, we can skip that here
 		previousRowReuse = !isPreviousRowReuse( parent ) && (
@@ -1535,7 +1533,7 @@ public class EntityInitializerImpl
 				}
 				// We have to query the second level cache if reference cache entries are used
 				// or if this fetch has an explicit graph cache retrieve mode
-				else if ( entityDescriptor.canUseReferenceCacheEntries() || cacheRetrieveMode != null ) {
+				else if ( entityDescriptor.canUseReferenceCacheEntries() || fetchOptions.cacheRetrieveMode() != null ) {
 				final Object cached = resolveInstanceFromCache( data );
 				if ( cached != null ) {
 					// EARLY EXIT!!!
@@ -2003,18 +2001,21 @@ public class EntityInitializerImpl
 	}
 
 	private boolean isCachePutEnabled(SharedSessionContractImplementor session) {
+		final var cacheStoreMode = fetchOptions.cacheStoreMode();
 		return cacheStoreMode == null
 				? session.getCacheMode().isPutEnabled()
 				: cacheStoreMode != CacheStoreMode.BYPASS;
 	}
 
 	private boolean isCacheRefreshEnabled(SharedSessionContractImplementor session) {
+		final var cacheStoreMode = fetchOptions.cacheStoreMode();
 		return cacheStoreMode == null
 				? session.getCacheMode().isRefreshEnabled()
 				: cacheStoreMode == CacheStoreMode.REFRESH;
 	}
 
 	private <T> T withCacheRetrieveMode(SharedSessionContractImplementor session, Supplier<T> action) {
+		final var cacheRetrieveMode = fetchOptions.cacheRetrieveMode();
 		if ( cacheRetrieveMode == null ) {
 			return action.get();
 		}

@@ -195,9 +195,10 @@ public class EntityDelayedFetchInitializer
 		final var session = rowProcessingState.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
 
-		final var ek = entityKey == null ?
-				session.generateEntityKey( data.entityIdentifier, concreteDescriptor ) :
-				entityKey;
+		final var ek =
+				entityKey == null
+						? session.generateEntityKey( data.entityIdentifier, concreteDescriptor )
+						: entityKey;
 		final var holder = persistenceContext.getEntityHolder( ek );
 		if ( holder != null && holder.getEntity() != null ) {
 			return persistenceContext.proxyFor( holder, concreteDescriptor );
@@ -253,9 +254,9 @@ public class EntityDelayedFetchInitializer
 				// field to the interceptor. If we don't get one, we load the entity by unique key.
 				final var persistentAttributeInterceptable =
 						getPersistentAttributeInterceptable( rowProcessingState );
-				if ( (persistentAttributeInterceptable != null ) &&
-					(persistentAttributeInterceptable.$$_hibernate_getInterceptor()
-							instanceof LazyAttributeLoadingInterceptor lazyAttributeLoadingInterceptor) ) {
+				if ( persistentAttributeInterceptable != null
+						&& persistentAttributeInterceptable.$$_hibernate_getInterceptor()
+								instanceof LazyAttributeLoadingInterceptor lazyAttributeLoadingInterceptor ) {
 					lazyAttributeLoadingInterceptor.addLazyFieldByGraph( navigablePath.getLocalName() );
 					instance = UNFETCHED_PROPERTY;
 				}
@@ -292,7 +293,10 @@ public class EntityDelayedFetchInitializer
 		}
 	}
 
-	private Type getUniqueKeyPropertyType(EntityPersister concreteDescriptor, SharedSessionContractImplementor session, String uniqueKeyPropertyName) {
+	private Type getUniqueKeyPropertyType(
+			EntityPersister concreteDescriptor,
+			SharedSessionContractImplementor session,
+			String uniqueKeyPropertyName) {
 		return referencedModelPart.getReferencedPropertyName() == null
 				? concreteDescriptor.getIdentifierType()
 				: session.getFactory().getRuntimeMetamodels()
@@ -336,10 +340,7 @@ public class EntityDelayedFetchInitializer
 			data.entityIdentifier = entityDescriptor.getIdentifier( instance, session );
 
 			final var entityKey = session.generateEntityKey( data.entityIdentifier, entityDescriptor );
-			final var entityHolder = session.getPersistenceContextInternal().getEntityHolder(
-					entityKey
-			);
-
+			final var entityHolder = session.getPersistenceContextInternal().getEntityHolder( entityKey );
 			if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
 				// the existing entity instance is detached or transient
 				if ( entityHolder != null ) {

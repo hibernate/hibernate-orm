@@ -827,18 +827,7 @@ public class LoaderSelectBuilder {
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
 					final var fetchStrategy = traversalResult.getFetchStrategy();
-					creationState.registerFetchCacheStoreMode(
-							fetchablePath,
-							traversalResult.getCacheStoreMode()
-					);
-					creationState.registerFetchCacheRetrieveMode(
-							fetchablePath,
-							traversalResult.getCacheRetrieveMode()
-					);
-					creationState.registerFetchBatchSize(
-							fetchablePath,
-							traversalResult.getBatchSize()
-					);
+					creationState.registerFetchOptions( fetchablePath, traversalResult.getFetchOptions() );
 					if ( fetchStrategy != null ) {
 						fetchTiming = fetchStrategy.getFetchTiming();
 						joined = fetchStrategy.isJoined();

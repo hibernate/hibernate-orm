@@ -4,9 +4,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -31,12 +29,10 @@ public class EntitySelectFetchByUniqueKeyInitializer
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		super( parent, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, cacheRetrieveMode, batchSize, creationState );
+				fetchOptions, creationState );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 
@@ -58,10 +54,14 @@ public class EntitySelectFetchByUniqueKeyInitializer
 				);
 		data.setInstance( persistenceContext.getEntity( entityUniqueKey ) );
 		if ( data.getInstance() == null ) {
-			final Object instance = withFetchOptions(
-					session,
-					() -> concreteDescriptor.loadByUniqueKey( uniqueKeyPropertyName, data.entityIdentifier, session )
-			);
+			final Object instance =
+					withFetchOptions(
+							session,
+							() -> concreteDescriptor.loadByUniqueKey(
+									uniqueKeyPropertyName,
+									data.entityIdentifier, session
+							)
+					);
 			data.setInstance( instance );
 			if ( instance == null ) {
 				checkNotFound( data );

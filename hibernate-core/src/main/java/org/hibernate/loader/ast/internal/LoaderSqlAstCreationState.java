@@ -4,12 +4,13 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import jakarta.persistence.Timeout;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.metamodel.mapping.AssociationKey;
@@ -69,9 +70,7 @@ public class LoaderSqlAstCreationState
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
-	private Map<NavigablePath, CacheStoreMode> fetchCacheStoreModes;
-	private Map<NavigablePath, CacheRetrieveMode> fetchCacheRetrieveModes;
-	private Map<NavigablePath, Integer> fetchBatchSizes;
+	private Map<NavigablePath, FetchOptions> fetchOptions;
 
 	public LoaderSqlAstCreationState(
 			QueryPart queryPart,
@@ -210,48 +209,18 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public void registerFetchCacheStoreMode(NavigablePath fetchablePath, CacheStoreMode cacheStoreMode) {
-		if ( cacheStoreMode != null ) {
-			if ( fetchCacheStoreModes == null ) {
-				fetchCacheStoreModes = new HashMap<>();
+	public void registerFetchOptions(NavigablePath fetchablePath, FetchOptions fetchOptions) {
+		if ( fetchOptions.hasOptions() ) {
+			if ( this.fetchOptions == null ) {
+				this.fetchOptions = new HashMap<>();
 			}
-			fetchCacheStoreModes.put( fetchablePath, cacheStoreMode );
+			this.fetchOptions.put( fetchablePath, fetchOptions );
 		}
 	}
 
 	@Override
-	public CacheStoreMode getFetchCacheStoreMode(NavigablePath fetchablePath) {
-		return fetchCacheStoreModes == null ? null : fetchCacheStoreModes.get( fetchablePath );
-	}
-
-	@Override
-	public void registerFetchCacheRetrieveMode(NavigablePath fetchablePath, CacheRetrieveMode cacheRetrieveMode) {
-		if ( cacheRetrieveMode != null ) {
-			if ( fetchCacheRetrieveModes == null ) {
-				fetchCacheRetrieveModes = new HashMap<>();
-			}
-			fetchCacheRetrieveModes.put( fetchablePath, cacheRetrieveMode );
-		}
-	}
-
-	@Override
-	public CacheRetrieveMode getFetchCacheRetrieveMode(NavigablePath fetchablePath) {
-		return fetchCacheRetrieveModes == null ? null : fetchCacheRetrieveModes.get( fetchablePath );
-	}
-
-	@Override
-	public void registerFetchBatchSize(NavigablePath fetchablePath, Integer batchSize) {
-		if ( batchSize != null ) {
-			if ( fetchBatchSizes == null ) {
-				fetchBatchSizes = new HashMap<>();
-			}
-			fetchBatchSizes.put( fetchablePath, batchSize );
-		}
-	}
-
-	@Override
-	public Integer getFetchBatchSize(NavigablePath fetchablePath) {
-		return fetchBatchSizes == null ? null : fetchBatchSizes.get( fetchablePath );
+	public FetchOptions getFetchOptions(NavigablePath fetchablePath) {
+		return fetchOptions == null ? FetchOptions.NONE : fetchOptions.getOrDefault( fetchablePath, FetchOptions.NONE );
 	}
 
 	@Override

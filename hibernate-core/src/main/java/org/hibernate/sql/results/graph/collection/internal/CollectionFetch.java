@@ -4,9 +4,7 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -27,23 +25,17 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 	private final PluralAttributeMapping fetchedAttribute;
 
 	private final FetchParent fetchParent;
-	private final CacheStoreMode cacheStoreMode;
-	private final CacheRetrieveMode cacheRetrieveMode;
-	private final Integer batchSize;
+	private final FetchOptions fetchOptions;
 
 	public CollectionFetch(
 			NavigablePath fetchedPath,
-				PluralAttributeMapping fetchedAttribute,
-				FetchParent fetchParent,
-				CacheStoreMode cacheStoreMode,
-				CacheRetrieveMode cacheRetrieveMode,
-				Integer batchSize) {
+			PluralAttributeMapping fetchedAttribute,
+			FetchParent fetchParent,
+			FetchOptions fetchOptions) {
 		this.fetchedPath = fetchedPath;
 		this.fetchedAttribute = fetchedAttribute;
 		this.fetchParent = fetchParent;
-		this.cacheStoreMode = cacheStoreMode;
-		this.cacheRetrieveMode = cacheRetrieveMode;
-		this.batchSize = batchSize;
+		this.fetchOptions = fetchOptions;
 	}
 
 	@Override
@@ -56,16 +48,8 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 		return fetchedAttribute;
 	}
 
-	public CacheStoreMode getCacheStoreMode() {
-		return cacheStoreMode;
-	}
-
-	public CacheRetrieveMode getCacheRetrieveMode() {
-		return cacheRetrieveMode;
-	}
-
-	public Integer getBatchSize() {
-		return batchSize;
+	public FetchOptions getFetchOptions() {
+		return fetchOptions;
 	}
 
 	@Override

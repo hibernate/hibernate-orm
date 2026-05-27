@@ -7,16 +7,13 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
-import org.hibernate.CacheMode;
 import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -54,15 +51,15 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected final boolean affectedByFilter;
 	protected final boolean keyIsEager;
 	protected final boolean hasLazySubInitializer;
-	protected final CacheStoreMode cacheStoreMode;
-	protected final CacheRetrieveMode cacheRetrieveMode;
-	protected final @Nullable Integer batchSize;
+	protected final FetchOptions fetchOptions;
 
 	public static class EntitySelectFetchInitializerData extends InitializerData {
 		// per-row state
 		protected @Nullable Object entityIdentifier;
 
-		public EntitySelectFetchInitializerData(EntitySelectFetchInitializer<?> initializer, RowProcessingState rowProcessingState) {
+		public EntitySelectFetchInitializerData(
+				EntitySelectFetchInitializer<?> initializer,
+				RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
 		}
 
@@ -82,9 +79,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			@Nullable Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.parent = parent;
@@ -92,13 +87,13 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
 		this.affectedByFilter = affectedByFilter;
-		this.cacheStoreMode = cacheStoreMode;
-		this.cacheRetrieveMode = cacheRetrieveMode;
-		this.batchSize = batchSize;
+		this.fetchOptions = fetchOptions;
 
 		isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
 		keyAssembler = keyResult.createResultAssembler( this, creationState );
-		isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+		isEnhancedForLazyLoading =
+				concreteDescriptor.getBytecodeEnhancementMetadata()
+						.isEnhancedForLazyLoading();
 
 		keyIsEager = keyAssembler.isEager();
 		hasLazySubInitializer = keyAssembler.hasLazySubInitializers();
@@ -181,7 +176,9 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 			}
 
-			final var entityKey = data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor );
+			final var entityKey =
+					rowProcessingState.getSession()
+							.generateEntityKey( data.entityIdentifier, concreteDescriptor );
 			final var entityHolder = persistenceContext.getEntityHolder(
 					entityKey
 			);
@@ -260,15 +257,16 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		data.setState( State.INITIALIZED );
 		final String entityName = concreteDescriptor.getEntityName();
 
-		final Object instance = withFetchOptions(
-				session,
-				() -> session.internalLoad(
-						entityName,
-						data.entityIdentifier,
-						true,
-						toOneMapping.isInternalLoadNullable()
-				)
-		);
+		final Object instance =
+				withFetchOptions(
+						session,
+						() -> session.internalLoad(
+								entityName,
+								data.entityIdentifier,
+								true,
+								toOneMapping.isInternalLoadNullable()
+						)
+				);
 		data.setInstance( instance );
 
 		if ( instance == null ) {
@@ -391,27 +389,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	protected <T> T withFetchOptions(SharedSessionContractImplementor session, Supplier<T> action) {
 		return session.getLoadQueryInfluencers()
-				.fromBatchSize( batchSize, () -> withCacheModes( session, action ) );
+				.withFetchOptions( session, fetchOptions, action);
 	}
 
-	protected <T> T withCacheModes(SharedSessionContractImplementor session, Supplier<T> action) {
-		if ( cacheRetrieveMode == null && cacheStoreMode == null ) {
-			return action.get();
-		}
-		final var previousCacheMode = session.getCacheMode();
-		final var effectiveCacheMode = CacheMode.fromJpaModes(
-				cacheRetrieveMode == null ? previousCacheMode.getJpaRetrieveMode() : cacheRetrieveMode,
-				cacheStoreMode == null ? previousCacheMode.getJpaStoreMode() : cacheStoreMode
-		);
-		if ( effectiveCacheMode == previousCacheMode ) {
-			return action.get();
-		}
-		session.setCacheMode( effectiveCacheMode );
-		try {
-			return action.get();
-		}
-		finally {
-			session.setCacheMode( previousCacheMode );
-		}
-	}
 }

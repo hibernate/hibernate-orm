@@ -6,9 +6,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.HashSet;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -44,12 +42,10 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, cacheRetrieveMode, batchSize, creationState );
+				fetchOptions, creationState );
 	}
 
 	@Override
@@ -68,10 +64,16 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 		// Force creating a proxy
 		final var entityKey = data.entityKey;
 		final var session = data.getRowProcessingState().getSession();
-		final Object instance = withFetchOptions(
-				session,
-				() -> session.internalLoad( entityKey.getEntityName(), entityKey.getIdentifier(), false, false )
-		);
+		final Object instance =
+				withFetchOptions(
+						session,
+						() -> session.internalLoad(
+								entityKey.getEntityName(),
+								entityKey.getIdentifier(),
+								false,
+								false
+						)
+				);
 		data.setInstance( instance );
 		var toBatchLoad = data.toBatchLoad;
 		if ( toBatchLoad == null ) {

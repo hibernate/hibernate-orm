@@ -4,10 +4,8 @@
  */
 package org.hibernate.sql.results.graph.collection;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.graph.InitializerData;
@@ -35,16 +33,8 @@ public interface CollectionInitializer<Data extends InitializerData> extends Ini
 		return getCollectionInstance( getData( rowProcessingState ) );
 	}
 
-	default @Nullable CacheStoreMode getCacheStoreMode() {
-		return null;
-	}
-
-	default @Nullable CacheRetrieveMode getCacheRetrieveMode() {
-		return null;
-	}
-
-	default @Nullable Integer getBatchSize() {
-		return null;
+	default FetchOptions getFetchOptions() {
+		return FetchOptions.NONE;
 	}
 
 	@Override

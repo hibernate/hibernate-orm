@@ -4,11 +4,9 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -55,9 +53,7 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		return new BagInitializer(
 				navigablePath,
@@ -67,9 +63,7 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 				collectionKeyResult,
 				collectionValueKeyResult,
 				isResultInitializer,
-				cacheStoreMode,
-				cacheRetrieveMode,
-				batchSize,
+				fetchOptions,
 				creationState,
 				elementFetch,
 				collectionIdFetch

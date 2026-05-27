@@ -4,13 +4,10 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.util.Collections;
 import java.util.IdentityHashMap;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -19,6 +16,8 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.InitializerParent;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Collections.newSetFromMap;
 
 /**
  * Base support for CollectionInitializer implementations that don't join data
@@ -34,9 +33,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			boolean isResultInitializer,
-			@Nullable CacheStoreMode cacheStoreMode,
-			@Nullable CacheRetrieveMode cacheRetrieveMode,
-			@Nullable Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		super(
 				collectionPath,
@@ -44,9 +41,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 				parent,
 				collectionKeyResult,
 				isResultInitializer,
-				cacheStoreMode,
-				cacheRetrieveMode,
-				batchSize,
+				fetchOptions,
 				creationState
 		);
 	}
@@ -107,11 +102,11 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 							}
 						}
 						else {
-							final var collectionDescriptor = collectionAttributeMapping.getCollectionDescriptor();
+							final var persister = collectionAttributeMapping.getCollectionDescriptor();
 							final Object key = collectionKey.getKey();
 							final var collection =
-									collectionDescriptor.getCollectionSemantics()
-											.instantiateWrapper( key, collectionDescriptor, session );
+									persister.getCollectionSemantics()
+											.instantiateWrapper( key, persister, session );
 							data.setCollectionInstance( collection );
 							final Object targetInstance = owningEntityInitializer.getTargetInstance( owningEntityData );
 							assert targetInstance != null;
@@ -119,15 +114,19 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 							withFetchOptions(
 									session,
 									() -> {
-										persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key,
-												isReadOnly( collectionKey, rowProcessingState, session ) );
+										persistenceContext.addUninitializedCollection(
+												persister,
+												collection,
+												key,
+												isReadOnly( collectionKey, rowProcessingState, session )
+										);
 										return null;
 									}
 							);
 							if ( isEager ) {
 								addNonLazyCollection( data, collection );
 							}
-							if ( collectionDescriptor.isArray() ) {
+							if ( persister.isArray() ) {
 								persistenceContext.addCollectionHolder( collection );
 							}
 						}
@@ -186,7 +185,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 		if ( hasLocalFetchOptions() ) {
 			var nonLazyCollections = data.nonLazyCollections;
 			if ( nonLazyCollections == null ) {
-				nonLazyCollections = data.nonLazyCollections = Collections.newSetFromMap( new IdentityHashMap<>() );
+				nonLazyCollections = data.nonLazyCollections = newSetFromMap( new IdentityHashMap<>() );
 			}
 			nonLazyCollections.add( collection );
 		}
@@ -197,7 +196,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 	}
 
 	private boolean hasLocalFetchOptions() {
-		return cacheStoreMode != null || cacheRetrieveMode != null || batchSize != null;
+		return fetchOptions.hasOptions();
 	}
 
 	@Override
@@ -205,9 +204,8 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 		super.endLoading( data );
 		final var nonLazyCollections = data.nonLazyCollections;
 		if ( nonLazyCollections != null ) {
-			final var session = data.getRowProcessingState().getSession();
 			withFetchOptions(
-					session,
+					data.getRowProcessingState().getSession(),
 					() -> {
 						for ( var collection : nonLazyCollections ) {
 							collection.forceInitialization();

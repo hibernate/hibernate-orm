@@ -7,14 +7,8 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-
-import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -23,7 +17,6 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
-import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.internal.LoadingCollectionEntryImpl;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -70,13 +63,10 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
 			InitializerParent<?> parent,
-			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
-			@Nullable CacheStoreMode cacheStoreMode,
-			@Nullable CacheRetrieveMode cacheRetrieveMode,
-			@Nullable Integer batchSize,
+			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		super(
 				collectionPath,
@@ -84,9 +74,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				parent,
 				collectionKeyResult,
 				isResultInitializer,
-				cacheStoreMode,
-				cacheRetrieveMode,
-				batchSize,
+				fetchOptions,
 				creationState
 		);
 		collectionValueKeyResultAssembler =
@@ -250,13 +238,14 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 
 				// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 				// First, look for a LoadingCollectionEntry
-				final RowProcessingState rowProcessingState = data.getRowProcessingState();
-				final SharedSessionContractImplementor session = rowProcessingState.getSession();
-				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-				final CollectionKey collectionKey = data.collectionKey;
+				final var rowProcessingState = data.getRowProcessingState();
+				final var session = rowProcessingState.getSession();
+				final var persistenceContext = session.getPersistenceContextInternal();
+				final var collectionKey = data.collectionKey;
 				assert collectionKey != null;
-				final LoadingCollectionEntry existingLoadingEntry = persistenceContext.getLoadContexts()
-						.findLoadingCollectionEntry( collectionKey );
+				final var existingLoadingEntry =
+						persistenceContext.getLoadContexts()
+								.findLoadingCollectionEntry( collectionKey );
 				final PersistentCollection<?> existing;
 				final PersistentCollection<?> existingUnowned;
 				if ( existingLoadingEntry != null ) {
@@ -453,8 +442,8 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			if ( data.collectionValueKey == null && collectionValueKeyResultAssembler != null ) {
 				final var initializer = collectionValueKeyResultAssembler.getInitializer();
 				if ( initializer != null ) {
-					data.collectionValueKey = collectionValueKeyResultAssembler.assemble(
-							data.getRowProcessingState() );
+					data.collectionValueKey =
+							collectionValueKeyResultAssembler.assemble( data.getRowProcessingState() );
 				}
 			}
 

@@ -51,7 +51,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 			boolean needsCollectionKeyResult,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
-		super( fetchedPath, fetchedAttribute, fetchParent );
+		super( fetchedPath, fetchedAttribute, fetchParent, creationState.getFetchCacheStoreMode( fetchedPath ) );
 		this.collectionTableGroup = (PluralTableGroup) collectionTableGroup;
 
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
@@ -113,6 +113,20 @@ public class EagerCollectionFetch extends CollectionFetch {
 				creationState
 		);
 
+		final var cacheStoreMode = creationState.getFetchCacheStoreMode( fetchedPath );
+		if ( cacheStoreMode != null ) {
+			creationState.registerFetchCacheStoreMode(
+					fetchedPath.append( CollectionPart.Nature.ELEMENT.getName() ),
+					cacheStoreMode
+			);
+			if ( fetchedAttribute.getIndexDescriptor() != null ) {
+				creationState.registerFetchCacheStoreMode(
+						fetchedPath.append( CollectionPart.Nature.INDEX.getName() ),
+						cacheStoreMode
+				);
+			}
+		}
+
 		fetches = creationState.visitFetches( this );
 		if ( fetchedAttribute.getIndexDescriptor() != null ) {
 			assert fetches.size() == 2;
@@ -160,6 +174,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 				collectionKeyResult,
 				collectionValueKeyResult,
 				false,
+				getCacheStoreMode(),
 				creationState
 		);
 	}

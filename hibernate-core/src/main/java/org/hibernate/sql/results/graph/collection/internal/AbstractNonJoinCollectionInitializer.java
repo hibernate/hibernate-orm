@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -26,6 +28,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			boolean isResultInitializer,
+			@Nullable CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
 		super(
 				collectionPath,
@@ -33,6 +36,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 				parent,
 				collectionKeyResult,
 				isResultInitializer,
+				cacheStoreMode,
 				creationState
 		);
 	}

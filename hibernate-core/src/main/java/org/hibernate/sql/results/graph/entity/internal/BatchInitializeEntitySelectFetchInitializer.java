@@ -6,6 +6,8 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.HashSet;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -41,8 +43,10 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
+			CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
-		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
+		super( parent, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
+				cacheStoreMode, creationState );
 	}
 
 	@Override
@@ -78,7 +82,7 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 		if ( keysToBatchLoad != null ) {
 			final var session = data.getRowProcessingState().getSession();
 			for ( var entityKey : keysToBatchLoad ) {
-				loadInstance( entityKey, toOneMapping, affectedByFilter, session );
+				loadInstance( entityKey, session );
 			}
 			data.toBatchLoad = null;
 		}

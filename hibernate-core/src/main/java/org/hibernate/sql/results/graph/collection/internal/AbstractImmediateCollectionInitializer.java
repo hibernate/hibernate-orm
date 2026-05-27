@@ -7,6 +7,8 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
@@ -71,6 +73,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
+			@Nullable CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
 		super(
 				collectionPath,
@@ -78,6 +81,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				parent,
 				collectionKeyResult,
 				isResultInitializer,
+				cacheStoreMode,
 				creationState
 		);
 		collectionValueKeyResultAssembler =

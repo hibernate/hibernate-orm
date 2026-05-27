@@ -9,6 +9,8 @@ import java.util.BitSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
@@ -109,6 +111,7 @@ public class EntityInitializerImpl
 	private final boolean isPartOfKey;
 	private final boolean isResultInitializer;
 	private final boolean hasKeyManyToOne;
+	private final CacheStoreMode cacheStoreMode;
 	/**
 	 * Indicates whether there is a high chance of the previous row to have the same entity key as the current row
 	 * and hence enable a check in the {@link #resolveKey(RowProcessingState)} phase which compare the previously read
@@ -247,6 +250,7 @@ public class EntityInitializerImpl
 						&& !composite.hasContainingClass();
 
 		navigablePath = resultDescriptor.getNavigablePath();
+		cacheStoreMode = resultDescriptor.getCacheStoreMode();
 		isPartOfKey = Initializer.isPartOfKey( navigablePath, parent );
 		// If the parent already has previous row reuse enabled, we can skip that here
 		previousRowReuse = !isPreviousRowReuse( parent ) && (
@@ -1801,7 +1805,7 @@ public class EntityInitializerImpl
 		if ( data.concreteDescriptor.canWriteToCache()
 				// No need to put into the entity cache if this is coming from the query cache already
 				&& !data.getRowProcessingState().isQueryCacheHit()
-				&& session.getCacheMode().isPutEnabled()
+				&& isCachePutEnabled( session )
 				// Don't cache temporal snapshots in the 2LC
 				&& ( data.entityKey == null || !data.entityKey.isTemporal() ) ) {
 			final var cacheAccess = data.concreteDescriptor.getCacheAccessStrategy();
@@ -1913,7 +1917,7 @@ public class EntityInitializerImpl
 			Object cacheKey, CacheEntry cacheEntry) {
 		final boolean minimalPutsEnabled =
 				session.getFactory().getSessionFactoryOptions().isMinimalPutsEnabled()
-						&& !session.getCacheMode().isRefreshEnabled();
+						&& !isCacheRefreshEnabled( session );
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean cacheContentChanged = false;
 		final var eventMonitor = session.getEventMonitor();
@@ -1987,6 +1991,18 @@ public class EntityInitializerImpl
 			);
 			//TODO: Statistics. Treat it like a regular put as above?
 		}
+	}
+
+	private boolean isCachePutEnabled(SharedSessionContractImplementor session) {
+		return cacheStoreMode == null
+				? session.getCacheMode().isPutEnabled()
+				: cacheStoreMode != CacheStoreMode.BYPASS;
+	}
+
+	private boolean isCacheRefreshEnabled(SharedSessionContractImplementor session) {
+		return cacheStoreMode == null
+				? session.getCacheMode().isRefreshEnabled()
+				: cacheStoreMode == CacheStoreMode.REFRESH;
 	}
 
 	protected void registerPossibleUniqueKeyEntries(

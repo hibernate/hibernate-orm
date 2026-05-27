@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -31,6 +33,7 @@ public class EntitySelectFetchInitializerBuilder {
 			NavigablePath navigablePath,
 			boolean selectByUniqueKey,
 			boolean affectedByFilter,
+			CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
 		if ( selectByUniqueKey ) {
 			return new EntitySelectFetchByUniqueKeyInitializer(
@@ -40,6 +43,7 @@ public class EntitySelectFetchInitializerBuilder {
 					entityPersister,
 					keyResult,
 					affectedByFilter,
+					cacheStoreMode,
 					creationState
 			);
 		}
@@ -52,6 +56,7 @@ public class EntitySelectFetchInitializerBuilder {
 					entityPersister,
 					keyResult,
 					affectedByFilter,
+					cacheStoreMode,
 					creationState
 			);
 		}
@@ -65,6 +70,7 @@ public class EntitySelectFetchInitializerBuilder {
 						entityPersister,
 						keyResult,
 						affectedByFilter,
+						cacheStoreMode,
 						creationState
 				);
 			case BATCH_LOAD:
@@ -76,6 +82,7 @@ public class EntitySelectFetchInitializerBuilder {
 							entityPersister,
 							keyResult,
 							affectedByFilter,
+							cacheStoreMode,
 							creationState
 					);
 				}
@@ -87,6 +94,7 @@ public class EntitySelectFetchInitializerBuilder {
 							entityPersister,
 							keyResult,
 							affectedByFilter,
+							cacheStoreMode,
 							creationState
 					);
 				}
@@ -98,6 +106,7 @@ public class EntitySelectFetchInitializerBuilder {
 						entityPersister,
 						keyResult,
 						affectedByFilter,
+						cacheStoreMode,
 						creationState
 				);
 		}

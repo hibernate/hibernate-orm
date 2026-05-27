@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.spi.GraphImplementor;
@@ -23,10 +25,19 @@ public interface EntityGraphTraversalState {
 	class TraversalResult {
 		private final GraphImplementor<?> previousContext;
 		private final FetchStrategy fetchStrategy;
+		private final CacheStoreMode cacheStoreMode;
 
 		public TraversalResult(GraphImplementor<?> previousContext, FetchStrategy fetchStrategy) {
+			this( previousContext, fetchStrategy, null );
+		}
+
+		public TraversalResult(
+				GraphImplementor<?> previousContext,
+				FetchStrategy fetchStrategy,
+				CacheStoreMode cacheStoreMode) {
 			this.previousContext = previousContext;
 			this.fetchStrategy = fetchStrategy;
+			this.cacheStoreMode = cacheStoreMode;
 		}
 
 		public GraphImplementor<?> getGraph() {
@@ -35,6 +46,10 @@ public interface EntityGraphTraversalState {
 
 		public FetchStrategy getFetchStrategy() {
 			return fetchStrategy;
+		}
+
+		public CacheStoreMode getCacheStoreMode() {
+			return cacheStoreMode;
 		}
 	}
 

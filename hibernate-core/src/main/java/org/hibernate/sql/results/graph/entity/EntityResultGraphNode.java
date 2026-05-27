@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -24,6 +26,10 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 	NavigablePath getNavigablePath();
 
 	EntityValuedModelPart getEntityValuedModelPart();
+
+	default CacheStoreMode getCacheStoreMode() {
+		return null;
+	}
 
 	@Override
 	default boolean containsAnyNonScalarResults() {

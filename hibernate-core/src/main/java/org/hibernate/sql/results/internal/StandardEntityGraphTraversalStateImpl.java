@@ -7,6 +7,8 @@ package org.hibernate.sql.results.internal;
 import java.util.Map;
 import java.util.Objects;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
@@ -61,8 +63,21 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 					: null;
 			currentGraphContext = null;
 			return new TraversalResult( previousContextRoot,
-					handleFetchType( fetchable, exploreKeySubgraph, attributeNode ) );
+					handleFetchType( fetchable, exploreKeySubgraph, attributeNode ),
+					getCacheStoreMode( attributeNode ) );
 		}
+	}
+
+	private static CacheStoreMode getCacheStoreMode(AttributeNodeImplementor<?, ?, ?> attributeNode) {
+		if ( attributeNode == null ) {
+			return null;
+		}
+		for ( var option : attributeNode.getOptions() ) {
+			if ( option instanceof CacheStoreMode cacheStoreMode ) {
+				return cacheStoreMode;
+			}
+		}
+		return null;
 	}
 
 	private FetchStrategy handleFetchType

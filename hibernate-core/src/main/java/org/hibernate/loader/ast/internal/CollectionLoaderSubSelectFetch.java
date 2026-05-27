@@ -140,7 +140,8 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 									persister,
 									c,
 									NullnessUtil.castNonNull( c.getKey() ),
-									true
+									true,
+									null
 							);
 						}
 					}

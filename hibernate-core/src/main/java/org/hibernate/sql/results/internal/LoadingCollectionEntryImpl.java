@@ -88,7 +88,8 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 				collectionDescriptor,
 				collectionInstance,
 				getKey(),
-				hasNoQueuedAdds
+				hasNoQueuedAdds,
+				initializer.getCacheStoreMode()
 		);
 	}
 

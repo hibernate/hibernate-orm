@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -28,8 +30,10 @@ public class EntitySelectFetchByUniqueKeyInitializer
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
+			CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
-		super( parent, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
+		super( parent, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
+				cacheStoreMode, creationState );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 
@@ -51,8 +55,10 @@ public class EntitySelectFetchByUniqueKeyInitializer
 				);
 		data.setInstance( persistenceContext.getEntity( entityUniqueKey ) );
 		if ( data.getInstance() == null ) {
-			final Object instance =
-					concreteDescriptor.loadByUniqueKey( uniqueKeyPropertyName, data.entityIdentifier, session );
+			final Object instance = withCacheStoreMode(
+					session,
+					() -> concreteDescriptor.loadByUniqueKey( uniqueKeyPropertyName, data.entityIdentifier, session )
+			);
 			data.setInstance( instance );
 			if ( instance == null ) {
 				checkNotFound( data );

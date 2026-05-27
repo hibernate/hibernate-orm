@@ -74,7 +74,8 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					loadedPersister,
 					collection,
 					loadedKey,
-					true
+					true,
+					null
 			);
 		}
 	}

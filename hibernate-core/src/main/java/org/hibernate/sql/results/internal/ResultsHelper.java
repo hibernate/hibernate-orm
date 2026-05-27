@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.internal;
 
+import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
@@ -52,7 +53,8 @@ public class ResultsHelper {
 			CollectionPersister collectionDescriptor,
 			PersistentCollection<?> collection,
 			Object key,
-			boolean hasNoQueuedAdds) {
+			boolean hasNoQueuedAdds,
+			CacheStoreMode cacheStoreMode) {
 		final var session = persistenceContext.getSession();
 		final var collectionEntry =
 				initializedEntry( persistenceContext, collectionDescriptor, collection, key, session );
@@ -60,8 +62,8 @@ public class ResultsHelper {
 			addCollectionHolder( persistenceContext, collectionDescriptor, collection );
 		}
 		persistenceContext.getBatchFetchQueue().removeBatchLoadableCollection( collectionEntry );
-		if ( addToCache( session, collectionEntry, collectionDescriptor, hasNoQueuedAdds ) ) {
-			addCollectionToCache( persistenceContext, collectionDescriptor, collection, key );
+		if ( addToCache( session, collectionEntry, collectionDescriptor, hasNoQueuedAdds, cacheStoreMode ) ) {
+			addCollectionToCache( persistenceContext, collectionDescriptor, collection, key, cacheStoreMode );
 		}
 		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
@@ -81,10 +83,11 @@ public class ResultsHelper {
 			SharedSessionContract session,
 			CollectionEntry collectionEntry,
 			CollectionPersister collectionDescriptor,
-			boolean hasNoQueuedAdds) {
+			boolean hasNoQueuedAdds,
+			CacheStoreMode cacheStoreMode) {
 		return hasNoQueuedAdds  // there were no queued additions
 			&& collectionDescriptor.hasCache()  // the collection role has a cache
-			&& session.getCacheMode().isPutEnabled()  // the session cache mode allows puts
+			&& isCachePutEnabled( session, cacheStoreMode )  // the effective cache mode allows puts
 			&& !collectionEntry.isDoremove();  // this is not a forced initialization during flush
 	}
 
@@ -129,7 +132,8 @@ public class ResultsHelper {
 			PersistenceContext persistenceContext,
 			CollectionPersister collectionDescriptor,
 			PersistentCollection<?> collection,
-			Object key) {
+			Object key,
+			CacheStoreMode cacheStoreMode) {
 		final var session = persistenceContext.getSession();
 
 		if ( CORE_LOGGER.isTraceEnabled() ) {
@@ -162,7 +166,7 @@ public class ResultsHelper {
 			version = null;
 		}
 
-		addCollectionToCache( persistenceContext, collectionDescriptor, collection, key, version );
+		addCollectionToCache( persistenceContext, collectionDescriptor, collection, key, version, cacheStoreMode );
 	}
 
 	private static void addCollectionToCache(
@@ -170,7 +174,8 @@ public class ResultsHelper {
 			CollectionPersister collectionDescriptor,
 			PersistentCollection<?> collection,
 			Object key,
-			Object version) {
+			Object version,
+			CacheStoreMode cacheStoreMode) {
 		final var session = context.getSession();
 		final var factory = session.getFactory();
 		if ( collection.getSession() == null ) {
@@ -189,7 +194,7 @@ public class ResultsHelper {
 		if ( isPutFromLoad( context, collectionDescriptor, entry ) ) {
 			final boolean minimalPutsEnabled =
 					factory.getSessionFactoryOptions().isMinimalPutsEnabled()
-							&& !session.getCacheMode().isRefreshEnabled();
+							&& !isCacheRefreshEnabled( session, cacheStoreMode );
 			final var eventListenerManager = session.getEventListenerManager();
 			final var eventMonitor = session.getEventMonitor();
 			final var cachePutEvent = eventMonitor.beginCachePutEvent();
@@ -224,6 +229,18 @@ public class ResultsHelper {
 				}
 			}
 		}
+	}
+
+	private static boolean isCachePutEnabled(SharedSessionContract session, CacheStoreMode cacheStoreMode) {
+		return cacheStoreMode == null
+				? session.getCacheMode().isPutEnabled()
+				: cacheStoreMode != CacheStoreMode.BYPASS;
+	}
+
+	private static boolean isCacheRefreshEnabled(SharedSessionContract session, CacheStoreMode cacheStoreMode) {
+		return cacheStoreMode == null
+				? session.getCacheMode().isRefreshEnabled()
+				: cacheStoreMode == CacheStoreMode.REFRESH;
 	}
 
 	private static boolean isPutFromLoad(

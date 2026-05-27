@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -25,8 +27,9 @@ public class SelectEagerCollectionInitializer
 			PluralAttributeMapping fetchedMapping,
 			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
+			@Nullable CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
-		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, creationState );
+		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, cacheStoreMode, creationState );
 	}
 
 	@Override

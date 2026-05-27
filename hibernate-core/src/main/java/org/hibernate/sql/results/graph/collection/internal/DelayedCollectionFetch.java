@@ -6,6 +6,8 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.BitSet;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -30,8 +32,9 @@ public class DelayedCollectionFetch extends CollectionFetch {
 			PluralAttributeMapping fetchedAttribute,
 			FetchParent fetchParent,
 			DomainResult<?> collectionKeyResult,
-			boolean unfetched) {
-		super( fetchedPath, fetchedAttribute, fetchParent );
+			boolean unfetched,
+			CacheStoreMode cacheStoreMode) {
+		super( fetchedPath, fetchedAttribute, fetchParent, cacheStoreMode );
 		this.collectionKeyResult = collectionKeyResult;
 		this.unfetched = unfetched;
 	}
@@ -52,6 +55,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 				getFetchedMapping(),
 				parent,
 				collectionKeyResult,
+				getCacheStoreMode(),
 				creationState
 		);
 	}

@@ -4,8 +4,13 @@
  */
 package org.hibernate.tool.reveng.hbmlint.HbmLintTest;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+@Entity
 public class BrokenNonLazy {
 
+	@Id
 	long id;
 
 	public BrokenNonLazy(long id) {

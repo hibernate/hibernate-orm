@@ -8,12 +8,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 @Entity
-public class BrokenLazy {
+public class IdentifierProblem {
 
 	@Id
-	long id;
+	private long name;
 
-	public BrokenLazy(long id) {
-		this.id = id;
-	}
+	private String id;
 }

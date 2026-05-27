@@ -5,15 +5,13 @@
 package org.hibernate.tool.reveng.hbmlint.HbmLintTest;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 @Entity
-public class BrokenLazy {
+public class NoTable {
 
 	@Id
-	long id;
-
-	public BrokenLazy(long id) {
-		this.id = id;
-	}
+	@GeneratedValue
+	private long id;
 }

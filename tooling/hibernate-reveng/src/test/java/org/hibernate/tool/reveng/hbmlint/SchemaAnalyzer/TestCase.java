@@ -47,10 +47,12 @@ public class TestCase {
 				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
 				SequenceMismatchStrategy.NONE);
 		MetadataSources metadataSources = new MetadataSources(ssrb.build());
-		metadataSources.addResource("org/hibernate/tool/reveng/hbmlint/SchemaAnalyzer/SchemaIssues.hbm.xml");
+		metadataSources.addAnnotatedClass(Category.class);
+		metadataSources.addAnnotatedClass(BadType.class);
+		metadataSources.addAnnotatedClass(MissingTable.class);
 		Metadata metadata = metadataSources.buildMetadata();
 		SchemaByMetaDataDetector analyzer = new SchemaByMetaDataDetector();
-		analyzer.initialize( metadata );
+		analyzer.initialize(metadata);
 
 
 		for (Table table : metadata.collectTableMappings()) {
@@ -76,8 +78,8 @@ public class TestCase {
 
 		MockCollector mc = new MockCollector();
 		analyzer.visitGenerators(mc);
-		assertEquals(1,mc.problems.size());
-		Issue issue = mc.problems.get( 0 );
+		assertEquals(1, mc.problems.size());
+		Issue issue = mc.problems.get(0);
 		assertTrue(issue.getDescription().contains("does_not_exist"));
 
 	}

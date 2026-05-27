@@ -6,6 +6,8 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.BitSet;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
@@ -38,6 +40,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	private final DomainResult<?> keyResult;
 	private final NotFoundAction notFoundAction;
 	private final boolean isAffectedByFilter;
+	private final CacheStoreMode cacheStoreMode;
 
 	private final String sourceAlias;
 
@@ -55,6 +58,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.notFoundAction = toOneMapping.getNotFoundAction();
 		this.sourceAlias = tableGroup.getSourceAlias();
 		this.isAffectedByFilter = isAffectedByFilter;
+		this.cacheStoreMode = creationState.getFetchCacheStoreMode( navigablePath );
 		this.entityResult = new EntityResultImpl<>(
 				navigablePath,
 				toOneMapping,
@@ -76,6 +80,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.keyResult = null;
 		this.sourceAlias = tableGroup.getSourceAlias();
 		this.isAffectedByFilter = false;
+		this.cacheStoreMode = creationState.getFetchCacheStoreMode( navigablePath );
 		this.entityResult = new EntityResultImpl<>(
 				navigablePath,
 				collectionPart,
@@ -96,6 +101,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		this.notFoundAction = original.notFoundAction;
 		this.isAffectedByFilter = original.isAffectedByFilter;
 		this.sourceAlias = original.sourceAlias;
+		this.cacheStoreMode = original.cacheStoreMode;
 	}
 
 	@Override
@@ -116,6 +122,11 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	@Override
 	public EntityValuedFetchable getFetchedMapping() {
 		return getEntityValuedModelPart();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return cacheStoreMode;
 	}
 
 	@Override

@@ -41,6 +41,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,7 @@ public class LoaderSqlAstCreationState
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
+	private Map<NavigablePath, CacheStoreMode> fetchCacheStoreModes;
 
 	public LoaderSqlAstCreationState(
 			QueryPart queryPart,
@@ -203,6 +205,21 @@ public class LoaderSqlAstCreationState
 	@Override
 	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide) {
 		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
+	}
+
+	@Override
+	public void registerFetchCacheStoreMode(NavigablePath fetchablePath, CacheStoreMode cacheStoreMode) {
+		if ( cacheStoreMode != null ) {
+			if ( fetchCacheStoreModes == null ) {
+				fetchCacheStoreModes = new HashMap<>();
+			}
+			fetchCacheStoreModes.put( fetchablePath, cacheStoreMode );
+		}
+	}
+
+	@Override
+	public CacheStoreMode getFetchCacheStoreMode(NavigablePath fetchablePath) {
+		return fetchCacheStoreModes == null ? null : fetchCacheStoreModes.get( fetchablePath );
 	}
 
 	@Override

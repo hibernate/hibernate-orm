@@ -4,6 +4,8 @@
  */
 package org.hibernate.collection.spi;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -48,5 +50,6 @@ public interface CollectionInitializerProducer {
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
+			CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState);
 }

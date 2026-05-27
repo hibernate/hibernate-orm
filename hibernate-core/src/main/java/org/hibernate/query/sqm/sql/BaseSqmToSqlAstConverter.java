@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.criteria.Predicate.BooleanOperator;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -479,6 +480,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean resolvingCircularFetch;
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
+	private Map<NavigablePath, CacheStoreMode> fetchCacheStoreModes;
 	private SqmStatement<?> currentSqmStatement;
 	private final Stack<SqmQueryPart<?>> sqmQueryPartStack = new StandardStack<>();
 	private CteContainer cteContainer;
@@ -8878,6 +8880,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						fetchable,
 						isKeyFetchable
 				);
+				registerFetchCacheStoreMode(
+						fetchablePath,
+						traversalResult.getCacheStoreMode()
+				);
 			}
 		}
 		else {
@@ -8889,6 +8895,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
 					final var fetchStrategy = traversalResult.getFetchStrategy();
+					registerFetchCacheStoreMode(
+							fetchablePath,
+							traversalResult.getCacheStoreMode()
+					);
 					if ( fetchStrategy != null ) {
 						fetchTiming = fetchStrategy.getFetchTiming();
 						joined = fetchStrategy.isJoined();
@@ -9227,6 +9237,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide) {
 		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
+	}
+
+	@Override
+	public void registerFetchCacheStoreMode(NavigablePath fetchablePath, CacheStoreMode cacheStoreMode) {
+		if ( cacheStoreMode != null ) {
+			if ( fetchCacheStoreModes == null ) {
+				fetchCacheStoreModes = new HashMap<>();
+			}
+			fetchCacheStoreModes.put( fetchablePath, cacheStoreMode );
+		}
+	}
+
+	@Override
+	public CacheStoreMode getFetchCacheStoreMode(NavigablePath fetchablePath) {
+		return fetchCacheStoreModes == null ? null : fetchCacheStoreModes.get( fetchablePath );
 	}
 
 	@Internal

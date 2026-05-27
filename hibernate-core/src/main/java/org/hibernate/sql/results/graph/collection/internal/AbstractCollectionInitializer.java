@@ -7,6 +7,8 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -39,6 +41,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	protected final boolean isResultInitializer;
 	protected final @Nullable InitializerParent<?> parent;
 	protected final @Nullable EntityInitializer<InitializerData> owningEntityInitializer;
+	protected final @Nullable CacheStoreMode cacheStoreMode;
 
 	/**
 	 * refers to the collection's container value - which collection-key?
@@ -69,6 +72,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			boolean isResultInitializer,
+			@Nullable CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.collectionPath = collectionPath;
@@ -78,6 +82,7 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 				.getTypeForEqualsHashCode();
 		this.isResultInitializer = isResultInitializer;
 		this.parent = parent;
+		this.cacheStoreMode = cacheStoreMode;
 		//noinspection unchecked
 		this.owningEntityInitializer = (EntityInitializer<InitializerData>) Initializer.findOwningEntityInitializer( parent );
 		this.collectionKeyResultAssembler = collectionKeyResult == null
@@ -242,6 +247,11 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	@Override
 	public @Nullable InitializerParent<?> getParent() {
 		return parent;
+	}
+
+	@Override
+	public @Nullable CacheStoreMode getCacheStoreMode() {
+		return cacheStoreMode;
 	}
 
 	@Override

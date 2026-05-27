@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.collection;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -30,6 +32,10 @@ public interface CollectionInitializer<Data extends InitializerData> extends Ini
 
 	default @Nullable PersistentCollection<?> getCollectionInstance(RowProcessingState rowProcessingState) {
 		return getCollectionInstance( getData( rowProcessingState ) );
+	}
+
+	default @Nullable CacheStoreMode getCacheStoreMode() {
+		return null;
 	}
 
 	@Override

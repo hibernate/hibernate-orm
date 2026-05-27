@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityKey;
@@ -61,8 +63,10 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
+			CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
-		super( parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
+		super( parent, toOneMapping, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
+				cacheStoreMode, creationState );
 		//noinspection unchecked
 		owningEntityInitializer =
 				(EntityInitializer<InitializerData>)
@@ -286,16 +290,14 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		}
 	}
 
-	protected static Object loadInstance(
-			EntityKey entityKey,
-			ToOneAttributeMapping toOneMapping,
-			boolean affectedByFilter,
-			SharedSessionContractImplementor session) {
+	protected Object loadInstance(EntityKey entityKey, SharedSessionContractImplementor session) {
 		final String entityName = entityKey.getEntityName();
 		final Object identifier = entityKey.getIdentifier();
-		final Object instance =
-				session.internalLoad( entityName, identifier, true,
-						toOneMapping.isInternalLoadNullable() );
+		final Object instance = withCacheStoreMode(
+				session,
+				() -> session.internalLoad( entityName, identifier, true,
+						toOneMapping.isInternalLoadNullable() )
+		);
 		if ( instance == null ) {
 			checkNotFound( toOneMapping, affectedByFilter, entityName, identifier );
 		}

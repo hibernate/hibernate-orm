@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -45,8 +47,10 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
+			CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
-		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
+		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
+				cacheStoreMode, creationState );
 		parentAttributes = getParentEntityAttributes( referencedModelPart.getAttributeName() );
 		referencedModelPartSetter = referencedModelPart.getPropertyAccess().getSetter();
 		referencedModelPartType =
@@ -104,7 +108,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			for ( var entry : toBatchLoad.entrySet() ) {
 				final var entityKey = entry.getKey();
 				final var parentInfos = entry.getValue();
-				final Object instance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
+				final Object instance = loadInstance( entityKey, session );
 				for ( var parentInfo : parentInfos ) {
 					final Object parentInstance = parentInfo.parentInstance;
 					final var entityEntry = persistenceContext.getEntry( parentInstance );

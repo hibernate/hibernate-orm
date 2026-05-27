@@ -4,11 +4,15 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.InitializerParent;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
@@ -22,8 +26,9 @@ public class DelayedCollectionInitializer extends AbstractNonJoinCollectionIniti
 			PluralAttributeMapping fetchedMapping,
 			InitializerParent<?> parent,
 			DomainResult<?> collectionKeyResult,
+			@Nullable CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
-		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, creationState );
+		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, cacheStoreMode, creationState );
 	}
 
 	@Override

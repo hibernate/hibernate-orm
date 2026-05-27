@@ -6,6 +6,8 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Function;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AssociationKey;
@@ -194,4 +196,18 @@ public interface DomainResultCreationState {
 	ForeignKeyDescriptor.Nature getCurrentlyResolvingForeignKeyPart();
 
 	void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide);
+
+	/**
+	 * Register the {@link CacheStoreMode} applied by an entity graph to a fetch path.
+	 */
+	default void registerFetchCacheStoreMode(NavigablePath fetchablePath, CacheStoreMode cacheStoreMode) {
+	}
+
+	/**
+	 * The {@link CacheStoreMode} applied by an entity graph to this fetch path,
+	 * or {@code null} when the fetch should use the session/query cache mode.
+	 */
+	default CacheStoreMode getFetchCacheStoreMode(NavigablePath fetchablePath) {
+		return null;
+	}
 }

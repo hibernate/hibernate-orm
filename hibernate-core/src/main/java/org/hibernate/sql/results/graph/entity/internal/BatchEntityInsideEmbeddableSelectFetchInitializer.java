@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -65,8 +67,10 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
+			CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
-		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
+		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
+				cacheStoreMode, creationState );
 
 		referencedModelPartSetter = referencedModelPart.getAttributeMetadata().getPropertyAccess().getSetter();
 		final String rootEmbeddablePropertyName =
@@ -173,7 +177,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 				final var session = data.getRowProcessingState().getSession();
 				final var factory = session.getFactory();
 				final var persistenceContext = session.getPersistenceContextInternal();
-				final Object loadedInstance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
+				final Object loadedInstance = loadInstance( entityKey, session );
 				for ( ParentInfo parentInfo : parentInfos ) {
 					final Object parentEntityInstance = parentInfo.parentEntityInstance;
 					final var parentEntityEntry = persistenceContext.getEntry( parentEntityInstance );

@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -24,14 +26,17 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 	private final PluralAttributeMapping fetchedAttribute;
 
 	private final FetchParent fetchParent;
+	private final CacheStoreMode cacheStoreMode;
 
 	public CollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
-			FetchParent fetchParent) {
+			FetchParent fetchParent,
+			CacheStoreMode cacheStoreMode) {
 		this.fetchedPath = fetchedPath;
 		this.fetchedAttribute = fetchedAttribute;
 		this.fetchParent = fetchParent;
+		this.cacheStoreMode = cacheStoreMode;
 	}
 
 	@Override
@@ -42,6 +47,10 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 	@Override
 	public PluralAttributeMapping getFetchedMapping() {
 		return fetchedAttribute;
+	}
+
+	public CacheStoreMode getCacheStoreMode() {
+		return cacheStoreMode;
 	}
 
 	@Override

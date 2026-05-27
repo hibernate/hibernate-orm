@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -40,6 +42,7 @@ public class ArrayInitializerProducer implements CollectionInitializerProducer {
 			DomainResult<?> collectionKeyResult,
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
+			CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
 		return new ArrayInitializer(
 				navigablePath,
@@ -49,6 +52,7 @@ public class ArrayInitializerProducer implements CollectionInitializerProducer {
 				collectionKeyResult,
 				collectionValueKeyResult,
 				isResultInitializer,
+				cacheStoreMode,
 				creationState,
 				listIndexFetch,
 				elementFetch

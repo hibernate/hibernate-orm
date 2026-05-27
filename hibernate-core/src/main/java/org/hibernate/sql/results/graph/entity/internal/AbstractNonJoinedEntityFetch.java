@@ -6,6 +6,8 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.BitSet;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -34,6 +36,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	private final DomainResult<?> keyResult;
 	private final BasicFetch<?> discriminatorFetch;
 	private final boolean selectByUniqueKey;
+	private final CacheStoreMode cacheStoreMode;
 
 	public AbstractNonJoinedEntityFetch(
 			NavigablePath navigablePath,
@@ -49,6 +52,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 		this.keyResult = keyResult;
 		this.discriminatorFetch = selectDiscriminator ? creationState.visitDiscriminatorFetch( this ) : null;
 		this.selectByUniqueKey = selectByUniqueKey;
+		this.cacheStoreMode = creationState.getFetchCacheStoreMode( navigablePath );
 	}
 
 	protected AbstractNonJoinedEntityFetch(
@@ -57,13 +61,15 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 			FetchParent fetchParent,
 			DomainResult<?> keyResult,
 			BasicFetch<?> discriminatorFetch,
-			boolean selectByUniqueKey) {
+			boolean selectByUniqueKey,
+			CacheStoreMode cacheStoreMode) {
 		this.navigablePath = navigablePath;
 		this.fetchedModelPart = fetchedModelPart;
 		this.fetchParent = fetchParent;
 		this.keyResult = keyResult;
 		this.discriminatorFetch = discriminatorFetch;
 		this.selectByUniqueKey = selectByUniqueKey;
+		this.cacheStoreMode = cacheStoreMode;
 	}
 
 	@Override
@@ -79,6 +85,11 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	@Override
 	public ToOneAttributeMapping getEntityValuedModelPart() {
 		return fetchedModelPart;
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode() {
+		return cacheStoreMode;
 	}
 
 	@Override

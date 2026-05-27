@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.persistence.CacheStoreMode;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -678,7 +680,31 @@ public class PluralAttributeMappingImpl
 			FetchParent fetchParent,
 			DomainResult<?> collectionKeyResult,
 			boolean unfetched) {
-		return new DelayedCollectionFetch( fetchedPath, fetchedAttribute, fetchParent, collectionKeyResult, unfetched );
+		return buildDelayedCollectionFetch(
+				fetchedPath,
+				fetchedAttribute,
+				fetchParent,
+				collectionKeyResult,
+				unfetched,
+				null
+		);
+	}
+
+	protected Fetch buildDelayedCollectionFetch(
+			NavigablePath fetchedPath,
+			PluralAttributeMapping fetchedAttribute,
+			FetchParent fetchParent,
+			DomainResult<?> collectionKeyResult,
+			boolean unfetched,
+			CacheStoreMode cacheStoreMode) {
+		return new DelayedCollectionFetch(
+				fetchedPath,
+				fetchedAttribute,
+				fetchParent,
+				collectionKeyResult,
+				unfetched,
+				cacheStoreMode
+		);
 	}
 
 	/**
@@ -689,7 +715,28 @@ public class PluralAttributeMappingImpl
 			PluralAttributeMapping fetchedAttribute,
 			DomainResult<?> collectionKeyDomainResult,
 			FetchParent fetchParent) {
-		return new SelectEagerCollectionFetch( fetchedPath, fetchedAttribute, collectionKeyDomainResult, fetchParent );
+		return buildSelectEagerCollectionFetch(
+				fetchedPath,
+				fetchedAttribute,
+				collectionKeyDomainResult,
+				fetchParent,
+				null
+		);
+	}
+
+	protected Fetch buildSelectEagerCollectionFetch(
+			NavigablePath fetchedPath,
+			PluralAttributeMapping fetchedAttribute,
+			DomainResult<?> collectionKeyDomainResult,
+			FetchParent fetchParent,
+			CacheStoreMode cacheStoreMode) {
+		return new SelectEagerCollectionFetch(
+				fetchedPath,
+				fetchedAttribute,
+				collectionKeyDomainResult,
+				fetchParent,
+				cacheStoreMode
+		);
 	}
 
 	/**
@@ -740,7 +787,8 @@ public class PluralAttributeMappingImpl
 			SqlAstCreationState sqlAstCreationState) {
 		return buildSelectEagerCollectionFetch( fetchablePath, this,
 				collectionKeyDomainResult( fetchParent, fetchablePath, creationState, sqlAstCreationState ),
-				fetchParent );
+				fetchParent,
+				creationState.getFetchCacheStoreMode( fetchablePath ) );
 	}
 
 	private @Nullable DomainResult<?> collectionKeyDomainResult(
@@ -823,7 +871,8 @@ public class PluralAttributeMappingImpl
 				this,
 				fetchParent,
 				collectionKeyDomainResult,
-				unfetched
+				unfetched,
+				creationState.getFetchCacheStoreMode( fetchablePath )
 		);
 	}
 

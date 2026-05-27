@@ -112,7 +112,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 						entry.getLoadedPersister(),
 						collection,
 						key,
-						true
+						true,
+						null
 				);
 			}
 		}

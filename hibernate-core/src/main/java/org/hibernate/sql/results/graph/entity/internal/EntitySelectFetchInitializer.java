@@ -5,7 +5,11 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
+import jakarta.persistence.CacheStoreMode;
+
+import org.hibernate.CacheMode;
 import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
@@ -49,6 +53,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected final boolean affectedByFilter;
 	protected final boolean keyIsEager;
 	protected final boolean hasLazySubInitializer;
+	protected final CacheStoreMode cacheStoreMode;
 
 	public static class EntitySelectFetchInitializerData extends InitializerData {
 		// per-row state
@@ -74,6 +79,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
+			CacheStoreMode cacheStoreMode,
 			AssemblerCreationState creationState) {
 		super( creationState );
 		this.parent = parent;
@@ -81,6 +87,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
 		this.affectedByFilter = affectedByFilter;
+		this.cacheStoreMode = cacheStoreMode;
 
 		isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
 		keyAssembler = keyResult.createResultAssembler( this, creationState );
@@ -246,11 +253,14 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		data.setState( State.INITIALIZED );
 		final String entityName = concreteDescriptor.getEntityName();
 
-		final Object instance = session.internalLoad(
-				entityName,
-				data.entityIdentifier,
-				true,
-				toOneMapping.isInternalLoadNullable()
+		final Object instance = withCacheStoreMode(
+				session,
+				() -> session.internalLoad(
+						entityName,
+						data.entityIdentifier,
+						true,
+						toOneMapping.isInternalLoadNullable()
+				)
 		);
 		data.setInstance( instance );
 
@@ -370,5 +380,23 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	public DomainResultAssembler<?> getKeyAssembler() {
 		return keyAssembler;
+	}
+
+	protected <T> T withCacheStoreMode(SharedSessionContractImplementor session, Supplier<T> action) {
+		if ( cacheStoreMode == null ) {
+			return action.get();
+		}
+		final var previousCacheMode = session.getCacheMode();
+		final var effectiveCacheMode = CacheMode.fromJpaModes( previousCacheMode.getJpaRetrieveMode(), cacheStoreMode );
+		if ( effectiveCacheMode == previousCacheMode ) {
+			return action.get();
+		}
+		session.setCacheMode( effectiveCacheMode );
+		try {
+			return action.get();
+		}
+		finally {
+			session.setCacheMode( previousCacheMode );
+		}
 	}
 }

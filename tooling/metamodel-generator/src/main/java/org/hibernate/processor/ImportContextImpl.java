@@ -118,12 +118,11 @@ public class ImportContextImpl implements ImportContext {
 			result = result.substring( 0, index );
 		}
 
-		return ( preamble + unqualifyName( result ) + appendices )
-				.replace( '$', '.' );
+		return preamble + unqualifyName( result ) + appendices;
 	}
 
 	private String unqualifyName(String qualifiedName) {
-		final String sourceQualifiedName = qualifiedName.replace( '$', '.' );
+		final String sourceQualifiedName = qualifiedName;
 		final String simpleName = unqualify( qualifiedName );
 		final boolean canBeSimple;
 		if ( simpleNames.containsKey( simpleName ) ) {

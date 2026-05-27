@@ -7,11 +7,13 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.Access;
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.BatchSize;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchOption;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
@@ -1650,7 +1652,13 @@ public class EntityBinder {
 	}
 
 	private void processNamedEntityGraphs() {
-		annotatedClass.forEachAnnotationUsage( NamedEntityGraph.class, modelsContext(), this::processNamedEntityGraph );
+		final var fetchGraphContributions = collectFetchGraphContributions();
+		final var jpaNamedGraphs = new ArrayList<NamedEntityGraph>();
+		annotatedClass.forEachAnnotationUsage( NamedEntityGraph.class, modelsContext(), jpaNamedGraphs::add );
+		validateFetchGraphNames( fetchGraphContributions, jpaNamedGraphs );
+		for ( var jpaNamedGraph : jpaNamedGraphs ) {
+			processNamedEntityGraph( jpaNamedGraph, fetchGraphContributions );
+		}
 		processParsedNamedGraphs();
 	}
 
@@ -1662,20 +1670,107 @@ public class EntityBinder {
 		);
 	}
 
-	private void processNamedEntityGraph(NamedEntityGraph annotation) {
+	private void processNamedEntityGraph(NamedEntityGraph annotation, List<FetchGraphContribution> fetchGraphContributions) {
 		if ( annotation != null ) {
-			getMetadataCollector()
-					.addNamedEntityGraph( namedEntityGraphDefinition( annotation ) );
+			final var definition = namedEntityGraphDefinition( annotation, fetchGraphContributions );
+			final var existing = getMetadataCollector().getNamedEntityGraph( definition.name() );
+			if ( existing != null && !existing.entityName().equals( definition.entityName() ) ) {
+				return;
+			}
+			getMetadataCollector().addNamedEntityGraph( definition );
 		}
 	}
 
-	private NamedEntityGraphDefinition namedEntityGraphDefinition(NamedEntityGraph annotation) {
+	private NamedEntityGraphDefinition namedEntityGraphDefinition(
+			NamedEntityGraph annotation,
+			List<FetchGraphContribution> fetchGraphContributions) {
 		final String explicitName = annotation.name();
 		return new NamedEntityGraphDefinition(
 				StringHelper.isNotEmpty( explicitName ) ? explicitName : name,
 				persistentClass.getEntityName(),
 				NamedEntityGraphDefinition.Source.JPA,
-				new NamedGraphCreatorJpa( annotation, name ) );
+				new NamedGraphCreatorJpa( annotation, name, fetchGraphContributions, modelsContext() ) );
+	}
+
+	private List<FetchGraphContribution> collectFetchGraphContributions() {
+		final var contributions = new ArrayList<FetchGraphContribution>();
+		collectFetchGraphContributions( annotatedClass.getFields(), contributions );
+		collectFetchGraphContributions( annotatedClass.getMethods(), contributions );
+		collectFetchGraphContributions( annotatedClass.getRecordComponents(), contributions );
+		return contributions;
+	}
+
+	private void collectFetchGraphContributions(
+			List<? extends MemberDetails> members,
+			List<FetchGraphContribution> contributions) {
+		for ( var member : members ) {
+			member.forEachRepeatedAnnotationUsages(
+					JpaAnnotations.FETCH,
+					modelsContext(),
+					usage -> {
+						if ( StringHelper.isNotEmpty( usage.graph() ) ) {
+							contributions.add( fetchGraphContribution( member, usage ) );
+						}
+					}
+			);
+		}
+	}
+
+	private FetchGraphContribution fetchGraphContribution(MemberDetails member, jakarta.persistence.Fetch fetch) {
+		return new FetchGraphContribution(
+				fetch.graph(),
+				member.resolveAttributeName(),
+				nonEmptySubgraphNames( fetch.subgraph() ),
+				fetchOptions( fetch )
+		);
+	}
+
+	private static String[] nonEmptySubgraphNames(String[] subgraphNames) {
+		if ( subgraphNames.length == 0 ) {
+			return subgraphNames;
+		}
+		final var result = new ArrayList<String>();
+		for ( var subgraphName : subgraphNames ) {
+			if ( StringHelper.isNotEmpty( subgraphName ) ) {
+				result.add( subgraphName );
+			}
+		}
+		return result.toArray( new String[0] );
+	}
+
+	private static List<FetchOption> fetchOptions(jakarta.persistence.Fetch fetch) {
+		final var options = new ArrayList<FetchOption>();
+		options.add( fetch.type() );
+		if ( fetch.batchSize() >= 0 ) {
+			options.add( new BatchSize( fetch.batchSize() ) );
+		}
+		options.add( fetch.cacheStoreMode() );
+		options.add( fetch.cacheRetrieveMode() );
+		if ( fetch.hints().length > 0 ) {
+			options.add( FetchHintOptions.from( fetch.hints() ) );
+		}
+		return options;
+	}
+
+	private void validateFetchGraphNames(
+			List<FetchGraphContribution> fetchGraphContributions,
+			List<NamedEntityGraph> jpaNamedGraphs) {
+		if ( fetchGraphContributions.isEmpty() ) {
+			return;
+		}
+		final var jpaGraphNames = new HashSet<String>();
+		for ( var jpaNamedGraph : jpaNamedGraphs ) {
+			final String explicitName = jpaNamedGraph.name();
+			jpaGraphNames.add( StringHelper.isNotEmpty( explicitName ) ? explicitName : name );
+		}
+		for ( var fetchGraphContribution : fetchGraphContributions ) {
+			if ( !jpaGraphNames.contains( fetchGraphContribution.graphName() ) ) {
+				throw new AnnotationException(
+						"Attribute '" + fetchGraphContribution.attributeName()
+								+ "' is annotated '@Fetch' for an unknown entity graph '"
+								+ fetchGraphContribution.graphName() + "'" );
+			}
+		}
 	}
 
 	private void processParsedNamedEntityGraph(org.hibernate.annotations.NamedEntityGraph annotation) {

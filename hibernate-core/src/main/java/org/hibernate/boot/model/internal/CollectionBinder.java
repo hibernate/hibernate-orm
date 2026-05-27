@@ -1474,6 +1474,11 @@ public abstract class CollectionBinder {
 	}
 
 	private FetchType getJpaFetchType() {
+		final var jpaFetch = getGraphlessJpaFetch();
+		if ( jpaFetch != null ) {
+			return handlingDefault( jpaFetch.type() );
+		}
+
 		final var oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
 		if ( oneToMany != null ) {
 			return handlingDefault( oneToMany.fetch() );
@@ -1501,6 +1506,22 @@ public abstract class CollectionBinder {
 
 	private FetchType handlingDefault(FetchType specifiedType) {
 		return specifiedType == DEFAULT ? LAZY : specifiedType;
+	}
+
+	private jakarta.persistence.Fetch getGraphlessJpaFetch() {
+		final var result = new jakarta.persistence.Fetch[1];
+		property.forEachRepeatedAnnotationUsages(
+				JpaAnnotations.FETCH,
+				modelsContext(),
+				usage -> {
+					if ( result[0] == null
+							&& nullIfEmpty( usage.graph() ) == null
+							&& usage.subgraph().length == 0 ) {
+						result[0] = usage;
+					}
+				}
+		);
+		return result[0];
 	}
 
 	TypeDetails getElementType() {

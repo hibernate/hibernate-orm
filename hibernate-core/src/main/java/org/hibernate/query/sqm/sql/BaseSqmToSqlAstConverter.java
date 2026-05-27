@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.criteria.Predicate.BooleanOperator;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -481,6 +482,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private Map<NavigablePath, CacheStoreMode> fetchCacheStoreModes;
+	private Map<NavigablePath, CacheRetrieveMode> fetchCacheRetrieveModes;
 	private SqmStatement<?> currentSqmStatement;
 	private final Stack<SqmQueryPart<?>> sqmQueryPartStack = new StandardStack<>();
 	private CteContainer cteContainer;
@@ -8884,6 +8886,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						fetchablePath,
 						traversalResult.getCacheStoreMode()
 				);
+				registerFetchCacheRetrieveMode(
+						fetchablePath,
+						traversalResult.getCacheRetrieveMode()
+				);
 			}
 		}
 		else {
@@ -8898,6 +8904,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					registerFetchCacheStoreMode(
 							fetchablePath,
 							traversalResult.getCacheStoreMode()
+					);
+					registerFetchCacheRetrieveMode(
+							fetchablePath,
+							traversalResult.getCacheRetrieveMode()
 					);
 					if ( fetchStrategy != null ) {
 						fetchTiming = fetchStrategy.getFetchTiming();
@@ -9252,6 +9262,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public CacheStoreMode getFetchCacheStoreMode(NavigablePath fetchablePath) {
 		return fetchCacheStoreModes == null ? null : fetchCacheStoreModes.get( fetchablePath );
+	}
+
+	@Override
+	public void registerFetchCacheRetrieveMode(NavigablePath fetchablePath, CacheRetrieveMode cacheRetrieveMode) {
+		if ( cacheRetrieveMode != null ) {
+			if ( fetchCacheRetrieveModes == null ) {
+				fetchCacheRetrieveModes = new HashMap<>();
+			}
+			fetchCacheRetrieveModes.put( fetchablePath, cacheRetrieveMode );
+		}
+	}
+
+	@Override
+	public CacheRetrieveMode getFetchCacheRetrieveMode(NavigablePath fetchablePath) {
+		return fetchCacheRetrieveModes == null ? null : fetchCacheRetrieveModes.get( fetchablePath );
 	}
 
 	@Internal

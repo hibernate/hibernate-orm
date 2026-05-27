@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.LockMode;
@@ -42,6 +43,7 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer<Abstr
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
+			@Nullable CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState,
 			Fetch elementFetch) {
 		super(
@@ -53,6 +55,7 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer<Abstr
 				collectionValueKeyResult,
 				isResultInitializer,
 				cacheStoreMode,
+				cacheRetrieveMode,
 				creationState
 		);
 		this.elementAssembler = elementFetch.createAssembler( this, creationState );

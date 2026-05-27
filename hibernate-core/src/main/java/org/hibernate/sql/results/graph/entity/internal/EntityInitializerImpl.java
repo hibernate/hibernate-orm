@@ -8,7 +8,9 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.EntityFilterException;
@@ -112,6 +114,7 @@ public class EntityInitializerImpl
 	private final boolean isResultInitializer;
 	private final boolean hasKeyManyToOne;
 	private final CacheStoreMode cacheStoreMode;
+	private final CacheRetrieveMode cacheRetrieveMode;
 	/**
 	 * Indicates whether there is a high chance of the previous row to have the same entity key as the current row
 	 * and hence enable a check in the {@link #resolveKey(RowProcessingState)} phase which compare the previously read
@@ -251,6 +254,7 @@ public class EntityInitializerImpl
 
 		navigablePath = resultDescriptor.getNavigablePath();
 		cacheStoreMode = resultDescriptor.getCacheStoreMode();
+		cacheRetrieveMode = resultDescriptor.getCacheRetrieveMode();
 		isPartOfKey = Initializer.isPartOfKey( navigablePath, parent );
 		// If the parent already has previous row reuse enabled, we can skip that here
 		previousRowReuse = !isPreviousRowReuse( parent ) && (
@@ -1528,9 +1532,10 @@ public class EntityInitializerImpl
 						true,
 						false
 				);
-			}
-			// We have to query the second level cache if reference cache entries are used
-			else if ( entityDescriptor.canUseReferenceCacheEntries() ) {
+				}
+				// We have to query the second level cache if reference cache entries are used
+				// or if this fetch has an explicit graph cache retrieve mode
+				else if ( entityDescriptor.canUseReferenceCacheEntries() || cacheRetrieveMode != null ) {
 				final Object cached = resolveInstanceFromCache( data );
 				if ( cached != null ) {
 					// EARLY EXIT!!!
@@ -1580,12 +1585,16 @@ public class EntityInitializerImpl
 
 	// Used by Hibernate Reactive
 	protected Object resolveInstanceFromCache(EntityInitializerData data) {
-		return loadFromSecondLevelCache(
-				data.getRowProcessingState().getSession().asEventSource(),
-				null,
-				data.lockMode,
-				entityDescriptor,
-				data.entityKey
+		final var session = data.getRowProcessingState().getSession();
+		return withCacheRetrieveMode(
+				session,
+				() -> loadFromSecondLevelCache(
+						session.asEventSource(),
+						null,
+						data.lockMode,
+						entityDescriptor,
+						data.entityKey
+				)
 		);
 	}
 
@@ -2003,6 +2012,27 @@ public class EntityInitializerImpl
 		return cacheStoreMode == null
 				? session.getCacheMode().isRefreshEnabled()
 				: cacheStoreMode == CacheStoreMode.REFRESH;
+	}
+
+	private <T> T withCacheRetrieveMode(SharedSessionContractImplementor session, Supplier<T> action) {
+		if ( cacheRetrieveMode == null ) {
+			return action.get();
+		}
+		final var previousCacheMode = session.getCacheMode();
+		final var effectiveCacheMode = CacheMode.fromJpaModes(
+				cacheRetrieveMode,
+				previousCacheMode.getJpaStoreMode()
+		);
+		if ( effectiveCacheMode == previousCacheMode ) {
+			return action.get();
+		}
+		session.setCacheMode( effectiveCacheMode );
+		try {
+			return action.get();
+		}
+		finally {
+			session.setCacheMode( previousCacheMode );
+		}
 	}
 
 	protected void registerPossibleUniqueKeyEntries(

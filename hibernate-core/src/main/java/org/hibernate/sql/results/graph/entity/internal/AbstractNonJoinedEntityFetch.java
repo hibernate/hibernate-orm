@@ -6,6 +6,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.BitSet;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -37,6 +38,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	private final BasicFetch<?> discriminatorFetch;
 	private final boolean selectByUniqueKey;
 	private final CacheStoreMode cacheStoreMode;
+	private final CacheRetrieveMode cacheRetrieveMode;
 
 	public AbstractNonJoinedEntityFetch(
 			NavigablePath navigablePath,
@@ -53,6 +55,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 		this.discriminatorFetch = selectDiscriminator ? creationState.visitDiscriminatorFetch( this ) : null;
 		this.selectByUniqueKey = selectByUniqueKey;
 		this.cacheStoreMode = creationState.getFetchCacheStoreMode( navigablePath );
+		this.cacheRetrieveMode = creationState.getFetchCacheRetrieveMode( navigablePath );
 	}
 
 	protected AbstractNonJoinedEntityFetch(
@@ -62,7 +65,8 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 			DomainResult<?> keyResult,
 			BasicFetch<?> discriminatorFetch,
 			boolean selectByUniqueKey,
-			CacheStoreMode cacheStoreMode) {
+			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode) {
 		this.navigablePath = navigablePath;
 		this.fetchedModelPart = fetchedModelPart;
 		this.fetchParent = fetchParent;
@@ -70,6 +74,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 		this.discriminatorFetch = discriminatorFetch;
 		this.selectByUniqueKey = selectByUniqueKey;
 		this.cacheStoreMode = cacheStoreMode;
+		this.cacheRetrieveMode = cacheRetrieveMode;
 	}
 
 	@Override
@@ -90,6 +95,11 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	@Override
 	public CacheStoreMode getCacheStoreMode() {
 		return cacheStoreMode;
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return cacheRetrieveMode;
 	}
 
 	@Override

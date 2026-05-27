@@ -432,6 +432,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public CacheImplementor getCache() {
 		return new DisabledCaching(this);
 	}

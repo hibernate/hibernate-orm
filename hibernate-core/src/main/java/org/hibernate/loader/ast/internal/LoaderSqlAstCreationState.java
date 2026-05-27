@@ -70,6 +70,7 @@ public class LoaderSqlAstCreationState
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 	private Map<NavigablePath, CacheStoreMode> fetchCacheStoreModes;
+	private Map<NavigablePath, CacheRetrieveMode> fetchCacheRetrieveModes;
 
 	public LoaderSqlAstCreationState(
 			QueryPart queryPart,
@@ -220,6 +221,21 @@ public class LoaderSqlAstCreationState
 	@Override
 	public CacheStoreMode getFetchCacheStoreMode(NavigablePath fetchablePath) {
 		return fetchCacheStoreModes == null ? null : fetchCacheStoreModes.get( fetchablePath );
+	}
+
+	@Override
+	public void registerFetchCacheRetrieveMode(NavigablePath fetchablePath, CacheRetrieveMode cacheRetrieveMode) {
+		if ( cacheRetrieveMode != null ) {
+			if ( fetchCacheRetrieveModes == null ) {
+				fetchCacheRetrieveModes = new HashMap<>();
+			}
+			fetchCacheRetrieveModes.put( fetchablePath, cacheRetrieveMode );
+		}
+	}
+
+	@Override
+	public CacheRetrieveMode getFetchCacheRetrieveMode(NavigablePath fetchablePath) {
+		return fetchCacheRetrieveModes == null ? null : fetchCacheRetrieveModes.get( fetchablePath );
 	}
 
 	@Override

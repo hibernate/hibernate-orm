@@ -101,6 +101,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * Obtain the {@link CacheImplementor}.
 	 */
 	@Override
+	@Nonnull
 	CacheImplementor getCache();
 
 	/**

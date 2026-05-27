@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -27,16 +28,19 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 
 	private final FetchParent fetchParent;
 	private final CacheStoreMode cacheStoreMode;
+	private final CacheRetrieveMode cacheRetrieveMode;
 
 	public CollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			FetchParent fetchParent,
-			CacheStoreMode cacheStoreMode) {
+			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode) {
 		this.fetchedPath = fetchedPath;
 		this.fetchedAttribute = fetchedAttribute;
 		this.fetchParent = fetchParent;
 		this.cacheStoreMode = cacheStoreMode;
+		this.cacheRetrieveMode = cacheRetrieveMode;
 	}
 
 	@Override
@@ -51,6 +55,10 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 
 	public CacheStoreMode getCacheStoreMode() {
 		return cacheStoreMode;
+	}
+
+	public CacheRetrieveMode getCacheRetrieveMode() {
+		return cacheRetrieveMode;
 	}
 
 	@Override

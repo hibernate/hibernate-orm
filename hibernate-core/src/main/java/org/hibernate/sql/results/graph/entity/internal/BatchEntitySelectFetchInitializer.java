@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.engine.spi.EntityKey;
@@ -48,9 +49,10 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, creationState );
 		parentAttributes = getParentEntityAttributes( referencedModelPart.getAttributeName() );
 		referencedModelPartSetter = referencedModelPart.getPropertyAccess().getSetter();
 		referencedModelPartType =

@@ -46,7 +46,8 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 				original.getKeyResult(),
 				original.getDiscriminatorFetch(),
 				original.isSelectByUniqueKey(),
-				original.getCacheStoreMode()
+				original.getCacheStoreMode(),
+				original.getCacheRetrieveMode()
 		);
 		this.isAffectedByFilter = original.isAffectedByFilter();
 	}
@@ -71,6 +72,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 				isSelectByUniqueKey(),
 				isAffectedByFilter(),
 				getCacheStoreMode(),
+				getCacheRetrieveMode(),
 				creationState
 		);
 	}

@@ -1012,6 +1012,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	@Nonnull
 	public CacheImplementor getCache() {
 		validateNotClosed();
 		return cacheAccess;

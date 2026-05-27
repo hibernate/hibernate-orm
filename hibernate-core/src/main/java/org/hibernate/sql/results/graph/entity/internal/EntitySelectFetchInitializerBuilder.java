@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -34,6 +35,7 @@ public class EntitySelectFetchInitializerBuilder {
 			boolean selectByUniqueKey,
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState) {
 		if ( selectByUniqueKey ) {
 			return new EntitySelectFetchByUniqueKeyInitializer(
@@ -44,6 +46,7 @@ public class EntitySelectFetchInitializerBuilder {
 					keyResult,
 					affectedByFilter,
 					cacheStoreMode,
+					cacheRetrieveMode,
 					creationState
 			);
 		}
@@ -57,6 +60,7 @@ public class EntitySelectFetchInitializerBuilder {
 					keyResult,
 					affectedByFilter,
 					cacheStoreMode,
+					cacheRetrieveMode,
 					creationState
 			);
 		}
@@ -71,6 +75,7 @@ public class EntitySelectFetchInitializerBuilder {
 						keyResult,
 						affectedByFilter,
 						cacheStoreMode,
+						cacheRetrieveMode,
 						creationState
 				);
 			case BATCH_LOAD:
@@ -83,6 +88,7 @@ public class EntitySelectFetchInitializerBuilder {
 							keyResult,
 							affectedByFilter,
 							cacheStoreMode,
+							cacheRetrieveMode,
 							creationState
 					);
 				}
@@ -95,6 +101,7 @@ public class EntitySelectFetchInitializerBuilder {
 							keyResult,
 							affectedByFilter,
 							cacheStoreMode,
+							cacheRetrieveMode,
 							creationState
 					);
 				}
@@ -107,6 +114,7 @@ public class EntitySelectFetchInitializerBuilder {
 						keyResult,
 						affectedByFilter,
 						cacheStoreMode,
+						cacheRetrieveMode,
 						creationState
 				);
 		}

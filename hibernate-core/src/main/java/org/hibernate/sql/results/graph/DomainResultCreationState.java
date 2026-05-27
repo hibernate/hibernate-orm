@@ -6,6 +6,7 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Function;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.Incubating;
@@ -208,6 +209,20 @@ public interface DomainResultCreationState {
 	 * or {@code null} when the fetch should use the session/query cache mode.
 	 */
 	default CacheStoreMode getFetchCacheStoreMode(NavigablePath fetchablePath) {
+		return null;
+	}
+
+	/**
+	 * Register the {@link CacheRetrieveMode} applied by an entity graph to a fetch path.
+	 */
+	default void registerFetchCacheRetrieveMode(NavigablePath fetchablePath, CacheRetrieveMode cacheRetrieveMode) {
+	}
+
+	/**
+	 * The {@link CacheRetrieveMode} applied by an entity graph to this fetch path,
+	 * or {@code null} when the fetch should use the session/query cache mode.
+	 */
+	default CacheRetrieveMode getFetchCacheRetrieveMode(NavigablePath fetchablePath) {
 		return null;
 	}
 }

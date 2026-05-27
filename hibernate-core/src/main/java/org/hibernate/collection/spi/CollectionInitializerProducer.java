@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.Incubating;
@@ -51,5 +52,6 @@ public interface CollectionInitializerProducer {
 			DomainResult<?> collectionValueKeyResult,
 			boolean isResultInitializer,
 			CacheStoreMode cacheStoreMode,
+			CacheRetrieveMode cacheRetrieveMode,
 			AssemblerCreationState creationState);
 }

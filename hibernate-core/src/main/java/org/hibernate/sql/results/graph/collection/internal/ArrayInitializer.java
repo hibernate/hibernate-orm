@@ -48,6 +48,7 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState,
 			Fetch listIndexFetch,
 			Fetch elementFetch) {
@@ -61,6 +62,7 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer<Abs
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 		//noinspection unchecked

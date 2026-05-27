@@ -44,6 +44,7 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer<Abstr
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState,
 			Fetch elementFetch) {
 		super(
@@ -56,6 +57,7 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer<Abstr
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 		this.elementAssembler = elementFetch.createAssembler( this, creationState );

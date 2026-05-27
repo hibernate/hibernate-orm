@@ -33,9 +33,10 @@ public class EntitySelectFetchByUniqueKeyInitializer
 			boolean affectedByFilter,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		super( parent, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
-				cacheStoreMode, cacheRetrieveMode, creationState );
+				cacheStoreMode, cacheRetrieveMode, batchSize, creationState );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 
@@ -57,7 +58,7 @@ public class EntitySelectFetchByUniqueKeyInitializer
 				);
 		data.setInstance( persistenceContext.getEntity( entityUniqueKey ) );
 		if ( data.getInstance() == null ) {
-			final Object instance = withCacheModes(
+			final Object instance = withFetchOptions(
 					session,
 					() -> concreteDescriptor.loadByUniqueKey( uniqueKeyPropertyName, data.entityIdentifier, session )
 			);

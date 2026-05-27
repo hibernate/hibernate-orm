@@ -57,6 +57,7 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 			boolean isResultInitializer,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		return new BagInitializer(
 				navigablePath,
@@ -68,6 +69,7 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState,
 				elementFetch,
 				collectionIdFetch

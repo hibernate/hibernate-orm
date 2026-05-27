@@ -29,18 +29,21 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 	private final FetchParent fetchParent;
 	private final CacheStoreMode cacheStoreMode;
 	private final CacheRetrieveMode cacheRetrieveMode;
+	private final Integer batchSize;
 
 	public CollectionFetch(
 			NavigablePath fetchedPath,
-			PluralAttributeMapping fetchedAttribute,
-			FetchParent fetchParent,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode) {
+				PluralAttributeMapping fetchedAttribute,
+				FetchParent fetchParent,
+				CacheStoreMode cacheStoreMode,
+				CacheRetrieveMode cacheRetrieveMode,
+				Integer batchSize) {
 		this.fetchedPath = fetchedPath;
 		this.fetchedAttribute = fetchedAttribute;
 		this.fetchParent = fetchParent;
 		this.cacheStoreMode = cacheStoreMode;
 		this.cacheRetrieveMode = cacheRetrieveMode;
+		this.batchSize = batchSize;
 	}
 
 	@Override
@@ -59,6 +62,10 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return cacheRetrieveMode;
+	}
+
+	public Integer getBatchSize() {
+		return batchSize;
 	}
 
 	@Override

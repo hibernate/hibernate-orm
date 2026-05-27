@@ -36,6 +36,10 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 		return null;
 	}
 
+	default Integer getBatchSize() {
+		return null;
+	}
+
 	@Override
 	default boolean containsAnyNonScalarResults() {
 		return true;

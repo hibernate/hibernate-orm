@@ -56,7 +56,8 @@ public class EagerCollectionFetch extends CollectionFetch {
 				fetchedAttribute,
 				fetchParent,
 				creationState.getFetchCacheStoreMode( fetchedPath ),
-				creationState.getFetchCacheRetrieveMode( fetchedPath )
+				creationState.getFetchCacheRetrieveMode( fetchedPath ),
+				creationState.getFetchBatchSize( fetchedPath )
 		);
 		this.collectionTableGroup = (PluralTableGroup) collectionTableGroup;
 
@@ -195,6 +196,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 				false,
 				getCacheStoreMode(),
 				getCacheRetrieveMode(),
+				getBatchSize(),
 				creationState
 		);
 	}

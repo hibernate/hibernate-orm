@@ -45,6 +45,7 @@ public class ListInitializerProducer implements CollectionInitializerProducer {
 			boolean isResultInitializer,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		return new ListInitializer(
 				navigablePath,
@@ -56,6 +57,7 @@ public class ListInitializerProducer implements CollectionInitializerProducer {
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState,
 				listIndexFetch,
 				elementFetch

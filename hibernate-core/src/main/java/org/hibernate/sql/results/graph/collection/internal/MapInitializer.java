@@ -50,6 +50,7 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 			boolean isResultInitializer,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState,
 			Fetch mapKeyFetch,
 			Fetch mapValueFetch) {
@@ -63,6 +64,7 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer<Abstr
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 		mapKeyAssembler = mapKeyFetch.createAssembler( this, creationState );

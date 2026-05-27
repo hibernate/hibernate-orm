@@ -49,9 +49,10 @@ public interface CollectionInitializerProducer {
 			InitializerParent<?> parent,
 			LockMode lockMode,
 			DomainResult<?> collectionKeyResult,
-			DomainResult<?> collectionValueKeyResult,
-			boolean isResultInitializer,
-			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode,
-			AssemblerCreationState creationState);
+				DomainResult<?> collectionValueKeyResult,
+				boolean isResultInitializer,
+				CacheStoreMode cacheStoreMode,
+				CacheRetrieveMode cacheRetrieveMode,
+				Integer batchSize,
+				AssemblerCreationState creationState);
 }

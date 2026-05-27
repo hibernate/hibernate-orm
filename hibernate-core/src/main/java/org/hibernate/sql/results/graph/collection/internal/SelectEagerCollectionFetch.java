@@ -33,8 +33,9 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 			DomainResult<?> collectionKeyDomainResult,
 			FetchParent fetchParent,
 			CacheStoreMode cacheStoreMode,
-			CacheRetrieveMode cacheRetrieveMode) {
-		super( fetchedPath, fetchedAttribute, fetchParent, cacheStoreMode, cacheRetrieveMode );
+			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize) {
+		super( fetchedPath, fetchedAttribute, fetchParent, cacheStoreMode, cacheRetrieveMode, batchSize );
 		this.collectionKeyDomainResult = collectionKeyDomainResult;
 	}
 
@@ -56,6 +57,7 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 				collectionKeyDomainResult,
 				getCacheStoreMode(),
 				getCacheRetrieveMode(),
+				getBatchSize(),
 				creationState
 		);
 	}

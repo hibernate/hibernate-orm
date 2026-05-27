@@ -29,6 +29,7 @@ public class DelayedCollectionInitializer extends AbstractNonJoinCollectionIniti
 			DomainResult<?> collectionKeyResult,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState) {
 		super(
 				fetchedPath,
@@ -38,6 +39,7 @@ public class DelayedCollectionInitializer extends AbstractNonJoinCollectionIniti
 				false,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 	}

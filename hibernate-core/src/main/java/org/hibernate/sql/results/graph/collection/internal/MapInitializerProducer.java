@@ -45,6 +45,7 @@ public class MapInitializerProducer implements CollectionInitializerProducer {
 			boolean isResultInitializer,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		return new MapInitializer(
 				navigablePath,
@@ -56,6 +57,7 @@ public class MapInitializerProducer implements CollectionInitializerProducer {
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState,
 				mapKeyFetch,
 				mapValueFetch

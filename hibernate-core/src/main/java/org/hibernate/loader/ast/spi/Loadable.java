@@ -50,7 +50,8 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 	}
 
 	default boolean isAffectedByBatchSize(LoadQueryInfluencers influencers) {
-		return influencers.getBatchSize() > 0
+		return influencers.hasBatchSizeOverride()
+			|| influencers.getBatchSize() > 0
 			&& influencers.getBatchSize() != getBatchSize();
 	}
 

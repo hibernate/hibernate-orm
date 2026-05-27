@@ -43,6 +43,10 @@ public interface CollectionInitializer<Data extends InitializerData> extends Ini
 		return null;
 	}
 
+	default @Nullable Integer getBatchSize() {
+		return null;
+	}
+
 	@Override
 	default boolean isCollectionInitializer() {
 		return true;

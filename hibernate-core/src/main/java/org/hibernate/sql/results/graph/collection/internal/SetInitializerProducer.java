@@ -42,6 +42,7 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 			boolean isResultInitializer,
 			CacheStoreMode cacheStoreMode,
 			CacheRetrieveMode cacheRetrieveMode,
+			Integer batchSize,
 			AssemblerCreationState creationState) {
 		return new SetInitializer(
 				navigablePath,
@@ -53,6 +54,7 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 				isResultInitializer,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState,
 				elementFetch
 		);

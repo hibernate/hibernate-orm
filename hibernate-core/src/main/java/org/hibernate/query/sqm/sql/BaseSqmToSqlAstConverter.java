@@ -483,6 +483,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private Map<NavigablePath, CacheStoreMode> fetchCacheStoreModes;
 	private Map<NavigablePath, CacheRetrieveMode> fetchCacheRetrieveModes;
+	private Map<NavigablePath, Integer> fetchBatchSizes;
 	private SqmStatement<?> currentSqmStatement;
 	private final Stack<SqmQueryPart<?>> sqmQueryPartStack = new StandardStack<>();
 	private CteContainer cteContainer;
@@ -8890,6 +8891,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						fetchablePath,
 						traversalResult.getCacheRetrieveMode()
 				);
+				registerFetchBatchSize(
+						fetchablePath,
+						traversalResult.getBatchSize()
+				);
 			}
 		}
 		else {
@@ -8908,6 +8913,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					registerFetchCacheRetrieveMode(
 							fetchablePath,
 							traversalResult.getCacheRetrieveMode()
+					);
+					registerFetchBatchSize(
+							fetchablePath,
+							traversalResult.getBatchSize()
 					);
 					if ( fetchStrategy != null ) {
 						fetchTiming = fetchStrategy.getFetchTiming();
@@ -9277,6 +9286,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public CacheRetrieveMode getFetchCacheRetrieveMode(NavigablePath fetchablePath) {
 		return fetchCacheRetrieveModes == null ? null : fetchCacheRetrieveModes.get( fetchablePath );
+	}
+
+	@Override
+	public void registerFetchBatchSize(NavigablePath fetchablePath, Integer batchSize) {
+		if ( batchSize != null ) {
+			if ( fetchBatchSizes == null ) {
+				fetchBatchSizes = new HashMap<>();
+			}
+			fetchBatchSizes.put( fetchablePath, batchSize );
+		}
+	}
+
+	@Override
+	public Integer getFetchBatchSize(NavigablePath fetchablePath) {
+		return fetchBatchSizes == null ? null : fetchBatchSizes.get( fetchablePath );
 	}
 
 	@Internal

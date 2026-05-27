@@ -835,6 +835,10 @@ public class LoaderSelectBuilder {
 							fetchablePath,
 							traversalResult.getCacheRetrieveMode()
 					);
+					creationState.registerFetchBatchSize(
+							fetchablePath,
+							traversalResult.getBatchSize()
+					);
 					if ( fetchStrategy != null ) {
 						fetchTiming = fetchStrategy.getFetchTiming();
 						joined = fetchStrategy.isJoined();

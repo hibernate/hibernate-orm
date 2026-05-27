@@ -30,6 +30,7 @@ public class SelectEagerCollectionInitializer
 			@Nullable DomainResult<?> collectionKeyResult,
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
 			AssemblerCreationState creationState) {
 		super(
 				fetchedPath,
@@ -39,6 +40,7 @@ public class SelectEagerCollectionInitializer
 				false,
 				cacheStoreMode,
 				cacheRetrieveMode,
+				batchSize,
 				creationState
 		);
 	}
@@ -63,7 +65,7 @@ public class SelectEagerCollectionInitializer
 			final var collection = getCollection( data, instance );
 			data.setState( State.INITIALIZED );
 			data.setCollectionInstance( collection );
-			withCacheModes(
+			withFetchOptions(
 					data.getRowProcessingState().getSession(),
 					() -> {
 						collection.forceInitialization();

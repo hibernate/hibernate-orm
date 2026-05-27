@@ -7,6 +7,7 @@ package org.hibernate.sql.results.internal;
 import java.util.Map;
 import java.util.Objects;
 
+import jakarta.persistence.BatchSize;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FetchOption;
@@ -63,11 +64,13 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 			final var attributeNode = appliesTo( fetchParent )
 					? currentGraphContext.findNode( fetchable.getFetchableName() )
 					: null;
+			final var batchSize = getBatchSize( attributeNode );
 			currentGraphContext = null;
 			return new TraversalResult( previousContextRoot,
-					handleFetchType( fetchable, exploreKeySubgraph, attributeNode ),
+					handleFetchType( fetchable, exploreKeySubgraph, attributeNode, batchSize ),
 					getCacheStoreMode( attributeNode ),
-					getCacheRetrieveMode( attributeNode ) );
+					getCacheRetrieveMode( attributeNode ),
+					batchSize );
 		}
 	}
 
@@ -95,8 +98,23 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 		return null;
 	}
 
-	private FetchStrategy handleFetchType
-			(Fetchable fetchable, boolean exploreKeySubgraph, AttributeNodeImplementor<?, ?, ?> attributeNode) {
+	private static Integer getBatchSize(AttributeNodeImplementor<?, ?, ?> attributeNode) {
+		if ( attributeNode == null ) {
+			return null;
+		}
+		for ( FetchOption option : attributeNode.getOptions() ) {
+			if ( option instanceof BatchSize batchSize && batchSize.batchSize() >= 0 ) {
+				return batchSize.batchSize();
+			}
+		}
+		return null;
+	}
+
+	private FetchStrategy handleFetchType(
+			Fetchable fetchable,
+			boolean exploreKeySubgraph,
+			AttributeNodeImplementor<?, ?, ?> attributeNode,
+			Integer batchSize) {
 		final var fetchType = attributeNode == null ? null : attributeNode.getFetchType();
 		if ( fetchType != null ) {
 			switch ( fetchType ) {
@@ -123,7 +141,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 					if ( subgraphMap != null && subgraphMapKey != null ) {
 						currentGraphContext = subgraphMap.get( subgraphMapKey );
 					}
-					return new FetchStrategy( FetchTiming.IMMEDIATE, true );
+					return new FetchStrategy( FetchTiming.IMMEDIATE, batchSize == null );
 				case LAZY:
 					return new FetchStrategy( FetchTiming.DELAYED, false );
 				default:

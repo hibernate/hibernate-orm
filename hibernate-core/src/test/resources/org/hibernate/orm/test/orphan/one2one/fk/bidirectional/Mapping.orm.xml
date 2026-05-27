@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.orphan.one2one.fk.bidirectional</package>
+    <attribute-accessor>property</attribute-accessor>
+    <entity class="Employee" metadata-complete="true">
+        <table name="Employee"/>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="increment"/>
+            </id>
+            <one-to-one name="info" target-entity="EmployeeInfo" fetch="EAGER" fetch-mode="JOIN" optional="true" orphan-removal="true" mapped-by="employee">
+                <cascade>
+                    <cascade-all/>
+                    <cascade-remove/>
+                </cascade>
+            </one-to-one>
+        </attributes>
+    </entity>
+    <entity class="EmployeeInfo" metadata-complete="true">
+        <table name="EmployeeInfo"/>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="increment"/>
+            </id>
+            <many-to-one name="employee" fetch="LAZY" fetch-mode="SELECT" optional="false" not-found="EXCEPTION">
+                <join-column name="employee_id" table="EmployeeInfo"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

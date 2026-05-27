@@ -32,6 +32,7 @@ import org.hibernate.query.MutationOrSelectionQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
@@ -130,6 +131,9 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 		}
 		catch (IllegalSelectQueryException e) {
 			throw new IllegalStateException( e.getMessage(), e );
+		}
+		catch (QueryTypeMismatchException e) {
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 	}
 

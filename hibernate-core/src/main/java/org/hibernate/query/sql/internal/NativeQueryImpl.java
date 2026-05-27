@@ -576,6 +576,7 @@ public class NativeQueryImpl<R>
 	@Nonnull
 	public <X> NativeQueryImplementor<X> asSelectionQuery(Class<X> type) {
 		errorIfNotSelectForSure();
+		checkResultType( type, resultSetMapping() );
 		//noinspection unchecked
 		return (NativeQueryImplementor<X>) this;
 	}
@@ -2021,7 +2022,7 @@ public class NativeQueryImpl<R>
 		}
 	}
 
-	private void checkResultType(Class<R> resultType, ResultSetMapping resultSetMapping) {
+	private void checkResultType(Class<?> resultType, ResultSetMapping resultSetMapping) {
 		// resultType can be null if any of the deprecated methods were used to create the query
 		if ( resultType != null && !isResultTypeAlwaysAllowed( resultType )) {
 			switch ( resultSetMapping.getNumberOfResultBuilders() ) {
@@ -2051,7 +2052,7 @@ public class NativeQueryImpl<R>
 		}
 	}
 
-	private boolean validConstructorFoundForResultType(Class<R> resultType, ResultSetMapping resultSetMapping) {
+	private boolean validConstructorFoundForResultType(Class<?> resultType, ResultSetMapping resultSetMapping) {
 		// TODO: Only one constructor with the right number of parameters is allowed
 		//       (see NativeQueryConstructorTransformer) so we should validate that
 		outer: for ( var constructor : resultType.getConstructors() ) {

@@ -4,12 +4,15 @@
  */
 package org.hibernate.orm.test.query.graph;
 
+import jakarta.persistence.ColumnResult;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedEntityGraph;
@@ -26,6 +29,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 /**
@@ -125,6 +129,23 @@ public class QueryWithGraphTests {
 	}
 
 	@Test
+	void ofTypeRejectsIncompatibleHqlResultType(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> assertThatIllegalArgumentException()
+				.isThrownBy( () -> session.createQuery( "select p.name from Publisher p" )
+						.ofType( Publisher.class ) ) );
+		factoryScope.inTransaction( (session) -> assertThatIllegalArgumentException()
+				.isThrownBy( () -> session.createQuery("SELECT p FROM Publisher p")
+						.ofType(String.class)) );
+	}
+
+	@Test
+	void ofTypeRejectsIncompatibleNativeResultSetMapping(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> assertThatIllegalArgumentException()
+				.isThrownBy( () -> session.createNamedQuery( "Publisher.nativeNames" )
+						.ofType( Integer.class ) ) );
+	}
+
+	@Test
 	void resultSetMappingIsRejectedForJpaQuery(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> assertThatIllegalStateException()
 				.isThrownBy( () -> session.createQuery( "from Publisher" )
@@ -138,6 +159,15 @@ public class QueryWithGraphTests {
 			query = "from Publisher",
 			resultClass = Publisher.class,
 			entityGraph = "pub-with-books"
+	)
+	@NamedNativeQuery(
+			name = "Publisher.nativeNames",
+			query = "select name from Publisher",
+			resultSetMapping = "Publisher.nameMapping"
+	)
+	@SqlResultSetMapping(
+			name = "Publisher.nameMapping",
+			columns = @ColumnResult(name = "name", type = String.class)
 	)
 	@NamedEntityGraph(
 			name = "pub-with-books",

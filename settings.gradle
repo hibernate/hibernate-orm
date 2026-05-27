@@ -32,6 +32,14 @@ dependencyResolutionManagement {
         if ( System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR'] ) {
             maven {
                 url System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR']
+                if ( System.getProperty( 'MAVEN_MIRROR_USERNAME' ) || System.env['MAVEN_MIRROR_USERNAME'] ) {
+                    credentials {
+                        username = System.getProperty( 'MAVEN_MIRROR_USERNAME' ) ?: System.env['MAVEN_MIRROR_USERNAME']
+                        if ( System.getProperty( 'MAVEN_MIRROR_PASSWORD' ) || System.env['MAVEN_MIRROR_PASSWORD'] ) {
+                            password = System.getProperty( 'MAVEN_MIRROR_PASSWORD' ) ?: System.env['MAVEN_MIRROR_PASSWORD']
+                        }
+                    }
+                }
             }
         }
         else {

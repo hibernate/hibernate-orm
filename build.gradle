@@ -23,7 +23,6 @@ plugins {
     alias(libs.plugins.bndPlugin) apply false
 
     alias(libs.plugins.spotless)
-    alias(libs.plugins.checkerFramework)
 	alias(libs.plugins.hibernateBuildJdks)
 
     alias(libs.plugins.nexusPublish)

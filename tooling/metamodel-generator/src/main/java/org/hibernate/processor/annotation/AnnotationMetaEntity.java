@@ -3338,7 +3338,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					+ "' in entity class '" + entityType.getQualifiedName() + "'",
 					Diagnostic.Kind.ERROR );
 		}
-		return new OrderBy( path, descending, ignoreCase );
+		final String resolvedPath = isIdRef( path )
+				? idAttributeName( entityType )
+				: path;
+		return new OrderBy( resolvedPath, descending, ignoreCase );
 	}
 
 	private static @Nullable TypeMirror getTypeArgument(TypeMirror parameterType) {

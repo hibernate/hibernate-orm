@@ -27,7 +27,7 @@ public class Java5FeaturesTest {
 
 	@AfterEach
 	public void afterEach(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

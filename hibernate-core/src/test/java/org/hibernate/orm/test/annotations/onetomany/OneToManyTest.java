@@ -106,7 +106,7 @@ public class OneToManyTest {
 
 	@AfterEach
 	public void afterEach(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

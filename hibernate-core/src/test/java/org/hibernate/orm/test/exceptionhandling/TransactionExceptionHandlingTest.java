@@ -35,7 +35,7 @@ public class TransactionExceptionHandlingTest extends BaseExceptionHandlingTest 
 	@AfterEach
 	void tearDown() {
 		//noinspection resource
-		sessionFactory().getSchemaManager().truncateMappedObjects();
+		sessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

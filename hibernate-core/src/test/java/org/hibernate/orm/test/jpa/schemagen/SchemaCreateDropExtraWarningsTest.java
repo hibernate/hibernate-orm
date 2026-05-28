@@ -37,9 +37,7 @@ public class SchemaCreateDropExtraWarningsTest extends EntityManagerFactoryBased
 			// No warnings on startup
 			assertFalse( watcher.wasTriggered() );
 
-			emf.unwrap( SessionFactory.class )
-					.getSchemaManager()
-					.dropMappedObjects( false );
+			emf.unwrap( SessionFactory.class ).getSchemaManager().drop( false );
 			// No warnings on explicit drop
 			assertFalse( watcher.wasTriggered() );
 		}

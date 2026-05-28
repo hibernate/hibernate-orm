@@ -361,7 +361,7 @@ public class SynchronizedSpaceTests {
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) {
 		cleanupCache( scope );
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private void cleanupCache(SessionFactoryScope scope) {

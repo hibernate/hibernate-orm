@@ -73,6 +73,6 @@ public class GenericEmbeddableSuperclassMetamodelTest {
 
 	@AfterAll
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncateMappedObjects();
+		scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncate();
 	}
 }

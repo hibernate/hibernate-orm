@@ -72,7 +72,7 @@ public class CollectionCacheEvictionTest {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) throws Exception {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.getSessionFactory().getCache().evictAll();
 	}
 

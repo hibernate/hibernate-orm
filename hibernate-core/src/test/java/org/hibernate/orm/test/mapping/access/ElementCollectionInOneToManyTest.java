@@ -83,7 +83,7 @@ public class ElementCollectionInOneToManyTest {
 	}
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 	@Entity(name = "Author")
 	public static class Author {

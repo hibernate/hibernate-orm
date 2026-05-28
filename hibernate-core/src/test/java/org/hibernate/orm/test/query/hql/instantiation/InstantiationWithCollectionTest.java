@@ -36,7 +36,7 @@ public class InstantiationWithCollectionTest {
 
 	@Test
 	void testElements(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 
 		Entity entity = new Entity("hello", "world");
 		scope.inTransaction(s -> s.persist(entity));
@@ -84,7 +84,7 @@ public class InstantiationWithCollectionTest {
 
 	@Test
 	void testAssociation(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 
 		Entity entity = new Entity("hello", "world");
 		entity.children.add(new ChildEntity(entity, "goodbye"));

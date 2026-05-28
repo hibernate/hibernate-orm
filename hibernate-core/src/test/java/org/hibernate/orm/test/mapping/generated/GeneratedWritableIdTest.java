@@ -49,7 +49,7 @@ public class GeneratedWritableIdTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "TestEntity")

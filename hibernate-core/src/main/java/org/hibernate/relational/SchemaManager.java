@@ -8,11 +8,11 @@ import org.hibernate.Incubating;
 import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
 
 /**
- * Allows programmatic {@linkplain #exportMappedObjects schema export},
- * {@linkplain #validateMappedObjects schema validation},
- * {@linkplain #truncateMappedObjects data cleanup},
+ * Allows programmatic {@linkplain #create schema export},
+ * {@linkplain #validate schema validation},
+ * {@linkplain #truncate data cleanup},
  * {@linkplain #populate data population}, and
- * {@linkplain #dropMappedObjects schema cleanup} as a convenience for
+ * {@linkplain #drop schema cleanup} as a convenience for
  * writing tests.
  *
  * @see org.hibernate.SessionFactory#getSchemaManager()
@@ -30,44 +30,6 @@ import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
 @Incubating
 public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	/**
-	 * Export database objects mapped by Hibernate entities, and then
-	 * import initial data from {@code /import.sql} and any other configured
-	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
-	 * load script}.
-	 * <p>
-	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaCreator}.
-	 *
-	 * @param createSchemas if {@code true}, attempt to create schemas,
-	 *                      otherwise, assume the schemas already exist
-	 *
-	 * @apiNote This operation is a synonym for {@link #create}.
-	 */
-	void exportMappedObjects(boolean createSchemas);
-
-	/**
-	 * Drop database objects mapped by Hibernate entities, undoing the
-	 * {@linkplain #exportMappedObjects(boolean) previous export}.
-	 * <p>
-	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaDropper}.
-	 *
-	 * @param dropSchemas if {@code true}, drop schemas,
-	 *                    otherwise, leave them be
-	 *
-	 * @apiNote This operation is a synonym for {@link #drop}.
-	 */
-	void dropMappedObjects(boolean dropSchemas);
-
-	/**
-	 * Validate that the database objects mapped by Hibernate entities
-	 * have the expected definitions.
-	 * <p>
-	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaValidator}.
-	 *
-	 * @apiNote This operation is a synonym for {@link #validate}.
-	 */
-	void validateMappedObjects();
-
-	/**
 	 * Truncate the database tables mapped by Hibernate entities, reset all associated
 	 * {@linkplain jakarta.persistence.SequenceGenerator sequences} and tables backing
 	 * {@linkplain jakarta.persistence.TableGenerator table generators}, and then
@@ -82,9 +44,10 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 * also call {@link org.hibernate.Cache#evictAllRegions} to clean up data held in the
 	 * second-level cache.
 	 *
-	 * @apiNote This operation is a synonym for {@link #truncate}.
+	 * @since 7.0
 	 */
-	void truncateMappedObjects();
+	@Override
+	void truncate();
 
 	/**
 	 * Truncate the given database table, and reset any associated
@@ -120,7 +83,7 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 */
-	@Incubating
+	@Override
 	void populate();
 
 	/**
@@ -165,4 +128,72 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 */
 	@Incubating
 	SchemaManager forCatalog(String catalogName);
+
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Deprecated operations
+
+	/**
+	 * Export database objects mapped by Hibernate entities, and then
+	 * import initial data from {@code /import.sql} and any other configured
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * load script}.
+	 * <p>
+	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaCreator}.
+	 *
+	 * @param createSchemas if {@code true}, attempt to create schemas,
+	 *                      otherwise, assume the schemas already exist
+	 *
+	 * @apiNote This operation is a synonym for {@link #create}.
+	 * @deprecated Use {@link #create} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.0")
+	void exportMappedObjects(boolean createSchemas);
+
+	/**
+	 * Drop database objects mapped by Hibernate entities, undoing the
+	 * {@linkplain #exportMappedObjects previous export}.
+	 * <p>
+	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaDropper}.
+	 *
+	 * @param dropSchemas if {@code true}, drop schemas,
+	 *                    otherwise, leave them be
+	 *
+	 * @apiNote This operation is a synonym for {@link #drop}.
+	 * @deprecated Use {@link #drop} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.0")
+	void dropMappedObjects(boolean dropSchemas);
+
+	/**
+	 * Validate that the database objects mapped by Hibernate entities
+	 * have the expected definitions.
+	 * <p>
+	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaValidator}.
+	 *
+	 * @apiNote This operation is a synonym for {@link #validate}.
+	 * @deprecated Use {@link #validate} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.0")
+	void validateMappedObjects();
+
+	/**
+	 * Truncate the database tables mapped by Hibernate entities, reset all associated
+	 * {@linkplain jakarta.persistence.SequenceGenerator sequences} and tables backing
+	 * {@linkplain jakarta.persistence.TableGenerator table generators}, and then
+	 * reimport initial data from {@code /import.sql} and any other configured
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * load script}.
+	 * <p>
+	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaTruncator}.
+	 * <p>
+	 * This operation does not affect the {@linkplain org.hibernate.Cache second-level cache}.
+	 * Therefore, after calling {@code truncateMappedObjects()}, it might be necessary to
+	 * also call {@link org.hibernate.Cache#evictAllRegions} to clean up data held in the
+	 * second-level cache.
+	 *
+	 * @apiNote This operation is a synonym for {@link #truncate}.
+	 * @deprecated Use {@link #truncate} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.0")
+	void truncateMappedObjects();
 }

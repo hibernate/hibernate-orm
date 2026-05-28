@@ -271,7 +271,7 @@ public class ConcreteProxyTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// InheritanceType.SINGLE_TABLE

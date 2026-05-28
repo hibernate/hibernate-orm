@@ -170,7 +170,7 @@ public class FetchGraphCollectionOrderByAndCriteriaJoinTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Level1")

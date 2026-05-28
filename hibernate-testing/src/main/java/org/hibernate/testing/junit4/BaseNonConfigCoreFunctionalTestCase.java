@@ -497,7 +497,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void cleanupTestData() throws Exception {
-		sessionFactory.getSchemaManager().truncateMappedObjects();
+		sessionFactory.getSchemaManager().truncate();
 //		doInHibernate( this::sessionFactory, session -> {
 //			session.createSelectionQuery( "from java.lang.Object", Object.class )
 //					.getResultList()

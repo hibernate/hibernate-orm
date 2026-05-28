@@ -110,6 +110,6 @@ public class HierarchyBytecodeOptimizerOrderingTest {
 
 	@AfterAll
 	public void cleanup(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

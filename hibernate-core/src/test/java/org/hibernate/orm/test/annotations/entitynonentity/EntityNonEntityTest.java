@@ -34,7 +34,7 @@ public class EntityNonEntityTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
-						scope.getSessionFactory().getSchemaManager().truncateMappedObjects()
+						scope.getSessionFactory().getSchemaManager().truncate()
 		);
 	}
 

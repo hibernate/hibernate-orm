@@ -439,7 +439,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void cleanupTestData() throws Exception {
-		sessionFactory.getSchemaManager().truncateMappedObjects();
+		sessionFactory.getSchemaManager().truncate();
 //		if ( isCleanupTestDataUsingBulkDelete() ) {
 //			doInHibernate( this::sessionFactory, session -> {
 //				session.createMutationQuery( "delete from java.lang.Object" )

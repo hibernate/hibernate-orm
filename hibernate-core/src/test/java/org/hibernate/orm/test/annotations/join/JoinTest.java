@@ -61,7 +61,7 @@ public class JoinTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

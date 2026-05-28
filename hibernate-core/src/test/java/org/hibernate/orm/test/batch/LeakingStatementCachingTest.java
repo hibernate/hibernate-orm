@@ -86,7 +86,7 @@ class LeakingStatementCachingTest {
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
 		try {
-			scope.getSessionFactory().getSchemaManager().dropMappedObjects( false );
+			scope.getSessionFactory().getSchemaManager().drop( false );
 		}
 		finally {
 			SINGLE_CONNECTION_DATASOURCE.close();

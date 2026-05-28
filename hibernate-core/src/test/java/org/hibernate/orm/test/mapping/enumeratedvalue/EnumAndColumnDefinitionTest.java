@@ -40,7 +40,7 @@ public class EnumAndColumnDefinitionTest {
 
 	@AfterAll
 	public static void cleanup(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

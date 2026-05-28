@@ -383,7 +383,7 @@ public class SharedDomainDataAndQueryResultsTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.getSessionFactory().getCache().evictAll();
 	}
 

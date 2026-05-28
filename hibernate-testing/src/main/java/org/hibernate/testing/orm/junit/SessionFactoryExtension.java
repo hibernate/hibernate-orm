@@ -454,7 +454,7 @@ public class SessionFactoryExtension
 		@Override
 		public void dropData() {
 			if ( sessionFactory != null ) {
-				sessionFactory.getSchemaManager().truncateMappedObjects();
+				sessionFactory.getSchemaManager().truncate();
 			}
 		}
 	}

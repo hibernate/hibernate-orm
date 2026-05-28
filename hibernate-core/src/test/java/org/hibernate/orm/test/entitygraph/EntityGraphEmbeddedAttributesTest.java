@@ -95,7 +95,7 @@ public class EntityGraphEmbeddedAttributesTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.getSessionFactory().getSchemaManager().truncateMappedObjects() );
+		scope.inTransaction( session -> session.getSessionFactory().getSchemaManager().truncate() );
 	}
 
 	@Entity( name = "TrackedProduct" )

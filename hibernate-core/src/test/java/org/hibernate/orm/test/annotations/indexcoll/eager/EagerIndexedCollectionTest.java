@@ -37,7 +37,7 @@ public class EagerIndexedCollectionTest {
 
 	@AfterEach
 	public void afterEach(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

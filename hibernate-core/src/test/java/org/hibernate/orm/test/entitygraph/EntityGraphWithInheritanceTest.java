@@ -90,7 +90,7 @@ public class EntityGraphWithInheritanceTest {
 
 	@AfterAll
 	public void clean(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

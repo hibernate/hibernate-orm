@@ -60,7 +60,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 	@AfterEach
 	public void cleanupTestData() {
-		entityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncateMappedObjects();
+		entityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncate();
 	}
 
 	@Override

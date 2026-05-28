@@ -58,7 +58,7 @@ public class NativeQueryJoinTest {
 
 	@AfterEach
 	public void teardown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

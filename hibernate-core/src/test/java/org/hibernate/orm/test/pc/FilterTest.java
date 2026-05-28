@@ -130,7 +130,7 @@ public class FilterTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncateMappedObjects();
+		scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncate();
 	}
 
 	@Test

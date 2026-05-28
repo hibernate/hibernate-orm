@@ -41,7 +41,7 @@ public class BrokenCollectionEventTest {
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			s.getSessionFactory().getSchemaManager().truncateMappedObjects();
+			s.getSessionFactory().getSchemaManager().truncate();
 		} );
 	}
 

@@ -63,7 +63,7 @@ public class SQLServerDialectCollationTest {
 			} );
 		} );
 
-		scope.getSessionFactory().getSchemaManager().exportMappedObjects( false );
+		scope.getSessionFactory().getSchemaManager().create( false );
 	}
 
 	@Test

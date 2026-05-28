@@ -41,22 +41,23 @@ public class SchemaManagerExplicitSchemaTest {
 
 	@BeforeEach
 	public void clean(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().dropMappedObjects(true);
+		scope.getSessionFactory().getSchemaManager().drop(true);
 	}
 
 	private Long countBooks(SessionImplementor s) {
 		return s.createQuery("select count(*) from BookForTesting", Long.class).getSingleResult();
 	}
 
-	@Test public void testExportValidateTruncateDrop(SessionFactoryScope scope) {
+	@Test public void testExportValidateTruncateDrop(SessionFactoryScope scope)
+			throws SchemaValidationException {
 		SessionFactoryImplementor factory = scope.getSessionFactory();
-		factory.getSchemaManager().exportMappedObjects(true);
+		factory.getSchemaManager().create(true);
 		scope.inTransaction( s -> s.persist( new Book() ) );
-		factory.getSchemaManager().validateMappedObjects();
+		factory.getSchemaManager().validate();
 		scope.inTransaction( s -> assertEquals( 1, countBooks(s) ) );
-		factory.getSchemaManager().truncateMappedObjects();
+		factory.getSchemaManager().truncate();
 		scope.inTransaction( s -> assertEquals( 0, countBooks(s) ) );
-		factory.getSchemaManager().dropMappedObjects(true);
+		factory.getSchemaManager().drop(true);
 		try {
 			factory.getSchemaManager().validateMappedObjects();
 			fail();

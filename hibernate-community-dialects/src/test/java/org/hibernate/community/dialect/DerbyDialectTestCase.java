@@ -92,7 +92,7 @@ public class DerbyDialectTestCase {
 	@RequiresDialect(DerbyDialect.class)
 	@Test
 	void testInsertConflictOnConstraintDoNothing(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.inTransaction( s -> s.persist( new Constrained() ) );
 		scope.inTransaction( s -> s.createMutationQuery(
 						"insert into Constrained(id, name, count) values (4,'Gavin',69) on conflict on constraint count_name_key do nothing" )

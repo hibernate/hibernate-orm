@@ -62,7 +62,7 @@ public class DifferentDBSchemaTest {
 	@AfterClassTemplate
 	public void cleanUp(SessionFactoryScope scope) {
 		// Drop the schema used for audit tables as well
-		scope.getSessionFactory().getSchemaManager().dropMappedObjects( true );
+		scope.getSessionFactory().getSchemaManager().drop( true );
 	}
 
 	@Test

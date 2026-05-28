@@ -81,7 +81,7 @@ public class CustomSqlNamespaceInjectionFunctionalTests {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope sessions) {
-		sessions.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		sessions.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "CustomEntity")

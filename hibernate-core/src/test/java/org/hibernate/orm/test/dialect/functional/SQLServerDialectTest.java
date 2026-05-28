@@ -53,7 +53,7 @@ public class SQLServerDialectTest {
 	public void cleanup(SessionFactoryScope scope) throws InterruptedException {
 		//SQL Server Driver does not deallocate connections right away
 		Thread.sleep( 100 );
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

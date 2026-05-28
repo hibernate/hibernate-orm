@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.SchemaValidationException;
 import jakarta.persistence.Table;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -38,7 +39,7 @@ public class SchemaManagerLoadScriptTest {
 
 	@BeforeEach
 	public void clean(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().dropMappedObjects(true);
+		scope.getSessionFactory().getSchemaManager().drop(true);
 	}
 
 	private Long countBooks(SessionImplementor s) {
@@ -50,23 +51,25 @@ public class SchemaManagerLoadScriptTest {
 	}
 
 	@Test
-	public void testExportValidateTruncateDrop(SessionFactoryScope scope) {
+	public void testExportValidateTruncateDrop(SessionFactoryScope scope)
+			throws SchemaValidationException {
 		SessionFactoryImplementor factory = scope.getSessionFactory();
-		factory.getSchemaManager().exportMappedObjects(true);
-		factory.getSchemaManager().validateMappedObjects();
+		factory.getSchemaManager().create(true);
+		factory.getSchemaManager().validate();
 		Author author = new Author(); author.name = "Steve Ebersole";
 		scope.inTransaction( s -> s.persist(author) );
 		scope.inTransaction( s -> assertEquals( 1, countBooks(s) ) );
 		scope.inTransaction( s -> assertEquals( 3, countAuthors(s) ) );
-		factory.getSchemaManager().truncateMappedObjects();
+		factory.getSchemaManager().truncate();
 		scope.inTransaction( s -> assertEquals( 2, countAuthors(s) ) );
-		factory.getSchemaManager().dropMappedObjects(true);
+		factory.getSchemaManager().drop(true);
 	}
 
 	@Test
-	public void testExportPopulateValidateDrop(SessionFactoryScope scope) {
+	public void testExportPopulateValidateDrop(SessionFactoryScope scope)
+			throws SchemaValidationException {
 		SessionFactoryImplementor factory = scope.getSessionFactory();
-		factory.getSchemaManager().exportMappedObjects(true);
+		factory.getSchemaManager().create(true);
 		scope.inTransaction( s -> s.createMutationQuery( "delete Author" ).executeUpdate() );
 		scope.inTransaction( s -> s.createMutationQuery( "delete Book" ).executeUpdate() );
 		scope.inTransaction( s -> assertEquals( 0, countBooks(s) ) );
@@ -74,14 +77,14 @@ public class SchemaManagerLoadScriptTest {
 		factory.getSchemaManager().populate();
 		scope.inTransaction( s -> assertEquals( 1, countBooks(s) ) );
 		scope.inTransaction( s -> assertEquals( 2, countAuthors(s) ) );
-		factory.getSchemaManager().validateMappedObjects();
+		factory.getSchemaManager().validate();
 		Author author = new Author(); author.name = "Steve Ebersole";
 		scope.inTransaction( s -> s.persist(author) );
 		scope.inTransaction( s -> assertEquals( 1, countBooks(s) ) );
 		scope.inTransaction( s -> assertEquals( 3, countAuthors(s) ) );
-		factory.getSchemaManager().truncateMappedObjects();
+		factory.getSchemaManager().truncate();
 		scope.inTransaction( s -> assertEquals( 2, countAuthors(s) ) );
-		factory.getSchemaManager().dropMappedObjects(true);
+		factory.getSchemaManager().drop(true);
 	}
 
 	@Entity(name="Book") @Table(name="Books")

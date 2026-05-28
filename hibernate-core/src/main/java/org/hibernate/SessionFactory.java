@@ -118,13 +118,11 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  * The factory also {@linkplain #getSchemaManager() provides} a
  * {@link SchemaManager} which allows, as a convenience for writing tests:
  * <ul>
- * <li>programmatic {@linkplain SchemaManager#exportMappedObjects(boolean)
- *     schema export} and {@linkplain SchemaManager#dropMappedObjects(boolean)
- *     schema removal},
- * <li>schema {@linkplain SchemaManager#validateMappedObjects() validation},
- *     and
- * <li>an operation for {@linkplain SchemaManager#truncateMappedObjects()
- *     cleaning up} data left behind by tests.
+ * <li>programmatic {@linkplain SchemaManager#create schema export} and
+ *     {@linkplain SchemaManager#drop schema removal},
+ * <li>schema {@linkplain SchemaManager#validate validation}, and
+ * <li>an operation for {@linkplain SchemaManager#truncate cleaning up}
+ *     data left behind by tests.
  * </ul>
  * <p>
  * Finally, the factory {@linkplain #getCriteriaBuilder() provides} a

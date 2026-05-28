@@ -2496,6 +2496,11 @@ public abstract class CollectionBinder {
 			TableBinder.addTableComment( collectionTable, usage.comment() );
 			TableBinder.addTableOptions( collectionTable, usage.options() );
 		} );
+		property.forEachAnnotationUsage( CollectionTable.class, modelsContext(), usage -> {
+			TableBinder.addTableCheck( collectionTable, usage.check() );
+			TableBinder.addTableComment( collectionTable, usage.comment() );
+			TableBinder.addTableOptions( collectionTable, usage.options() );
+		} );
 	}
 
 	private static void addCheckToCollection(Table collectionTable, Check check) {

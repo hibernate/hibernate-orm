@@ -2070,11 +2070,6 @@ public class EntityBinder {
 		table.setRowId( rowId );
 		table.setViewQuery( viewQuery );
 
-//		final Comment comment = annotatedClass.getAnnotation( Comment.class );
-//		if ( comment != null ) {
-//			table.setComment( comment.value() );
-//		}
-
 		getMetadataCollector()
 				.addEntityTableXref( entityName, logicalTableName, table, denormalizedSuperTableXref );
 

@@ -13,7 +13,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.Comment;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -64,45 +63,41 @@ public class CommentsTest {
 	}
 
 	@Entity(name = "Person")
-	@Table(name = TABLE_NAME)
-	@SecondaryTable(name = SEC_TABLE_NAME)
-	@Comment(TABLE_COMMENT)
-	@Comment(value = SEC_TABLE_COMMENT, on = SEC_TABLE_NAME)
+	@Table(name = TABLE_NAME, comment = TABLE_COMMENT)
+	@SecondaryTable(name = SEC_TABLE_NAME, comment = SEC_TABLE_COMMENT)
 	public static class TestEntity {
 
 		@Id
 		@GeneratedValue
-		@Comment("I am id")
+		@Column(comment = "I am id")
 		private Long id;
 
-		@Comment(on = "firstName", value = "I am firstName")
-		@Comment(on = "lastName", value = "I am lastName")
 		private Name name;
 
 		private Money money;
 
-		@Column(table = SEC_TABLE_NAME)
-		@Comment("This is a date")
+		@Column(table = SEC_TABLE_NAME, comment = "This is a date")
 		private LocalDate localDate;
 
 		@ManyToOne
-		@JoinColumn(name = "other")
-		@Comment("I am other")
+		@JoinColumn(name = "other", comment = "I am other")
 		private TestEntity other;
 
 	}
 
 	@Embeddable
 	public static class Name {
+		@Column(comment = "I am firstName")
 		private String firstName;
+		@Column(comment = "I am lastName")
 		private String lastName;
 	}
 
 	@Embeddable
 	public static class Money {
-		@Comment("I am amount")
+		@Column(comment = "I am amount")
 		private BigDecimal amount;
-		@Comment("I am currency")
+		@Column(comment = "I am currency")
 		private Currency currency;
 	}
 

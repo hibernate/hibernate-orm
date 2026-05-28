@@ -17,6 +17,7 @@ import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.BatchSize;
+import org.hibernate.CacheMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReadOnlyMode;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -55,6 +56,9 @@ public final class OptionsHelper {
 		else if ( option instanceof BatchSize batchSize ) {
 			entityManager.setJdbcBatchSize( batchSize.batchSize() );
 		}
+		else if ( option instanceof CacheMode cacheMode ) {
+			entityManager.setCacheMode( cacheMode );
+		}
 	}
 
 	public static Set<EntityManager.Option> getOptions(SessionImplementor entityManager) {
@@ -65,6 +69,10 @@ public final class OptionsHelper {
 		if ( entityManager.isDefaultReadOnly() ) {
 			options.add( ReadOnlyMode.READ_ONLY );
 		}
+		if ( entityManager.getJdbcBatchSize() != null ) {
+			options.add( new BatchSize( entityManager.getJdbcBatchSize() ) );
+		}
+		options.add( entityManager.getCacheMode() );
 		return options;
 	}
 
@@ -79,12 +87,19 @@ public final class OptionsHelper {
 		else if ( option instanceof BatchSize batchSize ) {
 			entityAgent.setJdbcBatchSize( batchSize.batchSize() );
 		}
+		else if ( option instanceof CacheMode cacheMode ) {
+			entityAgent.setCacheMode( cacheMode );
+		}
 	}
 
-	public static Set<EntityAgent.Option> getOptions(EntityAgent entityAgent) {
+	public static Set<EntityAgent.Option> getOptions(StatelessSessionImplementor entityAgent) {
 		final Set<EntityAgent.Option> options = new HashSet<>();
 		addIfNotNull( options, entityAgent.getCacheRetrieveMode() );
 		addIfNotNull( options, entityAgent.getCacheStoreMode() );
+		if ( entityAgent.getJdbcBatchSize() != null ) {
+			options.add( new BatchSize( entityAgent.getJdbcBatchSize() ) );
+		}
+		options.add( entityAgent.getCacheMode() );
 		return options;
 	}
 

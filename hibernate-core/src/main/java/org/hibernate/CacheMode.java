@@ -7,6 +7,8 @@ package org.hibernate;
 import java.util.Locale;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityAgent;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.FindOption;
 
 /**
@@ -30,10 +32,14 @@ import jakarta.persistence.FindOption;
  *
  * @see Session#setCacheMode(CacheMode)
  * @see org.hibernate.query.SelectionQuery#setCacheMode(CacheMode)
+ * @see jakarta.persistence.EntityManagerFactory#createEntityManager(EntityManager.CreationOption...)
+ * @see jakarta.persistence.EntityManagerFactory#createEntityAgent(EntityAgent.CreationOption...)
+ * @see EntityManager#addOption(EntityManager.Option)
+ * @see EntityAgent#addOption(EntityAgent.Option)
  * @see CacheStoreMode
  * @see CacheRetrieveMode
  */
-public enum CacheMode implements FindOption {
+public enum CacheMode implements FindOption, EntityManager.Option, EntityAgent.Option {
 
 	/**
 	 * The session may read items from the cache, and add items to the cache

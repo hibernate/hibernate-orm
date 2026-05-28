@@ -6,18 +6,17 @@ package org.hibernate.engine.spi;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Encapsulates details related to entities which contain sub-select-fetchable
@@ -89,42 +88,20 @@ public class SubselectFetch {
 	public static RegistrationHandler createRegistrationHandler(
 			BatchFetchQueue batchFetchQueue,
 			SelectStatement sqlAst,
-			TableGroup tableGroup,
 			JdbcParametersList jdbcParameters,
 			JdbcParameterBindings jdbcParameterBindings) {
-
-		return new StandardRegistrationHandler(
-				batchFetchQueue,
-				sqlAst,
-				tableGroup,
-				jdbcParameters,
-				jdbcParameterBindings
-		);
-	}
-
-	public static RegistrationHandler createRegistrationHandler(
-			BatchFetchQueue batchFetchQueue,
-			SelectStatement sqlAst,
-			JdbcParametersList jdbcParameters,
-			JdbcParameterBindings jdbcParameterBindings) {
-		final List<TableGroup> roots = sqlAst.getQuerySpec().getFromClause().getRoots();
-		if ( roots.isEmpty() ) {
-			// we allow this now
-			return NO_OP_REG_HANDLER;
-		}
-
-		return createRegistrationHandler( batchFetchQueue, sqlAst, roots.get( 0 ), jdbcParameters, jdbcParameterBindings );
+		// we allow this now
+		return sqlAst.getQuerySpec().getFromClause().getRoots().isEmpty()
+				? NO_OP_REG_HANDLER
+				: new StandardRegistrationHandler( batchFetchQueue, sqlAst,
+						jdbcParameters, jdbcParameterBindings );
 	}
 
 	public interface RegistrationHandler {
 		void addKey(EntityHolder holder);
 	}
 
-	private static final RegistrationHandler NO_OP_REG_HANDLER = new RegistrationHandler() {
-		@Override
-		public void addKey(EntityHolder holder) {
-		}
-	} ;
+	private static final RegistrationHandler NO_OP_REG_HANDLER = holder -> {};
 
 	public static class StandardRegistrationHandler implements RegistrationHandler {
 		private final BatchFetchQueue batchFetchQueue;
@@ -136,7 +113,6 @@ public class SubselectFetch {
 		private StandardRegistrationHandler(
 				BatchFetchQueue batchFetchQueue,
 				SelectStatement loadingSqlAst,
-				TableGroup ownerTableGroup,
 				JdbcParametersList loadingJdbcParameters,
 				JdbcParameterBindings loadingJdbcParameterBindings) {
 			this.batchFetchQueue = batchFetchQueue;
@@ -149,21 +125,21 @@ public class SubselectFetch {
 		public void addKey(EntityHolder holder) {
 			if ( batchFetchQueue.getSession().getLoadQueryInfluencers()
 					.hasSubselectLoadableCollections( holder.getDescriptor() ) ) {
-				final EntityInitializer<?> entityInitializer = NullnessUtil.castNonNull( holder.getEntityInitializer() );
-				final SubselectFetch subselectFetch = subselectFetches.computeIfAbsent(
-						entityInitializer.getNavigablePath(),
+				final var path = castNonNull( holder.getEntityInitializer() ).getNavigablePath();
+				final var querySpec = loadingSqlAst.getQuerySpec();
+				final var subselectFetch = subselectFetches.computeIfAbsent(
+						path,
 						navigablePath -> new SubselectFetch(
-								loadingSqlAst.getQuerySpec(),
-								loadingSqlAst.getQuerySpec()
-										.getFromClause()
-										.findTableGroup( entityInitializer.getNavigablePath() ),
+								querySpec,
+								querySpec.getFromClause().findTableGroup( path ),
 								loadingJdbcParameters,
 								loadingJdbcParameterBindings,
 								new HashSet<>()
 						)
 				);
-				subselectFetch.resultingEntityKeys.add( holder.getEntityKey() );
-				batchFetchQueue.addSubselect( holder.getEntityKey(), subselectFetch );
+				final var entityKey = holder.getEntityKey();
+				subselectFetch.resultingEntityKeys.add( entityKey );
+				batchFetchQueue.addSubselect( entityKey, subselectFetch );
 			}
 		}
 	}

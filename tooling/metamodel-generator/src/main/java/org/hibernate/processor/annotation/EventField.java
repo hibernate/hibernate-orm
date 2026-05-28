@@ -41,7 +41,7 @@ public class EventField implements MetaAttribute {
 		annotationMetaEntity.importType(INJECT);
 		annotationMetaEntity.importType(EVENT);
 		annotationMetaEntity.importType(JD_LIFECYCLE_EVENT);
-		return "\n@Inject\nprivate Event<? super LifecycleEvent<?>> event;";
+		return "\n@Inject\nprivate Event<LifecycleEvent<?>> event;";
 	}
 
 	@Override

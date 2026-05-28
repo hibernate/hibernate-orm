@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 
+import org.apache.tools.ant.filters.ReplaceTokens
+
 plugins {
 	id "local.publishing-java-module"
 	id "local.publishing-group-relocation"
@@ -42,6 +44,26 @@ sourceSets {
         compileClasspath += sourceSets.main.output + sourceSets.test.output
         runtimeClasspath += sourceSets.main.output + sourceSets.test.output
     }
+	integrationTest {
+		java {
+			srcDirs = ['src/integrationTest/java']
+		}
+		resources {
+			srcDirs = ['src/integrationTest/resources']
+		}
+		compileClasspath += sourceSets.main.output
+		runtimeClasspath += sourceSets.main.output
+	}
+	dataIntegrationTest {
+		java {
+			srcDirs = ['src/dataIntegrationTest/java']
+		}
+		resources {
+			srcDirs = ['src/dataIntegrationTest/resources']
+		}
+		compileClasspath += sourceSets.main.output
+		runtimeClasspath += sourceSets.main.output
+	}
 }
 
 dependencies {
@@ -64,6 +86,11 @@ dependencies {
 	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:3.0.1.Final"
 	jakartaDataImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.24.1"
 
+	integrationTestImplementation project( ':hibernate-testing' )
+
+	dataIntegrationTestImplementation project( ':hibernate-testing' )
+	dataIntegrationTestImplementation "jakarta.data:jakarta.data-api:1.1.0-M3"
+
 	// work-around for Gradle bug: https://github.com/gradle/gradle/issues/37146
 	quarkusOrmPanacheCompileOnly project( ':hibernate-graalvm' )
 	quarkusHrPanacheCompileOnly project( ':hibernate-graalvm' )
@@ -81,6 +108,12 @@ configurations {
     jakartaDataImplementation.extendsFrom(testImplementation)
     jakartaDataRuntimeOnly.extendsFrom(testRuntimeOnly)
     jakartaDataCompileOnly.extendsFrom(testCompileOnly)
+	integrationTestImplementation.extendsFrom(testImplementation)
+	integrationTestRuntimeOnly.extendsFrom(testRuntimeOnly)
+	integrationTestCompileOnly.extendsFrom(testCompileOnly)
+	dataIntegrationTestImplementation.extendsFrom(testImplementation)
+	dataIntegrationTestRuntimeOnly.extendsFrom(testRuntimeOnly)
+	dataIntegrationTestCompileOnly.extendsFrom(testCompileOnly)
 }
 
 versionInjection {
@@ -117,12 +150,36 @@ def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
     shouldRunAfter test
 }
 
+def integrationTestTask = tasks.register( 'integrationTest', Test ) {
+	description = 'Runs the processor integration tests (no Jakarta Data).'
+	group = 'verification'
+	useJUnitPlatform()
+
+	testClassesDirs = sourceSets.integrationTest.output.classesDirs
+	classpath = sourceSets.integrationTest.runtimeClasspath
+	shouldRunAfter test
+}
+
+def dataIntegrationTestTask = tasks.register( 'dataIntegrationTest', Test ) {
+	description = 'Runs the Jakarta Data repository integration tests.'
+	group = 'verification'
+	useJUnitPlatform()
+
+	testClassesDirs = sourceSets.dataIntegrationTest.output.classesDirs
+	classpath = sourceSets.dataIntegrationTest.runtimeClasspath
+	shouldRunAfter test
+}
+
 check.dependsOn quarkusHrPanacheTestTask
 check.dependsOn quarkusOrmPanacheTestTask
 check.dependsOn jakartaDataTestTask
+check.dependsOn integrationTestTask
+check.dependsOn dataIntegrationTestTask
 test.dependsOn quarkusHrPanacheTestTask
 test.dependsOn quarkusOrmPanacheTestTask
 test.dependsOn jakartaDataTestTask
+test.dependsOn integrationTestTask
+test.dependsOn dataIntegrationTestTask
 
 // work-around for Gradle bug: https://github.com/gradle/gradle/issues/37146
 tasks.quarkusHrPanacheTest.dependsOn ':hibernate-graalvm:jar'
@@ -137,6 +194,38 @@ compileTestJava {
 			"-proc:none",
 			"-AsuppressJakartaDataMetamodel=true"
 	]
+}
+
+compileIntegrationTestJava {
+	options.annotationProcessorPath = sourceSets.main.runtimeClasspath + files( sourceSets.main.java.classesDirectory )
+}
+
+compileDataIntegrationTestJava {
+	options.annotationProcessorPath = sourceSets.main.runtimeClasspath + files( sourceSets.main.java.classesDirectory ) + configurations.dataIntegrationTestCompileClasspath
+}
+
+processIntegrationTestResources {
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+	inputs.property( "db", db )
+	doLast {
+		copy {
+			from file( 'src/integrationTest/resources/hibernate.properties' )
+			into layout.buildDirectory.dir( "resources/integrationTest" ).get().asFile
+			filter( ReplaceTokens, tokens: dbBundle[db] )
+		}
+	}
+}
+
+processDataIntegrationTestResources {
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+	inputs.property( "db", db )
+	doLast {
+		copy {
+			from file( 'src/dataIntegrationTest/resources/hibernate.properties' )
+			into layout.buildDirectory.dir( "resources/dataIntegrationTest" ).get().asFile
+			filter( ReplaceTokens, tokens: dbBundle[db] )
+		}
+	}
 }
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
@@ -177,5 +266,13 @@ tasks.forbiddenApisQuarkusOrmPanache {
 }
 
 tasks.forbiddenApisQuarkusHrPanache {
+	enabled = false
+}
+
+tasks.forbiddenApisIntegrationTest {
+	enabled = false
+}
+
+tasks.forbiddenApisDataIntegrationTest {
 	enabled = false
 }

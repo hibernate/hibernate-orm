@@ -4282,8 +4282,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			|| JD_QUERY.equals( annotationName );
 	}
 
-	private static String staticQueryName(ExecutableElement method) {
-		return method.getEnclosingElement().getSimpleName() + "." + method.getSimpleName();
+	private String staticQueryName(ExecutableElement method) {
+		// note we are using the element name rather than the declaring class,
+		// because there might be multiple repositories extending the same interface
+		// with a "common" query method:
+		return removeDollar( element.getSimpleName().toString() ) + "." + method.getSimpleName();
 	}
 
 	private String fullReturnType(ExecutableElement method) {

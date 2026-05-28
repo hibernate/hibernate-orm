@@ -19,6 +19,23 @@ import java.util.function.UnaryOperator;
  * persistence context, and entity instances must not be shared between
  * parent and child sessions.
  * <p>
+ * A child session does not, by default, share the parent's JDBC connection,
+ * transaction coordinator, persistence context, action queue, interceptor, or
+ * SQL statement inspector. Instead, the child session starts from the normal
+ * {@link SessionFactory} defaults, with the following values inherited from the
+ * parent session as the baseline:
+ * <ul>
+ * <li>the tenant identifier,
+ * <li>the JDBC time zone,
+ * <li>the temporal or changeset identifier used for loading temporal data, and
+ * <li>whether identifier rollback is enabled.
+ * </ul>
+ * Other stateful session options are inherited only when explicitly requested
+ * by the corresponding no-argument method, for example {@link #connection()},
+ * {@link #interceptor()}, {@link #statementInspector()}, {@link #flushMode()},
+ * {@link #autoJoinTransactions()}, {@link #autoClose()}, or
+ * {@link #connectionHandlingMode()}.
+ * <p>
  * When {@linkplain Transaction resource-local} transaction management is used:
  * <ul>
  * <li>by default, each session executes with its own dedicated JDBC connection
@@ -27,6 +44,10 @@ import java.util.function.UnaryOperator;
  *     and therefore also the JDBC transaction, should be shared from parent
  *     to child.
  * </ul>
+ * A child session with a shared transaction context also receives parent flush
+ * and close notifications, so the child's work is flushed with the parent, and
+ * the child is automatically closed when the parent is closed.
+ * <p>
  * <pre>
  * try (var childSession
  *          = session.sessionWithOptions()
@@ -60,7 +81,7 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 	SharedSessionBuilder interceptor();
 
 	/**
-	 * Signifies that the connection release mode from the original session should be used to create the new session.
+	 * Signifies that the connection handling mode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */

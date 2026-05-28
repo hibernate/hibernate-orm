@@ -14,6 +14,15 @@ import java.util.function.UnaryOperator;
  * Allows creation of a child {@link StatelessSession} which shares some options
  * with another pre-existing parent session.
  * <p>
+ * A child stateless session does not, by default, share the parent's JDBC
+ * connection, transaction coordinator, interceptor, or SQL statement inspector.
+ * Instead, the child stateless session starts from the normal
+ * {@link SessionFactory} defaults, with the parent's tenant identifier and JDBC
+ * time zone inherited as the baseline. The parent's interceptor, SQL statement
+ * inspector, connection, and transaction context are inherited only when
+ * explicitly requested by calling {@link #interceptor()},
+ * {@link #statementInspector()}, or {@link #connection()}.
+ * <p>
  * When {@linkplain Transaction resource-local} transaction management is used:
  * <ul>
  * <li>by default, each session executes with its own dedicated JDBC connection
@@ -22,6 +31,10 @@ import java.util.function.UnaryOperator;
  *     and therefore also the JDBC transaction, should be shared from parent
  *     to child.
  * </ul>
+ * A child stateless session with a shared transaction context also receives
+ * parent flush and close notifications, so its JDBC batch is executed with the
+ * parent, and the child is automatically closed when the parent is closed.
+ * <p>
  * <pre>{@code
  * try (var statelessSession
  *          = session.statelessWithOptions()

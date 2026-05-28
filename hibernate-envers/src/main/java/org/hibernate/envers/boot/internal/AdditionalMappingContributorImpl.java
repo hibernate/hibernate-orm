@@ -19,6 +19,10 @@ import static org.hibernate.cfg.AvailableSettings.XML_MAPPING_ENABLED;
  * @author Steve Ebersole
  */
 public class AdditionalMappingContributorImpl implements AdditionalMappingContributor {
+	public AdditionalMappingContributorImpl() {
+		DeprecationLoggingManager.logDeprecation();
+	}
+
 	@Override
 	public String getContributorName() {
 		return "envers";

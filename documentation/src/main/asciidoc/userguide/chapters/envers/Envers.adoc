@@ -7,6 +7,13 @@
 [[envers-basics]]
 === Basics
 
+[IMPORTANT]
+====
+The `hibernate-envers` module is deprecated since Hibernate ORM 8.0.
+For new development, prefer Hibernate ORM's core temporal and audit support using
+`@org.hibernate.annotations.Temporal` and `@org.hibernate.annotations.Audited`.
+====
+
 To audit changes that are performed on an entity, you only need two things:
 
 * the `hibernate-envers` jar on the classpath,
@@ -1655,4 +1662,3 @@ And sometime in 2011, the last partition (or 'extension bucket') is split into t
 .  https://hibernate.atlassian.net/[JIRA issue tracker] (when adding issues concerning Envers, be sure to select the "envers" component!)
 .  https://hibernate.zulipchat.com/#narrow/stream/132096-hibernate-user[Zulip channel]
 .  https://community.jboss.org/wiki/EnversFAQ[FAQ]
-

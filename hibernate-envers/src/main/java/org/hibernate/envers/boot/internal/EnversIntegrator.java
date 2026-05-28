@@ -38,6 +38,10 @@ public class EnversIntegrator implements Integrator {
 
 	public static final String AUTO_REGISTER = "hibernate.envers.autoRegisterListeners";
 
+	public EnversIntegrator() {
+		DeprecationLoggingManager.logDeprecation();
+	}
+
 	public void integrate(
 			Metadata metadata,
 			BootstrapContext bootstrapContext,

@@ -14,6 +14,10 @@ import org.hibernate.service.spi.ServiceContributor;
  * @author Steve Ebersole
  */
 public class EnversServiceContributor implements ServiceContributor {
+	public EnversServiceContributor() {
+		DeprecationLoggingManager.logDeprecation();
+	}
+
 	@Override
 	public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.addInitiator( EnversServiceInitiator.INSTANCE );

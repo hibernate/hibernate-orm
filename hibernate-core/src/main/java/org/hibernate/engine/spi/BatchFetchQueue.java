@@ -21,6 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedSetOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -458,7 +459,7 @@ public class BatchFetchQueue {
 	private boolean isCached(Object collectionKey, CollectionPersister persister) {
 		final var session = getSession();
 		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
+			final var cache = castNonNull( persister.getCacheAccessStrategy() );
 			final Object cacheKey =
 					cache.generateCacheKey( collectionKey, persister,
 							session.getFactory(), session.getTenantIdentifier() );
@@ -472,7 +473,7 @@ public class BatchFetchQueue {
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
 		final var session = getSession();
 		if ( session.getCacheMode().isGetEnabled() && persister.canReadFromCache() ) {
-			final var cache = persister.getCacheAccessStrategy();
+			final var cache = castNonNull( persister.getCacheAccessStrategy() );
 			final Object key =
 					cache.generateCacheKey( entityKey.getIdentifier(), persister,
 							session.getFactory(), session.getTenantIdentifier() );

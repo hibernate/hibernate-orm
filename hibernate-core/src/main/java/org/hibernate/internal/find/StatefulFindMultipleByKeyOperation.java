@@ -17,7 +17,6 @@ import org.hibernate.ReadOnlyMode;
 import org.hibernate.RemovalsMode;
 import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;

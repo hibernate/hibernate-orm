@@ -6,6 +6,7 @@ package org.hibernate.cache.spi.support;
 
 import java.util.Comparator;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.cache.cfg.spi.EntityDataCachingConfig;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -58,6 +59,7 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 	}
 
 	@Override
+	@NonNull
 	public Object generateCacheKey(
 			Object id,
 			EntityPersister rootEntityDescriptor,

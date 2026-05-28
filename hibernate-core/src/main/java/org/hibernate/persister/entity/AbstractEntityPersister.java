@@ -5,6 +5,7 @@
 package org.hibernate.persister.entity;
 
 import jakarta.persistence.PessimisticLockScope;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -407,9 +408,9 @@ public abstract class AbstractEntityPersister
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
 	private SqmMultiTableInsertStrategy sqmMultiTableInsertStrategy;
 
-	private final EntityDataAccess cacheAccessStrategy;
+	private final @Nullable EntityDataAccess cacheAccessStrategy;
 	private final NaturalIdDataAccess naturalIdRegionAccessStrategy;
-	private final CacheEntryHelper cacheEntryHelper;
+	private final @NonNull CacheEntryHelper cacheEntryHelper;
 	private final boolean canReadFromCache;
 	private final boolean canWriteToCache;
 	private final boolean invalidateCache;
@@ -4332,16 +4333,19 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	@Nullable
 	public EntityDataAccess getCacheAccessStrategy() {
 		return cacheAccessStrategy;
 	}
 
 	@Override
+	@Nullable
 	public CacheEntryStructure getCacheEntryStructure() {
 		return cacheEntryHelper.getCacheEntryStructure();
 	}
 
 	@Override
+	@NonNull
 	public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
 		return cacheEntryHelper.buildCacheEntry( entity, state, version, session );
 	}
@@ -5059,8 +5063,10 @@ public abstract class AbstractEntityPersister
 	 * Consolidated these onto a single helper because the 2 pieces work in tandem.
 	 */
 	public interface CacheEntryHelper {
+		@NonNull
 		CacheEntryStructure getCacheEntryStructure();
 
+		@NonNull
 		CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session);
 	}
 
@@ -5072,11 +5078,13 @@ public abstract class AbstractEntityPersister
 		}
 
 		@Override
+		@NonNull
 		public CacheEntryStructure getCacheEntryStructure() {
 			return UnstructuredCacheEntry.INSTANCE;
 		}
 
 		@Override
+		@NonNull
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
 			return new StandardCacheEntryImpl( state, persister, version, session, entity );
 		}
@@ -5090,11 +5098,13 @@ public abstract class AbstractEntityPersister
 		}
 
 		@Override
+		@NonNull
 		public CacheEntryStructure getCacheEntryStructure() {
 			return UnstructuredCacheEntry.INSTANCE;
 		}
 
 		@Override
+		@NonNull
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
 			return new ReferenceCacheEntryImpl( entity, persister );
 		}
@@ -5110,11 +5120,13 @@ public abstract class AbstractEntityPersister
 		}
 
 		@Override
+		@NonNull
 		public CacheEntryStructure getCacheEntryStructure() {
 			return structure;
 		}
 
 		@Override
+		@NonNull
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
 			return new StandardCacheEntryImpl( state, persister, version, session, entity );
 		}
@@ -5124,11 +5136,13 @@ public abstract class AbstractEntityPersister
 		public static final NoopCacheEntryHelper INSTANCE = new NoopCacheEntryHelper();
 
 		@Override
+		@NonNull
 		public CacheEntryStructure getCacheEntryStructure() {
 			return UnstructuredCacheEntry.INSTANCE;
 		}
 
 		@Override
+		@NonNull
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
 			throw new HibernateException( "Illegal attempt to build cache entry for non-cached entity" );
 		}

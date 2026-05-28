@@ -4,6 +4,7 @@
  */
 package org.hibernate.cache.spi.access;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -37,6 +38,7 @@ public interface EntityDataAccess extends CachedDomainDataAccess {
 	 *
 	 * todo (6.0) : the access for an entity knows the entity hierarchy and the factory.  why pass them in?
 	 */
+	@NonNull
 	Object generateCacheKey(
 			Object id,
 			EntityPersister rootEntityDescriptor,

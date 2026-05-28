@@ -120,7 +120,7 @@ and `com.github.ben-manes.caffeine:jcache`
 `com.fasterxml.jackson.core:jackson-databind`, `tools.jackson.core:jackson-databind` +
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
-| <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
+| <<envers,Envers>>, deprecated since Hibernate ORM 8.0, for auditing historical data | `org.hibernate.orm:hibernate-envers`
 | <<jfr,Hibernate JFR>>, for monitoring via Java Flight Recorder | `org.hibernate.orm:hibernate-jfr`
 | Hibernate Jandex integration, for <<entity-discovery,entity discovery>> | `org.hibernate.orm:hibernate-scan-jandex`
 | link:{doc-dialect-url}#community-dialects[Community dialects] | `org.hibernate.orm:hibernate-community-dialects`
@@ -625,4 +625,3 @@ You may set `hibernate.jdbc.time_zone` to the time zone of the database server i
 We do not recommend this approach.
 
 On the other hand, we would love to recommend the use of `hibernate.type.java_time_use_direct_jdbc`, but this option is still experimental for now, and does result in some subtle differences in behavior which might affect legacy programs using Hibernate.
-

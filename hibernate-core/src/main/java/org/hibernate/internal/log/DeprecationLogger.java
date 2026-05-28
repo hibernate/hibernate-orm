@@ -272,4 +272,11 @@ public interface DeprecationLogger extends BasicLogger {
 					"Specify the root entity using the 'root' attribute instead of prefixing the graph with the entity type."
 	)
 	void deprecatedNamedEntityGraphTextThatContainTypeIndicator();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000045,
+			value = "Hibernate-envers is considered deprecated in favor of @Temporal and @Audited in hibernate-core."
+	)
+	void envers();
 }

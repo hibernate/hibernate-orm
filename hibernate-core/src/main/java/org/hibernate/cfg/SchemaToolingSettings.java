@@ -147,8 +147,8 @@ public interface SchemaToolingSettings {
 	 * @see #JAKARTA_HBM2DDL_DATABASE_ACTION
 	 * @see #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE
 	 * @see org.hibernate.relational.SchemaManager#populate
-	 * @see org.hibernate.relational.SchemaManager#exportMappedObjects
-	 * @see org.hibernate.relational.SchemaManager#truncateMappedObjects
+	 * @see org.hibernate.relational.SchemaManager#create
+	 * @see org.hibernate.relational.SchemaManager#truncate
 	 */
 	String JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE = "jakarta.persistence.sql-load-script-source";
 

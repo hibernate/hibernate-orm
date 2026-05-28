@@ -35,7 +35,7 @@ public class StaleObjectStateExceptionHandlingTest extends BaseExceptionHandling
 	@AfterEach
 	void tearDown() {
 		//noinspection resource
-		sessionFactory().getSchemaManager().truncateMappedObjects();
+		sessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -23,7 +23,7 @@ public abstract class ResultCheckStyleTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -63,6 +63,6 @@ public class HierarchyBytecodeOptimizerMethodVisibilityTest {
 
 	@AfterAll
 	public void cleanup(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

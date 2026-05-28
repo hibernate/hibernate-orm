@@ -42,7 +42,7 @@ public class InsertedDataTest {
 	void tearDown(SessionFactoryScope scope) {
 		scope.getSessionFactory().getCache().evictEntityData();
 		scope.getSessionFactory().getStatistics().clear();
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

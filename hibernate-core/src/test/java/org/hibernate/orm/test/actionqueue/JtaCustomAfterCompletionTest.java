@@ -45,7 +45,7 @@ public class JtaCustomAfterCompletionTest {
 	@AfterEach
 	public void afterEach(EntityManagerFactoryScope scope) {
 		scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getSchemaManager()
-				.truncateMappedObjects();
+				.truncate();
 	}
 
 	@Test

@@ -63,7 +63,7 @@ public class OneToOneLazyOrphanRemovalEmbeddedTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "OwnerEntity")

@@ -73,7 +73,7 @@ public class ReadWriteCacheTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.getSessionFactory().getCache().evictAll();
 	}
 

@@ -110,7 +110,7 @@ public class FetchTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "School")

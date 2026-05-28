@@ -217,7 +217,7 @@ public class OptionalOneToOneMapsIdQueryTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "FooHasBarWithIdNamedId")

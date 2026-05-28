@@ -82,7 +82,7 @@ public class JoinedDiscriminatorSameChildTableTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "EntityParent")

@@ -98,7 +98,7 @@ public class DetachedCollectionInitializationJoinFetchTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private void fetchQuery(List<EntityB> b, SessionImplementor session) {

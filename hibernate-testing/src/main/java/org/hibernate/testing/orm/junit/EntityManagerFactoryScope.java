@@ -39,6 +39,6 @@ public interface EntityManagerFactoryScope extends AutoCloseable {
 	}
 
 	default void dropData() {
-		((SessionFactoryImplementor) getEntityManagerFactory()).getSchemaManager().truncateMappedObjects();
+		((SessionFactoryImplementor) getEntityManagerFactory()).getSchemaManager().truncate();
 	}
 }

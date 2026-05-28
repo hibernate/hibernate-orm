@@ -46,7 +46,7 @@ public class NativeSqlAndQuotedIdentifiersTest {
 
 	@AfterAll
 	protected void cleanupTest(SessionFactoryScope scope) throws Exception {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

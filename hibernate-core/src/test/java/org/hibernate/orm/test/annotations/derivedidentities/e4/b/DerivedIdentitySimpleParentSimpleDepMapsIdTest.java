@@ -31,7 +31,7 @@ public class DerivedIdentitySimpleParentSimpleDepMapsIdTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

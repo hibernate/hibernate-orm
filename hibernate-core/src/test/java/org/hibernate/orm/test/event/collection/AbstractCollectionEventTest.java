@@ -50,7 +50,7 @@ public abstract class AbstractCollectionEventTest {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public abstract ParentWithCollection createParent(String name);

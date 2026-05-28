@@ -183,7 +183,7 @@ public class ProxyDeletionTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@MappedSuperclass

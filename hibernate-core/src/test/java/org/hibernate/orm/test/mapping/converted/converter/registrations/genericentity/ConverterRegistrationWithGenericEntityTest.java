@@ -65,7 +65,7 @@ class ConverterRegistrationWithGenericEntityTest {
 
 	@AfterAll
 	void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public static class Person {

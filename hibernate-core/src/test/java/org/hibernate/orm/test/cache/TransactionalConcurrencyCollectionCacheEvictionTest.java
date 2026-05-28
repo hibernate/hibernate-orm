@@ -97,7 +97,7 @@ public class TransactionalConcurrencyCollectionCacheEvictionTest {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) throws Exception {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.getSessionFactory().getCache().evictAll();
 		CollectionCacheInvalidator.PROPAGATE_EXCEPTION = false;
 	}

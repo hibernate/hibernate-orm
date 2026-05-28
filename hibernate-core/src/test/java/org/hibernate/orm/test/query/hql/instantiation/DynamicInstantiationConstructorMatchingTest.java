@@ -31,7 +31,7 @@ public class DynamicInstantiationConstructorMatchingTest {
 
 	@AfterAll
 	public void cleanUpData(final SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

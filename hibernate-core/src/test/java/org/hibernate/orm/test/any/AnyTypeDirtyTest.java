@@ -72,7 +72,7 @@ public class AnyTypeDirtyTest {
 		scope.getEntityManagerFactory()
 				.unwrap( SessionFactory.class)
 				.getSchemaManager()
-				.truncateMappedObjects();
+				.truncate();
 	}
 
 	@Test

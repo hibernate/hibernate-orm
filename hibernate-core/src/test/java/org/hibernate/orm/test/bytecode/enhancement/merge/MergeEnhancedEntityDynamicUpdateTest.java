@@ -122,7 +122,7 @@ public class MergeEnhancedEntityDynamicUpdateTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// --- //

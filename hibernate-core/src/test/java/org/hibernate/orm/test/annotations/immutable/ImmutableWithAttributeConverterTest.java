@@ -44,7 +44,7 @@ public class ImmutableWithAttributeConverterTest {
 
 	@AfterEach
 	public void afterEach(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

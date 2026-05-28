@@ -44,7 +44,7 @@ public class ScrollableTest {
 
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) {
-		// scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		// scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -76,7 +76,7 @@ public class SubselectFetch2Test {
 	@AfterEach
 	@JiraKey("HHH-19868")
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

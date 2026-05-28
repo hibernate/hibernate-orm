@@ -48,7 +48,7 @@ public class SchemaUpdateArrayPropertiesTest {
 			try (Session session = sf.openSession()) {
 				assertThat( session.find( TestEntity.class, 1 ) ).isNull();
 			}
-			sf.getSchemaManager().dropMappedObjects( false );
+			sf.getSchemaManager().drop( false );
 		}
 	}
 
@@ -65,7 +65,7 @@ public class SchemaUpdateArrayPropertiesTest {
 			try (Session session = sf.openSession()) {
 				assertThat( session.find( TestEntity.class, 1 ) ).isNull();
 			}
-			sf.getSchemaManager().dropMappedObjects( false );
+			sf.getSchemaManager().drop( false );
 		}
 	}
 

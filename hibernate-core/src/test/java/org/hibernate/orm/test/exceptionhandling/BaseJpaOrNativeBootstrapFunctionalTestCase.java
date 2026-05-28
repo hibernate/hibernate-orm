@@ -67,7 +67,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase {
 	@AfterEach
 	void cleanUpState() {
 		if ( sessionFactory != null ) {
-			sessionFactory.getSchemaManager().truncateMappedObjects();
+			sessionFactory.getSchemaManager().truncate();
 			sessionFactory.close();
 			sessionFactory = null;
 		}

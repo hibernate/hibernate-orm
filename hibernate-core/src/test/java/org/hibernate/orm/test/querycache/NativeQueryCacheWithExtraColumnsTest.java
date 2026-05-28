@@ -71,7 +71,7 @@ public class NativeQueryCacheWithExtraColumnsTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

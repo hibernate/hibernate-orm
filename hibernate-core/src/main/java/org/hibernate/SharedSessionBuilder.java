@@ -47,7 +47,6 @@ import java.util.function.UnaryOperator;
  * A child session with a shared transaction context also receives parent flush
  * and close notifications, so the child's work is flushed with the parent, and
  * the child is automatically closed when the parent is closed.
- * <p>
  * <pre>
  * try (var childSession
  *          = session.sessionWithOptions()

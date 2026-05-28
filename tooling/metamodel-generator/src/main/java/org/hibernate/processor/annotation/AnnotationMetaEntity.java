@@ -4267,7 +4267,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable String namedRepositoryQueryName(ExecutableElement method, AnnotationMirror mirror) {
-		return repository && isNamedRepositoryQueryAnnotation( mirror ) ? staticQueryName( method ) : null;
+		return repository
+			&& !isCompanionMethod( method )
+			&& isNamedRepositoryQueryAnnotation( mirror )
+				? staticQueryName( method )
+				: null;
 	}
 
 	private static boolean isNamedRepositoryQueryAnnotation(AnnotationMirror mirror) {

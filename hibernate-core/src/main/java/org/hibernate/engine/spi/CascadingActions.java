@@ -9,7 +9,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.ReplicationMode;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CascadePoint;
@@ -517,44 +516,6 @@ public class CascadingActions {
 			}
 		}
 	}
-
-	/**
-	 * @see org.hibernate.Session#replicate
-	 */
-	public static final CascadingAction<ReplicationMode> REPLICATE = new BaseCascadingAction<>() {
-		@Override
-		public void cascade(
-				EventSource session,
-				Object child,
-				String childEntityName,
-				String parentEntityName,
-				String propertyName,
-				List<String> attributePath,
-				ReplicationMode mode,
-				boolean isCascadeDeleteEnabled)
-				throws HibernateException {
-			session.replicate( childEntityName, child, mode );
-		}
-
-		@Override
-		public Iterator<?> getCascadableChildrenIterator(
-				EventSource session,
-				CollectionType collectionType,
-				Object collection) {
-			// replicate does cascade to uninitialized collections
-			return getLoadedElementsIterator( collectionType, collection );
-		}
-
-		@Override
-		public boolean deleteOrphans() {
-			return false; //I suppose?
-		}
-
-		@Override
-		public String toString() {
-			return "ACTION_REPLICATE";
-		}
-	};
 
 	public abstract static class BaseCascadingAction<T> implements CascadingAction<T> {
 		@Override

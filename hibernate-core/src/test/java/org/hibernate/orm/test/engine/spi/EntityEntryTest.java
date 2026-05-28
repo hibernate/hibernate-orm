@@ -35,7 +35,6 @@ public class EntityEntryTest {
 		assertThat( entityEntry.getLockMode() ).isEqualTo( LockMode.OPTIMISTIC );
 		assertThat( entityEntry.getStatus() ).isEqualTo( Status.MANAGED );
 		assertThat( entityEntry.isExistsInDatabase() ).isTrue();
-		assertThat( entityEntry.isBeingReplicated() ).isTrue();
 	}
 
 	@Test
@@ -45,14 +44,12 @@ public class EntityEntryTest {
 		assertThat( entityEntry.getLockMode() ).isEqualTo( LockMode.OPTIMISTIC );
 		assertThat( entityEntry.getStatus() ).isEqualTo( Status.MANAGED );
 		assertThat( entityEntry.isExistsInDatabase() ).isTrue();
-		assertThat( entityEntry.isBeingReplicated() ).isTrue();
 		// When
 		entityEntry.setLockMode( LockMode.PESSIMISTIC_READ );
 		// Then
 		assertThat( entityEntry.getLockMode() ).isEqualTo( LockMode.PESSIMISTIC_READ );
 		assertThat( entityEntry.getStatus() ).isEqualTo( Status.MANAGED );
 		assertThat( entityEntry.isExistsInDatabase() ).isTrue();
-		assertThat( entityEntry.isBeingReplicated() ).isTrue();
 	}
 
 	@Test
@@ -65,7 +62,6 @@ public class EntityEntryTest {
 		assertThat( entityEntry.getLockMode() ).isEqualTo( LockMode.OPTIMISTIC );
 		assertThat( entityEntry.getStatus() ).isEqualTo( Status.DELETED );
 		assertThat( entityEntry.isExistsInDatabase() ).isTrue();
-		assertThat( entityEntry.isBeingReplicated() ).isTrue();
 	}
 
 	@Test
@@ -78,7 +74,6 @@ public class EntityEntryTest {
 		assertThat( entityEntry.getLockMode() ).isEqualTo( LockMode.OPTIMISTIC );
 		assertThat( entityEntry.getStatus() ).isEqualTo( Status.GONE );
 		assertThat( entityEntry.isExistsInDatabase() ).isFalse();
-		assertThat( entityEntry.isBeingReplicated() ).isTrue();
 	}
 
 	@Test
@@ -104,7 +99,6 @@ public class EntityEntryTest {
 		assertThat( deserializedEntry.getLockMode() ).isEqualTo( LockMode.OPTIMISTIC );
 		assertThat( deserializedEntry.getStatus() ).isEqualTo( Status.MANAGED );
 		assertThat( deserializedEntry.isExistsInDatabase() ).isTrue();
-		assertThat( deserializedEntry.isBeingReplicated() ).isTrue();
 	}
 
 	private EntityEntry createEntityEntry() {
@@ -117,7 +111,6 @@ public class EntityEntryTest {
 				LockMode.OPTIMISTIC,
 				true,
 				null,
-				true,
 				getPersistenceContextMock()
 		);
 	}

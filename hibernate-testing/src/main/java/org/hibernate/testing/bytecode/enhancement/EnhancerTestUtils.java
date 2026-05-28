@@ -66,7 +66,6 @@ public abstract class EnhancerTestUtils extends BaseUnitTestCase {
 				LockMode.NONE,
 				false,
 				null,
-				false,
 				null
 		);
 	}

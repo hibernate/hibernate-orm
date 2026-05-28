@@ -37,7 +37,6 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
-import static org.hibernate.engine.internal.Versioning.getVersion;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
@@ -238,7 +237,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		logScheduleUpdate( entry, event.getFactory(), status, persister );
 
-		final boolean intercepted = !entry.isBeingReplicated() && handleInterception( event );
+		final boolean intercepted = handleInterception( event );
 
 		// increment the version number (if necessary)
 		final Object nextVersion = getNextVersion( event );
@@ -384,17 +383,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final var persister = entry.getPersister();
 		if ( persister.isVersioned() ) {
 			final Object[] values = event.getPropertyValues();
-			if ( entry.isBeingReplicated() ) {
-				return getVersion( values, persister );
-			}
-			else {
-				final Object nextVersion =
-						isVersionIncrementRequired( event, entry )
-								? incrementVersion( event.getEntity(), entry.getVersion(), persister, event.getSession() )
-								: entry.getVersion(); //use the current version
-				setVersion( values, nextVersion, persister );
-				return nextVersion;
-			}
+			final Object nextVersion =
+					isVersionIncrementRequired( event, entry )
+							? incrementVersion( event.getEntity(), entry.getVersion(), persister, event.getSession() )
+							: entry.getVersion(); //use the current version
+			setVersion( values, nextVersion, persister );
+			return nextVersion;
 		}
 		else {
 			return null;

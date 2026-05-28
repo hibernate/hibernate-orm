@@ -28,7 +28,6 @@ import org.hibernate.event.internal.DefaultPostLoadEventListener;
 import org.hibernate.event.internal.DefaultPreFlushEventListener;
 import org.hibernate.event.internal.DefaultPreLoadEventListener;
 import org.hibernate.event.internal.DefaultRefreshEventListener;
-import org.hibernate.event.internal.DefaultReplicateEventListener;
 import org.hibernate.event.internal.PostDeleteEventListenerStandardImpl;
 import org.hibernate.event.internal.PostInsertEventListenerStandardImpl;
 import org.hibernate.event.internal.PostUpdateEventListenerStandardImpl;
@@ -75,7 +74,6 @@ import static org.hibernate.event.spi.EventType.PRE_LOAD;
 import static org.hibernate.event.spi.EventType.PRE_UPDATE;
 import static org.hibernate.event.spi.EventType.PRE_UPSERT;
 import static org.hibernate.event.spi.EventType.REFRESH;
-import static org.hibernate.event.spi.EventType.REPLICATE;
 
 /**
  * Standard implementation of EventListenerRegistry
@@ -312,8 +310,6 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 			// refresh listeners
 			prepareListeners( REFRESH, new DefaultRefreshEventListener() );
 
-			// replicate listeners
-			prepareListeners( REPLICATE, new DefaultReplicateEventListener() );
 		}
 
 		public <T> void prepareListeners(EventType<T> eventType) {

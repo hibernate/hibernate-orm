@@ -128,7 +128,6 @@
             <xs:enumeration value="pre-load"/>
             <xs:enumeration value="pre-update"/>
             <xs:enumeration value="refresh"/>
-            <xs:enumeration value="replicate"/>
             <xs:enumeration value="save"/>
             <xs:enumeration value="save-update"/>
             <xs:enumeration value="update"/>

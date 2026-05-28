@@ -42,7 +42,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
-import org.hibernate.ReplicationMode;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SharedStatelessSessionBuilder;
@@ -1096,16 +1095,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void load(@Nonnull Object object, @Nonnull Object id) {
 		delegate.load( object, id );
-	}
-
-	@Override
-	public void replicate(@Nonnull Object object, @Nonnull ReplicationMode replicationMode) {
-		delegate.replicate( object, replicationMode );
-	}
-
-	@Override
-	public void replicate(@Nonnull String entityName, @Nonnull Object object, @Nonnull ReplicationMode replicationMode) {
-		delegate.replicate( entityName, object, replicationMode );
 	}
 
 	@Override

@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.nullargs;
 
 import jakarta.persistence.LockModeType;
-import org.hibernate.ReplicationMode;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -29,7 +28,6 @@ class NullSessionArgumentsTest {
 					session::evict,
 					session::remove,
 					e -> session.lock( e, LockModeType.NONE ),
-					e -> session.replicate( e, ReplicationMode.EXCEPTION ),
 					session::getLockMode,
 					session::getEntityName,
 					session::getIdentifier,

@@ -75,6 +75,13 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+[[session-replicate]]
+=== Removed `Session.replicate()`
+
+The deprecated `Session.replicate()` methods and the associated `ReplicationMode` enum have been removed.
+There is no direct replacement.
+For some import or overwrite workflows, consider `StatelessSession#upsert(Object)`.
+
 
 [[stateless]]
 === StatelessSession
@@ -562,4 +569,3 @@ No DDL changes are needed. The default `REV`/`REVTYPE` column names and encoding
 == Changes in Dependencies
 
 This section describes changes to dependencies used by Hibernate ORM.
-

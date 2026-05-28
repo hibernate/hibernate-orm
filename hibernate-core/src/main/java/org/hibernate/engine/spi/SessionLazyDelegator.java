@@ -39,7 +39,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
-import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
@@ -213,18 +212,6 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public void load(@Nonnull Object object, @Nonnull Object id) {
 		this.lazySession.get().load( object, id );
-	}
-
-	@Override
-	@Deprecated
-	public void replicate(@Nonnull Object object, @Nonnull ReplicationMode replicationMode) {
-		this.lazySession.get().replicate( object, replicationMode );
-	}
-
-	@Override
-	@Deprecated
-	public void replicate(@Nonnull String entityName, @Nonnull Object object, @Nonnull ReplicationMode replicationMode) {
-		this.lazySession.get().replicate( entityName, object, replicationMode );
 	}
 
 	@Override

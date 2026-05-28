@@ -35,8 +35,6 @@ public final class EventType<T> {
 
 	public static final EventType<DeleteEventListener> DELETE = create( "delete", DeleteEventListener.class );
 
-	public static final EventType<ReplicateEventListener> REPLICATE = create( "replicate", ReplicateEventListener.class );
-
 	public static final EventType<FlushEventListener> FLUSH = create( "flush", FlushEventListener.class );
 	public static final EventType<AutoFlushEventListener> AUTO_FLUSH = create( "auto-flush", AutoFlushEventListener.class );
 	public static final EventType<PreFlushEventListener> PRE_FLUSH = create( "pre-flush", PreFlushEventListener.class );

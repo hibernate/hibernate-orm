@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EmbeddedId;
@@ -1387,10 +1388,15 @@ public class PropertyBinder {
 	 *          The intention is really whether non-optional is explicit
 	 */
 	private static boolean isExplicitlyOptional(MemberDetails attributeMember) {
-		final var basic = attributeMember.getDirectAnnotationUsage( Basic.class );
-		// things are optional (nullable) by default.
-		// If there is no annotation, that cannot be altered
-		return basic == null || basic.optional();
+		if ( isNonnull( attributeMember ) ) {
+			return false;
+		}
+		else {
+			final var basic = attributeMember.getDirectAnnotationUsage( Basic.class );
+			// things are optional (nullable) by default.
+			// If there is no annotation, that cannot be altered
+			return basic == null || basic.optional();
+		}
 	}
 
 	/**
@@ -1398,23 +1404,32 @@ public class PropertyBinder {
 	 * whether it is primitive?
 	 */
 	public static boolean isOptional(MemberDetails attributeMember, PropertyHolder propertyHolder) {
-		final var basic = attributeMember.getDirectAnnotationUsage( Basic.class );
-		if ( basic != null ) {
-			return basic.optional()
-				&& attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
-		}
-		else if ( attributeMember.isArray() ) {
-			return true;
-		}
-		else if ( propertyHolder != null && propertyHolder.isComponent() ) {
-			return true;
-		}
-		else if ( attributeMember.isPlural() ) {
-			return attributeMember.getElementType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+		if ( isNonnull( attributeMember ) ) {
+			return false;
 		}
 		else {
-			return attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+			final var basic = attributeMember.getDirectAnnotationUsage( Basic.class );
+			if ( basic != null ) {
+				return basic.optional()
+				       && attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+			}
+			else if ( attributeMember.isArray() ) {
+				return true;
+			}
+			else if ( propertyHolder != null && propertyHolder.isComponent() ) {
+				return true;
+			}
+			else if ( attributeMember.isPlural() ) {
+				return attributeMember.getElementType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+			}
+			else {
+				return attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+			}
 		}
+	}
+
+	static boolean isNonnull(MemberDetails attributeMember) {
+		return attributeMember.hasDirectAnnotationUsage( Nonnull.class );
 	}
 
 	private static boolean isLazy(MemberDetails property) {

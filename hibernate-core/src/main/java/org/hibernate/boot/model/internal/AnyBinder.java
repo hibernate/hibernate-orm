@@ -24,6 +24,7 @@ import jakarta.persistence.FetchType;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
+import static org.hibernate.boot.model.internal.PropertyBinder.isNonnull;
 
 public class AnyBinder {
 
@@ -76,7 +77,7 @@ public class AnyBinder {
 		}
 
 		final boolean lazy = any.fetch() == FetchType.LAZY;
-		final boolean optional = any.optional();
+		final boolean optional = any.optional() && !isNonnull( memberDetails );
 		final var anyValue = BinderHelper.buildAnyValue(
 				memberDetails.getDirectAnnotationUsage( Column.class ),
 				getOverridableAnnotation( memberDetails, Formula.class, context ),

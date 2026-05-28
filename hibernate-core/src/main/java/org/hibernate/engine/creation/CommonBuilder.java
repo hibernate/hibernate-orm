@@ -6,6 +6,8 @@ package org.hibernate.engine.creation;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -170,6 +172,18 @@ public interface CommonBuilder {
 	@Nonnull
 	CommonBuilder readOnly(boolean readOnly);
 
+	/// Specifies a session-specific size for JDBC batching, overriding any
+	/// SessionFactory-level size.
+	///
+	/// @return `this`, for method chaining
+	///
+	/// @see org.hibernate.cfg.BatchSettings#STATEMENT_BATCH_SIZE
+	/// @see org.hibernate.BatchSize
+	///
+	/// @since 8.0
+	@Nonnull
+	CommonBuilder jdbcBatchSize(int batchSize);
+
 	/// Specify the initial [CacheMode] for the session.
 	///
 	/// @return `this`, for method chaining
@@ -179,6 +193,22 @@ public interface CommonBuilder {
 	/// @since 7.2
 	@Nonnull
 	CommonBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
+
+	/// Specify the [CacheStoreMode] for the session.
+	///
+	/// @return `this`, for method chaining
+	///
+	/// @since 8.0
+	@Nonnull
+	CommonBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode);
+
+	/// Specify the [CacheRetrieveMode] for the session.
+	///
+	/// @return `this`, for method chaining
+	///
+	/// @since 8.0
+	@Nonnull
+	CommonBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode);
 
 	/// Specify the [JDBC time zone][org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE]
 	/// to use for the session.

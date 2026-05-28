@@ -181,9 +181,11 @@ public class StatelessSessionImpl
 		influencers.setTemporalIdentifier( options.getTemporalIdentifier() );
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
-		// A nonzero batch size forces the use of write-behind
-		// Therefore, ignore the value of hibernate.jdbc.batch_size
-		setJdbcBatchSize( 0 );
+		if ( getJdbcBatchSize() == null ) {
+			// A nonzero batch size forces the use of write-behind
+			// Therefore, ignore the value of hibernate.jdbc.batch_size
+			setJdbcBatchSize( 0 );
+		}
 
 		final var statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {

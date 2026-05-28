@@ -56,6 +56,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
 	 * @see SessionBuilder#tenantIdentifier(Object)
+	 * @see SessionCreationOption.TenantId
 	 */
 	@Nullable
 	String getTenantIdentifier();
@@ -68,6 +69,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
 	 * @see SessionBuilder#tenantIdentifier(Object)
+	 * @see SessionCreationOption.TenantId
 	 */
 	@Nullable
 	Object getTenantIdentifierValue();

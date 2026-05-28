@@ -78,6 +78,8 @@ import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.util.OptionsHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.GeneratorSettings;
@@ -761,20 +763,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 					builder.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
 				}
 				else {
-					builder.withOption( option );
+					OptionsHelper.applyOption( builder, option );
 				}
 			}
 		}
 
-		final var session = builder.openSession();
-		if ( options != null ) {
-			for ( var option : options ) {
-				if ( option instanceof EntityManager.Option entityManagerOption ) {
-					session.addOption( entityManagerOption );
-				}
-			}
-		}
-		return session;
+		return builder.openSession();
 	}
 
 	private Session buildEntityManager(SynchronizationType synchronizationType, Map<?,?> map) {
@@ -845,15 +839,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	@Nonnull
 	public StatelessSession createEntityAgent(@Nullable EntityAgent.CreationOption... options) {
-		final var agent = createEntityAgent();
-		if ( options != null ) {
-			for ( var option : options ) {
-				if ( option instanceof EntityAgent.Option entityAgentOption ) {
-					agent.addOption( entityAgentOption );
-				}
-			}
+		if ( CollectionHelper.isEmpty( options ) ) {
+			return createEntityAgent();
 		}
-		return agent;
+
+		var builder = withStatelessOptions();
+		for ( int i = 0; i < options.length; i++ ) {
+			OptionsHelper.applyOption( builder, options[i] );
+		}
+
+		return builder.openStatelessSession();
 	}
 
 	@Override

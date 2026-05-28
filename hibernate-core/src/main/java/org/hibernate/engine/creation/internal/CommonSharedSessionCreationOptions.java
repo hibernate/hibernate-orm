@@ -36,6 +36,7 @@ public interface CommonSharedSessionCreationOptions {
 	Object getTenantIdentifierValue();
 
 	boolean isReadOnly();
+	Integer getJdbcBatchSize();
 
 	CacheMode getInitialCacheMode();
 

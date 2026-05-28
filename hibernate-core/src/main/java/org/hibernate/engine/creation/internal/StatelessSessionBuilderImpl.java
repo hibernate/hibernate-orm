@@ -131,6 +131,11 @@ public abstract class StatelessSessionBuilderImpl
 	}
 
 	@Override
+	public Integer getJdbcBatchSize() {
+		return jdbcBatchSize;
+	}
+
+	@Override
 	public CacheMode getInitialCacheMode() {
 		return cacheMode;
 	}

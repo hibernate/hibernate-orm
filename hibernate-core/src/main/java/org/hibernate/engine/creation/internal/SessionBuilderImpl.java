@@ -9,8 +9,8 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
+import org.hibernate.SessionCreationOption;
 import org.hibernate.SessionEventListener;
-import org.hibernate.SubselectFetchMode;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -68,8 +68,8 @@ public abstract class SessionBuilderImpl
 
 	@Override
 	public SessionBuilderImplementor withOption(EntityManager.CreationOption option) {
-		if ( option instanceof SubselectFetchMode subselectFetchMode ) {
-			subselectFetchEnabled = subselectFetchMode == SubselectFetchMode.ENABLED;
+		if ( option instanceof SessionCreationOption.SubselectFetchMode subselectFetchMode ) {
+			subselectFetchEnabled = subselectFetchMode == SessionCreationOption.SubselectFetchMode.ENABLED;
 		}
 		return this;
 	}
@@ -132,6 +132,11 @@ public abstract class SessionBuilderImpl
 	@Override
 	public boolean isReadOnly() {
 		return readOnly;
+	}
+
+	@Override
+	public Integer getJdbcBatchSize() {
+		return jdbcBatchSize;
 	}
 
 	@Override

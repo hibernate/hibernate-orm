@@ -50,6 +50,8 @@ public interface SessionCreationOptions {
 
 	boolean isReadOnly();
 
+	Integer getJdbcBatchSize();
+
 	CacheMode getInitialCacheMode();
 
 	boolean isIdentifierRollbackEnabled();

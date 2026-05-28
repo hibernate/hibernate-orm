@@ -6,6 +6,8 @@ package org.hibernate.engine.creation.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -37,6 +39,7 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 	protected PhysicalConnectionHandlingMode connectionHandlingMode;
 	protected Object tenantIdentifier;
 	protected boolean readOnly;
+	protected Integer jdbcBatchSize;
 	protected CacheMode cacheMode;
 	protected TimeZone jdbcTimeZone;
 	protected Object temporalIdentifier;
@@ -140,6 +143,13 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 
 	@Override
 	@Nonnull
+	public T jdbcBatchSize(int batchSize) {
+		this.jdbcBatchSize = batchSize;
+		return getThis();
+	}
+
+	@Override
+	@Nonnull
 	public T readOnly(boolean readOnly) {
 		this.readOnly = readOnly;
 		return getThis();
@@ -150,6 +160,18 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 	public T initialCacheMode(@Nonnull CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
 		return getThis();
+	}
+
+	@Override
+	@Nonnull
+	public CommonBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
+		return initialCacheMode( CacheMode.interpretStoreMode( cacheMode, cacheStoreMode ) );
+	}
+
+	@Override
+	@Nonnull
+	public CommonBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
+		return initialCacheMode( CacheMode.interpretRetrieveMode( cacheMode, cacheRetrieveMode ) );
 	}
 
 	@Override

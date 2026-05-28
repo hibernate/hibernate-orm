@@ -57,6 +57,11 @@ public record SessionCreationOptionsAdaptor(
 	}
 
 	@Override
+	public Integer getJdbcBatchSize() {
+		return options.getJdbcBatchSize();
+	}
+
+	@Override
 	public CacheMode getInitialCacheMode() {
 		return options.getInitialCacheMode();
 	}

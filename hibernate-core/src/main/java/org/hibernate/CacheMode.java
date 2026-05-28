@@ -126,6 +126,24 @@ public enum CacheMode implements FindOption, EntityManager.Option, EntityAgent.O
 		}
 	}
 
+	public static CacheMode interpretStoreMode(
+			CacheMode cacheMode,
+			CacheStoreMode cacheStoreMode) {
+		return fromJpaModes(
+				cacheMode == null ? NORMAL.retrieveMode : cacheMode.retrieveMode,
+				cacheStoreMode
+		);
+	}
+
+	public static CacheMode interpretRetrieveMode(
+			CacheMode cacheMode,
+			CacheRetrieveMode cacheRetrieveMode) {
+		return fromJpaModes(
+				cacheRetrieveMode,
+				cacheMode == null ? NORMAL.storeMode : cacheMode.storeMode
+		);
+	}
+
 	/**
 	 * @return the JPA-defined {@link CacheStoreMode} implied by this cache mode
 	 */

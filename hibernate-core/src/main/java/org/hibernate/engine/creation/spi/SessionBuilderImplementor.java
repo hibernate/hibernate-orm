@@ -132,5 +132,6 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 	@Nonnull
 	SessionBuilderImplementor atChangeset(@Nullable Object changesetId);
 
+	@Nonnull
 	SessionBuilderImplementor withOption(EntityManager.CreationOption option);
 }

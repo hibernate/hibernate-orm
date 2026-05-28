@@ -18,8 +18,12 @@ import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReadOnlyMode;
+import org.hibernate.SessionBuilder;
+import org.hibernate.SessionCreationOption;
+import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.query.spi.QueryOptions;
@@ -38,6 +42,66 @@ import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushMode
  * @since 8.0
  */
 public final class OptionsHelper {
+	public static void applyOption(SessionBuilder builder, EntityManager.CreationOption option) {
+		if ( option instanceof CacheMode cacheMode ) {
+			builder.initialCacheMode( cacheMode );
+		}
+		else if ( option instanceof CacheStoreMode cacheStoreMode ) {
+			builder.cacheStoreMode( cacheStoreMode );
+		}
+		else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+			builder.cacheRetrieveMode( cacheRetrieveMode );
+		}
+		else if ( option instanceof FlushMode flushMode ) {
+			builder.flushMode( flushMode );
+		}
+		else if ( option instanceof FlushModeType flushModeType ) {
+			builder.flushMode( FlushMode.fromJpaFlushMode(  flushModeType ) );
+		}
+		else if ( option instanceof BatchSize batchSize) {
+			builder.jdbcBatchSize( batchSize.batchSize() );
+		}
+		else if ( option instanceof ReadOnlyMode readOnlyMode) {
+			builder.readOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
+		}
+		else if ( option instanceof SessionCreationOption.SubselectFetchMode subselectFetchMode ) {
+			builder.subselectFetchEnabled( subselectFetchMode == SessionCreationOption.SubselectFetchMode.ENABLED );
+		}
+		else if ( option instanceof SessionCreationOption.TenantId tenantId ) {
+			builder.tenantIdentifier( tenantId.value() );
+		}
+		else if ( option instanceof SessionCreationOption.EffectiveChangeset effectiveChangeset ) {
+			builder.atChangeset( effectiveChangeset.changesetId() );
+		}
+		else if ( option instanceof SessionCreationOption.EffectiveAt effectiveAt ) {
+			builder.asOf( effectiveAt.instant() );
+		}
+	}
+
+	public static void applyOption(StatelessSessionBuilder builder, EntityAgent.CreationOption option) {
+		if ( option instanceof CacheMode cacheMode ) {
+			builder.initialCacheMode( cacheMode );
+		}
+		else if ( option instanceof CacheStoreMode cacheStoreMode ) {
+			builder.cacheStoreMode( cacheStoreMode );
+		}
+		else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+			builder.cacheRetrieveMode( cacheRetrieveMode );
+		}
+		else if ( option instanceof BatchSize batchSize) {
+			builder.jdbcBatchSize( batchSize.batchSize() );
+		}
+		else if ( option instanceof SessionCreationOption.TenantId tenantId ) {
+			builder.tenantIdentifier( tenantId.value() );
+		}
+		else if ( option instanceof SessionCreationOption.EffectiveChangeset effectiveChangeset ) {
+			builder.atChangeset( effectiveChangeset.changesetId() );
+		}
+		else if ( option instanceof SessionCreationOption.EffectiveAt effectiveAt ) {
+			builder.asOf( effectiveAt.instant() );
+		}
+
+	}
 
 	public static void applyOption(SessionImplementor entityManager, EntityManager.Option option) {
 		Objects.requireNonNull( option, "option" );

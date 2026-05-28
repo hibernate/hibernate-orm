@@ -255,6 +255,7 @@ abstract class AbstractSharedSessionContract
 
 		tenantIdentifier = getTenantId( factoryOptions, options );
 		readOnly = options.isReadOnly();
+		jdbcBatchSize = options.getJdbcBatchSize();
 		cacheMode = options.getInitialCacheMode();
 		interceptor = interpret( options.getInterceptor() );
 		jdbcTimeZone = options.getJdbcTimeZone();

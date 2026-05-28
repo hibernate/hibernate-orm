@@ -9,9 +9,9 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
+import org.hibernate.SessionCreationOption;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
-import org.hibernate.SubselectFetchMode;
 import org.hibernate.Transaction;
 import org.hibernate.engine.creation.spi.SharedSessionBuilderImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -86,8 +86,8 @@ public abstract class SharedSessionBuilderImpl
 
 	@Override
 	public SharedSessionBuilderImplementor withOption(EntityManager.CreationOption option) {
-		if ( option instanceof SubselectFetchMode subselectFetchMode ) {
-			subselectFetchEnabled = subselectFetchMode == SubselectFetchMode.ENABLED;
+		if ( option instanceof SessionCreationOption.SubselectFetchMode subselectFetchMode ) {
+			subselectFetchEnabled = subselectFetchMode == SessionCreationOption.SubselectFetchMode.ENABLED;
 		}
 		return this;
 	}
@@ -341,6 +341,11 @@ public abstract class SharedSessionBuilderImpl
 	@Override
 	public boolean isReadOnly() {
 		return readOnly;
+	}
+
+	@Override
+	public Integer getJdbcBatchSize() {
+		return jdbcBatchSize;
 	}
 
 	@Override

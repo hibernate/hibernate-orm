@@ -48,6 +48,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
+import static org.hibernate.boot.model.internal.PropertyBinder.isNonnull;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -128,6 +129,7 @@ public class ToOneBinder {
 		// the association is optional.
 		// @OneToOne(optional = true) with @PKJC makes the association optional.
 		return !optional
+			|| isNonnull( property )
 			|| property.hasDirectAnnotationUsage( Id.class )
 			|| property.hasDirectAnnotationUsage( MapsId.class ) && notFoundAction != NotFoundAction.IGNORE;
 	}

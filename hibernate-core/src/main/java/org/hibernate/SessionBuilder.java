@@ -9,6 +9,8 @@ import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -41,27 +43,34 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 public interface SessionBuilder extends CommonBuilder {
 	/// Open the session using the specified options.
 	/// @see #open
+	@Nonnull
 	Session openSession();
 
 	@Override
+	@Nonnull
 	default Session open() {
 		return openSession();
 	}
 
 	@Override
-	SessionBuilder interceptor(Interceptor interceptor);
+	@Nonnull
+	SessionBuilder interceptor(@Nullable Interceptor interceptor);
 
 	@Override
+	@Nonnull
 	SessionBuilder noInterceptor();
 
 	@Override
+	@Nonnull
 	SessionBuilder noSessionInterceptorCreation();
 
 	@Override
+	@Nonnull
 	SessionBuilder noStatementInspector();
 
 	@Override
-	SessionBuilder statementInspector(UnaryOperator<String> operator);
+	@Nonnull
+	SessionBuilder statementInspector(@Nullable UnaryOperator<String> operator);
 
 	/**
 	 * Applies the given {@link StatementInspector} to the session.
@@ -75,7 +84,8 @@ public interface SessionBuilder extends CommonBuilder {
 	 * instead.
 	 */
 	@Deprecated(since = "7.0")
-	SessionBuilder statementInspector(StatementInspector statementInspector);
+	@Nonnull
+	SessionBuilder statementInspector(@Nonnull StatementInspector statementInspector);
 
 	/**
 	 * Adds a specific connection to the session options.
@@ -85,7 +95,8 @@ public interface SessionBuilder extends CommonBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	@Override
-	SessionBuilder connection(Connection connection);
+	@Nonnull
+	SessionBuilder connection(@Nonnull Connection connection);
 
 	/**
 	 * Specifies the connection handling modes for the session.
@@ -98,7 +109,8 @@ public interface SessionBuilder extends CommonBuilder {
 	 * @since 7.0
 	 */
 	@Override
-	SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+	@Nonnull
+	SessionBuilder connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode);
 
 	/**
 	 * Specifies the {@linkplain PhysicalConnectionHandlingMode connection handling mode}.
@@ -113,6 +125,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 * instead.
 	 */
 	@Deprecated(since = "7.0")
+	@Nonnull
 	SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 
 	/**
@@ -124,6 +137,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @see jakarta.persistence.SynchronizationType#SYNCHRONIZED
 	 */
+	@Nonnull
 	SessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
 
 	/**
@@ -133,6 +147,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Nonnull
 	SessionBuilder autoClear(boolean autoClear);
 
 	/**
@@ -144,7 +159,8 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @see jakarta.persistence.PersistenceContextType
 	 */
-	SessionBuilder flushMode(FlushMode flushMode);
+	@Nonnull
+	SessionBuilder flushMode(@Nonnull FlushMode flushMode);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -155,13 +171,16 @@ public interface SessionBuilder extends CommonBuilder {
 	 * @since 6.4
 	 */
 	@Override
+	@Nonnull
 	SessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	@Override
+	@Nonnull
 	SessionBuilder readOnly(boolean readOnly);
 
 	@Override
-	SessionBuilder initialCacheMode(CacheMode cacheMode);
+	@Nonnull
+	SessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
 
 	/**
 	 * Add one or more {@link SessionEventListener} instances to the list of
@@ -171,7 +190,8 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	SessionBuilder eventListeners(SessionEventListener... listeners);
+	@Nonnull
+	SessionBuilder eventListeners(@Nonnull SessionEventListener... listeners);
 
 	/**
 	 * Remove all listeners intended for the built session currently held here,
@@ -179,6 +199,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Nonnull
 	SessionBuilder clearEventListeners();
 
 	/**
@@ -188,7 +209,8 @@ public interface SessionBuilder extends CommonBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	@Override
-	SessionBuilder jdbcTimeZone(TimeZone timeZone);
+	@Nonnull
+	SessionBuilder jdbcTimeZone(@Nullable TimeZone timeZone);
 
 	/**
 	 * Should the session be automatically closed after transaction completion?
@@ -199,6 +221,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @see jakarta.persistence.PersistenceContextType
 	 */
+	@Nonnull
 	SessionBuilder autoClose(boolean autoClose);
 
 	/**
@@ -210,6 +233,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	SessionBuilder identifierRollback(boolean identifierRollback);
 
 	/**
@@ -222,6 +246,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @since 7.2
 	 */
+	@Nonnull
 	SessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize);
 
 	/**
@@ -234,6 +259,7 @@ public interface SessionBuilder extends CommonBuilder {
 	 *
 	 * @since 7.2
 	 */
+	@Nonnull
 	SessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled);
 
 	/**
@@ -242,7 +268,8 @@ public interface SessionBuilder extends CommonBuilder {
 	 * Instances of temporal entities retrieved in the session represent the
 	 * revisions effective at the given instant.
 	 */
-	SessionBuilder asOf(Instant instant);
+	@Nonnull
+	SessionBuilder asOf(@Nullable Instant instant);
 
 	/**
 	 * Specify the
@@ -252,5 +279,6 @@ public interface SessionBuilder extends CommonBuilder {
 	 * entity data. Instances of temporal or audited entities retrieved in
 	 * the session represent the state effective at the given changeset.
 	 */
-	SessionBuilder atChangeset(Object changesetId);
+	@Nonnull
+	SessionBuilder atChangeset(@Nullable Object changesetId);
 }

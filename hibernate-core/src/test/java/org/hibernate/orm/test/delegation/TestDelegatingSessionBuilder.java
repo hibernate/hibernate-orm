@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.delegation;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.SessionBuilder;
 import org.hibernate.engine.spi.AbstractDelegatingSessionBuilder;
 
@@ -24,6 +25,7 @@ public class TestDelegatingSessionBuilder extends AbstractDelegatingSessionBuild
 	}
 
 	@Override
+	@Nonnull
 	protected TestDelegatingSessionBuilder getThis() {
 		return this;
 	}

@@ -639,6 +639,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	public SessionBuilderImplementor withOptions() {
 		return new SessionBuilderImpl( this ) {
 			@Override
+			@Nonnull
 			protected SessionImplementor createSession() {
 				return new SessionImpl( SessionFactoryImpl.this, this );
 			}
@@ -650,6 +651,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	public StatelessSessionBuilder withStatelessOptions() {
 		return new StatelessSessionBuilderImpl( this ) {
 			@Override
+			@Nonnull
 			protected StatelessSessionImplementor createStatelessSession() {
 				return new StatelessSessionImpl( SessionFactoryImpl.this, this );
 			}

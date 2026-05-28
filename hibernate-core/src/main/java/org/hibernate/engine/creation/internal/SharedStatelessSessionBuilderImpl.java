@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.creation.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.CacheMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionException;
@@ -51,6 +52,7 @@ public abstract class SharedStatelessSessionBuilderImpl
 	protected abstract StatelessSessionImplementor createStatelessSession();
 
 	@Override
+	@Nonnull
 	protected SharedStatelessSessionBuilder getThis() {
 		return this;
 	}
@@ -59,6 +61,7 @@ public abstract class SharedStatelessSessionBuilderImpl
 	// SharedStatelessSessionBuilder
 
 	@Override
+	@Nonnull
 	public StatelessSessionImplementor open() {
 		CORE_LOGGER.openingStatelessSession( tenantIdentifier );
 		if ( original.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
@@ -74,23 +77,27 @@ public abstract class SharedStatelessSessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	public StatelessSession openStatelessSession() {
 		return open();
 	}
 
 	@Override
+	@Nonnull
 	public SharedStatelessSessionBuilder connection() {
 		shareTransactionContext = true;
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedStatelessSessionBuilder interceptor() {
 		interceptor = original.getInterceptor();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedStatelessSessionBuilder statementInspector() {
 		statementInspector = original.getJdbcSessionContext().getStatementInspector();
 		return this;
@@ -101,16 +108,19 @@ public abstract class SharedStatelessSessionBuilderImpl
 	// CommonSharedSessionCreationOptions
 
 	@Override
+	@Nonnull
 	public Interceptor getInterceptor() {
 		return configuredInterceptor();
 	}
 
 	@Override
+	@Nonnull
 	public StatementInspector getStatementInspector() {
 		return statementInspector;
 	}
 
 	@Override
+	@Nonnull
 	public Object getTenantIdentifierValue() {
 		return tenantIdentifier;
 	}
@@ -135,8 +145,10 @@ public abstract class SharedStatelessSessionBuilderImpl
 		return jdbcTimeZone;
 	}
 
-	@Override @Deprecated
-	public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
+	@Override
+	@Deprecated
+	@Nonnull
+	public StatelessSessionBuilder statementInspector(@Nonnull StatementInspector statementInspector) {
 		this.statementInspector = statementInspector;
 		return this;
 	}

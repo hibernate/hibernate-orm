@@ -9,6 +9,8 @@ import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -27,31 +29,42 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 	 * Opens a session with the specified options.
 	 * @see #open()
 	 */
+	@Nonnull
 	StatelessSession openStatelessSession();
 
 	@Override
+	@Nonnull
 	StatelessSession open();
 
 	@Override
-	StatelessSessionBuilder connection(Connection connection);
+	@Nonnull
+	StatelessSessionBuilder connection(@Nonnull Connection connection);
 
 	@Override
-	StatelessSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+	@Nonnull
+	StatelessSessionBuilder connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode);
 
 	@Override
+	@Nonnull
 	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
-	@Incubating	@Override
+	@Incubating
+	@Override
+	@Nonnull
 	StatelessSessionBuilder readOnly(boolean readOnly);
 
-	@Incubating	@Override
-	StatelessSessionBuilder initialCacheMode(CacheMode cacheMode);
+	@Incubating
+	@Override
+	@Nonnull
+	StatelessSessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
 
 	@Override
-	StatelessSessionBuilder statementInspector(UnaryOperator<String> operator);
+	@Nonnull
+	StatelessSessionBuilder statementInspector(@Nullable UnaryOperator<String> operator);
 
 	@Override
-	StatelessSessionBuilder jdbcTimeZone(TimeZone timeZone);
+	@Nonnull
+	StatelessSessionBuilder jdbcTimeZone(@Nullable TimeZone timeZone);
 
 	/**
 	 * Applies the given {@link StatementInspector} to the session.
@@ -65,7 +78,8 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 	 * instead.
 	 */
 	@Deprecated(since = "7.0")
-	StatelessSessionBuilder statementInspector(StatementInspector statementInspector);
+	@Nonnull
+	StatelessSessionBuilder statementInspector(@Nonnull StatementInspector statementInspector);
 
 	/**
 	 * Specify the instant for reading
@@ -73,7 +87,8 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 	 * Instances of temporal entities retrieved in the session will represent
 	 * the revisions effective at the given instant.
 	 */
-	StatelessSessionBuilder asOf(Instant instant);
+	@Nonnull
+	StatelessSessionBuilder asOf(@Nullable Instant instant);
 
 	/**
 	 * Specify the
@@ -85,5 +100,6 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 	 * The given value should match the type returned by the configured
 	 * changeset id supplier.
 	 */
-	StatelessSessionBuilder atChangeset(Object changesetId);
+	@Nonnull
+	StatelessSessionBuilder atChangeset(@Nullable Object changesetId);
 }

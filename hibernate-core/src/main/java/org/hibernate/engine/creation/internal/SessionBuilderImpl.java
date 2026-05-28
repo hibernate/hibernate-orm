@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.creation.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
@@ -55,6 +56,7 @@ public abstract class SessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	protected SessionBuilderImplementor getThis() {
 		return this;
 	}
@@ -152,59 +154,69 @@ public abstract class SessionBuilderImpl
 	// SessionBuilder
 
 	@Override
+	@Nonnull
 	public SessionImplementor openSession() {
 		CORE_LOGGER.openingSession( tenantIdentifier );
 		return createSession();
 	}
 
+	@Nonnull
 	protected abstract SessionImplementor createSession();
 
 	@Override
 	@Deprecated
-	public SessionBuilderImplementor statementInspector(StatementInspector statementInspector) {
+	@Nonnull
+	public SessionBuilderImplementor statementInspector(@Nonnull StatementInspector statementInspector) {
 		this.statementInspector = statementInspector;
 		return this;
 	}
 
 	@Override
 	@Deprecated
-	public SessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+	@Nonnull
+	public SessionBuilderImplementor connectionHandlingMode(@Nonnull PhysicalConnectionHandlingMode connectionHandlingMode) {
 		this.connectionHandlingMode = connectionHandlingMode;
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor autoJoinTransactions(boolean autoJoinTransactions) {
 		this.autoJoinTransactions = autoJoinTransactions;
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor autoClose(boolean autoClose) {
 		this.autoClose = autoClose;
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor autoClear(boolean autoClear) {
 		this.autoClear = autoClear;
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor flushMode(FlushMode flushMode) {
+	@Nonnull
+	public SessionBuilderImplementor flushMode(@Nonnull FlushMode flushMode) {
 		this.flushMode = flushMode;
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor identifierRollback(boolean identifierRollback) {
 		this.identifierRollback = identifierRollback;
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor eventListeners(SessionEventListener... listeners) {
+	@Nonnull
+	public SessionBuilderImplementor eventListeners(@Nonnull SessionEventListener... listeners) {
 		if ( this.listeners == null ) {
 			final var baselineListeners =
 					sessionFactory.getSessionFactoryOptions().buildSessionEventListeners();
@@ -216,6 +228,7 @@ public abstract class SessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor clearEventListeners() {
 		if ( listeners == null ) {
 			//Needs to initialize explicitly to an empty list as otherwise "null" implies the default listeners will be applied
@@ -228,12 +241,14 @@ public abstract class SessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize) {
 		this.defaultBatchFetchSize = defaultBatchFetchSize;
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled) {
 		this.subselectFetchEnabled = subselectFetchEnabled;
 		return this;

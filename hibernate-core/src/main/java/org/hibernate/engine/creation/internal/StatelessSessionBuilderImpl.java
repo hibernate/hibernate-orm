@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.creation.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
@@ -33,6 +34,7 @@ public abstract class StatelessSessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	protected StatelessSessionBuilder getThis() {
 		return this;
 	}
@@ -41,21 +43,25 @@ public abstract class StatelessSessionBuilderImpl
 	// StatelessSessionBuilder
 
 	@Override
+	@Nonnull
 	public StatelessSession open() {
 		return openStatelessSession();
 	}
 
 	@Override
+	@Nonnull
 	public StatelessSession openStatelessSession() {
 		CORE_LOGGER.openingStatelessSession( tenantIdentifier );
 		return createStatelessSession();
 	}
 
+	@Nonnull
 	protected abstract StatelessSessionImplementor createStatelessSession();
 
 	@Override
 	@Deprecated
-	public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
+	@Nonnull
+	public StatelessSessionBuilder statementInspector(@Nonnull StatementInspector statementInspector) {
 		this.statementInspector = statementInspector;
 		return this;
 	}

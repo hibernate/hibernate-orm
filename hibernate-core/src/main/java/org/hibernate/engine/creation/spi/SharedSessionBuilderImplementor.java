@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.creation.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -26,96 +28,127 @@ import java.util.function.UnaryOperator;
  */
 public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, SessionBuilderImplementor {
 	@Override
-	SharedSessionBuilderImplementor interceptor(Interceptor interceptor);
+	@Nonnull
+	SharedSessionBuilderImplementor interceptor(@Nullable Interceptor interceptor);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor noInterceptor();
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor noSessionInterceptorCreation();
 
 	@Override
-	SharedSessionBuilderImplementor statementInspector(UnaryOperator<String> operator);
+	@Nonnull
+	SharedSessionBuilderImplementor statementInspector(@Nullable UnaryOperator<String> operator);
 
 	@Override
-	SharedSessionBuilderImplementor statementInspector(StatementInspector statementInspector);
+	@Nonnull
+	SharedSessionBuilderImplementor statementInspector(@Nonnull StatementInspector statementInspector);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor tenantIdentifier(Object tenantIdentifier);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor readOnly(boolean readOnly);
 
 	@Override
-	SharedSessionBuilderImplementor initialCacheMode(CacheMode cacheMode);
-
+	@Nonnull
+	SharedSessionBuilderImplementor initialCacheMode(@Nonnull CacheMode cacheMode);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor connection();
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor interceptor();
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor connectionHandlingMode();
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor autoJoinTransactions();
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor flushMode();
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor autoClose();
 
-	@Override @Deprecated
-	SharedSessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode mode);
+	@Override
+	@Deprecated
+	@Nonnull
+	SharedSessionBuilderImplementor connectionHandlingMode(@Nonnull PhysicalConnectionHandlingMode mode);
 
 	@Override
-	SharedSessionBuilderImplementor connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+	@Nonnull
+	SharedSessionBuilderImplementor connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor autoClear(boolean autoClear);
 
 	@Override
-	SharedSessionBuilderImplementor flushMode(FlushMode flushMode);
+	@Nonnull
+	SharedSessionBuilderImplementor flushMode(@Nonnull FlushMode flushMode);
 
 	@Override
-	SharedSessionBuilderImplementor eventListeners(SessionEventListener... listeners);
+	@Nonnull
+	SharedSessionBuilderImplementor eventListeners(@Nonnull SessionEventListener... listeners);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor clearEventListeners();
 
 	@Override
-	SharedSessionBuilderImplementor jdbcTimeZone(TimeZone timeZone);
+	@Nonnull
+	SharedSessionBuilderImplementor jdbcTimeZone(@Nullable TimeZone timeZone);
 
 	@Override
-	SharedSessionBuilderImplementor connection(Connection connection);
+	@Nonnull
+	SharedSessionBuilderImplementor connection(@Nonnull Connection connection);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor autoJoinTransactions(boolean autoJoinTransactions);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor autoClose(boolean autoClose);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor identifierRollback(boolean identifierRollback);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor statementInspector();
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor noStatementInspector();
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize);
 
 	@Override
+	@Nonnull
 	SharedSessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled);
 
 	@Override
-	SharedSessionBuilderImplementor asOf(Instant instant);
+	@Nonnull
+	SharedSessionBuilderImplementor asOf(@Nullable Instant instant);
 
 	@Override
-	SharedSessionBuilderImplementor atChangeset(Object changesetId);
+	@Nonnull
+	SharedSessionBuilderImplementor atChangeset(@Nullable Object changesetId);
 }

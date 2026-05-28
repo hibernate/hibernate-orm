@@ -63,7 +63,7 @@ class DataTest {
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
 		assertTrue( queryMetamodel.contains( "\"org.hibernate.processor.test.data.basic.BookAuthorRepository"
 				+ "#booksWithJakartaQueryOrder(java.lang.String,jakarta.data.Order)\"" ) );
-		assertTrue( repository.contains( "private Event<? super LifecycleEvent<?>> event;" ) );
+		assertTrue( repository.contains( "private Event<LifecycleEvent<?>> event;" ) );
 		assertTrue( repository.contains( "PreInsertEvent<Book>" ) );
 		assertTrue( repository.contains( "PostInsertEvent<Book>" ) );
 		assertTrue( repository.contains( "PreUpdateEvent<Book>" ) );

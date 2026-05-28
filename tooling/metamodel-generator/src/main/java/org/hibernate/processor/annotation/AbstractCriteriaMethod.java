@@ -320,6 +320,9 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	}
 
 	void where(StringBuilder declaration, List<String> paramTypes) {
+		if ( !hasNonSpecialParams( paramTypes ) ) {
+			return;
+		}
 		declaration
 				.append("\t_query.where(");
 		wherePredicates( declaration, paramTypes );
@@ -343,6 +346,15 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				condition(declaration, i, paramName, paramType );
 			}
 		}
+	}
+
+	private boolean hasNonSpecialParams(List<String> paramTypes) {
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			if ( !isSpecialParam( paramTypes.get( i ) ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void condition(StringBuilder declaration, int i, String paramName, String paramType) {

@@ -12,7 +12,7 @@ import java.time.Instant;
 /// Centralized point for [session][EntityManager.CreationOption] and
 /// [stateless session][EntityAgent.CreationOption] creation options.
 ///
-/// @apiNote Serves no real purpose other than a singular place to consolidate the actual options
+/// @apiNote Serves no functional purpose - place to consolidate the actual options
 /// for easier discovery / documentation.
 ///
 /// @see ReadOnlyMode
@@ -22,6 +22,7 @@ import java.time.Instant;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
+@Incubating
 public interface SessionCreationOption {
 	/// Specifies the tenant-id which should be used when creating a Session or StatelessSession.
 	///

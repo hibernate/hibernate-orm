@@ -46,10 +46,11 @@ import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.creation.internal.ParentSessionObserver;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
-import org.hibernate.engine.creation.internal.SessionCreationOptionsAdaptor;
 import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedStatelessSessionBuilderImpl;
+import org.hibernate.engine.creation.internal.options.SharedStatefulOptions;
+import org.hibernate.engine.creation.internal.options.SharedStatelessOptions;
 import org.hibernate.engine.extension.spi.Extension;
 import org.hibernate.engine.extension.spi.ExtensionIntegrationContext;
 import org.hibernate.engine.extension.spi.ExtensionIntegrationService;
@@ -257,7 +258,7 @@ abstract class AbstractSharedSessionContract
 		readOnly = options.isReadOnly();
 		jdbcBatchSize = options.getJdbcBatchSize();
 		cacheMode = options.getInitialCacheMode();
-		interceptor = interpret( options.getInterceptor() );
+		interceptor = interpret( options.resolveInterceptor( factory ) );
 		jdbcTimeZone = options.getJdbcTimeZone();
 
 		sessionEventsManager = createSessionEventsManager( factoryOptions, options );
@@ -713,10 +714,8 @@ abstract class AbstractSharedSessionContract
 		checkSessionReentrancy();
 		return new SharedStatelessSessionBuilderImpl( this ) {
 			@Override
-			protected StatelessSessionImplementor createStatelessSession() {
-				return new StatelessSessionImpl( factory,
-						new SessionCreationOptionsAdaptor( factory, this,
-								AbstractSharedSessionContract.this ) );
+			protected StatelessSessionImplementor createStatelessSession(SharedStatelessOptions options) {
+				return new StatelessSessionImpl( factory, options );
 			}
 		};
 	}
@@ -727,8 +726,8 @@ abstract class AbstractSharedSessionContract
 		checkSessionReentrancy();
 		return new SharedSessionBuilderImpl( this ) {
 			@Override
-			protected SessionImplementor createSession() {
-				return new SessionImpl( factory, this );
+			protected SessionImplementor createSession(SharedStatefulOptions options) {
+				return new SessionImpl( factory, options );
 			}
 		};
 	}

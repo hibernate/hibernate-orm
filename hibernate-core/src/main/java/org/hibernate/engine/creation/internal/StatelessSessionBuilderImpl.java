@@ -4,21 +4,12 @@
  */
 package org.hibernate.engine.creation.internal;
 
-import jakarta.annotation.Nonnull;
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
-import org.hibernate.Interceptor;
-import org.hibernate.SessionEventListener;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.engine.creation.internal.options.StatelessOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-
-import java.sql.Connection;
-import java.util.List;
-import java.util.TimeZone;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
@@ -27,14 +18,19 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  */
 public abstract class StatelessSessionBuilderImpl
 		extends AbstractCommonBuilder<StatelessSessionBuilder>
-		implements StatelessSessionBuilder, SessionCreationOptions {
+		implements StatelessSessionBuilder {
+	private final StatelessOptions options;
 
 	public StatelessSessionBuilderImpl(SessionFactoryImplementor sessionFactory) {
-		super( sessionFactory );
+		this( sessionFactory, new StatelessOptions( sessionFactory ) );
+	}
+
+	protected StatelessSessionBuilderImpl(SessionFactoryImplementor sessionFactory, StatelessOptions options) {
+		super( sessionFactory, options );
+		this.options = options;
 	}
 
 	@Override
-	@Nonnull
 	protected StatelessSessionBuilder getThis() {
 		return this;
 	}
@@ -43,120 +39,22 @@ public abstract class StatelessSessionBuilderImpl
 	// StatelessSessionBuilder
 
 	@Override
-	@Nonnull
 	public StatelessSession open() {
 		return openStatelessSession();
 	}
 
 	@Override
-	@Nonnull
 	public StatelessSession openStatelessSession() {
-		CORE_LOGGER.openingStatelessSession( tenantIdentifier );
-		return createStatelessSession();
+		CORE_LOGGER.openingStatelessSession( options.getTenantIdentifierValue() );
+		return createStatelessSession( options );
 	}
 
-	@Nonnull
-	protected abstract StatelessSessionImplementor createStatelessSession();
+	protected abstract StatelessSessionImplementor createStatelessSession(StatelessOptions options);
 
 	@Override
 	@Deprecated
-	@Nonnull
-	public StatelessSessionBuilder statementInspector(@Nonnull StatementInspector statementInspector) {
-		this.statementInspector = statementInspector;
+	public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
+		options.statementInspector( statementInspector );
 		return this;
-	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// SessionCreationOptions
-
-	@Override
-	public boolean shouldAutoJoinTransactions() {
-		return true;
-	}
-
-	@Override
-	public FlushMode getInitialSessionFlushMode() {
-		return FlushMode.ALWAYS;
-	}
-
-	@Override
-	public boolean isSubselectFetchEnabled() {
-		return false;
-	}
-
-	@Override
-	public int getDefaultBatchFetchSize() {
-		return -1;
-	}
-
-	@Override
-	public boolean shouldAutoClose() {
-		return false;
-	}
-
-	@Override
-	public boolean shouldAutoClear() {
-		return false;
-	}
-
-	@Override
-	public Connection getConnection() {
-		return connection;
-	}
-
-	@Override
-	public Interceptor getInterceptor() {
-		return configuredInterceptor();
-	}
-
-	@Override
-	public boolean isIdentifierRollbackEnabled() {
-		// identifier rollback is not yet implemented for StatelessSessions
-		return false;
-	}
-
-	@Override
-	public StatementInspector getStatementInspector() {
-		return statementInspector;
-	}
-
-	@Override
-	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
-		return connectionHandlingMode;
-	}
-
-	@Override
-	public boolean isReadOnly() {
-		return readOnly;
-	}
-
-	@Override
-	public Integer getJdbcBatchSize() {
-		return jdbcBatchSize;
-	}
-
-	@Override
-	public CacheMode getInitialCacheMode() {
-		return cacheMode;
-	}
-
-	@Override
-	public Object getTenantIdentifierValue() {
-		return tenantIdentifier;
-	}
-
-	@Override
-	public TimeZone getJdbcTimeZone() {
-		return jdbcTimeZone;
-	}
-
-	@Override
-	public Object getTemporalIdentifier() {
-		return temporalIdentifier;
-	}
-
-	@Override
-	public List<SessionEventListener> getCustomSessionEventListeners() {
-		return null;
 	}
 }

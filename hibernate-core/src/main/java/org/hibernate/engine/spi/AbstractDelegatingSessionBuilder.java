@@ -157,14 +157,14 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 
 	@Override
 	@Nonnull
-	public CommonBuilder cacheStoreMode(CacheStoreMode cacheStoreMode) {
+	public CommonBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
 		delegate.cacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override
 	@Nonnull
-	public CommonBuilder cacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	public CommonBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
 		delegate.cacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}

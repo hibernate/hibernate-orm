@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -205,11 +207,13 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * Access to the collection's cache region
 	 */
+	@Nullable
 	CollectionDataAccess getCacheAccessStrategy();
 
 	/**
 	 * Get the structure used to store data into the collection's {@linkplain #getCacheAccessStrategy() cache region}
 	 */
+	@NonNull
 	CacheEntryStructure getCacheEntryStructure();
 
 	@Incubating

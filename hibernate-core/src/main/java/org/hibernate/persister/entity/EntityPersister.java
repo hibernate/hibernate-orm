@@ -5,6 +5,7 @@
 package org.hibernate.persister.entity;
 
 import jakarta.persistence.Entity;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -864,15 +865,20 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	@Deprecated
 	boolean hasCache();
+
 	/**
 	 * Get the cache (optional operation)
 	 */
+	@Nullable
 	EntityDataAccess getCacheAccessStrategy();
+
 	/**
 	 * Get the cache structure
 	 */
+	@Nullable
 	CacheEntryStructure getCacheEntryStructure();
 
+	@NonNull
 	CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session);
 
 	/**

@@ -268,6 +268,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	protected boolean isLob(int sqlTypeCode) {
+		return switch ( sqlTypeCode ) {
+			case LONG32VARCHAR, LONG32NVARCHAR, LONG32VARBINARY -> false;
+			default -> super.isLob( sqlTypeCode );
+		};
+	}
+
+	@Override
 	protected String castType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case CHAR:

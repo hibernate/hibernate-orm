@@ -162,6 +162,8 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
+import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
+import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
@@ -1932,6 +1934,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_CLOB, ClobJdbcType.MATERIALIZED );
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_NCLOB, NClobJdbcType.MATERIALIZED );
+		}
+		if ( isLob( LONG32VARCHAR ) ) {
+			jdbcTypeRegistry.addDescriptor( new LongVarcharJdbcType( SqlTypes.LONG32VARCHAR, CLOB ) );
+		}
+		if ( isLob( LONG32NVARCHAR ) && nationalizationSupport == NationalizationSupport.EXPLICIT ) {
+			jdbcTypeRegistry.addDescriptor( new LongNVarcharJdbcType( SqlTypes.LONG32NVARCHAR, NCLOB ) );
+		}
+		if ( isLob( LONG32VARBINARY ) ) {
+			jdbcTypeRegistry.addDescriptor( new LongVarbinaryJdbcType( LONG32VARBINARY, BLOB ) );
 		}
 	}
 

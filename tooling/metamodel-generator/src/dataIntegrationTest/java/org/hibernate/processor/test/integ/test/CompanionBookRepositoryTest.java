@@ -11,7 +11,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -55,7 +54,6 @@ class CompanionBookRepositoryTest {
 	}
 
 	@Test
-	@Disabled("companion @Query generates createNamedQuery() but no query metamodel is produced to register it")
 	void testCountAllFromCompanionOverride(SessionFactoryScope scope) {
 		scope.inStatelessTransaction( session -> {
 			var repo = new _CompanionBookRepository( session );

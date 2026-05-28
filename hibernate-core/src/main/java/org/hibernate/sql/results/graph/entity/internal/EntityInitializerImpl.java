@@ -1746,8 +1746,7 @@ public class EntityInitializerImpl
 						version,
 						lockModeToAcquire( data ),
 						true,
-						data.concreteDescriptor,
-						false
+						data.concreteDescriptor
 				);
 
 		entityEntry.setMaybeLazySet( maybeLazySets[data.concreteDescriptor.getSubclassId()] );

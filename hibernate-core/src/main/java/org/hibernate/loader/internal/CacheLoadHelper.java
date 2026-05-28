@@ -301,8 +301,7 @@ public class CacheLoadHelper {
 						entry.getVersion(),
 						LockMode.NONE,
 						true,
-						persister,
-						false
+						persister
 				)
 		);
 
@@ -335,8 +334,7 @@ public class CacheLoadHelper {
 				version,
 				LockMode.NONE,
 				true,
-				subclassPersister,
-				false
+				subclassPersister
 		);
 		holder.setEntityEntry( entityEntry );
 		subclassPersister.afterInitialize( entity, source );
@@ -447,8 +445,7 @@ public class CacheLoadHelper {
 				version,
 				lockMode,
 				true,
-				persister,
-				false
+				persister
 		);
 		entityHolder.setEntityEntry( entityEntry );
 		final Object proxy = entityHolder.getProxy();

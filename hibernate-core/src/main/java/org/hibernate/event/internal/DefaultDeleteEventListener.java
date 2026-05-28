@@ -184,8 +184,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 									version,
 									LockMode.NONE,
 									true,
-									persister,
-									false
+									persister
 							);
 			persister.afterReassociate( entity, source );
 

@@ -45,7 +45,6 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	 * @param instance The entity instance
 	 * @param version The current entity version value
 	 * @param persister The entity's persister
-	 * @param isVersionIncrementDisabled Whether version incrementing is disabled.
 	 * @param session The session
 	 */
 	public EntityInsertAction(
@@ -54,9 +53,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			final Object instance,
 			final Object version,
 			final EntityPersister persister,
-			final boolean isVersionIncrementDisabled,
 			final EventSource session) {
-		super( id, state, instance, isVersionIncrementDisabled, persister, session );
+		super( id, state, instance, persister, session );
 		this.version = version;
 	}
 

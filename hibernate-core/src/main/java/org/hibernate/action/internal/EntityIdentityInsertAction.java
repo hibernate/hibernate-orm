@@ -41,7 +41,6 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 * @param state The current (extracted) entity state
 	 * @param instance The entity instance
 	 * @param persister The entity persister
-	 * @param isVersionIncrementDisabled Whether version incrementing is disabled
 	 * @param session The session
 	 * @param isDelayed Are we in a situation which allows the insertion to be delayed?
 	 *
@@ -51,17 +50,15 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			final Object[] state,
 			final Object instance,
 			final EntityPersister persister,
-			final boolean isVersionIncrementDisabled,
 			final EventSource session,
 			final boolean isDelayed) {
-		this( state, instance, persister, isVersionIncrementDisabled, session, isDelayed, isDelayed );
+		this( state, instance, persister, session, isDelayed, isDelayed );
 	}
 
 	private EntityIdentityInsertAction(
 			final Object[] state,
 			final Object instance,
 			final EntityPersister persister,
-			final boolean isVersionIncrementDisabled,
 			final EventSource session,
 			final boolean isDelayed,
 			final boolean useDelayedIdentifier) {
@@ -69,7 +66,6 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				useDelayedIdentifier ? generateDelayedPostInsertIdentifier() : null,
 				state,
 				instance,
-				isVersionIncrementDisabled,
 				persister,
 				session
 		);
@@ -82,7 +78,6 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				action.getState(),
 				action.getInstance(),
 				action.getPersister(),
-				action.isVersionIncrementDisabled(),
 				action.getSession(),
 				true,
 				true

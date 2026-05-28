@@ -37,7 +37,6 @@ import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.event.spi.PreUpsertEventListener;
 import org.hibernate.event.spi.RefreshEventListener;
-import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.service.ServiceRegistry;
 
 import java.util.Objects;
@@ -91,7 +90,6 @@ public final class EventListenerGroups {
 	public final EventListenerGroup<PreUpdateEventListener> eventListenerGroup_PRE_UPDATE;
 	public final EventListenerGroup<PreUpsertEventListener> eventListenerGroup_PRE_UPSERT;
 	public final EventListenerGroup<RefreshEventListener> eventListenerGroup_REFRESH;
-	public final EventListenerGroup<ReplicateEventListener> eventListenerGroup_REPLICATE;
 
 	private static <T> EventListenerGroup<T> listeners(EventListenerRegistry listenerRegistry, EventType<T> type) {
 		return listenerRegistry.getEventListenerGroup( type );
@@ -138,6 +136,5 @@ public final class EventListenerGroups {
 		eventListenerGroup_PRE_UPDATE = listeners( eventListenerRegistry, PRE_UPDATE );
 		eventListenerGroup_PRE_UPSERT = listeners( eventListenerRegistry, PRE_UPSERT );
 		eventListenerGroup_REFRESH = listeners( eventListenerRegistry, REFRESH );
-		eventListenerGroup_REPLICATE = listeners( eventListenerRegistry, REPLICATE );
 	}
 }

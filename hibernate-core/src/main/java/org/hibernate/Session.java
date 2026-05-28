@@ -575,27 +575,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// @param id an identifier
 	void load(@Nonnull Object object, @Nonnull Object id);
 
-	/// Persist the state of the given detached instance, reusing the current
-	/// identifier value.
-	///
-	/// @param object a detached instance of a persistent class
-	/// @param replicationMode the replication mode to use
-	///
-	/// @deprecated With no real replacement. For some use cases try [StatelessSession#upsert(Object)].
-	@Deprecated( since = "6.0" )
-	void replicate(@Nonnull Object object, @Nonnull ReplicationMode replicationMode);
-
-	/// Persist the state of the given detached instance, reusing the current
-	/// identifier value.
-	///
-	/// @param entityName the entity name
-	/// @param object a detached instance of a persistent class
-	/// @param replicationMode the replication mode to use
-	///
-	/// @deprecated With no real replacement. For some use cases try [StatelessSession#upsert(Object)].
-	@Deprecated( since = "6.0" )
-	void replicate(@Nonnull String entityName, @Nonnull Object object, @Nonnull ReplicationMode replicationMode) ;
-
 	/// Copy the state of the given object onto the persistent object with the same
 	/// identifier. If there is no persistent instance currently associated with
 	/// the session, it will be loaded. Return the persistent instance. If the

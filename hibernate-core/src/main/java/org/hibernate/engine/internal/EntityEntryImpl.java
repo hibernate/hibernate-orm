@@ -32,7 +32,6 @@ import jakarta.annotation.Nullable;
 
 import static org.hibernate.LockMode.PESSIMISTIC_FORCE_INCREMENT;
 import static org.hibernate.engine.internal.EntityEntryImpl.BooleanState.EXISTS_IN_DATABASE;
-import static org.hibernate.engine.internal.EntityEntryImpl.BooleanState.IS_BEING_REPLICATED;
 import static org.hibernate.engine.internal.EntityEntryImpl.EnumState.LOCK_MODE;
 import static org.hibernate.engine.internal.EntityEntryImpl.EnumState.PREVIOUS_STATUS;
 import static org.hibernate.engine.internal.EntityEntryImpl.EnumState.STATUS;
@@ -83,8 +82,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	 * 2 - Status
 	 * 3 - Previous Status
 	 * 4 - existsInDatabase
-	 * 5 - isBeingReplicated
-	 * 6 - loadedWithLazyPropertiesUnfetched; NOTE: this is not updated when properties are fetched lazily!
+	 * 5 - loadedWithLazyPropertiesUnfetched; NOTE: this is not updated when properties are fetched lazily!
 	 *
 	 * 0000 0000 | 0000 0000 | 0654 3333 | 2222 1111
 	 * </pre>
@@ -107,7 +105,6 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister,
-			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {
 		setCompressedValue( STATUS, status );
 		// not useful strictly speaking but more explicit
@@ -121,7 +118,6 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		setCompressedValue( EXISTS_IN_DATABASE, existsInDatabase );
 		this.version = version;
 		setCompressedValue( LOCK_MODE, lockMode );
-		setCompressedValue( IS_BEING_REPLICATED, disableVersionIncrement );
 		this.persister = persister;
 		// don't store PersistenceContext for immutable entity, see HHH-10251
 		this.persistenceContext =
@@ -143,7 +139,6 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final boolean isBeingReplicated,
 			final boolean mutable,
 			final PersistenceContext persistenceContext) {
 		final var factory = persistenceContext.getSession().getFactory();
@@ -159,7 +154,6 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		this.version = version;
 		setCompressedValue( LOCK_MODE, lockMode );
 		setCompressedValue( EXISTS_IN_DATABASE, existsInDatabase );
-		setCompressedValue( IS_BEING_REPLICATED, isBeingReplicated );
 		this.rowId = null; // this is equivalent to the old behavior...
 		// don't store PersistenceContext for immutable entity, see HHH-10251
 		this.persistenceContext = mutable ? persistenceContext : null;
@@ -268,11 +262,6 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	public String getEntityName() {
 		return persister == null ? null : persister.getEntityName();
 
-	}
-
-	@Override
-	public boolean isBeingReplicated() {
-		return getCompressedValue( IS_BEING_REPLICATED );
 	}
 
 	@Override
@@ -513,7 +502,6 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		oos.writeObject( version );
 		oos.writeInt( getLockMode().ordinal() );
 		oos.writeBoolean( isExistsInDatabase() );
-		oos.writeBoolean( isBeingReplicated() );
 		oos.writeBoolean( persister == null || persister.isMutable() );
 	}
 
@@ -543,7 +531,6 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 				(Object[]) ois.readObject(),
 				ois.readObject(),
 				LockMode.values()[ ois.readInt() ],
-				ois.readBoolean(),
 				ois.readBoolean(),
 				ois.readBoolean(),
 				persistenceContext
@@ -712,8 +699,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	 */
 	enum BooleanState {
 
-		EXISTS_IN_DATABASE(13),
-		IS_BEING_REPLICATED(14);
+		EXISTS_IN_DATABASE(13);
 
 		private final int offset;
 		private final int mask;

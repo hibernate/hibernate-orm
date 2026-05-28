@@ -66,8 +66,6 @@ public interface EntityEntry {
 
 	String getEntityName();
 
-	boolean isBeingReplicated();
-
 	Object getRowId();
 
 	void postLoad(Object entity);

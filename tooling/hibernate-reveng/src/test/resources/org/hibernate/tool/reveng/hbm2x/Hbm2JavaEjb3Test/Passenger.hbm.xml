@@ -34,7 +34,7 @@
 		<many-to-one
 		    name="currentTrain"
             class="org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Train"
-            cascade="all, replicate"
+            cascade="all"
             fetch="join"
             lazy="false"
             update="true"

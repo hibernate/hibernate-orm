@@ -34,7 +34,6 @@ import static org.hibernate.engine.internal.Versioning.getVersion;
  */
 public abstract class AbstractEntityInsertAction extends EntityAction {
 	private transient Object[] state;
-	private final boolean isVersionIncrementDisabled;
 	private boolean isExecuted;
 	private boolean areTransientReferencesNullified;
 
@@ -43,8 +42,6 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 *  @param id - the entity ID
 	 * @param state - the entity state
 	 * @param instance - the entity
-	 * @param isVersionIncrementDisabled - true, if version increment should
-*                                     be disabled; false, otherwise
 	 * @param persister - the entity persister
 	 * @param session - the session
 	 */
@@ -52,12 +49,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			Object id,
 			Object[] state,
 			Object instance,
-			boolean isVersionIncrementDisabled,
 			EntityPersister persister,
 			EventSource session) {
 		super( session, id, instance, persister );
 		this.state = state;
-		this.isVersionIncrementDisabled = isVersionIncrementDisabled;
 		this.isExecuted = false;
 		this.areTransientReferencesNullified = false;
 
@@ -110,10 +105,6 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 *         false, otherwise.
 	 */
 	public abstract boolean isEarlyInsert();
-
-	public final boolean isVersionIncrementDisabled() {
-		return isVersionIncrementDisabled;
-	}
 
 	/**
 	 * Find the transient unsaved entity dependencies that are non-nullable.
@@ -172,8 +163,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 				version,
 				LockMode.WRITE,
 				isExecuted,
-				persister,
-				isVersionIncrementDisabled
+				persister
 		);
 		entityHolder.setEntityEntry( entityEntry );
 		if ( isEarlyInsert() ) {

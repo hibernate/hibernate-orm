@@ -73,7 +73,6 @@ public class HistoryTableDecomposerTest {
 					entity,
 					persister.getVersion( entity ),
 					persister,
-					false,
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
@@ -184,7 +183,6 @@ public class HistoryTableDecomposerTest {
 					entity,
 					persister.getVersion( entity ),
 					persister,
-					false,
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
@@ -302,7 +300,6 @@ public class HistoryTableDecomposerTest {
 					entity,
 					persister.getVersion( entity ),
 					persister,
-					false,
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();

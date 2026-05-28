@@ -356,7 +356,6 @@ public class InsertDecomposerTest {
 				entity,
 				null, // version
 				persister,
-				false, // isVersionIncrementDisabled
 				(EventSource) session
 		);
 	}

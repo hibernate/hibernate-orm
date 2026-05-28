@@ -26,7 +26,7 @@ public final class CascadeStyles {
 	}
 
 	/**
-	 * save / delete / update / evict / lock / replicate / merge / persist + delete orphans
+	 * save / delete / update / evict / lock / merge / persist + delete orphans
 	 */
 	public static final CascadeStyle ALL_DELETE_ORPHAN = new BaseCascadeStyle() {
 		@Override
@@ -46,7 +46,7 @@ public final class CascadeStyles {
 	};
 
 	/**
-	 * save / delete / update / evict / lock / replicate / merge / persist
+	 * save / delete / update / evict / lock / merge / persist
 	 */
 	public static final CascadeStyle ALL = new BaseCascadeStyle() {
 		@Override
@@ -109,22 +109,6 @@ public final class CascadeStyles {
 		@Override
 		public String toString() {
 			return "STYLE_EVICT";
-		}
-	};
-
-	/**
-	 * replicate
-	 */
-	public static final CascadeStyle REPLICATE = new BaseCascadeStyle() {
-		@Override
-		public boolean doCascade(CascadingAction<?> action) {
-			return action == CascadingActions.REPLICATE
-				|| action == CascadingActions.CHECK_ON_FLUSH;
-		}
-
-		@Override
-		public String toString() {
-			return "STYLE_REPLICATE";
 		}
 	};
 
@@ -230,7 +214,6 @@ public final class CascadeStyles {
 		base.put( "merge", MERGE );
 		base.put( "lock", LOCK );
 		base.put( "refresh", REFRESH );
-		base.put( "replicate", REPLICATE );
 		base.put( "evict", EVICT );
 		base.put( "delete", DELETE );
 		base.put( "remove", DELETE ); // adds remove as a sort-of alias for delete...

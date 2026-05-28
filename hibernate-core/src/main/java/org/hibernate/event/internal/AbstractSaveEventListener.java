@@ -277,8 +277,7 @@ public abstract class AbstractSaveEventListener<C> {
 				null,
 				LockMode.WRITE,
 				useIdentityColumn,
-				persister,
-				false
+				persister
 		);
 		if ( original.getLoadedState() != null ) {
 			persistenceContext.getEntityHolder( key ).setEntityEntry( original );
@@ -368,7 +367,6 @@ public abstract class AbstractSaveEventListener<C> {
 					values,
 					entity,
 					persister,
-					isVersionIncrementDisabled(),
 					source,
 					delayIdentityInserts
 			);
@@ -382,7 +380,6 @@ public abstract class AbstractSaveEventListener<C> {
 					entity,
 					getVersion( values, persister ),
 					persister,
-					isVersionIncrementDisabled(),
 					source
 			);
 			source.getActionQueue().addAction( insert );
@@ -392,17 +389,6 @@ public abstract class AbstractSaveEventListener<C> {
 
 	protected Map<Object,Object> getMergeMap(C anything) {
 		return null;
-	}
-
-	/**
-	 * After the persist, will the version number be incremented
-	 * if the instance is modified?
-	 *
-	 * @return True if the version will be incremented on an entity change after persist;
-	 *         false otherwise.
-	 */
-	protected boolean isVersionIncrementDisabled() {
-		return false;
 	}
 
 	protected boolean visitCollectionsBeforeSave(
@@ -445,7 +431,6 @@ public abstract class AbstractSaveEventListener<C> {
 						persister.getPropertyTypes()
 				) );
 
-		//keep the existing version number in the case of replicate!
 		if ( persister.isVersioned() ) {
 			substitute = seedVersion( entity, values, persister, source ) || substitute;
 		}

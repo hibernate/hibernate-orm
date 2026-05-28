@@ -180,8 +180,7 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 					LockMode.NONE,
 					// we assume it exists in db
 					true,
-					persister,
-					true
+					persister
 			);
 			entityHolder.setEntityEntry( entityEntry );
 		}

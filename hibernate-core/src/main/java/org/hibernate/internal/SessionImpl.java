@@ -1345,28 +1345,6 @@ public class SessionImpl
 		}
 	}
 
-	// replicate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public void replicate(@Nonnull Object obj, @Nonnull @SuppressWarnings("deprecation") ReplicationMode replicationMode) {
-		fireReplicate( new ReplicateEvent( obj, replicationMode, this ) );
-	}
-
-	@Override
-	public void replicate(@Nonnull String entityName, @Nonnull Object obj, @Nonnull @SuppressWarnings("deprecation") ReplicationMode replicationMode) {
-		fireReplicate( new ReplicateEvent( entityName, obj, replicationMode, this ) );
-	}
-
-	private void fireReplicate(final ReplicateEvent replicateEvent) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		eventListenerGroups.eventListenerGroup_REPLICATE
-				.fireEventOnEachListener( replicateEvent,
-						ReplicateEventListener::onReplicate );
-		delayedAfterCompletion();
-	}
-
-
 	// evict() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**

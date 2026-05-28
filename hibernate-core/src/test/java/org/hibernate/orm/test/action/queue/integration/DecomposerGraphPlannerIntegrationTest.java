@@ -112,7 +112,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final Object id = 1L;
 			final Object[] state = persister.getValues(person);
 			final EntityInsertAction action = new EntityInsertAction(
-					id, state, person, null, persister, false, (EventSource) sessionImpl
+					id, state, person, null, persister, (EventSource) sessionImpl
 			);
 
 			// Decompose
@@ -190,12 +190,12 @@ public class DecomposerGraphPlannerIntegrationTest {
 			// Create insert actions
 			final Object[] personState = personPersister.getValues(person);
 			final EntityInsertAction personAction = new EntityInsertAction(
-					person.getId(), personState, person, null, personPersister, false, (EventSource) sessionImpl
+					person.getId(), personState, person, null, personPersister, (EventSource) sessionImpl
 			);
 
 			final Object[] addressState = addressPersister.getValues(address);
 			final EntityInsertAction addressAction = new EntityInsertAction(
-					address.getId(), addressState, address, null, addressPersister, false, (EventSource) sessionImpl
+					address.getId(), addressState, address, null, addressPersister, (EventSource) sessionImpl
 			);
 
 			// Decompose both actions
@@ -442,7 +442,6 @@ public class DecomposerGraphPlannerIntegrationTest {
 					person1,
 					null,
 					personPersister,
-					false,
 					(EventSource) sessionImpl
 			);
 
@@ -452,7 +451,6 @@ public class DecomposerGraphPlannerIntegrationTest {
 					address,
 					null,
 					addressPersister,
-					false,
 					(EventSource) sessionImpl
 			);
 
@@ -552,7 +550,6 @@ public class DecomposerGraphPlannerIntegrationTest {
 					dept,
 					null,
 					deptPersister,
-					false,
 					(EventSource) sessionImpl
 			);
 
@@ -562,7 +559,6 @@ public class DecomposerGraphPlannerIntegrationTest {
 					emp,
 					null,
 					empPersister,
-					false,
 					(EventSource) sessionImpl
 			);
 
@@ -739,7 +735,6 @@ public class DecomposerGraphPlannerIntegrationTest {
 					replacementProduct,
 					null,
 					productPersister,
-					false,
 					(EventSource) sessionImpl
 			);
 
@@ -808,7 +803,6 @@ public class DecomposerGraphPlannerIntegrationTest {
 					replacementProduct,
 					null,
 					productPersister,
-					false,
 					(EventSource) sessionImpl
 			);
 

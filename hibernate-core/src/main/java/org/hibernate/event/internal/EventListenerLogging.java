@@ -177,32 +177,6 @@ public interface EventListenerLogging extends BasicLogger {
 	@Message(id = 90060026, value = "Detached instance not found in database")
 	void detachedInstanceNotFoundInDatabase();
 
-	// Replicate
-
-	@LogMessage(level = TRACE)
-	@Message(id = 90060027, value = "Uninitialized proxy passed to replicate()")
-	void uninitializedProxyPassedToReplicate();
-
-	@LogMessage(level = TRACE)
-	@Message(id = 90060028, value = "Ignoring persistent instance passed to replicate()")
-	void ignoringPersistentInstancePassedToReplicate();
-
-	@LogMessage(level = TRACE)
-	@Message(id = 90060029, value = "Found existing row for %s")
-	void foundExistingRowFor(String infoString);
-
-	@LogMessage(level = TRACE)
-	@Message(id = 90060030, value = "No need to replicate")
-	void noNeedToReplicate();
-
-	@LogMessage(level = TRACE)
-	@Message(id = 90060031, value = "No existing row, replicating new instance %s")
-	void noExistingRowReplicatingNewInstance(String infoString);
-
-	@LogMessage(level = TRACE)
-	@Message(id = 90060032, value = "Replicating changes to %s")
-	void replicatingChangesTo(String infoString);
-
 	// Initialize collection
 
 	@LogMessage(level = TRACE)

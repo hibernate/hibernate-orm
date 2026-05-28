@@ -100,8 +100,7 @@ public class LazyAttributeLoadingInterceptor
 								persister.getVersion( target ),
 								LockMode.NONE,
 								existsInDb,
-								persister,
-								true
+								persister
 						);
 					}
 

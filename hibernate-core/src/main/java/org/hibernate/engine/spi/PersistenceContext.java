@@ -238,8 +238,7 @@ public interface PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
-			final boolean disableVersionIncrement);
+			final EntityPersister persister);
 
 	/**
 	 * Generates an appropriate EntityEntry instance and adds it
@@ -254,8 +253,7 @@ public interface PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
-			final boolean disableVersionIncrement);
+			final EntityPersister persister);
 
 	EntityEntry addReferenceEntry(
 			final Object entity,

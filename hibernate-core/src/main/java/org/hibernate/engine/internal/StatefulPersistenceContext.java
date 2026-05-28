@@ -613,8 +613,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
-			final boolean disableVersionIncrement) {
+			final EntityPersister persister) {
 		final var entityHolder = addEntityHolder( entityKey, entity );
 		final var entityEntry = addEntry(
 				entity,
@@ -625,8 +624,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 				version,
 				lockMode,
 				existsInDatabase,
-				persister,
-				disableVersionIncrement
+				persister
 		);
 		entityHolder.setEntityEntry( entityEntry );
 		return entityEntry;
@@ -642,8 +640,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
-			final EntityPersister persister,
-			final boolean disableVersionIncrement) {
+			final EntityPersister persister) {
 		assert lockMode != null;
 		final var entityEntry =
 				new EntityEntryImpl(
@@ -655,7 +652,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 						lockMode,
 						existsInDatabase,
 						persister,
-						disableVersionIncrement,
 						this
 				);
 		entityEntryContext.addEntityEntry( entity, entityEntry );
@@ -1757,8 +1753,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 				oldEntry.getVersion(),
 				oldEntry.getLockMode(),
 				oldEntry.isExistsInDatabase(),
-				oldEntry.getPersister(),
-				oldEntry.isBeingReplicated()
+				oldEntry.getPersister()
 		);
 		entityHolder.setEntityEntry( entityEntry );
 	}
@@ -1775,8 +1770,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 				oldEntry.getVersion(),
 				oldEntry.getLockMode(),
 				oldEntry.isExistsInDatabase(),
-				oldEntry.getPersister(),
-				oldEntry.isBeingReplicated()
+				oldEntry.getPersister()
 		);
 		getEntityHolder( oldEntry.getEntityKey() ).setEntityEntry( entityEntry );
 	}

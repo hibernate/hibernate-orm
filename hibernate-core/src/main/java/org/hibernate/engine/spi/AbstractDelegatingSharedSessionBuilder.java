@@ -11,6 +11,8 @@ import java.util.function.UnaryOperator;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -19,6 +21,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
+import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -182,6 +185,27 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	@Nonnull
 	public SharedSessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode) {
 		delegate.initialCacheMode( cacheMode );
+		return this;
+	}
+
+	@Override
+	@Nonnull
+	public CommonBuilder jdbcBatchSize(int batchSize) {
+		delegate.jdbcBatchSize( batchSize );
+		return this;
+	}
+
+	@Override
+	@Nonnull
+	public CommonBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
+		delegate.cacheStoreMode( cacheStoreMode );
+		return this;
+	}
+
+	@Override
+	@Nonnull
+	public CommonBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
+		delegate.cacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}
 

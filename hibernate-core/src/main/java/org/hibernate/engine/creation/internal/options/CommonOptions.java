@@ -1,0 +1,223 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.engine.creation.internal.options;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import org.hibernate.CacheMode;
+import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.Interceptor;
+import org.hibernate.StatementObserver;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.EmptyInterceptor;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+
+import java.sql.Connection;
+import java.time.Instant;
+import java.util.TimeZone;
+import java.util.function.UnaryOperator;
+
+/// Mutable collector for options common to creation of both stateful and stateless sessions.
+///
+/// Instances are populated by session builders and by the Jakarta Persistence
+/// type-safe creation option support, then consumed through the
+/// [org.hibernate.engine.creation.internal.SessionCreationOptions] contract
+/// when constructing a session.
+///
+/// The constructor initializes the collector with the defaults supplied by the
+/// [SessionFactoryImplementor], but the factory is not retained. Behaviors
+/// which require the factory at consumption time, such as interceptor resolution,
+/// take it explicitly.
+///
+/// @since 8.0
+/// @author Steve Ebersole
+public class CommonOptions {
+	protected StatementInspector statementInspector;
+	protected StatementObserver statementObserver;
+	protected Interceptor interceptor;
+	protected boolean allowInterceptor = true;
+	protected boolean allowSessionInterceptorCreation = true;
+	protected Connection connection;
+	protected PhysicalConnectionHandlingMode connectionHandlingMode;
+	protected Object tenantIdentifier;
+	protected boolean readOnly;
+	protected Integer jdbcBatchSize;
+	protected CacheMode cacheMode;
+	protected TimeZone jdbcTimeZone;
+	protected Object temporalIdentifier;
+
+	public CommonOptions(SessionFactoryImplementor sessionFactory) {
+		final var options = sessionFactory.getSessionFactoryOptions();
+		statementInspector = options.getStatementInspector();
+		cacheMode = options.getInitialSessionCacheMode();
+		connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
+		jdbcTimeZone = options.getJdbcTimeZone();
+		tenantIdentifier = sessionFactory.resolveTenantIdentifier();
+	}
+
+	public StatementInspector getStatementInspector() {
+		return statementInspector;
+	}
+
+	public StatementObserver getStatementObserver() {
+		return statementObserver;
+	}
+
+	public Connection getConnection() {
+		return connection;
+	}
+
+	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+		return connectionHandlingMode;
+	}
+
+	public Object getTenantIdentifierValue() {
+		return tenantIdentifier;
+	}
+
+	public boolean isReadOnly() {
+		return readOnly;
+	}
+
+	public Integer getJdbcBatchSize() {
+		return jdbcBatchSize;
+	}
+
+	public CacheMode getInitialCacheMode() {
+		return cacheMode;
+	}
+
+	public TimeZone getJdbcTimeZone() {
+		return jdbcTimeZone;
+	}
+
+	public Object getTemporalIdentifier() {
+		return temporalIdentifier;
+	}
+
+	public void connection(Connection connection) {
+		this.connection = connection;
+	}
+
+	public void connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+		this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret( acquisitionMode, releaseMode );
+	}
+
+	public void connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+		this.connectionHandlingMode = connectionHandlingMode;
+	}
+
+	public void interceptor(Interceptor interceptor) {
+		if ( interceptor == null ) {
+			noInterceptor();
+		}
+		else {
+			this.interceptor = interceptor;
+			this.allowInterceptor = true;
+		}
+	}
+
+	public void useInterceptor(Interceptor interceptor) {
+		this.interceptor = interceptor;
+		this.allowInterceptor = true;
+	}
+
+	public void noInterceptor() {
+		this.interceptor = null;
+		this.allowInterceptor = false;
+	}
+
+	public void noSessionInterceptorCreation() {
+		this.allowSessionInterceptorCreation = false;
+	}
+
+	public void tenantIdentifier(Object tenantIdentifier) {
+		this.tenantIdentifier = tenantIdentifier;
+	}
+
+	public void jdbcBatchSize(int batchSize) {
+		this.jdbcBatchSize = batchSize;
+	}
+
+	public void readOnly(boolean readOnly) {
+		this.readOnly = readOnly;
+	}
+
+	public void initialCacheMode(CacheMode cacheMode) {
+		this.cacheMode = cacheMode;
+	}
+
+	public void cacheStoreMode(CacheStoreMode cacheStoreMode) {
+		initialCacheMode( CacheMode.interpretStoreMode( cacheMode, cacheStoreMode ) );
+	}
+
+	public void cacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		initialCacheMode( CacheMode.interpretRetrieveMode( cacheMode, cacheRetrieveMode ) );
+	}
+
+	public void statementInspector(UnaryOperator<String> operator) {
+		if ( operator == null ) {
+			noStatementInspector();
+		}
+		else {
+			this.statementInspector = operator::apply;
+		}
+	}
+
+	public void statementInspector(StatementInspector statementInspector) {
+		this.statementInspector = statementInspector;
+	}
+
+	public void noStatementInspector() {
+		this.statementInspector = null;
+	}
+
+	public void jdbcTimeZone(TimeZone timeZone) {
+		jdbcTimeZone = timeZone;
+	}
+
+	public void asOf(Instant instant) {
+		this.temporalIdentifier = instant;
+	}
+
+	public void atChangeset(Object changesetId) {
+		this.temporalIdentifier = changesetId;
+	}
+
+	/// Resolve the interceptor to use for the session being created.
+	///
+	/// This is intentionally not a simple getter. Resolution must account for
+	/// an explicitly disabled interceptor, an explicitly supplied interceptor,
+	/// the factory-scoped interceptor, and the factory's session-scoped
+	/// interceptor supplier.
+	public Interceptor resolveInterceptor(SessionFactoryImplementor sessionFactory) {
+		if ( !allowInterceptor ) {
+			return null;
+		}
+
+		if ( interceptor != null && interceptor != EmptyInterceptor.INSTANCE ) {
+			return interceptor;
+		}
+
+		final var options = sessionFactory.getSessionFactoryOptions();
+
+		final var optionsInterceptor = options.getInterceptor();
+		if ( optionsInterceptor != null && optionsInterceptor != EmptyInterceptor.INSTANCE ) {
+			return optionsInterceptor;
+		}
+
+		if ( allowSessionInterceptorCreation ) {
+			final var statelessInterceptorImplementorSupplier =
+					options.getStatelessInterceptorImplementorSupplier();
+			if ( statelessInterceptorImplementorSupplier != null ) {
+				return statelessInterceptorImplementorSupplier.get();
+			}
+		}
+
+		return null;
+	}
+}

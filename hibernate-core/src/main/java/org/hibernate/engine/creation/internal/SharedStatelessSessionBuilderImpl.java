@@ -4,55 +4,43 @@
  */
 package org.hibernate.engine.creation.internal;
 
-import jakarta.annotation.Nonnull;
-import org.hibernate.CacheMode;
-import org.hibernate.Interceptor;
 import org.hibernate.SessionException;
 import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
-import org.hibernate.Transaction;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.creation.internal.options.SharedStatelessOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
-import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import java.util.Objects;
-import java.util.TimeZone;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
  * Builder for shared {@linkplain StatelessSessionImplementor stateless} sessions.
- * Exposes the builder state via its {@linkplain CommonSharedSessionCreationOptions} implementation
- * for use when creating the shared stateless session.
- *
  * @author Steve Ebersole
  */
 public abstract class SharedStatelessSessionBuilderImpl
 		extends AbstractCommonBuilder<SharedStatelessSessionBuilder>
-		implements SharedStatelessSessionBuilder, CommonSharedSessionCreationOptions {
+		implements SharedStatelessSessionBuilder {
 
 	protected final SharedSessionContractImplementor original;
-	protected boolean shareTransactionContext;
+	protected final SharedStatelessOptions options;
 
 	public SharedStatelessSessionBuilderImpl(SharedSessionContractImplementor original) {
-		super( original.getSessionFactory() );
-		this.original = original;
-		final var options = original.getSessionFactory().getSessionFactoryOptions();
-		statementInspector = options.getStatementInspector();
-		tenantIdentifier = original.getTenantIdentifierValue();
-		// good idea to inherit this
-		jdbcTimeZone = original.getJdbcTimeZone();
+		this( original, new SharedStatelessOptions( original ) );
 	}
 
-	protected abstract StatelessSessionImplementor createStatelessSession();
+	protected SharedStatelessSessionBuilderImpl(SharedSessionContractImplementor original, SharedStatelessOptions options) {
+		super( original.getSessionFactory(), options );
+		this.original = original;
+		this.options = options;
+	}
+
+	protected abstract StatelessSessionImplementor createStatelessSession(SharedStatelessOptions options);
 
 	@Override
-	@Nonnull
 	protected SharedStatelessSessionBuilder getThis() {
 		return this;
 	}
@@ -61,128 +49,46 @@ public abstract class SharedStatelessSessionBuilderImpl
 	// SharedStatelessSessionBuilder
 
 	@Override
-	@Nonnull
 	public StatelessSessionImplementor open() {
-		CORE_LOGGER.openingStatelessSession( tenantIdentifier );
+		CORE_LOGGER.openingStatelessSession( options.getTenantIdentifierValue() );
 		if ( original.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
-			if ( shareTransactionContext ) {
+			if ( options.isTransactionCoordinatorShared() ) {
 				final var tenantId = original.getTenantIdentifierValue();
 				assert tenantId != null;
-				if ( Objects.equals( tenantId, tenantIdentifier ) ) {
+				if ( !Objects.equals( tenantId, options.getTenantIdentifierValue() ) ) {
 					throw new SessionException( "Cannot redefine the tenant identifier on a child session if the connection is reused" );
 				}
 			}
 		}
-		return createStatelessSession();
+		return createStatelessSession( options );
 	}
 
 	@Override
-	@Nonnull
 	public StatelessSession openStatelessSession() {
 		return open();
 	}
 
 	@Override
-	@Nonnull
 	public SharedStatelessSessionBuilder connection() {
-		shareTransactionContext = true;
+		options.shareTransactionContext();
 		return this;
 	}
 
 	@Override
-	@Nonnull
 	public SharedStatelessSessionBuilder interceptor() {
-		interceptor = original.getInterceptor();
+		options.useInterceptor( original.getInterceptor() );
 		return this;
 	}
 
 	@Override
-	@Nonnull
 	public SharedStatelessSessionBuilder statementInspector() {
-		statementInspector = original.getJdbcSessionContext().getStatementInspector();
+		options.statementInspector( original.getJdbcSessionContext().getStatementInspector() );
 		return this;
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// CommonSharedSessionCreationOptions
-
-	@Override
-	@Nonnull
-	public Interceptor getInterceptor() {
-		return configuredInterceptor();
-	}
-
-	@Override
-	@Nonnull
-	public StatementInspector getStatementInspector() {
-		return statementInspector;
-	}
-
-	@Override
-	@Nonnull
-	public Object getTenantIdentifierValue() {
-		return tenantIdentifier;
-	}
-
-	@Override
-	public boolean isReadOnly() {
-		return readOnly;
-	}
-
-	@Override
-	public CacheMode getInitialCacheMode() {
-		return cacheMode;
-	}
-
-	@Override
-	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
-		return connectionHandlingMode;
-	}
-
-	@Override
-	public TimeZone getJdbcTimeZone() {
-		return jdbcTimeZone;
-	}
-
-	@Override
-	@Deprecated
-	@Nonnull
-	public StatelessSessionBuilder statementInspector(@Nonnull StatementInspector statementInspector) {
-		this.statementInspector = statementInspector;
+	@Override @Deprecated
+	public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
+		options.statementInspector( statementInspector );
 		return this;
-	}
-
-	@Override
-	public boolean isTransactionCoordinatorShared() {
-		return shareTransactionContext;
-	}
-
-	@Override
-	public TransactionCoordinator getTransactionCoordinator() {
-		return shareTransactionContext
-				? original.getTransactionCoordinator()
-				: null;
-	}
-
-	@Override
-	public JdbcCoordinator getJdbcCoordinator() {
-		return shareTransactionContext
-				? original.getJdbcCoordinator()
-				: null;
-	}
-
-	@Override
-	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor() {
-		return shareTransactionContext
-				? original.getTransactionCompletionCallbacksImplementor()
-				: null;
-	}
-
-	@Override
-	public Transaction getTransaction() {
-		return shareTransactionContext
-				? original.getTransaction()
-				: null;
 	}
 }

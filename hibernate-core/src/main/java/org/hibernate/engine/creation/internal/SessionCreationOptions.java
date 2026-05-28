@@ -13,6 +13,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.creation.CommonBuilder;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -40,7 +41,7 @@ public interface SessionCreationOptions {
 
 	Connection getConnection();
 
-	Interceptor getInterceptor();
+	Interceptor resolveInterceptor(SessionFactoryImplementor sessionFactory);
 
 	StatementInspector getStatementInspector();
 
@@ -49,6 +50,8 @@ public interface SessionCreationOptions {
 	Object getTenantIdentifierValue();
 
 	boolean isReadOnly();
+
+	Integer getJdbcBatchSize();
 
 	CacheMode getInitialCacheMode();
 

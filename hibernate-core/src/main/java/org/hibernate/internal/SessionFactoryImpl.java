@@ -56,6 +56,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.creation.internal.SessionBuilderImpl;
 import org.hibernate.engine.creation.internal.StatelessSessionBuilderImpl;
+import org.hibernate.engine.creation.internal.options.StatefulOptions;
+import org.hibernate.engine.creation.internal.options.StatelessOptions;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -78,6 +80,7 @@ import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.GeneratorSettings;
@@ -638,9 +641,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	public SessionBuilderImplementor withOptions() {
 		return new SessionBuilderImpl( this ) {
 			@Override
-			@Nonnull
-			protected SessionImplementor createSession() {
-				return new SessionImpl( SessionFactoryImpl.this, this );
+			protected SessionImplementor createSession(StatefulOptions options) {
+				return new SessionImpl( SessionFactoryImpl.this, options );
 			}
 		};
 	}
@@ -650,9 +652,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	public StatelessSessionBuilder withStatelessOptions() {
 		return new StatelessSessionBuilderImpl( this ) {
 			@Override
-			@Nonnull
-			protected StatelessSessionImplementor createStatelessSession() {
-				return new StatelessSessionImpl( SessionFactoryImpl.this, this );
+			protected StatelessSessionImplementor createStatelessSession(StatelessOptions options) {
+				return new StatelessSessionImpl( SessionFactoryImpl.this, options );
 			}
 		};
 	}
@@ -750,40 +751,39 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Nonnull
 	public Session createEntityManager(@Nullable EntityManager.CreationOption... options) {
 		validateNotClosed();
-		SynchronizationType synchronizationType = SYNCHRONIZED;
+
+		final var optionsCollector = new StatefulOptions( this );
+		optionsCollector.autoJoinTransactions( true );
+
 		if ( options != null ) {
 			for ( var option : options ) {
-				if ( option instanceof SynchronizationType explicitSynchronizationType ) {
+				if ( option instanceof SynchronizationType synchronizationType ) {
 					errorIfResourceLocalDueToExplicitSynchronizationType();
-					synchronizationType = explicitSynchronizationType;
+					optionsCollector.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
+				}
+				else {
+					optionsCollector.apply( option );
 				}
 			}
 		}
-		final var session = buildEntityManager( synchronizationType, null );
-		if ( options != null ) {
-			for ( var option : options ) {
-				if ( option instanceof EntityManager.Option entityManagerOption ) {
-					session.addOption( entityManagerOption );
-				}
-			}
-		}
-		return session;
+
+		return new SessionImpl( this, optionsCollector );
 	}
 
 	private Session buildEntityManager(SynchronizationType synchronizationType, Map<?,?> map) {
 		assert status != Status.CLOSED;
 
-		var builder = withOptions();
-		builder.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
+		final var optionsCollector = new StatefulOptions( this );
+		optionsCollector.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
 
 		if ( map != null ) {
 			final Object tenantIdHint = map.get( HINT_TENANT_ID );
 			if ( tenantIdHint != null ) {
-				builder = builder.tenantIdentifier( tenantIdHint );
+				optionsCollector.tenantIdentifier( tenantIdHint );
 			}
 		}
 
-		final var session = builder.openSession();
+		final var session = new SessionImpl( this, optionsCollector );
 		if ( map != null ) {
 			for ( var entry : map.entrySet() ) {
 				if ( entry.getKey() instanceof String string ) {
@@ -838,15 +838,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	@Nonnull
 	public StatelessSession createEntityAgent(@Nullable EntityAgent.CreationOption... options) {
-		final var agent = createEntityAgent();
-		if ( options != null ) {
-			for ( var option : options ) {
-				if ( option instanceof EntityAgent.Option entityAgentOption ) {
-					agent.addOption( entityAgentOption );
-				}
-			}
+		validateNotClosed();
+		if ( CollectionHelper.isEmpty( options ) ) {
+			return openStatelessSession();
 		}
-		return agent;
+
+		final var optionsCollector = new StatelessOptions( this );
+		optionsCollector.apply( options );
+
+		return new StatelessSessionImpl( this, optionsCollector );
 	}
 
 	@Override
@@ -1013,7 +1013,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	@Nonnull
 	public CacheImplementor getCache() {
 		validateNotClosed();
 		return cacheAccess;

@@ -184,6 +184,7 @@ import java.util.List;
 /// alternative solution to this problem is to provide an [EntityNameResolver].
 ///
 /// @see SessionFactory
+/// @see SessionCreationOption
 ///
 /// @author Gavin King
 /// @author Steve Ebersole

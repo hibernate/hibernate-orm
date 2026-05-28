@@ -16,7 +16,16 @@ import jakarta.persistence.Statement;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
+import org.hibernate.BatchSize;
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
+import org.hibernate.ReadOnlyMode;
+import org.hibernate.SessionCreationOption;
+import org.hibernate.engine.creation.internal.options.StatefulOptions;
+import org.hibernate.engine.creation.internal.options.StatelessOptions;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.query.spi.QueryOptions;
 
 import java.util.HashSet;
@@ -25,18 +34,61 @@ import java.util.Set;
 
 import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushModeFromFlushMode;
 
-/**
- * Support for the type-safe option contracts introduced by Jakarta Persistence 4.
- *
- * @author Gavin King
- *
- * @since 8.0
- */
+/// Support for the type-safe option contracts introduced by Jakarta Persistence 4.
+///
+/// @since 8.0
+/// @author Gavin King
 public final class OptionsHelper {
 
-	public static void applyOption(EntityManager entityManager, EntityManager.Option option) {
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Session
+
+	/// Applies a `Session` creation `option` to the `options` collector.
+	public static void applyOption(StatefulOptions options, EntityManager.CreationOption option) {
+		if ( option instanceof CacheMode cacheMode ) {
+			options.initialCacheMode( cacheMode );
+		}
+		else if ( option instanceof CacheStoreMode cacheStoreMode ) {
+			options.cacheStoreMode( cacheStoreMode );
+		}
+		else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+			options.cacheRetrieveMode( cacheRetrieveMode );
+		}
+		else if ( option instanceof FlushMode flushMode ) {
+			options.flushMode( flushMode );
+		}
+		else if ( option instanceof FlushModeType flushModeType ) {
+			options.flushMode( FlushMode.fromJpaFlushMode( flushModeType ) );
+		}
+		else if ( option instanceof BatchSize batchSize) {
+			options.jdbcBatchSize( batchSize.batchSize() );
+		}
+		else if ( option instanceof ReadOnlyMode readOnlyMode) {
+			options.readOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
+		}
+		else if ( option instanceof SessionCreationOption.SubselectFetchMode subselectFetchMode ) {
+			options.subselectFetchEnabled( subselectFetchMode == SessionCreationOption.SubselectFetchMode.ENABLED );
+		}
+		else if ( option instanceof SessionCreationOption.TenantId tenantId ) {
+			options.tenantIdentifier( tenantId.value() );
+		}
+		else if ( option instanceof SessionCreationOption.EffectiveChangeset effectiveChangeset ) {
+			options.atChangeset( effectiveChangeset.changesetId() );
+		}
+		else if ( option instanceof SessionCreationOption.EffectiveAt effectiveAt ) {
+			options.asOf( effectiveAt.instant() );
+		}
+	}
+
+
+	/// Applies a runtime-adjustable `option` to the `Session`.
+	public static void applyOption(SessionImplementor entityManager, EntityManager.Option option) {
 		Objects.requireNonNull( option, "option" );
-		if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+
+		if ( option instanceof CacheMode cacheMode ) {
+			entityManager.setCacheMode( cacheMode );
+		}
+		else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 			entityManager.setCacheRetrieveMode( cacheRetrieveMode );
 		}
 		else if ( option instanceof CacheStoreMode cacheStoreMode ) {
@@ -45,17 +97,62 @@ public final class OptionsHelper {
 		else if ( option instanceof FlushModeType flushModeType ) {
 			entityManager.setFlushMode( flushModeType );
 		}
+		else if ( option instanceof ReadOnlyMode readOnlyMode ) {
+			entityManager.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
+		}
+		else if ( option instanceof BatchSize batchSize ) {
+			entityManager.setJdbcBatchSize( batchSize.batchSize() );
+		}
 	}
 
-	public static Set<EntityManager.Option> getOptions(EntityManager entityManager) {
+	/// Collects all options from the `Session`.
+	public static Set<EntityManager.Option> getOptions(SessionImplementor entityManager) {
 		final Set<EntityManager.Option> options = new HashSet<>();
+		options.add( entityManager.getCacheMode() );
 		addIfNotNull( options, entityManager.getCacheRetrieveMode() );
 		addIfNotNull( options, entityManager.getCacheStoreMode() );
 		addIfNotNull( options, entityManager.getFlushMode() );
+		addIfNotNull( options, entityManager.getHibernateFlushMode() );
+		if ( entityManager.isDefaultReadOnly() ) {
+			options.add( ReadOnlyMode.READ_ONLY );
+		}
+		if ( entityManager.getJdbcBatchSize() != null ) {
+			options.add( new BatchSize( entityManager.getJdbcBatchSize() ) );
+		}
 		return options;
 	}
 
-	public static void applyOption(EntityAgent entityAgent, EntityAgent.Option option) {
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// StatelessSession
+
+	/// Applies a `StatelessSession` creation `option` to the `options` collector.
+	public static void applyOption(StatelessOptions options, EntityAgent.CreationOption option) {
+		if ( option instanceof CacheMode cacheMode ) {
+			options.initialCacheMode( cacheMode );
+		}
+		else if ( option instanceof CacheStoreMode cacheStoreMode ) {
+			options.cacheStoreMode( cacheStoreMode );
+		}
+		else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
+			options.cacheRetrieveMode( cacheRetrieveMode );
+		}
+		else if ( option instanceof BatchSize batchSize) {
+			options.jdbcBatchSize( batchSize.batchSize() );
+		}
+		else if ( option instanceof SessionCreationOption.TenantId tenantId ) {
+			options.tenantIdentifier( tenantId.value() );
+		}
+		else if ( option instanceof SessionCreationOption.EffectiveChangeset effectiveChangeset ) {
+			options.atChangeset( effectiveChangeset.changesetId() );
+		}
+		else if ( option instanceof SessionCreationOption.EffectiveAt effectiveAt ) {
+			options.asOf( effectiveAt.instant() );
+		}
+	}
+
+	/// Applies a runtime-adjustable `option` to the `StatelessSession`.
+	public static void applyOption(StatelessSessionImplementor entityAgent, EntityAgent.Option option) {
 		Objects.requireNonNull( option, "option" );
 		if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 			entityAgent.setCacheRetrieveMode( cacheRetrieveMode );
@@ -63,14 +160,29 @@ public final class OptionsHelper {
 		else if ( option instanceof CacheStoreMode cacheStoreMode ) {
 			entityAgent.setCacheStoreMode( cacheStoreMode );
 		}
+		else if ( option instanceof BatchSize batchSize ) {
+			entityAgent.setJdbcBatchSize( batchSize.batchSize() );
+		}
+		else if ( option instanceof CacheMode cacheMode ) {
+			entityAgent.setCacheMode( cacheMode );
+		}
 	}
 
-	public static Set<EntityAgent.Option> getOptions(EntityAgent entityAgent) {
+	/// Collects all options from the `StatelessSession`.
+	public static Set<EntityAgent.Option> getOptions(StatelessSessionImplementor entityAgent) {
 		final Set<EntityAgent.Option> options = new HashSet<>();
+		options.add( entityAgent.getCacheMode() );
 		addIfNotNull( options, entityAgent.getCacheRetrieveMode() );
 		addIfNotNull( options, entityAgent.getCacheStoreMode() );
+		if ( entityAgent.getJdbcBatchSize() != null ) {
+			options.add( new BatchSize( entityAgent.getJdbcBatchSize() ) );
+		}
 		return options;
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Query
 
 	public static void applyOption(TypedQuery<?> query, TypedQuery.Option option) {
 		Objects.requireNonNull( option, "option" );

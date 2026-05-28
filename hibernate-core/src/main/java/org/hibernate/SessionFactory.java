@@ -370,6 +370,11 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 		return fromStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
 	}
 
+	/**
+	 * Create a new {@link Session}, with the given {@linkplain EntityManager.CreationOption options}.
+	 *
+	 * @see SessionCreationOption
+	 */
 	@Override
 	@Nonnull
 	Session createEntityManager(@Nullable EntityManager.CreationOption... options);

@@ -30,8 +30,8 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
+import org.hibernate.engine.creation.internal.options.StatelessOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -157,7 +157,7 @@ public class StatelessSessionImpl
 	private final FlushMode flushMode;
 	private final EventListenerGroups eventListenerGroups;
 
-	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
+	public StatelessSessionImpl(SessionFactoryImpl factory, StatelessOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
@@ -181,9 +181,11 @@ public class StatelessSessionImpl
 		influencers.setTemporalIdentifier( options.getTemporalIdentifier() );
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
-		// A nonzero batch size forces the use of write-behind
-		// Therefore, ignore the value of hibernate.jdbc.batch_size
-		setJdbcBatchSize( 0 );
+		if ( getJdbcBatchSize() == null ) {
+			// A nonzero batch size forces the use of write-behind
+			// Therefore, ignore the value of hibernate.jdbc.batch_size
+			setJdbcBatchSize( 0 );
+		}
 
 		final var statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {

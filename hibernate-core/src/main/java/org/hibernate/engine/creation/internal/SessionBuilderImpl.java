@@ -4,23 +4,16 @@
  */
 package org.hibernate.engine.creation.internal;
 
-import jakarta.annotation.Nonnull;
-import org.hibernate.CacheMode;
+import jakarta.persistence.EntityManager;
 import org.hibernate.FlushMode;
-import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
+import org.hibernate.engine.creation.internal.options.StatefulOptions;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TimeZone;
-
-import static java.util.Collections.addAll;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
@@ -30,227 +23,109 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  */
 public abstract class SessionBuilderImpl
 		extends AbstractCommonBuilder<SessionBuilderImplementor>
-		implements SessionBuilderImplementor, SessionCreationOptions {
-
-	private boolean autoJoinTransactions = true;
-	private boolean autoClose;
-	private boolean autoClear;
-	private boolean identifierRollback;
-	private FlushMode flushMode;
-	private int defaultBatchFetchSize;
-	private boolean subselectFetchEnabled;
-
-	// Lazy: defaults are built only when overriding the factory-level listeners.
-	// Need a fresh build for each Session as the listener instances can't be
-	// reused across sessions.
-	private List<SessionEventListener> listeners;
+		implements SessionBuilderImplementor {
+	private final StatefulOptions options;
 
 	public SessionBuilderImpl(SessionFactoryImplementor sessionFactory) {
-		super( sessionFactory );
-		// set up default builder values
-		final var options = sessionFactory.getSessionFactoryOptions();
-		autoClose = options.isAutoCloseSessionEnabled();
-		identifierRollback = options.isIdentifierRollbackEnabled();
-		defaultBatchFetchSize = options.getDefaultBatchFetchSize();
-		subselectFetchEnabled = options.isSubselectFetchEnabled();
+		this( sessionFactory, new StatefulOptions( sessionFactory ) );
+	}
+
+	protected SessionBuilderImpl(SessionFactoryImplementor sessionFactory, StatefulOptions options) {
+		super( sessionFactory, options );
+		this.options = options;
 	}
 
 	@Override
-	@Nonnull
 	protected SessionBuilderImplementor getThis() {
 		return this;
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// SessionCreationOptions
-
-
-	@Override
-	public boolean shouldAutoJoinTransactions() {
-		return autoJoinTransactions;
-	}
-
-	@Override
-	public FlushMode getInitialSessionFlushMode() {
-		return flushMode;
-	}
-
-	@Override
-	public boolean isSubselectFetchEnabled() {
-		return subselectFetchEnabled;
-	}
-
-	@Override
-	public int getDefaultBatchFetchSize() {
-		return defaultBatchFetchSize;
-	}
-
-	@Override
-	public boolean shouldAutoClose() {
-		return autoClose;
-	}
-
-	@Override
-	public boolean shouldAutoClear() {
-		return autoClear;
-	}
-
-	@Override
-	public Connection getConnection() {
-		return connection;
-	}
-
-	@Override
-	public Interceptor getInterceptor() {
-		return configuredInterceptor();
-	}
-
-	@Override
-	public StatementInspector getStatementInspector() {
-		return statementInspector;
-	}
-
-	@Override
-	public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
-		return connectionHandlingMode;
-	}
-
-	@Override
-	public Object getTenantIdentifierValue() {
-		return tenantIdentifier;
-	}
-
-	@Override
-	public boolean isReadOnly() {
-		return readOnly;
-	}
-
-	@Override
-	public CacheMode getInitialCacheMode() {
-		return cacheMode;
-	}
-
-	@Override
-	public boolean isIdentifierRollbackEnabled() {
-		return identifierRollback;
-	}
-
-	@Override
-	public TimeZone getJdbcTimeZone() {
-		return jdbcTimeZone;
-	}
-
-	@Override
-	public Object getTemporalIdentifier() {
-		return temporalIdentifier;
-	}
-
-	@Override
-	public List<SessionEventListener> getCustomSessionEventListeners() {
-		return listeners;
+	protected StatefulOptions options() {
+		return options;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SessionBuilder
 
 	@Override
-	@Nonnull
+	public SessionBuilderImplementor withOption(EntityManager.CreationOption option) {
+		options.apply( option );
+		return this;
+	}
+
+	@Override
 	public SessionImplementor openSession() {
-		CORE_LOGGER.openingSession( tenantIdentifier );
-		return createSession();
+		CORE_LOGGER.openingSession( options.getTenantIdentifierValue() );
+		return createSession( options );
 	}
 
-	@Nonnull
-	protected abstract SessionImplementor createSession();
+	protected abstract SessionImplementor createSession(StatefulOptions options);
 
 	@Override
 	@Deprecated
-	@Nonnull
-	public SessionBuilderImplementor statementInspector(@Nonnull StatementInspector statementInspector) {
-		this.statementInspector = statementInspector;
+	public SessionBuilderImplementor statementInspector(StatementInspector statementInspector) {
+		options.statementInspector( statementInspector );
 		return this;
 	}
 
 	@Override
 	@Deprecated
-	@Nonnull
-	public SessionBuilderImplementor connectionHandlingMode(@Nonnull PhysicalConnectionHandlingMode connectionHandlingMode) {
-		this.connectionHandlingMode = connectionHandlingMode;
+	public SessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+		options.connectionHandlingMode( connectionHandlingMode );
 		return this;
 	}
 
 	@Override
-	@Nonnull
 	public SessionBuilderImplementor autoJoinTransactions(boolean autoJoinTransactions) {
-		this.autoJoinTransactions = autoJoinTransactions;
+		options.autoJoinTransactions( autoJoinTransactions );
 		return this;
 	}
 
 	@Override
-	@Nonnull
 	public SessionBuilderImplementor autoClose(boolean autoClose) {
-		this.autoClose = autoClose;
+		options.autoClose( autoClose );
 		return this;
 	}
 
 	@Override
-	@Nonnull
 	public SessionBuilderImplementor autoClear(boolean autoClear) {
-		this.autoClear = autoClear;
+		options.autoClear( autoClear );
 		return this;
 	}
 
 	@Override
-	@Nonnull
-	public SessionBuilderImplementor flushMode(@Nonnull FlushMode flushMode) {
-		this.flushMode = flushMode;
+	public SessionBuilderImplementor flushMode(FlushMode flushMode) {
+		options.flushMode( flushMode );
 		return this;
 	}
 
 	@Override
-	@Nonnull
 	public SessionBuilderImplementor identifierRollback(boolean identifierRollback) {
-		this.identifierRollback = identifierRollback;
+		options.identifierRollback( identifierRollback );
 		return this;
 	}
 
 	@Override
-	@Nonnull
-	public SessionBuilderImplementor eventListeners(@Nonnull SessionEventListener... listeners) {
-		if ( this.listeners == null ) {
-			final var baselineListeners =
-					sessionFactory.getSessionFactoryOptions().buildSessionEventListeners();
-			this.listeners = new ArrayList<>( baselineListeners.length + listeners.length );
-			addAll( this.listeners, baselineListeners );
-		}
-		addAll( this.listeners, listeners );
+	public SessionBuilderImplementor eventListeners(SessionEventListener... listeners) {
+		options.eventListeners( sessionFactory, listeners );
 		return this;
 	}
 
 	@Override
-	@Nonnull
 	public SessionBuilderImplementor clearEventListeners() {
-		if ( listeners == null ) {
-			//Needs to initialize explicitly to an empty list as otherwise "null" implies the default listeners will be applied
-			listeners = new ArrayList<>( 3 );
-		}
-		else {
-			listeners.clear();
-		}
+		options.clearEventListeners();
 		return this;
 	}
 
 	@Override
-	@Nonnull
 	public SessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize) {
-		this.defaultBatchFetchSize = defaultBatchFetchSize;
+		options.defaultBatchFetchSize( defaultBatchFetchSize );
 		return this;
 	}
 
 	@Override
-	@Nonnull
 	public SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled) {
-		this.subselectFetchEnabled = subselectFetchEnabled;
+		options.subselectFetchEnabled( subselectFetchEnabled );
 		return this;
 	}
 }

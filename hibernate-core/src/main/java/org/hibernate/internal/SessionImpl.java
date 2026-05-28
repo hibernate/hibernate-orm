@@ -26,6 +26,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
+import org.hibernate.engine.creation.internal.options.StatefulOptions;
 import org.hibernate.engine.internal.PersistenceContexts;
 import org.hibernate.action.queue.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
@@ -182,7 +183,7 @@ public class SessionImpl
 
 	private transient TransactionObserver transactionObserver;
 
-	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
+	public SessionImpl(SessionFactoryImpl factory, StatefulOptions options) {
 		super( factory, options );
 
 		final var sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();

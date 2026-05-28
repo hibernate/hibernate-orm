@@ -9,6 +9,8 @@ import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -34,206 +36,243 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		this.delegate = delegate;
 	}
 
+	@Nonnull
 	protected SharedSessionBuilder getThis() {
 		return this;
 	}
 
+	@Nonnull
 	public SharedSessionBuilder delegate() {
 		return delegate;
 	}
 
 	@Override
+	@Nonnull
 	public Session openSession() {
 		return delegate.openSession();
 	}
 
 	@Override
+	@Nonnull
 	public Session open() {
 		return delegate.open();
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder interceptor() {
 		delegate.interceptor();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder connection() {
 		delegate.connection();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder connectionHandlingMode() {
 		delegate.connectionHandlingMode();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder autoJoinTransactions() {
 		delegate.autoJoinTransactions();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder autoClose() {
 		delegate.autoClose();
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder interceptor(Interceptor interceptor) {
+	@Nonnull
+	public SharedSessionBuilder interceptor(@Nullable Interceptor interceptor) {
 		delegate.interceptor( interceptor );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder noInterceptor() {
 		delegate.noInterceptor();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder noSessionInterceptorCreation() {
 		delegate.noSessionInterceptorCreation();
 		return this;
 	}
 
-	@Override @Deprecated
-	public SharedSessionBuilder statementInspector(StatementInspector statementInspector) {
+	@Override
+	@Deprecated
+	@Nonnull
+	public SharedSessionBuilder statementInspector(@Nonnull StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder statementInspector(UnaryOperator<String> operator) {
+	@Nonnull
+	public SharedSessionBuilder statementInspector(@Nullable UnaryOperator<String> operator) {
 		delegate.statementInspector( operator );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder statementInspector() {
 		delegate.statementInspector();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder noStatementInspector() {
 		delegate.noStatementInspector();
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder connection(Connection connection) {
+	@Nonnull
+	public SharedSessionBuilder connection(@Nonnull Connection connection) {
 		delegate.connection( connection );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
 		delegate.autoJoinTransactions( autoJoinTransactions );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder autoClose(boolean autoClose) {
 		delegate.autoClose( autoClose );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder tenantIdentifier(Object tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder readOnly(boolean readOnly) {
 		delegate.readOnly( readOnly );
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder initialCacheMode(CacheMode cacheMode) {
+	@Nonnull
+	public SharedSessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode) {
 		delegate.initialCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder eventListeners(SessionEventListener... listeners) {
+	@Nonnull
+	public SharedSessionBuilder eventListeners(@Nonnull SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder clearEventListeners() {
 		delegate.clearEventListeners();
 		return this;
 	}
 
-	@Override @Deprecated
+	@Override
+	@Deprecated
+	@Nonnull
 	public SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+	@Nonnull
+	public SharedSessionBuilder connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode) {
 		delegate.connectionHandling( acquisitionMode, releaseMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder autoClear(boolean autoClear) {
 		delegate.autoClear( autoClear );
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder flushMode(FlushMode flushMode) {
+	@Nonnull
+	public SharedSessionBuilder flushMode(@Nonnull FlushMode flushMode) {
 		delegate.flushMode( flushMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder flushMode() {
 		delegate.flushMode();
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder jdbcTimeZone(TimeZone timeZone) {
+	@Nonnull
+	public SharedSessionBuilder jdbcTimeZone(@Nullable TimeZone timeZone) {
 		delegate.jdbcTimeZone( timeZone );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder identifierRollback(boolean identifierRollback) {
 		delegate.identifierRollback( identifierRollback );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder defaultBatchFetchSize(int defaultBatchFetchSize) {
 		delegate.defaultBatchFetchSize( defaultBatchFetchSize );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled) {
 		delegate.subselectFetchEnabled( subselectFetchEnabled );
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder asOf(Instant instant) {
+	@Nonnull
+	public SharedSessionBuilder asOf(@Nullable Instant instant) {
 		delegate.asOf( instant );
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilder atChangeset(Object changesetId) {
+	@Nonnull
+	public SharedSessionBuilder atChangeset(@Nullable Object changesetId) {
 		delegate.atChangeset( changesetId );
 		return this;
 	}

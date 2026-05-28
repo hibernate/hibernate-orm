@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
@@ -36,159 +37,187 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		this.delegate = (SessionBuilderImplementor) delegate;
 	}
 
+	@Nonnull
 	protected SessionBuilder getThis() {
 		return this;
 	}
 
+	@Nonnull
 	protected SessionBuilderImplementor delegate() {
 		return delegate;
 	}
 
 	@Override
+	@Nonnull
 	public SessionImplementor openSession() {
 		return delegate.openSession();
 	}
 
 	@Override
-	public SessionBuilderImplementor interceptor(Interceptor interceptor) {
+	@Nonnull
+	public SessionBuilderImplementor interceptor(@Nullable Interceptor interceptor) {
 		delegate.interceptor( interceptor );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor noInterceptor() {
 		delegate.noInterceptor();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor noSessionInterceptorCreation() {
 		delegate.noSessionInterceptorCreation();
 		return this;
 	}
 
-	@Override @Deprecated
-	public SessionBuilderImplementor statementInspector(StatementInspector statementInspector) {
+	@Override
+	@Deprecated
+	@Nonnull
+	public SessionBuilderImplementor statementInspector(@Nonnull StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor statementInspector(UnaryOperator<String> operator) {
+	@Nonnull
+	public SessionBuilderImplementor statementInspector(@Nullable UnaryOperator<String> operator) {
 		delegate.statementInspector( operator );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor noStatementInspector() {
 		delegate.noStatementInspector();
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor connection(Connection connection) {
+	@Nonnull
+	public SessionBuilderImplementor connection(@Nonnull Connection connection) {
 		delegate.connection( connection );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor autoJoinTransactions(boolean autoJoinTransactions) {
 		delegate.autoJoinTransactions( autoJoinTransactions );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor autoClose(boolean autoClose) {
 		delegate.autoClose( autoClose );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor tenantIdentifier(@Nullable Object tenantIdentifier) {
 		delegate.tenantIdentifier( tenantIdentifier );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor readOnly(boolean readOnly) {
 		delegate.readOnly( readOnly );
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor initialCacheMode(CacheMode cacheMode) {
+	@Nonnull
+	public SessionBuilderImplementor initialCacheMode(@Nonnull CacheMode cacheMode) {
 		delegate.initialCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor eventListeners(SessionEventListener... listeners) {
+	@Nonnull
+	public SessionBuilderImplementor eventListeners(@Nonnull SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor clearEventListeners() {
 		delegate.clearEventListeners();
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor jdbcTimeZone(TimeZone timeZone) {
+	@Nonnull
+	public SessionBuilderImplementor jdbcTimeZone(@Nullable TimeZone timeZone) {
 		delegate.jdbcTimeZone(timeZone);
 		return this;
 	}
 
 	@Override @Deprecated
-	public SessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
+	@Nonnull
+	public SessionBuilderImplementor connectionHandlingMode(@Nonnull PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+	@Nonnull
+	public SessionBuilderImplementor connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode) {
 		delegate.connectionHandling( acquisitionMode, releaseMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor autoClear(boolean autoClear) {
 		delegate.autoClear( autoClear );
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor flushMode(FlushMode flushMode) {
+	@Nonnull
+	public SessionBuilderImplementor flushMode(@Nonnull FlushMode flushMode) {
 		delegate.flushMode( flushMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor identifierRollback(boolean identifierRollback) {
 		delegate.identifierRollback( identifierRollback );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize) {
 		delegate.defaultBatchFetchSize( defaultBatchFetchSize );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled) {
 		delegate.subselectFetchEnabled( subselectFetchEnabled );
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor asOf(Instant instant) {
+	@Nonnull
+	public SessionBuilderImplementor asOf(@Nullable Instant instant) {
 		delegate.asOf( instant );
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor atChangeset(Object changesetId) {
+	@Nonnull
+	public SessionBuilderImplementor atChangeset(@Nullable Object changesetId) {
 		delegate.atChangeset( changesetId );
 		return this;
 	}

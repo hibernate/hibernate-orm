@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.creation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -28,48 +30,62 @@ public interface CommonSharedBuilder extends CommonBuilder {
 	/// Implies that the overall "transaction context" should be shared as well.
 	///
 	/// @return `this`, for method chaining
+	@Nonnull
 	CommonSharedBuilder connection();
 
 	/// Signifies the interceptor from the original session should be used to create the new session.
 	///
 	/// @return `this`, for method chaining
+	@Nonnull
 	CommonSharedBuilder interceptor();
 
 	/// Signifies that the SQL statement inspector from the original session should be used to create the new session.
 	///
 	/// @return `this`, for method chaining
+	@Nonnull
 	CommonSharedBuilder statementInspector();
 
 	@Override
+	@Nonnull
 	CommonSharedBuilder noStatementInspector();
 
 	@Override
-	CommonSharedBuilder interceptor(Interceptor interceptor);
+	@Nonnull
+	CommonSharedBuilder interceptor(@Nullable Interceptor interceptor);
 
 	@Override
+	@Nonnull
 	CommonSharedBuilder noInterceptor();
 
 	@Override
+	@Nonnull
 	CommonSharedBuilder noSessionInterceptorCreation();
 
 	@Override
-	CommonSharedBuilder statementInspector(UnaryOperator<String> operator);
+	@Nonnull
+	CommonSharedBuilder statementInspector(@Nullable UnaryOperator<String> operator);
 
 	@Override
+	@Nonnull
 	CommonSharedBuilder readOnly(boolean readOnly);
 
 	@Override
-	CommonSharedBuilder initialCacheMode(CacheMode cacheMode);
+	@Nonnull
+	CommonSharedBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
 
 	@Override
+	@Nonnull
 	CommonSharedBuilder tenantIdentifier(Object tenantIdentifier);
 
 	@Override
-	CommonBuilder connection(Connection connection);
+	@Nonnull
+	CommonBuilder connection(@Nonnull Connection connection);
 
 	@Override
-	CommonSharedBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+	@Nonnull
+	CommonSharedBuilder connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode);
 
 	@Override
-	CommonSharedBuilder jdbcTimeZone(TimeZone timeZone);
+	@Nonnull
+	CommonSharedBuilder jdbcTimeZone(@Nullable TimeZone timeZone);
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.creation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -30,13 +32,15 @@ import java.util.function.UnaryOperator;
 @Incubating
 public interface CommonBuilder {
 	/// Open the session using the specified options.
+	@Nonnull
 	SharedSessionContract open();
 
 	/// Adds a specific connection to be used to the session options.
 	///
 	/// @param connection The connection to use.
 	/// @return {@code this}, for method chaining
-	CommonBuilder connection(Connection connection);
+	@Nonnull
+	CommonBuilder connection(@Nonnull Connection connection);
 
 	/// Specifies the connection handling modes for the session.
 	///
@@ -46,13 +50,15 @@ public interface CommonBuilder {
 	/// @return `this`, for method chaining
 	///
 	/// @since 7.0
-	CommonBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+	@Nonnull
+	CommonBuilder connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode);
 
 	/// Adds a specific interceptor to the session options.
 	///
 	/// @param interceptor The interceptor to use.
 	/// @return `this`, for method chaining
-	CommonBuilder interceptor(Interceptor interceptor);
+	@Nonnull
+	CommonBuilder interceptor(@Nullable Interceptor interceptor);
 
 	/// Specifies that no {@link Interceptor} should be used.  This indicates to
 	/// ignore both (if either) the [interceptor][org.hibernate.cfg.SessionEventSettings#INTERCEPTOR]
@@ -62,6 +68,7 @@ public interface CommonBuilder {
 	/// @return `this`, for method chaining
 	///
 	/// @apiNote Calling [#interceptor(Interceptor)] with `null` has the same effect
+	@Nonnull
 	CommonBuilder noInterceptor();
 
 	/// Specifies that no [session-scoped interceptor][org.hibernate.cfg.SessionEventSettings#SESSION_SCOPED_INTERCEPTOR]
@@ -76,6 +83,7 @@ public interface CommonBuilder {
 	/// [interceptor][org.hibernate.cfg.SessionEventSettings#INTERCEPTOR] associated with the `SessionFactory`.
 	///
 	/// @since 7.2
+	@Nonnull
 	CommonBuilder noSessionInterceptorCreation();
 
 	/// Applies the given statement inspection function to the session.
@@ -85,7 +93,8 @@ public interface CommonBuilder {
 	/// operator may simply (and usually) return the original SQL.
 	///
 	/// @return `this`, for method chaining
-	CommonBuilder statementInspector(UnaryOperator<String> operator);
+	@Nonnull
+	CommonBuilder statementInspector(@Nullable UnaryOperator<String> operator);
 
 	/// Signifies that no SQL statement inspector should be used.
 	///
@@ -96,6 +105,7 @@ public interface CommonBuilder {
 	/// @return `this`, for method chaining
 	///
 	/// @apiNote Calling [#statementInspector] with `null` has the same effect.
+	@Nonnull
 	CommonBuilder noStatementInspector();
 
 	/// Specify the tenant identifier to be associated with the opened session.
@@ -110,6 +120,7 @@ public interface CommonBuilder {
 	/// @param tenantIdentifier The tenant identifier.
 	///
 	/// @return `this`, for method chaining
+	@Nonnull
 	CommonBuilder tenantIdentifier(Object tenantIdentifier);
 
 	/// Specify a [read-only mode][Session#isDefaultReadOnly]
@@ -156,6 +167,7 @@ public interface CommonBuilder {
 	///
 	/// @since 7.2
 	@Incubating
+	@Nonnull
 	CommonBuilder readOnly(boolean readOnly);
 
 	/// Specify the initial [CacheMode] for the session.
@@ -165,13 +177,15 @@ public interface CommonBuilder {
 	/// @see SharedSessionContract#getCacheMode()
 	///
 	/// @since 7.2
-	CommonBuilder initialCacheMode(CacheMode cacheMode);
+	@Nonnull
+	CommonBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
 
 	/// Specify the [JDBC time zone][org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE]
 	/// to use for the session.
 	///
 	/// @return `this`, for method chaining
-	CommonBuilder jdbcTimeZone(TimeZone timeZone);
+	@Nonnull
+	CommonBuilder jdbcTimeZone(@Nullable TimeZone timeZone);
 
 	/**
 	 * Specify the instant for reading
@@ -182,7 +196,8 @@ public interface CommonBuilder {
 	 * @see org.hibernate.annotations.Temporal
 	 */
 	@Incubating
-	CommonBuilder asOf(Instant instant);
+	@Nonnull
+	CommonBuilder asOf(@Nullable Instant instant);
 
 	/**
 	 * Specify the
@@ -197,5 +212,6 @@ public interface CommonBuilder {
 	 * @see org.hibernate.annotations.Temporal
 	 */
 	@Incubating
-	CommonBuilder atChangeset(Object changesetId);
+	@Nonnull
+	CommonBuilder atChangeset(@Nullable Object changesetId);
 }

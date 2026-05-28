@@ -31,6 +31,8 @@ import java.io.Serializable;
  * @see SessionBuilderImplementor#statementInspector(StatementInspector)
  *
  * @author Steve Ebersole
+ *
+ * @since 5.0
  */
 public interface StatementInspector extends Serializable {
 	StatementInspector NONE = sql -> sql;

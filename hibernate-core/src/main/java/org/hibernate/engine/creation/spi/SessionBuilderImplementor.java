@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.creation.spi;
 
+import jakarta.annotation.Nonnull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
@@ -31,77 +32,102 @@ import java.util.function.UnaryOperator;
  */
 public interface SessionBuilderImplementor extends SessionBuilder {
 	@Override
+	@Nonnull
 	SessionImplementor openSession();
 
 	@Override
-	SessionBuilderImplementor interceptor(Interceptor interceptor);
+	@Nonnull
+	SessionBuilderImplementor interceptor(@Nullable Interceptor interceptor);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor noInterceptor();
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor noSessionInterceptorCreation();
 
 	@Override
-	SessionBuilderImplementor statementInspector(UnaryOperator<String> operator);
+	@Nonnull
+	SessionBuilderImplementor statementInspector(@Nullable UnaryOperator<String> operator);
 
 	@Override
-	SessionBuilderImplementor statementInspector(StatementInspector statementInspector);
+	@Nonnull
+	SessionBuilderImplementor statementInspector(@Nonnull StatementInspector statementInspector);
 
 	@Override
-	SessionBuilderImplementor connection(Connection connection);
+	@Nonnull
+	SessionBuilderImplementor connection(@Nonnull Connection connection);
 
 	@Override
-	SessionBuilderImplementor connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+	@Nonnull
+	SessionBuilderImplementor connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode);
 
 	@Override
-	SessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode mode);
+	@Nonnull
+	SessionBuilderImplementor connectionHandlingMode(@Nonnull PhysicalConnectionHandlingMode mode);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor autoJoinTransactions(boolean autoJoinTransactions);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor autoClear(boolean autoClear);
 
 	@Override
-	SessionBuilderImplementor flushMode(FlushMode flushMode);
+	@Nonnull
+	SessionBuilderImplementor flushMode(@Nonnull FlushMode flushMode);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor tenantIdentifier(@Nullable Object tenantIdentifier);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor readOnly(boolean readOnly);
 
 	@Override
-	SessionBuilderImplementor initialCacheMode(CacheMode cacheMode);
+	@Nonnull
+	SessionBuilderImplementor initialCacheMode(@Nonnull CacheMode cacheMode);
 
 	@Override
-	SessionBuilderImplementor eventListeners(SessionEventListener... listeners);
+	@Nonnull
+	SessionBuilderImplementor eventListeners(@Nonnull SessionEventListener... listeners);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor clearEventListeners();
 
 	@Override
-	SessionBuilderImplementor jdbcTimeZone(TimeZone timeZone);
+	@Nonnull
+	SessionBuilderImplementor jdbcTimeZone(@Nullable TimeZone timeZone);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor autoClose(boolean autoClose);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor identifierRollback(boolean identifierRollback);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor noStatementInspector();
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize);
 
 	@Override
+	@Nonnull
 	SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled);
 
 	@Override
-	SessionBuilderImplementor asOf(Instant instant);
+	@Nonnull
+	SessionBuilderImplementor asOf(@Nullable Instant instant);
 
 	@Override
-	SessionBuilderImplementor atChangeset(Object changesetId);
+	@Nonnull
+	SessionBuilderImplementor atChangeset(@Nullable Object changesetId);
 }

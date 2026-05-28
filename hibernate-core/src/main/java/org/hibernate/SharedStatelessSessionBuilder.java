@@ -4,6 +4,8 @@
  */
 package org.hibernate;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.creation.CommonSharedBuilder;
 
 import java.sql.Connection;
@@ -63,46 +65,62 @@ public interface SharedStatelessSessionBuilder extends StatelessSessionBuilder, 
 	 * Open the stateless session.
 	 */
 	@Override
+	@Nonnull
 	StatelessSession open();
 
 	@Override
+	@Nonnull
 	SharedStatelessSessionBuilder connection();
 
 	@Override
+	@Nonnull
 	SharedStatelessSessionBuilder interceptor();
 
 	@Override
-	SharedStatelessSessionBuilder interceptor(Interceptor interceptor);
+	@Nonnull
+	SharedStatelessSessionBuilder interceptor(@Nullable Interceptor interceptor);
 
 	@Override
+	@Nonnull
 	SharedStatelessSessionBuilder noInterceptor();
 
 	@Override
+	@Nonnull
 	SharedStatelessSessionBuilder noSessionInterceptorCreation();
 
-	SharedStatelessSessionBuilder statementInspector(UnaryOperator<String> operator);
+	@Override
+	@Nonnull
+	SharedStatelessSessionBuilder statementInspector(@Nullable UnaryOperator<String> operator);
 
 	@Override
+	@Nonnull
 	SharedStatelessSessionBuilder statementInspector();
 
 	@Override
+	@Nonnull
 	SharedStatelessSessionBuilder noStatementInspector();
 
 	@Override
+	@Nonnull
 	SharedStatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	@Override
+	@Nonnull
 	SharedStatelessSessionBuilder readOnly(boolean readOnly);
 
 	@Override
-	SharedStatelessSessionBuilder initialCacheMode(CacheMode cacheMode);
+	@Nonnull
+	SharedStatelessSessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
 
 	@Override
-	SharedStatelessSessionBuilder connection(Connection connection);
+	@Nonnull
+	SharedStatelessSessionBuilder connection(@Nonnull Connection connection);
 
 	@Override
-	SharedStatelessSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+	@Nonnull
+	SharedStatelessSessionBuilder connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode);
 
 	@Override
-	SharedStatelessSessionBuilder jdbcTimeZone(TimeZone timeZone);
+	@Nonnull
+	SharedStatelessSessionBuilder jdbcTimeZone(@Nullable TimeZone timeZone);
 }

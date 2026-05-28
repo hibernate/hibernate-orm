@@ -11,6 +11,7 @@ import java.util.function.UnaryOperator;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.EntityManager;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -45,6 +46,11 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 	@Nonnull
 	protected SessionBuilderImplementor delegate() {
 		return delegate;
+	}
+
+	@Override
+	public SessionBuilderImplementor withOption(EntityManager.CreationOption option) {
+		return delegate.withOption( option );
 	}
 
 	@Override

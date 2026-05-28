@@ -6,6 +6,7 @@ package org.hibernate.engine.creation.spi;
 
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.EntityManager;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -130,4 +131,6 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 	@Override
 	@Nonnull
 	SessionBuilderImplementor atChangeset(@Nullable Object changesetId);
+
+	SessionBuilderImplementor withOption(EntityManager.CreationOption option);
 }

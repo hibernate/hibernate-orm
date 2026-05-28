@@ -750,16 +750,23 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Nonnull
 	public Session createEntityManager(@Nullable EntityManager.CreationOption... options) {
 		validateNotClosed();
-		SynchronizationType synchronizationType = SYNCHRONIZED;
+
+		var builder = withOptions();
+		builder.autoJoinTransactions( true );
+
 		if ( options != null ) {
 			for ( var option : options ) {
-				if ( option instanceof SynchronizationType explicitSynchronizationType ) {
+				if ( option instanceof SynchronizationType synchronizationType ) {
 					errorIfResourceLocalDueToExplicitSynchronizationType();
-					synchronizationType = explicitSynchronizationType;
+					builder.autoJoinTransactions( synchronizationType == SYNCHRONIZED );
+				}
+				else {
+					builder.withOption( option );
 				}
 			}
 		}
-		final var session = buildEntityManager( synchronizationType, null );
+
+		final var session = builder.openSession();
 		if ( options != null ) {
 			for ( var option : options ) {
 				if ( option instanceof EntityManager.Option entityManagerOption ) {

@@ -5,10 +5,12 @@
 package org.hibernate.engine.creation.internal;
 
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.EntityManager;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
+import org.hibernate.SubselectFetchMode;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -64,6 +66,13 @@ public abstract class SessionBuilderImpl
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SessionCreationOptions
 
+	@Override
+	public SessionBuilderImplementor withOption(EntityManager.CreationOption option) {
+		if ( option instanceof SubselectFetchMode subselectFetchMode ) {
+			subselectFetchEnabled = subselectFetchMode == SubselectFetchMode.ENABLED;
+		}
+		return this;
+	}
 
 	@Override
 	public boolean shouldAutoJoinTransactions() {

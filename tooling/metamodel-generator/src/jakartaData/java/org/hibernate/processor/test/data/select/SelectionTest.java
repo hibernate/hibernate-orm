@@ -58,12 +58,18 @@ class SelectionTest {
 						"_builder.construct(SelectionRepository.Named.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" ) );
 		assertTrue( repository.contains( "var _spec = SelectionSpecification.create(SelectionBook.class);" ) );
 		assertTrue( repository.contains( "var _projection = ProjectionSpecification.create(_spec);" ) );
-		assertTrue( repository.contains( "var _selection0 = _projection.select(SelectionBook_.title);" ) );
-		assertTrue( repository.contains( "var _selection1 = _projection.select(SelectionBook_.pages);" ) );
+		assertTrue( repository.contains( "var _TitleAndPages_title = _projection.select(SelectionBook_.title);" ) );
+		assertTrue( repository.contains( "var _TitleAndPages_pages = _projection.select(SelectionBook_.pages);" ) );
 		assertTrue( repository.contains(
-				".map(_result -> new TitleAndPages(_selection0.in(_result), _selection1.in(_result)))" )
+				".map(_result -> new TitleAndPages(_TitleAndPages_title.in(_result), _TitleAndPages_pages.in(_result)))" )
 				|| repository.contains(
-						".map(_result -> new SelectionRepository.TitleAndPages(_selection0.in(_result), _selection1.in(_result)))" ) );
+						".map(_result -> new SelectionRepository.TitleAndPages(_TitleAndPages_title.in(_result), _TitleAndPages_pages.in(_result)))" ) );
+		assertTrue( repository.contains( "var _Renamed_name = _projection.select(SelectionBook_.title);" ) );
+		assertTrue( repository.contains( "var _Renamed_pageCount = _projection.select(SelectionBook_.pages);" ) );
+		assertTrue( repository.contains(
+				".map(_result -> new Renamed(_Renamed_name.in(_result), _Renamed_pageCount.in(_result)))" )
+				|| repository.contains(
+						".map(_result -> new SelectionRepository.Renamed(_Renamed_name.in(_result), _Renamed_pageCount.in(_result)))" ) );
 		assertTrue( repository.contains( ".setMaxResults(1)" ) );
 		assertTrue( repository.contains( ".setMaxResults(3)" ) );
 		assertTrue( repository.contains( ".setMaxResults(2)" ) );

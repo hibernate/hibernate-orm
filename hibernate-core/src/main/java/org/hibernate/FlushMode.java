@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityManager;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 
 import jakarta.persistence.FlushModeType;
@@ -31,7 +32,7 @@ import java.util.Locale;
  *
  * @author Gavin King
  */
-public enum FlushMode {
+public enum FlushMode implements EntityManager.Option {
 	/**
 	 * The {@link Session} is only flushed when {@link Session#flush()}
 	 * is called explicitly. This mode is very efficient for read-only

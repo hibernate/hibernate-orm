@@ -16,6 +16,7 @@ import jakarta.persistence.Statement;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
+import org.hibernate.BatchSize;
 import org.hibernate.LockOptions;
 import org.hibernate.ReadOnlyMode;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -51,6 +52,9 @@ public final class OptionsHelper {
 		else if ( option instanceof ReadOnlyMode readOnlyMode ) {
 			entityManager.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
 		}
+		else if ( option instanceof BatchSize batchSize ) {
+			entityManager.setJdbcBatchSize( batchSize.batchSize() );
+		}
 	}
 
 	public static Set<EntityManager.Option> getOptions(SessionImplementor entityManager) {
@@ -71,6 +75,9 @@ public final class OptionsHelper {
 		}
 		else if ( option instanceof CacheStoreMode cacheStoreMode ) {
 			entityAgent.setCacheStoreMode( cacheStoreMode );
+		}
+		else if ( option instanceof BatchSize batchSize ) {
+			entityAgent.setJdbcBatchSize( batchSize.batchSize() );
 		}
 	}
 

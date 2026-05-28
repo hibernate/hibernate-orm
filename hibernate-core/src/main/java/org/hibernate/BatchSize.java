@@ -4,6 +4,8 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityAgent;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.FindOption;
 
 import java.util.List;
@@ -41,10 +43,14 @@ import java.util.List;
  *
  * @see Session#findMultiple
  * @see MultiIdentifierLoadAccess#withBatchSize
+ * @see jakarta.persistence.EntityManagerFactory#createEntityManager(EntityManager.CreationOption...)
+ * @see jakarta.persistence.EntityManagerFactory#createEntityAgent(EntityAgent.CreationOption...)
+ * @see EntityManager#addOption(EntityManager.Option)
+ * @see EntityAgent#addOption(EntityAgent.Option)
  *
  * @since 7.0
  *
  * @author Gavin King
  */
-public record BatchSize(int batchSize) implements FindOption {
+public record BatchSize(int batchSize) implements FindOption, EntityManager.Option, EntityAgent.Option {
 }

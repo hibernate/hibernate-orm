@@ -6,6 +6,7 @@ package org.hibernate.orm.test.pc;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.BatchSize;
 import org.hibernate.ReadOnlyMode;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -23,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 public class EntityHandlerOptionTests {
 	@Test
-	void testReadOnlyMode(SessionFactoryScope factoryScope) {
+	void testReadOnlyModeSession(SessionFactoryScope factoryScope) {
 		var sf = factoryScope.getSessionFactory();
 
 		try (var em = sf.createEntityManager()) {
@@ -38,6 +39,42 @@ public class EntityHandlerOptionTests {
 			assertThat(em.isDefaultReadOnly()).isFalse();
 			em.addOption( ReadOnlyMode.READ_ONLY );
 			assertThat(em.isDefaultReadOnly()).isTrue();
+		}
+	}
+
+	@Test
+	void testBatchSizeSession(SessionFactoryScope factoryScope) {
+		var sf = factoryScope.getSessionFactory();
+
+		try (var em = sf.createEntityManager()) {
+			assertThat(em.getJdbcBatchSize()).isNull();
+		}
+
+		try (var em = sf.createEntityManager(new BatchSize( 10 ) )) {
+			assertThat(em.getJdbcBatchSize()).isEqualTo(10);
+		}
+
+		try (var em = sf.createEntityManager()) {
+			em.addOption( new BatchSize( 20 ) );
+			assertThat(em.getJdbcBatchSize()).isEqualTo(20);
+		}
+	}
+
+	@Test
+	void testBatchSizeStateless(SessionFactoryScope factoryScope) {
+		var sf = factoryScope.getSessionFactory();
+
+		try (var em = sf.createEntityAgent()) {
+			assertThat(em.getJdbcBatchSize()).isEqualTo(0);
+		}
+
+		try (var em = sf.createEntityAgent(new BatchSize( 10 ) )) {
+			assertThat(em.getJdbcBatchSize()).isEqualTo(10);
+		}
+
+		try (var em = sf.createEntityAgent()) {
+			em.addOption( new BatchSize( 20 ) );
+			assertThat(em.getJdbcBatchSize()).isEqualTo(20);
 		}
 	}
 

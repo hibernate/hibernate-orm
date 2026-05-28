@@ -64,6 +64,10 @@ public interface SelectionRepository extends CrudRepository<SelectionBook, Long>
 	Page<TitleAndPages> titlePagesPageByStatus(SelectionStatus status, PageRequest pageRequest);
 
 	@Find
+	@OrderBy("title")
+	Page<Renamed> renamedPageByStatus(SelectionStatus status, PageRequest pageRequest);
+
+	@Find
 	List<Renamed> renamedByStatus(SelectionStatus status);
 
 	@Find

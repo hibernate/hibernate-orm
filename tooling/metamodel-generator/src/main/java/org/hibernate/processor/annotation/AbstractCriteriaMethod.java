@@ -225,8 +225,8 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				.append( ".create(_spec);\n" );
 		for ( int i = 0; i < selection.paths().size(); i++ ) {
 			declaration
-					.append( "\tvar _selection" )
-					.append( i )
+					.append( "\tvar " )
+					.append( selectionVariableName( i ) )
 					.append( " = _projection.select(" );
 			projectionSelection( declaration, selection.paths().get( i ) );
 			declaration
@@ -586,13 +586,29 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		}
 	}
 
-	private static void selectionValue(StringBuilder declaration, int selection, String resultVariable) {
+	private void selectionValue(StringBuilder declaration, int selectionIndex, String resultVariable) {
 		declaration
-				.append( "_selection" )
-				.append( selection )
+				.append( selectionVariableName( selectionIndex ) )
 				.append( ".in(" )
 				.append( resultVariable )
 				.append( ")" );
+	}
+
+	private String selectionVariableName(int selectionIndex) {
+		if ( selection == null ) {
+			throw new AssertionFailure( "missing result selection" );
+		}
+		else if ( selection.recordProjection() ) {
+			return "_" + unqualifiedName( selection.resultTypeName() )
+					+ "_" + selection.componentNames().get( selectionIndex );
+		}
+		else {
+			return "_selection" + selectionIndex;
+		}
+	}
+
+	private static String unqualifiedName(String name) {
+		return name.substring( Math.max( name.lastIndexOf( '.' ), name.lastIndexOf( '$' ) ) + 1 );
 	}
 
 	private void projectionSelection(StringBuilder declaration, String path) {

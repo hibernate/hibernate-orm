@@ -2785,7 +2785,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					+ stripAnnotations( typeAsString( resultType ) ) + "'" );
 			return null;
 		}
-		return new ResultSelection( selectionResultTypeName( resultType ), List.of( selectedAttribute.path() ), false );
+		return new ResultSelection( selectionResultTypeName( resultType ), List.of( selectedAttribute.path() ), List.of(), false );
 	}
 
 	private @Nullable ResultSelection recordSelection(
@@ -2809,6 +2809,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return null;
 		}
 		final List<String> paths = new ArrayList<>();
+		final List<String> componentNames = new ArrayList<>();
 		for ( int i = 0; i < components.size(); i++ ) {
 			final RecordComponentElement component = components.get( i );
 			final SelectAnnotation select =
@@ -2828,8 +2829,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return null;
 			}
 			paths.add( selectedAttribute.path() );
+			componentNames.add( component.getSimpleName().toString() );
 		}
-		return new ResultSelection( returnTypeClass( resultType ), paths, true );
+		return new ResultSelection( returnTypeClass( resultType ), paths, componentNames, true );
 	}
 
 	private SelectAnnotation componentSelect(RecordComponentElement component) {

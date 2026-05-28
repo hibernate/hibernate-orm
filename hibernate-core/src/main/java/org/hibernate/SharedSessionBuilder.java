@@ -30,7 +30,7 @@ import java.util.function.UnaryOperator;
  * <li>the temporal or changeset identifier used for loading temporal data, and
  * <li>whether identifier rollback is enabled.
  * </ul>
- * Other stateful-session options are inherited only when explicitly requested
+ * Other stateful session options are inherited only when explicitly requested
  * by the corresponding no-argument method, for example {@link #connection()},
  * {@link #interceptor()}, {@link #statementInspector()}, {@link #flushMode()},
  * {@link #autoJoinTransactions()}, {@link #autoClose()}, or

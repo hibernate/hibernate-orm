@@ -5,6 +5,7 @@
 package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.AssertionFailure;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -13,6 +14,11 @@ import java.util.StringTokenizer;
 
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.util.Constants.HIB_JAKARTA_DATA_RESTRICTION;
+import static org.hibernate.processor.util.Constants.JD_PAGE;
+import static org.hibernate.processor.util.Constants.JD_PAGE_REQUEST;
+import static org.hibernate.processor.util.Constants.LIST;
+import static org.hibernate.processor.util.Constants.OPTIONAL;
+import static org.hibernate.processor.util.Constants.STREAM;
 import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
@@ -52,6 +58,9 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
+		if ( usesProjectionSpecification() ) {
+			return getProjectionSpecificationAttributeDeclarationString( paramTypes );
+		}
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
@@ -63,6 +72,29 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		where( declaration, paramTypes );
 //		orderBy( paramTypes, declaration );
 		executeQuery( declaration, paramTypes );
+		convertExceptions( declaration );
+		chainSessionEnd( false, declaration );
+		closingBrace( declaration );
+		return declaration.toString();
+	}
+
+	private String getProjectionSpecificationAttributeDeclarationString(List<String> paramTypes) {
+		final StringBuilder declaration = new StringBuilder();
+		comment( declaration );
+		modifiers( declaration );
+		preamble( declaration, paramTypes );
+		chainSession( declaration );
+		nullChecks( declaration, paramTypes );
+		createEntitySpecification( declaration );
+		augmentSpecification( declaration, paramTypes );
+		handleRestrictionParameters( declaration, paramTypes );
+		collectOrdering( declaration, paramTypes, containerType );
+		createProjectionSpecification( declaration );
+		inTry( declaration );
+		createQuery( declaration, true );
+		QueryOptionsSupport.setQueryOptions( this, declaration, false, false );
+		declaration.append( ";\n" );
+		executeProjectionQuery( declaration, paramTypes );
 		convertExceptions( declaration );
 		chainSessionEnd( false, declaration );
 		closingBrace( declaration );
@@ -93,7 +125,14 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			declaration
 					.append("var _select = ");
 		}
-		if ( useSpecificationCreateQuery() ) {
+		if ( usesProjectionSpecification() ) {
+			declaration
+					.append("_projection.createQuery(");
+			localSession( declaration );
+			declaration
+					.append(")");
+		}
+		else if ( useSpecificationCreateQuery() ) {
 			declaration
 					.append("_spec.createQuery(");
 			localSession( declaration );
@@ -131,6 +170,68 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	boolean isUsingSpecification() {
 		return hasRestriction()
 			|| hasOrder() && !isJakartaCursoredPage(containerType);
+	}
+
+	private boolean usesProjectionSpecification() {
+		return selection != null
+			&& useSpecificationCreateQuery()
+			&& isProjectionSpecificationContainer();
+	}
+
+	private boolean isProjectionSpecificationContainer() {
+		return containerType == null
+			|| "[]".equals( containerType )
+			|| LIST.equals( containerType )
+			|| OPTIONAL.equals( containerType )
+			|| STREAM.equals( containerType )
+			|| JD_PAGE.equals( containerType );
+	}
+
+	private void createEntitySpecification(StringBuilder declaration) {
+		declaration
+				.append( "\tvar _spec = " )
+				.append( annotationMetaEntity.importType( specificationType() ) )
+				.append( ".create(" )
+				.append( annotationMetaEntity.importType( entity ) )
+				.append( ".class);\n" );
+	}
+
+	private void augmentSpecification(StringBuilder declaration, List<String> paramTypes) {
+		if ( hasFinderParameters( paramTypes ) ) {
+			declaration
+					.append( "\t_spec.augment((_builder, _query, _entity) -> _query.where(" );
+			wherePredicates( declaration, paramTypes );
+			declaration
+					.append( "\n\t));\n" );
+		}
+	}
+
+	private static boolean hasFinderParameters(List<String> paramTypes) {
+		for ( String paramType : paramTypes ) {
+			if ( !isSpecialParam( paramType ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void createProjectionSpecification(StringBuilder declaration) {
+		if ( selection == null ) {
+			throw new AssertionFailure( "missing result selection" );
+		}
+		declaration
+				.append( "\tvar _projection = " )
+				.append( annotationMetaEntity.importType( "org.hibernate.query.specification.ProjectionSpecification" ) )
+				.append( ".create(_spec);\n" );
+		for ( int i = 0; i < selection.paths().size(); i++ ) {
+			declaration
+					.append( "\tvar _selection" )
+					.append( i )
+					.append( " = _projection.select(" );
+			projectionSelection( declaration, selection.paths().get( i ) );
+			declaration
+					.append( ");\n" );
+		}
 	}
 
 	void createCriteriaQuery(StringBuilder declaration) {
@@ -221,6 +322,12 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	void where(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append("\t_query.where(");
+		wherePredicates( declaration, paramTypes );
+		declaration
+				.append("\n\t);");
+	}
+
+	private void wherePredicates(StringBuilder declaration, List<String> paramTypes) {
 		boolean first = true;
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			final String paramName = paramNames.get(i);
@@ -236,8 +343,6 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				condition(declaration, i, paramName, paramType );
 			}
 		}
-		declaration
-				.append("\n\t);");
 	}
 
 	private void condition(StringBuilder declaration, int i, String paramName, String paramType) {
@@ -330,6 +435,207 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			}
 		}
 		return collisions == 0 ? baseName : baseName + (collisions + 1);
+	}
+
+	private void executeProjectionQuery(StringBuilder declaration, List<String> paramTypes) {
+		final String indent = dataRepository && !isReactive() ? "\t\t" : "\t";
+		if ( JD_PAGE.equals( containerType ) ) {
+			projectionTotalResults( declaration, indent, paramTypes );
+			declaration
+					.append( indent )
+					.append( "var _results = " );
+			selectProjectionResultList( declaration, paramTypes );
+			declaration
+					.append( ";\n" )
+					.append( indent )
+					.append( "return new " )
+					.append( annotationMetaEntity.importType( "jakarta.data.page.impl.PageRecord" ) )
+					.append( "<>(" )
+					.append( parameterName(JD_PAGE_REQUEST, paramTypes, paramNames) )
+					.append( ", _results, _totalResults)" );
+		}
+		else if ( containerType == null ) {
+			declaration
+					.append( indent )
+					.append( "var _result = " );
+			select( declaration );
+			setFirstResultLimit( declaration );
+			handlePageParameters( declaration, paramTypes, null );
+			declaration
+					.append( nullable ? "\t\t\t.getSingleResultOrNull();\n" : "\t\t\t.getSingleResult();\n" )
+					.append( indent )
+					.append( "return " );
+			if ( nullable ) {
+				declaration.append( "_result == null ? null : " );
+			}
+			projectionResult( declaration, "_result" );
+		}
+		else {
+			declaration
+					.append( indent )
+					.append( "return " );
+			selectProjectionResult( declaration, paramTypes );
+		}
+	}
+
+	private void projectionTotalResults(StringBuilder declaration, String indent, List<String> paramTypes) {
+		declaration
+				.append( indent )
+				.append( "long _totalResults = \n" )
+				.append( indent )
+				.append( "\t\t" )
+				.append( parameterName(JD_PAGE_REQUEST, paramTypes, paramNames) )
+				.append( ".requestTotal()\n" )
+				.append( indent )
+				.append( "\t\t\t\t? _select\n" )
+				.append( indent )
+				.append( "\t\t\t\t\t\t.getResultCount()\n" )
+				.append( indent )
+				.append( "\t\t\t\t: -1;\n" );
+	}
+
+	private void selectProjectionResult(StringBuilder declaration, List<String> paramTypes) {
+		final String containerType = this.containerType;
+		if ( containerType == null ) {
+			throw new AssertionFailure( "missing container type" );
+		}
+		switch ( containerType ) {
+			case "[]":
+				select( declaration );
+				setFirstResultLimit( declaration );
+				handlePageParameters( declaration, paramTypes, containerType );
+				declaration
+						.append( "\t\t\t.getResultList()\n" )
+						.append( "\t\t\t.stream()\n" )
+						.append( "\t\t\t.map(_result -> " );
+				projectionResult( declaration, "_result" );
+				declaration
+						.append( ")\n" )
+						.append( "\t\t\t.toArray(" )
+						.append( annotationMetaEntity.importType( resultTypeName() ) )
+						.append( "[]::new)" );
+				break;
+			case OPTIONAL:
+				select( declaration );
+				setFirstResultLimit( declaration );
+				handlePageParameters( declaration, paramTypes, containerType );
+				declaration
+						.append( "\t\t\t.uniqueResultOptional()\n" )
+						.append( "\t\t\t.map(_result -> " );
+				projectionResult( declaration, "_result" );
+				declaration.append( ")" );
+				break;
+			case STREAM:
+				select( declaration );
+				setFirstResultLimit( declaration );
+				handlePageParameters( declaration, paramTypes, containerType );
+				declaration
+						.append( "\t\t\t.getResultStream()\n" )
+						.append( "\t\t\t.map(_result -> " );
+				projectionResult( declaration, "_result" );
+				declaration.append( ")" );
+				break;
+			case LIST:
+				selectProjectionResultList( declaration, paramTypes );
+				break;
+			default:
+				throw new AssertionFailure( "unsupported projection container type: " + containerType );
+		}
+	}
+
+	private void selectProjectionResultList(StringBuilder declaration, List<String> paramTypes) {
+		select( declaration );
+		setFirstResultLimit( declaration );
+		handlePageParameters( declaration, paramTypes, containerType );
+		declaration
+				.append( "\t\t\t.getResultList()\n" )
+				.append( "\t\t\t.stream()\n" )
+				.append( "\t\t\t.map(_result -> " );
+		projectionResult( declaration, "_result" );
+		declaration
+				.append( ")\n" )
+				.append( "\t\t\t.toList()" );
+	}
+
+	private String resultTypeName() {
+		if ( returnTypeName == null ) {
+			throw new AssertionFailure( "missing return type" );
+		}
+		return returnTypeName;
+	}
+
+	private void projectionResult(StringBuilder declaration, String resultVariable) {
+		if ( selection == null ) {
+			throw new AssertionFailure( "missing result selection" );
+		}
+		if ( selection.recordProjection() ) {
+			declaration
+					.append( "new " )
+					.append( annotationMetaEntity.importType( selection.resultTypeName() ) )
+					.append( "(" );
+			for ( int i = 0; i < selection.paths().size(); i++ ) {
+				if ( i > 0 ) {
+					declaration.append( ", " );
+				}
+				selectionValue( declaration, i, resultVariable );
+			}
+			declaration.append( ")" );
+		}
+		else {
+			selectionValue( declaration, 0, resultVariable );
+		}
+	}
+
+	private static void selectionValue(StringBuilder declaration, int selection, String resultVariable) {
+		declaration
+				.append( "_selection" )
+				.append( selection )
+				.append( ".in(" )
+				.append( resultVariable )
+				.append( ")" );
+	}
+
+	private void projectionSelection(StringBuilder declaration, String path) {
+		final StringTokenizer tokens = new StringTokenizer(path, ".");
+		if ( tokens.countTokens() == 1 && !ID_ROLE_NAME.equals( path ) ) {
+			metamodelAttribute( declaration, entity, path );
+		}
+		else {
+			declaration
+					.append( annotationMetaEntity.importType( "org.hibernate.query.restriction.Path" ) )
+					.append( ".from(" )
+					.append( annotationMetaEntity.importType( entity ) )
+					.append( ".class)" );
+			String typeName = entity;
+			while ( typeName != null && tokens.hasMoreTokens() ) {
+				final String memberName = tokens.nextToken();
+				declaration.append( ".to(" );
+				if ( ID_ROLE_NAME.equals( memberName ) ) {
+					declaration
+							.append( '"' )
+							.append( memberName )
+							.append( "\", " )
+							.append( annotationMetaEntity.importType( "java.lang.Object" ) )
+							.append( ".class" );
+				}
+				else {
+					metamodelAttribute( declaration, typeName, memberName );
+				}
+				declaration.append( ")" );
+				typeName = annotationMetaEntity.getMemberType(typeName, memberName);
+			}
+		}
+	}
+
+	private void metamodelAttribute(StringBuilder declaration, String typeName, String memberName) {
+		final TypeElement typeElement =
+				annotationMetaEntity.getContext().getElementUtils()
+						.getTypeElement( typeName );
+		declaration
+				.append( annotationMetaEntity.importType(
+						getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
+				.append( '.' )
+				.append( memberName );
 	}
 
 	private void path(StringBuilder declaration, String paramName) {

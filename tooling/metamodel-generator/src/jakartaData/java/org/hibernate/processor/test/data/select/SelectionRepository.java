@@ -8,10 +8,13 @@ import java.util.List;
 import java.util.Optional;
 
 import jakarta.data.Order;
+import jakarta.data.page.Page;
+import jakarta.data.page.PageRequest;
 import jakarta.data.repository.By;
 import jakarta.data.repository.CrudRepository;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.First;
+import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Select;
@@ -55,6 +58,10 @@ public interface SelectionRepository extends CrudRepository<SelectionBook, Long>
 	@Select("title")
 	@Select("pages")
 	List<TitleAndPages> titlePagesByStatus(SelectionStatus status);
+
+	@Find
+	@OrderBy("title")
+	Page<TitleAndPages> titlePagesPageByStatus(SelectionStatus status, PageRequest pageRequest);
 
 	@Find
 	List<Renamed> renamedByStatus(SelectionStatus status);

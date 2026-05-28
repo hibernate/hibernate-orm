@@ -82,6 +82,11 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		return entity;
 	}
 
+	@Override
+	String restrictionTypeName() {
+		return entity;
+	}
+
 	void comment(StringBuilder declaration) {
 		declaration
 				.append("\n/**")

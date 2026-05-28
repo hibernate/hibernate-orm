@@ -56,6 +56,14 @@ class SelectionTest {
 				"_builder.construct(Named.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" )
 				|| repository.contains(
 						"_builder.construct(SelectionRepository.Named.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" ) );
+		assertTrue( repository.contains( "var _spec = SelectionSpecification.create(SelectionBook.class);" ) );
+		assertTrue( repository.contains( "var _projection = ProjectionSpecification.create(_spec);" ) );
+		assertTrue( repository.contains( "var _selection0 = _projection.select(SelectionBook_.title);" ) );
+		assertTrue( repository.contains( "var _selection1 = _projection.select(SelectionBook_.pages);" ) );
+		assertTrue( repository.contains(
+				".map(_result -> new TitleAndPages(_selection0.in(_result), _selection1.in(_result)))" )
+				|| repository.contains(
+						".map(_result -> new SelectionRepository.TitleAndPages(_selection0.in(_result), _selection1.in(_result)))" ) );
 		assertTrue( repository.contains( ".setMaxResults(1)" ) );
 		assertTrue( repository.contains( ".setMaxResults(3)" ) );
 		assertTrue( repository.contains( ".setMaxResults(2)" ) );

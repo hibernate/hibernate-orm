@@ -1442,6 +1442,13 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class OracleExtendedStringSize implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof OracleDialect oracleDialect
+				&& oracleDialect.isExtended();
+		}
+	}
+
 	private static final HashMap<Dialect, FakeFunctionContributions> FUNCTION_CONTRIBUTIONS = new HashMap<>();
 
 	public static boolean definesFunction(Dialect dialect, String functionName) {

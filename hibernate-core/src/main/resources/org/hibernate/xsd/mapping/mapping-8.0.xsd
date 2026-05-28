@@ -905,7 +905,7 @@
         <xsd:annotation>
             <xsd:documentation>
                 See `@jakarta.persistence.Column`
-                See `@org.hibernate.annotations.Comment`
+                See `@jakarta.persistence.Column#comment`
                 See `@org.hibernate.annotations.Check`
                 See `@org.hibernate.annotations.ColumnDefault`
                 See `@org.hibernate.annotations.ColumnTransformer`
@@ -3678,7 +3678,7 @@
     <xsd:group name="hbm-common-table-extensions">
         <xsd:annotation>
             <xsd:documentation>
-                See `@org.hibernate.annotations.Comment`
+                See table comment attributes on the Jakarta Persistence table annotations
                 See `@org.hibernate.annotations.Check`
             </xsd:documentation>
         </xsd:annotation>

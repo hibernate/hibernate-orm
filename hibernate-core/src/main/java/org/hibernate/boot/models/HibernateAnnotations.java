@@ -233,19 +233,6 @@ public interface HibernateAnnotations {
 			false,
 			COLUMN_TRANSFORMERS
 	);
-	OrmAnnotationDescriptor<Comments, CommentsAnnotation> COMMENTS = new OrmAnnotationDescriptor<>(
-			Comments.class,
-			CommentsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.FIELD, Kind.METHOD ),
-			false
-	);
-	OrmAnnotationDescriptor<Comment, CommentAnnotation> COMMENT = new OrmAnnotationDescriptor<>(
-			Comment.class,
-			CommentAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.FIELD, Kind.METHOD ),
-			false,
-			COMMENTS
-	);
 	OrmAnnotationDescriptor<CompositeType, CompositeTypeAnnotation> COMPOSITE_TYPE = new OrmAnnotationDescriptor<>(
 			CompositeType.class,
 			CompositeTypeAnnotation.class,

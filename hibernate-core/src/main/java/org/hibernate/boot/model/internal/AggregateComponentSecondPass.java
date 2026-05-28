@@ -11,7 +11,6 @@ import java.util.TreeSet;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.Comment;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -91,10 +90,6 @@ public class AggregateComponentSecondPass implements SecondPass {
 				throw new MappingException( "Database does not support user-defined types (remove '@Struct' annotation)" );
 			}
 			final var udt = new UserDefinedObjectType( "orm", namespace, structName.getObjectName() );
-			final var comment = componentClassDetails.getDirectAnnotationUsage( Comment.class );
-			if ( comment != null ) {
-				udt.setComment( comment.value() );
-			}
 			for ( var aggregatedColumn : aggregatedColumns ) {
 				udt.addColumn( aggregatedColumn );
 			}

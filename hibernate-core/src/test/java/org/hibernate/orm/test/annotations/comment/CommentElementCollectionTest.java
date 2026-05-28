@@ -5,12 +5,13 @@
 package org.hibernate.orm.test.annotations.comment;
 
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
-import org.hibernate.annotations.Comment;
+import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -49,7 +50,7 @@ public class CommentElementCollectionTest {
 	}
 
 	@Entity
-	@Comment(MainEntity.EXPECTED_MAIN_ENTITY_TABLE_COMMENT)
+	@Table(comment = MainEntity.EXPECTED_MAIN_ENTITY_TABLE_COMMENT)
 	static class MainEntity {
 		public static final String EXPECTED_MAIN_ENTITY_TABLE_COMMENT = "Expected main entity table level comment";
 		public static final String EXPECTED_ELEMENT_COLLECTION_TABLE_COMMENT = "Expected element collection table level comment";
@@ -59,8 +60,8 @@ public class CommentElementCollectionTest {
 		public long id;
 
 		@ElementCollection
+		@CollectionTable(comment = EXPECTED_ELEMENT_COLLECTION_TABLE_COMMENT)
 		@OrderColumn(name = "elementOrder", nullable = false)
-		@Comment(EXPECTED_ELEMENT_COLLECTION_TABLE_COMMENT)
 		public List<String> embeddableValues;
 	}
 

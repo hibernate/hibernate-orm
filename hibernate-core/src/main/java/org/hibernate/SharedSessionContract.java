@@ -45,6 +45,10 @@ import static org.hibernate.internal.TransactionManagement.manageTransaction;
  */
 public interface SharedSessionContract extends EntityHandler, AutoCloseable, Serializable {
 
+	interface CreationOptions {
+
+	}
+
 	/**
 	 * Obtain the tenant identifier associated with this session, as a string.
 	 *

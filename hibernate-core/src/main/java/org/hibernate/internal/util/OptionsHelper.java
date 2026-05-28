@@ -17,6 +17,9 @@ import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.LockOptions;
+import org.hibernate.ReadOnlyMode;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.query.spi.QueryOptions;
 
 import java.util.HashSet;
@@ -34,7 +37,7 @@ import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushMode
  */
 public final class OptionsHelper {
 
-	public static void applyOption(EntityManager entityManager, EntityManager.Option option) {
+	public static void applyOption(SessionImplementor entityManager, EntityManager.Option option) {
 		Objects.requireNonNull( option, "option" );
 		if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 			entityManager.setCacheRetrieveMode( cacheRetrieveMode );
@@ -45,17 +48,23 @@ public final class OptionsHelper {
 		else if ( option instanceof FlushModeType flushModeType ) {
 			entityManager.setFlushMode( flushModeType );
 		}
+		else if ( option instanceof ReadOnlyMode readOnlyMode ) {
+			entityManager.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
+		}
 	}
 
-	public static Set<EntityManager.Option> getOptions(EntityManager entityManager) {
+	public static Set<EntityManager.Option> getOptions(SessionImplementor entityManager) {
 		final Set<EntityManager.Option> options = new HashSet<>();
 		addIfNotNull( options, entityManager.getCacheRetrieveMode() );
 		addIfNotNull( options, entityManager.getCacheStoreMode() );
 		addIfNotNull( options, entityManager.getFlushMode() );
+		if ( entityManager.isDefaultReadOnly() ) {
+			options.add( ReadOnlyMode.READ_ONLY );
+		}
 		return options;
 	}
 
-	public static void applyOption(EntityAgent entityAgent, EntityAgent.Option option) {
+	public static void applyOption(StatelessSessionImplementor entityAgent, EntityAgent.Option option) {
 		Objects.requireNonNull( option, "option" );
 		if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 			entityAgent.setCacheRetrieveMode( cacheRetrieveMode );

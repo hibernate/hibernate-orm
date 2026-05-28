@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.FindOption;
 
 /**
@@ -15,10 +16,12 @@ import jakarta.persistence.FindOption;
  *
  * @see Session#setDefaultReadOnly(boolean)
  * @see Session#find(Class, Object, FindOption...)
+ * @see jakarta.persistence.EntityManagerFactory#createEntityManager(EntityManager.CreationOption...)
+ * @see EntityManager#addOption(EntityManager.Option)
  *
  * @author Gavin King
  */
-public enum ReadOnlyMode implements FindOption {
+public enum ReadOnlyMode implements FindOption, EntityManager.Option {
 	/**
 	 * Specifies that an entity should be loaded in read-only mode.
 	 * <p>

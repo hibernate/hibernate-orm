@@ -147,6 +147,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		return returnTypeName;
 	}
 
+	@Nullable String restrictionTypeName() {
+		return returnTypeName;
+	}
+
 	String strip(final String fullType) {
 		String type = fullType;
 		// strip off type annotations
@@ -360,21 +364,24 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 							.append( ");\n" );
 				}
 			}
-			else if ( isRangeParam(paramType) && returnTypeName!= null ) {
-				final TypeElement entityElement =
-						annotationMetaEntity.getContext().getElementUtils()
-								.getTypeElement( returnTypeName );
-				declaration
-						.append("\t_spec.restrict(")
-						.append(annotationMetaEntity.importType(HIB_RESTRICTION))
-						.append(".restrict(")
-						.append(annotationMetaEntity.importType(
-										getGeneratedClassFullyQualifiedName( entityElement, false ) ))
-						.append('.')
-						.append(paramName)
-						.append(", ")
-						.append(paramName)
-						.append("));\n");
+			else if ( isRangeParam(paramType) ) {
+				final String restrictionTypeName = restrictionTypeName();
+				if ( restrictionTypeName != null ) {
+					final TypeElement entityElement =
+							annotationMetaEntity.getContext().getElementUtils()
+									.getTypeElement( restrictionTypeName );
+					declaration
+							.append("\t_spec.restrict(")
+							.append(annotationMetaEntity.importType(HIB_RESTRICTION))
+							.append(".restrict(")
+							.append(annotationMetaEntity.importType(
+											getGeneratedClassFullyQualifiedName( entityElement, false ) ))
+							.append('.')
+							.append(paramName)
+							.append(", ")
+							.append(paramName)
+							.append("));\n");
+				}
 			}
 		}
 	}
@@ -881,7 +888,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
-	private static String parameterName(String paramType, List<String> paramTypes, List<String> paramNames) {
+	static String parameterName(String paramType, List<String> paramTypes, List<String> paramNames) {
 		for (int i = 0; i < paramTypes.size(); i++) {
 			if ( paramTypes.get(i).startsWith(paramType) ) {
 				return paramNames.get(i);

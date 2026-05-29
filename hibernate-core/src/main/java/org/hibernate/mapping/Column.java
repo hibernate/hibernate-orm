@@ -752,6 +752,34 @@ public sealed class Column
 		this.options = options;
 	}
 
+	@Internal
+	public void copy(Column source) {
+		nullable = source.nullable;
+		length = source.length;
+		precision = source.precision;
+		scale = source.scale;
+		temporalPrecision = source.temporalPrecision;
+		arrayLength = source.arrayLength;
+		comment = source.comment;
+		collation = source.collation;
+		defaultValue = source.defaultValue;
+		generatedAs = source.generatedAs;
+		assignmentExpression = source.assignmentExpression;
+		customRead = source.customRead;
+		customWrite = source.customWrite;
+		options = source.options;
+
+		if ( source.getSqlType() != null ) {
+			setSqlType( source.getSqlType() );
+		}
+		if ( source.getSqlTypeCode() != null ) {
+			setSqlTypeCode( source.getSqlTypeCode() );
+		}
+		for ( var checkConstraint : source.getCheckConstraints() ) {
+			addCheckConstraint( checkConstraint );
+		}
+	}
+
 	/**
 	 * Shallow copy, the value is not copied
 	 */

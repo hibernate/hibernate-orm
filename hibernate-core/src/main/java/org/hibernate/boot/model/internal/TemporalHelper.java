@@ -175,7 +175,19 @@ public class TemporalHelper {
 
 	private static void copyTableColumns(Table sourceTable, Table targetTable) {
 		for ( var column : sourceTable.getColumns() ) {
-			targetTable.addColumn( column.clone() );
+			copyColumn( targetTable, column );
+		}
+	}
+
+	private static void copyColumn(Table targetTable, Column column) {
+		final var targetColumn = targetTable.getColumn( column );
+		if ( targetColumn == null ) {
+			final var columnCopy = column.clone();
+			columnCopy.copy( column );
+			targetTable.addColumn( columnCopy );
+		}
+		else {
+			targetColumn.copy( column );
 		}
 	}
 

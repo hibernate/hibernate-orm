@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -13,7 +12,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

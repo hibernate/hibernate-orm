@@ -600,15 +600,33 @@ public abstract class QueryBinder {
 	}
 
 	private static String staticQueryName(ClassDetails classDetails, MethodDetails methodDetails) {
-		return unqualifiedClassName( classDetails ) + "." + methodDetails.getName();
+		final var name =
+				new StringBuilder( javadocTypeName( classDetails ) )
+						.append( '#' )
+						.append( methodDetails.getName() )
+						.append( '(' );
+		final var argumentTypes = methodDetails.getArgumentTypes();
+		for ( int i = 0; i < argumentTypes.size(); i++ ) {
+			if ( i > 0 ) {
+				name.append( ',' );
+			}
+			name.append( javadocTypeName( argumentTypes.get( i ) ) );
+		}
+		return name.append( ')' ).toString();
 	}
 
-	private static String unqualifiedClassName(ClassDetails classDetails) {
-		final String className = classDetails.getClassName() == null ? classDetails.getName() : classDetails.getClassName();
-		final int packageSeparator = className.lastIndexOf( '.' );
-		final String unqualifiedName = packageSeparator < 0 ? className : className.substring( packageSeparator + 1 );
-		final int nestedClassSeparator = unqualifiedName.lastIndexOf( '$' );
-		return nestedClassSeparator < 0 ? unqualifiedName : unqualifiedName.substring( nestedClassSeparator + 1 );
+	private static String javadocTypeName(ClassDetails classDetails) {
+		final var classDetailsClassName = classDetails.getClassName();
+		final String className =
+				classDetailsClassName == null
+						? classDetails.getName()
+						: classDetailsClassName;
+		if ( className.startsWith( "[" ) ) {
+			throw new IllegalArgumentException( "Array type not allowed: " + className );
+		}
+		return className.endsWith( "$" )
+				? className
+				: className.replace( '$', '.' );
 	}
 
 	private static String staticQueryLocation(ClassDetails classDetails, MethodDetails methodDetails) {

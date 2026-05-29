@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @SessionFactory
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/entitymode/map/basic/ProductLine.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/entitymode/map/basic/ProductLine.orm.xml"
 )
 class DynamicClassTest {
 	@AfterEach

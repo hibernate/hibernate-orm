@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @JiraKey(value = "HHH-7780")
 @RequiresAuditStrategy(DefaultAuditStrategy.class)
 @EnversTest
-@DomainModel(xmlMappings = "mappings/customType/mappings.hbm.xml")
+@DomainModel(xmlMappings = "mappings/customType/mappings.orm.xml")
 @ServiceRegistry(settings = {
 		@Setting(name = AvailableSettings.SHOW_SQL, value = "true"),
 		@Setting(name = AvailableSettings.FORMAT_SQL, value = "true"),

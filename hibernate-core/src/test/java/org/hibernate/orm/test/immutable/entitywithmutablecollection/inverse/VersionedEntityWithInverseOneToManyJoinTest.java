@@ -20,7 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 @JiraKey(value = "HHH-4992")
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTemporaryTable.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/inverse/ContractVariationVersionedOneToManyJoin.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/inverse/ContractVariationVersionedOneToManyJoin.xml"
 )
 public class VersionedEntityWithInverseOneToManyJoinTest extends AbstractEntityWithOneToManyTest {
 	@AfterEach

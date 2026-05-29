@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.namingstrategy.synchronizedTables</package>
+    <attribute-accessor>field</attribute-accessor>
+    <entity class="DynamicEntity" metadata-complete="true">
+        <table name="DynamicEntity"/>
+        <synchronize table="table_a"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="id-gen"/>
+                <generic-generator name="id-gen" class="native"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+        </attributes>
+    </entity>
+</entity-mappings>

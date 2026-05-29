@@ -36,7 +36,7 @@ public class CascadeTest extends AbstractJPATest {
 
 	@Override
 	protected String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/jpa/cascade2/ParentChild.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/jpa/cascade2/ParentChild.orm.xml" };
 	}
 
 	@Override

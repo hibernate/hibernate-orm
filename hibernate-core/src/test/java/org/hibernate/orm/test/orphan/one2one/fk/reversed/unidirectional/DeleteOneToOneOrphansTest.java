@@ -21,9 +21,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/orphan/one2one/fk/reversed/unidirectional/Mapping.hbm.xml"
-)
+@DomainModel(annotatedClasses = {Employee.class, EmployeeInfo.class})
 @SessionFactory
 public class DeleteOneToOneOrphansTest {
 

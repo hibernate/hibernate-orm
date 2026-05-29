@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/entitymode/map/compositeId/CompId.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/entitymode/map/compositeId/CompId.orm.xml"
 )
 @SessionFactory
 @JiraKey(value = "HHH-15201")

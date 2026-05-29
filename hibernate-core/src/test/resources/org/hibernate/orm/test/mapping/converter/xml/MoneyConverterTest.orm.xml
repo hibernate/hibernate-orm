@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.mapping.converter.xml</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="org.hibernate.orm.test.mapping.converter.xml.Account" metadata-complete="true">
+        <table name="account"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="owner" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <basic name="balance" fetch="EAGER" optional="true" optimistic-lock="true">
+                <convert converter="org.hibernate.orm.test.mapping.converter.xml.MoneyConverter"/>
+                <generated>NEVER</generated>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

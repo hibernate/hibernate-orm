@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.idgen.enhanced.table;
 
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -18,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/table/HiLo.hbm.xml" )
+@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/table/HiLo.orm.xml" )
 @SessionFactory
 public class HiLoTableTest {
 	@Test
@@ -26,8 +27,9 @@ public class HiLoTableTest {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getGenerator() ).isInstanceOf( TableGenerator.class );
-		final TableGenerator generator = (TableGenerator) persister.getGenerator();
+		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );
+		assertThat( ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate() ).isInstanceOf( TableGenerator.class );
+		final TableGenerator generator = (TableGenerator) ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate();
 		assertThat( generator.getOptimizer() ).isInstanceOf( HiLoOptimizer.class );
 		final HiLoOptimizer optimizer = (HiLoOptimizer) generator.getOptimizer();
 		final int increment = optimizer.getIncrementSize();

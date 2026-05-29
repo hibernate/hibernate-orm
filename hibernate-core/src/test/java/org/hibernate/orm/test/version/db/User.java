@@ -3,18 +3,59 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.version.db;
+
 import java.sql.Timestamp;
 import java.util.Set;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.annotations.SourceType;
 
 /**
  * @author Steve Ebersole
  */
+@Entity
+@Table(name = "db_vers_user")
 public class User {
+	@Id
+	@Column(name = "user_id")
 	private Integer id;
+
+	@Version
+	@CurrentTimestamp(source = SourceType.DB)
+	@Column(name = "ts")
 	private Timestamp timestamp;
+
+	@Column(name = "user_name", unique = true, nullable = false)
 	private String username;
-	private Set groups;
-	private Set permissions;
+
+	@ManyToMany(mappedBy = "users")
+	@BatchSize(size = 9)
+	@Fetch(FetchMode.JOIN)
+	@OptimisticLock(excluded = false)
+	private Set<Group> groups;
+
+	@ManyToMany
+	@JoinTable(
+			name = "db_vers_user_perm",
+			joinColumns = @JoinColumn(name = "user_id"),
+			inverseJoinColumns = @JoinColumn(name = "perm_id")
+	)
+	@BatchSize(size = 9)
+	@Fetch(FetchMode.JOIN)
+	@OptimisticLock(excluded = true)
+	private Set<Permission> permissions;
 
 	public User() {
 	}
@@ -48,19 +89,19 @@ public class User {
 		this.username = username;
 	}
 
-	public Set getGroups() {
+	public Set<Group> getGroups() {
 		return groups;
 	}
 
-	public void setGroups(Set groups) {
+	public void setGroups(Set<Group> groups) {
 		this.groups = groups;
 	}
 
-	public Set getPermissions() {
+	public Set<Permission> getPermissions() {
 		return permissions;
 	}
 
-	public void setPermissions(Set permissions) {
+	public void setPermissions(Set<Permission> permissions) {
 		this.permissions = permissions;
 	}
 }

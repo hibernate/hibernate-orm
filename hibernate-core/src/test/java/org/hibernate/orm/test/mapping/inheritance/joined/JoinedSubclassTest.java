@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/joined/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/joined/Person.orm.xml"
 )
 @SessionFactory
 public class JoinedSubclassTest {

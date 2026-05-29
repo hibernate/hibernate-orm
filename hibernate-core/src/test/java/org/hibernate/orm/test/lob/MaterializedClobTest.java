@@ -15,8 +15,6 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
  * @author Gail Badner
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/lob/MaterializedClobMappings.hbm.xml"
-)
+@DomainModel(xmlMappings = "mappings/lob/MaterializedClobMappings.orm.xml")
 public class MaterializedClobTest extends LongStringTest {
 }

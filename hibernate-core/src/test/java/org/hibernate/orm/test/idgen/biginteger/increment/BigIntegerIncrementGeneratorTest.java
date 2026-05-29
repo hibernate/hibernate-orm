@@ -17,7 +17,7 @@ import java.math.BigInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/increment/Mapping.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/increment/Mapping.orm.xml")
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class BigIntegerIncrementGeneratorTest {

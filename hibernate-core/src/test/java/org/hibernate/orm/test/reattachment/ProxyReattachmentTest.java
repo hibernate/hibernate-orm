@@ -16,9 +16,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Steve Ebersole
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/reattachment/Mappings.hbm.xml"
-)
+@DomainModel(annotatedClasses = {Parent.class, Child.class})
 @SessionFactory
 public class ProxyReattachmentTest {
 

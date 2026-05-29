@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/joined/JoinedSubclassInheritance.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/joined/JoinedSubclassInheritance.orm.xml"
 )
 @SessionFactory
 public class DiscriminatorQueryUsageTests {

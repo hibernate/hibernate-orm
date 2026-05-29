@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 @JiraKey(value = "HHH-3854")
 @EnversTest
-@Jpa(xmlMappings = "mappings/oneToOne/bidirectional/eagerLoading.hbm.xml")
+@Jpa(xmlMappings = "mappings/oneToOne/bidirectional/eagerLoading.orm.xml")
 public class BidirectionalEagerHbmTest {
 	private Long refIngId1 = null;
 

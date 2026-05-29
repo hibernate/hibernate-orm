@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <package>org.hibernate.orm.test.subclassfilter</package>
+
+    <filter-def name="region">
+        <filter-param name="userRegion" type="string"/>
+    </filter-def>
+
+    <entity class="Person" metadata-complete="true" access="PROPERTY">
+        <table name="SPerson"/>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <discriminator-value>0</discriminator-value>
+        <discriminator-formula discriminator-type="INTEGER">
+            <fragment>CASE WHEN company is null THEN 0 WHEN company = 'JBoss' THEN 1 ELSE 2 END</fragment>
+        </discriminator-formula>
+        <filter name="region">
+            <condition>p_region = :userRegion</condition>
+        </filter>
+        <attributes>
+            <id name="id">
+                <column name="person_id"/>
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="increment"/>
+            </id>
+            <basic name="name"/>
+            <basic name="company"/>
+            <basic name="region">
+                <column name="p_region"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="Employee" metadata-complete="true">
+        <extends>org.hibernate.orm.test.subclassfilter.Person</extends>
+        <discriminator-value>1</discriminator-value>
+        <attributes>
+            <basic name="title">
+                <column name="`title`"/>
+            </basic>
+            <basic name="department">
+                <column name="dept"/>
+            </basic>
+            <many-to-one name="manager" target-entity="Employee">
+                <join-column name="mgr_id"/>
+                <cascade/>
+            </many-to-one>
+            <one-to-many name="minions" target-entity="Employee" mapped-by="manager" classification="SET">
+                <filter name="region">
+                    <condition>p_region = :userRegion</condition>
+                </filter>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Customer" metadata-complete="true">
+        <extends>org.hibernate.orm.test.subclassfilter.Person</extends>
+        <discriminator-value>2</discriminator-value>
+        <attributes>
+            <many-to-one name="contactOwner" target-entity="Employee">
+                <join-column name="contactOwner"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+</entity-mappings>

@@ -47,13 +47,13 @@ public class GetAndIsVariantGetterTest {
 
 	@Test
 	@JiraKey(value = "HHH-10172")
-	public void testHbmXml() {
+	public void testOrmXml() {
 		MappingException mappingException = assertThrows( MappingException.class, () ->
 				new MetadataSources( ssr )
-						.addResource( "org/hibernate/property/TheEntity.hbm.xml" )
+						.addResource( "org/hibernate/property/TheEntity.orm.xml" )
 						.buildMetadata()
 		);
-		assertThat( mappingException.getMessage() ).endsWith( "variants of getter for property 'id'" );
+		assertThat( mappingException.getMessage() ).startsWith( "Ambiguous persistent property methods" );
 	}
 
 	@Test

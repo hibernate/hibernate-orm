@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/sql/hand/identity/Mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/sql/hand/identity/Mappings.orm.xml"
 )
 @SessionFactory
 public class CustomInsertSQLWithIdentityColumnTest {

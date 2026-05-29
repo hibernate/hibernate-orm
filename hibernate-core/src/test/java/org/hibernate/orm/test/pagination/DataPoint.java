@@ -3,15 +3,30 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.pagination;
+
 import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+
+import org.hibernate.annotations.DynamicUpdate;
 
 /**
  * @author Gavin King
  */
+@Entity
+@DynamicUpdate
 public class DataPoint {
+	@Id
+	@GeneratedValue
 	private long id;
+	@Column(name = "seqval", nullable = false)
 	private int sequence;
+	@Column(name = "xval", nullable = false, precision = 20, scale = 19)
 	private BigDecimal x;
+	@Column(name = "yval", nullable = false, precision = 20, scale = 19)
 	private BigDecimal y;
 	private String description;
 

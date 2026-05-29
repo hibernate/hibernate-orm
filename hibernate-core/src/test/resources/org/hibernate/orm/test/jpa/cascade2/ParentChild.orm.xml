@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <!-- +++++++++++++   Generated ids    ++++++++++++++++++++++ -->
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.Parent"
+            access="FIELD" metadata-complete="true">
+        <table name="PARENT"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="name">
+                <column name="name" unique="true"/>
+            </basic>
+            <one-to-one name="info"
+                        target-entity="org.hibernate.orm.test.jpa.cascade2.ParentInfo"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.Child"
+            access="FIELD" metadata-complete="true">
+        <table name="CHILD"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="name"/>
+            <many-to-one name="parent"
+                         target-entity="org.hibernate.orm.test.jpa.cascade2.Parent"/>
+            <one-to-one name="info"
+                        target-entity="org.hibernate.orm.test.jpa.cascade2.ChildInfo"
+                        mapped-by="owner"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.ParentInfo"
+            access="FIELD" metadata-complete="true">
+        <table name="P_INFO"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="foreign-owner"/>
+                <generic-generator name="foreign-owner" class="foreign">
+                    <parameter name="property" value="owner"/>
+                </generic-generator>
+            </id>
+            <basic name="info">
+                <column name="INFO"/>
+            </basic>
+            <one-to-one name="owner"
+                        target-entity="org.hibernate.orm.test.jpa.cascade2.Parent"
+                        constrained="true"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.ChildInfo"
+            access="FIELD" metadata-complete="true">
+        <table name="C_INFO"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="info">
+                <column name="INFO"/>
+            </basic>
+            <many-to-one name="owner"
+                         target-entity="org.hibernate.orm.test.jpa.cascade2.Child">
+                <join-column name="CHILD_ID"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.Other"
+            access="FIELD" metadata-complete="true">
+        <table name="OTHER"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <many-to-one name="owner"
+                         target-entity="org.hibernate.orm.test.jpa.cascade2.Parent">
+                <join-column name="OWNER_NAME" referenced-column-name="name"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <!-- +++++++++++++   Assigned ids    ++++++++++++++++++++++ -->
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.ParentAssigned"
+            access="FIELD" metadata-complete="true">
+        <table name="PARENT_A"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+            </id>
+            <basic name="name">
+                <column name="name" unique="true"/>
+            </basic>
+            <one-to-one name="info"
+                        target-entity="org.hibernate.orm.test.jpa.cascade2.ParentInfoAssigned"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.ChildAssigned"
+            access="FIELD" metadata-complete="true">
+        <table name="CHILD_A"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+            </id>
+            <basic name="name"/>
+            <many-to-one name="parent"
+                         target-entity="org.hibernate.orm.test.jpa.cascade2.ParentAssigned"/>
+            <one-to-one name="info"
+                        target-entity="org.hibernate.orm.test.jpa.cascade2.ChildInfoAssigned"
+                        mapped-by="owner"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.ParentInfoAssigned"
+            access="FIELD" metadata-complete="true">
+        <table name="P_INFO_A"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="foreign-owner-a"/>
+                <generic-generator name="foreign-owner-a" class="foreign">
+                    <parameter name="property" value="owner"/>
+                </generic-generator>
+            </id>
+            <basic name="info">
+                <column name="INFO"/>
+            </basic>
+            <one-to-one name="owner"
+                        target-entity="org.hibernate.orm.test.jpa.cascade2.ParentAssigned"
+                        constrained="true"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.ChildInfoAssigned"
+            access="FIELD" metadata-complete="true">
+        <table name="C_INFO_A"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+            </id>
+            <basic name="info">
+                <column name="INFO"/>
+            </basic>
+            <many-to-one name="owner"
+                         target-entity="org.hibernate.orm.test.jpa.cascade2.ChildAssigned">
+                <join-column name="CHILD_ID"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.jpa.cascade2.OtherAssigned"
+            access="FIELD" metadata-complete="true">
+        <table name="OTHER_A"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+            </id>
+            <many-to-one name="owner"
+                         target-entity="org.hibernate.orm.test.jpa.cascade2.ParentAssigned">
+                <join-column name="OWNER_NAME" referenced-column-name="name"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+</entity-mappings>

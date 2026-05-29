@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.idgen.enhanced.table;
 
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -16,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/table/Basic.hbm.xml" )
+@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/table/Basic.orm.xml" )
 @SessionFactory
 public class BasicTableTest {
 
@@ -25,8 +26,9 @@ public class BasicTableTest {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getGenerator() ).isInstanceOf( TableGenerator.class );
-		final TableGenerator generator = ( TableGenerator ) persister.getGenerator();
+		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );
+		assertThat( ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate() ).isInstanceOf( TableGenerator.class );
+		final TableGenerator generator = (TableGenerator) ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate();
 
 		scope.inTransaction( (s) -> {
 			int count = 5;

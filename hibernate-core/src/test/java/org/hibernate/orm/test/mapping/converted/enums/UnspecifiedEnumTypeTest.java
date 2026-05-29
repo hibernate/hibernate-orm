@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
  */
 @JiraKey( value = "HHH-7780" )
 @RequiresDialect( value = H2Dialect.class )
-@DomainModel(xmlMappings = {"org/hibernate/orm/test/mapping/converted/enums/mappings.hbm.xml"})
+@DomainModel(annotatedClasses = UnspecifiedEnumTypeEntity.class)
 @SessionFactory(exportSchema = false)
 @ServiceRegistry(settings = {@Setting(name = Environment.PREFER_NATIVE_ENUM_TYPES, value = "false")})
 public class UnspecifiedEnumTypeTest {

@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @JiraKey(value = "HHH-11241")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/join/Reportable.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/join/Reportable.orm.xml"
 )
 @SessionFactory
 public class SubclassesWithSamePropertyNameTest {

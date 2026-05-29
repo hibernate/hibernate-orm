@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class,
 		comment = "database/driver does not support expected LOB usage pattern"
 )
-@DomainModel(xmlMappings = "org/hibernate/orm/test/lob/LobMappings.hbm.xml")
+@DomainModel(xmlMappings = "mappings/lob/LobMappings.orm.xml")
 @SessionFactory
 public class ClobLocatorTest {
 	private static final int CLOB_SIZE = 10000;

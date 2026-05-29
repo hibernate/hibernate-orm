@@ -10,6 +10,10 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -19,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/ops/SimpleEntity.hbm.xml"
+		annotatedClasses = SimpleOpsTest.SimpleEntity.class
 )
 public class SimpleOpsTest extends AbstractOperationTestCase {
 
@@ -103,5 +107,36 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 		assertInsertCount( 0, scope );
 		assertUpdateCount( 0, scope );
 		assertDeleteCount( 1, scope );
+	}
+
+	@Entity(name = "SimpleEntity")
+	@Table(name = "SimpleEntity")
+	public static class SimpleEntity {
+		@Id
+		private Long id;
+		private String name;
+
+		public SimpleEntity() {
+		}
+
+		public SimpleEntity(String name) {
+			this.name = name;
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 }

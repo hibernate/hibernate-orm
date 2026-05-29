@@ -27,7 +27,7 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(settings = @Setting(name = HBM2DDL_AUTO, value = "none"))
-@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/manytomany/UserGroup.hbm.xml")
+@DomainModel(annotatedClasses = {User.class, Group.class})
 public class ForeignKeyNameTest {
 
 	@Test

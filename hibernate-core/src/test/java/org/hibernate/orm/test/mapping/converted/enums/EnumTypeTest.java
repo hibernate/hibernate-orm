@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Brett Meyer
  */
-@DomainModel(xmlMappings = {"org/hibernate/orm/test/mapping/converted/enums/Person.hbm.xml" })
+@DomainModel(annotatedClasses = Person.class)
 @SessionFactory
 @ServiceRegistry(settings = {@Setting(name = Environment.PREFER_NATIVE_ENUM_TYPES, value = "false")})
 @LoggingInspections(

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping">
+    <package>org.hibernate.orm.test.component.cascading.toone</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-lazy>true</default-lazy>
+    <entity class="Document" metadata-complete="true">
+        <table name="COMP_CASC_TO1_DOC"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <many-to-one name="owner" target-entity="User" fetch="LAZY">
+                <join-column name="owner"/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-remove/>
+                </cascade>
+            </many-to-one>
+            <transient name="location"/>
+        </attributes>
+    </entity>
+    <entity class="User" metadata-complete="true">
+        <table name="COMP_CASC_TO1_USER"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <embedded name="personalInfo">
+                <target>org.hibernate.orm.test.component.cascading.toone.PersonalInfo</target>
+            </embedded>
+        </attributes>
+    </entity>
+    <entity class="Address" metadata-complete="true">
+        <table name="COMP_CASC_TO1_ADDR"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="street1">
+                <column name="STREET1"/>
+            </basic>
+            <basic name="street2">
+                <column name="STREET2"/>
+            </basic>
+            <basic name="city">
+                <column name="CITY"/>
+            </basic>
+            <basic name="state">
+                <column name="STATE"/>
+            </basic>
+            <basic name="zipCode">
+                <column name="ZIP_CODE"/>
+            </basic>
+        </attributes>
+    </entity>
+    <embeddable class="org.hibernate.orm.test.component.cascading.toone.PersonalInfo" metadata-complete="true">
+        <attributes>
+            <many-to-one name="homeAddress" target-entity="Address" fetch="LAZY">
+                <join-column name="homeAddress"/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-remove/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </embeddable>
+</entity-mappings>

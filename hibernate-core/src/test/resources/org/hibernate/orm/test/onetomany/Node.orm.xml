@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.onetomany</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="Node" metadata-complete="true">
+        <table name="Node"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <caching region="Node.entities" access="READ_WRITE" includeLazy="true"/>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.IntegerJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.IntegerJdbcType</jdbc-type>
+            </id>
+            <basic name="description" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <many-to-one name="parentNode" target-entity="Node" fetch="LAZY" fetch-mode="SELECT" optional="true" not-found="EXCEPTION">
+                <join-column name="node_id" unique="false" nullable="true" insertable="false" updatable="false"/>
+                <cascade/>
+            </many-to-one>
+            <one-to-many name="subNodes" target-entity="Node" fetch="LAZY" orphan-removal="false" classification="LIST" not-found="EXCEPTION" optimistic-lock="true">
+                <order-column name="idx"/>
+                <mutable>true</mutable>
+                <join-column name="node_id" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+</entity-mappings>

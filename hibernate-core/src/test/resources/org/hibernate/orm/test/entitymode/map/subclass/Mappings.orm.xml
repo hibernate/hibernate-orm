@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <attribute-accessor>property</attribute-accessor>
+    <entity name="Superclass" metadata-complete="true">
+        <table name="Superclass"/>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <discriminator-value>A</discriminator-value>
+        <discriminator-column name="DISC" discriminator-type="STRING" force-selection="false"/>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="native"/>
+                <java-type>org.hibernate.type.descriptor.java.IntegerJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.IntegerJdbcType</jdbc-type>
+            </id>
+            <basic name="dataA" fetch="EAGER" optional="true" optimistic-lock="true">
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+    <entity name="Subclass" metadata-complete="true">
+        <extends>Superclass</extends>
+        <discriminator-value>B</discriminator-value>
+        <attributes>
+            <basic name="dataB" fetch="EAGER" optional="true" optimistic-lock="true">
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

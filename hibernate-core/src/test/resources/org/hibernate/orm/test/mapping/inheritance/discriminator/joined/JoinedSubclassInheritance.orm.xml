@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.mapping.inheritance.discriminator.joined</package>
+    <attribute-accessor>field</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="ParentEntity" metadata-complete="true">
+        <table name="ParentEntity"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <inheritance strategy="JOINED"/>
+        <discriminator-value>pe</discriminator-value>
+        <discriminator-column name="type" discriminator-type="STRING" force-selection="false" length="255"/>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <java-type>org.hibernate.type.descriptor.java.IntegerJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.IntegerJdbcType</jdbc-type>
+            </id>
+            <basic name="type" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column unique="false" nullable="true" insertable="false" updatable="false"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="ChildEntity" metadata-complete="true">
+        <extends>org.hibernate.orm.test.mapping.inheritance.discriminator.joined.ParentEntity</extends>
+        <table name="ChildEntity"/>
+        <primary-key-join-column/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <discriminator-value>ce</discriminator-value>
+        <attributes>
+            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

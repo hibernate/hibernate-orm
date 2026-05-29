@@ -4,13 +4,27 @@
  */
 package org.hibernate.orm.test.mapping.converted.enums;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+
+@Entity
 public class Person {
+	@Id
+	@GeneratedValue
 	private long id;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private Gender gender;
 
+	@Column(nullable = false)
 	private HairColor hairColor;
 
+	@Enumerated(EnumType.STRING)
 	private HairColor originalHairColor;
 
 	public static Person person(Gender gender, HairColor hairColor) {

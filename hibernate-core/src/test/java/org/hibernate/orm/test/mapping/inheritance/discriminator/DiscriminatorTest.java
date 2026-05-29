@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/Person.orm.xml"
 )
 @SessionFactory
 public class DiscriminatorTest {

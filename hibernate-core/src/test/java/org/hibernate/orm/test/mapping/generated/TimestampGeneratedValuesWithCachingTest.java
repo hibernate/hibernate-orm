@@ -14,6 +14,6 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
  */
 @RequiresDialect(SybaseDialect.class)
 @RequiresDialect(SQLServerDialect.class)
-@DomainModel(xmlMappings = "org/hibernate/orm/test/mapping/generated/MSSQLGeneratedPropertyEntity.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/mapping/generated/MSSQLGeneratedPropertyEntity.orm.xml")
 public class TimestampGeneratedValuesWithCachingTest extends AbstractGeneratedPropertyTest {
 }

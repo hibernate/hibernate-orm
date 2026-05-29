@@ -3,18 +3,39 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.manytomany.ordered;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Transient;
+
+@Entity
+@Table(name = "`Group`")
 public class Group implements Serializable {
 
+	@Id
+	@GeneratedValue
+	@Column(name = "ID")
 	private Long id;
+
+	@Transient
 	private String org;
+
 	private String name;
+
 	private String description;
 
-	private List users = new ArrayList();
+	@ManyToMany(mappedBy = "groups")
+	@OrderBy("name")
+	private List<User> users = new ArrayList<>();
 
 	public Group() {
 	}
@@ -48,11 +69,11 @@ public class Group implements Serializable {
 		this.org = org;
 	}
 
-	public List getUsers() {
+	public List<User> getUsers() {
 		return users;
 	}
 
-	public void setUsers(List users) {
+	public void setUsers(List<User> users) {
 		this.users = users;
 	}
 

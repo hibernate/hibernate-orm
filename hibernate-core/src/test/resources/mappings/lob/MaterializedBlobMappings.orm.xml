@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<package>org.hibernate.orm.test.lob</package>
+
+	<entity class="LongByteArrayHolder" metadata-complete="true" access="FIELD">
+		<table name="LOB_ENTITY_MAT_BLOB"/>
+		<attributes>
+			<id name="id">
+				<column name="ID"/>
+				<generated-value/>
+			</id>
+			<basic name="longByteArray">
+				<column name="LONG_BYTE_ARRAY" length="15000"/>
+				<lob/>
+			</basic>
+		</attributes>
+	</entity>
+</entity-mappings>

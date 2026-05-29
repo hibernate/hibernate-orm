@@ -35,7 +35,7 @@ public class CommentGenerationTest {
 
 	@Test
 	public void testSchemaUpdateScriptGeneration() throws Exception {
-		final String resource = "org/hibernate/orm/test/schemaupdate/CommentGeneration.hbm.xml";
+		final String resource = "org/hibernate/orm/test/schemaupdate/CommentGeneration.orm.xml";
 		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.build();

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.AfterEach;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/inverse/ContractVariation.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/inverse/ContractVariation.xml"
 )
 public class EntityWithInverseOneToManyTest extends AbstractEntityWithOneToManyTest {
 	@AfterEach

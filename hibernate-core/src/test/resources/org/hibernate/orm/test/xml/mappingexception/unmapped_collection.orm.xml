@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.xml.mappingexception</package>
+    <attribute-accessor>property</attribute-accessor>
+    <entity class="Employee" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <column name="EMPLOYEE_ID"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="increment"/>
+            </id>
+            <basic name="name">
+                <column name="EMPLOYEE_NAME"/>
+            </basic>
+            <!-- Address has no mapping — should cause MappingException -->
+            <many-to-many name="addresses" target-entity="Address">
+                <join-table>
+                    <join-column name="EMPLOYEE_ID"/>
+                </join-table>
+            </many-to-many>
+        </attributes>
+    </entity>
+</entity-mappings>

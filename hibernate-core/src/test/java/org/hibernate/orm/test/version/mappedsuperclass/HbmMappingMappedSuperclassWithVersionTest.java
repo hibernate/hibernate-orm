@@ -22,10 +22,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-11549")
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/version/mappedsuperclass/TestEntity.hbm.xml",
-		annotatedClasses = AbstractEntity.class
-)
+@DomainModel(annotatedClasses = { AbstractEntity.class, TestEntity.class })
 @SessionFactory
 public class HbmMappingMappedSuperclassWithVersionTest {
 

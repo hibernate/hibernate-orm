@@ -22,10 +22,7 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry( settings = @Setting( name = HBM2DDL_IMPORT_FILES, value = "/org/hibernate/orm/test/tool/schema/scripts/dogs.sql" ) )
-@DomainModel(xmlMappings = {
-		"/org/hibernate/orm/test/tool/schema/scripts/Human.hbm.xml",
-		"/org/hibernate/orm/test/tool/schema/scripts/Dog.hbm.xml"
-})
+@DomainModel(annotatedClasses = { Human.class, Dog.class })
 @SessionFactory
 public class SingleLineImportFileTest {
 	@AfterEach

@@ -22,64 +22,65 @@ Throughout this chapter and thereafter, entity types will be simply referred to 
 Section _2.1 The Entity Class_ of the _Java Persistence 2.1 specification_ defines its requirements for an entity class.
 Applications that wish to remain portable across Jakarta Persistence providers should adhere to these requirements:
 
-* The entity class must be annotated with the `jakarta.persistence.Entity` annotation (or be denoted as such in XML mapping).
-* The entity class must have a public or protected no-argument constructor. It may define additional constructors as well.
-* The entity class must be a top-level class.
-* An enum or interface may not be designated as an entity.
-* The entity class must not be final. No methods or persistent instance variables of the entity class may be final.
-* If an entity instance is to be used remotely as a detached object, the entity class must implement the `Serializable` interface.
-* Both abstract and concrete classes can be entities. Entities may extend non-entity classes as well as entity classes, and non-entity classes may extend entity classes.
-* The persistent state of an entity is represented by instance variables, which may correspond to JavaBean-style properties.
-An instance variable must be directly accessed only from within the methods of the entity by the entity instance itself.
-The state of the entity is available to clients only through the entity’s accessor methods (getter/setter methods) or other business methods.
+> - The entity class must be annotated with the `@Entity` annotation or declared as an `entity` in its XML descriptor.
+>
+> - The entity class must be a top-level class or a static inner class.
+> An enum, record, or interface may not be designated as an entity.
+>
+> - The entity class must have a `public` or `protected` constructor with no parameters, which is called by the persistence provider runtime to instantiate the entity.
+>
+> - The entity class must be non-`final`. Every method and persistent instance variable of the entity class must also be non-`final`.
+>
+> An entity might be an abstract class, or it might be a concrete class.
+> An entity may extend a non-entity class, or it may extend another entity class.
+> A non-entity class may extend an entity class.
+>
+> The persistent state of an entity is represented by instance variables, which may correspond to JavaBeans properties.
+> An instance variable may be directly accessed only within the methods of the entity, by the entity instance itself.
+> An instance variable of an entity must _not_ be directly accessed by a client of the entity.
+> The state of the entity is available to clients only through the methods of the entity--that is, via accessor (getter/setter) methods, or via other business methods.
 
-Hibernate, however, is not as strict in its requirements. The differences from the list above include:
+Hibernate, however, is not as strict in its requirements. Differences from the list above include:
 
-* The entity class must have a no-argument constructor, which may be public, protected or package visibility. It may define additional constructors as well.
-* The entity class _need not_ be a top-level class.
-* Technically Hibernate can persist final classes or classes with final persistent state accessor (getter/setter) methods.
-However, it is generally not a good idea as doing so will stop Hibernate from being able to generate proxies for lazy-loading the entity.
-* Hibernate does not restrict the application developer from exposing instance variables and referencing them from outside the entity class itself.
-The validity of such a paradigm, however, is debatable at best.
+- Fields may be declared `final`.
+
+- The constructor with no parameters may be declared with package visibility, or, when the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancer>> is used, it may be omitted completely.
+
+- Final classes and classes with final methods are tolerated but not recommended unless the bytecode enhancer is used.
+
 
 Let's look at each requirement in detail.
 
 [[entity-pojo-final]]
 ==== Prefer non-final classes
 
-A central feature of Hibernate is the ability to load lazily certain entity instance variables (attributes) via runtime proxies.
-This feature depends upon the entity class being non-final or else implementing an interface that declares all the attribute getters/setters.
-You can still persist final classes that do not implement such an interface with Hibernate,
-but you will not be able to use proxies for fetching lazy associations, therefore limiting your options for performance tuning.
-For the very same reason, you should also avoid declaring persistent attribute getters and setters as final.
+A central feature of Hibernate is the ability to lazily load entity state via _proxies_.
+This feature depends on:
 
-[NOTE]
-====
-Starting with 5.0, Hibernate offers a more robust version of bytecode enhancement as another means for handling lazy loading.
-Hibernate had some bytecode re-writing capabilities prior to 5.0 but they were very rudimentary.
-See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enhancement>> for additional information on fetching and on bytecode enhancement.
-====
+- the entity class being non-`final` (or implementing an interface that declares the external operations of the entity), and
+- the non-`private` methods and accessor methods being non-`final`.
+
+Hibernate _can_ persist a `final` entity class that does not implement any interface, but it is then not able to use proxies for lazily fetching to-one associations to that entity type, limiting options for performance tuning.
+
+The bytecode enhancer automatically makes any entity class non-`final`, along with all its methods.
 
 [[entity-pojo-constructor]]
 ==== Implement a no-argument constructor
 
-The entity class should have a no-argument constructor. Both Hibernate and Jakarta Persistence require this.
+The entity class should have a constructor with no parameters.
+Both Hibernate and Jakarta Persistence require this.
+Hibernate allows the constructor to be declared with `public`, `protected`, or package visibility.
 
-Jakarta Persistence requires that this constructor be defined as public or protected.
-Hibernate, for the most part, does not care about the constructor visibility, and will override the visibility setting.
-That said, the constructor should be defined with at least package visibility if you wish to leverage runtime proxy generation.
+The bytecode enhancer automatically adds a constructor with no parameters if it is missing.
 
 [[entity-pojo-accessors]]
 ==== Declare getters and setters for persistent attributes
 
-The Jakarta Persistence specification requires this, otherwise, the model would prevent accessing the entity persistent state fields directly from outside the entity itself.
+Strictly speaking, neither Jakarta Persistence nor Hibernate require accessor methods for a persistent field.
+However, direct access to a field of an entity from outside the entity instance itself is extremely dangerous and can easily expose the application program to uninitialized/unfetched state.
+All external access to fields of an entity should go through methods or accessor methods of the entity class.
 
-Although Hibernate does not require it, it is recommended to follow the JavaBean conventions and define getters and setters for entity persistent attributes.
-Nevertheless, you can still tell Hibernate to directly access the entity fields.
-
-Attributes (whether fields or getters/setters) need not be declared public.
-Hibernate can deal with attributes declared with the public, protected, package or private visibility.
-Again, if wanting to use runtime proxy generation for lazy loading, the getter/setter should grant access to at least package visibility.
+Therefore, it's a good idea to declare fields as `private`.
 
 [[entity-pojo-identifier]]
 ==== Providing identifier attribute(s)

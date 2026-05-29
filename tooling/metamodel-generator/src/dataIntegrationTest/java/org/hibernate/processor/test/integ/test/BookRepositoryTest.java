@@ -15,10 +15,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(annotatedClasses = { Book.class, BookRepository.class })
 @SessionFactory
@@ -38,6 +40,26 @@ class BookRepositoryTest {
 			assertNotNull( found );
 			assertEquals( "Effective Java", found.getTitle() );
 			assertEquals( 416, found.getPages() );
+		} );
+	}
+
+	@Test
+	void testFindOptionalPresent(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var repo = new _BookRepository( session );
+			repo.insert( new Book( "978-0-13-468599-1", "Effective Java", 416 ) );
+			Optional<Book> found = repo.maybeByIsbn( "978-0-13-468599-1" );
+			assertTrue( found.isPresent() );
+			assertEquals( "Effective Java", found.get().getTitle() );
+		} );
+	}
+
+	@Test
+	void testFindOptionalEmpty(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var repo = new _BookRepository( session );
+			Optional<Book> found = repo.maybeByIsbn( "nonexistent" );
+			assertTrue( found.isEmpty() );
 		} );
 	}
 

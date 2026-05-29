@@ -4,7 +4,7 @@
  */
 package org.hibernate.processor.test.integ.test;
 
-import jakarta.persistence.EntityNotFoundException;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.processor.test.integ.dao._BookDao;
 import org.hibernate.processor.test.integ.model.Book;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -46,7 +46,7 @@ class BookDaoTest {
 	void testFindByIdNotFound(SessionFactoryScope scope) {
 		scope.inStatelessTransaction( session -> {
 			var dao = new _BookDao( session );
-			assertThrows( EntityNotFoundException.class, () -> dao.getBook( "nonexistent" ) );
+			assertThrows( ObjectNotFoundException.class, () -> dao.getBook( "nonexistent" ) );
 		} );
 	}
 

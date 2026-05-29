@@ -94,11 +94,13 @@ public class HqlSelectionMementoImpl<R>
 	}
 
 	@Override
+	@Nullable //FIXME: declared @Nonnull by JPA
 	public Class<? extends R> getResultType() {
 		return queryType;
 	}
 
 	@Override
+	@Nullable
 	public String getEntityGraphName() {
 		return entityGraphName;
 	}

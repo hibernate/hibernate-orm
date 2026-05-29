@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.TypedQuery;
@@ -21,6 +23,7 @@ public interface JpaTypedQueryReference<R> extends JpaReference, TypedQueryRefer
 
 	/// {@inheritDoc}
 	@Override
+	@Nullable
 	default List<Class<?>> getParameterTypes() {
 		return null;
 	}
@@ -39,6 +42,7 @@ public interface JpaTypedQueryReference<R> extends JpaReference, TypedQueryRefer
 
 	/// {@inheritDoc}
 	@Override
+	@Nonnull
 	default Set<TypedQuery.Option> getOptions() {
 		return Set.of();
 	}

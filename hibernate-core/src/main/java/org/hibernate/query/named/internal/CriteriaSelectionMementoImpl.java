@@ -96,6 +96,7 @@ public class CriteriaSelectionMementoImpl<R>
 	}
 
 	@Override
+	@Nullable
 	public String getEntityGraphName() {
 		return null;
 	}

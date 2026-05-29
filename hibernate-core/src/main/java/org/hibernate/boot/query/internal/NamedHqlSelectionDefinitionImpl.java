@@ -96,11 +96,13 @@ public class NamedHqlSelectionDefinitionImpl<R>
 	}
 
 	@Override
-	public @Nullable Class<R> getResultType() {
+	@Nullable
+	public Class<R> getResultType() {
 		return resultType;
 	}
 
 	@Override
+	@Nullable
 	public String getEntityGraphName() {
 		return entityGraphName;
 	}

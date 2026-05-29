@@ -80,6 +80,7 @@ public class NativeSelectionMementoImpl<R>
 	}
 
 	@Override
+	@Nullable
 	public String getEntityGraphName() {
 		return null;
 	}

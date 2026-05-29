@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Statement;
 import jakarta.persistence.StatementReference;
@@ -113,11 +115,13 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	}
 
 	@Override
+	@Nullable
 	public String getName() {
 		return statementReference == null ? null : statementReference.getName();
 	}
 
 	@Override
+	@Nonnull
 	public Map<String,Object> getHints() {
 		return statementReference == null ? emptyMap() : statementReference.getHints();
 	}
@@ -130,21 +134,25 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	}
 
 	@Override
+	@Nullable
 	public List<Class<?>> getParameterTypes() {
 		return statementReference == null ? null : statementReference.getParameterTypes();
 	}
 
 	@Override
+	@Nullable
 	public List<String> getParameterNames() {
 		return statementReference == null ? null : statementReference.getParameterNames();
 	}
 
 	@Override
+	@Nullable
 	public List<Object> getArguments() {
 		return statementReference == null ? null : statementReference.getArguments();
 	}
 
 	@Override
+	@Nonnull
 	public Set<Statement.Option> getOptions() {
 		return statementReference == null ? emptySet() : statementReference.getOptions();
 	}

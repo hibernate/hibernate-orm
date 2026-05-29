@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
@@ -94,36 +95,43 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	}
 
 	@Override
+	@Nullable
 	public String getName() {
 		return typedQueryReference == null ? null : typedQueryReference.getName();
 	}
 
 	@Override
+	@Nonnull
 	public Class<T> getResultType() {
 		return resultType;
 	}
 
 	@Override
+	@Nonnull
 	public Map<String,Object> getHints() {
 		return typedQueryReference == null ? emptyMap() : typedQueryReference.getHints();
 	}
 
 	@Override
+	@Nullable
 	public List<Class<?>> getParameterTypes() {
 		return typedQueryReference == null ? null : typedQueryReference.getParameterTypes();
 	}
 
 	@Override
+	@Nullable
 	public List<String> getParameterNames() {
 		return typedQueryReference == null ? null : typedQueryReference.getParameterNames();
 	}
 
 	@Override
+	@Nullable
 	public List<Object> getArguments() {
 		return typedQueryReference == null ? null : typedQueryReference.getArguments();
 	}
 
 	@Override
+	@Nonnull
 	public Set<TypedQuery.Option> getOptions() {
 		return typedQueryReference == null ? emptySet() : typedQueryReference.getOptions();
 	}
@@ -472,6 +480,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 //	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return typedQueryReference instanceof JpaTypedQueryReference<?> jpaTypedQueryReference
 				? jpaTypedQueryReference.getTimeout()
@@ -479,6 +488,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	}
 
 	@Override
+	@Nullable
 	public String getEntityGraphName() {
 		return typedQueryReference == null ? "" : typedQueryReference.getEntityGraphName();
 	}

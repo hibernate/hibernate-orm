@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.named.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.FlushMode;
@@ -53,6 +54,7 @@ public abstract class AbstractQueryMemento<R>
 	}
 
 	@Override
+	@Nullable
 	public String getName() {
 		return name;
 	}
@@ -78,6 +80,7 @@ public abstract class AbstractQueryMemento<R>
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getHints() {
 		return hints;
 	}

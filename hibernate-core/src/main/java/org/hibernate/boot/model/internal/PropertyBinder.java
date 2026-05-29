@@ -1411,7 +1411,7 @@ public class PropertyBinder {
 			final var basic = attributeMember.getDirectAnnotationUsage( Basic.class );
 			if ( basic != null ) {
 				return basic.optional()
-				       && attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+					&& attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
 			}
 			else if ( attributeMember.isArray() ) {
 				return true;

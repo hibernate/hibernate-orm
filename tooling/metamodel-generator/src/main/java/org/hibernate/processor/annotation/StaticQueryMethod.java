@@ -40,6 +40,7 @@ class StaticQueryMethod implements MetaAttribute {
 	private final boolean nativeQuery;
 	private final @Nullable String resultTypeName;
 	private final @Nullable String resultTypeClass;
+	private final List<String> queryParamTypes;
 	private final List<String> paramNames;
 	private final List<String> paramTypes;
 	private final @Nullable AnnotationMirror queryOptions;
@@ -53,6 +54,7 @@ class StaticQueryMethod implements MetaAttribute {
 			boolean nativeQuery,
 			@Nullable String resultTypeName,
 			@Nullable String resultTypeClass,
+			List<String> queryParamTypes,
 			List<String> paramNames,
 			List<String> paramTypes,
 			@Nullable AnnotationMirror queryOptions) {
@@ -64,6 +66,7 @@ class StaticQueryMethod implements MetaAttribute {
 		this.nativeQuery = nativeQuery;
 		this.resultTypeName = resultTypeName;
 		this.resultTypeClass = resultTypeClass;
+		this.queryParamTypes = queryParamTypes;
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
 		this.queryOptions = queryOptions;
@@ -115,7 +118,26 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private String queryName() {
-		return annotationMetaEntity.getSimpleName() + "." + queryMethodName;
+		return queryName( annotationMetaEntity.getQualifiedName(), queryMethodName, queryParamTypes );
+	}
+
+	static String queryName(String typeName, String methodName, List<String> paramTypes) {
+		final StringBuilder name =
+				new StringBuilder( javadocTypeName( typeName ) )
+						.append( '#' )
+						.append( methodName )
+						.append( '(' );
+		for ( int i = 0; i < paramTypes.size(); i++ ) {
+			if ( i > 0 ) {
+				name.append( ',' );
+			}
+			name.append( javadocTypeName( erasedType( paramTypes.get( i ) ) ) );
+		}
+		return name.append( ')' ).toString();
+	}
+
+	private static String javadocTypeName(String typeName) {
+		return typeName.endsWith( "$" ) ? typeName : typeName.replace( '$', '.' );
 	}
 
 	private void modifiers(StringBuilder declaration) {
@@ -139,7 +161,7 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private String parameterList() {
-		return paramTypes.stream()
+		return queryParamTypes.stream()
 				.map(StaticQueryMethod::erasedType)
 				.map(annotationMetaEntity::importType)
 				.reduce((x, y) -> x + ',' + y)

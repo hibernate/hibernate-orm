@@ -1919,6 +1919,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									isNative,
 									queryReturnType.resultTypeName,
 									queryReturnType.resultTypeClass,
+									paramTypes,
 									referenceParamNames,
 									referenceParamTypes,
 									getAnnotationMirror( method, QUERY_OPTIONS )
@@ -4202,7 +4203,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						this, method,
 						method.getSimpleName().toString(),
 						processedQuery,
-						namedRepositoryQueryName( method, mirror ),
+						namedRepositoryQueryName( method, mirror, paramTypes ),
 						returnType == null ? null : returnType.toString(),
 						returnType == null ? null : returnTypeClass( returnType ),
 						containerTypeName,
@@ -4266,8 +4267,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& canBindReferenceArguments( queryString, isNative, staticQueryParameterNames( method ), paramTypes );
 	}
 
-	private @Nullable String namedRepositoryQueryName(ExecutableElement method, AnnotationMirror mirror) {
-		return repository && isNamedRepositoryQueryAnnotation( mirror ) ? staticQueryName( method ) : null;
+	private @Nullable String namedRepositoryQueryName(
+			ExecutableElement method,
+			AnnotationMirror mirror,
+			List<String> paramTypes) {
+		return repository && isNamedRepositoryQueryAnnotation( mirror )
+				? StaticQueryMethod.queryName( getQualifiedName(), method.getSimpleName().toString(), paramTypes )
+				: null;
 	}
 
 	private static boolean isNamedRepositoryQueryAnnotation(AnnotationMirror mirror) {
@@ -4276,10 +4282,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return JAKARTA_QUERY.equals( annotationName )
 			|| NATIVE_QUERY.equals( annotationName )
 			|| JD_QUERY.equals( annotationName );
-	}
-
-	private static String staticQueryName(ExecutableElement method) {
-		return method.getEnclosingElement().getSimpleName() + "." + method.getSimpleName();
 	}
 
 	private String fullReturnType(ExecutableElement method) {

@@ -39,7 +39,7 @@ class StaticQueryTest {
 
 		final TypedQueryReference<?> findBooksReference =
 				(TypedQueryReference<?>) findBooks.invoke( null, "Hibernate" );
-		assertEquals( "Library.findBooks", findBooksReference.getName() );
+		assertEquals( Library.class.getName() + "#findBooks(java.lang.String)", findBooksReference.getName() );
 		assertEquals( Book.class, findBooksReference.getResultType() );
 		assertEquals( List.of( String.class ), findBooksReference.getParameterTypes() );
 		assertEquals( List.of( "title" ), findBooksReference.getParameterNames() );
@@ -57,7 +57,7 @@ class StaticQueryTest {
 
 		final TypedQueryReference<?> nativeBookReference =
 				(TypedQueryReference<?>) nativeBook.invoke( null, "9781932394153" );
-		assertEquals( "Library.nativeBook", nativeBookReference.getName() );
+		assertEquals( Library.class.getName() + "#nativeBook(java.lang.String)", nativeBookReference.getName() );
 		assertEquals( List.of( String.class ), nativeBookReference.getParameterTypes() );
 		assertEquals( List.of( "isbn" ), nativeBookReference.getParameterNames() );
 		assertEquals( List.of( "9781932394153" ), nativeBookReference.getArguments() );
@@ -66,7 +66,7 @@ class StaticQueryTest {
 		assertEquals( StatementReference.class, deleteObsolete.getReturnType() );
 		final StatementReference statementReference =
 				(StatementReference) deleteObsolete.invoke( null );
-		assertEquals( "Library.deleteObsolete", statementReference.getName() );
+		assertEquals( Library.class.getName() + "#deleteObsolete()", statementReference.getName() );
 		assertEquals( List.of(), statementReference.getParameterTypes() );
 		assertEquals( List.of(), statementReference.getParameterNames() );
 		assertEquals( List.of(), statementReference.getArguments() );

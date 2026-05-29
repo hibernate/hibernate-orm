@@ -4,7 +4,7 @@
  */
 package org.hibernate.testing.jdbc;
 
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,10 +46,19 @@ public class GradleParallelTestingResolver {
 				connectionProps.put( JDBC_USER_CONNECTION_PROPERTY,
 						user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
 			}
-			final String url = connectionProps.getProperty( AvailableSettings.URL );
-			if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
-				connectionProps.put( AvailableSettings.URL,
-						url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+			if( connectionProps.containsKey( JdbcSettings.URL ) ) {
+				final String url = connectionProps.getProperty( JdbcSettings.URL );
+				if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
+					connectionProps.put( JdbcSettings.URL,
+							url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
+			}
+			else {
+				final String url = connectionProps.getProperty( JdbcSettings.JAKARTA_JDBC_URL );
+				if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
+					connectionProps.put( JdbcSettings.JAKARTA_JDBC_URL,
+							url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
 			}
 		}
 	}
@@ -57,15 +66,34 @@ public class GradleParallelTestingResolver {
 	public static void resolveFromSettings(final Properties settingsProps) {
 		if ( settingsProps != null ) {
 			// If Gradle parallel testing is enabled (maxParallelForks > 1)
-			final String user = settingsProps.getProperty( AvailableSettings.USER );
-			if ( user != null && user.contains( GRADLE_WORKER_PATTERN ) ) {
-				settingsProps.put( AvailableSettings.USER,
-						user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+			if( settingsProps.containsKey( JdbcSettings.USER ) ) {
+				final String user = settingsProps.getProperty( JdbcSettings.USER );
+				if ( user != null && user.contains( GRADLE_WORKER_PATTERN ) ) {
+					settingsProps.put( JdbcSettings.USER,
+							user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
 			}
-			final String url = settingsProps.getProperty( AvailableSettings.URL );
-			if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
-				settingsProps.put( AvailableSettings.URL,
-						url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+			else {
+				final String user = settingsProps.getProperty( JdbcSettings.JAKARTA_JDBC_USER );
+				if ( user != null && user.contains( GRADLE_WORKER_PATTERN ) ) {
+					settingsProps.put( JdbcSettings.JAKARTA_JDBC_USER,
+							user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
+			}
+
+			if( settingsProps.containsKey( JdbcSettings.URL ) ) {
+				final String url = settingsProps.getProperty( JdbcSettings.URL );
+				if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
+					settingsProps.put( JdbcSettings.URL,
+							url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
+			}
+			else {
+				final String url = settingsProps.getProperty( JdbcSettings.JAKARTA_JDBC_URL );
+				if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
+					settingsProps.put( JdbcSettings.JAKARTA_JDBC_URL,
+							url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
 			}
 		}
 	}
@@ -73,15 +101,33 @@ public class GradleParallelTestingResolver {
 	public static void resolveFromSettings(final Map<String, Object> settingsProps) {
 		if ( settingsProps != null ) {
 			// If Gradle parallel testing is enabled (maxParallelForks > 1)
-			final String user = (String) settingsProps.get( AvailableSettings.USER );
-			if ( user != null && user.contains( GRADLE_WORKER_PATTERN ) ) {
-				settingsProps.put( AvailableSettings.USER,
-						user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+			if( settingsProps.containsKey( JdbcSettings.USER ) ) {
+				final String user = (String) settingsProps.get( JdbcSettings.USER );
+				if ( user != null && user.contains( GRADLE_WORKER_PATTERN ) ) {
+					settingsProps.put( JdbcSettings.USER,
+							user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
 			}
-			final String url = (String) settingsProps.get( AvailableSettings.URL );
-			if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
-				settingsProps.put( AvailableSettings.URL,
-						url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+			else {
+				final String user = (String) settingsProps.get( JdbcSettings.JAKARTA_JDBC_USER );
+				if ( user != null && user.contains( GRADLE_WORKER_PATTERN ) ) {
+					settingsProps.put( JdbcSettings.JAKARTA_JDBC_USER,
+							user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
+			}
+			if( settingsProps.containsKey(  JdbcSettings.URL ) ) {
+				final String url = (String) settingsProps.get( JdbcSettings.URL );
+				if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
+					settingsProps.put( JdbcSettings.URL,
+							url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
+			}
+			else {
+				final String url = (String) settingsProps.get( JdbcSettings.JAKARTA_JDBC_URL );
+				if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
+					settingsProps.put( JdbcSettings.JAKARTA_JDBC_URL,
+							url.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
+				}
 			}
 		}
 	}

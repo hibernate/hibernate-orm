@@ -46,11 +46,17 @@ public final class DialectContext {
 	static void init() {
 		final Properties properties = Environment.getProperties();
 		final String driverClassName = properties.getProperty( Environment.DRIVER );
-		final String jdbcUrl = resolveUrl( properties.getProperty( Environment.URL ) );
+		final String jdbcUrl = resolveUrl( properties.containsKey( Environment.URL )
+				? properties.getProperty( Environment.URL )
+				: properties.getProperty( Environment.JAKARTA_JDBC_URL ) );
 		final Properties props = new Properties();
 		resolveFromSettings(properties);
-		props.setProperty( "user", properties.getProperty( Environment.USER ) );
-		props.setProperty( "password", properties.getProperty( Environment.PASS ) );
+		props.setProperty( "user", properties.containsKey( Environment.USER )
+				? properties.getProperty( Environment.USER )
+				: properties.getProperty( Environment.JAKARTA_JDBC_USER ) );
+		props.setProperty( "password", properties.containsKey( Environment.PASS )
+				? properties.getProperty( Environment.PASS )
+				: properties.getProperty( Environment.JAKARTA_JDBC_PASSWORD ) );
 		final Class<? extends Dialect> dialectClass = getDialectClass();
 		final Constructor<? extends Dialect> constructor;
 		try {

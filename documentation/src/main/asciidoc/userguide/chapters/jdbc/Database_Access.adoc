@@ -18,8 +18,9 @@ Hibernate will internally determine which `ConnectionProvider` to use based on t
 3. else if any setting prefixed by `hibernate.c3p0.` is set -> <<database-connectionprovider-c3p0>>
 4. else if any setting prefixed by `hibernate.hikari.` is set -> <<database-connectionprovider-hikari>>
 5. else if any setting prefixed by `hibernate.agroal.` is set -> <<database-connectionprovider-agroal>>
-6. else if `hibernate.connection.url` is set -> <<database-connectionprovider-drivermanager>>
-7. else -> <<database-connectionprovider-provided>>
+6. else if any setting prefixed by `hibernate.ucp.` is set -> <<database-connectionprovider-oracleucp>>
+7. else if `hibernate.connection.url` is set -> <<database-connectionprovider-drivermanager>>
+8. else -> <<database-connectionprovider-provided>>
 
 [[database-connectionprovider-datasource]]
 === Using DataSources
@@ -109,6 +110,41 @@ Additionally, this `ConnectionProvider` will pick up the following Hibernate-spe
 `hibernate.connection.password`:: Mapped to Agroal's `credential` setting
 `hibernate.connection.isolation`:: Mapped to Agroal's `jdbcTransactionIsolation` setting. See <<ConnectionProvider support for transaction isolation setting>>.
 `hibernate.connection.autocommit`:: Mapped to Agroal's `autoCommit` setting
+
+[[database-connectionprovider-oracleucp]]
+=== Using Oracle Universal Connection Pool
+
+[IMPORTANT]
+====
+To use the Oracle Universal Connection Pool (aka UCP) integration, the application must include the `hibernate-ucp` module jar (as well as its dependencies) on the classpath.
+====
+
+Hibernate also provides support for applications using https://docs.oracle.com/en/database/oracle/oracle-database/26/jjucp/intro.html[Oracle Universal Connection Pool].
+
+UCP settings may be supplied by prefixing the setting name with `hibernate.ucp.`.
+Additionally, the UCP `ConnectionProvider` understands the following standard properties:
+
+`jakarta.persistence.jdbc.url` or `hibernate.connection.url`:: Mapped to UCP `URL` setting
+`jakarta.persistence.jdbc.user` or `hibernate.connection.username`:: Mapped to UCP `user` setting
+`jakarta.persistence.jdbc.password` or `hibernate.connection.password`:: Mapped to UCP `password` setting
+`hibernate.connection.isolation`:: Used to initialize the `Connection` retrieved from UCP. See <<ConnectionProvider support for transaction isolation setting>>.
+`hibernate.connection.autocommit`:: Used to initialize the `Connection` retrieved from UCP.
+Any other setting prefixed with `hibernate.ucp.`:: The `hibernate.ucp.` prefix is stripped and the remaining text is passed to UCP (for example, `hibernate.ucp.loginTimeout 5000`).
+
+[IMPORTANT]
+====
+You can pass further properties to the `Connection` provided by UCP by using the `hibernate.ucp.connectionProperties` property in the following manner:
+
+`hibernate.ucp.connectionProperties=oracle.jdbc.thinForceDNSLoadBalancing=true,oracle.jdbc.fanEnabled=true,oracle.jdbc.defaultConnectionValidation=SOCKET,oracle.jdbc.implicitStatementCacheSize=50,oracle.jdbc.loginTimeout=5000`
+
+You can find the exhaustive list of the supported `Connection` properties https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html[here].
+
+====
+
+The Hibernate property `hibernate.ucp.connectionFactoryClassName` selects between:
+
+. a standard connection pool: `oracle.jdbc.pool.OracleDataSource`
+. a _replay_ connection pool: `oracle.jdbc.replay.OracleDataSourceImpl` which allows using https://docs.oracle.com/en/database/oracle/oracle-database/26/jjdbc/application-continuity.html[Application Continuity] capabilities to mask planned and unplanned downtimes. Note that the `OracleDialect` knows  if Application Continuity is enabled by using the `isApplicationContinuity()` function.
 
 [[database-connectionprovider-drivermanager]]
 === Using Hibernate's built-in (and unsupported) pooling

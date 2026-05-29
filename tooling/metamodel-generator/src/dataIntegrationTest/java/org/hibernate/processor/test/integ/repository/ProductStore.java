@@ -4,13 +4,17 @@
  */
 package org.hibernate.processor.test.integ.repository;
 
+import jakarta.data.Order;
 import jakarta.data.repository.DataRepository;
+import jakarta.data.repository.Find;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
+import jakarta.data.restrict.Restriction;
 import org.hibernate.processor.test.integ.model.Product;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Repository
 public interface ProductStore extends DataRepository<Product, Long> {
@@ -28,4 +32,8 @@ public interface ProductStore extends DataRepository<Product, Long> {
 	List<String> expensiveNames(double minPrice);
 
 	long cheaperThan(double maxPrice);
+
+	@Find
+	Stream<Product> filter(Restriction<Product> restriction,
+						Order<Product> sortBy);
 }

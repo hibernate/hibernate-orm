@@ -8,6 +8,7 @@ import jakarta.persistence.Tuple;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.internal.TupleImpl;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -15,6 +16,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.BitSet;
+import java.util.function.BiConsumer;
 
 /**
  * @author Steve Ebersole
@@ -38,7 +40,7 @@ public record TupleResultImpl(
 	public TupleAssembler createResultAssembler(
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler<?>[] elementAssemblers = new DomainResultAssembler<?>[elementResults.length];
+		final var elementAssemblers = new DomainResultAssembler<?>[elementResults.length];
 		for ( int i = 0; i < elementResults.length; i++ ) {
 			elementAssemblers[i] = elementResults[i].createResultAssembler( parent, creationState );
 		}
@@ -47,13 +49,13 @@ public record TupleResultImpl(
 
 	@Override
 	public void collectValueIndexesToCache(BitSet valueIndexes) {
-
 	}
 
 	public record TupleAssembler(
 			JavaType<Tuple> resultType,
 			TupleMetadata tupleMetadata,
-			DomainResultAssembler<?>[] elementAssemblers) implements DomainResultAssembler<Tuple> {
+			DomainResultAssembler<?>[] elementAssemblers)
+					implements DomainResultAssembler<Tuple> {
 
 		@Override
 		public JavaType<Tuple> getAssembledJavaType() {
@@ -62,11 +64,25 @@ public record TupleResultImpl(
 
 		@Override
 		public Tuple assemble(RowProcessingState rowProcessingState) {
-			final Object[] row = new Object[elementAssemblers.length];
+			final var row = new Object[elementAssemblers.length];
 			for ( int i = 0; i < elementAssemblers.length; i++ ) {
 				row[i] = elementAssemblers[i].assemble( rowProcessingState );
 			}
 			return new TupleImpl( tupleMetadata, row );
+		}
+
+		@Override
+		public void resolveState(RowProcessingState rowProcessingState) {
+			for ( var elementAssembler : elementAssemblers ) {
+				elementAssembler.resolveState( rowProcessingState );
+			}
+		}
+
+		@Override
+		public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
+			for ( var elementAssembler : elementAssemblers ) {
+				elementAssembler.forEachResultAssembler( consumer, arg );
+			}
 		}
 	}
 }

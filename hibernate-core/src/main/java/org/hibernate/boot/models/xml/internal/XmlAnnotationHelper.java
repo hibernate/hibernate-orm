@@ -221,6 +221,12 @@ public class XmlAnnotationHelper {
 		if ( isNotEmpty( jaxbEntity.getName() ) ) {
 			entityAnn.name( jaxbEntity.getName() );
 		}
+		if ( jaxbEntity.isMutable() != null && !jaxbEntity.isMutable() ) {
+			classDetails.applyAnnotationUsage(
+					HibernateAnnotations.IMMUTABLE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+		}
 	}
 
 	public static void applyColumn(

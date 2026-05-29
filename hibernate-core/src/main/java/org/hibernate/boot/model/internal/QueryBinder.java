@@ -44,6 +44,7 @@ import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.query.hql.internal.HqlHelper;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
@@ -339,7 +340,7 @@ public abstract class QueryBinder {
 				final var definition = new NamedHqlSelectionDefinitionImpl<>(
 						registrationName,
 						staticQueryLocation( classDetails, methodDetails ),
-						staticSelectionQueryString( queryString, resultType ),
+						staticSelectionQueryString( queryString, resultType, classDetails ),
 						resultType,
 						entityGraphName( options ),
 						queryFlushMode( options ),
@@ -364,9 +365,37 @@ public abstract class QueryBinder {
 		}
 	}
 
-	private static String staticSelectionQueryString(String queryString, Class<?> resultType) {
-		final String entityName = queryString.isBlank() ? entityName( resultType ) : null;
-		return entityName == null ? queryString : "from " + entityName;
+	private static String staticSelectionQueryString(String queryString, Class<?> resultType,
+			ClassDetails classDetails) {
+		final String entityName = entityName( resultType );
+		return HqlHelper.addFromClauseIfNecessary( queryString,
+				entityName != null ? entityName : repositoryEntityName( classDetails ) );
+	}
+
+	private static String repositoryEntityName(ClassDetails classDetails) {
+		return repositoryEntityName( classDetails.toJavaClass() );
+	}
+
+	private static String repositoryEntityName(Class<?> type) {
+		for ( var genericInterface : type.getGenericInterfaces() ) {
+			if ( genericInterface instanceof ParameterizedType parameterizedType ) {
+				final var rawType = (Class<?>) parameterizedType.getRawType();
+				final var rawTypeName = rawType.getName();
+				if ( parameterizedType.getActualTypeArguments().length == 2
+						&& ( "jakarta.data.repository.DataRepository".equals( rawTypeName )
+							|| "jakarta.data.repository.BasicRepository".equals( rawTypeName )
+							|| "jakarta.data.repository.CrudRepository".equals( rawTypeName ) ) ) {
+					return entityName( erasedClass( parameterizedType.getActualTypeArguments()[0] ) );
+				}
+				else {
+					final var result = repositoryEntityName( rawType );
+					if ( result != null ) {
+						return result;
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	private static String entityName(Class<?> resultType) {

@@ -25,6 +25,7 @@ import org.hibernate.query.SyntaxException;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.hql.internal.HqlHelper;
 import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -77,14 +78,7 @@ import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
-import static org.hibernate.grammars.hql.HqlLexer.FILTER;
-import static org.hibernate.grammars.hql.HqlLexer.FROM;
-import static org.hibernate.grammars.hql.HqlLexer.GROUP;
-import static org.hibernate.grammars.hql.HqlLexer.HAVING;
-import static org.hibernate.grammars.hql.HqlLexer.LEFT_PAREN;
-import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.SELECT;
-import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
@@ -112,6 +106,7 @@ import static org.hibernate.processor.util.TypeUtils.isPluralAttribute;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
 import static org.hibernate.processor.util.TypeUtils.resolveTypeMirror;
+import static org.hibernate.query.hql.internal.HqlHelper.*;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -1958,7 +1953,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			AnnotationMirror mirror,
 			AnnotationValue value,
 			String queryString) {
-		final boolean statement = isInsertUpdateDelete( queryString );
+		final boolean statement = isMutationStatement( queryString );
 		return switch ( methodReturnType.getKind() ) {
 			case VOID -> statement
 					? new StaticQueryReturnType( true, null, null, methodReturnType )
@@ -2984,7 +2979,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			return null;
 		}
-		if ( isInsertUpdateDelete( queryString ) ) {
+		if ( isMutationStatement( queryString ) ) {
 			if ( explicitMethodSelect ) {
 				message( method, query,
 						"'@Select' may not be used on a mutation query",
@@ -4179,7 +4174,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			processedQuery = addFromClauseIfNecessary( selectedQueryString, implicitEntityName( resultType ) );
 			validateHql( method, returnType, mirror, value, processedQuery, paramNames, paramTypes );
 		}
-		final boolean mutation = isInsertUpdateDelete( queryString );
+		final boolean mutation = isMutationStatement( queryString );
 		if ( mutation && hasAnnotation( method, JD_FIRST ) ) {
 			final AnnotationMirror first = getAnnotationMirror( method, JD_FIRST );
 			if ( first == null ) {
@@ -4695,49 +4690,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return resultType.asElement().getSimpleName().toString();
 	}
 
-	/**
-	 * In the {@code @Query} annotation we tolerate missing {@code from} clauses
-	 * to an extent that ORM core does not. For example, we accept {@code select name, age}
-	 * and {@code select id where year(date)>:year} as a legit queries. (It would be easy to
-	 * change ORM core to also accept these queries.)
-	 */
 	private static String addFromClauseIfNecessary(String hql, @Nullable String entityType) {
-		if ( entityType == null ) {
-			return hql;
-		}
-		else if ( isInsertUpdateDelete( hql ) ) {
-			return hql;
-		}
-		else {
-			final var hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
-			final var allTokens = hqlLexer.getAllTokens();
-			int previousType = -1;
-			int previousPreviousType = -1;
-			for ( final var token : allTokens ) {
-				if ( token.getChannel() == DEFAULT_CHANNEL ) {
-					final int tokenType = token.getType();
-					switch ( tokenType ) {
-						case FROM:
-							return hql;
-						case WHERE:
-							if ( previousType == LEFT_PAREN && previousPreviousType == FILTER ) {
-								// WHERE is part of FILTER (WHERE ...), not the query's own WHERE clause
-								break;
-							}
-							// fall through
-						case HAVING:
-						case GROUP:
-						case ORDER:
-							return new StringBuilder( hql )
-									.insert( token.getStartIndex(), "from " + entityType + " " )
-									.toString();
-					}
-					previousPreviousType = previousType;
-					previousType = tokenType;
-				}
-			}
-			return hql + " from " + entityType;
-		}
+		return HqlHelper.addFromClauseIfNecessary( hql, entityType );
 	}
 
 	private @Nullable DeclaredType resultType(
@@ -4758,13 +4712,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static boolean isInsertUpdateDelete(String hql) {
-		final String trimmed = hql.trim();
-		final String keyword = trimmed.length() > 6 ? trimmed.substring( 0, 6 ) : "";
-		return keyword.equalsIgnoreCase( "update" )
-			|| keyword.equalsIgnoreCase( "delete" )
-			|| keyword.equalsIgnoreCase( "insert" );
-	}
 
 	private void validateHql(
 			ExecutableElement method,

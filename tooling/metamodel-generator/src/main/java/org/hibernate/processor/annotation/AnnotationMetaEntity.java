@@ -98,7 +98,6 @@ import static org.hibernate.processor.util.TypeUtils.extendsClass;
 import static org.hibernate.processor.util.TypeUtils.findMappedSuperElement;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
-import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.getInheritedAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.implementsInterface;
@@ -520,9 +519,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			determineAccessTypeForHierarchy( element, context );
 			entityAccessTypeInfo = castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
-			if ( repositoryQueryMetamodel && primaryEntity == null ) {
-				primaryEntity = primaryEntity( element );
-			}
 
 			final List<VariableElement> fieldsOfClass = fieldsIn( element.getEnclosedElements() );
 			final List<ExecutableElement> methodsOfClass =
@@ -530,6 +526,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							? context.getAllMembers( element )
 							: element.getEnclosedElements() );
 			final List<ExecutableElement> gettersAndSettersOfClass = new ArrayList<>();
+			final List<ExecutableElement> lifecycleMethodsOfClass = new ArrayList<>();
 			for ( ExecutableElement method : methodsOfClass ) {
 				if ( shouldGenerateStaticQueryMethodInMetamodel( method ) ) {
 					staticQueryMethods.add( method );
@@ -542,6 +539,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						&& containsAnnotation( method, HQL, SQL, FIND ) ) {
 					queryMethods.add( method );
 				}
+				if ( containsAnnotation( method, JD_INSERT, JD_UPDATE, JD_SAVE,
+						JD_PERSIST, JD_MERGE, JD_REFRESH, JD_REMOVE, JD_DETACH ) ) {
+					lifecycleMethodsOfClass.add( method );
+				}
+				else if ( hasAnnotation( method, JD_DELETE ) && isDeleteLifecycle( method ) ) {
+					lifecycleMethodsOfClass.add( method );
+				}
+			}
+			if ( repositoryQueryMetamodel && primaryEntity == null ) {
+				primaryEntity = primaryEntity( lifecycleMethodsOfClass );
 			}
 
 			if ( managed && !jakartaDataStaticModel ) {

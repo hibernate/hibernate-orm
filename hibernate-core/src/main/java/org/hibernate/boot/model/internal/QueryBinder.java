@@ -40,10 +40,13 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.jpa.HibernateHints;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.query.hql.internal.HqlHelper;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -372,38 +375,86 @@ public abstract class QueryBinder {
 				entityName != null ? entityName : repositoryEntityName( classDetails ) );
 	}
 
-	private static String repositoryEntityName(ClassDetails classDetails) {
-		return repositoryEntityName( classDetails.toJavaClass() );
+	private static final Set<String> DATA_REPOSITORY_SUPERTYPES = Set.of(
+			"jakarta.data.repository.DataRepository",
+			"jakarta.data.repository.BasicRepository",
+			"jakarta.data.repository.CrudRepository"
+	);
+
+	private static final Set<String> LIFECYCLE_ANNOTATIONS = Set.of(
+			"jakarta.data.repository.Insert",
+			"jakarta.data.repository.Delete",
+			"jakarta.data.repository.Save"
+	);
+
+	private static @Nullable String repositoryEntityName(ClassDetails classDetails) {
+		final var result = repositoryEntityNameFromTypeHierarchy( classDetails );
+		return result != null ? result : repositoryEntityNameFromLifecycleMethods( classDetails );
 	}
 
-	private static String repositoryEntityName(Class<?> type) {
-		for ( var genericInterface : type.getGenericInterfaces() ) {
-			if ( genericInterface instanceof ParameterizedType parameterizedType ) {
-				final var rawType = (Class<?>) parameterizedType.getRawType();
-				final var rawTypeName = rawType.getName();
-				if ( parameterizedType.getActualTypeArguments().length == 2
-						&& ( "jakarta.data.repository.DataRepository".equals( rawTypeName )
-							|| "jakarta.data.repository.BasicRepository".equals( rawTypeName )
-							|| "jakarta.data.repository.CrudRepository".equals( rawTypeName ) ) ) {
-					return entityName( erasedClass( parameterizedType.getActualTypeArguments()[0] ) );
-				}
-				else {
-					final var result = repositoryEntityName( rawType );
-					if ( result != null ) {
-						return result;
-					}
+	private static @Nullable String repositoryEntityNameFromTypeHierarchy(ClassDetails classDetails) {
+		for ( var implementedInterface : classDetails.getImplementedInterfaces() ) {
+			final var rawClass = implementedInterface.determineRawClass();
+			if ( implementedInterface.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+				final var parameterized = implementedInterface.asParameterizedType();
+				if ( parameterized.getArguments().size() == 2
+						&& DATA_REPOSITORY_SUPERTYPES.contains( rawClass.getName() ) ) {
+					return entityName( parameterized.getArguments().get( 0 ).determineRawClass().toJavaClass() );
 				}
 			}
-			else if ( genericInterface instanceof Class<?> classInterface ) {
-				// companion ($) interfaces extend the main repository
-				// without type arguments, appearing as a raw Class
-				final var result = repositoryEntityName( classInterface );
-				if ( result != null ) {
-					return result;
-				}
+			// recurse into super interfaces, including companion ($)
+			// interfaces which extend the main repository without
+			// type arguments
+			final var result = repositoryEntityNameFromTypeHierarchy( rawClass );
+			if ( result != null ) {
+				return result;
 			}
 		}
 		return null;
+	}
+
+	private static @Nullable String repositoryEntityNameFromLifecycleMethods(ClassDetails classDetails) {
+		for ( var methodDetails : classDetails.getMethods() ) {
+			if ( isLifecycleMethod( methodDetails ) ) {
+				for ( var argumentType : methodDetails.getArgumentTypes() ) {
+					final var name = entityName( argumentType.toJavaClass() );
+					if ( name != null ) {
+						return name;
+					}
+					// List<Entity> or other Iterable<Entity> parameter
+					if ( argumentType.isImplementor( Iterable.class ) ) {
+						final var method = methodDetails.toJavaMember();
+						for ( var paramType : method.getGenericParameterTypes() ) {
+							if ( paramType instanceof ParameterizedType parameterizedType
+									&& parameterizedType.getActualTypeArguments().length == 1 ) {
+								final var elementType = erasedClass( parameterizedType.getActualTypeArguments()[0] );
+								final var elementName = entityName( elementType );
+								if ( elementName != null ) {
+									return elementName;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		// check super interfaces (e.g. companion extends main repository)
+		for ( var implementedInterface : classDetails.getImplementedInterfaces() ) {
+			final var result = repositoryEntityNameFromLifecycleMethods( implementedInterface.determineRawClass() );
+			if ( result != null ) {
+				return result;
+			}
+		}
+		return null;
+	}
+
+	private static boolean isLifecycleMethod(MethodDetails methodDetails) {
+		for ( var annotation : methodDetails.getDirectAnnotationUsages() ) {
+			if ( LIFECYCLE_ANNOTATIONS.contains( annotation.annotationType().getName() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static String entityName(Class<?> resultType) {

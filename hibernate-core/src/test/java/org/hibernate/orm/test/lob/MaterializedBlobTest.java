@@ -19,8 +19,6 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 		feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class,
 		comment = "database/driver does not support expected LOB usage pattern"
 )
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/lob/MaterializedBlobMappings.hbm.xml"
-)
+@DomainModel(xmlMappings = "mappings/lob/MaterializedBlobMappings.orm.xml")
 public class MaterializedBlobTest extends LongByteArrayTest {
 }

@@ -17,8 +17,6 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,21 +35,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class MultipleSessionFactoriesProxyTest {
 
 	private SessionFactory produceSessionFactory() {
-		try (InputStream is = Thread.currentThread().getContextClassLoader()
-				.getResourceAsStream( "org/hibernate/orm/test/proxy/DataPoint.hbm.xml" )) {
-			final Configuration cfg = new Configuration()
-					.addInputStream( is )
-					.addAnnotatedClass( Investor.class )
-					.registerTypeContributor( new InvestorTypeContributor() )
-					.setProperty( Environment.HBM2DDL_AUTO, "create-drop" )
-					.setProperty( Environment.SESSION_FACTORY_NAME, "sf-name" )
-					.setProperty( Environment.SESSION_FACTORY_NAME, "sf-name" );
-			ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
-			return cfg.buildSessionFactory();
-		}
-		catch (IOException e) {
-			throw new IllegalArgumentException( e );
-		}
+		final Configuration cfg = new Configuration()
+				.addAnnotatedClass( DataPoint.class )
+				.addAnnotatedClass( Container.class )
+				.addAnnotatedClass( Owner.class )
+				.addAnnotatedClass( Info.class )
+				.addAnnotatedClass( Investor.class )
+				.registerTypeContributor( new InvestorTypeContributor() )
+				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" )
+				.setProperty( Environment.SESSION_FACTORY_NAME, "sf-name" )
+				.setProperty( Environment.SESSION_FACTORY_NAME, "sf-name" );
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
+		return cfg.buildSessionFactory();
 	}
 
 	@Test

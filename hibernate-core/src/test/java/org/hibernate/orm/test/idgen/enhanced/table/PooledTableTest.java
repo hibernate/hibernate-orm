@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.idgen.enhanced.table;
 
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -18,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/table/Pooled.hbm.xml" )
+@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/table/Pooled.orm.xml" )
 @SessionFactory
 public class PooledTableTest {
 	private static final long INITIAL_VALUE = 1;
@@ -28,8 +29,9 @@ public class PooledTableTest {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getGenerator() ).isInstanceOf( TableGenerator.class );
-		final TableGenerator generator = (TableGenerator) persister.getGenerator();
+		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );
+		assertThat( ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate() ).isInstanceOf( TableGenerator.class );
+		final TableGenerator generator = (TableGenerator) ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate();
 		assertThat( generator.getOptimizer() ).isInstanceOf( PooledOptimizer.class );
 		final PooledOptimizer optimizer = (PooledOptimizer) generator.getOptimizer();
 		final int increment = optimizer.getIncrementSize();

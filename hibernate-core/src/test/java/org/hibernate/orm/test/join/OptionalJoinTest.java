@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/join/Thing.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/join/Thing.orm.xml"
 )
 @SessionFactory
 public class OptionalJoinTest {

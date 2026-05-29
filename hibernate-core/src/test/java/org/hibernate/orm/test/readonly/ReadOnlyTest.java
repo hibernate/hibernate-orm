@@ -27,10 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/readonly/DataPoint.hbm.xml",
-				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
-		}
+		annotatedClasses = {DataPoint.class, Owner.class, Info.class, Container.class, TextHolder.class}
 )
 public class ReadOnlyTest extends AbstractReadOnlyTest {
 

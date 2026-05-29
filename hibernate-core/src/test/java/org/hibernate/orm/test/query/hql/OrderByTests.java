@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/hql/Animal.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/hql/Animal.orm.xml"
 )
 @SessionFactory(
 		generateStatistics = true

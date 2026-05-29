@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping">
+    <package>org.hibernate.orm.test.ordered</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-lazy>true</default-lazy>
+    <entity class="Search" metadata-complete="true">
+        <table name="Search"/>
+        <attributes>
+            <id name="searchString">
+                <column name="searchString"/>
+            </id>
+            <element-collection name="searchResults" target-class="java.lang.String" fetch="LAZY" classification="SET">
+                <order-by>lower(text) asc</order-by>
+                <column name="text"/>
+                <collection-table>
+                    <join-column name="searchString"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+</entity-mappings>

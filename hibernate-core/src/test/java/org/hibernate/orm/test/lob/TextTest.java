@@ -12,6 +12,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
  *
  * @author Gail Badner
  */
-@DomainModel(xmlMappings = "org/hibernate/orm/test/lob/TextMappings.hbm.xml")
+@DomainModel(xmlMappings = "mappings/lob/TextMappings.orm.xml")
 public class TextTest extends LongStringTest {
 }

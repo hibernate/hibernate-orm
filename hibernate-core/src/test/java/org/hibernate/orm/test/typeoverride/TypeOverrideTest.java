@@ -33,8 +33,8 @@ import static org.junit.Assert.assertSame;
 public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
-	protected String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/typeoverride/Entity.hbm.xml" };
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Entity.class };
 	}
 
 	@Override

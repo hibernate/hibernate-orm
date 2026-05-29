@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.event.collection.detached.MultipleCollectionEntity"
+            access="FIELD" metadata-complete="true">
+        <table name="PARENT"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value/>
+            </id>
+            <basic name="text">
+                <column name="TEXT"/>
+            </basic>
+            <one-to-many name="refEntities1"
+                         target-entity="org.hibernate.orm.test.event.collection.detached.MultipleCollectionRefEntity1"
+                         mapped-by="multipleCollectionEntity"
+                         orphan-removal="true"
+                         classification="BAG">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <one-to-many name="refEntities2"
+                         target-entity="org.hibernate.orm.test.event.collection.detached.MultipleCollectionRefEntity2"
+                         mapped-by="multipleCollectionEntity"
+                         orphan-removal="true"
+                         classification="BAG">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.event.collection.detached.MultipleCollectionRefEntity1"
+            access="FIELD" metadata-complete="true">
+        <table name="CHILD1"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value/>
+            </id>
+            <basic name="text">
+                <column name="TEXT"/>
+            </basic>
+            <many-to-one name="multipleCollectionEntity"
+                         target-entity="org.hibernate.orm.test.event.collection.detached.MultipleCollectionEntity">
+                <join-column name="parent_id"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.event.collection.detached.MultipleCollectionRefEntity2"
+            access="FIELD" metadata-complete="true">
+        <table name="CHILD2"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value/>
+            </id>
+            <basic name="text">
+                <column name="TEXT"/>
+            </basic>
+            <many-to-one name="multipleCollectionEntity"
+                         target-entity="org.hibernate.orm.test.event.collection.detached.MultipleCollectionEntity">
+                <join-column name="parent_id"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+</entity-mappings>

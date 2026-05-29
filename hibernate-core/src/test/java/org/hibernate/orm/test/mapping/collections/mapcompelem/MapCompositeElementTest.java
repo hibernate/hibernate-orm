@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/mapping/collections/mapcompelem/ProductPart.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/mapping/collections/mapcompelem/ProductPart.orm.xml"
 )
 @SessionFactory
 public class MapCompositeElementTest {

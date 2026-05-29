@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.extendxml</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="Customer" metadata-complete="true">
+        <extends>org.hibernate.orm.test.extendxml.Person</extends>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <attributes>
+            <basic name="comments" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column unique="false" nullable="true" table="Person"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+            <many-to-one name="salesperson" fetch="LAZY" fetch-mode="SELECT" optional="true" not-found="EXCEPTION">
+                <join-column name="salesperson" unique="false" nullable="true" insertable="true" updatable="true" table="Person"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

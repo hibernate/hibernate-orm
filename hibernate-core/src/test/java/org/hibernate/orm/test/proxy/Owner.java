@@ -3,13 +3,21 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.proxy;
+
 import java.io.Serializable;
 
-/**
- * @author Steve Ebersole
- */
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+
+@Entity
 public class Owner implements Serializable {
+	@Id
+	@GeneratedValue
 	private Long id;
+
+	@Column(unique = true)
 	private String name;
 
 	public Owner() {

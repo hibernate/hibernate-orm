@@ -19,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @JiraKey(value = "HHH-11133")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/joined/JoinedSubclassInheritance.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/joined/JoinedSubclassInheritance.orm.xml"
 )
 @SessionFactory
 public class JoinedSubclassInheritanceTest {

@@ -27,9 +27,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Richard H. Tingstad
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/dialect/function/Product.hbm.xml"
-)
+@DomainModel(xmlMappings = "org/hibernate/orm/test/dialect/function/Product.orm.xml")
 @SessionFactory
 @RequiresDialect(value = SybaseASEDialect.class)
 public class SybaseASEFunctionTest {

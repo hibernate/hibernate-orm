@@ -28,8 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Steve Ebersole
  */
 @DomainModel(
-		annotatedClasses = { Producer.class, Product.class, Vendor.class },
-		xmlMappings = "org/hibernate/orm/test/stateless/fetching/Mappings.hbm.xml"
+		annotatedClasses = { Producer.class, Product.class, Vendor.class, User.class, Resource.class, Task.class }
 
 )
 @ServiceRegistry(

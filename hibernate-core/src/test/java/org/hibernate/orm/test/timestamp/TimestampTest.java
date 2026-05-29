@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/timestamp/User.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/timestamp/User.orm.xml"
 )
 @SessionFactory
 @ServiceRegistry(

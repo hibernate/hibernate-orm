@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.legacy.Foo"
+            access="PROPERTY" metadata-complete="true">
+        <table name="`foos`"/>
+        <secondary-table name="jointable">
+            <primary-key-join-column name="fooid"/>
+        </secondary-table>
+        <dynamic-insert>true</dynamic-insert>
+        <dynamic-update>true</dynamic-update>
+        <select-before-update>true</select-before-update>
+        <inheritance strategy="SINGLE_TABLE"/>
+        <discriminator-value>F</discriminator-value>
+        <discriminator-column name="`foo_subclass_1234`" discriminator-type="CHAR"/>
+        <attributes>
+            <id name="key">
+                <column name="`foo_idcolumnname123`" length="36"/>
+                <generated-value generator="uuid-hex"/>
+                <generic-generator name="uuid-hex" class="uuid.hex">
+                    <parameter name="seperator" value=":"/>
+                </generic-generator>
+            </id>
+            <basic name="long">
+                <column name="long_" nullable="false"/>
+            </basic>
+            <basic name="integer">
+                <column name="`integer__`" nullable="false"/>
+            </basic>
+            <basic name="float">
+                <column name="float_" nullable="false"/>
+            </basic>
+            <basic name="x"/>
+            <basic name="double">
+                <column name="double_"/>
+            </basic>
+            <basic name="date">
+                <column name="date_"/>
+                <temporal>DATE</temporal>
+            </basic>
+            <basic name="timestamp">
+                <column name="timestamp_"/>
+                <temporal>TIMESTAMP</temporal>
+            </basic>
+            <basic name="boolean">
+                <column name="boolean_"/>
+            </basic>
+            <basic name="bool">
+                <column name="bool_"/>
+            </basic>
+            <basic name="null">
+                <column name="null_"/>
+            </basic>
+            <basic name="short">
+                <column name="short_"/>
+            </basic>
+            <basic name="char">
+                <column name="char_"/>
+            </basic>
+            <basic name="zero">
+                <column name="zero_"/>
+            </basic>
+            <basic name="int">
+                <column name="int_"/>
+            </basic>
+            <basic name="string">
+                <column name="string_" length="48"/>
+            </basic>
+            <basic name="byte">
+                <column name="byte_"/>
+            </basic>
+            <basic name="yesno">
+                <column name="yesno"/>
+                <convert converter="org.hibernate.type.YesNoConverter"/>
+            </basic>
+            <basic name="blob">
+                <column name="blobb_"/>
+            </basic>
+            <basic name="nullBlob"/>
+            <basic name="binary">
+                <column name="bin_"/>
+            </basic>
+            <basic name="theLocale" access="FIELD">
+                <column name="`localeayzabc123`"/>
+            </basic>
+            <basic name="formula">
+                <formula>int_/2</formula>
+            </basic>
+            <basic name="joinedProp">
+                <column name="joinedProp" table="jointable"/>
+            </basic>
+            <version name="version"/>
+            <many-to-one name="foo"
+                         target-entity="org.hibernate.orm.test.legacy.Foo">
+                <join-column name="foo"/>
+            </many-to-one>
+            <embedded name="nullComponent"/>
+            <transient name="bytes"/>
+            <transient name="component"/>
+            <transient name="dependent"/>
+            <transient name="locale"/>
+            <transient name="versionCalendar"/>
+            <transient name="versionTimestamp"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.Trivial"
+            access="PROPERTY" metadata-complete="true">
+        <discriminator-value>T</discriminator-value>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.Abstract"
+            access="PROPERTY" metadata-complete="true">
+        <discriminator-value>null</discriminator-value>
+        <attributes>
+            <basic name="time">
+                <column name="the_time"/>
+            </basic>
+            <one-to-many name="abstracts"
+                         target-entity="org.hibernate.orm.test.legacy.Abstract"
+                         classification="SET">
+                <join-column name="abstract_id"/>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.Bar"
+            access="PROPERTY" metadata-complete="true">
+        <secondary-table name="bar_join_table">
+            <primary-key-join-column name="bar_id"/>
+        </secondary-table>
+        <discriminator-value>B</discriminator-value>
+        <attributes>
+            <basic name="barString">
+                <column name="bar_string" length="24"/>
+            </basic>
+            <basic name="name">
+                <column name="name_name" table="bar_join_table"/>
+            </basic>
+            <transient name="barComponent"/>
+            <transient name="baz"/>
+            <any name="object">
+                <discriminator>
+                    <column name="clazz" length="100"/>
+                    <mapping value="O">org.hibernate.orm.test.legacy.One</mapping>
+                    <mapping value="M">org.hibernate.orm.test.legacy.Many</mapping>
+                </discriminator>
+                <key>
+                    <type>long</type>
+                    <column name="gen_id"/>
+                </key>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </any>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.One"
+            access="PROPERTY" metadata-complete="true">
+        <table name="one"/>
+        <attributes>
+            <id name="key">
+                <column name="one_key"/>
+                <generated-value/>
+            </id>
+            <basic name="x"/>
+            <basic name="value">
+                <column name="one_value"/>
+            </basic>
+            <transient name="manies"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.Many"
+            access="PROPERTY" metadata-complete="true">
+        <table name="many"/>
+        <attributes>
+            <id name="key">
+                <column name="many_key"/>
+                <generated-value/>
+            </id>
+            <basic name="x"/>
+            <transient name="one"/>
+        </attributes>
+    </entity>
+
+    <embeddable class="org.hibernate.orm.test.legacy.FooComponent"
+                access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <basic name="name">
+                <column name="null_cmpnt_"/>
+            </basic>
+            <transient name="count"/>
+            <transient name="importantDates"/>
+            <transient name="subcomponent"/>
+            <transient name="fee"/>
+            <transient name="glarch"/>
+            <transient name="parent"/>
+            <transient name="baz"/>
+            <transient name="null"/>
+        </attributes>
+    </embeddable>
+
+</entity-mappings>

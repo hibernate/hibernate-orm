@@ -394,6 +394,14 @@ public abstract class QueryBinder {
 					}
 				}
 			}
+			else if ( genericInterface instanceof Class<?> classInterface ) {
+				// companion ($) interfaces extend the main repository
+				// without type arguments, appearing as a raw Class
+				final var result = repositoryEntityName( classInterface );
+				if ( result != null ) {
+					return result;
+				}
+			}
 		}
 		return null;
 	}

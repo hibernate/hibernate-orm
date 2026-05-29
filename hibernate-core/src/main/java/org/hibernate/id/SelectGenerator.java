@@ -29,9 +29,9 @@ import static org.hibernate.internal.NaturalIdHelper.getNaturalIdPropertyNames;
  * or something similar, for example:
  * <pre>
  * &#64;Entity &#64;Table(name="TableWithPKAssignedByTrigger")
- * &#64;GenericGenerator(name = "triggered", type = SelectGenerator.class)
  * public class TriggeredEntity {
- *     &#64;Id @GeneratedValue(generator = "triggered")
+ *     &#64;Id
+ *     &#64;GenericGenerator(type = SelectGenerator.class)
  *     private Long id;
  *
  *     &#64;NaturalId

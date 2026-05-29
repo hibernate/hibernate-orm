@@ -20,6 +20,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
@@ -39,7 +40,9 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IncrementGenerator;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
@@ -553,12 +556,12 @@ public class DefaultCatalogAndSchemaTest
 	@Test
 	public void sequenceGenerator() {
 		org.hibernate.id.enhanced.SequenceStyleGenerator generator = idGenerator(
-				org.hibernate.id.enhanced.SequenceStyleGenerator.class,
+				SequenceStyleGenerator.class,
 				EntityWithDefaultQualifiersWithSequenceGenerator.class );
 		verifyOnlyQualifier( generator.getDatabaseStructure().getAllSqlForTests(), SqlType.RUNTIME,
 				EntityWithDefaultQualifiersWithSequenceGenerator.NAME, expectedDefaultQualifier() );
 
-		generator = idGenerator( org.hibernate.id.enhanced.SequenceStyleGenerator.class,
+		generator = idGenerator( SequenceStyleGenerator.class,
 				EntityWithExplicitQualifiersWithSequenceGenerator.class );
 		verifyOnlyQualifier( generator.getDatabaseStructure().getAllSqlForTests(), SqlType.RUNTIME,
 				EntityWithExplicitQualifiersWithSequenceGenerator.NAME, expectedExplicitQualifier() );
@@ -567,12 +570,12 @@ public class DefaultCatalogAndSchemaTest
 	@Test
 	public void enhancedSequenceGenerator() {
 		org.hibernate.id.enhanced.SequenceStyleGenerator generator = idGenerator(
-				org.hibernate.id.enhanced.SequenceStyleGenerator.class,
+				SequenceStyleGenerator.class,
 				EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.class );
 		verifyOnlyQualifier( generator.getDatabaseStructure().getAllSqlForTests(), SqlType.RUNTIME,
 				EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.NAME, expectedDefaultQualifier() );
 
-		generator = idGenerator( org.hibernate.id.enhanced.SequenceStyleGenerator.class,
+		generator = idGenerator( SequenceStyleGenerator.class,
 				EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.class );
 		verifyOnlyQualifier( generator.getDatabaseStructure().getAllSqlForTests(), SqlType.RUNTIME,
 				EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.NAME, expectedExplicitQualifier() );
@@ -580,12 +583,12 @@ public class DefaultCatalogAndSchemaTest
 
 	@Test
 	public void incrementGenerator() {
-		org.hibernate.id.IncrementGenerator generator = idGenerator( org.hibernate.id.IncrementGenerator.class,
+		IncrementGenerator generator = idGenerator( IncrementGenerator.class,
 				EntityWithDefaultQualifiersWithIncrementGenerator.class );
 		verifyOnlyQualifier( generator.getAllSqlForTests(), SqlType.RUNTIME,
 				EntityWithDefaultQualifiersWithIncrementGenerator.NAME, expectedDefaultQualifier() );
 
-		generator = idGenerator( org.hibernate.id.IncrementGenerator.class,
+		generator = idGenerator( IncrementGenerator.class,
 				EntityWithExplicitQualifiersWithIncrementGenerator.class );
 		verifyOnlyQualifier( generator.getAllSqlForTests(), SqlType.RUNTIME,
 				EntityWithExplicitQualifiersWithIncrementGenerator.NAME, expectedExplicitQualifier() );
@@ -595,7 +598,10 @@ public class DefaultCatalogAndSchemaTest
 		final AbstractEntityPersister persister = (AbstractEntityPersister) factoryScope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityClass );
-		return expectedType.cast( persister.getIdentifierGenerator() );
+		final Object generator = persister.getIdentifierGenerator() instanceof GenericGeneratorGeneration genericGenerator
+				? genericGenerator.getDelegate()
+				: persister.getIdentifierGenerator();
+		return expectedType.cast( generator );
 	}
 
 	private void verifyDDLCreateCatalogOrSchema(String sql) {
@@ -1224,8 +1230,7 @@ public class DefaultCatalogAndSchemaTest
 	public static class EntityWithDefaultQualifiersWithIncrementGenerator {
 		public static final String NAME = "EntityWithDefaultQualifiersWithIncrementGenerator";
 		@Id
-		@GeneratedValue(generator = NAME + "_generator")
-		@GenericGenerator(name = NAME + "_generator", strategy = "increment")
+		@GenericGenerator(type = IncrementGenerator.class)
 		private Long id;
 		@Basic
 		private String basic;
@@ -1236,8 +1241,7 @@ public class DefaultCatalogAndSchemaTest
 	public static class EntityWithExplicitQualifiersWithIncrementGenerator {
 		public static final String NAME = "EntityWithExplicitQualifiersWithIncrementGenerator";
 		@Id
-		@GeneratedValue(generator = NAME + "_generator")
-		@GenericGenerator(name = NAME + "_generator", strategy = "increment", parameters = {
+		@GenericGenerator(type = IncrementGenerator.class, parameters = {
 				@Parameter(name = "catalog", value = EXPLICIT_CATALOG),
 				@Parameter(name = "schema", value = EXPLICIT_SCHEMA)
 		})

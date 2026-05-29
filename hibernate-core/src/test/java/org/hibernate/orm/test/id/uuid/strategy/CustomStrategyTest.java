@@ -6,10 +6,10 @@ package org.hibernate.orm.test.id.uuid.strategy;
 
 import java.util.UUID;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.UUIDGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.dialect.SybaseDialect;
 
@@ -51,10 +51,7 @@ public class CustomStrategyTest {
 	static class Node {
 
 		@Id
-		@GeneratedValue( generator = "custom-uuid" )
-		@GenericGenerator(
-				name = "custom-uuid",
-				strategy = "org.hibernate.id.UUIDGenerator",
+		@GenericGenerator(type = UUIDGenerator.class,
 				parameters = {
 						@Parameter(
 								name = "uuid_gen_strategy_class",

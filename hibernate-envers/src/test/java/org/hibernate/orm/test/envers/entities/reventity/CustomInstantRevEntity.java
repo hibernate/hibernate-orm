@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
@@ -19,8 +20,7 @@ import org.hibernate.envers.RevisionTimestamp;
  * @author Chris Cranford
  */
 @Entity
-@GenericGenerator(name = "EnversTestingRevisionGenerator",
-		strategy = "org.hibernate.id.enhanced.TableGenerator",
+@GenericGenerator(type = TableGenerator.class,
 		parameters = {
 				@Parameter(name = "table_name", value = "REVISION_GENERATOR"),
 				@Parameter(name = "initial_value", value = "1"),
@@ -31,7 +31,7 @@ import org.hibernate.envers.RevisionTimestamp;
 @RevisionEntity
 public class CustomInstantRevEntity {
 	@Id
-	@GeneratedValue(generator = "EnversTestingRevisionGenerator")
+	@GeneratedValue
 	@RevisionNumber
 	private int customId;
 

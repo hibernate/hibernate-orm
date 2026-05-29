@@ -10,6 +10,7 @@ import jakarta.persistence.MappedSuperclass;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -44,15 +45,17 @@ public class GenericGeneratorOverrideTest {
 
 		Generator generator1 = p1.getGenerator();
 		Generator generator2 = p2.getGenerator();
-		assertThat( generator1 ).isInstanceOf( UUIDGenerator.class );
-		assertThat( generator2 ).isInstanceOf( UUIDHexGenerator.class );
+		assertThat( generator1 ).isInstanceOf( GenericGeneratorGeneration.class );
+		assertThat( ( (GenericGeneratorGeneration) generator1 ).getDelegate() ).isInstanceOf( UUIDGenerator.class );
+		assertThat( generator2 ).isInstanceOf( GenericGeneratorGeneration.class );
+		assertThat( ( (GenericGeneratorGeneration) generator2 ).getDelegate() ).isInstanceOf( UUIDHexGenerator.class );
 	}
 
 	@MappedSuperclass
-	@GenericGenerator(name = "my-generator", strategy = "uuid2")
+	@GenericGenerator(type = UUIDGenerator.class)
 	public static abstract class BaseEntity {
 		@Id
-		@GeneratedValue(generator = "my-generator")
+		@GeneratedValue
 		private String id;
 
 		public String getId() {
@@ -71,7 +74,7 @@ public class GenericGeneratorOverrideTest {
 	}
 
 	@jakarta.persistence.Entity(name = "Entity2")
-	@GenericGenerator(name = "my-generator", strategy = "uuid.hex")
+	@GenericGenerator(type = UUIDHexGenerator.class)
 	public static class Entity2 extends BaseEntity {
 		public Entity2() {
 		}

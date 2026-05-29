@@ -62,7 +62,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class IdTest {
 
 	@Test
-	public void testGenericGenerator(SessionFactoryScope scope) {
+	public void testClassLevelGenericGenerator(SessionFactoryScope scope) {
 		SoundSystem system = new SoundSystem();
 		Furniture fur = new Furniture();
 		scope.inTransaction(
@@ -87,8 +87,7 @@ public class IdTest {
 	}
 
 	@Test
-	public void testGenericGenerators(SessionFactoryScope scope) {
-		// Ensures that GenericGenerator annotations wrapped inside a GenericGenerators holder are bound correctly
+	public void testGenericGenerator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					Monkey monkey = new Monkey();

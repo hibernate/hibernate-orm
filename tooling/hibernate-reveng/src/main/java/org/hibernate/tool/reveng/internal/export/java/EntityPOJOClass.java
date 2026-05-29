@@ -212,24 +212,21 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 	public String generateAnnIdGenerator() {
 		KeyValue identifier = clazz.getIdentifier();
-		String strategy;
-		Properties properties;
 		StringBuffer wholeString = new StringBuffer( "    " );
 		if ( identifier instanceof Component ) {
 
 			wholeString.append( AnnotationBuilder.createAnnotation( importType("jakarta.persistence.EmbeddedId") ).getResult());
 		}
 		else if (identifier instanceof EnhancedBasicValue enhancedBasicValue) {
-			strategy = enhancedBasicValue.getIdentifierGeneratorStrategy();
-			properties = c2j.getFilteredIdentifierGeneratorProperties(enhancedBasicValue);
+			String strategy = enhancedBasicValue.getIdentifierGeneratorStrategy();
+			Properties properties = c2j.getFilteredIdentifierGeneratorProperties(enhancedBasicValue);
 			StringBuilder idResult = new StringBuilder();
 			AnnotationBuilder builder = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.Id") );
 			idResult.append(builder.getResult());
 			idResult.append(" ");
 
-			boolean isGenericGenerator = false; //TODO: how to handle generic now??
+			boolean isGenericGenerator = false;
 			if ( !"assigned".equals( strategy ) ) {
-
 				if ( !"native".equals( strategy ) ) {
 					if ( "identity".equals( strategy ) ) {
 						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") );
@@ -262,9 +259,6 @@ public class EntityPOJOClass extends BasicPOJOClass {
 					}
 					else {
 						isGenericGenerator = true;
-						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") );
-						builder.addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
-						idResult.append(builder.getResult());
 					}
 				}
 				else {
@@ -274,11 +268,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			}
 			if ( isGenericGenerator ) {
 				builder.resetAnnotation( importType("org.hibernate.annotations.GenericGenerator") )
-						.addQuotedAttribute( "name", clazz.getClassName()+"IdGenerator" )
-						.addQuotedAttribute( "strategy", strategy);
+						.addAttribute( "type", importType( generatorClassName( strategy ) ) + ".class" );
 
 				List<AnnotationBuilder> params = new ArrayList<>();
-				//wholeString.append( "parameters = {  " );
 				if ( properties != null ) {
 					Enumeration<?> propNames = properties.propertyNames();
 					while ( propNames.hasMoreElements() ) {
@@ -296,6 +288,21 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			wholeString.append( idResult );
 		}
 		return wholeString.toString();
+	}
+
+	private String generatorClassName(String strategy) {
+		return switch ( strategy ) {
+			case "enhanced-sequence", "sequence" -> org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName();
+			case "enhanced-table", "table" -> org.hibernate.id.enhanced.TableGenerator.class.getName();
+			case "identity" -> org.hibernate.id.IdentityGenerator.class.getName();
+			case "increment" -> org.hibernate.id.IncrementGenerator.class.getName();
+			case "foreign" -> org.hibernate.id.ForeignGenerator.class.getName();
+			case "uuid", "uuid.hex" -> org.hibernate.id.UUIDHexGenerator.class.getName();
+			case "uuid2" -> org.hibernate.id.UUIDGenerator.class.getName();
+			case "select" -> org.hibernate.id.SelectGenerator.class.getName();
+			case "guid" -> org.hibernate.id.GUIDGenerator.class.getName();
+			default -> strategy;
+		};
 	}
 
 	private void buildAnnTableGenerator(StringBuffer wholeString, Properties properties) {

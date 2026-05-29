@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.annotations.id.generationmappings;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.PooledOptimizer;
@@ -136,8 +137,9 @@ public class NewGeneratorMappingsTest  {
 		EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(
 				DedicatedSequenceEntity1.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
-		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
-		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
+		assertTrue( GenericGeneratorGeneration.class.isInstance( generator ) );
+		SequenceStyleGenerator seqGenerator =
+				(SequenceStyleGenerator) ( (GenericGeneratorGeneration) generator ).getDelegate();
 		assertEquals(
 				"DEDICATED_SEQ_TBL1" + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
 				seqGenerator.getDatabaseStructure().getPhysicalName().render()
@@ -146,8 +148,8 @@ public class NewGeneratorMappingsTest  {
 		// Checking second entity.
 		persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(DedicatedSequenceEntity2.class.getName());
 		generator = persister.getIdentifierGenerator();
-		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
-		seqGenerator = (SequenceStyleGenerator) generator;
+		assertTrue( GenericGeneratorGeneration.class.isInstance( generator ) );
+		seqGenerator = (SequenceStyleGenerator) ( (GenericGeneratorGeneration) generator ).getDelegate();
 		assertEquals(
 				"DEDICATED_SEQ_TBL2" + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
 				seqGenerator.getDatabaseStructure().getPhysicalName().render()

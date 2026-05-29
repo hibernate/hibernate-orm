@@ -11,7 +11,6 @@ import jakarta.persistence.TableGenerator;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -67,7 +66,6 @@ import java.util.function.Consumer;
 
 import static jakarta.persistence.GenerationType.AUTO;
 import static java.util.Collections.emptyMap;
-import static org.hibernate.boot.model.internal.AnnotationHelper.extractParameterMap;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
 import static org.hibernate.boot.model.internal.Constructors.construct;
@@ -249,7 +247,7 @@ public class GeneratorBinder {
 		if ( definition == null ) {
 			throw new AnnotationException( "No id generator was declared with the name '" + generatorName
 					+ "' specified by '@GeneratedValue'"
-					+ " (define a named generator using '@SequenceGenerator', '@TableGenerator', or '@GenericGenerator')" );
+					+ " (define a named generator using '@SequenceGenerator' or '@TableGenerator')" );
 		}
 		configuration.putAll( definition.getParameters() );
 		// This is quite vague in the spec,
@@ -313,8 +311,6 @@ public class GeneratorBinder {
 				usage -> consumer.accept( buildTableIdGenerator( usage ) ) );
 		annotatedElement.forEachAnnotationUsage( SequenceGenerator.class, modelsContext,
 				usage -> consumer.accept( buildSequenceIdGenerator( usage ) ) );
-		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, modelsContext,
-				usage -> consumer.accept( buildIdGenerator( usage ) ) );
 	}
 
 	public static void registerGlobalGenerators(
@@ -332,27 +328,6 @@ public class GeneratorBinder {
 					context
 			);
 		}
-	}
-
-	private static IdentifierGeneratorDefinition buildIdGenerator(GenericGenerator generatorAnnotation) {
-		final var definitionBuilder = genericDefinitionBuilder( generatorAnnotation );
-		if ( BOOT_LOGGER.isTraceEnabled() ) {
-			BOOT_LOGGER.addedGenerator( definitionBuilder.getName(), definitionBuilder.getStrategy() );
-		}
-		return definitionBuilder.build();
-	}
-
-	private static IdentifierGeneratorDefinition.Builder genericDefinitionBuilder(GenericGenerator generatorAnnotation) {
-		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-		definitionBuilder.setName( generatorAnnotation.name() );
-		final var generatorClass = generatorAnnotation.type();
-		final String strategy =
-				generatorClass.equals( Generator.class )
-						? generatorAnnotation.strategy()
-						: generatorClass.getName();
-		definitionBuilder.setStrategy( strategy );
-		definitionBuilder.addParams( extractParameterMap( generatorAnnotation.parameters() ) );
-		return definitionBuilder;
 	}
 
 	private static IdentifierGeneratorDefinition buildSequenceIdGenerator(SequenceGenerator generatorAnnotation) {

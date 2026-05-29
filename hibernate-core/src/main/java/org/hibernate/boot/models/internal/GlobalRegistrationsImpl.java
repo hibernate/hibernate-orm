@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeRegistrationImpl;
@@ -113,7 +112,6 @@ import static org.hibernate.boot.models.HibernateAnnotations.COMPOSITE_TYPE_REGI
 import static org.hibernate.boot.models.HibernateAnnotations.CONVERTER_REGISTRATION;
 import static org.hibernate.boot.models.HibernateAnnotations.EMBEDDABLE_INSTANTIATOR_REGISTRATION;
 import static org.hibernate.boot.models.HibernateAnnotations.FILTER_DEF;
-import static org.hibernate.boot.models.HibernateAnnotations.GENERIC_GENERATOR;
 import static org.hibernate.boot.models.HibernateAnnotations.JAVA_TYPE_REGISTRATION;
 import static org.hibernate.boot.models.HibernateAnnotations.JDBC_TYPE_REGISTRATION;
 import static org.hibernate.boot.models.JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY;
@@ -807,11 +805,6 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 					sourceModelContext,
 					tableGenerator -> collectTableGenerator( classDetails, tableGenerator )
 			);
-			classDetails.forEachAnnotationUsage(
-					GENERIC_GENERATOR,
-					sourceModelContext,
-					this::collectGenericGenerator
-			);
 		}
 	}
 
@@ -827,11 +820,6 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 					TABLE_GENERATOR,
 					sourceModelContext,
 					tableGenerator -> collectTableGenerator( memberDetails, tableGenerator )
-			);
-			memberDetails.forEachAnnotationUsage(
-					GENERIC_GENERATOR,
-					sourceModelContext,
-					this::collectGenericGenerator
 			);
 		}
 	}
@@ -1010,22 +998,18 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 
 	private void collectGenericGenerators(List<JaxbGenericIdGeneratorImpl> jaxbGenerators) {
 		jaxbGenerators.forEach( jaxbGenerator -> {
-			final var annotation = GENERIC_GENERATOR.createUsage( sourceModelContext );
-			annotation.name( jaxbGenerator.getName() );
-			annotation.strategy( jaxbGenerator.getClazz() );
-			annotation.parameters( XmlAnnotationHelper.collectParameters(
+			final Map<String,String> parameters = new HashMap<>();
+			for ( var parameter : XmlAnnotationHelper.collectParameters(
 					jaxbGenerator.getParameters(),
-					sourceModelContext
+					sourceModelContext ) ) {
+				parameters.put( parameter.name(), parameter.value() );
+			}
+			collectGenericGenerator( new GenericGeneratorRegistration(
+					jaxbGenerator.getName(),
+					jaxbGenerator.getClazz(),
+					parameters
 			) );
-
-			collectGenericGenerator( new GenericGeneratorRegistration( jaxbGenerator.getName(), annotation ) );
 		} );
-	}
-
-	public void collectGenericGenerator(GenericGenerator usage) {
-		if ( !usage.name().isEmpty() ) {
-			collectGenericGenerator( new GenericGeneratorRegistration( usage.name(), usage ) );
-		}
 	}
 
 	public void collectGenericGenerator(GenericGeneratorRegistration generatorRegistration) {

@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
@@ -18,19 +19,18 @@ import org.hibernate.envers.RevisionTimestamp;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-@GenericGenerator(name = "EnversTestingRevisionGenerator",
-				strategy = "org.hibernate.id.enhanced.TableGenerator",
-				parameters = {
-						@Parameter(name = "table_name", value = "REVISION_GENERATOR"),
-						@Parameter(name = "initial_value", value = "1"),
-						@Parameter(name = "increment_size", value = "1"),
-						@Parameter(name = "prefer_entity_table_as_segment_value", value = "true")
-				}
+@GenericGenerator(type = TableGenerator.class,
+		parameters = {
+				@Parameter(name = "table_name", value = "REVISION_GENERATOR"),
+				@Parameter(name = "initial_value", value = "1"),
+				@Parameter(name = "increment_size", value = "1"),
+				@Parameter(name = "prefer_entity_table_as_segment_value", value = "true")
+		}
 )
 @RevisionEntity(TestExceptionRevisionListener.class)
 public class ExceptionListenerRevEntity {
 	@Id
-	@GeneratedValue(generator = "EnversTestingRevisionGenerator")
+	@GeneratedValue
 	@RevisionNumber
 	private int id;
 

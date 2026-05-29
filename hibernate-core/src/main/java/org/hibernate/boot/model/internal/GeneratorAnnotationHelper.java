@@ -14,6 +14,8 @@ import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
+import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -21,7 +23,6 @@ import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.Configurable;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -48,9 +49,10 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.instantiateGener
 import static org.hibernate.boot.model.internal.GeneratorParameters.collectBaselineProperties;
 import static org.hibernate.boot.model.internal.GeneratorParameters.fallbackAllocationSize;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
+import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
+import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
 import static org.hibernate.internal.util.StringHelper.qualifier;
-import static org.hibernate.internal.util.config.ConfigurationHelper.setIfNotEmpty;
 
 /**
  * Helper for dealing with generators defined via annotations
@@ -379,30 +381,50 @@ public class GeneratorAnnotationHelper {
 			MetadataBuildingContext context) {
 		//generator settings
 		final Map<String,String> configuration = new HashMap<>();
-		setIfNotEmpty( generatorConfig.name(), IdentifierGenerator.GENERATOR_NAME, configuration );
-		configuration.put( IdentifierGenerator.ENTITY_NAME, entityMapping.getEntityName() );
-		configuration.put( IdentifierGenerator.JPA_ENTITY_NAME, entityMapping.getJpaEntityName() );
+		configuration.put( ENTITY_NAME, entityMapping.getEntityName() );
+		configuration.put( JPA_ENTITY_NAME, entityMapping.getJpaEntityName() );
 
 		applyAnnotationParameters( generatorConfig, configuration );
+		handleGenericGenerator( generatorName, determineStrategyName( generatorConfig ), configuration, idValue, context );
+	}
 
+	public static void handleGenericGenerator(
+			String generatorName,
+			GenericGeneratorRegistration generatorRegistration,
+			PersistentClass entityMapping,
+			SimpleValue idValue,
+			MetadataBuildingContext context) {
+		final Map<String,String> configuration = new HashMap<>( generatorRegistration.parameters() );
+		configuration.put( GENERATOR_NAME, generatorRegistration.name() );
+		configuration.put( ENTITY_NAME, entityMapping.getEntityName() );
+		configuration.put( JPA_ENTITY_NAME, entityMapping.getJpaEntityName() );
+		handleGenericGenerator( generatorName, generatorRegistration.strategy(), configuration, idValue, context );
+	}
+
+	private static void handleGenericGenerator(
+			String generatorName,
+			String strategy,
+			Map<String, String> configuration,
+			SimpleValue idValue,
+			MetadataBuildingContext context) {
 		configuration.put( PersistentIdentifierGenerator.TABLE, idValue.getTable().getName() );
 		if ( idValue.getColumnSpan() == 1 ) {
 			configuration.put( PersistentIdentifierGenerator.PK, idValue.getColumns().get(0).getName() );
 		}
 
 		GeneratorBinder.createGeneratorFrom(
-				new IdentifierGeneratorDefinition( generatorName,
-						determineStrategyName( generatorConfig ), configuration ),
+				new IdentifierGeneratorDefinition( generatorName, strategy, configuration ),
 				idValue,
 				context
 		);
 	}
 
 	private static String determineStrategyName(GenericGenerator generatorConfig) {
-		final var generatorClass = generatorConfig.type();
-		return Generator.class.equals( generatorClass )
-				? generatorConfig.strategy()
-				: generatorClass.getName();
+		if ( generatorConfig instanceof GenericGeneratorAnnotation generatorAnnotation
+				&& generatorAnnotation.strategy() != null ) {
+			return generatorAnnotation.strategy();
+		}
+		return generatorConfig.type().getName();
 	}
 
 	private static void applyAnnotationParameters(GenericGenerator generatorConfig, Map<String, String> configuration) {

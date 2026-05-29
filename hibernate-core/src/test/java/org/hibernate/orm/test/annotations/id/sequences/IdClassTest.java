@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
-@SuppressWarnings("unchecked")
 @DomainModel(annotatedClasses = Tower.class)
 @SessionFactory
 public class IdClassTest {

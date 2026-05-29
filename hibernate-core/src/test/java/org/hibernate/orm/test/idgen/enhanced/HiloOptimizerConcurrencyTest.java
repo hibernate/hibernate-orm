@@ -5,9 +5,9 @@
 package org.hibernate.orm.test.idgen.enhanced;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -91,8 +91,7 @@ public class HiloOptimizerConcurrencyTest {
 	public static class HibPerson {
 
 		@Id
-		@GeneratedValue(generator = "HIB_TGEN")
-		@GenericGenerator(name = "HIB_TGEN", strategy = "org.hibernate.id.enhanced.TableGenerator", parameters = {
+		@GenericGenerator(type = TableGenerator.class, parameters = {
 				@Parameter(name = "table_name", value = "HIB_TGEN"),
 				@Parameter(name = "prefer_entity_table_as_segment_value", value = "true"),
 				@Parameter(name = "optimizer", value = "hilo"),

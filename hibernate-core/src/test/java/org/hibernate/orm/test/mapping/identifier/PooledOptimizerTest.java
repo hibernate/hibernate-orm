@@ -6,11 +6,10 @@ package org.hibernate.orm.test.mapping.identifier;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.annotations.Parameter;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -46,13 +45,7 @@ public class PooledOptimizerTest {
 	public static class Product {
 
 		@Id
-		@GeneratedValue(
-			strategy = GenerationType.SEQUENCE,
-			generator = "product_generator"
-		)
-		@GenericGenerator(
-			name = "product_generator",
-			type = org.hibernate.id.enhanced.SequenceStyleGenerator.class,
+		@GenericGenerator(type = SequenceStyleGenerator.class,
 			parameters = {
 				@Parameter(name = "sequence_name", value = "product_sequence"),
 				@Parameter(name = "initial_value", value = "1"),

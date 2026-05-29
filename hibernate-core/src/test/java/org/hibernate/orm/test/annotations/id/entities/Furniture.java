@@ -4,10 +4,10 @@
  */
 package org.hibernate.orm.test.annotations.id.entities;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.IncrementGenerator;
 
 /**
  * @author Emmanuel Bernard
@@ -17,8 +17,7 @@ public class Furniture {
 	private Integer id;
 
 	@Id
-	@GeneratedValue(generator = "hibseq")
-	@GenericGenerator(name = "hibseq", strategy = "increment")
+	@GenericGenerator(type = IncrementGenerator.class)
 	public Integer getId() {
 		return id;
 	}

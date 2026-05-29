@@ -118,12 +118,8 @@ public class IdTest {
 		);
 	}
 
-	/*
-	 * Ensures that GenericGenerator annotations wrapped inside a
-	 * GenericGenerators holder are bound correctly
-	 */
 	@Test
-	public void testGenericGenerators(SessionFactoryScope scope) {
+	public void testClassLevelGenericGenerator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					Monkey monkey = new Monkey();

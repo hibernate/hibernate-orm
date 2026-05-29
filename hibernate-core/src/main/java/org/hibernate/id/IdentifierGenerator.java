@@ -73,7 +73,6 @@ public interface IdentifierGenerator extends BeforeExecutionGenerator, Exportabl
 	 * The configuration parameter holding the name of this
 	 * identifier generator.
 	 *
-	 * @see org.hibernate.annotations.GenericGenerator#name()
 	 * @see jakarta.persistence.GeneratedValue#generator()
 	 */
 	String GENERATOR_NAME = "GENERATOR_NAME";

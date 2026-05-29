@@ -8,9 +8,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -266,25 +264,6 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 			return;
 		}
 
-		final var localizedGenericMatch = findLocalizedMatch(
-				HibernateAnnotations.GENERIC_GENERATOR,
-				idMember,
-				classDetailsRegistry.getClassDetails( entityMapping.getClassName() ),
-				null,
-				null,
-				buildingContext
-		);
-		if ( localizedGenericMatch != null ) {
-			GeneratorAnnotationHelper.handleGenericGenerator(
-					entityMapping.getJpaEntityName(),
-					localizedGenericMatch,
-					entityMapping,
-					idValue,
-					buildingContext
-			);
-			return;
-		}
-
 		if ( handleAsMetaAnnotated() ) {
 			return;
 		}
@@ -385,25 +364,6 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 			return true;
 		}
 
-		final var localizedGenericMatch = findLocalizedMatch(
-				HibernateAnnotations.GENERIC_GENERATOR,
-				idMember,
-				classDetailsRegistry.getClassDetails( entityMapping.getClassName() ),
-				GenericGenerator::name,
-				generator,
-				buildingContext
-		);
-		if ( localizedGenericMatch != null ) {
-			GeneratorAnnotationHelper.handleGenericGenerator(
-					generator,
-					localizedGenericMatch,
-					entityMapping,
-					idValue,
-					buildingContext
-			);
-			return true;
-		}
-
 		return false;
 	}
 
@@ -427,7 +387,7 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		if ( globalGenericMatch != null ) {
 			GeneratorAnnotationHelper.handleGenericGenerator(
 					generator,
-					globalGenericMatch.configuration(),
+					globalGenericMatch,
 					entityMapping,
 					idValue,
 					buildingContext

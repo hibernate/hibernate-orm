@@ -9,7 +9,6 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.id.ForeignGenerator;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Basic;
 import jakarta.persistence.ManyToOne;
@@ -20,10 +19,7 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class Info {
 	@Id
-	@GeneratedValue( generator = "foreign" )
-	@GenericGenerator(
-			name = "foreign",
-			type = ForeignGenerator.class,
+	@GenericGenerator(type = ForeignGenerator.class,
 			parameters = @Parameter( name = "property", value = "owner" )
 	)
 	private Integer id;

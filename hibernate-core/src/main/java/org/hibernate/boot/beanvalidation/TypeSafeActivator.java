@@ -48,6 +48,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
 
+import org.hibernate.mapping.Table;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import jakarta.validation.Validation;
@@ -219,9 +220,28 @@ class TypeSafeActivator {
 							dialect,
 							constraintCompositionTypeCache
 					);
+					synchronizeAuxiliaryTables( persistentClass );
 				}
 				catch (Exception e) {
 					BEAN_VALIDATION_LOGGER.unableToApplyConstraints( className, e );
+				}
+			}
+		}
+	}
+
+	private static void synchronizeAuxiliaryTables(PersistentClass persistentClass) {
+		synchronizeTable( persistentClass.getAuxiliaryTable(), persistentClass.getTable() );
+		for ( var join : persistentClass.getJoins() ) {
+			synchronizeTable( join.getAuxiliaryTable(), join.getTable() );
+		}
+	}
+
+	private static void synchronizeTable(Table auxiliaryTable, Table sourceTable) {
+		if ( auxiliaryTable != null && auxiliaryTable != sourceTable ) {
+			for ( var sourceColumn : sourceTable.getColumns() ) {
+				final var targetColumn = auxiliaryTable.getColumn( sourceColumn );
+				if ( targetColumn != null ) {
+					targetColumn.copy( sourceColumn );
 				}
 			}
 		}

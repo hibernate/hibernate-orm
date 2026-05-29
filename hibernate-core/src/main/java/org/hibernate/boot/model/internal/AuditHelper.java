@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Changelog;
@@ -312,15 +313,8 @@ public final class AuditHelper {
 
 		// Table name: @Audited.CollectionTable name, or {OwnerJpaEntityName}_{ChildJpaEntityName}_AUD
 		final var referencedEntity = collector.getEntityBinding( referencedEntityName );
-		final String auditTableName;
-		if ( collectionAuditTable != null && !isBlank( collectionAuditTable.name() ) ) {
-			auditTableName = collectionAuditTable.name();
-		}
-		else {
-			final String ownerSimpleName = collection.getOwner().getJpaEntityName();
-			final String childSimpleName = referencedEntity.getJpaEntityName();
-			auditTableName = ownerSimpleName + "_" + childSimpleName + DEFAULT_TABLE_SUFFIX;
-		}
+		final String auditTableName =
+				auditTableName( collection, collectionAuditTable, referencedEntity );
 
 		final String auditSchema;
 		final String auditCatalog;
@@ -338,12 +332,14 @@ public final class AuditHelper {
 			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
 			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
-		final String schema = collectionAuditTable != null && !isBlank( collectionAuditTable.schema() )
-				? collectionAuditTable.schema()
-				: !isBlank( auditSchema ) ? auditSchema : ownerTable.getSchema();
-		final String catalog = collectionAuditTable != null && !isBlank( collectionAuditTable.catalog() )
-				? collectionAuditTable.catalog()
-				: !isBlank( auditCatalog ) ? auditCatalog : ownerTable.getCatalog();
+		final String schema =
+				collectionAuditTable != null && !isBlank( collectionAuditTable.schema() )
+						? collectionAuditTable.schema()
+						: !isBlank( auditSchema ) ? auditSchema : ownerTable.getSchema();
+		final String catalog =
+				collectionAuditTable != null && !isBlank( collectionAuditTable.catalog() )
+						? collectionAuditTable.catalog()
+						: !isBlank( auditCatalog ) ? auditCatalog : ownerTable.getCatalog();
 		final var middleAuditTable = collector.addTable(
 				schema,
 				catalog,
@@ -357,19 +353,11 @@ public final class AuditHelper {
 			final var keyColumns = new ArrayList<Column>();
 			// Copy the FK columns (parent key) from the collection's key
 			for ( var column : collection.getKey().getColumns() ) {
-				final var copy = column.clone();
-				copy.setUnique( false );
-				copy.setUniqueKeyName( null );
-				middleAuditTable.addColumn( copy );
-				keyColumns.add( copy );
+				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
 			}
 			// Copy the child identifier columns from the referenced entity
 			for ( var column : referencedEntity.getKey().getColumns() ) {
-				final var copy = column.clone();
-				copy.setUnique( false );
-				copy.setUniqueKeyName( null );
-				middleAuditTable.addColumn( copy );
-				keyColumns.add( copy );
+				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
 			}
 			// Audit columns
 			final var changesetIdColumn = createAuditColumn(
@@ -391,6 +379,21 @@ public final class AuditHelper {
 			enableAudit( collection, middleAuditTable, changesetIdColumn, modificationTypeColumn );
 			addTransactionEndColumns( auditTable, collection, middleAuditTable, context );
 		} );
+	}
+
+	@Nonnull
+	private static String auditTableName(
+			Collection collection,
+			@Nullable Audited.CollectionTable collectionAuditTable,
+			PersistentClass referencedEntity) {
+		if ( collectionAuditTable != null && !isBlank( collectionAuditTable.name() ) ) {
+			return collectionAuditTable.name();
+		}
+		else {
+			final String ownerSimpleName = collection.getOwner().getJpaEntityName();
+			final String childSimpleName = referencedEntity.getJpaEntityName();
+			return ownerSimpleName + "_" + childSimpleName + DEFAULT_TABLE_SUFFIX;
+		}
 	}
 
 	static void bindChangelog(
@@ -532,19 +535,18 @@ public final class AuditHelper {
 			String revTimestampName,
 			MetadataBuildingContext context) {
 		final var entityBinding = context.getMetadataCollector().getEntityBinding( entityName );
-		if ( entityBinding == null ) {
-			return;
-		}
-		final var revNumberProperty = requireBasicProperty(
-				entityBinding,
-				revNumberName,
-				"@Changelog.ChangesetId"
-		);
-		requireBasicProperty( entityBinding, revTimestampName, "@Changelog.Timestamp" );
-		// Add unique constraint on non-ID @ChangesetId
-		if ( revNumberProperty != entityBinding.getIdentifierProperty() ) {
-			for ( var column : revNumberProperty.getColumns() ) {
-				column.setUnique( true );
+		if ( entityBinding != null ) {
+			final var revNumberProperty = requireBasicProperty(
+					entityBinding,
+					revNumberName,
+					"@Changelog.ChangesetId"
+			);
+			requireBasicProperty( entityBinding, revTimestampName, "@Changelog.Timestamp" );
+			// Add unique constraint on non-ID @ChangesetId
+			if ( revNumberProperty != entityBinding.getIdentifierProperty() ) {
+				for ( var column : revNumberProperty.getColumns() ) {
+					column.setUnique( true );
+				}
 			}
 		}
 	}
@@ -631,14 +633,37 @@ public final class AuditHelper {
 	private static void copyTableColumns(Table sourceTable, Table targetTable, Set<String> excludedColumns) {
 		for ( var column : sourceTable.getColumns() ) {
 			if ( !excludedColumns.contains( column.getCanonicalName() ) ) {
-				final var copy = column.clone();
-				// Audit tables must not inherit unique constraints from the source,
-				// since the same value can appear at different revisions
-				copy.setUnique( false );
-				copy.setUniqueKeyName( null );
-				targetTable.addColumn( copy );
+				copyColumnRemovingUnique( column, targetTable );
 			}
 		}
+	}
+
+	private static Column copyColumnRemovingUnique(Column sourceColumn, Table auditTable) {
+		final var auditColumn = copyColumn( auditTable, sourceColumn );
+		removeUniqueConstraint( auditColumn );
+		return auditColumn;
+	}
+
+	@Nonnull
+	private static Column copyColumn(Table targetTable, Column column) {
+		final var targetColumn = targetTable.getColumn( column );
+		if ( targetColumn == null ) {
+			final var columnCopy = column.clone();
+			columnCopy.copy( column );
+			targetTable.addColumn( columnCopy );
+			return columnCopy;
+		}
+		else {
+			targetColumn.copy( column );
+			return targetColumn;
+		}
+	}
+
+	private static void removeUniqueConstraint(Column column) {
+		// Audit tables must not inherit unique constraints from the source,
+		// since the same value can appear at different revisions
+		column.setUnique( false );
+		column.setUniqueKeyName( null );
 	}
 
 	private static Column createAuditColumn(
@@ -654,7 +679,8 @@ public final class AuditHelper {
 		basicValue.addColumn( column );
 
 		final var database = context.getMetadataCollector().getDatabase();
-		setColumnName( columnName, column, database, context.getBuildingOptions().getPhysicalNamingStrategy() );
+		setColumnName( columnName, column, database,
+				context.getBuildingOptions().getPhysicalNamingStrategy() );
 		setTemporalColumnType( column, database, javaType );
 
 		return column;
@@ -693,19 +719,18 @@ public final class AuditHelper {
 			AuxiliaryTableHolder holder,
 			Table auditTable,
 			MetadataBuildingContext context) {
-		if ( !isValidityStrategy( context ) ) {
-			return;
+		if ( isValidityStrategy( context ) ) {
+			final var revEndColumn =
+					createAuditColumn(
+							auditTableAnnotation == null
+									? DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME
+									: auditTableAnnotation.invalidatingChangesetIdColumn(),
+							getChangesetIdType( context ), auditTable, context );
+			revEndColumn.setNullable( true );
+			auditTable.addColumn( revEndColumn );
+			holder.addAuxiliaryColumn( INVALIDATING_CHANGESET_ID, revEndColumn );
+			createChangesetForeignKey( auditTable, revEndColumn, context );
 		}
-		final var revEndColumn =
-				createAuditColumn(
-						auditTableAnnotation != null
-								? auditTableAnnotation.invalidatingChangesetIdColumn()
-								: DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME,
-						getChangesetIdType( context ), auditTable, context );
-		revEndColumn.setNullable( true );
-		auditTable.addColumn( revEndColumn );
-		holder.addAuxiliaryColumn( INVALIDATING_CHANGESET_ID, revEndColumn );
-		createChangesetForeignKey( auditTable, revEndColumn, context );
 	}
 
 	/**

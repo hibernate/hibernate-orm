@@ -103,8 +103,7 @@ public class RevisionNumberOverflowTest {
 	// number overflow; however the second attempt to persist an entity will.
 
 	@Entity(name = "CustomCappedRevEntity")
-	@GenericGenerator(name = "EnversCappedRevisionNumberGenerator",
-			strategy = "org.hibernate.id.enhanced.TableGenerator",
+	@GenericGenerator(type = TableGenerator.class,
 			parameters = {
 					@Parameter(name = TableGenerator.TABLE_PARAM, value = "REVISION_GENERATOR"),
 					@Parameter(name = TableGenerator.INITIAL_PARAM, value = "2147483647"),
@@ -114,7 +113,7 @@ public class RevisionNumberOverflowTest {
 	@RevisionEntity
 	public static class CustomCappedRevEntity {
 		@Id
-		@GeneratedValue(generator = "EnversCappedRevisionNumberGenerator")
+		@GeneratedValue
 		@RevisionNumber
 		private int rev;
 

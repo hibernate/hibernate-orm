@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.util.EnumSet;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -287,8 +289,7 @@ public class SequenceGeneratorIncrementTest {
 	@Entity(name = "TestEntity5")
 	public static class TestEntity5 {
 		@Id
-		@GeneratedValue(generator = "ID_GENERATOR")
-		@GenericGenerator(name = "ID_GENERATOR", strategy = "enhanced-sequence")
+		@GenericGenerator(type = SequenceStyleGenerator.class)
 		private Long id;
 
 		private String name;
@@ -297,8 +298,7 @@ public class SequenceGeneratorIncrementTest {
 	@Entity(name = "TestEntity6")
 	public static class TestEntity6 {
 		@Id
-		@GeneratedValue(generator = "ID_GENERATOR")
-		@GenericGenerator(name = "ID_GENERATOR", strategy = "enhanced-sequence", parameters = @org.hibernate.annotations.Parameter(
+		@GenericGenerator(type = SequenceStyleGenerator.class, parameters = @Parameter(
 				name = "increment_size",
 				value = "10"
 		)

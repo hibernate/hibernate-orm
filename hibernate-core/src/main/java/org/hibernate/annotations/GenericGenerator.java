@@ -4,100 +4,84 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.Incubating;
 import org.hibernate.generator.Generator;
+import org.hibernate.id.Configurable;
+import org.hibernate.id.GenericGeneratorGeneration;
+import org.hibernate.id.IdentifierGenerator;
 
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.GenerationType;
+
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PACKAGE;
-import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Defines a named identifier generator, usually an instance of the interface
- * {@link org.hibernate.id.IdentifierGenerator}. This allows the use of custom
- * identifier generation strategies beyond those provided by the four basic
- * JPA-defined {@linkplain jakarta.persistence.GenerationType generation types}.
+ * Specifies a {@linkplain Generator generator} used for generating entity
+ * identifiers, allowing the use of custom identifier generation strategies
+ * going beyond those provided by the four standard JPA-defined
+ * {@linkplain GenerationType generation types}.
  * <p>
- * A named generator may be associated with an entity class by:
- * <ul>
- * <li>defining a named generator using this annotation, specifying an
- *     implementation of {@code IdentifierGenerator} using {@link #type},
- *     then
- * <li>annotating the identifier property of the entity with the JPA-defined
- *     {@link jakarta.persistence.GeneratedValue @GeneratedValue} annotation,
- *     and
- * <li>using {@link jakarta.persistence.GeneratedValue#generator() generator}
- *     to specify the {@link #name()} of the generator defined using this
- *     annotation.
- * </ul>
- * <p>
- * If neither {@link #type} not {@link #strategy} is specified, Hibernate asks
- * {@linkplain org.hibernate.dialect.Dialect#getNativeIdentifierGeneratorStrategy
- * the dialect} to decide an appropriate strategy. This is equivalent to using
- * {@link jakarta.persistence.GenerationType#AUTO AUTO} in JPA.
- * <p>
- * For example, if we define a generator using:
+ * When {@code @GenericGenerator} directly annotates a field, the
+ * {@link jakarta.persistence.GeneratedValue @GeneratedValue} annotation is
+ * not required:
  * <pre>
- * &#64;GenericGenerator(name = "custom-generator",
- *                   type = org.hibernate.eg.CustomStringGenerator.class)
- * }</pre>
- * <p>
- * Then we may make use of it by annotating an identifier field as follows:
- * <pre>
- * &#64;Id &#64;GeneratedValue(generator = "custom-generator")
- * private String id;
+ * &#64;Id
+ * &#64;GenericGenerator(type = CustomUuidGenerator.class)
+ * private String uuid;
  * </pre>
  * <p>
- * The disadvantage of this approach is the use of stringly-typed names. An
- * alternative, completely typesafe, way to declare a generator and associate
- * it with an entity is provided by the {@link IdGeneratorType @IdGeneratorType}
- * meta-annotation.
+ * On the other hand, when {@code @GenericGenerator} annotates a class or
+ * package, {@code @GeneratedValue} must be applied to the generated id
+ * field:
+ * <pre>
+ * &#64;Entity
+ * &#64;GenericGenerator(type = CustomUuidGenerator.class)
+ * class Record {
+ *     &#64;Id
+ *     &#64;GeneratedValue
+ *     private String uuid;
+ *     ...
+ * }
+ * </pre>
  *
- * @see jakarta.persistence.GeneratedValue
+ * @apiNote This annotation has been substantially reworked after a period of
+ * being marked as deprecated, and its semantics have changed significantly.
+ * Previously, it registered a named generator using legacy infrastructure.
+ * It is now redefined as an {@link IdGeneratorType} and the deprecation has
+ * been reversed. Nevertheless, use of {@code @GenericGenerator} is still
+ * only recommended as a migrational bridge to the recommended approach of
+ * {@linkplain IdGeneratorType declaring a custom annotation} for each kind
+ * of generator.
  *
- * @deprecated Use the new approach based on {@link IdGeneratorType}.
+ * @see IdGeneratorType
  *
  * @author Emmanuel Bernard
  */
-@Target({PACKAGE, TYPE, METHOD, FIELD})
+@Target({METHOD, FIELD, TYPE, PACKAGE})
 @Retention(RUNTIME)
-@Repeatable(GenericGenerators.class)
-@Deprecated(since = "6.5", forRemoval = true)
+@Incubating
+@IdGeneratorType(GenericGeneratorGeneration.class)
 public @interface GenericGenerator {
 	/**
-	 * The name of the identifier generator. This is the name that may be specified by
-	 * the {@link jakarta.persistence.GeneratedValue#generator() generator} member of
-	 * the {@code @GeneratedValue} annotation.
-	 *
-	 * @see jakarta.persistence.GeneratedValue#generator
-	 */
-	String name();
-	/**
 	 * The type of identifier generator, a class implementing {@link Generator}
-	 * or, more commonly, {@link org.hibernate.id.IdentifierGenerator}.
-	 *
-	 * @since 6.2
+	 * or, more commonly, {@link IdentifierGenerator}.
 	 */
-	Class<? extends Generator> type() default Generator.class;
+	Class<? extends Generator> type();
+
 	/**
-	 * The type of identifier generator, the name of either:
-	 * <ul>
-	 * <li>a built-in Hibernate id generator, or
-	 * <li>a custom class implementing {@link Generator}, or, more commonly,
-	 *     {@link org.hibernate.id.IdentifierGenerator}.
-	 * </ul>
+	 * Parameters to be passed to {@link Configurable#configure} when the
+	 * identifier generator is instantiated.
 	 *
-	 * @deprecated use {@link #type()} for typesafety
-	 */
-	@Deprecated(since="6.2", forRemoval = true)
-	String strategy() default "native";
-	/**
-	 * Parameters to be passed to {@link org.hibernate.id.IdentifierGenerator#configure}
-	 * when the identifier generator is instantiated.
+	 * @apiNote Use of {@link Parameter @Parameter} to configure a generator
+	 * is verbose and completely lacks type safety&mdash;it's much better to
+	 * use {@link IdGeneratorType} to define a custom annotation type carrying
+	 * the configuration of the specific generator class.
 	 */
 	Parameter[] parameters() default {};
 }

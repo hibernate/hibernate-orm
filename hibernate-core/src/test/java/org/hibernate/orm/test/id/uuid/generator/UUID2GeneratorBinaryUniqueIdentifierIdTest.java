@@ -9,11 +9,11 @@ import java.util.Set;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.UUIDGenerator;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -60,8 +60,7 @@ public class UUID2GeneratorBinaryUniqueIdentifierIdTest {
 	static class FooEntity {
 
 		@Id
-		@GenericGenerator(name = "uuid", strategy = "uuid2")
-		@GeneratedValue(generator = "uuid")
+		@GenericGenerator(type = UUIDGenerator.class)
 		@Column(columnDefinition = "UNIQUEIDENTIFIER")
 		byte[] id;
 

@@ -5,11 +5,11 @@
 package org.hibernate.orm.test.idgen.enhanced.sequence;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -83,8 +83,9 @@ public class HiLoSequenceMismatchStrategyTest {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(TestEntity.class.getName());
-		assertThat( persister.getGenerator() ).isInstanceOf( SequenceStyleGenerator.class );
-		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getGenerator();
+		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );
+		final SequenceStyleGenerator generator =
+				(SequenceStyleGenerator) ( (GenericGeneratorGeneration) persister.getGenerator() ).getDelegate();
 		final Optimizer optimizer = generator.getOptimizer();
 		assertThat( optimizer ).isInstanceOf( HiLoOptimizer.class );
 		assertThat( optimizer.getIncrementSize() ).isNotEqualTo( 1 );
@@ -95,8 +96,7 @@ public class HiLoSequenceMismatchStrategyTest {
 	public static class TestEntity {
 
 		@Id
-		@GeneratedValue(generator = "hilo_sequence_generator")
-		@GenericGenerator(name = "hilo_sequence_generator", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
+		@GenericGenerator(type = SequenceStyleGenerator.class, parameters = {
 				@Parameter(name = "sequence_name", value = sequenceName),
 				@Parameter(name = "initial_value", value = "1"),
 				@Parameter(name = "increment_size", value = "10"),

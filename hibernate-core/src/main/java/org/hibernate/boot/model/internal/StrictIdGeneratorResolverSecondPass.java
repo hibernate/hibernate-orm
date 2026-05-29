@@ -198,7 +198,7 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 		if ( globalGenericMatch != null ) {
 			handleGenericGenerator(
 					globalRegistrationName,
-					globalGenericMatch.configuration(),
+					globalGenericMatch,
 					entityMapping,
 					idValue,
 					buildingContext

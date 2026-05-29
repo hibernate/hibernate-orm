@@ -16,6 +16,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.generator.Generator;
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -287,7 +288,8 @@ public class GeneratedValueTests {
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
-		assertTyping( IncrementGenerator.class, generator );
+		final GenericGeneratorGeneration genericGenerator = assertTyping( GenericGeneratorGeneration.class, generator );
+		assertTyping( IncrementGenerator.class, genericGenerator.getDelegate() );
 	}
 
 	@Test
@@ -396,8 +398,7 @@ public class GeneratedValueTests {
 		 * This entity does not have explicit {@link jakarta.persistence.TableGenerator} defined
 		 */
 		@Id
-		@GeneratedValue( strategy = GenerationType.AUTO, generator = "increment" )
-		@GenericGenerator( name = "increment", strategy = "increment" )
+		@GenericGenerator(type = IncrementGenerator.class )
 		public Integer id;
 		public String name;
 	}

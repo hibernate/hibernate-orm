@@ -7,12 +7,12 @@ package org.hibernate.orm.test.id;
 import java.sql.PreparedStatement;
 import java.util.List;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -81,14 +81,13 @@ public class PooledHiLoSequenceIdentifierTest {
 	public static class SequenceIdentifier {
 
 		@Id
-		@GenericGenerator(name = "sampleGenerator", strategy = "enhanced-sequence",
+		@GenericGenerator(type = SequenceStyleGenerator.class,
 				parameters = {
-						@org.hibernate.annotations.Parameter(name = "optimizer", value = "pooled"),
-						@org.hibernate.annotations.Parameter(name = "initial_value", value = "1"),
-						@org.hibernate.annotations.Parameter(name = "increment_size", value = "2")
+						@Parameter(name = "optimizer", value = "pooled"),
+						@Parameter(name = "initial_value", value = "1"),
+						@Parameter(name = "increment_size", value = "2")
 				}
 		)
-		@GeneratedValue(strategy = GenerationType.TABLE, generator = "sampleGenerator")
 		private Long id;
 
 		private String name;

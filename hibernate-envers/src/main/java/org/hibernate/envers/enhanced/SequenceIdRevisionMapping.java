@@ -4,7 +4,6 @@
  */
 package org.hibernate.envers.enhanced;
 
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Transient;
@@ -27,10 +26,8 @@ public class SequenceIdRevisionMapping implements Serializable {
 	private static final long serialVersionUID = 4159156677698841902L;
 
 	@Id
-	@GeneratedValue(generator = "RevisionNumberSequenceGenerator")
 	@GenericGenerator(
-			name = "RevisionNumberSequenceGenerator",
-			strategy = "org.hibernate.envers.enhanced.OrderedSequenceGenerator",
+			type = OrderedSequenceGenerator.class,
 			parameters = {
 					@Parameter(name = "table_name", value = "REVISION_GENERATOR"),
 					@Parameter(name = "sequence_name", value = "REVISION_GENERATOR"),

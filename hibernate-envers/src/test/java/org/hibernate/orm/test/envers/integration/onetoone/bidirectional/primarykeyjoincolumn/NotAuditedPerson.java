@@ -7,12 +7,12 @@ package org.hibernate.orm.test.envers.integration.onetoone.bidirectional.primary
 import java.io.Serializable;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.ForeignGenerator;
 import org.hibernate.annotations.Parameter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
@@ -24,8 +24,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 public class NotAuditedPerson implements Serializable {
 	@Id
 	@Column(name = "PERSON_ID")
-	@GeneratedValue(generator = "NotAuditedProxyKeyGenerator")
-	@GenericGenerator(name = "NotAuditedProxyKeyGenerator", strategy = "foreign",
+	@GenericGenerator(type = ForeignGenerator.class,
 					parameters = {@Parameter(name = "property", value = "account")})
 	private Long personId;
 

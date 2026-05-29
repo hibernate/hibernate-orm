@@ -1185,12 +1185,12 @@ public class BasicValue extends SimpleValue
 		}
 	}
 
-	private <A extends Annotation> A castAnnotationType(
+	private static <A extends Annotation> A castAnnotationType(
 			Annotation typeAnnotation, AnnotationBasedUserType<A, ?> annotationBased ) {
 		final var annotationType = annotationBased.getClass();
 		for ( var iface: annotationType.getGenericInterfaces() ) {
 			if ( iface instanceof ParameterizedType parameterizedType
-				&& parameterizedType.getRawType() == AnnotationBasedUserType.class ) {
+					&& parameterizedType.getRawType() == AnnotationBasedUserType.class ) {
 				final var typeArguments = parameterizedType.getActualTypeArguments();
 				if ( typeArguments.length > 0
 					&& typeArguments[0] instanceof Class<?> annotationClass ) {

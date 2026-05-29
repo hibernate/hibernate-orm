@@ -420,18 +420,11 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<GenericGenerators, GenericGeneratorsAnnotation> GENERIC_GENERATORS = new OrmAnnotationDescriptor<>(
-			GenericGenerators.class,
-			GenericGeneratorsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
-			false
-	);
 	OrmAnnotationDescriptor<GenericGenerator, GenericGeneratorAnnotation> GENERIC_GENERATOR = new OrmAnnotationDescriptor<>(
 			GenericGenerator.class,
 			GenericGeneratorAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE ),
-			false,
-			GENERIC_GENERATORS
+			false
 	);
 	OrmAnnotationDescriptor<HQLSelect, HQLSelectAnnotation> HQL_SELECT = new OrmAnnotationDescriptor<>(
 			HQLSelect.class,

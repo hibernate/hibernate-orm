@@ -18,9 +18,9 @@ import org.hibernate.id.SelectGenerator;
  * @author Steve Ebersole
  */
 @Entity @Table(name="my_entity")
-@GenericGenerator(name = "triggered", type = SelectGenerator.class)
+@GenericGenerator(type = SelectGenerator.class)
 public class MyEntity {
-	@Id @GeneratedValue(generator = "triggered")
+	@Id @GeneratedValue
 	@ColumnDefault("-666") //workaround for h2 'before insert' triggers being crap
 	private Long id;
 

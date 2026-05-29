@@ -120,22 +120,35 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	protected abstract void handleNamedAutoGenerator();
 
 	protected boolean handleAsMetaAnnotated() {
-		final Annotation fromMember = findGeneratorAnnotation( idMember );
+		final var fromMember = findGeneratorAnnotation( idMember );
 		if ( fromMember != null ) {
 			handleIdGeneratorType( fromMember, idValue, idMember, buildingContext );
 			return true;
 		}
 
-		final Annotation fromClass = findGeneratorAnnotation( idMember.getDeclaringType() );
+		final var entityType =
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() );
+		final var fromEntityClass = findGeneratorAnnotation( entityType );
+		if ( fromEntityClass != null ) {
+			handleIdGeneratorType( fromEntityClass, idValue, idMember, buildingContext );
+			return true;
+		}
+
+		final var declaringType = idMember.getDeclaringType();
+		final var fromClass =
+				entityType.getName().equals( declaringType.getName() )
+						? null
+						: findGeneratorAnnotation( declaringType );
 		if ( fromClass != null ) {
 			handleIdGeneratorType( fromClass, idValue, idMember, buildingContext );
 			return true;
 		}
 
 		final var packageInfoDetails =
-				locatePackageInfoDetails( idMember.getDeclaringType(), buildingContext );
+				locatePackageInfoDetails( declaringType, buildingContext );
 		if ( packageInfoDetails != null ) {
-			final Annotation fromPackage = findGeneratorAnnotation( packageInfoDetails );
+			final var fromPackage = findGeneratorAnnotation( packageInfoDetails );
 			if ( fromPackage != null ) {
 				handleIdGeneratorType( fromPackage, idValue, idMember, buildingContext );
 				return true;

@@ -16,7 +16,7 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.orm.test.hbm.index.JournalingSchemaToolingTarget;
+import org.hibernate.orm.test.xml.index.JournalingSchemaToolingTarget;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;

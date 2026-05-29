@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(
 		integrationSettings = {@Setting(name = AvailableSettings.JPA_METAMODEL_POPULATION, value = "enabled")},
-		xmlMappings = {"org/hibernate/orm/test/jpa/criteria/paths/dynamic-model.hbm.xml"}
+		xmlMappings = {"org/hibernate/orm/test/jpa/criteria/paths/dynamic-model.orm.xml"}
 )
 public class DynamicModelSingularAttributeJoinTest {
 	@Test

@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SuppressWarnings({"unchecked", "JUnitMalformedDeclaration"})
 @ServiceRegistryFunctionalTesting
-@DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass/Beings.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass/Beings.orm.xml")
 @SessionFactory
 public class UnionSubclassTest implements ServiceRegistryProducer {
 

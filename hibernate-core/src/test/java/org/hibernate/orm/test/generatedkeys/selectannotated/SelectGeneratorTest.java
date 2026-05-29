@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  */
 @DomainModel(
 		annotatedClasses = MyEntity.class,
-		xmlMappings = "org/hibernate/orm/test/generatedkeys/selectannotated/MyEntity.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/generatedkeys/selectannotated/MyEntity.orm.xml"
 )
 @SessionFactory
 @RequiresDialect(OracleDialect.class)

@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/jdbc/Mappings.hbm.xml")
+@DomainModel(annotatedClasses = {Person.class, Boat.class})
 @SessionFactory
 public class GeneralWorkTest {
 	@AfterEach

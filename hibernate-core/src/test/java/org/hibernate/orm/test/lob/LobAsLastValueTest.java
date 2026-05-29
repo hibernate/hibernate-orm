@@ -21,9 +21,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialectFeature(feature = DialectFeatureChecks.ForceLobAsLastValue.class)
 @JiraKey(value = "HHH-8382")
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/lob/LobAsLastValue.hbm.xml"
-)
+@DomainModel(xmlMappings = "mappings/lob/LobAsLastValue.orm.xml")
 @SessionFactory
 public class LobAsLastValueTest {
 	@AfterEach

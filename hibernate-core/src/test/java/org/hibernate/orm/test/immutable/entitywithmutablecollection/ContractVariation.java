@@ -12,7 +12,7 @@ public class ContractVariation implements Serializable {
 	private int id;
 	private Contract contract;
 	private String text;
-	private Set infos = new HashSet();
+	private Set<Info> infos = new HashSet<>();
 
 	public Contract getContract() {
 		return contract;
@@ -47,11 +47,11 @@ public class ContractVariation implements Serializable {
 		contract.getVariations().add(this);
 	}
 
-	public Set getInfos() {
+	public Set<Info> getInfos() {
 		return infos;
 	}
 
-	public void setInfos(Set infos) {
+	public void setInfos(Set<Info> infos) {
 		this.infos = infos;
 	}
 }

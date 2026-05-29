@@ -4,16 +4,26 @@
  */
 package org.hibernate.orm.test.jdbc;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 /**
- * Boat implementation
- *
  * @author Steve Ebersole
  */
+@Entity
+@Table(name = "T_JDBC_BOAT")
 public class Boat {
+	@Id
+	@GeneratedValue
 	private Long id;
 	private String tag;
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Person driver;
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Person boarder;
 
 	public Boat() {

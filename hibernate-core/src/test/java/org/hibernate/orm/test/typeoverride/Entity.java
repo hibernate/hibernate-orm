@@ -4,10 +4,16 @@
  */
 package org.hibernate.orm.test.typeoverride;
 
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+
 /**
  * @author Gail Badner
  */
+@jakarta.persistence.Entity
 public class Entity {
+	@Id
+	@GeneratedValue
 	private long id;
 	private String name;
 

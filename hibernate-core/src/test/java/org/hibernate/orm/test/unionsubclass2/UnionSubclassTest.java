@@ -30,7 +30,7 @@ import static org.junit.Assert.fail;
  * @author Gavin King
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass2/Person.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/unionsubclass2/Person.orm.xml")
 @SessionFactory
 public class UnionSubclassTest {
 	@AfterEach

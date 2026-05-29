@@ -26,7 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/keymanytoone/bidir/embedded/Mapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/keymanytoone/bidir/embedded/Mapping.orm.xml"
 )
 @SessionFactory(
 		generateStatistics = true

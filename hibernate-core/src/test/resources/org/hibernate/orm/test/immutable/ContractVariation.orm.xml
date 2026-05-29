@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.immutable.Info"
+            access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="text"/>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.immutable.Plan"
+            access="PROPERTY" metadata-complete="true">
+        <table name="tbl_plan"/>
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="description">
+                <column name="description" nullable="false"/>
+            </basic>
+            <many-to-many name="contracts"
+                          target-entity="org.hibernate.orm.test.immutable.Contract"
+                          fetch="EAGER"
+                          fetch-mode="JOIN"
+                          classification="SET">
+                <join-table name="plan_contract">
+                    <join-column name="col_plan"/>
+                    <inverse-join-column name="contract"/>
+                </join-table>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+                <mutable>true</mutable>
+            </many-to-many>
+            <one-to-many name="infos"
+                         target-entity="org.hibernate.orm.test.immutable.Info"
+                         orphan-removal="true"
+                         classification="SET">
+                <join-column name="col_plan"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+                <mutable>true</mutable>
+            </one-to-many>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.immutable.Party"
+            access="PROPERTY" metadata-complete="true">
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="name">
+                <column name="name" nullable="false"/>
+            </basic>
+            <many-to-one name="contract"
+                         target-entity="org.hibernate.orm.test.immutable.Contract"/>
+            <one-to-many name="infos"
+                         target-entity="org.hibernate.orm.test.immutable.Info"
+                         orphan-removal="true"
+                         classification="SET">
+                <join-column name="party"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+                <mutable>true</mutable>
+            </one-to-many>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.immutable.Contract"
+            access="PROPERTY" metadata-complete="true">
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="customerName">
+                <column name="customerName" nullable="false"/>
+            </basic>
+            <basic name="type">
+                <column name="`type`" nullable="false"/>
+            </basic>
+            <many-to-one name="parent"
+                         target-entity="org.hibernate.orm.test.immutable.Contract">
+                <join-column name="parent" insertable="false" updatable="false"/>
+            </many-to-one>
+            <one-to-many name="variations"
+                         target-entity="org.hibernate.orm.test.immutable.ContractVariation"
+                         mapped-by="contract"
+                         fetch="EAGER"
+                         fetch-mode="JOIN"
+                         classification="BAG">
+                <order-by>version asc</order-by>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+                <mutable>false</mutable>
+            </one-to-many>
+            <one-to-many name="subcontracts"
+                         target-entity="org.hibernate.orm.test.immutable.Contract"
+                         fetch="EAGER"
+                         fetch-mode="JOIN"
+                         classification="SET">
+                <join-column name="parent"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+                <mutable>true</mutable>
+            </one-to-many>
+            <many-to-many name="plans"
+                          target-entity="org.hibernate.orm.test.immutable.Plan"
+                          mapped-by="contracts"
+                          classification="SET">
+                <mutable>true</mutable>
+            </many-to-many>
+            <one-to-many name="parties"
+                         target-entity="org.hibernate.orm.test.immutable.Party"
+                         mapped-by="contract"
+                         fetch="EAGER"
+                         fetch-mode="JOIN"
+                         classification="SET">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+                <mutable>true</mutable>
+            </one-to-many>
+            <one-to-many name="infos"
+                         target-entity="org.hibernate.orm.test.immutable.Info"
+                         orphan-removal="true"
+                         classification="SET">
+                <join-column name="contract"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+                <mutable>true</mutable>
+            </one-to-many>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.immutable.ContractVariation"
+            access="PROPERTY" metadata-complete="true">
+        <mutable>false</mutable>
+        <attributes>
+            <id name="version"/>
+            <basic name="text">
+                <lob/>
+            </basic>
+            <many-to-one name="contract"
+                         target-entity="org.hibernate.orm.test.immutable.Contract"
+                         id="true"/>
+            <one-to-many name="infos"
+                         target-entity="org.hibernate.orm.test.immutable.Info"
+                         orphan-removal="true"
+                         classification="SET">
+                <join-column name="contractvariation"/>
+                <join-column name="version"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+                <mutable>true</mutable>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+</entity-mappings>

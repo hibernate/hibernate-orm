@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.hql.ComponentContainer"
+            access="FIELD" metadata-complete="true">
+        <table name="HQL_COMP_CONT"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+            <embedded name="address"/>
+        </attributes>
+    </entity>
+
+    <embeddable class="org.hibernate.orm.test.hql.ComponentContainer$Address$Zip"
+                access="FIELD" metadata-complete="true">
+        <attributes>
+            <basic name="code">
+                <column name="ZIP_CODE_ADDR"/>
+            </basic>
+            <basic name="plus4">
+                <column name="ZIP_PLUS4_ADDR"/>
+            </basic>
+        </attributes>
+    </embeddable>
+
+    <embeddable class="org.hibernate.orm.test.hql.ComponentContainer$Address"
+                access="FIELD" metadata-complete="true">
+        <attributes>
+            <basic name="street">
+                <column name="STREET_ADDR"/>
+            </basic>
+            <basic name="city">
+                <column name="CITY_ADDR"/>
+            </basic>
+            <basic name="state">
+                <column name="STATE_ADDR"/>
+            </basic>
+            <embedded name="zip"/>
+        </attributes>
+    </embeddable>
+
+</entity-mappings>

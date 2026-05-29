@@ -202,6 +202,81 @@ public class SimpleResultSetMappingTests {
 	}
 
 	@Test
+	void testTupleMappingWithColumnAliases(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var idMapping = ResultSetMapping.column( "id", Integer.class ).withAlias( "bookId" );
+			var nameMapping = ResultSetMapping.column( "name", String.class ).withAlias( "bookTitle" );
+			var mapping = ResultSetMapping.tuple( idMapping, nameMapping );
+			var result = session.createNativeQuery( "select id, name from books", mapping ).list();
+			assertThat( result ).hasSize( 1 );
+
+			final Tuple tuple = result.get( 0 );
+			assertThat( tuple.getElements() ).extracting( "alias" )
+					.containsExactly( "bookId", "bookTitle" );
+			assertThat( tuple.get( idMapping ) ).isEqualTo( 1 );
+			assertThat( tuple.get( nameMapping ) ).isEqualTo( "The Fellowship of the Ring" );
+			assertThat( tuple.get( "bookId", Integer.class ) ).isEqualTo( 1 );
+			assertThat( tuple.get( "bookTitle", String.class ) ).isEqualTo( "The Fellowship of the Ring" );
+			assertThat( tuple.get( 0, Integer.class ) ).isEqualTo( 1 );
+			assertThat( tuple.get( 1, String.class ) ).isEqualTo( "The Fellowship of the Ring" );
+			assertThat( tuple.toArray() ).containsExactly( 1, "The Fellowship of the Ring" );
+		} );
+	}
+
+	@Test
+	void testTupleMappingWithConstructorAlias(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var itemMapping = ResultSetMapping.constructor(
+					DropDownItem.class,
+					ResultSetMapping.column( "id", Integer.class ),
+					ResultSetMapping.column( "name", String.class )
+			).withAlias( "item" );
+			var isbnMapping = ResultSetMapping.column( "isbn", String.class ).withAlias( "bookIsbn" );
+			var mapping = ResultSetMapping.tuple( itemMapping, isbnMapping );
+			var result = session.createNativeQuery( "select id, name, isbn from books", mapping ).list();
+			assertThat( result ).hasSize( 1 );
+
+			final Tuple tuple = result.get( 0 );
+			assertThat( tuple.getElements() ).extracting( "alias" )
+					.containsExactly( "item", "bookIsbn" );
+			assertThat( tuple.get( itemMapping ) ).isInstanceOf( DropDownItem.class );
+			assertThat( tuple.get( "item", DropDownItem.class ) )
+					.extracting( "key", "text" )
+					.containsExactly( 1, "The Fellowship of the Ring" );
+			assertThat( tuple.get( isbnMapping ) ).isEqualTo( "123-456" );
+			assertThat( tuple.get( "bookIsbn", String.class ) ).isEqualTo( "123-456" );
+		} );
+	}
+
+	@Test
+	void testTupleMappingWithEntityAlias(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var bookMapping = ResultSetMapping.entity(
+					Book.class,
+					ResultSetMapping.field( Book_.id, "id" ),
+					ResultSetMapping.field( Book_.name, "name" ),
+					ResultSetMapping.field( Book_.isbn, "isbn" ),
+					ResultSetMapping.field( Book_.published, "published" )
+			).withAlias( "book" );
+			var labelMapping = ResultSetMapping.column( "label", String.class ).withAlias( "label" );
+			var mapping = ResultSetMapping.tuple( bookMapping, labelMapping );
+			var result = session.createNativeQuery(
+					"select id, name, isbn, published, name as label from books",
+					mapping
+			).list();
+			assertThat( result ).hasSize( 1 );
+
+			final Tuple tuple = result.get( 0 );
+			assertThat( tuple.getElements() ).extracting( "alias" )
+					.containsExactly( "book", "label" );
+			assertThat( tuple.get( bookMapping ) ).isInstanceOf( Book.class );
+			assertThat( tuple.get( "book", Book.class ) ).isInstanceOf( Book.class );
+			assertThat( tuple.get( labelMapping ) ).isEqualTo( "The Fellowship of the Ring" );
+			assertThat( tuple.get( "label", String.class ) ).isEqualTo( "The Fellowship of the Ring" );
+		} );
+	}
+
+	@Test
 	void testCompoundMapping(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			var mapping = ResultSetMapping.compound(

@@ -22,6 +22,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
@@ -34,6 +35,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -104,6 +106,14 @@ public final class TypeUtils {
 		return type.getKind().isPrimitive()
 				? castNonNull( PRIMITIVE_WRAPPERS.get( type.getKind() ) )
 				: TypeRenderingVisitor.toString( type );
+	}
+
+	public static String toPrimitiveTypeString(PrimitiveType primitiveType) {
+		String type = PRIMITIVES.get( primitiveType.getKind() );
+		if ( type != null ) {
+			return type;
+		}
+		return primitiveType.getKind().toString().toLowerCase( Locale.ROOT );
 	}
 
 	public static String toArrayTypeString(ArrayType type, Context context) {

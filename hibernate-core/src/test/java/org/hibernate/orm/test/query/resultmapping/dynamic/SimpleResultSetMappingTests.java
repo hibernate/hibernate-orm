@@ -57,6 +57,28 @@ public class SimpleResultSetMappingTests {
 		} );
 	}
 
+	@Test
+	void testWithResultSetMapping(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var query =
+					session.createNativeQuery( "select id, name from books where id = :id" )
+							.setParameter( "id", 1 );
+			var mapping = ResultSetMapping.constructor(
+					DropDownItem.class,
+					ResultSetMapping.column( "id", Integer.class ),
+					ResultSetMapping.column( "name", String.class )
+			);
+
+			var result =
+					query.withResultSetMapping( mapping )
+							.getSingleResult();
+
+			assertThat( result )
+					.extracting( "key", "text" )
+					.containsExactly( 1, "The Fellowship of the Ring" );
+		} );
+	}
+
 	/// @see NamedToDynamicTests#testConstructorConversions
 	@Test
 	void testConstructorMappings(SessionFactoryScope factoryScope) {

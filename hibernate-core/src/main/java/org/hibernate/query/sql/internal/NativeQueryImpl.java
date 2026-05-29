@@ -21,6 +21,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
+import jakarta.persistence.sql.EntityMapping;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
@@ -69,7 +70,6 @@ import org.hibernate.query.results.internal.ResultSetMappingImpl;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderInstantiation;
-import org.hibernate.query.results.internal.jpa.JpaMappingHelper;
 import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -78,6 +78,7 @@ import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.spi.SelectionQueryImplementor;
@@ -120,6 +121,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
 import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.query.results.internal.Builders.resultClassBuilder;
+import static org.hibernate.query.results.internal.jpa.JpaMappingHelper.toHibernateMapping;
 import static org.hibernate.query.results.spi.ResultSetMapping.resolveResultSetMapping;
 import static org.hibernate.query.sqm.internal.SqmUtil.isResultTypeAlwaysAllowed;
 import static org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard.isStandardRenderer;
@@ -156,6 +158,7 @@ public class NativeQueryImpl<R>
 	 */
 	public NativeQueryImpl(String incomingSqlString, SharedSessionContractImplementor session) {
 		super( session );
+		final var factory = session.getFactory();
 
 		originalSqlString = incomingSqlString;
 		querySpaces = new HashSet<>();
@@ -164,12 +167,12 @@ public class NativeQueryImpl<R>
 		sqlString = parameterInterpretation.getAdjustedSqlString();
 		parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+		parameterBindings = parameterMetadata.createBindings( factory );
 
 		// We don't know (yet).  Create an "implicit" ResultSetMapping...
 		resultType = null;
-		var resultSetMappingProducer = session.getFactory().getJdbcValuesMappingProducerProvider();
-		resultSetMapping = resultSetMappingProducer.buildResultSetMapping( sqlString, true, session.getFactory() );
+		var resultSetMappingProducer = factory.getJdbcValuesMappingProducerProvider();
+		resultSetMapping = resultSetMappingProducer.buildResultSetMapping( sqlString, true, factory );
 		resultMappingSuppliedToCtor = false;
 	}
 
@@ -425,6 +428,7 @@ public class NativeQueryImpl<R>
 			jakarta.persistence.sql.ResultSetMapping<R> resultSetMapping,
 			SharedSessionContractImplementor session) {
 		super( session );
+		final var factory = session.getFactory();
 		originalSqlString = sql;
 		startsWithSelect = true;
 		querySpaces = new HashSet<>();
@@ -433,9 +437,29 @@ public class NativeQueryImpl<R>
 		sqlString = parameterInterpretation.getAdjustedSqlString();
 		parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+		parameterBindings = parameterMetadata.createBindings( factory );
 
-		this.resultSetMapping = JpaMappingHelper.toHibernateMapping( resultSetMapping, session.getSessionFactory() );
+		this.resultSetMapping = toHibernateMapping( resultSetMapping, factory );
+		resultMappingSuppliedToCtor = true;
+		resultType = resultSetMapping.type();
+	}
+
+	private NativeQueryImpl(
+			NativeQueryImpl<?> original,
+			jakarta.persistence.sql.ResultSetMapping<R> resultSetMapping) {
+		super( original.session, original.queryOptions );
+		final var factory = session.getFactory();
+		originalSqlString = original.originalSqlString;
+		sqlString = original.sqlString;
+		startsWithSelect = true;
+		querySpaces = makeCopy( original.querySpaces );
+
+		parameterMetadata = original.parameterMetadata;
+		parameterOccurrences = original.parameterOccurrences;
+		parameterBindings = parameterMetadata.createBindings( factory );
+		original.getQueryParameterBindings().visitBindings( this::setBindValues );
+
+		this.resultSetMapping = toHibernateMapping( resultSetMapping, factory );
 		resultMappingSuppliedToCtor = true;
 		resultType = resultSetMapping.type();
 	}
@@ -446,6 +470,7 @@ public class NativeQueryImpl<R>
 			Class<R> resultClass,
 			SharedSessionContractImplementor session) {
 		super( session );
+		final var factory = session.getFactory();
 		originalSqlString = sql;
 		startsWithSelect = true;
 		querySpaces = new HashSet<>();
@@ -454,18 +479,18 @@ public class NativeQueryImpl<R>
 		sqlString = parameterInterpretation.getAdjustedSqlString();
 		parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+		parameterBindings = parameterMetadata.createBindings( factory );
 
 		resultType = resultClass;
 		if ( resultSetMappingMemento != null ) {
-			resultSetMapping = session.getFactory().getJdbcValuesMappingProducerProvider()
-					.buildResultSetMapping( null, true, session.getFactory() );
+			resultSetMapping = factory.getJdbcValuesMappingProducerProvider()
+					.buildResultSetMapping( null, true, factory );
 			resultSetMappingMemento.resolve( resultSetMapping, this::addSynchronizedQuerySpace, this );
 			resultMappingSuppliedToCtor = true;
 			handleExplicitResultSetMapping();
 		}
 		else {
-			resultSetMapping = resolveResultSetMapping( sql, true, session.getFactory() );
+			resultSetMapping = resolveResultSetMapping( sql, true, factory );
 			resultMappingSuppliedToCtor = false;
 			handleImplicitResultSetMapping( session );
 		}
@@ -843,8 +868,21 @@ public class NativeQueryImpl<R>
 
 	@Override
 	@Nonnull
-	public <T> SelectionQueryImplementor<T> withResultSetMapping(@Nonnull jakarta.persistence.sql.ResultSetMapping<T> mapping) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+	public <T> SelectionQueryImplementor<T> withResultSetMapping(
+			@Nonnull jakarta.persistence.sql.ResultSetMapping<T> mapping) {
+		errorIfNotSelectForSure();
+		final var query = new NativeQueryImpl<>( this, mapping );
+		query.applyEntityMappingLockMode( mapping );
+		return query;
+	}
+
+	private void applyEntityMappingLockMode(jakarta.persistence.sql.ResultSetMapping<?> mapping) {
+		if ( mapping instanceof EntityMapping<?> entityMapping ) {
+			final var lockMode = LockMode.fromJpaLockMode( entityMapping.lockMode() );
+			if ( lockMode.greaterThan( LockMode.READ ) ) {
+				setHibernateLockMode( lockMode );
+			}
+		}
 	}
 
 	@Override
@@ -2072,6 +2110,33 @@ public class NativeQueryImpl<R>
 
 	private static boolean constructorParameterMatches(ResultBuilder resultBuilder, Class<?> paramType) {
 		return resultBuilder.getJavaType() == canonicalize( paramType );
+	}
+
+	private <T> void setBindValues(QueryParameter<?> parameter, QueryParameterBinding<T> binding) {
+		final var parameterBinding = parameterBindings.getBinding( binding.getQueryParameter() );
+		parameterBinding.setType( binding.getType() );
+		if ( !binding.isBound() ) {
+			return;
+		}
+		final var explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
+		if ( explicitTemporalPrecision != null ) {
+			if ( binding.isMultiValued() ) {
+				parameterBinding.setBindValues( binding.getBindValues(), explicitTemporalPrecision );
+			}
+			else {
+				parameterBinding.setBindValue( binding.getBindValue(), explicitTemporalPrecision );
+			}
+		}
+		else {
+			final var bindType = binding.getBindType();
+			if ( binding.isMultiValued() ) {
+				parameterBinding.setBindValues( binding.getBindValues(), bindType );
+			}
+			else {
+				parameterBinding.setBindValue( binding.getBindValue(), bindType );
+			}
+		}
+		parameterBinding.setType( binding.getType() );
 	}
 
 	protected <T> void setTupleTransformerForResultType(Class<T> resultClass) {

@@ -11,11 +11,8 @@ import jakarta.persistence.sql.FieldMapping;
 import jakarta.persistence.sql.MemberMapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
@@ -186,7 +183,7 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 		}
 		else {
 			throw new IllegalArgumentException( "Unrecognized member mapping type: "
-			                                    + memberMapping.getClass().getName());
+												+ memberMapping.getClass().getName());
 		}
 	}
 

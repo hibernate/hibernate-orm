@@ -57,6 +57,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -1265,6 +1266,11 @@ public class OracleDialect extends Dialect {
 				case 4020 ->
 					// ORA-04020 deadlock detected while trying to lock object
 						new LockAcquisitionException( message, sqlException, sql );
+
+				// serialization failures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+				case 8177 ->
+					// ORA-08177: can't serialize access for this transaction
+						new TransactionSerializationException( message, sqlException, sql );
 
 				// query cancelled ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 				case 1013 ->

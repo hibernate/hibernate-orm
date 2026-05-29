@@ -12,7 +12,8 @@ import java.sql.SQLException;
  * A {@link JDBCException} indicating a transaction failed because it could not be placed into a serializable ordering
  * among all currently-executing transactions
  *
- * @apiNote At present, this is only used to represent {@code WriteTooOldError} on CockroachDB.
+ * @apiNote This is used to represent {@code WriteTooOldError} on CockroachDB and
+ *          {@code ORA-08177: can't serialize access for this transaction} on Oracle.
  *
  * @author Karel Maesen
  */

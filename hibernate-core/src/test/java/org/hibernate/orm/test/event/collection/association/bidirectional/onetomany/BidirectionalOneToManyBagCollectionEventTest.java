@@ -15,7 +15,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
  *
  * @author Gail Badner
  */
-@DomainModel(xmlMappings = "org/hibernate/orm/test/event/collection/association/bidirectional/onetomany/BidirectionalOneToManyBagMapping.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/event/collection/association/bidirectional/onetomany/BidirectionalOneToManyBagMapping.orm.xml")
 public class BidirectionalOneToManyBagCollectionEventTest extends AbstractAssociationCollectionEventTest {
 
 	@Override

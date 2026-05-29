@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/formula/EntityOfFormulas.hbm.xml")
+@DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/formula/EntityOfFormulas.orm.xml")
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJdbcEscapes.class )
 public class FormulaFromHbmTests {

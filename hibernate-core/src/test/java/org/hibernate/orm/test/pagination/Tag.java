@@ -4,8 +4,17 @@
  */
 package org.hibernate.orm.test.pagination;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
+import org.hibernate.annotations.DynamicUpdate;
+
+@Entity
+@DynamicUpdate
 public class Tag {
+	@Id
+	@GeneratedValue
 	private int id;
 	private String surrogate;
 

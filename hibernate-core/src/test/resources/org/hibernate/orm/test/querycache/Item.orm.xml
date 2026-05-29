@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.querycache.Item"
+            access="PROPERTY" metadata-complete="true">
+        <table name="Items"/>
+        <batch-size>9</batch-size>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="name">
+                <column name="name" nullable="false"/>
+            </basic>
+            <basic name="description">
+                <column name="description" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+</entity-mappings>

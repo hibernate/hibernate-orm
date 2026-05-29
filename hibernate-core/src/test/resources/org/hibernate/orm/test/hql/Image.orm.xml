@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.hql</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-lazy>true</default-lazy>
+    <entity class="Image" metadata-complete="true">
+        <table name="image"/>
+        <select-before-update>true</select-before-update>
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="native"/>
+            </id>
+            <basic name="name">
+                <column name="name"/>
+            </basic>
+            <basic name="sizeKb" fetch="EAGER">
+                <column name="size_mb">
+                    <read>size_mb * 1024.0</read>
+                    <write>? / 1024.0</write>
+                </column>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

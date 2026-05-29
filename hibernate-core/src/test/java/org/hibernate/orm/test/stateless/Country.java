@@ -4,8 +4,14 @@
  */
 package org.hibernate.orm.test.stateless;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
+@Entity
 public class Country {
+	@Id
+	@GeneratedValue
 	private Integer id;
 
 	public Integer getId() {

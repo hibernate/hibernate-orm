@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  * @author Gail Badner
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/ZeroScaleMapping.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/ZeroScaleMapping.orm.xml")
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
 public class BigIntegerSequenceGeneratorZeroScaleTest extends BigIntegerSequenceGeneratorTest {

@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity name="Marelo" metadata-complete="true">
+        <table name="MARELO"/>
+        <attributes>
+            <id name="mlmag">
+                <column name="MLMAG" length="5"/>
+                <target>java.lang.Integer</target>
+            </id>
+            <id name="mloca">
+                <column name="MLOCA" length="11"/>
+                <target>java.lang.String</target>
+            </id>
+            <basic name="mlink">
+                <column name="MLINK" length="10"/>
+                <target>java.lang.Long</target>
+            </basic>
+            <basic name="mlart">
+                <column name="MLART" length="13"/>
+                <target>java.lang.String</target>
+            </basic>
+            <basic name="mlido">
+                <column name="MLIDO" length="10"/>
+                <target>java.lang.Long</target>
+            </basic>
+            <basic name="mldtc">
+                <column name="MLDTC" length="7"/>
+                <target>java.sql.Timestamp</target>
+            </basic>
+            <basic name="mltop">
+                <column name="MLTOP" length="10"/>
+                <target>java.lang.String</target>
+            </basic>
+            <basic name="mlrag">
+                <column name="MLRAG" length="2"/>
+                <target>java.lang.String</target>
+            </basic>
+            <basic name="mlrop">
+                <column name="MLROP" length="4"/>
+                <target>java.lang.Short</target>
+            </basic>
+            <basic name="mlcom">
+                <column name="MLCOM" length="10"/>
+                <target>java.lang.Long</target>
+            </basic>
+            <basic name="matri">
+                <column name="MATRI" length="14"/>
+                <target>java.lang.String</target>
+            </basic>
+            <basic name="socod">
+                <column name="SOCOD" length="10"/>
+                <target>java.lang.String</target>
+            </basic>
+            <many-to-one name="commento" target-entity="Commento">
+                <join-column name="MLCOM" insertable="false" updatable="false"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+</entity-mappings>

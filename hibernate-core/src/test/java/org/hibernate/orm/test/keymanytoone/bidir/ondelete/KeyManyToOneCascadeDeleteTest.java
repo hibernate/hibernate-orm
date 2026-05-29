@@ -21,7 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/keymanytoone/bidir/ondelete/Mapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/keymanytoone/bidir/ondelete/Mapping.orm.xml"
 )
 @SessionFactory
 public class KeyManyToOneCascadeDeleteTest {

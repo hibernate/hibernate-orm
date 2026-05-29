@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+    <package>org.hibernate.orm.test.immutable</package>
+    <entity class="ImmutableEntityXmlMappingTest$TestEntity" metadata-complete="true">
+
+        <table name="test_entity"/>
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

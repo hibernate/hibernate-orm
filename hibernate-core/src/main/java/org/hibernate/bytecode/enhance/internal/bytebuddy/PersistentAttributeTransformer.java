@@ -45,6 +45,38 @@ import net.bytebuddy.utility.OpenedClassReader;
 final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
 
 	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
+	private static final ModifierContributor.ForType REMOVE_FINAL_TYPE_MODIFIER = new ModifierContributor.ForType() {
+		@Override
+		public int getMask() {
+			return EMPTY_MASK; // Do not add any modifier
+		}
+
+		@Override
+		public int getRange() {
+			return Opcodes.ACC_FINAL; // Remove the "final" modifier
+		}
+
+		@Override
+		public boolean isDefault() {
+			return false;
+		}
+	};
+	private static final ModifierContributor.ForMethod REMOVE_FINAL_METHOD_MODIFIER = new ModifierContributor.ForMethod() {
+		@Override
+		public int getMask() {
+			return EMPTY_MASK; // Do not add any modifier
+		}
+
+		@Override
+		public int getRange() {
+			return Opcodes.ACC_FINAL; // Remove the "final" modifier
+		}
+
+		@Override
+		public boolean isDefault() {
+			return false;
+		}
+	};
 	private static final ModifierContributor.ForField REMOVE_PRIVATE_FINAL_MODIFIER = new ModifierContributor.ForField() {
 		@Override
 		public int getMask() {
@@ -231,6 +263,15 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 
 	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder) {
 		boolean compositeOwner = false;
+
+		if ( enhancementContext.isEntityClass( managedCtClass )
+				|| enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+			builder = builder.visit(
+					new ModifierAdjustment()
+							.withTypeModifiers( REMOVE_FINAL_TYPE_MODIFIER )
+							.withMethodModifiers( NOT_HIBERNATE_GENERATED, REMOVE_FINAL_METHOD_MODIFIER )
+			);
+		}
 
 		// Remove the private modifier from the constructor, which allows to create a better InstantiationOptimizer
 		builder = builder.visit(

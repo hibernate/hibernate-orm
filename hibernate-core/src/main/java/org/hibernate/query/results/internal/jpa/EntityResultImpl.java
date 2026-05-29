@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.results.internal.jpa;
 
+import org.hibernate.LockMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -38,6 +39,7 @@ class EntityResultImpl<E> implements EntityResult<E> {
 
 	private final JavaType<E> javaType;
 	private final NavigablePath navigablePath;
+	private final String resultAlias;
 
 	private final Fetch identifierFetch;
 	private final BasicFetch<?> discriminatorFetch;
@@ -47,6 +49,8 @@ class EntityResultImpl<E> implements EntityResult<E> {
 			EntityMappingType entityDescriptor,
 			JavaType<E> javaType,
 			NavigablePath navigablePath,
+			String resultAlias,
+			LockMode lockMode,
 			FetchBuilder identifierFetchBuilder,
 			FetchBuilderBasicValued discriminatorFetchBuilder,
 			Map<String, FetchBuilder> attributeFetchBuilders,
@@ -55,6 +59,8 @@ class EntityResultImpl<E> implements EntityResult<E> {
 		this.entityDescriptor = entityDescriptor;
 		this.javaType = javaType;
 		this.navigablePath = navigablePath;
+		this.resultAlias = resultAlias;
+		creationState.getSqlAstCreationState().registerLockMode( resultAlias, lockMode );
 
 		this.identifierFetch = identifierFetchBuilder.buildFetch(
 				this,
@@ -115,7 +121,7 @@ class EntityResultImpl<E> implements EntityResult<E> {
 			AssemblerCreationState creationState) {
 		return new EntityInitializerImpl(
 				this,
-				getResultVariable(),
+				resultAlias,
 				identifierFetch,
 				discriminatorFetch,
 				null,
@@ -136,7 +142,7 @@ class EntityResultImpl<E> implements EntityResult<E> {
 
 	@Override
 	public String getResultVariable() {
-		return "";
+		return resultAlias;
 	}
 
 	@Override

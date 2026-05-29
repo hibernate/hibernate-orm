@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.query.resultmapping.dynamic;
 
 import jakarta.persistence.Tuple;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -140,6 +141,23 @@ public class SimpleResultSetMappingTests {
 	}
 
 	@Test
+	void testEntityMappingWithLockMode(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var mapping = ResultSetMapping.entity(
+					Book.class,
+					ResultSetMapping.field( Book_.id, "id" ),
+					ResultSetMapping.field( Book_.name, "name" ),
+					ResultSetMapping.field( Book_.isbn, "isbn" ),
+					ResultSetMapping.field( Book_.published, "published" )
+			).withLockMode( LockModeType.PESSIMISTIC_WRITE );
+			var result = session.createNativeQuery( "select * from books where id = 1", mapping )
+					.getSingleResult();
+
+			assertThat( session.getLockMode( result ) ).isEqualTo( LockModeType.PESSIMISTIC_WRITE );
+		} );
+	}
+
+	@Test
 	void testTupleMapping(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			var mapping = ResultSetMapping.tuple(
@@ -200,6 +218,32 @@ public class SimpleResultSetMappingTests {
 			assertThat( row[0] ).isEqualTo( 1 );
 			// should be the name
 			assertThat( row[1] ).isEqualTo( "The Fellowship of the Ring" );
+		} );
+	}
+
+	@Test
+	void testCompoundEntityMappingWithLockMode(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var bookMapping = ResultSetMapping.entity(
+					Book.class,
+					ResultSetMapping.field( Book_.id, "id" ),
+					ResultSetMapping.field( Book_.name, "name" ),
+					ResultSetMapping.field( Book_.isbn, "isbn" ),
+					ResultSetMapping.field( Book_.published, "published" )
+			).withLockMode( LockModeType.PESSIMISTIC_WRITE );
+			var mapping = ResultSetMapping.compound(
+					bookMapping,
+					ResultSetMapping.column( "label", String.class )
+			);
+
+			var result = session.createNativeQuery(
+					"select id, name, isbn, published, name as label from books where id = 1 for update",
+					mapping
+			).getSingleResult();
+
+			assertThat( result[0] ).isInstanceOf( Book.class );
+			assertThat( result[1] ).isEqualTo( "The Fellowship of the Ring" );
+			assertThat( session.getLockMode( result[0] ) ).isEqualTo( LockModeType.PESSIMISTIC_WRITE );
 		} );
 	}
 }

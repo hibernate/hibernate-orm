@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/unidir/ParentChild.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/unidir/ParentChild.orm.xml"
 //		annotatedClasses = { Parent1.class, Child1.class, Child2.class }
 )
 @SessionFactory

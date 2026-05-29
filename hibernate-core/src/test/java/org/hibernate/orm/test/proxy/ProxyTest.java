@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/proxy/DataPoint.hbm.xml"
+		annotatedClasses = { DataPoint.class, Container.class, Owner.class, Info.class }
 )
 @SessionFactory
 @ServiceRegistry(

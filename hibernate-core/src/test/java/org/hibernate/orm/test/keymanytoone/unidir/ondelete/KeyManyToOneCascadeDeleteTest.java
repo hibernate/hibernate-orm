@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 @DomainModel(xmlMappings = {
-		"org/hibernate/orm/test/keymanytoone/unidir/ondelete/Mapping.hbm.xml"
+		"org/hibernate/orm/test/keymanytoone/unidir/ondelete/Mapping.orm.xml"
 })
 @SessionFactory
 public class KeyManyToOneCascadeDeleteTest {

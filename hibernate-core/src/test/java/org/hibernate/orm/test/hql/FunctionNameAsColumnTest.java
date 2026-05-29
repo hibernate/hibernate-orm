@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SkipForDialect(dialectClass = PostgresPlusDialect.class,
 		reason = "Almost all of the tests result in 'ambiguous column' errors.")
 @ServiceRegistry(settings = @Setting(name = USE_QUERY_CACHE, value = "false"))
-@DomainModel(xmlMappings = "org/hibernate/orm/test/hql/FunctionNamesAsColumns.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/hql/FunctionNamesAsColumns.orm.xml")
 @SessionFactory
 public class FunctionNameAsColumnTest {
 

@@ -17,7 +17,7 @@ import org.junit.jupiter.api.AfterEach;
  */
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTemporaryTable.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/noninverse/ContractVariationVersionedOneToManyJoin.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/noninverse/ContractVariationVersionedOneToManyJoin.xml"
 )
 public class VersionedEntityWithNonInverseOneToManyJoinTest extends AbstractEntityWithOneToManyTest {
 	@AfterEach

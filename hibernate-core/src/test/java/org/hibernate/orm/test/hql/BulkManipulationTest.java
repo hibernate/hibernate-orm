@@ -55,16 +55,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(
 		annotatedClasses = { Farm.class, Crop.class, BulkManipulationTest.Queries.class },
 		xmlMappings = {
-				"org/hibernate/orm/test/hql/Animal.hbm.xml",
-				"org/hibernate/orm/test/hql/Vehicle.hbm.xml",
-				"org/hibernate/orm/test/hql/KeyManyToOneEntity.hbm.xml",
-				"org/hibernate/orm/test/hql/Versions.hbm.xml",
-				"org/hibernate/orm/test/hql/FooBarCopy.hbm.xml",
-				"org/hibernate/orm/test/hql/EntityWithCrazyCompositeKey.hbm.xml",
-				"org/hibernate/orm/test/hql/SimpleEntityWithAssociation.hbm.xml",
-				"org/hibernate/orm/test/hql/BooleanLiteralEntity.hbm.xml",
-				"org/hibernate/orm/test/hql/CompositeIdEntity.hbm.xml",
-				"/org/hibernate/orm/test/legacy/Multi.hbm.xml"
+				"org/hibernate/orm/test/hql/Animal.orm.xml",
+				"org/hibernate/orm/test/hql/Vehicle.orm.xml",
+				"org/hibernate/orm/test/hql/KeyManyToOneEntity.orm.xml",
+				"org/hibernate/orm/test/hql/Versions.orm.xml",
+				"org/hibernate/orm/test/hql/FooBarCopy.orm.xml",
+				"org/hibernate/orm/test/hql/EntityWithCrazyCompositeKey.orm.xml",
+				"org/hibernate/orm/test/hql/SimpleEntityWithAssociation.orm.xml",
+				"org/hibernate/orm/test/hql/BooleanLiteralEntity.orm.xml",
+				"org/hibernate/orm/test/hql/CompositeIdEntity.orm.xml",
+				"/org/hibernate/orm/test/legacy/Multi.orm.xml"
 		}
 )
 @SessionFactory

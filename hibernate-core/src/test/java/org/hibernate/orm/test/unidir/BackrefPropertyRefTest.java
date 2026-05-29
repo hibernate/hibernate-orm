@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-9370")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/unidir/ParentChildPropertyRef.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/unidir/ParentChildPropertyRef.orm.xml"
 )
 @SessionFactory
 public class BackrefPropertyRefTest extends BackrefTest {

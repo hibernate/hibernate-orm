@@ -37,7 +37,7 @@ import static org.junit.Assert.assertSame;
  */
 @JiraKey(value = "HHH-6361")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/event/collection/detached/MultipleCollectionBagMapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/event/collection/detached/MultipleCollectionBagMapping.orm.xml"
 )
 @ServiceRegistry(
 		settings = {

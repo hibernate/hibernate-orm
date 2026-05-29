@@ -21,7 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @RequiresDialect(HANADialect.class)
-@DomainModel(xmlMappings = {"org/hibernate/orm/test/dialect/function/Product.hbm.xml"})
+@DomainModel(annotatedClasses = Product.class)
 @SessionFactory
 public class HANAFunctionsTest {
 

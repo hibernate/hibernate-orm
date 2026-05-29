@@ -3,17 +3,29 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.exception;
+
 import java.util.Set;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+
 /**
- * Implementation of Group.
- *
  * @author Steve Ebersole
  */
+@Entity
+@Table(name = "T_GROUP")
 public class Group {
+	@Id
+	@GeneratedValue
+	@Column(name = "group_id")
 	private Long id;
 	private String name;
-	private Set members;
+	@ManyToMany(mappedBy = "memberships")
+	private Set<User> members;
 
 	public Long getId() {
 		return id;

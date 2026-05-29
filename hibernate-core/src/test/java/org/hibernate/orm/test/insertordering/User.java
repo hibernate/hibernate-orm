@@ -8,15 +8,27 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
 /**
- * {@inheritDoc}
- *
  * @author Steve Ebersole
  */
+@Entity
+@Table(name = "INS_ORD_USR")
 public class User {
+	@Id
+	@GeneratedValue
 	private Long id;
+	@Column(name = "USR_NM")
 	private String username;
-	private Set memberships = new HashSet();
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	private Set<Membership> memberships = new HashSet<>();
 
 	/**
 	 * for persistence

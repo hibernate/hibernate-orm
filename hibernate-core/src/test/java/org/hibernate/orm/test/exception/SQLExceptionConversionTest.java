@@ -32,10 +32,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@DomainModel(xmlMappings = {
-		"org/hibernate/orm/test/exception/User.hbm.xml",
-		"org/hibernate/orm/test/exception/Group.hbm.xml"
-})
+@DomainModel(annotatedClasses = {User.class, Group.class})
 @SessionFactory
 public class SQLExceptionConversionTest {
 

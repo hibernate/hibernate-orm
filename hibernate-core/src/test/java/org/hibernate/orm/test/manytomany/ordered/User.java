@@ -3,16 +3,42 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.manytomany.ordered;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "`User`")
 public class User implements Serializable {
 
+	@Id
+	@GeneratedValue
+	@Column(name = "ID")
 	private Long id;
+
+	@Column(name = "ORG")
 	private String org;
+
+	@Column(name = "NAME")
 	private String name;
-	private Set groups = new HashSet();
+
+	@ManyToMany
+	@JoinTable(
+			name = "UserGroup",
+			joinColumns = @JoinColumn(name = "USER_ID"),
+			inverseJoinColumns = @JoinColumn(name = "GROUP_ID")
+	)
+	private Set<Group> groups = new HashSet<>();
 
 	public User() {
 	}
@@ -46,11 +72,11 @@ public class User implements Serializable {
 		this.org = org;
 	}
 
-	public Set getGroups() {
+	public Set<Group> getGroups() {
 		return groups;
 	}
 
-	public void setGroups(Set groups) {
+	public void setGroups(Set<Group> groups) {
 		this.groups = groups;
 	}
 

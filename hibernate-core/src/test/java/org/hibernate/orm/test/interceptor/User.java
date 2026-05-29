@@ -3,16 +3,38 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.interceptor;
+
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
+@Entity
+@Table(name = "users")
 public class User {
+	@Id
 	private String name;
+	@Column(name = "\"password\"")
 	private String password;
-	private Set actions = new HashSet();
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(joinColumns = @JoinColumn(name = "user_name"))
+	@Column(name = "action")
+	@Fetch(FetchMode.JOIN)
+	private Set<String> actions = new HashSet<>();
 	private Calendar lastUpdated;
 	private Calendar created;
+	@jakarta.persistence.Transient
 	private String injectedString;
 
 	public User(String name, String password) {

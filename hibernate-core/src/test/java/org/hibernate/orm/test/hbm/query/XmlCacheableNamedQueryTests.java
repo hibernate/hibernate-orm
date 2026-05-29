@@ -23,7 +23,7 @@ public class XmlCacheableNamedQueryTests {
 	@Test
 	@DomainModel(
 			annotatedClasses = SimpleEntity.class,
-			xmlMappings = "org/hibernate/orm/test/hbm/query/CacheableNamedQueryOverride.xml"
+			xmlMappings = "org/hibernate/orm/test/xml/query/CacheableNamedQueryOverride.xml"
 	)
 	@SessionFactory
 	@SuppressWarnings("JUnitMalformedDeclaration")

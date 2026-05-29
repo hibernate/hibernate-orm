@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @DomainModel(xmlMappings = {
-		"org/hibernate/orm/test/keymanytoone/bidir/component/EagerMapping.hbm.xml"
+		"org/hibernate/orm/test/keymanytoone/bidir/component/EagerMapping.orm.xml"
 })
 @SessionFactory(generateStatistics = true)
 @BootstrapServiceRegistry( integrators = EagerKeyManyToOneTest.CustomLoadIntegrator.class )

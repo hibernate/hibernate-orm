@@ -3,17 +3,35 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.insertordering;
+
 import java.util.Date;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 /**
- * {@inheritDoc}
- *
  * @author Steve Ebersole
  */
+@Entity
+@Table(name = "INS_ORD_MEM")
 public class Membership {
+	@Id
+	@GeneratedValue
 	private Long id;
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "USR_ID")
 	private User user;
+	@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "GRP_ID")
 	private Group group;
+	@Column(name = "JN_DT")
 	private Date activationDate;
 
 	/**

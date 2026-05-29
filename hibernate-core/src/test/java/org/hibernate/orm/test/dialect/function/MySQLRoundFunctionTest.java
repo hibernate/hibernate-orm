@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @author Strong Liu
  */
 @RequiresDialect( MySQLDialect.class )
-@DomainModel(xmlMappings = {"org/hibernate/orm/test/dialect/function/Product.hbm.xml"})
+@DomainModel(annotatedClasses = Product.class)
 @SessionFactory
 public class MySQLRoundFunctionTest {
 

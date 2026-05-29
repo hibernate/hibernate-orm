@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @org.hibernate.testing.orm.junit.ServiceRegistry
-@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/mapping.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/mapping.orm.xml")
 public class SchemaExportTest {
 	private boolean doesDialectSupportDropTableIfExist(ServiceRegistryScope registryScope) {
 		var dialect = registryScope.getRegistry().requireService( JdbcEnvironment.class ).getDialect();
@@ -131,7 +131,7 @@ public class SchemaExportTest {
 		var output = new File( tempDir, "update_script.sql" );
 
 		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addResource( "org/hibernate/orm/test/schemaupdate/mapping2.hbm.xml" )
+				.addResource( "org/hibernate/orm/test/schemaupdate/mapping2.orm.xml" )
 				.buildMetadata();
 		metadata.orderColumns( false );
 		metadata.validate();

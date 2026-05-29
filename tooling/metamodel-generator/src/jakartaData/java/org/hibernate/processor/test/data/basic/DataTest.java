@@ -61,7 +61,8 @@ class DataTest {
 		assertTrue( queryMetamodel.contains( "TypedQueryReference<Author> withNoOrder2()" ) );
 		assertTrue( repository.contains( "SelectionSpecification.create(BookAuthorRepository_.booksWithJakartaQueryOrder(title))" ) );
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
-		assertTrue( queryMetamodel.contains( "\"BookAuthorRepository.booksWithJakartaQueryOrder\"" ) );
+		assertTrue( queryMetamodel.contains( "\"org.hibernate.processor.test.data.basic.BookAuthorRepository"
+				+ "#booksWithJakartaQueryOrder(java.lang.String,jakarta.data.Order)\"" ) );
 		assertTrue( repository.contains( "private Event<? super LifecycleEvent<?>> event;" ) );
 		assertTrue( repository.contains( "PreInsertEvent<Book>" ) );
 		assertTrue( repository.contains( "PostInsertEvent<Book>" ) );
@@ -73,7 +74,9 @@ class DataTest {
 		assertTrue( repository.contains( "PostUpsertEvent<Book>" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.bookWithTitle(title))" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.booksWithOptions(title))" ) );
-		assertTrue( repository.contains( "createNamedQuery(\"BookAuthorRepository.nativeBookWithResultMapping\", Book.class)" ) );
+		assertTrue( repository.contains( "createNamedQuery(\"org.hibernate.processor.test.data.basic"
+				+ ".BookAuthorRepository#nativeBookWithResultMapping(jakarta.persistence.EntityManager,java.lang.String)\", "
+				+ "Book.class)" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.bookCountWithNativeResultMapping(title))" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.bookTitlesWithNativeResultMapping(title))" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.bookRowsWithNativeResultMapping(title))" ) );
@@ -89,7 +92,8 @@ class DataTest {
 		assertFalse( repository.contains( "createNamedMutationQuery(\"BookAuthorRepository.updateAuthorAddress" ) );
 		assertFalse( repository.contains( "_defaultDeleteWithJakartaQuery(String title)" ) );
 		assertTrue( queryMetamodel.contains( "defaultDeleteWithJakartaQuery(String title)" ) );
-		assertTrue( queryMetamodel.contains( "\"BookAuthorRepository.defaultBooksWithJakartaQuery\"" ) );
+		assertTrue( queryMetamodel.contains( "\"org.hibernate.processor.test.data.basic.BookAuthorRepository"
+				+ "#defaultBooksWithJakartaQuery(java.lang.String)\"" ) );
 		assertFalse( repository.contains( "@Override\n\tpublic List<Book> defaultBooksWithJakartaQuery(String title)" ) );
 		assertMetamodelClassGeneratedFor( Author.class, true );
 		assertMetamodelClassGeneratedFor( Book.class, true );

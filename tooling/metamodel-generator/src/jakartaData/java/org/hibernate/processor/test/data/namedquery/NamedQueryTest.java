@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
@@ -24,7 +25,12 @@ class NamedQueryTest {
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
 		System.out.println( getMetaModelSourceAsString( Author.class, true ) );
 		System.out.println( getMetaModelSourceAsString( Book.class, true ) );
-		System.out.println( getMetaModelSourceAsString( BookAuthorRepository.class, true ) );
+		final String repository = getMetaModelSourceAsString( BookAuthorRepository.class, true );
+		System.out.println( repository );
+		assertTrue( repository.contains( "createNamedQuery(\"org.hibernate.processor.test.data.namedquery"
+				+ ".BookAuthorRepository$#findByTitleLike(java.lang.String)\", Book.class)" ) );
+		assertTrue( repository.contains( "createNamedQuery(\"org.hibernate.processor.test.data.namedquery"
+				+ ".BookAuthorRepository$#findByTypeIn(java.util.Set)\", Book.class)" ) );
 		assertMetamodelClassGeneratedFor( Author.class, true );
 		assertMetamodelClassGeneratedFor( Book.class, true );
 		assertMetamodelClassGeneratedFor( Author.class );

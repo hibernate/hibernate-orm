@@ -52,7 +52,8 @@ class DataRestrictionTest {
 		assertTrue( repository.contains( "SelectionSpecification.create(DataRestrictionRepository_.query())" ) );
 		assertTrue( repository.contains( "SelectionSpecification.create(DataRestrictionRepository_.query(title))" ) );
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
-		assertTrue( queryMetamodel.contains( "\"DataRestrictionRepository.query\"" ) );
+		assertTrue( queryMetamodel.contains( "\"org.hibernate.processor.test.data.restriction"
+				+ ".DataRestrictionRepository#query(jakarta.data.restrict.Restriction)\"" ) );
 		assertTrue( repository.contains( "for (var _sort : order.sorts())" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.restriction" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.queryRestriction" ) );

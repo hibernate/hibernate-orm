@@ -205,7 +205,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					.append(localSessionName());
 		}
 		declaration
-				.append(isUsingStatelessSession() ? ".get(" : ".find(")
+				.append(isReactive() && isUsingStatelessSession() ? ".get(" : ".find(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class, ")
 				.append(parameterName(paramName));

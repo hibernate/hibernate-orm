@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <mapped-superclass class="org.hibernate.orm.test.event.collection.AbstractParentWithCollection"
+                       access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <one-to-many name="children"
+                         target-entity="org.hibernate.orm.test.event.collection.ChildEntity"
+                         classification="BAG">
+                <join-column name="parent_id"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <transient name="name"/>
+        </attributes>
+    </mapped-superclass>
+
+    <entity class="org.hibernate.orm.test.event.collection.association.unidirectional.ParentWithCollectionOfEntities"
+            access="PROPERTY" metadata-complete="true">
+        <table name="PARENT"/>
+    </entity>
+
+    <mapped-superclass class="org.hibernate.orm.test.event.collection.ChildValue"
+                       access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <basic name="name">
+                <column name="NAME"/>
+            </basic>
+        </attributes>
+    </mapped-superclass>
+
+    <entity class="org.hibernate.orm.test.event.collection.ChildEntity"
+            access="PROPERTY" metadata-complete="true">
+        <table name="CHILD"/>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+        </attributes>
+    </entity>
+
+</entity-mappings>

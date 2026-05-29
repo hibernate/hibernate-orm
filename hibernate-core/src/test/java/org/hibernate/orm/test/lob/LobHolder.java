@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
+
 import java.sql.Blob;
 import java.sql.Clob;
 

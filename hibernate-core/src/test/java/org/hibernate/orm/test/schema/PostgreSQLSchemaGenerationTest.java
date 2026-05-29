@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 				BaseSchemaGeneratorTest.Book.class,
 				BaseSchemaGeneratorTest.Customer.class
 		},
-		xmlMappings = "org/hibernate/orm/test/schema/SchemaGenerationTest.hbm.xml",
+		xmlMappings = "org/hibernate/orm/test/schema/SchemaGenerationTest.orm.xml",
 		integrationSettings = {
 				@Setting(name = AvailableSettings.HBM2DDL_IMPORT_FILES, value = "schema-generation.sql"),
 				@Setting(name = AvailableSettings.HBM2DDL_AUTO, value = "update")

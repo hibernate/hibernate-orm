@@ -14,7 +14,7 @@ import org.hibernate.orm.test.manytomanyassociationclass.Membership;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/manytomanyassociationclass/surrogateid/assigned/Mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/manytomanyassociationclass/surrogateid/assigned/Mappings.orm.xml"
 )
 public class ManyToManyAssociationClassAssignedIdTest extends AbstractManyToManyAssociationClassTest {
 	@Override

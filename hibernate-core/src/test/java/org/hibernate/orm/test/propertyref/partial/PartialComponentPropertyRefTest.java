@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
-@DomainModel( xmlMappings = "org/hibernate/orm/test/propertyref/partial/Mapping.hbm.xml" )
+@DomainModel( xmlMappings = "org/hibernate/orm/test/propertyref/partial/Mapping.orm.xml" )
 @SessionFactory
 public class PartialComponentPropertyRefTest {
 

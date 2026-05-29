@@ -30,6 +30,8 @@ dependencies {
         api "org.hibernate:hibernate-c3p0:$version"
         api project( ":hibernate-hikaricp" )
         api "org.hibernate:hibernate-hikaricp:$version"
+        api project( ":hibernate-ucp" )
+        api "org.hibernate:hibernate-ucp:$version"
 
         api project( ":hibernate-jcache" )
         api "org.hibernate:hibernate-jcache:$version"

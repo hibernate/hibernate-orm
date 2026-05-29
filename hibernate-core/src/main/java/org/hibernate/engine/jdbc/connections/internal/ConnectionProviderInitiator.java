@@ -30,6 +30,7 @@ import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 import static org.hibernate.cfg.C3p0Settings.C3P0_CONFIG_PREFIX;
 import static org.hibernate.cfg.HikariCPSettings.HIKARI_CONFIG_PREFIX;
+import static org.hibernate.cfg.UCPSettings.UCP_CONFIG_PREFIX;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PREFIX;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
@@ -51,6 +52,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfBlank;
  * @author Gavin King
  * @author Steve Ebersole
  * @author Brett Meyer
+ * @author Loïc Lefèvre
  */
 public class ConnectionProviderInitiator implements StandardServiceInitiator<ConnectionProvider> {
 
@@ -73,6 +75,11 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 * The strategy for agroal connection pooling
 	 */
 	public static final String AGROAL_STRATEGY = "agroal";
+
+	/**
+	 * The strategy for oracle ucp connection pooling
+	 */
+	public static final String UCP_STRATEGY = "ucp";
 
 	@Override
 	public Class<ConnectionProvider> getServiceInitiated() {
@@ -154,6 +161,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 		else if ( hasConfiguration( configurationValues, AGROAL_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, AGROAL_STRATEGY );
+		}
+		else if ( hasConfiguration( configurationValues, UCP_CONFIG_PREFIX ) ) {
+			return instantiateProvider( strategySelector, UCP_STRATEGY );
 		}
 		else if ( configurationValues.containsKey( URL ) ) {
 			return new DriverManagerConnectionProvider();

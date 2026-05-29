@@ -154,6 +154,7 @@ include 'hibernate-vector'
 include 'hibernate-c3p0'
 include 'hibernate-hikaricp'
 include 'hibernate-agroal'
+include 'hibernate-ucp'
 
 include 'hibernate-jcache'
 

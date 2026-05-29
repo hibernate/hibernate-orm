@@ -12,14 +12,19 @@ import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
+
+import org.hibernate.annotations.Immutable;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -34,6 +39,8 @@ import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
+import net.bytebuddy.jar.asm.AnnotationVisitor;
+import net.bytebuddy.jar.asm.FieldVisitor;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
@@ -45,6 +52,9 @@ import net.bytebuddy.utility.OpenedClassReader;
 final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
 
 	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
+	private static final String IMMUTABLE_DESCRIPTOR = Type.getDescriptor( Immutable.class );
+	private static final Set<String> IMMUTABLE_BASIC_TYPES =
+			Set.of( String.class.getName(), BigDecimal.class.getName(), BigInteger.class.getName() );
 	private static final ModifierContributor.ForType REMOVE_FINAL_TYPE_MODIFIER = new ModifierContributor.ForType() {
 		@Override
 		public int getMask() {
@@ -290,6 +300,20 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		for ( var fieldDescription : enhancedFields ) {
 			enhancedFieldsAsDefined.add( fieldDescription.asDefined() );
 		}
+		final List<FieldDescription.InDefinedShape> immutableFinalEnhancedFieldsAsDefined = new ArrayList<>();
+		for ( var fieldDescription : enhancedFields ) {
+			if ( fieldDescription.getFieldDescription().isFinal()
+					&& isImmutableBasicType( fieldDescription.getFieldDescription().getType() ) ) {
+				immutableFinalEnhancedFieldsAsDefined.add( fieldDescription.asDefined() );
+			}
+		}
+		if ( !immutableFinalEnhancedFieldsAsDefined.isEmpty() ) {
+			builder = builder.visit(
+					new AsmVisitorWrapper.ForDeclaredFields()
+							.field( anyOf( immutableFinalEnhancedFieldsAsDefined ),
+									ImmutableAnnotationAppender.INSTANCE )
+			);
+		}
 		// Replace the private modifier with package-private for all enhanced fields,
 		// because our AccessOptimizer needs to get/set fields and can't use field reader/writer,
 		// as reader/writer methods have different semantics
@@ -391,6 +415,53 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	DynamicType.Builder<?> applyExtended(DynamicType.Builder<?> builder) {
 		AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper enhancer = new FieldAccessEnhancer( managedCtClass, enhancementContext, classPool );
 		return builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, enhancer ) );
+	}
+
+	private enum ImmutableAnnotationAppender implements AsmVisitorWrapper.ForDeclaredFields.FieldVisitorWrapper {
+		INSTANCE;
+
+		@Override
+		public FieldVisitor wrap(
+				TypeDescription instrumentedType,
+				FieldDescription.InDefinedShape fieldDescription,
+				FieldVisitor fieldVisitor) {
+			return new FieldVisitor( OpenedClassReader.ASM_API, fieldVisitor ) {
+				private boolean immutableAnnotationSeen;
+
+				@Override
+				public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+					if ( IMMUTABLE_DESCRIPTOR.equals( descriptor ) ) {
+						immutableAnnotationSeen = true;
+					}
+					return super.visitAnnotation( descriptor, visible );
+				}
+
+				@Override
+				public void visitEnd() {
+					if ( !immutableAnnotationSeen ) {
+						final var immutable = super.visitAnnotation( IMMUTABLE_DESCRIPTOR, true );
+						if ( immutable != null ) {
+							immutable.visitEnd();
+						}
+					}
+					super.visitEnd();
+				}
+			};
+		}
+	}
+
+	private static boolean isImmutableBasicType(TypeDefinition type) {
+		if ( type.isArray() ) {
+			return false;
+		}
+		else {
+			final var erasure = type.asErasure();
+			return type.isPrimitive()
+				|| type.isEnum()
+				|| erasure.isPrimitiveWrapper()
+				|| IMMUTABLE_BASIC_TYPES.contains( erasure.getName() )
+				|| erasure.getName().startsWith( "java.time." );
+		}
 	}
 
 	private static class FieldMethodReader implements ByteCodeAppender {

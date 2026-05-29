@@ -16,6 +16,11 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.data.Limit;
+import jakarta.data.Order;
+import jakarta.data.Sort;
+import jakarta.data.restrict.Restrict;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -80,6 +85,69 @@ class SharedInterfaceTest {
 			assertEquals( 2, funded.size() );
 			assertEquals( "Atlas", funded.get( 0 ).getName() );
 			assertEquals( "Beacon", funded.get( 1 ).getName() );
+		} );
+	}
+
+	@Test
+	void testSortVarargs(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var dir = new _EmployeeDirectory( session );
+			dir.save( new Employee( 1L, "Alice", "Engineering", 120_000.0 ) );
+			dir.save( new Employee( 2L, "Bob", "Engineering", 80_000.0 ) );
+			dir.save( new Employee( 3L, "Carol", "Marketing", 150_000.0 ) );
+
+			try ( var stream = dir.sortedByDepartment( "Engineering", Sort.desc( "salary" ) ) ) {
+				List<Employee> result = stream.toList();
+				assertEquals( 2, result.size() );
+				assertEquals( "Alice", result.get( 0 ).getName() );
+				assertEquals( "Bob", result.get( 1 ).getName() );
+			}
+		} );
+	}
+
+	@Test
+	void testOrder(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var dir = new _EmployeeDirectory( session );
+			dir.save( new Employee( 1L, "Alice", "Engineering", 120_000.0 ) );
+			dir.save( new Employee( 2L, "Bob", "Engineering", 80_000.0 ) );
+			dir.save( new Employee( 3L, "Carol", "Engineering", 95_000.0 ) );
+
+			List<Employee> result = dir.orderedByDepartment( "Engineering",
+					Order.by( Sort.asc( "name" ) ) );
+			assertEquals( 3, result.size() );
+			assertEquals( "Alice", result.get( 0 ).getName() );
+			assertEquals( "Bob", result.get( 1 ).getName() );
+			assertEquals( "Carol", result.get( 2 ).getName() );
+		} );
+	}
+
+	@Test
+	void testLimitWithSortVarargs(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var dir = new _EmployeeDirectory( session );
+			dir.save( new Employee( 1L, "Alice", "Engineering", 120_000.0 ) );
+			dir.save( new Employee( 2L, "Bob", "Engineering", 80_000.0 ) );
+			dir.save( new Employee( 3L, "Carol", "Engineering", 95_000.0 ) );
+
+			List<Employee> result = dir.pagedByDepartment( "Engineering",
+					Limit.of( 2 ), Sort.desc( "salary" ) );
+			assertEquals( 2, result.size() );
+			assertEquals( "Alice", result.get( 0 ).getName() );
+			assertEquals( "Carol", result.get( 1 ).getName() );
+		} );
+	}
+
+	@Test
+	void testRestriction(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var dir = new _EmployeeDirectory( session );
+			dir.save( new Employee( 1L, "Alice", "Engineering", 120_000.0 ) );
+			dir.save( new Employee( 2L, "Bob", "Engineering", 80_000.0 ) );
+			dir.save( new Employee( 3L, "Carol", "Marketing", 150_000.0 ) );
+
+			List<Employee> result = dir.allEmployees( Restrict.unrestricted() );
+			assertEquals( 3, result.size() );
 		} );
 	}
 }

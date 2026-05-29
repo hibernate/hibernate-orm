@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Entity;
@@ -173,7 +175,7 @@ class Jpa4OptionsTest {
 			final var book = entityManager.find( Book.class, 2L, (Map<String, Object>) null );
 
 			assertEquals( "before", book.title );
-			assertEquals( book, entityManager.find( Book.class, 2L, LockModeType.NONE, (Map<String, Object>) null ) );
+			assertEquals( book, entityManager.find( Book.class, 2L, LockModeType.NONE, null ) );
 			entityManager.lock( book, LockModeType.NONE, (Map<String, Object>) null );
 
 			entityManager.createStatement( "update Book b set b.title = 'after' where b.id = :id" )
@@ -185,7 +187,7 @@ class Jpa4OptionsTest {
 			entityManager.createStatement( "update Book b set b.title = 'again' where b.id = :id" )
 					.setParameter( "id", 2L )
 					.execute();
-			entityManager.refresh( book, LockModeType.NONE, (Map<String, Object>) null );
+			entityManager.refresh( book, LockModeType.NONE, null );
 			assertEquals( "again", book.title );
 			entityManager.getTransaction().commit();
 		}
@@ -298,41 +300,49 @@ class Jpa4OptionsTest {
 			Class<R> resultType,
 			Set<TypedQuery.Option> options) implements TypedQueryReference<R> {
 		@Override
+		@Nonnull
 		public String getName() {
 			return name;
 		}
 
 		@Override
+		@Nonnull
 		public Class<? extends R> getResultType() {
 			return resultType;
 		}
 
 		@Override
+		@Nullable
 		public List<Class<?>> getParameterTypes() {
 			return null;
 		}
 
 		@Override
+		@Nullable
 		public List<String> getParameterNames() {
 			return null;
 		}
 
 		@Override
+		@Nullable
 		public List<Object> getArguments() {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, Object> getHints() {
 			return Map.of();
 		}
 
 		@Override
+		@Nonnull
 		public Set<TypedQuery.Option> getOptions() {
 			return options;
 		}
 
 		@Override
+		@Nullable
 		public String getEntityGraphName() {
 			return null;
 		}
@@ -346,26 +356,31 @@ class Jpa4OptionsTest {
 		}
 
 		@Override
+		@Nullable
 		public List<Class<?>> getParameterTypes() {
 			return null;
 		}
 
 		@Override
+		@Nullable
 		public List<String> getParameterNames() {
 			return null;
 		}
 
 		@Override
+		@Nullable
 		public List<Object> getArguments() {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, Object> getHints() {
 			return Map.of();
 		}
 
 		@Override
+		@Nonnull
 		public Set<jakarta.persistence.Statement.Option> getOptions() {
 			return options;
 		}

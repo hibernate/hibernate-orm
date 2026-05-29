@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
@@ -83,41 +85,49 @@ public class ExistsProjectionSpecificationImpl<T> implements SimpleProjectionSpe
 	}
 
 	@Override
+	@Nullable
 	public String getName() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public Class<Boolean> getResultType() {
 		return Boolean.class;
 	}
 
 	@Override
+	@Nullable
 	public String getEntityGraphName() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getHints() {
 		return Collections.emptyMap();
 	}
 
 	@Override
+	@Nonnull
 	public List<Class<?>> getParameterTypes() {
 		return List.of();
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getParameterNames() {
 		return List.of();
 	}
 
 	@Override
+	@Nonnull
 	public List<Object> getArguments() {
 		return List.of();
 	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return null;
 	}

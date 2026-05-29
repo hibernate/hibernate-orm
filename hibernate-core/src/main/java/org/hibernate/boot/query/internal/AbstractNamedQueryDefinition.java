@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.query.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.FlushMode;
@@ -55,6 +56,7 @@ public abstract class AbstractNamedQueryDefinition<T> implements NamedQueryDefin
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getHints() {
 		return hints;
 	}

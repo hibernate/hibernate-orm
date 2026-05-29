@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.Statement;
 
@@ -22,24 +24,28 @@ public interface JpaStatementReference<T> extends JpaReference, StatementReferen
 
 	/// {@inheritDoc}
 	@Override
+	@Nullable
 	default List<Class<?>> getParameterTypes() {
 		return null;
 	}
 
 	/// {@inheritDoc}
 	@Override
+	@Nullable
 	default List<String> getParameterNames() {
 		return null;
 	}
 
 	/// {@inheritDoc}
 	@Override
+	@Nullable
 	default List<Object> getArguments() {
 		return null;
 	}
 
 	/// {@inheritDoc}
 	@Override
+	@Nonnull
 	default Set<Statement.Option> getOptions() {
 		return Set.of();
 	}

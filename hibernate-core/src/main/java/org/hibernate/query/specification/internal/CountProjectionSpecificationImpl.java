@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
@@ -20,9 +22,10 @@ import org.hibernate.query.specification.SimpleProjectionSpecification;
 import org.hibernate.query.spi.JpaTypedQueryReference;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * @author Gavin King
@@ -83,41 +86,49 @@ public class CountProjectionSpecificationImpl<T> implements SimpleProjectionSpec
 	}
 
 	@Override
+	@Nullable
 	public String getName() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public Class<Long> getResultType() {
 		return Long.class;
 	}
 
 	@Override
+	@Nullable
 	public String getEntityGraphName() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getHints() {
-		return Collections.emptyMap();
+		return emptyMap();
 	}
 
 	@Override
+	@Nonnull
 	public List<Class<?>> getParameterTypes() {
 		return List.of();
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getParameterNames() {
 		return List.of();
 	}
 
 	@Override
+	@Nonnull
 	public List<Object> getArguments() {
 		return List.of();
 	}
 
 	@Override
+	@Nullable
 	public Timeout getTimeout() {
 		return null;
 	}

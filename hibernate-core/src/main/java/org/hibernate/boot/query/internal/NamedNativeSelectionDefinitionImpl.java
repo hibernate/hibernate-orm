@@ -103,11 +103,13 @@ public class NamedNativeSelectionDefinitionImpl<R> extends AbstractNamedSelectio
 	}
 
 	@Override
-	public @Nullable Class<R> getResultType() {
+	@Nullable
+	public Class<R> getResultType() {
 		return resultType;
 	}
 
 	@Override
+	@Nullable
 	public String getEntityGraphName() {
 		return null;
 	}

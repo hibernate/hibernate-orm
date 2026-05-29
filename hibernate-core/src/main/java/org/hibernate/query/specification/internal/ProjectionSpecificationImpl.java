@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.specification.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
@@ -28,11 +30,11 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+import static java.util.Collections.emptyMap;
 import static org.hibernate.internal.util.type.PrimitiveWrappers.cast;
 
 /**
@@ -115,18 +117,21 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 	}
 
 	@Override
+	@Nullable
 	public String getName() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public Class<Object[]> getResultType() {
 		return Object[].class;
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getHints() {
-		return Collections.emptyMap();
+		return emptyMap();
 	}
 
 	@Override
@@ -135,7 +140,8 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 	}
 
 	@Override
+	@Nullable
 	public String getEntityGraphName() {
-		return "";
+		return null;
 	}
 }

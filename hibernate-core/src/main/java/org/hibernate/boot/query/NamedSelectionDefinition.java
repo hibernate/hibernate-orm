@@ -23,6 +23,7 @@ public interface NamedSelectionDefinition<R>
 	String getQueryString();
 
 	@Override
+	@Nullable
 	default String getName() {
 		return getRegistrationName();
 	}
@@ -30,7 +31,7 @@ public interface NamedSelectionDefinition<R>
 	/**
 	 * The expected result type of the query, or {@code null}.
 	 */
-	@Nullable
+	@Nullable //FIXME: declared @Nonnull by JPA
 	Class<R> getResultType();
 
 	Boolean getReadOnly();
@@ -52,5 +53,6 @@ public interface NamedSelectionDefinition<R>
 	Integer getFetchSize();
 
 	@Override
+	@Nullable
 	String getEntityGraphName();
 }

@@ -21,6 +21,7 @@ import org.hibernate.query.spi.JpaStatementReference;
 public interface NamedMutationDefinition<T>
 		extends NamedQueryDefinition<T>, JpaStatementReference<T> {
 	@Override
+	@Nullable
 	default String getName() {
 		return getRegistrationName();
 	}

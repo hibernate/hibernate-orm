@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.named.internal;
 
-import jakarta.annotation.Nonnull;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
@@ -75,9 +74,8 @@ public abstract class AbstractSelectionMemento<R>
 	}
 
 	@Override
-	@Nonnull
+	@Nullable //FIXME: declared @Nonnull by JPA
 	public Class<? extends R> getResultType() {
-		//TODO: fix!!
 		return queryType;
 	}
 

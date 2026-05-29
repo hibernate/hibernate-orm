@@ -7,9 +7,11 @@ package org.hibernate.orm.test.query.resultmapping.dynamic;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.sql.ResultSetMapping;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -297,6 +299,8 @@ public class SimpleResultSetMappingTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SQLServerDialect.class,
+			reason = "FOR UPDATE clause allowed only for DECLARE CURSOR")
 	void testCompoundEntityMappingWithLockMode(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			var bookMapping = ResultSetMapping.entity(

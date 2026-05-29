@@ -28,7 +28,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public abstract class BlobJdbcType implements JdbcType {
 
-	protected BlobJdbcType() {
+	private BlobJdbcType() {
 	}
 
 	@Override

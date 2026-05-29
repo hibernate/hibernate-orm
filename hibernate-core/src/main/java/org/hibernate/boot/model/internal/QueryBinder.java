@@ -660,9 +660,16 @@ public abstract class QueryBinder {
 				classDetailsClassName == null
 						? classDetails.getName()
 						: classDetailsClassName;
-		if ( className.startsWith( "[" ) ) {
-			throw new IllegalArgumentException( "Array type not allowed: " + className );
+		// JVM array descriptor for varargs, e.g. "[Ljakarta.data.Sort;"
+		// The annotation processor uses the component type without "[]"
+		if ( className.startsWith( "[L" ) && className.endsWith( ";" ) ) {
+			// cannot be a companion, just return:
+			return className.substring( 2, className.length() - 1 );
 		}
+		return javadocName( className );
+	}
+
+	private static String javadocName(String className) {
 		return className.endsWith( "$" )
 				? className
 				: className.replace( '$', '.' );

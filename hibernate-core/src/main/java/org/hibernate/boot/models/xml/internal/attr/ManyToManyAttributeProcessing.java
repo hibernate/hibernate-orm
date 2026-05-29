@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.xml.internal.attr;
 
+import jakarta.persistence.AccessType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
@@ -17,11 +18,10 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 
-import jakarta.persistence.AccessType;
-
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAccess;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.boot.models.xml.internal.attr.CommonPluralAttributeProcessing.applyPluralAttributeStructure;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
 
@@ -68,11 +68,15 @@ public class ManyToManyAttributeProcessing {
 
 		TableProcessing.transformJoinTable( jaxbManyToMany.getJoinTable(), memberDetails, xmlDocumentContext );
 
-		XmlAnnotationHelper.applySqlJoinTableRestriction( jaxbManyToMany.getSqlJoinTableRestriction(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applySqlJoinTableRestriction( jaxbManyToMany.getSqlJoinTableRestriction(), memberDetails,
+				xmlDocumentContext );
 
-		XmlAnnotationHelper.applyJoinTableFilters( jaxbManyToMany.getJoinTableFilters(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyJoinTableFilters( jaxbManyToMany.getJoinTableFilters(), memberDetails,
+				xmlDocumentContext );
 
 		XmlAnnotationHelper.applyNotFound( jaxbManyToMany, memberDetails, xmlDocumentContext );
+
+		applyOptimisticLock( jaxbManyToMany, memberDetails, xmlDocumentContext );
 
 		return memberDetails;
 	}

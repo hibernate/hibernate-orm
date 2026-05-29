@@ -118,12 +118,14 @@ public class ImportContextImpl implements ImportContext {
 			result = result.substring( 0, index );
 		}
 
-		return ( preamble + unqualifyName( result ) + appendices )
-				.replace( '$', '.' );
+		// No need to replace '$' with '.' for inner classes here:
+		// TypeElement.getQualifiedName() already returns source-form
+		// names with dots (e.g. "Outer.Inner", not "Outer$Inner").
+		return preamble + unqualifyName( result ) + appendices;
 	}
 
 	private String unqualifyName(String qualifiedName) {
-		final String sourceQualifiedName = qualifiedName.replace( '$', '.' );
+		final String sourceQualifiedName = qualifiedName;
 		final String simpleName = unqualify( qualifiedName );
 		final boolean canBeSimple;
 		if ( simpleNames.containsKey( simpleName ) ) {

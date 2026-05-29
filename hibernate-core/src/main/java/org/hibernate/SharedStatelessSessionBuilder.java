@@ -36,7 +36,6 @@ import java.util.function.UnaryOperator;
  * A child stateless session with a shared transaction context also receives
  * parent flush and close notifications, so its JDBC batch is executed with the
  * parent, and the child is automatically closed when the parent is closed.
- * <p>
  * <pre>{@code
  * try (var statelessSession
  *          = session.statelessWithOptions()

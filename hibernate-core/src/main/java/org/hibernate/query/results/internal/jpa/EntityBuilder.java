@@ -9,6 +9,7 @@ import jakarta.persistence.sql.EmbeddedMapping;
 import jakarta.persistence.sql.EntityMapping;
 import jakarta.persistence.sql.FieldMapping;
 import jakarta.persistence.sql.MemberMapping;
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -46,6 +47,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implements ResultBuilderEntityValued {
 	private final EntityPersister entityDescriptor;
 	private final NavigablePath rootPath;
+	private final LockMode lockMode;
 	private final FetchBuilder identifierFetchBuilder;
 	private final FetchBuilderBasicValued discriminatorFetchBuilder;
 	private final Map<String,FetchBuilder> attributeFetchBuilders = new HashMap<>();
@@ -57,6 +59,7 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 				sessionFactory.getMappingMetamodel()
 						.getEntityDescriptor( entityMapping.entityClass() );
 		rootPath = new NavigablePath( entityDescriptor.getRootPathName() );
+		lockMode = LockMode.fromJpaLockMode( entityMapping.lockMode() );
 
 		if ( StringHelper.isBlank( entityMapping.discriminatorColumn() ) ) {
 			discriminatorFetchBuilder = null;
@@ -346,12 +349,14 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState creationState) {
-		applyTableGroup( resultPosition, creationState );
+		final String resultAlias = applyTableGroup( resultPosition, creationState );
 
 		return new EntityResultImpl<>(
 				entityDescriptor,
 				javaType,
 				rootPath,
+				resultAlias,
+				lockMode,
 				identifierFetchBuilder,
 				discriminatorFetchBuilder,
 				attributeFetchBuilders,
@@ -360,7 +365,7 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 		);
 	}
 
-	private void applyTableGroup(int resultPosition, DomainResultCreationState creationState) {
+	private String applyTableGroup(int resultPosition, DomainResultCreationState creationState) {
 		final String implicitAlias = entityDescriptor.getSqlAliasStem() + resultPosition;
 		final var sqlAliasBase = creationState.getSqlAliasBaseManager().createSqlAliasBase( implicitAlias );
 
@@ -377,6 +382,7 @@ public class EntityBuilder<T> extends AbstractMappingElementBuilder<T> implement
 						creationState.getSqlAstCreationState()
 				)
 		);
+		return implicitAlias;
 	}
 
 	@Override

@@ -57,6 +57,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -85,6 +86,7 @@ import static org.hibernate.models.internal.util.StringHelper.isEmpty;
 public abstract class QueryBinder {
 	private static final String JAKARTA_DATA_REPOSITORY = "jakarta.data.repository.Repository";
 	private static final String JAKARTA_DATA_QUERY = "jakarta.data.repository.Query";
+	private static final String JAKARTA_DATA_SELECT = "jakarta.data.repository.Select";
 	private static final String JAKARTA_DATA_PAGE = "jakarta.data.page.Page";
 	private static final String JAKARTA_DATA_CURSORED_PAGE = "jakarta.data.page.CursoredPage";
 
@@ -375,8 +377,24 @@ public abstract class QueryBinder {
 	private static String staticSelectionQueryString(String queryString, Class<?> resultType,
 			ClassDetails classDetails) {
 		final String entityName = entityName( resultType );
-		return HqlHelper.addFromClauseIfNecessary( queryString,
-				entityName != null ? entityName : repositoryEntityName( classDetails ) );
+		final String resolvedEntityName = entityName != null ? entityName : repositoryEntityName( classDetails );
+		final String withFrom = HqlHelper.addFromClauseIfNecessary( queryString, resolvedEntityName );
+		if ( resultType.isRecord() ) {
+			final var attributeNames = Arrays.stream( resultType.getRecordComponents() )
+					.map( QueryBinder::selectedAttributeName )
+					.toList();
+			return HqlHelper.addSelectClauseIfNecessary( withFrom, attributeNames );
+		}
+		return withFrom;
+	}
+
+	private static String selectedAttributeName(java.lang.reflect.RecordComponent component) {
+		for ( var annotation : component.getAnnotations() ) {
+			if ( JAKARTA_DATA_SELECT.equals( annotation.annotationType().getName() ) ) {
+				return annotationValue( annotation );
+			}
+		}
+		return component.getName();
 	}
 
 	private static final Set<String> DATA_REPOSITORY_SUPERTYPES = Set.of(

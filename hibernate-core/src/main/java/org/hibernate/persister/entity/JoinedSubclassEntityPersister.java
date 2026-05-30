@@ -97,6 +97,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[][] naturalOrderTableKeyColumns;
 	private final boolean[] naturalOrderCascadeDeleteEnabled;
 
+	private final TableMutationDetails[] tableMutationDetails;
+
 	private final String[] spaces;
 
 //	private final String[] subclassClosure;
@@ -353,14 +355,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		spaces = join( this.tableNames, toStringArray( persistentClass.getSynchronizedTables() ) );
 
-		initializeTableMutationDetails( tableSpan );
+		tableMutationDetails = new TableMutationDetails[tableSpan];
 
 		PersistentClass currentClass = persistentClass;
 		int jk = coreTableSpan - 1;
 		while ( currentClass != null ) {
 			isNullableTable[jk] = false;
 			isInverseTable[jk] = false;
-			setTableMutationDetails( jk, createTableMutationDetails( currentClass ) );
+			tableMutationDetails[jk] = createTableMutationDetails( currentClass );
 
 			jk--;
 			currentClass = currentClass.getSuperclass();
@@ -374,7 +376,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		for ( var join : persistentClass.getJoinClosure() ) {
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
-			setTableMutationDetails( j, createTableMutationDetails( join ) );
+			tableMutationDetails[j] = createTableMutationDetails( join );
 
 			j++;
 		}
@@ -840,6 +842,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public boolean isTableCascadeDeleteEnabled(int j) {
 		return naturalOrderCascadeDeleteEnabled[j];
+	}
+
+	@Override
+	protected TableMutationDetails getTableMutationDetails(int relativePosition) {
+		return tableMutationDetails[relativePosition];
 	}
 
 	@Override

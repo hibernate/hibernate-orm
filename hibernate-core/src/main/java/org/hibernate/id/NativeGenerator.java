@@ -68,32 +68,22 @@ public class NativeGenerator
 
 	@Override
 	public void initialize(
-			org.hibernate.annotations.NativeGenerator annotation,
+			org.hibernate.annotations.NativeGenerator nativeGenerator,
 			Member member,
 			GeneratorCreationContext context) {
-		this.annotation = annotation;
+		annotation = nativeGenerator;
 		generationType =
 				context.getDatabase().getDialect()
 						.getNativeValueGenerationStrategy();
-		switch ( generationType ) {
-			case TABLE: {
-				dialectNativeGenerator = new TableGenerator();
-				break;
-			}
-			case IDENTITY: {
-				dialectNativeGenerator = new IdentityGenerator();
+		dialectNativeGenerator = switch ( generationType ) {
+			case UUID -> new UuidGenerator( context.getType().getReturnedClass() );
+			case AUTO, SEQUENCE -> new SequenceStyleGenerator();
+			case TABLE -> new TableGenerator();
+			case IDENTITY -> {
 				context.getProperty().getValue().getColumns().get( 0 ).setIdentity( true );
-				break;
+				yield new IdentityGenerator();
 			}
-			case UUID: {
-				dialectNativeGenerator = new UuidGenerator( context.getType().getReturnedClass() );
-				break;
-			}
-			default: {
-				assert generationType == GenerationType.AUTO || generationType == GenerationType.SEQUENCE;
-				dialectNativeGenerator = new SequenceStyleGenerator();
-			}
-		}
+		};
 	}
 
 	@Override

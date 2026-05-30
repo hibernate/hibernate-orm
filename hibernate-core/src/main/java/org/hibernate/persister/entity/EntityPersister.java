@@ -1237,7 +1237,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	EntityRepresentationStrategy getRepresentationStrategy();
 
 	@Override
-	default EntityMappingType getEntityMappingType() {
+	default EntityPersister getEntityMappingType() {
 		return this;
 	}
 

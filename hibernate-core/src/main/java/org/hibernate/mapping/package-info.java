@@ -38,7 +38,6 @@
  *     {@linkplain org.hibernate.persister.entity.EntityPersister entities}
  *     and {@linkplain org.hibernate.persister.collection.CollectionPersister collections}.
  * <li>The model objects are used directly in the constructors of
- *     {@link org.hibernate.tuple.entity.EntityMetamodel},
  *     {@link org.hibernate.persister.entity.AbstractEntityPersister},
  *     {@link org.hibernate.persister.collection.AbstractCollectionPersister},
  *     and friends, to build up the internal data structures used by these

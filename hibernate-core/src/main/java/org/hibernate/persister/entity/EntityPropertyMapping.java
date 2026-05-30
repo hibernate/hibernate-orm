@@ -16,7 +16,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
@@ -31,6 +30,8 @@ import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.StringHelper.qualifier;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * @author Gavin King
@@ -124,8 +125,9 @@ class EntityPropertyMapping {
 			String[] columnReaders,
 			String[] columnReaderTemplates,
 			Metadata factory) {
-		Type existingType = typesByPropertyPath.get( path );
-		if ( existingType != null || ( duplicateIncompatiblePaths != null && duplicateIncompatiblePaths.contains( path ) ) ) {
+		final Type existingType = typesByPropertyPath.get( path );
+		if ( existingType != null
+				|| ( duplicateIncompatiblePaths != null && duplicateIncompatiblePaths.contains( path ) ) ) {
 			// If types match or the new type is not an association type, there is nothing for us to do
 			if ( type == existingType || existingType == null || !( type instanceof AssociationType ) ) {
 				logDuplicateRegistration( path, existingType, type );
@@ -140,11 +142,11 @@ class EntityPropertyMapping {
 				}
 				else {
 					Type commonType = null;
-					MetadataImplementor metadata = (MetadataImplementor) factory;
-					if ( type instanceof CollectionType && existingType instanceof CollectionType ) {
-						Collection thisCollection = metadata.getCollectionBinding( ( (CollectionType) existingType ).getRole() );
-						Collection otherCollection = metadata.getCollectionBinding( ( (CollectionType) type ).getRole() );
-
+					final var metadata = (MetadataImplementor) factory; // FIXME!
+					if ( type instanceof CollectionType collectionType
+							&& existingType instanceof CollectionType existingCollectionType ) {
+						final var thisCollection = metadata.getCollectionBinding( existingCollectionType.getRole() );
+						final var otherCollection = metadata.getCollectionBinding( collectionType.getRole() );
 						if ( thisCollection.isSame( otherCollection ) ) {
 							logDuplicateRegistration( path, existingType, type );
 							return;
@@ -154,7 +156,6 @@ class EntityPropertyMapping {
 						}
 					}
 					else if ( type instanceof EntityType entityType2 && existingType instanceof EntityType entityType1 ) {
-
 						if ( entityType1.getAssociatedEntityName().equals( entityType2.getAssociatedEntityName() ) ) {
 							logDuplicateRegistration( path, existingType, type );
 							return;
@@ -174,10 +175,9 @@ class EntityPropertyMapping {
 						typesByPropertyPath.remove( path );
 						// Set everything to empty to signal action has to be taken!
 						// org.hibernate.hql.internal.ast.tree.DotNode#dereferenceEntityJoin() is reacting to this
-						String[] empty = ArrayHelper.EMPTY_STRING_ARRAY;
-						columnsByPropertyPath.put( path, empty );
-						columnReadersByPropertyPath.put( path, empty );
-						columnReaderTemplatesByPropertyPath.put( path, empty );
+						columnsByPropertyPath.put( path, EMPTY_STRING_ARRAY );
+						columnReadersByPropertyPath.put( path, EMPTY_STRING_ARRAY );
+						columnReaderTemplatesByPropertyPath.put( path, EMPTY_STRING_ARRAY );
 					}
 					else {
 						typesByPropertyPath.put( path, commonType );
@@ -194,16 +194,15 @@ class EntityPropertyMapping {
 	}
 
 	private Type getCommonType(MetadataImplementor metadata, EntityType entityType1, EntityType entityType2) {
-		PersistentClass thisClass = metadata.getEntityBinding( entityType1.getAssociatedEntityName() );
-		PersistentClass otherClass = metadata.getEntityBinding( entityType2.getAssociatedEntityName() );
-		PersistentClass commonClass = getCommonPersistentClass( thisClass, otherClass );
+		final var thisClass = metadata.getEntityBinding( entityType1.getAssociatedEntityName() );
+		final var otherClass = metadata.getEntityBinding( entityType2.getAssociatedEntityName() );
+		final var commonClass = getCommonPersistentClass( thisClass, otherClass );
 
 		if ( commonClass == null ) {
 			return null;
 		}
-
 		// Create a copy of the type but with the common class
-		if ( entityType1 instanceof ManyToOneType manyToOneType ) {
+		else if ( entityType1 instanceof ManyToOneType manyToOneType ) {
 			return new ManyToOneType( manyToOneType, commonClass.getEntityName() );
 		}
 		else if ( entityType1 instanceof SpecialOneToOneType specialOneToOneType ) {
@@ -218,8 +217,10 @@ class EntityPropertyMapping {
 	}
 
 	private PersistentClass getCommonPersistentClass(PersistentClass clazz1, PersistentClass clazz2) {
-		while ( clazz2 != null && clazz2.getMappedClass() != null && clazz1.getMappedClass() != null && !clazz2.getMappedClass()
-				.isAssignableFrom( clazz1.getMappedClass() ) ) {
+		while ( clazz2 != null
+				&& clazz2.getMappedClass() != null
+				&& clazz1.getMappedClass() != null
+				&& !clazz2.getMappedClass().isAssignableFrom( clazz1.getMappedClass() ) ) {
 			clazz2 = clazz2.getSuperclass();
 		}
 		return clazz2;
@@ -244,14 +245,14 @@ class EntityPropertyMapping {
 		}
 
 		if ( type instanceof AnyType || type instanceof CollectionType || type instanceof EntityType ) {
-			AssociationType actype = (AssociationType) type;
-			if ( actype.useLHSPrimaryKey() ) {
+			final var associationType = (AssociationType) type;
+			if ( associationType.useLHSPrimaryKey() ) {
 				columns = getIdentifierColumnNames();
 				columnReaders = getIdentifierColumnReaders();
 				columnReaderTemplates = getIdentifierColumnReaderTemplates();
 			}
 			else {
-				String foreignKeyProperty = actype.getLHSPropertyName();
+				final String foreignKeyProperty = associationType.getLHSPropertyName();
 				if ( foreignKeyProperty != null && !path.equals( foreignKeyProperty ) ) {
 					//TODO: this requires that the collection is defined after the
 					//      referenced property in the mapping file (ok?)
@@ -292,7 +293,7 @@ class EntityPropertyMapping {
 			);
 			if ( actype.isEmbedded() ) {
 				initComponentPropertyPaths(
-						path == null ? null : StringHelper.qualifier( path ),
+						path == null ? null : qualifier( path ),
 						actype,
 						columns,
 						columnReaders,
@@ -324,20 +325,19 @@ class EntityPropertyMapping {
 			final String[] formulaTemplates,
 			final Metadata factory) throws MappingException {
 
-		Type idtype = etype.getIdentifierOrUniqueKeyType( factory );
-		String idPropName = etype.getIdentifierOrUniqueKeyPropertyName( factory );
+		final var idtype = etype.getIdentifierOrUniqueKeyType( factory );
+		final String idPropName = etype.getIdentifierOrUniqueKeyPropertyName( factory );
 		boolean hasNonIdentifierPropertyNamedId = hasNonIdentifierPropertyNamedId( etype, factory );
 
-		if ( etype.isReferenceToPrimaryKey() ) {
-			if ( !hasNonIdentifierPropertyNamedId ) {
-				String idpath = extendPath( path, AbstractEntityPersister.ENTITY_ID );
-				addPropertyPath( idpath, idtype, columns, columnReaders, columnReaderTemplates, factory );
-				initPropertyPaths( idpath, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
-			}
+		if ( etype.isReferenceToPrimaryKey() && !hasNonIdentifierPropertyNamedId ) {
+			final String idpath = extendPath( path, AbstractEntityPersister.ENTITY_ID );
+			addPropertyPath( idpath, idtype, columns, columnReaders, columnReaderTemplates, factory );
+			initPropertyPaths( idpath, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates,
+					factory );
 		}
 
 		if ( !etype.isNullable() && idPropName != null ) {
-			String idpath2 = extendPath( path, idPropName );
+			final String idpath2 = extendPath( path, idPropName );
 			addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, factory );
 			initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 		}
@@ -367,18 +367,20 @@ class EntityPropertyMapping {
 			final String[] formulaTemplates,
 			final Metadata factory) throws MappingException {
 
-		Type[] types = type.getSubtypes();
-		String[] properties = type.getPropertyNames();
+		final var types = type.getSubtypes();
+		final var properties = type.getPropertyNames();
 		int begin = 0;
 		for ( int i = 0; i < properties.length; i++ ) {
-			String subpath = extendPath( path, properties[i] );
+			final String subpath = extendPath( path, properties[i] );
 			try {
-				int length = types[i].getColumnSpan( factory );
-				String[] columnSlice = ArrayHelper.slice( columns, begin, length );
-				String[] columnReaderSlice = ArrayHelper.slice( columnReaders, begin, length );
-				String[] columnReaderTemplateSlice = ArrayHelper.slice( columnReaderTemplates, begin, length );
-				String[] formulaSlice = formulaTemplates == null ?
-						null : ArrayHelper.slice( formulaTemplates, begin, length );
+				final int length = types[i].getColumnSpan( factory );
+				final var columnSlice = ArrayHelper.slice( columns, begin, length );
+				final var columnReaderSlice = ArrayHelper.slice( columnReaders, begin, length );
+				final var columnReaderTemplateSlice = ArrayHelper.slice( columnReaderTemplates, begin, length );
+				final var formulaSlice =
+						formulaTemplates == null
+								? null
+								: ArrayHelper.slice( formulaTemplates, begin, length );
 				initPropertyPaths(
 						subpath,
 						types[i],

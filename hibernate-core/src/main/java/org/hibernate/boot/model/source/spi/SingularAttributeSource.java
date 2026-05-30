@@ -4,8 +4,6 @@
  */
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.tuple.GenerationTiming;
-
 /**
  * Source-agnostic description of information needed to bind a singular attribute.
  *

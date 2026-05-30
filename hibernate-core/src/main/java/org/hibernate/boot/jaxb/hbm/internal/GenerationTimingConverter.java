@@ -6,7 +6,7 @@ package org.hibernate.boot.jaxb.hbm.internal;
 
 import java.util.Locale;
 
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.boot.model.source.spi.GenerationTiming;
 
 /**
  * @author Steve Ebersole

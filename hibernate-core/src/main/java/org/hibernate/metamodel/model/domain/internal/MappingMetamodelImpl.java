@@ -28,6 +28,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -170,18 +171,24 @@ public class MappingMetamodelImpl
 		// 		- prepareMappingModel (which builds id-mappings, attribute mappings, fk-descriptors, etc.)
 		MappingModelCreationProcess.process( entityPersisterMap, collectionPersisterMap, context );
 
+		// Build tableMappings after the mapping model is ready and before the constraint model.
+		for ( var persister : entityPersisterMap.values() ) {
+			if ( persister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
+				inFlightEntityMappingType.prepareTableMappings( bootModel.getEntityBinding( persister.getEntityName() ) );
+			}
+		}
+
 		// triggers
 		//		- collecting insert and update generated attributes
 		//		- building insert and update generation delegates
-		//		- building tableMappings (in doLateInit)
 		for ( var persister : entityPersisterMap.values() ) {
 			persister.postInstantiate();
 			registerEntityNameResolvers( persister, entityNameResolvers );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Build the constraint model AFTER tableMappings exist (from postInstantiate)
-		// but BEFORE tableDescriptors are built (which need the constraint model)
+		// Build the constraint model AFTER tableMappings exist but BEFORE tableDescriptors are built
+		// (which need the constraint model)
 		constraintModel = ConstraintModelBuilder.buildConstraintModel(
 				this,
 				context.getGraphPlanningOptions(),

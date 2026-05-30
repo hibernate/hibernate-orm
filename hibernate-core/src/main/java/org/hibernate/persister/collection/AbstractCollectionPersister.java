@@ -14,7 +14,6 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.queue.spi.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.spi.meta.ColumnDescriptor;
 import org.hibernate.action.queue.spi.meta.TableKeyDescriptor;
@@ -1191,25 +1190,6 @@ public abstract class AbstractCollectionPersister
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
-			SqlAstCreationState creationState) {
-		applyBaseRestrictions(
-				predicateConsumer,
-				tableGroup,
-				useQualifier,
-				enabledFilters,
-				false,
-				treatAsDeclarations,
-				creationState
-		);
-	}
-
-	@Override
-	public void applyBaseRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
 			boolean onlyApplyLoadByKeyFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState) {
@@ -1743,9 +1723,8 @@ public abstract class AbstractCollectionPersister
 
 	private static TableKeyDescriptor buildTableKeyDescriptor(PluralAttributeMapping attributeMapping) {
 		var keyColumns = new ArrayList<ColumnDescriptor>();
-		attributeMapping.getKeyDescriptor().visitKeySelectables( (index, selectableMapping) -> {
-			keyColumns.add( ColumnDescriptor.from( selectableMapping ) );
-		} );
+		attributeMapping.getKeyDescriptor().visitKeySelectables( (index, selectableMapping)
+				-> keyColumns.add( ColumnDescriptor.from( selectableMapping ) ) );
 		return new TableKeyDescriptor( keyColumns );
 	}
 
@@ -1819,8 +1798,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private JdbcDeleteMutation buildCustomSqlDeleteAllOperation(MutatingTableReference tableReference) {
-		final var attributeMapping = getAttributeMapping();
-		final var keyDescriptor = attributeMapping.getKeyDescriptor();
+		final var keyDescriptor = getAttributeMapping().getKeyDescriptor();
 		final var parameterBinders =
 				new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyDescriptor.getJdbcTypeCount() );
 		keyDescriptor.getKeyPart().forEachSelectable( parameterBinders );
@@ -1897,26 +1875,27 @@ public abstract class AbstractCollectionPersister
 	@Deprecated private final Type indexType;
 	@Deprecated protected final Type elementType;
 
+	@Override @Deprecated(forRemoval = true)
 	public CollectionType getCollectionType() {
 		return collectionType;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public Type getKeyType() {
 		return keyType;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public Type getIdentifierType() {
 		return identifierType;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public Type getIndexType() {
 		return indexType;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public Type getElementType() {
 		return elementType;
 	}
@@ -1936,22 +1915,22 @@ public abstract class AbstractCollectionPersister
 	@Deprecated protected final String[] elementColumnAliases;
 	@Deprecated private final Map<String,String[]> collectionPropertyColumnAliases = new HashMap<>();
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public String[] getKeyColumnAliases(String suffix) {
 		return new Alias( suffix ).toAliasStrings( keyColumnAliases );
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public String[] getElementColumnAliases(String suffix) {
 		return new Alias( suffix ).toAliasStrings( elementColumnAliases );
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public String[] getIndexColumnAliases(String suffix) {
 		return hasIndex() ? new Alias( suffix ).toAliasStrings( indexColumnAliases ) : null;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public String getIdentifierColumnAlias(String suffix) {
 		return hasId() ? new Alias( suffix ).toAliasString( identifierColumnAlias ) : null;
 	}
@@ -1961,20 +1940,20 @@ public abstract class AbstractCollectionPersister
 		return getNavigableRole().getFullPath();
 	}
 
-	protected Object lockCacheItem(CollectionAction action, SharedSessionContractImplementor session) {
-		if (!action.getPersister().hasCache()) {
-			return null;
-		}
-
-		final CollectionDataAccess cache = action.getPersister().getCacheAccessStrategy();
-		return cache.generateCacheKey(
-				action.getKey(),
-				action.getPersister(),
-				session.getFactory(),
-				session.getTenantIdentifier()
-		);
-		// Note: The actual lock is obtained in CollectionAction.beforeExecutions()
-		// We just generate the cache key here for use in post-execution
-	}
+//	protected Object lockCacheItem(CollectionAction action, SharedSessionContractImplementor session) {
+//		if (!action.getPersister().hasCache()) {
+//			return null;
+//		}
+//
+//		final CollectionDataAccess cache = action.getPersister().getCacheAccessStrategy();
+//		return cache.generateCacheKey(
+//				action.getKey(),
+//				action.getPersister(),
+//				session.getFactory(),
+//				session.getTenantIdentifier()
+//		);
+//		// Note: The actual lock is obtained in CollectionAction.beforeExecutions()
+//		// We just generate the cache key here for use in post-execution
+//	}
 
 }

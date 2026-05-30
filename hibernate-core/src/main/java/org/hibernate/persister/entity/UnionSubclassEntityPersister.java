@@ -206,9 +206,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		visitAttributeMappings( (attribute) -> {
 			builder.addAttribute( attribute );
-			attribute.forEachSelectable( (selectableIndex, selectable) -> {
-				builder.addColumn( attribute, ColumnDescriptor.from( selectable ) );
-			} );
+			attribute.forEachSelectable( (selectableIndex, selectable)
+					-> builder.addColumn( attribute, ColumnDescriptor.from( selectable ) ) );
 		} );
 
 		// Union subclass has only one table, so entity-wide flag equals table flag

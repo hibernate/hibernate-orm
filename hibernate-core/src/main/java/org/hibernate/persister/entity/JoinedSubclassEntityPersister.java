@@ -92,8 +92,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] tableNames;
 	private final String[] naturalOrderTableNames;
 	private final String[][] tableKeyColumns;
-	private final String[][] tableKeyColumnReaders;
-	private final String[][] tableKeyColumnReaderTemplates;
+//	private final String[][] tableKeyColumnReaders;
+//	private final String[][] tableKeyColumnReaderTemplates;
 	private final String[][] naturalOrderTableKeyColumns;
 	private final boolean[] naturalOrderCascadeDeleteEnabled;
 
@@ -221,8 +221,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		final ArrayList<String> tableNames = new ArrayList<>();
 		final ArrayList<String[]> keyColumns = new ArrayList<>();
-		final ArrayList<String[]> keyColumnReaders = new ArrayList<>();
-		final ArrayList<String[]> keyColumnReaderTemplates = new ArrayList<>();
+//		final ArrayList<String[]> keyColumnReaders = new ArrayList<>();
+//		final ArrayList<String[]> keyColumnReaderTemplates = new ArrayList<>();
 		final ArrayList<Boolean> cascadeDeletes = new ArrayList<>();
 		final var tableClosure = persistentClass.getTableClosure();
 		final var keyClosure = persistentClass.getKeyClosure();
@@ -231,18 +231,18 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 			final var key = keyClosure.get(i);
 			final String[] keyCols = new String[idColumnSpan];
-			final String[] keyColReaders = new String[idColumnSpan];
-			final String[] keyColReaderTemplates = new String[idColumnSpan];
+//			final String[] keyColReaders = new String[idColumnSpan];
+//			final String[] keyColReaderTemplates = new String[idColumnSpan];
 			final var columns = key.getColumns();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				final var column = columns.get(k);
 				keyCols[k] = column.getQuotedName( dialect );
-				keyColReaders[k] = column.getReadExpr( dialect );
-				keyColReaderTemplates[k] = column.getTemplate( dialect, typeConfiguration );
+//				keyColReaders[k] = column.getReadExpr( dialect );
+//				keyColReaderTemplates[k] = column.getTemplate( dialect, typeConfiguration );
 			}
 			keyColumns.add( keyCols );
-			keyColumnReaders.add( keyColReaders );
-			keyColumnReaderTemplates.add( keyColReaderTemplates );
+//			keyColumnReaders.add( keyColReaders );
+//			keyColumnReaderTemplates.add( keyColReaderTemplates );
 			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.supportsCascadeDelete() );
 		}
 
@@ -266,27 +266,27 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final int joinIdColumnSpan = key.getColumnSpan();
 
 			final String[] keyCols = new String[joinIdColumnSpan];
-			final String[] keyColReaders = new String[joinIdColumnSpan];
-			final String[] keyColReaderTemplates = new String[joinIdColumnSpan];
+//			final String[] keyColReaders = new String[joinIdColumnSpan];
+//			final String[] keyColReaderTemplates = new String[joinIdColumnSpan];
 
 			final var columns = key.getColumns();
 			for ( int k = 0; k < joinIdColumnSpan; k++ ) {
 				final var column = columns.get(k);
 				keyCols[k] = column.getQuotedName( dialect );
-				keyColReaders[k] = column.getReadExpr( dialect );
-				keyColReaderTemplates[k] = column.getTemplate( dialect, typeConfiguration );
+//				keyColReaders[k] = column.getReadExpr( dialect );
+//				keyColReaderTemplates[k] = column.getTemplate( dialect, typeConfiguration );
 			}
 			keyColumns.add( keyCols );
-			keyColumnReaders.add( keyColReaders );
-			keyColumnReaderTemplates.add( keyColReaderTemplates );
+//			keyColumnReaders.add( keyColReaders );
+//			keyColumnReaderTemplates.add( keyColReaderTemplates );
 			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.supportsCascadeDelete() );
 		}
 
 		hasDuplicateTables = new HashSet<>( tableNames ).size() == tableNames.size();
 		naturalOrderTableNames = toStringArray( tableNames );
 		naturalOrderTableKeyColumns = to2DStringArray( keyColumns );
-		final String[][] naturalOrderTableKeyColumnReaders = to2DStringArray( keyColumnReaders );
-		final String[][] naturalOrderTableKeyColumnReaderTemplates = to2DStringArray( keyColumnReaderTemplates );
+//		final String[][] naturalOrderTableKeyColumnReaders = to2DStringArray( keyColumnReaders );
+//		final String[][] naturalOrderTableKeyColumnReaderTemplates = to2DStringArray( keyColumnReaderTemplates );
 		naturalOrderCascadeDeleteEnabled = toBooleanArray( cascadeDeletes );
 
 		final ArrayList<String> subclassTableNames = new ArrayList<>();
@@ -346,8 +346,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		this.tableNames = reverseFirst( naturalOrderTableNames, coreTableSpan );
 		tableKeyColumns = reverseFirst( naturalOrderTableKeyColumns, coreTableSpan );
-		tableKeyColumnReaders = reverseFirst( naturalOrderTableKeyColumnReaders, coreTableSpan );
-		tableKeyColumnReaderTemplates = reverseFirst( naturalOrderTableKeyColumnReaderTemplates, coreTableSpan );
+//		tableKeyColumnReaders = reverseFirst( naturalOrderTableKeyColumnReaders, coreTableSpan );
+//		tableKeyColumnReaderTemplates = reverseFirst( naturalOrderTableKeyColumnReaderTemplates, coreTableSpan );
 		subclassTableNameClosure = reverseFirst( naturalOrderSubclassTableNameClosure, coreTableSpan );
 		subclassTableKeyColumnClosure = reverseFirst( naturalOrderSubclassTableKeyColumnClosure, coreTableSpan );
 
@@ -720,11 +720,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String getDiscriminatorColumnReaderTemplate() {
-		return getDiscriminatorColumnName();
-	}
-
-	@Override
 	public String getDiscriminatorAlias() {
 		return discriminatorAlias;
 	}
@@ -870,18 +865,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String[] getIdentifierColumnReaderTemplates() {
-		return tableKeyColumnReaderTemplates[0];
-	}
-
-	@Override
 	public String getRootTableName() {
 		return naturalOrderTableNames[0];
-	}
-
-	@Override
-	public String[] getIdentifierColumnReaders() {
-		return tableKeyColumnReaders[0];
 	}
 
 	@Override
@@ -933,10 +918,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	protected boolean isSubclassTableIndicatedByTreatAsDeclarations(
 			int subclassTableNumber,
 			Set<String> treatAsDeclarations) {
-		if ( treatAsDeclarations == null || treatAsDeclarations.isEmpty() ) {
-			return false;
-		}
-		else {
+		if ( treatAsDeclarations != null && !treatAsDeclarations.isEmpty() ) {
 			final var inclusionSubclassNameClosure =
 					getSubclassNameClosureBySubclassTable( subclassTableNumber );
 			// NOTE: we assume the entire hierarchy is joined-subclass here
@@ -947,8 +929,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					}
 				}
 			}
-			return false;
 		}
+		return false;
 	}
 
 	private String[] getSubclassNameClosureBySubclassTable(int subclassTableNumber) {

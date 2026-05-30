@@ -72,8 +72,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String[][] keyColumnNames;
 	private final boolean[] cascadeDeleteEnabled;
 
-	private final TableMutationDetails[] tableMutationDetails;
-
 	private final String[] spaces;
 
 	private final String[] subclassClosure;
@@ -144,9 +142,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		keyColumnNames[0] = getIdentifierColumnNames();
 		cascadeDeleteEnabled = new boolean[joinSpan];
 
-		tableMutationDetails = new TableMutationDetails[joinSpan];
-		tableMutationDetails[0] = createTableMutationDetails( persistentClass );
-
 		// JOINS
 
 		final var joinClosure = persistentClass.getJoinClosure();
@@ -159,8 +154,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
 			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() && dialect.supportsCascadeDelete();
-
-			tableMutationDetails[j] = createTableMutationDetails( join );
 
 			keyColumnNames[j] = new String[join.getKey().getColumnSpan()];
 
@@ -423,8 +416,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected TableMutationDetails getTableMutationDetails(int relativePosition) {
-		return tableMutationDetails[relativePosition];
+	protected TableMutationDetails createTableMutationDetails(PersistentClass bootEntityDescriptor, int relativePosition) {
+		return relativePosition == 0
+				? createTableMutationDetails( bootEntityDescriptor )
+				: createTableMutationDetails( bootEntityDescriptor.getJoinClosure().get( relativePosition - 1 ) );
 	}
 
 	@Override

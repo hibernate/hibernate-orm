@@ -3531,8 +3531,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void doLateInit() {
-		tableMappings = buildTableMappings();
-
 		final List<AttributeMapping> insertGeneratedAttributes =
 				hasInsertGeneratedProperties()
 						? getGeneratedAttributes( this, INSERT )
@@ -3729,16 +3727,43 @@ public abstract class AbstractEntityPersister
 		return new CustomSqlMutationDetails( createExpectation( expectation, callable ), customSql, callable );
 	}
 
-	protected abstract TableMutationDetails getTableMutationDetails(int relativePosition);
+	protected abstract TableMutationDetails createTableMutationDetails(
+			PersistentClass bootEntityDescriptor,
+			int relativePosition);
 
-	private TableMutationDetails resolveTableMutationDetails(int relativePosition) {
-		final var tableMutationDetails = getTableMutationDetails( relativePosition );
+	private TableMutationDetails resolveTableMutationDetails(
+			PersistentClass bootEntityDescriptor,
+			int relativePosition) {
+		final var tableMutationDetails = createTableMutationDetails( bootEntityDescriptor, relativePosition );
 		if ( tableMutationDetails == null ) {
 			throw new AssertionFailure(
 					"Table mutation details were not initialized for table position " + relativePosition
 			);
 		}
 		return tableMutationDetails.resolveCustomSql( this::substituteBrackets );
+	}
+
+	private TableMutationDetails resolveTableMutationDetails(String tableName, int relativePosition) {
+		final var tableMapping = findTableMapping( tableName, relativePosition );
+		return new TableMutationDetails(
+				CustomSqlMutationDetails.from( tableMapping.getInsertDetails() ),
+				CustomSqlMutationDetails.from( tableMapping.getUpdateDetails() ),
+				CustomSqlMutationDetails.from( tableMapping.getDeleteDetails() )
+		);
+	}
+
+	private EntityTableMapping findTableMapping(String tableName, int relativePosition) {
+		for ( var tableMapping : tableMappings ) {
+			if ( tableMapping.relativePosition() == relativePosition && tableMapping.containsTableName( tableName ) ) {
+				return tableMapping;
+			}
+		}
+		for ( var tableMapping : tableMappings ) {
+			if ( tableMapping.containsTableName( tableName ) ) {
+				return tableMapping;
+			}
+		}
+		throw new AssertionFailure( "Could not resolve table mapping for table " + tableName );
 	}
 
 	protected TableDescriptorBuilder createTableDescriptorBuilder(
@@ -3755,7 +3780,7 @@ public abstract class AbstractEntityPersister
 		} );
 
 		final boolean isIdentifierTable = isIdentifierTable( tableName );
-		final var mutationDetails = resolveTableMutationDetails( relativePosition );
+		final var mutationDetails = resolveTableMutationDetails( tableName, relativePosition );
 
 		return new TableDescriptorBuilder(
 				tableName,
@@ -3790,6 +3815,14 @@ public abstract class AbstractEntityPersister
 			Expectation expectation,
 			String customSql,
 			boolean callable) {
+		static CustomSqlMutationDetails from(TableMapping.MutationDetails mutationDetails) {
+			return new CustomSqlMutationDetails(
+					mutationDetails.getExpectation(),
+					mutationDetails.getCustomSql(),
+					mutationDetails.isCallable()
+			);
+		}
+
 		CustomSqlMutationDetails resolveCustomSql(Function<String, String> sqlResolver) {
 			return new CustomSqlMutationDetails( expectation, sqlResolver.apply( customSql ), callable );
 		}
@@ -3977,11 +4010,17 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @see #visitMutabilityOrderedTables
 	 */
-	protected EntityTableMapping[] buildTableMappings() {
+	protected EntityTableMapping[] buildTableMappings(PersistentClass bootEntityDescriptor) {
 		final LinkedHashMap<String, TableMappingBuilder> tableBuilderMap = new LinkedHashMap<>();
 		visitMutabilityOrderedTables( (tableExpression, relativePosition, tableKeyColumnSupplier) -> {
 			final var tableMappingBuilder =
-					getTableMappingBuilder( tableExpression, relativePosition, tableKeyColumnSupplier, tableBuilderMap );
+					getTableMappingBuilder(
+							bootEntityDescriptor,
+							tableExpression,
+							relativePosition,
+							tableKeyColumnSupplier,
+							tableBuilderMap
+					);
 			if ( !isInverseTable( relativePosition ) ) {
 				collectAttributesIndexesForTable( relativePosition, tableMappingBuilder.attributeIndexes::add );
 			}
@@ -3996,6 +4035,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private TableMappingBuilder getTableMappingBuilder(
+			PersistentClass bootEntityDescriptor,
 			String tableExpression,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
@@ -4006,13 +4046,19 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			final var tableMappingBuilder =
-					createTableMappingBuilder( tableExpression, relativePosition, tableKeyColumnVisitationSupplier );
+					createTableMappingBuilder(
+							bootEntityDescriptor,
+							tableExpression,
+							relativePosition,
+							tableKeyColumnVisitationSupplier
+					);
 			tableBuilderMap.put( tableExpression, tableMappingBuilder );
 			return tableMappingBuilder;
 		}
 	}
 
 	private TableMappingBuilder createTableMappingBuilder(
+			PersistentClass bootEntityDescriptor,
 			String tableExpression,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
@@ -4027,7 +4073,7 @@ public abstract class AbstractEntityPersister
 
 		final boolean isIdentifierTable = isIdentifierTable( tableExpression );
 		final boolean isSecondaryTable = isSecondaryTable( tableExpression, relativePosition );
-		final var mutationDetails = resolveTableMutationDetails( relativePosition );
+		final var mutationDetails = resolveTableMutationDetails( bootEntityDescriptor, relativePosition );
 
 		return new TableMappingBuilder(
 				tableExpression,
@@ -4066,7 +4112,7 @@ public abstract class AbstractEntityPersister
 	protected abstract void visitMutabilityOrderedTables(MutabilityOrderedTableConsumer consumer);
 
 	/**
-	 * Consumer for processing table details.  Used while {@linkplain #buildTableMappings() building}
+	 * Consumer for processing table details.  Used while {@linkplain #buildTableMappings(PersistentClass) building}
 	 * the {@link EntityTableMappingImpl} descriptors.
 	 */
 	protected interface MutabilityOrderedTableConsumer {
@@ -5275,6 +5321,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
+	}
+
+	@Override
+	public void prepareTableMappings(PersistentClass bootEntityDescriptor) {
+		tableMappings = buildTableMappings( bootEntityDescriptor );
 	}
 
 	private void handleSubtypeMappings(MappingModelCreationProcess creationProcess) {

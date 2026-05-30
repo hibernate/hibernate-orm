@@ -97,8 +97,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[][] naturalOrderTableKeyColumns;
 	private final boolean[] naturalOrderCascadeDeleteEnabled;
 
-	private final TableMutationDetails[] tableMutationDetails;
-
 	private final String[] spaces;
 
 //	private final String[] subclassClosure;
@@ -355,14 +353,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		spaces = join( this.tableNames, toStringArray( persistentClass.getSynchronizedTables() ) );
 
-		tableMutationDetails = new TableMutationDetails[tableSpan];
-
 		PersistentClass currentClass = persistentClass;
 		int jk = coreTableSpan - 1;
 		while ( currentClass != null ) {
 			isNullableTable[jk] = false;
 			isInverseTable[jk] = false;
-			tableMutationDetails[jk] = createTableMutationDetails( currentClass );
 
 			jk--;
 			currentClass = currentClass.getSuperclass();
@@ -376,7 +371,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		for ( var join : persistentClass.getJoinClosure() ) {
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
-			tableMutationDetails[j] = createTableMutationDetails( join );
 
 			j++;
 		}
@@ -845,8 +839,22 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected TableMutationDetails getTableMutationDetails(int relativePosition) {
-		return tableMutationDetails[relativePosition];
+	protected TableMutationDetails createTableMutationDetails(PersistentClass bootEntityDescriptor, int relativePosition) {
+		if ( relativePosition < coreTableSpan ) {
+			PersistentClass currentClass = bootEntityDescriptor;
+			int currentPosition = coreTableSpan - 1;
+			while ( currentClass != null ) {
+				if ( currentPosition == relativePosition ) {
+					return createTableMutationDetails( currentClass );
+				}
+				currentPosition--;
+				currentClass = currentClass.getSuperclass();
+			}
+			throw new AssertionFailure( "Could not resolve table mutation details for table position " + relativePosition );
+		}
+		else {
+			return createTableMutationDetails( bootEntityDescriptor.getJoinClosure().get( relativePosition - coreTableSpan ) );
+		}
 	}
 
 	@Override

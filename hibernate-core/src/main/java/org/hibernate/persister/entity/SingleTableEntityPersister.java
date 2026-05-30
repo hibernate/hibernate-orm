@@ -17,7 +17,6 @@ import org.hibernate.Remove;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
@@ -44,7 +43,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
-import static org.hibernate.jdbc.Expectations.createExpectation;
 
 /**
  * The default implementation of the {@link EntityPersister} interface.
@@ -144,29 +142,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		keyColumnNames[0] = getIdentifierColumnNames();
 		cascadeDeleteEnabled = new boolean[joinSpan];
 
-		// Custom sql
-		customSQLInsert = new String[joinSpan];
-		customSQLUpdate = new String[joinSpan];
-		customSQLDelete = new String[joinSpan];
-		insertCallable = new boolean[joinSpan];
-		updateCallable = new boolean[joinSpan];
-		deleteCallable = new boolean[joinSpan];
-
-		insertExpectations = new Expectation[joinSpan];
-		updateExpectations = new Expectation[joinSpan];
-		deleteExpectations = new Expectation[joinSpan];
-
-		customSQLInsert[0] = persistentClass.getCustomSQLInsert();
-		insertCallable[0] = persistentClass.isCustomInsertCallable();
-		insertExpectations[0] = createExpectation( persistentClass.getInsertExpectation(), insertCallable[0] );
-
-		customSQLUpdate[0] = persistentClass.getCustomSQLUpdate();
-		updateCallable[0] = persistentClass.isCustomUpdateCallable();
-		updateExpectations[0] = createExpectation( persistentClass.getUpdateExpectation(), updateCallable[0] );
-
-		customSQLDelete[0] = persistentClass.getCustomSQLDelete();
-		deleteCallable[0] = persistentClass.isCustomDeleteCallable();
-		deleteExpectations[0] = createExpectation( persistentClass.getDeleteExpectation(), deleteCallable[0] );
+		initializeTableMutationDetails( joinSpan );
+		setTableMutationDetails( 0, createTableMutationDetails( persistentClass ) );
 
 		// JOINS
 
@@ -181,17 +158,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			isNullableTable[j] = join.isOptional();
 			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() && dialect.supportsCascadeDelete();
 
-			customSQLInsert[j] = join.getCustomSQLInsert();
-			insertCallable[j] = join.isCustomInsertCallable();
-			insertExpectations[j] = createExpectation( join.getInsertExpectation(), insertCallable[j] );
-
-			customSQLUpdate[j] = join.getCustomSQLUpdate();
-			updateCallable[j] = join.isCustomUpdateCallable();
-			updateExpectations[j] = createExpectation( join.getUpdateExpectation(), updateCallable[j] );
-
-			customSQLDelete[j] = join.getCustomSQLDelete();
-			deleteCallable[j] = join.isCustomDeleteCallable();
-			deleteExpectations[j] = createExpectation( join.getDeleteExpectation(), deleteCallable[j] );
+			setTableMutationDetails( j, createTableMutationDetails( join ) );
 
 			keyColumnNames[j] = new String[join.getKey().getColumnSpan()];
 

@@ -15,7 +15,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
@@ -66,7 +65,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
-import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildEncapsulatedCompositeIdentifierMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping;
 
@@ -355,35 +353,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		spaces = join( this.tableNames, toStringArray( persistentClass.getSynchronizedTables() ) );
 
-		// Custom sql
-		customSQLInsert = new String[tableSpan];
-		customSQLUpdate = new String[tableSpan];
-		customSQLDelete = new String[tableSpan];
-		insertCallable = new boolean[tableSpan];
-		updateCallable = new boolean[tableSpan];
-		deleteCallable = new boolean[tableSpan];
-
-		insertExpectations = new Expectation[tableSpan];
-		updateExpectations = new Expectation[tableSpan];
-		deleteExpectations = new Expectation[tableSpan];
+		initializeTableMutationDetails( tableSpan );
 
 		PersistentClass currentClass = persistentClass;
 		int jk = coreTableSpan - 1;
 		while ( currentClass != null ) {
 			isNullableTable[jk] = false;
 			isInverseTable[jk] = false;
-
-			customSQLInsert[jk] = currentClass.getCustomSQLInsert();
-			insertCallable[jk] = currentClass.isCustomInsertCallable();
-			insertExpectations[jk] = createExpectation( currentClass.getInsertExpectation(), insertCallable[jk] );
-
-			customSQLUpdate[jk] = currentClass.getCustomSQLUpdate();
-			updateCallable[jk] = currentClass.isCustomUpdateCallable();
-			updateExpectations[jk] = createExpectation( currentClass.getUpdateExpectation(), updateCallable[jk] );
-
-			customSQLDelete[jk] = currentClass.getCustomSQLDelete();
-			deleteCallable[jk] = currentClass.isCustomDeleteCallable();
-			deleteExpectations[jk] = createExpectation( currentClass.getDeleteExpectation(), deleteCallable[jk] );
+			setTableMutationDetails( jk, createTableMutationDetails( currentClass ) );
 
 			jk--;
 			currentClass = currentClass.getSuperclass();
@@ -397,18 +374,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		for ( var join : persistentClass.getJoinClosure() ) {
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
-
-			customSQLInsert[j] = join.getCustomSQLInsert();
-			insertCallable[j] = join.isCustomInsertCallable();
-			insertExpectations[j] = createExpectation( join.getInsertExpectation(), insertCallable[j] );
-
-			customSQLUpdate[j] = join.getCustomSQLUpdate();
-			updateCallable[j] = join.isCustomUpdateCallable();
-			updateExpectations[j] = createExpectation( join.getUpdateExpectation(), updateCallable[j] );
-
-			customSQLDelete[j] = join.getCustomSQLDelete();
-			deleteCallable[j] = join.isCustomDeleteCallable();
-			deleteExpectations[j] = createExpectation( join.getDeleteExpectation(), deleteCallable[j] );
+			setTableMutationDetails( j, createTableMutationDetails( join ) );
 
 			j++;
 		}

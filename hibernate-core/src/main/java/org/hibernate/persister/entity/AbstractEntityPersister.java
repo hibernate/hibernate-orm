@@ -95,6 +95,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -148,7 +149,6 @@ import org.hibernate.metamodel.mapping.internal.UnifiedAnyDiscriminatorConverter
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -289,6 +289,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
+import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 import static org.hibernate.metamodel.RepresentationMode.POJO;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
@@ -3681,6 +3682,73 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	protected final void initializeTableMutationDetails(int tableSpan) {
+		tableMutationDetails = new TableMutationDetails[tableSpan];
+	}
+
+	protected final void setTableMutationDetails(int relativePosition, TableMutationDetails mutationDetails) {
+		if ( tableMutationDetails == null ) {
+			throw new AssertionFailure( "Table mutation details were not initialized" );
+		}
+		tableMutationDetails[relativePosition] = mutationDetails;
+	}
+
+	protected static TableMutationDetails createTableMutationDetails(PersistentClass persistentClass) {
+		return new TableMutationDetails(
+				createCustomSqlMutationDetails(
+						persistentClass.getCustomSQLInsert(),
+						persistentClass.isCustomInsertCallable(),
+						persistentClass.getInsertExpectation()
+				),
+				createCustomSqlMutationDetails(
+						persistentClass.getCustomSQLUpdate(),
+						persistentClass.isCustomUpdateCallable(),
+						persistentClass.getUpdateExpectation()
+				),
+				createCustomSqlMutationDetails(
+						persistentClass.getCustomSQLDelete(),
+						persistentClass.isCustomDeleteCallable(),
+						persistentClass.getDeleteExpectation()
+				)
+		);
+	}
+
+	protected static TableMutationDetails createTableMutationDetails(Join join) {
+		return new TableMutationDetails(
+				createCustomSqlMutationDetails(
+						join.getCustomSQLInsert(),
+						join.isCustomInsertCallable(),
+						join.getInsertExpectation()
+				),
+				createCustomSqlMutationDetails(
+						join.getCustomSQLUpdate(),
+						join.isCustomUpdateCallable(),
+						join.getUpdateExpectation()
+				),
+				createCustomSqlMutationDetails(
+						join.getCustomSQLDelete(),
+						join.isCustomDeleteCallable(),
+						join.getDeleteExpectation()
+				)
+		);
+	}
+
+	private static CustomSqlMutationDetails createCustomSqlMutationDetails(
+			String customSql,
+			boolean callable,
+			Supplier<? extends Expectation> expectation) {
+		return new CustomSqlMutationDetails( createExpectation( expectation, callable ), customSql, callable );
+	}
+
+	private TableMutationDetails getTableMutationDetails(int relativePosition) {
+		if ( tableMutationDetails == null || tableMutationDetails[relativePosition] == null ) {
+			throw new AssertionFailure(
+					"Table mutation details were not initialized for table position " + relativePosition
+			);
+		}
+		return tableMutationDetails[relativePosition].resolveCustomSql( this::substituteBrackets );
+	}
+
 	protected TableDescriptorBuilder createTableDescriptorBuilder(
 			String tableName,
 			int relativePosition,
@@ -3695,6 +3763,7 @@ public abstract class AbstractEntityPersister
 		} );
 
 		final boolean isIdentifierTable = isIdentifierTable( tableName );
+		final var mutationDetails = getTableMutationDetails( relativePosition );
 
 		return new TableDescriptorBuilder(
 				tableName,
@@ -3702,22 +3771,44 @@ public abstract class AbstractEntityPersister
 				isIdentifierTable,
 				!isIdentifierTable && isNullableTable( relativePosition ),
 				isInverseTable( relativePosition ),
-				insertExpectations[relativePosition],
-				substituteBrackets( customSQLInsert[relativePosition] ),
-				insertCallable[relativePosition],
-				updateExpectations[relativePosition],
-				substituteBrackets( customSQLUpdate[relativePosition] ),
-				updateCallable[relativePosition],
+				mutationDetails,
 				isTableCascadeDeleteEnabled( relativePosition ),
-				deleteExpectations[relativePosition],
-				substituteBrackets( customSQLDelete[relativePosition] ),
-				deleteCallable[relativePosition],
 				isDynamicUpdate(),
 				isDynamicInsert(),
 				isSelfReferential,
 				hasUniqueKeys,
 				new TableKeyDescriptor( keyColumns )
-		);
+			);
+	}
+
+	protected record TableMutationDetails(
+			CustomSqlMutationDetails insertDetails,
+			CustomSqlMutationDetails updateDetails,
+			CustomSqlMutationDetails deleteDetails) {
+		TableMutationDetails resolveCustomSql(Function<String, String> sqlResolver) {
+			return new TableMutationDetails(
+					insertDetails.resolveCustomSql( sqlResolver ),
+					updateDetails.resolveCustomSql( sqlResolver ),
+					deleteDetails.resolveCustomSql( sqlResolver )
+			);
+		}
+	}
+
+	protected record CustomSqlMutationDetails(
+			Expectation expectation,
+			String customSql,
+			boolean callable) {
+		CustomSqlMutationDetails resolveCustomSql(Function<String, String> sqlResolver) {
+			return new CustomSqlMutationDetails( expectation, sqlResolver.apply( customSql ), callable );
+		}
+
+		TableMapping.MutationDetails toMutationDetails(MutationType mutationType) {
+			return new TableMapping.MutationDetails( mutationType, expectation, customSql, callable );
+		}
+
+		TableMapping.MutationDetails toMutationDetails(MutationType mutationType, boolean dynamicMutation) {
+			return new TableMapping.MutationDetails( mutationType, expectation, customSql, callable, dynamicMutation );
+		}
 	}
 
 
@@ -3728,18 +3819,8 @@ public abstract class AbstractEntityPersister
 		private final boolean isOptional;
 		private final boolean isInverse;
 
-		private final Expectation insertExpectation;
-		private final String customInsertSql;
-		private final boolean insertCallable;
-
-		private final Expectation updateExpectation;
-		private final String customUpdateSql;
-		private final boolean updateCallable;
-
+		private final TableMutationDetails mutationDetails;
 		private final boolean cascadeDeleteEnabled;
-		private final Expectation deleteExpectation;
-		private final String customDeleteSql;
-		private final boolean deleteCallable;
 
 		private final boolean dynamicInsert;
 		private final boolean dynamicUpdate;
@@ -3757,16 +3838,8 @@ public abstract class AbstractEntityPersister
 				boolean isIdentifierTable,
 				boolean isOptional,
 				boolean isInverse,
-				Expectation insertExpectation,
-				String customInsertSql,
-				boolean insertCallable,
-				Expectation updateExpectation,
-				String customUpdateSql,
-				boolean updateCallable,
+				TableMutationDetails mutationDetails,
 				boolean cascadeDeleteEnabled,
-				Expectation deleteExpectation,
-				String customDeleteSql,
-				boolean deleteCallable,
 				boolean dynamicInsert,
 				boolean dynamicUpdate,
 				boolean isSelfReferential,
@@ -3777,16 +3850,8 @@ public abstract class AbstractEntityPersister
 			this.isIdentifierTable = isIdentifierTable;
 			this.isOptional = isOptional;
 			this.isInverse = isInverse;
-			this.insertExpectation = insertExpectation;
-			this.customInsertSql = customInsertSql;
-			this.insertCallable = insertCallable;
-			this.updateExpectation = updateExpectation;
-			this.customUpdateSql = customUpdateSql;
-			this.updateCallable = updateCallable;
+			this.mutationDetails = mutationDetails;
 			this.cascadeDeleteEnabled = cascadeDeleteEnabled;
-			this.deleteExpectation = deleteExpectation;
-			this.customDeleteSql = customDeleteSql;
-			this.deleteCallable = deleteCallable;
 			this.dynamicInsert = dynamicInsert;
 			this.dynamicUpdate = dynamicUpdate;
 			this.isSelfReferential = isSelfReferential;
@@ -3804,26 +3869,9 @@ public abstract class AbstractEntityPersister
 					entityHasSelfReferentialTable,
 					hasUniqueKeys,
 					cascadeDeleteEnabled,
-					new TableMapping.MutationDetails(
-							MutationType.INSERT,
-							insertExpectation,
-							customInsertSql,
-							insertCallable,
-							dynamicInsert
-					),
-					new TableMapping.MutationDetails(
-							MutationType.UPDATE,
-							updateExpectation,
-							customUpdateSql,
-							updateCallable,
-							dynamicUpdate
-					),
-					new TableMapping.MutationDetails(
-							MutationType.DELETE,
-							deleteExpectation,
-							customDeleteSql,
-							deleteCallable
-					),
+					mutationDetails.insertDetails().toMutationDetails( MutationType.INSERT, dynamicInsert ),
+					mutationDetails.updateDetails().toMutationDetails( MutationType.UPDATE, dynamicUpdate ),
+					mutationDetails.deleteDetails().toMutationDetails( MutationType.DELETE ),
 					columnDescriptors,
 					attributes,
 					attributeColumnIndexes,
@@ -3871,18 +3919,8 @@ public abstract class AbstractEntityPersister
 		private final boolean isIdentifierTable;
 		private final boolean isSecondaryTable;
 
-		private final Expectation insertExpectation;
-		private final String customInsertSql;
-		private final boolean insertCallable;
-
-		private final Expectation updateExpectation;
-		private final String customUpdateSql;
-		private final boolean updateCallable;
-
+		private final TableMutationDetails mutationDetails;
 		private final boolean cascadeDeleteEnabled;
-		private final Expectation deleteExpectation;
-		private final String customDeleteSql;
-		private final boolean deleteCallable;
 		private final boolean dynamicUpdate;
 		private final boolean dynamicInsert;
 
@@ -3896,16 +3934,8 @@ public abstract class AbstractEntityPersister
 				boolean isInverse,
 				boolean isIdentifierTable,
 				boolean isSecondaryTable,
-				Expectation insertExpectation,
-				String customInsertSql,
-				boolean insertCallable,
-				Expectation updateExpectation,
-				String customUpdateSql,
-				boolean updateCallable,
+				TableMutationDetails mutationDetails,
 				boolean cascadeDeleteEnabled,
-				Expectation deleteExpectation,
-				String customDeleteSql,
-				boolean deleteCallable,
 				boolean dynamicUpdate,
 				boolean dynamicInsert) {
 			this.tableName = tableName;
@@ -3915,21 +3945,16 @@ public abstract class AbstractEntityPersister
 			this.isInverse = isInverse;
 			this.isIdentifierTable = isIdentifierTable;
 			this.isSecondaryTable = isSecondaryTable;
-			this.insertExpectation = insertExpectation;
-			this.customInsertSql = customInsertSql;
-			this.insertCallable = insertCallable;
-			this.updateExpectation = updateExpectation;
-			this.customUpdateSql = customUpdateSql;
-			this.updateCallable = updateCallable;
+			this.mutationDetails = mutationDetails;
 			this.cascadeDeleteEnabled = cascadeDeleteEnabled;
-			this.deleteExpectation = deleteExpectation;
-			this.customDeleteSql = customDeleteSql;
-			this.deleteCallable = deleteCallable;
 			this.dynamicUpdate = dynamicUpdate;
 			this.dynamicInsert = dynamicInsert;
 		}
 
 		private EntityTableMapping build() {
+			final var insertDetails = mutationDetails.insertDetails();
+			final var updateDetails = mutationDetails.updateDetails();
+			final var deleteDetails = mutationDetails.deleteDetails();
 			return new EntityTableMappingImpl(
 					tableName,
 					relativePosition,
@@ -3939,16 +3964,16 @@ public abstract class AbstractEntityPersister
 					isIdentifierTable,
 					isSecondaryTable,
 					toIntArray( attributeIndexes ),
-					insertExpectation,
-					customInsertSql,
-					insertCallable,
-					updateExpectation,
-					customUpdateSql,
-					updateCallable,
+					insertDetails.expectation(),
+					insertDetails.customSql(),
+					insertDetails.callable(),
+					updateDetails.expectation(),
+					updateDetails.customSql(),
+					updateDetails.callable(),
 					cascadeDeleteEnabled,
-					deleteExpectation,
-					customDeleteSql,
-					deleteCallable,
+					deleteDetails.expectation(),
+					deleteDetails.customSql(),
+					deleteDetails.callable(),
 					dynamicUpdate,
 					dynamicInsert
 			);
@@ -4010,6 +4035,7 @@ public abstract class AbstractEntityPersister
 
 		final boolean isIdentifierTable = isIdentifierTable( tableExpression );
 		final boolean isSecondaryTable = isSecondaryTable( tableExpression, relativePosition );
+		final var mutationDetails = getTableMutationDetails( relativePosition );
 
 		return new TableMappingBuilder(
 				tableExpression,
@@ -4019,16 +4045,8 @@ public abstract class AbstractEntityPersister
 				isInverseTable( relativePosition ),
 				isIdentifierTable,
 				isSecondaryTable,
-				insertExpectations[relativePosition],
-				substituteBrackets( customSQLInsert[relativePosition] ),
-				insertCallable[relativePosition],
-				updateExpectations[relativePosition],
-				substituteBrackets( customSQLUpdate[relativePosition] ),
-				updateCallable[relativePosition],
+				mutationDetails,
 				isTableCascadeDeleteEnabled( relativePosition ),
-				deleteExpectations[relativePosition],
-				substituteBrackets( customSQLDelete[relativePosition] ),
-				deleteCallable[relativePosition],
 				isDynamicUpdate(),
 				isDynamicInsert()
 		);
@@ -6660,17 +6678,7 @@ public abstract class AbstractEntityPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Deprecated protected Expectation[] insertExpectations;
-	@Deprecated protected Expectation[] updateExpectations;
-	@Deprecated protected Expectation[] deleteExpectations;
-
-	@Deprecated protected boolean[] insertCallable;
-	@Deprecated protected boolean[] updateCallable;
-	@Deprecated protected boolean[] deleteCallable;
-
-	@Deprecated protected String[] customSQLInsert;
-	@Deprecated protected String[] customSQLUpdate;
-	@Deprecated protected String[] customSQLDelete;
+	private TableMutationDetails[] tableMutationDetails;
 
 
 

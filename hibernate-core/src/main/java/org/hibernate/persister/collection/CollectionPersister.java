@@ -30,7 +30,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -305,18 +304,8 @@ public interface CollectionPersister extends Restrictable {
 
 	/**
 	 * Get the surrogate key generation strategy (optional operation)
-	 *
-	 * @deprecated use {@link #getGenerator()}
 	 */
-	@Deprecated
-	IdentifierGenerator getIdentifierGenerator();
-
-	/**
-	 * Get the surrogate key generation strategy (optional operation)
-	 */
-	default BeforeExecutionGenerator getGenerator() {
-		return getIdentifierGenerator();
-	}
+	BeforeExecutionGenerator getGenerator();
 
 	/**
 	 * Does this collection implement "orphan delete"?

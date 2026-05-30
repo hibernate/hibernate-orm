@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.annotations.id.generationmappings;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.GenericGeneratorGeneration;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -64,7 +64,7 @@ public class NewGeneratorMappingsTest  {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor(MinimalSequenceEntity.class.getName());
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		Generator generator = persister.getGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals( MinimalSequenceEntity.SEQ_NAME,
@@ -82,7 +82,7 @@ public class NewGeneratorMappingsTest  {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor(CompleteSequenceEntity.class.getName());
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		Generator generator = persister.getGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals( 1000, seqGenerator.getDatabaseStructure().getInitialValue() );
@@ -93,7 +93,7 @@ public class NewGeneratorMappingsTest  {
 	@Test
 	public void testAutoEntity(SessionFactoryScope scope) {
 		final EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(AutoEntity.class.getName());
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		Generator generator = persister.getGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals( "AutoEntity_SEQ", seqGenerator.getDatabaseStructure().getPhysicalName().render() );
@@ -104,7 +104,7 @@ public class NewGeneratorMappingsTest  {
 	@Test
 	public void testTablePerClassAutoEntity(SessionFactoryScope scope) {
 		final EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(AbstractTPCAutoEntity.class.getName());
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		Generator generator = persister.getGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals( "AbstractTPCAutoEntity_SEQ",
@@ -116,7 +116,7 @@ public class NewGeneratorMappingsTest  {
 	@Test
 	public void testMinimalTableEntity(SessionFactoryScope scope) {
 		final EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(MinimalTableEntity.class.getName());
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		Generator generator = persister.getGenerator();
 		assertTrue( TableGenerator.class.isInstance( generator ) );
 		TableGenerator tabGenerator = (TableGenerator) generator;
 		assertEquals( MinimalTableEntity.TBL_NAME, tabGenerator.getTableName() );
@@ -136,7 +136,7 @@ public class NewGeneratorMappingsTest  {
 		// Checking first entity.
 		EntityPersister persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(
 				DedicatedSequenceEntity1.class.getName());
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		Generator generator = persister.getGenerator();
 		assertTrue( GenericGeneratorGeneration.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator =
 				(SequenceStyleGenerator) ( (GenericGeneratorGeneration) generator ).getDelegate();
@@ -147,7 +147,7 @@ public class NewGeneratorMappingsTest  {
 
 		// Checking second entity.
 		persister = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor(DedicatedSequenceEntity2.class.getName());
-		generator = persister.getIdentifierGenerator();
+		generator = persister.getGenerator();
 		assertTrue( GenericGeneratorGeneration.class.isInstance( generator ) );
 		seqGenerator = (SequenceStyleGenerator) ( (GenericGeneratorGeneration) generator ).getDelegate();
 		assertEquals(

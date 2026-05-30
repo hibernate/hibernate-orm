@@ -70,7 +70,6 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -4494,11 +4493,6 @@ public abstract class AbstractEntityPersister
 		// skip proxy instantiation if entity is bytecode enhanced
 		return isLazy()
 			&& !getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
-	}
-
-	@Override @Deprecated
-	public IdentifierGenerator getIdentifierGenerator() throws HibernateException {
-		return getIdentifierProperty().getIdentifierGenerator();
 	}
 
 	@Override

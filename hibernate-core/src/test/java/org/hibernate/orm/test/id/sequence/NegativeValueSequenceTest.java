@@ -349,12 +349,12 @@ public class NegativeValueSequenceTest {
 			Class<? extends Optimizer> expectedOptimizerClass) {
 		assertTrue(
 				SequenceStyleGenerator.class.isInstance(
-						sessionFactory.getMappingMetamodel().getEntityDescriptor( entityClass ).getIdentifierGenerator()
+						sessionFactory.getMappingMetamodel().getEntityDescriptor( entityClass ).getGenerator()
 				)
 		);
 		SequenceStyleGenerator generator = (SequenceStyleGenerator) sessionFactory.getMappingMetamodel()
 				.getEntityDescriptor( entityClass )
-				.getIdentifierGenerator();
+				.getGenerator();
 		assertTrue( expectedOptimizerClass.isInstance( generator.getOptimizer() ) );
 	}
 

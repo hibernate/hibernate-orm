@@ -7,7 +7,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 import org.hibernate.boot.model.source.spi.AttributeSource;
 import org.hibernate.boot.model.source.spi.NaturalIdMutability;
 import org.hibernate.boot.model.source.spi.SingularAttributeSourceToOne;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.boot.model.source.spi.GenerationTiming;
 
 /**
  * @author Steve Ebersole

@@ -73,7 +73,7 @@ public class ImmutableManyToOneNaturalIdHbmTest {
 		final int nameIndex = persister.getPropertyIndex( "name" );
 		final int parentIndex = persister.getPropertyIndex( "parent" );
 
-		// checking alphabetic sort in relation to EntityPersister/EntityMetamodel
+		// checking alphabetic sort in relation to EntityPersister
 		assertThat( nameIndex, lessThan( parentIndex ) );
 
 		assertFalse( persister.getPropertyUpdateability()[ nameIndex ] );

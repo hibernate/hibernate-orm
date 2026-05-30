@@ -8,7 +8,6 @@ import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.type.Type;
 
 import jakarta.annotation.Nullable;
@@ -18,61 +17,6 @@ import jakarta.annotation.Nullable;
  */
 @Internal
 class DirtyHelper {
-	/**
-	 * Determine if any of the given field values are dirty, returning an array containing
-	 * indices of the dirty fields.
-	 * <p>
-	 * If it is determined that no fields are dirty, null is returned.
-	 *
-	 * @param properties The property definitions
-	 * @param currentState The current state of the entity
-	 * @param previousState The baseline state of the entity
-	 * @param includeColumns Columns to be included in the dirty checking, per property
-	 * @param session The session from which the dirty check request originated.
-	 *
-	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
-	 */
-	public static int[] findDirty(
-			final NonIdentifierAttribute[] properties,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final SharedSessionContractImplementor session) {
-		int[] results = null;
-		int count = 0;
-		int span = properties.length;
-
-		for ( int i = 0; i < span; i++ ) {
-
-			if ( isDirty( properties, currentState, previousState, includeColumns, session, i ) ) {
-				if ( results == null ) {
-					results = new int[span];
-				}
-				results[count++] = i;
-			}
-		}
-
-		return count == 0 ? null : ArrayHelper.trim( results, count );
-	}
-
-	private static boolean isDirty(
-			NonIdentifierAttribute[] properties,
-			Object[] currentState,
-			Object[] previousState,
-			boolean[][] includeColumns,
-			SharedSessionContractImplementor session, int i) {
-		if ( currentState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-			return false;
-		}
-		else if ( previousState[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-			return true;
-		}
-		else {
-			return properties[i].isDirtyCheckable()
-				&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session);
-		}
-	}
-
 	/**
 	 * Determine if any of the given field values are dirty, returning an array containing
 	 * indices of the dirty fields.
@@ -132,7 +76,8 @@ class DirtyHelper {
 	 * <p>
 	 * If it is determined that no fields are dirty, null is returned.
 	 *
-	 * @param properties The property definitions
+	 * @param propertyTypes The property types
+	 * @param propertyCheckability Whether each property participates in the check
 	 * @param currentState The current state of the entity
 	 * @param previousState The baseline state of the entity
 	 * @param includeColumns Columns to be included in the mod checking, per property
@@ -142,7 +87,8 @@ class DirtyHelper {
 	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
 	 **/
 	public static int[] findModified(
-			final NonIdentifierAttribute[] properties,
+			final Type[] propertyTypes,
+			final boolean[] propertyCheckability,
 			final Object[] currentState,
 			final Object[] previousState,
 			final boolean[][] includeColumns,
@@ -150,10 +96,18 @@ class DirtyHelper {
 			final SharedSessionContractImplementor session) {
 		int[] results = null;
 		int count = 0;
-		int span = properties.length;
+		int span = propertyTypes.length;
 
 		for ( int i = 0; i < span; i++ ) {
-			if ( isModified( properties, currentState, previousState, includeColumns, includeProperties, session, i ) ) {
+			if ( isModified(
+					propertyTypes,
+					propertyCheckability,
+					currentState,
+					previousState,
+					includeColumns,
+					includeProperties,
+					session,
+					i ) ) {
 				if ( results == null ) {
 					results = new int[ span ];
 				}
@@ -172,7 +126,8 @@ class DirtyHelper {
 	}
 
 	private static boolean isModified(
-			NonIdentifierAttribute[] properties,
+			Type[] propertyTypes,
+			boolean[] propertyCheckability,
 			Object[] currentState,
 			Object[] previousState,
 			boolean[][] includeColumns,
@@ -181,7 +136,7 @@ class DirtyHelper {
 			int i) {
 		return currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
 			&& includeProperties[i]
-			&& properties[i].isDirtyCheckable()
-			&& properties[i].getType().isModified( previousState[i], currentState[i], includeColumns[i], session );
+			&& propertyCheckability[i]
+			&& propertyTypes[i].isModified( previousState[i], currentState[i], includeColumns[i], session );
 	}
 }

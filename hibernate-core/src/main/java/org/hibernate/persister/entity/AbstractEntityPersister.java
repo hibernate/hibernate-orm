@@ -31,7 +31,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeDescriptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
@@ -58,7 +57,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.jpa.internal.EntityCallbacksFactory;
 import org.hibernate.event.jpa.spi.EntityCallbacks;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -222,8 +220,6 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.tuple.NonIdentifierAttribute;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
@@ -267,6 +263,7 @@ import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
+import static org.hibernate.event.jpa.internal.EntityCallbacksFactory.buildCallbacks;
 import static org.hibernate.generator.EventType.FORCE_INCREMENT;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
@@ -313,7 +310,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 @Internal
 @SuppressWarnings("deprecation")
 public abstract class AbstractEntityPersister
-		extends EntityMetamodel
+		extends BaseEntityPersister
 		implements EntityPersister, InFlightEntityMappingType, LazyPropertyInitializer, FetchProfileAffectee, Joinable {
 
 	/**
@@ -434,7 +431,7 @@ public abstract class AbstractEntityPersister
 	private final JavaType<?> javaType;
 	private final EntityRepresentationStrategy representationStrategy;
 
-	private EntityMappingType superMappingType;
+	private EntityPersister superMappingType;
 	private SortedMap<String, EntityMappingType> subclassMappingTypes;
 	private final boolean concreteProxy;
 	private EntityConcreteTypeLoader concreteTypeLoader;
@@ -455,8 +452,6 @@ public abstract class AbstractEntityPersister
 	private Setter[] setterCache;
 
 	private final String queryLoaderName;
-
-	private BeforeExecutionGenerator versionGenerator;
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -501,11 +496,9 @@ public abstract class AbstractEntityPersister
 		final var factoryOptions = creationContext.getSessionFactoryOptions();
 
 		this.jpaEntityName = persistentClass.getJpaEntityName();
-		this.jpaCallbacks = EntityCallbacksFactory.buildCallbacks(
-				persistentClass,
-				factoryOptions,
-				creationContext.getServiceRegistry()
-		);
+		this.jpaCallbacks =
+				buildCallbacks( persistentClass, factoryOptions,
+						creationContext.getServiceRegistry() );
 
 		//set it here, but don't call it, since it's still uninitialized!
 		factory = creationContext.getSessionFactory();
@@ -627,9 +620,6 @@ public abstract class AbstractEntityPersister
 		final List<Integer> immutableProperties = new ArrayList<>();
 
 		final HashSet<Property> thisClassProperties = new HashSet<>();
-		final ArrayList<String> lazyNames = new ArrayList<>();
-		final ArrayList<Integer> lazyNumbers = new ArrayList<>();
-		final ArrayList<Type> lazyTypes = new ArrayList<>();
 		boolean foundTemporalExcluded = false;
 		boolean foundNonExcludedCollection = false;
 
@@ -669,28 +659,6 @@ public abstract class AbstractEntityPersister
 			propertyColumnFormulaTemplates[i] = formulaTemplates;
 			propertyColumnAliases[i] = colAliases;
 
-			final boolean lazy = !EnhancementHelper.includeInBaseFetchGroup(
-					property,
-					isInstrumented(),
-					entityName -> {
-						final var entityBinding =
-								creationContext.getMetadata()
-										.getEntityBinding( entityName );
-						assert entityBinding != null;
-						return entityBinding.hasSubclasses();
-					},
-					factoryOptions.isCollectionsInDefaultFetchGroupEnabled()
-			);
-
-			if ( lazy ) {
-				lazyNames.add( property.getName() );
-				lazyNumbers.add( i );
-				lazyTypes.add( propertyValue.getType() );
-			}
-			else {
-				nonLazyPropertyNames.add( property.getName() );
-			}
-
 			propertyColumnUpdateable[i] = propertyValue.getColumnUpdateability();
 			propertyColumnInsertable[i] = propertyValue.getColumnInsertability();
 
@@ -700,6 +668,23 @@ public abstract class AbstractEntityPersister
 		}
 		hasTemporalExcludedProperties = foundTemporalExcluded;
 		hasFormulaProperties = foundFormula;
+
+		final ArrayList<String> lazyNames = new ArrayList<>();
+		final ArrayList<Integer> lazyNumbers = new ArrayList<>();
+		final ArrayList<Type> lazyTypes = new ArrayList<>();
+		final boolean[] propertyLaziness = getPropertyLaziness();
+		final String[] propertyNames = getPropertyNames();
+		final Type[] propertyTypes = getPropertyTypes();
+		for ( int i = 0; i < propertyLaziness.length; i++ ) {
+			if ( propertyLaziness[i] ) {
+				lazyNames.add( propertyNames[i] );
+				lazyNumbers.add( i );
+				lazyTypes.add( propertyTypes[i] );
+			}
+			else {
+				nonLazyPropertyNames.add( propertyNames[i] );
+			}
+		}
 		lazyPropertyNames = toStringArray( lazyNames );
 		lazyPropertyNumbers = toIntArray( lazyNumbers );
 		lazyPropertyTypes = toTypeArray( lazyTypes );
@@ -808,7 +793,6 @@ public abstract class AbstractEntityPersister
 			final var subclasses = persistentClass.getSubclasses();
 			for ( int k = 0; k < subclasses.size(); k++ ) {
 				final var subclass = subclasses.get( k );
-				//copy/paste from EntityMetamodel:
 				if ( !isAbstract( subclass ) ) {
 					values.add( DiscriminatorHelper.getDiscriminatorValue( subclass ) );
 					sqlValues.add( DiscriminatorHelper.getDiscriminatorSQLValue( subclass, dialect ) );
@@ -2742,7 +2726,7 @@ public abstract class AbstractEntityPersister
 					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping
 			);
 		}
-		if ( getIdentifierProperty().isEmbedded() ) {
+		if ( isIdentifierEmbedded() ) {
 			propertyMapping.initPropertyPaths(
 					null, getIdentifierType(), getIdentifierColumnNames(),
 					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping
@@ -2878,7 +2862,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public EntityMappingType getTargetPart() {
+	public EntityPersister getTargetPart() {
 		return this;
 	}
 
@@ -4243,7 +4227,8 @@ public abstract class AbstractEntityPersister
 	public int[] findModified(Object[] old, Object[] current, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
 		final int[] modified = DirtyHelper.findModified(
-				getProperties(),
+				getPropertyTypes(),
+				getPropertyDirtyCheckability(),
 				current,
 				old,
 				propertyColumnUpdateable,
@@ -4373,18 +4358,19 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean hasIdentifierProperty() {
-		return !getIdentifierProperty().isVirtual();
+		return !isIdentifierVirtual();
 	}
 
 	@Override
 	public BasicType<?> getVersionType() {
-		final var versionProperty = getVersionProperty();
-		return versionProperty == null ? null : (BasicType<?>) versionProperty.getType();
+		return getVersionPropertyIndex() == NO_VERSION_INDX
+				? null
+				: (BasicType<?>) getPropertyTypes()[getVersionPropertyIndex()];
 	}
 
 	@Override
 	public boolean isIdentifierAssignedByInsert() {
-		return getIdentifierProperty().isIdentifierAssignedByInsert();
+		return isIdentifierAssignedByInsertInternal();
 	}
 
 	@Override
@@ -4497,12 +4483,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Generator getGenerator() {
-		return getIdentifierProperty().getGenerator();
-	}
-
-	@Override
-	public BeforeExecutionGenerator getVersionGenerator() {
-		return versionGenerator;
+		return getIdentifierGenerator();
 	}
 
 	@Override
@@ -4521,7 +4502,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public EntityMappingType resolveConcreteProxyTypeForId(Object id, SharedSessionContractImplementor session) {
+	public EntityPersister resolveConcreteProxyTypeForId(Object id, SharedSessionContractImplementor session) {
 		if ( !concreteProxy ) {
 			return this;
 		}
@@ -4849,7 +4830,7 @@ public abstract class AbstractEntityPersister
 		if ( instance != null
 				&& hasSubclasses()
 				&& !getRepresentationStrategy().getInstantiator().isSameClass( instance ) ) {
-			// todo (6.0) : this previously used `org.hibernate.tuple.entity.EntityTuplizer#determineConcreteSubclassEntityName`
+			// todo (6.0) : this previously used the old tuple tuplizer infrastructure
 			//		- we may need something similar here...
 			for ( var subclassMappingType : subclassMappingTypes.values() ) {
 				final var persister = subclassMappingType.getEntityPersister();
@@ -4962,12 +4943,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String getIdentifierPropertyName() {
-		return getIdentifierProperty().getName();
+		return getIdentifierAttributeName();
 	}
 
 	@Override
 	public Type getIdentifierType() {
-		return getIdentifierProperty().getType();
+		return getIdentifierAttributeType();
 	}
 
 	@Override
@@ -5205,7 +5186,7 @@ public abstract class AbstractEntityPersister
 				creationProcess.getCreationContext().getBootModel()
 						.getEntityBinding( getEntityName() );
 		initializeSpecialAttributeMappings( creationProcess, persistentClass );
-		versionGenerator = createVersionGenerator( super.getVersionGenerator(), versionMapping );
+		setVersionGenerator( createVersionGenerator( getVersionGenerator(), versionMapping ) );
 		buildDeclaredAttributeMappings( creationProcess, persistentClass );
 		getAttributeMappings();
 		initializeNaturalIdMapping( creationProcess, persistentClass );
@@ -5239,23 +5220,19 @@ public abstract class AbstractEntityPersister
 	private void buildDeclaredAttributeMappings
 			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		final var allPropertyClosure = bootEntityDescriptor.getAllPropertyClosure();
-		final var properties = getProperties();
 		final var mappingsBuilder = AttributeMappingsMap.builder();
 		final var genericMappingsBuilder = AttributeMappingsMap.builder();
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
 		int fetchableIndex = getFetchableIndexOffset();
-		int i = 0;
 		for ( var property : allPropertyClosure ) {
 			if ( !property.isGeneric() ) {
-				final var runtimeAttributeDefinition = properties[i];
-				final String attributeName = runtimeAttributeDefinition.getName();
+				final String attributeName = property.getName();
 				final var bootProperty = bootEntityDescriptor.getProperty( attributeName );
 				if ( superMappingType == null
 					|| superMappingType.findAttributeMapping( bootProperty.getName() ) == null ) {
 					mappingsBuilder.put(
 							attributeName,
 							generateNonIdAttributeMapping(
-									runtimeAttributeDefinition,
 									bootProperty,
 									stateArrayPosition++,
 									fetchableIndex++,
@@ -5264,7 +5241,6 @@ public abstract class AbstractEntityPersister
 					);
 				}
 				declaredAttributeMappings = mappingsBuilder.build();
-				i++;
 			}
 			else {
 				final int span = property.getColumnSpan();
@@ -5308,7 +5284,6 @@ public abstract class AbstractEntityPersister
 			@Nullable BeforeExecutionGenerator configuredGenerator,
 			@Nullable EntityVersionMapping versionMapping) {
 		if ( versionMapping != null ) {
-			// need to do this here because EntityMetamodel doesn't have the EntityVersionMapping :-(
 			return configuredGenerator == null ? new VersionGeneration( versionMapping ) : configuredGenerator;
 		}
 		else {
@@ -5674,7 +5649,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public EntityMappingType getSuperMappingType() {
+	public EntityPersister getSuperMappingType() {
 		return superMappingType;
 	}
 
@@ -5816,22 +5791,16 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected AttributeMapping generateNonIdAttributeMapping(
-			NonIdentifierAttribute tupleAttrDefinition,
 			Property bootProperty,
 			int stateArrayPosition,
 			int fetchableIndex,
 			MappingModelCreationProcess creationProcess) {
-		final var type = tupleAttrDefinition.getType();
+		final var type = bootProperty.getType();
 		final int propertyIndex = getPropertyIndex( bootProperty.getName() );
-		final String[] attrColumnExpression =
-				type instanceof BasicType<?>
-				&& bootProperty.getSelectables().get( 0 ).isFormula()
-						? propertyColumnFormulaTemplates[ propertyIndex ]
-						: getPropertyColumnNames( propertyIndex ) ;
 		return generateNonIdAttributeMapping(
-				tupleAttrDefinition.getName(),
+				bootProperty.getName(),
 				type,
-				tupleAttrDefinition.getCascadeStyle(),
+				bootProperty.getCascadeStyle(),
 				propertyIndex,
 				getTableName( getPropertyTableNumbers()[propertyIndex] ),
 				type instanceof BasicType<?> && bootProperty.getSelectables().get( 0 ).isFormula()

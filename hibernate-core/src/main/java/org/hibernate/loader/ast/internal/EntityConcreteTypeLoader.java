@@ -56,8 +56,9 @@ public class EntityConcreteTypeLoader {
 		jdbcParameters = builder.build();
 	}
 
-	public EntityMappingType getConcreteType(Object id, SharedSessionContractImplementor session) {
+	public EntityPersister getConcreteType(Object id, SharedSessionContractImplementor session) {
 		final var factory = session.getSessionFactory();
+		final var jdbcServices = factory.getJdbcServices();
 
 		final var bindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		final int offset = bindings.registerParametersForEachJdbcValue(
@@ -69,11 +70,11 @@ public class EntityConcreteTypeLoader {
 		assert offset == jdbcParameters.size();
 
 		final var jdbcSelect =
-				factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+				jdbcServices.getJdbcEnvironment().getSqlAstTranslatorFactory()
 						.buildSelectTranslator( factory, sqlSelect )
 						.translate( bindings, QueryOptions.NONE );
 		final var results =
-				session.getFactory().getJdbcServices().getJdbcSelectExecutor()
+				jdbcServices.getJdbcSelectExecutor()
 						.list(
 								jdbcSelect,
 								bindings,

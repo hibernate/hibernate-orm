@@ -16,7 +16,7 @@ import org.hibernate.boot.model.source.spi.SingularAttributeNature;
 import org.hibernate.boot.model.source.spi.SingularAttributeSourceBasic;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.boot.model.source.spi.GenerationTiming;
 
 /**
  * Implementation for {@code <property/>} mappings

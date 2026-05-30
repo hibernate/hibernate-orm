@@ -54,13 +54,13 @@
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:simpleType[@name='GenerationTimingEnum']">
-			<jaxb:javaType name="org.hibernate.tuple.GenerationTiming"
+			<jaxb:javaType name="org.hibernate.boot.model.source.spi.GenerationTiming"
 					parseMethod="org.hibernate.boot.jaxb.hbm.internal.GenerationTimingConverter.fromXml"
 					printMethod="org.hibernate.boot.jaxb.hbm.internal.GenerationTimingConverter.toXml" />
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:simpleType[@name='GenerationTimingVersionEnum']">
-			<jaxb:javaType name="org.hibernate.tuple.GenerationTiming"
+			<jaxb:javaType name="org.hibernate.boot.model.source.spi.GenerationTiming"
 					parseMethod="org.hibernate.boot.jaxb.hbm.internal.GenerationTimingConverter.fromXml"
 					printMethod="org.hibernate.boot.jaxb.hbm.internal.GenerationTimingConverter.toXml" />
 		</jaxb:bindings>

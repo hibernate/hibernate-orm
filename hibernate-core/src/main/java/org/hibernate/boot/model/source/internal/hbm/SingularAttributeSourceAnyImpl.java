@@ -24,7 +24,7 @@ import org.hibernate.boot.model.source.spi.SingularAttributeNature;
 import org.hibernate.boot.model.source.spi.SingularAttributeSourceAny;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.boot.model.source.spi.GenerationTiming;
 
 /**
  * @author Steve Ebersole

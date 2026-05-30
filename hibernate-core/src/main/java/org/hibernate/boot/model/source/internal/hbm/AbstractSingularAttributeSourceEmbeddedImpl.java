@@ -16,7 +16,7 @@ import org.hibernate.boot.model.source.spi.NaturalIdMutability;
 import org.hibernate.boot.model.source.spi.SingularAttributeNature;
 import org.hibernate.boot.model.source.spi.SingularAttributeSourceEmbedded;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.boot.model.source.spi.GenerationTiming;
 
 /**
  * Common base class for {@code <component/>} and {@code <composite-id/>} mappings.

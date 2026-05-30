@@ -79,7 +79,7 @@ public class LazyBasicFieldNotInitializedTest {
 			assertEquals( 1, propertyLaziness.length );
 			Assertions.assertTrue( propertyLaziness[0] );
 
-			// Make sure NonIdentifierAttribute#isLazy is consistent (HHH-10551)
+			// Make sure runtime attribute metadata is consistent (HHH-10551)
 			final AttributeMapping theBytesAttr = entityPersister.findAttributeMapping( "description" );
 			assertThat( theBytesAttr ).isInstanceOf( BasicValuedModelPart.class );
 			assertThat( theBytesAttr.getMappedFetchOptions().getTiming() ).isEqualTo( FetchTiming.DELAYED );

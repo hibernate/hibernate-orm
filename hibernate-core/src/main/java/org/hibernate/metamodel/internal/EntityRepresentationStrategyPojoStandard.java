@@ -23,11 +23,11 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
@@ -149,7 +149,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				final var proxyFactory =
 						createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
 				if ( proxyFactory == null ) {
-					( (EntityMetamodel) entityPersister ).setLazy( false );
+					( (AbstractEntityPersister) entityPersister ).setLazy( false );
 				}
 				return proxyFactory;
 			}

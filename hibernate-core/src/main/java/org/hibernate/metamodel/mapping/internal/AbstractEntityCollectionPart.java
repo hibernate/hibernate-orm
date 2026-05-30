@@ -411,11 +411,10 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			while ( ( dotIndex = referencedPropertyName.indexOf( '.', dotIndex + 1 ) ) != -1 ) {
 				targetKeyPropertyNames.add( referencedPropertyName.substring( 0, dotIndex ) );
 			}
-			// todo (PropertyMapping) : the problem here is timing.  this needs to be delayed.
 			addPrefixedPropertyPaths(
 					targetKeyPropertyNames,
 					referencedPropertyName,
-					elementTypeDescriptor.getEntityPersister().getPropertyType( referencedPropertyName ),
+					entityBinding.getRecursiveProperty( referencedPropertyName ).getType(),
 					creationProcess.getCreationContext().getSessionFactory()
 			);
 			return targetKeyPropertyNames;

@@ -211,8 +211,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		initSubclassPropertyAliasesMap( persistentClass );
-
-		postConstruct( creationContext.getMetadata() );
 	}
 
 	protected EntityTableDescriptor[] buildTableDescriptors() {

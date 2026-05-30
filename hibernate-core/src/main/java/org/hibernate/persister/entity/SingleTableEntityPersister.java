@@ -332,8 +332,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassesByDiscriminatorValue = toSmallMap( subclassesByDiscriminatorValueLocal );
 
 		initSubclassPropertyAliasesMap( persistentClass );
-
-		postConstruct( creationContext.getMetadata() );
 	}
 
 	private static boolean isDiscriminatorInsertable(PersistentClass persistentClass) {

@@ -521,8 +521,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		initSubclassPropertyAliasesMap( persistentClass );
 
-		postConstruct( creationContext.getMetadata() );
-
 	}
 
 	private void initDiscriminatorProperties(

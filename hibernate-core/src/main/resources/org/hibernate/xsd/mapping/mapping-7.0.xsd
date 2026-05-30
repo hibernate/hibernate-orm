@@ -3226,7 +3226,7 @@
         <xsd:annotation>
             <xsd:documentation>
                 See `org.hibernate.annotations.GenerationTime`
-                See `org.hibernate.boot.model.source.spi.GenerationTiming`
+                See `org.hibernate.boot.jaxb.mapping.GenerationTiming`
                 See `@org.hibernate.annotations.Generated`
             </xsd:documentation>
         </xsd:annotation>

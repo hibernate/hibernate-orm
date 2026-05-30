@@ -18,7 +18,7 @@ import org.hibernate.boot.model.source.spi.SingularAttributeSource;
 import org.hibernate.boot.model.source.spi.SizeSource;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.boot.model.source.spi.GenerationTiming;
+import org.hibernate.boot.jaxb.mapping.GenerationTiming;
 
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 

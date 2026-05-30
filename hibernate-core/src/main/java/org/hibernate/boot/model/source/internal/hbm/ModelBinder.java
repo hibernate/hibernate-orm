@@ -123,7 +123,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.boot.model.source.spi.GenerationTiming;
+import org.hibernate.boot.jaxb.mapping.GenerationTiming;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;

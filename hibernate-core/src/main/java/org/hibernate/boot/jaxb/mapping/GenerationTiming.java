@@ -10,9 +10,11 @@ import java.util.Locale;
 import org.hibernate.generator.EventType;
 
 /**
- * Represents the {@linkplain EventType timing} of {@link org.hibernate.generator.Generator value generation}
- * in XML mappings.  That is, whether the value is generated on{@linkplain EventType#INSERT INSERT},
- * {@linkplain EventType#UPDATE UPDATE} or both.
+ * Represents the {@linkplain EventType timing} of
+ * {@linkplain org.hibernate.generator.Generator value generation}
+ * in XML mappings.  That is, whether the value is generated on
+ * {@linkplain EventType#INSERT INSERT}, on
+ * {@linkplain EventType#UPDATE UPDATE}, or both.
  *
  * @author Steve Ebersole
  */

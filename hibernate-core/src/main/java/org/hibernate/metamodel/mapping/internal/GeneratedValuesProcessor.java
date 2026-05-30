@@ -137,7 +137,7 @@ public class GeneratedValuesProcessor {
 	 */
 	public static List<AttributeMapping> getGeneratedAttributes(EntityMappingType entityDescriptor, EventType timing) {
 		// todo (6.0): For now, we rely on the entity metamodel as composite attributes report
-		//             GenerationTiming.NEVER even if they have attributes that would need generation
+		//             no generation timing even if they have attributes that would need generation
 		final var generators = entityDescriptor.getEntityPersister().getGenerators();
 		final List<AttributeMapping> generatedValuesToSelect = new ArrayList<>();
 		entityDescriptor.forEachAttributeMapping( mapping -> {

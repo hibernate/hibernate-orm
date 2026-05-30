@@ -16,7 +16,7 @@ import org.hibernate.boot.model.source.spi.SingularAttributeNature;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.boot.model.source.spi.VersionAttributeSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.model.source.spi.GenerationTiming;
+import org.hibernate.boot.jaxb.mapping.GenerationTiming;
 
 /**
  * Implementation for {@code <version/>} mappings

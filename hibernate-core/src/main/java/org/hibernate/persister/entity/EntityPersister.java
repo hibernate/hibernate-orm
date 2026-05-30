@@ -34,6 +34,7 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -130,34 +131,37 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 *
 	 * @throws MappingException Indicates an issue in the metadata.
 	 */
-	void postInstantiate() throws MappingException;
+	void postInstantiate(PersistentClass bootEntityDescriptor) throws MappingException;
 
 	/**
-	 * Prepare loaders associated with the persister.  Distinct "phase"
-	 * in building the persister after {@linkplain InFlightEntityMappingType#prepareMappingModel}
-	 * and {@linkplain #postInstantiate()} have occurred.
+	 * Prepare loaders associated with the persister.
 	 * <p>
-	 * The distinct phase is used to ensure that all {@linkplain org.hibernate.metamodel.mapping.TableDetails}
+	 * Distinct "phase" in building the persister after
+	 * {@linkplain InFlightEntityMappingType#prepareMappingModel} and
+	 * {@linkplain #postInstantiate(PersistentClass)} have occurred.
+	 * <p>
+	 * The distinct phase is used to ensure that all
+	 * {@linkplain org.hibernate.metamodel.mapping.TableDetails}
 	 * are available across the entire model
 	 */
 	default void prepareLoaders() {
 	}
 
 	/**
-	 * Build {@link org.hibernate.action.queue.spi.meta.TableDescriptor}s early, before loaders.
+	 * Build {@link org.hibernate.action.queue.spi.meta.TableDescriptor}s
+	 * early, before loaders.
 	 * <p>
-	 * This is separated from {@link #prepareLoaders()} to ensure all table descriptors
-	 * are available across the entire model hierarchy before any persister tries to
-	 * access them (e.g., subclass persisters accessing root persister's table descriptors).
+	 * This is separated from {@link #prepareLoaders()} to ensure all
+	 * table descriptors are available across the entire model hierarchy
+	 * before any persister tries to access them (e.g., subclass persisters
+	 * accessing root persister's table descriptors).
 	 */
 	default void buildTableDescriptorsEarly() {
 	}
 
 	/**
-	 * Return the {@link org.hibernate.SessionFactory} to which this persister
+	 * The {@link org.hibernate.SessionFactory} to which this persister
 	 * belongs.
-	 *
-	 * @return The owning {@code SessionFactory}.
 	 */
 	SessionFactoryImplementor getFactory();
 
@@ -172,7 +176,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Returns an object that identifies the space in which identifiers of
-	 * this entity hierarchy are unique.  Might be a table name, a JNDI URL, etc.
+	 * this entity hierarchy are unique.
+	 * <p>
+	 * Might be a table name, a JNDI URL, etc.
 	 *
 	 * @return The root entity name.
 	 */
@@ -199,9 +205,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	/**
-	 * The strategy to use for SQM mutation statements where the target entity
-	 * has multiple tables. Returns {@code null} to indicate that the entity
-	 * does not have multiple tables.
+	 * The strategy to use for SQM mutation statements where the target
+	 * entity has multiple tables. Returns {@code null} to indicate that
+	 * the entity does not have multiple tables.
 	 */
 	SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy();
 

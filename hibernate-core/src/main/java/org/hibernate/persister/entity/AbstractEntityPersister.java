@@ -467,7 +467,8 @@ public abstract class AbstractEntityPersister
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext) throws HibernateException {this(
+			final RuntimeModelCreationContext creationContext) throws HibernateException {
+		this(
 				persistentClass,
 				cacheAccessStrategy,
 				naturalIdRegionAccessStrategy,
@@ -3531,7 +3532,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public final void postInstantiate() throws MappingException {
+	public final void postInstantiate(PersistentClass bootEntityDescriptor) throws MappingException {
+
+		tableMappings = buildTableMappings( bootEntityDescriptor );
+
 		final List<AttributeMapping> insertGeneratedAttributes =
 				hasInsertGeneratedProperties()
 						? getGeneratedAttributes( this, INSERT )
@@ -4023,7 +4027,11 @@ public abstract class AbstractEntityPersister
 							tableBuilderMap
 					);
 			if ( !isInverseTable( relativePosition ) ) {
-				collectAttributesIndexesForTable( relativePosition, tableMappingBuilder.attributeIndexes::add );
+				forEachAttributeMapping( (attributeIndex, attributeMapping) -> {
+					if ( isPropertyOfTable( attributeIndex, relativePosition ) ) {
+						tableMappingBuilder.attributeIndexes.add( attributeIndex );
+					}
+				} );
 			}
 		} );
 
@@ -4093,7 +4101,8 @@ public abstract class AbstractEntityPersister
 
 	/**
 	 * Determine if the specified table is a secondary table (@SecondaryTable).
-	 * By default, returns false. Subclasses should override to provide accurate information.
+	 * By default, returns false. Subclasses must override to provide accurate
+	 * information.
 	 */
 	protected boolean isSecondaryTable(String tableExpression, int relativePosition) {
 		return false;
@@ -4121,14 +4130,6 @@ public abstract class AbstractEntityPersister
 				String tableExpression,
 				int relativePosition,
 				Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
-	}
-
-	private void collectAttributesIndexesForTable(int naturalTableIndex, Consumer<Integer> indexConsumer) {
-		forEachAttributeMapping( (attributeIndex, attributeMapping) -> {
-			if ( isPropertyOfTable( attributeIndex, naturalTableIndex ) ) {
-				indexConsumer.accept( attributeIndex );
-			}
-		} );
 	}
 
 	protected abstract boolean isIdentifierTable(String tableExpression);
@@ -5209,12 +5210,8 @@ public abstract class AbstractEntityPersister
 		CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session);
 	}
 
-	private static class StandardCacheEntryHelper implements CacheEntryHelper {
-		private final EntityPersister persister;
-
-		private StandardCacheEntryHelper(EntityPersister persister) {
-			this.persister = persister;
-		}
+	private record StandardCacheEntryHelper(EntityPersister persister)
+			implements CacheEntryHelper {
 
 		@Override
 		@Nonnull
@@ -5229,12 +5226,8 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private static class ReferenceCacheEntryHelper implements CacheEntryHelper {
-		private final EntityPersister persister;
-
-		private ReferenceCacheEntryHelper(EntityPersister persister) {
-			this.persister = persister;
-		}
+	private record ReferenceCacheEntryHelper(EntityPersister persister)
+			implements CacheEntryHelper {
 
 		@Override
 		@Nonnull
@@ -5249,13 +5242,11 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private static class StructuredCacheEntryHelper implements CacheEntryHelper {
-		private final EntityPersister persister;
-		private final StructuredCacheEntry structure;
+	private record StructuredCacheEntryHelper(EntityPersister persister, StructuredCacheEntry structure)
+			implements CacheEntryHelper {
 
 		private StructuredCacheEntryHelper(EntityPersister persister) {
-			this.persister = persister;
-			this.structure = new StructuredCacheEntry( persister );
+			this( persister, new StructuredCacheEntry( persister ) );
 		}
 
 		@Override
@@ -5317,11 +5308,6 @@ public abstract class AbstractEntityPersister
 			prepareMultiTableMutationStrategy( creationProcess );
 			prepareMultiTableInsertStrategy( creationProcess );
 		}
-	}
-
-	@Override
-	public void prepareTableMappings(PersistentClass bootEntityDescriptor) {
-		tableMappings = buildTableMappings( bootEntityDescriptor );
 	}
 
 	private void handleSubtypeMappings(MappingModelCreationProcess creationProcess) {

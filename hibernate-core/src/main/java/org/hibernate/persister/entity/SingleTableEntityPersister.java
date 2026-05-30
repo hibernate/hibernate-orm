@@ -94,7 +94,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final boolean forceDiscriminator;
 	private final String discriminatorColumnName;
 	private final String discriminatorColumnReaders;
-	private final String discriminatorColumnReaderTemplate;
+//	private final String discriminatorColumnReaderTemplate;
 	private final String discriminatorFormulaTemplate;
 	private final BasicType<?> discriminatorType;
 	private final DiscriminatorValue discriminatorValue;
@@ -221,13 +221,13 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorFormulaTemplate = formula.getTemplate( dialect, typeConfiguration );
 				discriminatorColumnName = null;
 				discriminatorColumnReaders = null;
-				discriminatorColumnReaderTemplate = null;
+//				discriminatorColumnReaderTemplate = null;
 				discriminatorAlias = "clazz_";
 			}
 			else if ( selectable instanceof Column column ) {
 				discriminatorColumnName = column.getQuotedName( dialect );
 				discriminatorColumnReaders = column.getReadExpr( dialect );
-				discriminatorColumnReaderTemplate = column.getTemplate( dialect, typeConfiguration );
+//				discriminatorColumnReaderTemplate = column.getTemplate( dialect, typeConfiguration );
 				discriminatorAlias = column.getAlias( dialect, persistentClass.getRootTable() );
 				discriminatorFormulaTemplate = null;
 			}
@@ -240,7 +240,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			discriminatorInsertable = false;
 			discriminatorColumnName = null;
 			discriminatorColumnReaders = null;
-			discriminatorColumnReaderTemplate = null;
+//			discriminatorColumnReaderTemplate = null;
 			discriminatorAlias = null;
 			discriminatorType = null;
 			discriminatorValue = null;
@@ -327,11 +327,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String getDiscriminatorColumnReaders() {
 		return discriminatorColumnReaders;
-	}
-
-	@Override
-	public String getDiscriminatorColumnReaderTemplate() {
-		return discriminatorColumnReaderTemplate;
 	}
 
 	@Override

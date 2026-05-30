@@ -184,7 +184,6 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -206,9 +205,6 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ast.LogicalTableUpdate;
-import org.hibernate.sql.model.ast.TableInsert;
-import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -340,8 +336,8 @@ public abstract class AbstractEntityPersister
 	private MultiNaturalIdLoader<?> multiNaturalIdLoader;
 
 	private final String[] rootTableKeyColumnNames;
-	private final String[] rootTableKeyColumnReaders;
-	private final String[] rootTableKeyColumnReaderTemplates;
+//	private final String[] rootTableKeyColumnReaders;
+//	private final String[] rootTableKeyColumnReaderTemplates;
 	private final String[] identifierAliases;
 	private final int identifierColumnSpan;
 	private final String versionColumnName;
@@ -379,10 +375,10 @@ public abstract class AbstractEntityPersister
 	//information about all properties in class hierarchy
 	private final String[] subclassPropertyNameClosure;
 	private final Type[] subclassPropertyTypeClosure;
-	private final String[][] subclassPropertyFormulaTemplateClosure;
+//	private final String[][] subclassPropertyFormulaTemplateClosure;
 	private final String[][] subclassPropertyColumnNameClosure;
-	private final String[][] subclassPropertyColumnReaderClosure;
-	private final String[][] subclassPropertyColumnReaderTemplateClosure;
+//	private final String[][] subclassPropertyColumnReaderClosure;
+//	private final String[][] subclassPropertyColumnReaderTemplateClosure;
 	private final FetchMode[] subclassPropertyFetchModeClosure;
 
 	private final StateManagement stateManagement;
@@ -555,8 +551,8 @@ public abstract class AbstractEntityPersister
 
 		identifierColumnSpan = persistentClass.getIdentifier().getColumnSpan();
 		rootTableKeyColumnNames = new String[identifierColumnSpan];
-		rootTableKeyColumnReaders = new String[identifierColumnSpan];
-		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
+//		rootTableKeyColumnReaders = new String[identifierColumnSpan];
+//		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
 		identifierAliases = new String[identifierColumnSpan];
 
 		final var rootTable = persistentClass.getRootTable();
@@ -571,8 +567,8 @@ public abstract class AbstractEntityPersister
 		for (int i = 0; i < columns.size(); i++ ) {
 			final var column = columns.get(i);
 			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
-			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
-			rootTableKeyColumnReaderTemplates[i] = column.getTemplate( dialect, typeConfiguration );
+//			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
+//			rootTableKeyColumnReaderTemplates[i] = column.getTemplate( dialect, typeConfiguration );
 			identifierAliases[i] = column.getAlias( dialect, rootTable );
 		}
 
@@ -685,11 +681,11 @@ public abstract class AbstractEntityPersister
 		final ArrayList<String> formulaAliases = new ArrayList<>();
 		final ArrayList<Type> types = new ArrayList<>();
 		final ArrayList<String> names = new ArrayList<>();
-		final ArrayList<String[]> templates = new ArrayList<>();
+//		final ArrayList<String[]> templates = new ArrayList<>();
 		final ArrayList<String[]> propColumns = new ArrayList<>();
 		final ArrayList<String[]> propColumnAliases = new ArrayList<>();
-		final ArrayList<String[]> propColumnReaders = new ArrayList<>();
-		final ArrayList<String[]> propColumnReaderTemplates = new ArrayList<>();
+//		final ArrayList<String[]> propColumnReaders = new ArrayList<>();
+//		final ArrayList<String[]> propColumnReaderTemplates = new ArrayList<>();
 		final ArrayList<FetchMode> joinedFetchesList = new ArrayList<>();
 
 		if ( persistentClass.hasSubclasses() ) {
@@ -708,16 +704,16 @@ public abstract class AbstractEntityPersister
 			final int columnSpan = prop.getColumnSpan();
 			final String[] columnNames = new String[columnSpan];
 			final String[] columnAliases = new String[columnSpan];
-			final String[] readers = new String[columnSpan];
-			final String[] readerTemplates = new String[columnSpan];
-			final String[] formulaTemplates = new String[columnSpan];
+//			final String[] readers = new String[columnSpan];
+//			final String[] readerTemplates = new String[columnSpan];
+//			final String[] formulaTemplates = new String[columnSpan];
 
 			final var selectables = prop.getSelectables();
 			for ( int i = 0; i < selectables.size(); i++ ) {
 				final var selectable = selectables.get(i);
 				if ( selectable instanceof Formula ) {
 					columnAliases[i] = selectable.getAlias( dialect, prop.getValue().getTable() );
-					formulaTemplates[i] = selectable.getTemplate( dialect, typeConfiguration );
+//					formulaTemplates[i] = selectable.getTemplate( dialect, typeConfiguration );
 					final String formulaAlias = selectable.getAlias( dialect );
 					if ( prop.isSelectable() && !formulaAliases.contains( formulaAlias ) ) {
 						formulaAliases.add( formulaAlias );
@@ -731,8 +727,8 @@ public abstract class AbstractEntityPersister
 					if ( prop.isSelectable() && !aliases.contains( columnAlias ) ) {
 						aliases.add( columnAlias );
 					}
-					readers[i] = column.getReadExpr( dialect );
-					readerTemplates[i] = column.getTemplate( dialect, typeConfiguration );
+//					readers[i] = column.getReadExpr( dialect );
+//					readerTemplates[i] = column.getTemplate( dialect, typeConfiguration );
 					if ( thisClassProperties.contains( prop )
 							? persistentClass.hasSubclasses()
 							: persistentClass.isDefinedOnMultipleSubclasses( column ) ) {
@@ -742,9 +738,9 @@ public abstract class AbstractEntityPersister
 			}
 			propColumns.add( columnNames );
 			propColumnAliases.add( columnAliases );
-			propColumnReaders.add( readers );
-			propColumnReaderTemplates.add( readerTemplates );
-			templates.add( formulaTemplates );
+//			propColumnReaders.add( readers );
+//			propColumnReaderTemplates.add( readerTemplates );
+//			templates.add( formulaTemplates );
 
 			joinedFetchesList.add( prop.getValue().getFetchMode() );
 		}
@@ -753,11 +749,11 @@ public abstract class AbstractEntityPersister
 
 		subclassPropertyNameClosure = toStringArray( names );
 		subclassPropertyTypeClosure = toTypeArray( types );
-		subclassPropertyFormulaTemplateClosure = to2DStringArray( templates );
+//		subclassPropertyFormulaTemplateClosure = to2DStringArray( templates );
 		subclassPropertyColumnNameClosure = to2DStringArray( propColumns );
 		subclassPropertyColumnAliasClosure = to2DStringArray( propColumnAliases );
-		subclassPropertyColumnReaderClosure = to2DStringArray( propColumnReaders );
-		subclassPropertyColumnReaderTemplateClosure = to2DStringArray( propColumnReaderTemplates );
+//		subclassPropertyColumnReaderClosure = to2DStringArray( propColumnReaders );
+//		subclassPropertyColumnReaderTemplateClosure = to2DStringArray( propColumnReaderTemplates );
 
 		subclassPropertyFetchModeClosure = new FetchMode[joinedFetchesList.size()];
 		int j = 0;
@@ -1059,12 +1055,6 @@ public abstract class AbstractEntityPersister
 
 	public String getDiscriminatorColumnReaders() {
 		return DISCRIMINATOR_ALIAS;
-	}
-
-	public String getDiscriminatorColumnReaderTemplate() {
-		return getSubclassEntityNames().size() == 1
-				? getDiscriminatorSQLValue()
-				: Template.TEMPLATE + "." + DISCRIMINATOR_ALIAS;
 	}
 
 	public String getDiscriminatorFormulaTemplate() {
@@ -1940,14 +1930,6 @@ public abstract class AbstractEntityPersister
 		return rootTableKeyColumnNames;
 	}
 
-	public String[] getIdentifierColumnReaders() {
-		return rootTableKeyColumnReaders;
-	}
-
-	public String[] getIdentifierColumnReaderTemplates() {
-		return rootTableKeyColumnReaderTemplates;
-	}
-
 	public int getIdentifierColumnSpan() {
 		return identifierColumnSpan;
 	}
@@ -2045,8 +2027,6 @@ public abstract class AbstractEntityPersister
 			i++;
 		}
 
-		final String[] columnAliases = getSubclassColumnAliasClosure();
-		final String[] formulaAliases = getSubclassFormulaAliasClosure();
 		int columnIndex = 0;
 		int formulaIndex = 0;
 		final int size = getNumberOfFetchables();
@@ -2066,8 +2046,8 @@ public abstract class AbstractEntityPersister
 					final var selectableMapping = fetchable.getSelectable( k );
 					if ( processedExpressions.add( selectableMapping.getSelectionExpression() ) ) {
 						final String baseAlias = selectableMapping.isFormula()
-								? formulaAliases[formulaIndex++]
-								: columnAliases[columnIndex++];
+								? subclassFormulaAliasClosure[formulaIndex++]
+								: subclassColumnAliasClosure[columnIndex++];
 						aliasSelection( sqlSelections, i, baseAlias + suffix );
 						i++;
 					}
@@ -2375,7 +2355,7 @@ public abstract class AbstractEntityPersister
 	 * {@literal this} is the concrete EntityPersister (since the
 	 * concrete EntityPersister cannot have duplicated property names).
 	 */
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public String[] toColumns(String propertyName) throws QueryException {
 		return getPropertyColumnNames( propertyName );
 	}
@@ -2478,28 +2458,8 @@ public abstract class AbstractEntityPersister
 		return subclassPropertyColumnNameClosure[i];
 	}
 
-	public String[][] getSubclassPropertyFormulaTemplateClosure() {
-		return subclassPropertyFormulaTemplateClosure;
-	}
-
 	protected Type[] getSubclassPropertyTypeClosure() {
 		return subclassPropertyTypeClosure;
-	}
-
-	protected String[][] getSubclassPropertyColumnNameClosure() {
-		return subclassPropertyColumnNameClosure;
-	}
-
-	public String[][] getSubclassPropertyColumnReaderClosure() {
-		return subclassPropertyColumnReaderClosure;
-	}
-
-	public String[][] getSubclassPropertyColumnReaderTemplateClosure() {
-		return subclassPropertyColumnReaderTemplateClosure;
-	}
-
-	protected String[] getSubclassPropertyNameClosure() {
-		return subclassPropertyNameClosure;
 	}
 
 	private static boolean isPrefix(final AttributeMapping attributeMapping, final String currentAttributeName) {
@@ -2862,8 +2822,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean hasNonIdentifierPropertyNamedId(EntityType entityType) {
-		final var associatedPersister = entityType.getAssociatedEntityPersister( factory );
-		return associatedPersister instanceof BaseEntityPersister baseEntityPersister
+		return entityType.getAssociatedEntityPersister( factory )
+					instanceof BaseEntityPersister baseEntityPersister
 			&& baseEntityPersister.hasNonIdentifierPropertyNamedId();
 	}
 
@@ -2952,8 +2912,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachMutableTableDescriptor(Consumer<EntityTableDescriptor> consumer) {
-		for ( int i = 0; i < tableDescriptors.length; i++ ) {
-			final var tableMapping = tableDescriptors[i];
+		for ( var tableMapping : tableDescriptors ) {
 			// inverse tables are not mutable from this mapping
 			if ( !tableMapping.isInverse() ) {
 				consumer.accept( tableMapping );
@@ -2994,8 +2953,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachMutableTable(Consumer<EntityTableMapping> consumer) {
-		for ( int i = 0; i < tableMappings.length; i++ ) {
-			final var tableMapping = tableMappings[i];
+		for ( var tableMapping : tableMappings ) {
 			// inverse tables are not mutable from this mapping
 			if ( !tableMapping.isInverse() ) {
 				consumer.accept( tableMapping );
@@ -3033,7 +2991,8 @@ public abstract class AbstractEntityPersister
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.staticSqlForEntity( getEntityName() );
 			for ( var entry : lazyLoadPlanByFetchGroup.entrySet() ) {
-				MODEL_MUTATION_LOGGER.lazySelect( String.valueOf(entry.getKey()), entry.getValue().getJdbcSelect().getSqlString() );
+				MODEL_MUTATION_LOGGER.lazySelect( String.valueOf( entry.getKey() ),
+						entry.getValue().getJdbcSelect().getSqlString() );
 			}
 			if ( sqlVersionSelectString != null ) {
 				MODEL_MUTATION_LOGGER.versionSelect( sqlVersionSelectString );
@@ -3042,7 +3001,7 @@ public abstract class AbstractEntityPersister
 			{
 				final var staticInsertOperations = insertDecomposer.getStaticInsertOperations();
 				int i = 0;
-				for ( Map.Entry<String, TableInsert> insertEntry : staticInsertOperations.entrySet() ) {
+				for ( var insertEntry : staticInsertOperations.entrySet() ) {
 					if ( insertEntry.getValue() instanceof JdbcMutationOperation jdbcOperation ) {
 						MODEL_MUTATION_LOGGER.insertOperationSql( i++, jdbcOperation.getSqlString() );
 					}
@@ -3052,7 +3011,7 @@ public abstract class AbstractEntityPersister
 			{
 				final var staticUpdateOperations = updateDecomposer.getStaticUpdateOperations();
 				int i = 0;
-				for ( Map.Entry<String, LogicalTableUpdate<?>> updateEntry : staticUpdateOperations.entrySet() ) {
+				for ( var updateEntry : staticUpdateOperations.entrySet() ) {
 					if ( updateEntry.getValue() instanceof JdbcMutationOperation jdbcOperation ) {
 						MODEL_MUTATION_LOGGER.updateOperationSql( i++, jdbcOperation.getSqlString() );
 					}
@@ -3062,7 +3021,7 @@ public abstract class AbstractEntityPersister
 			{
 				final var staticDeleteOperations = deleteDecomposer.getStaticDeleteOperations();
 				int i = 0;
-				for ( Map.Entry<String, ? extends TableMutation<?>> updateEntry : staticDeleteOperations.entrySet() ) {
+				for ( var updateEntry : staticDeleteOperations.entrySet() ) {
 					if ( updateEntry.getValue() instanceof JdbcMutationOperation jdbcOperation ) {
 						MODEL_MUTATION_LOGGER.updateOperationSql( i++, jdbcOperation.getSqlString() );
 					}
@@ -3100,7 +3059,10 @@ public abstract class AbstractEntityPersister
 		final boolean useAuxiliaryTable =
 				auxiliaryMapping != null
 						&& auxiliaryMapping.useAuxiliaryTable( loadQueryInfluencers );
-		final String originalTableName = needsDiscriminator() ? getRootTableName() : getTableName();
+		final String originalTableName =
+				needsDiscriminator()
+						? getRootTableName()
+						: getTableName();
 		final String rootTableName =
 				useAuxiliaryTable
 						? auxiliaryMapping.resolveTableName( originalTableName )
@@ -3108,11 +3070,7 @@ public abstract class AbstractEntityPersister
 		final String rootAlias = sqlAliasBase.generateNewAlias();
 		final var rootTableReference =
 				useAuxiliaryTable
-						? new AuxiliaryTableReference(
-								rootTableName,
-								originalTableName,
-								rootAlias
-						)
+						? new AuxiliaryTableReference( rootTableName, originalTableName, rootAlias )
 						: new NamedTableReference( rootTableName, rootAlias );
 		rootTableReference.applyAuxiliaryTable( auxiliaryMapping, loadQueryInfluencers );
 
@@ -3181,8 +3139,8 @@ public abstract class AbstractEntityPersister
 		if ( additionalPredicateCollector != null ) {
 			if ( needsDiscriminator() ) {
 				final String alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-				final var discriminatorPredicate = createDiscriminatorPredicate( alias, tableGroup, creationState );
-				additionalPredicateCollector.get().accept( discriminatorPredicate );
+				additionalPredicateCollector.get()
+						.accept( createDiscriminatorPredicate( alias, tableGroup, creationState ) );
 			}
 
 			if ( auxiliaryMapping != null ) {
@@ -3230,38 +3188,32 @@ public abstract class AbstractEntityPersister
 			String alias,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
-		final SqlExpressionResolver.ColumnReferenceKey columnReferenceKey;
-		final String discriminatorExpression;
-		if ( isDiscriminatorFormula() ) {
-			discriminatorExpression = getDiscriminatorFormulaTemplate();
-			columnReferenceKey = createColumnReferenceKey(
-					tableGroup.getPrimaryTableReference(),
-					getDiscriminatorFormulaTemplate(),
-					getDiscriminatorType()
-			);
-		}
-		else {
-			discriminatorExpression = getDiscriminatorColumnName();
-			columnReferenceKey = createColumnReferenceKey(
-					tableGroup.getPrimaryTableReference(),
-					getDiscriminatorColumnName(),
-					getDiscriminatorType()
-			);
-		}
+		final String discriminatorExpression =
+				isDiscriminatorFormula()
+						? getDiscriminatorFormulaTemplate()
+						: getDiscriminatorColumnName();
 
-		final var discriminatorType = (BasicType<?>) getDiscriminatorMapping().getJdbcMapping();
-		final var sqlExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
-				columnReferenceKey,
-				sqlAstProcessingState -> new ColumnReference(
-						alias,
-						discriminatorExpression,
-						isDiscriminatorFormula(),
-						null,
-						discriminatorType.getJdbcMapping()
-				)
-		);
+		final var discriminatorJdbcMapping =
+				(BasicType<?>)
+						getDiscriminatorMapping().getJdbcMapping();
+		final var sqlExpression =
+				creationState.getSqlExpressionResolver()
+						.resolveSqlExpression(
+								createColumnReferenceKey(
+										tableGroup.getPrimaryTableReference(),
+										discriminatorExpression,
+										getDiscriminatorType()
+								),
+								sqlAstProcessingState -> new ColumnReference(
+										alias,
+										discriminatorExpression,
+										isDiscriminatorFormula(),
+										null,
+										discriminatorJdbcMapping
+								)
+						);
 
-		return createDisciminatorPredicate( discriminatorType, sqlExpression );
+		return createDisciminatorPredicate( discriminatorJdbcMapping, sqlExpression );
 	}
 
 	private Predicate createDisciminatorPredicate(BasicType<?> discriminatorType, Expression sqlExpression) {
@@ -3623,9 +3575,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void applyAttributes(LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap) {
-		forEachAttributeMapping( (attributeIndex, attribute) -> {
-			applyAttribute( tableBuilderMap, attribute );
-		} );
+		forEachAttributeMapping( (attributeIndex, attribute)
+				-> applyAttribute( tableBuilderMap, attribute ) );
 	}
 
 	protected void applyAttribute(LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap, AttributeMapping attribute) {
@@ -3647,9 +3598,8 @@ public abstract class AbstractEntityPersister
 			final var builder = tableBuilderMap.get( tableName );
 			if ( builder != null && !builder.isInverse ) {
 				builder.addAttribute( attribute );
-				attribute.forEachSelectable( (selectableIndex, selectable) -> {
-					builder.addColumn( attribute, ColumnDescriptor.from( selectable ) );
-				} );
+				attribute.forEachSelectable( (selectableIndex, selectable)
+						-> builder.addColumn( attribute, ColumnDescriptor.from( selectable ) ) );
 			}
 		}
 	}
@@ -3781,13 +3731,12 @@ public abstract class AbstractEntityPersister
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
 		var constraintModel = factory.getMappingMetamodel().getConstraintModel();
-		// NOTE : if ActionQueue is not the graph-based one, isSelfReferential will have no impact
+		// NOTE: if ActionQueue is not the graph-based one, isSelfReferential will have no impact
 		final boolean isSelfReferential = constraintModel.hasSelfReferentialTable( tableName );
 		final boolean hasUniqueKeys = isNotEmpty( constraintModel.getUniqueConstraintsForTable( tableName ) );
 		var keyColumns = new ArrayList<ColumnDescriptor>();
-		tableKeyColumnVisitationSupplier.get().accept( (index, selectableMapping) -> {
-			keyColumns.add( ColumnDescriptor.from( selectableMapping ) );
-		} );
+		tableKeyColumnVisitationSupplier.get().accept( (index, selectableMapping)
+				-> keyColumns.add( ColumnDescriptor.from( selectableMapping ) ) );
 
 		final boolean isIdentifierTable = isIdentifierTable( tableName );
 		final var mutationDetails = resolveTableMutationDetails( tableName, relativePosition );
@@ -4985,13 +4934,18 @@ public abstract class AbstractEntityPersister
 			SharedSessionContractImplementor session) {
 		if ( !getGenerator().allowAssignedIdentifiers() ) {
 			// reset the identifier
-			final Object defaultIdentifier = identifierMapping.getUnsavedStrategy().getDefaultValue( currentId );
+			final Object defaultIdentifier =
+					identifierMapping.getUnsavedStrategy()
+							.getDefaultValue( currentId );
 			setIdentifier( entity, defaultIdentifier, session );
 		}
 		// reset the version
 		if ( versionMapping != null ) {
-			final Object defaultVersion = versionMapping.getUnsavedStrategy().getDefaultValue( currentVersion );
-			versionMapping.getVersionAttribute().getPropertyAccess().getSetter().set( entity, defaultVersion );
+			final Object defaultVersion =
+					versionMapping.getUnsavedStrategy()
+							.getDefaultValue( currentVersion );
+			versionMapping.getVersionAttribute().getPropertyAccess()
+					.getSetter().set( entity, defaultVersion );
 		}
 	}
 
@@ -6702,20 +6656,6 @@ public abstract class AbstractEntityPersister
 	@Deprecated private final String[] subclassColumnAliasClosure;
 	@Deprecated private final String[] subclassFormulaAliasClosure;
 	@Deprecated private final String[][] subclassPropertyColumnAliasClosure;
-
-	/**
-	 * @deprecated Hibernate no longer uses aliases to read from result sets
-	 */
-	@Deprecated	protected String[] getSubclassColumnAliasClosure() {
-		return subclassColumnAliasClosure;
-	}
-
-	/**
-	 * @deprecated Hibernate no longer uses aliases to read from result sets
-	 */
-	@Deprecated	protected String[] getSubclassFormulaAliasClosure() {
-		return subclassFormulaAliasClosure;
-	}
 
 	/**
 	 * @deprecated Hibernate no longer uses aliases to read from result sets

@@ -3530,7 +3530,8 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private void doLateInit() {
+	@Override
+	public final void postInstantiate() throws MappingException {
 		final List<AttributeMapping> insertGeneratedAttributes =
 				hasInsertGeneratedProperties()
 						? getGeneratedAttributes( this, INSERT )
@@ -5316,11 +5317,6 @@ public abstract class AbstractEntityPersister
 			prepareMultiTableMutationStrategy( creationProcess );
 			prepareMultiTableInsertStrategy( creationProcess );
 		}
-	}
-
-	@Override
-	public final void postInstantiate() throws MappingException {
-		doLateInit();
 	}
 
 	@Override

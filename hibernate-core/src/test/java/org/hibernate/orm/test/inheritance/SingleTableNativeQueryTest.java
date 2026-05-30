@@ -109,7 +109,6 @@ public class SingleTableNativeQueryTest {
 	@Test
 	public void itShouldGetPersons(SessionFactoryScope scope) {
 		scope.inTransaction(session -> {
-			//noinspection removal
 			var results = session.createNativeQuery( "select {p.*} from person p order by p.name",
 					Object.class ).addEntity( "p", Person.class ).list();
 			assertThat( results.stream().map( p -> ((Person) p).getName() ).collect( Collectors.toList() ),
@@ -120,7 +119,6 @@ public class SingleTableNativeQueryTest {
 	@Test
 	public void itShouldGetWife(SessionFactoryScope scope) {
 		scope.inTransaction(session -> {
-			//noinspection removal
 			var results = session.createNativeQuery(
 							"select {m.*}, {w.*} from person m left join person w on m.wife_name = w.name where m.TYPE = 'MAN'",
 							Object[].class )
@@ -138,7 +136,6 @@ public class SingleTableNativeQueryTest {
 	@Test
 	public void itShouldGetFamilyMembers(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			//noinspection removal
 			var results = session.createNativeQuery( "select {f.*} from family f", Object.class )
 					.addEntity( "f", Family.class ).list();
 			Family family = (Family) results.get( 0 );

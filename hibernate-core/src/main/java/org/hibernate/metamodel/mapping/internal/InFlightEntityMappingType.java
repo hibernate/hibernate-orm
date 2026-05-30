@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
 /**
@@ -34,13 +33,6 @@ public interface InFlightEntityMappingType extends EntityMappingType {
 	 * descriptors, identifier mapping descriptor, etc.
 	 */
 	default void prepareMappingModel(MappingModelCreationProcess creationProcess) {
-		// by default do nothing - support for legacy impls
-	}
-
-	/**
-	 * Prepare table mappings after the mapping model is ready.
-	 */
-	default void prepareTableMappings(PersistentClass bootEntityDescriptor) {
 		// by default do nothing - support for legacy impls
 	}
 }

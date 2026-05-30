@@ -28,7 +28,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -171,18 +170,12 @@ public class MappingMetamodelImpl
 		// 		- prepareMappingModel (which builds id-mappings, attribute mappings, fk-descriptors, etc.)
 		MappingModelCreationProcess.process( entityPersisterMap, collectionPersisterMap, context );
 
-		// Build tableMappings after the mapping model is ready and before the constraint model.
-		for ( var persister : entityPersisterMap.values() ) {
-			if ( persister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
-				inFlightEntityMappingType.prepareTableMappings( bootModel.getEntityBinding( persister.getEntityName() ) );
-			}
-		}
-
 		// triggers
+		//      - build table mappings after the mapping model is ready and before the constraint model
 		//		- collecting insert and update generated attributes
 		//		- building insert and update generation delegates
 		for ( var persister : entityPersisterMap.values() ) {
-			persister.postInstantiate();
+			persister.postInstantiate( bootModel.getEntityBinding( persister.getEntityName() ) );
 			registerEntityNameResolvers( persister, entityNameResolvers );
 		}
 

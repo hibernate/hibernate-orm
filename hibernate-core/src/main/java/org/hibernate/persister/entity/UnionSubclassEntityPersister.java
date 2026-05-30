@@ -191,8 +191,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			constraintOrderedTableNames = new String[] { tableName };
 			constraintOrderedKeyColumnNames = new String[][] { getIdentifierColumnNames() };
 		}
-
-		initSubclassPropertyAliasesMap( persistentClass );
 	}
 
 	protected EntityTableDescriptor[] buildTableDescriptors() {

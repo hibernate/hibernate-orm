@@ -480,9 +480,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				persistentClass,
 				sqlStringGenerationContext
 		);
-
-		initSubclassPropertyAliasesMap( persistentClass );
-
 	}
 
 	private void initDiscriminatorProperties(

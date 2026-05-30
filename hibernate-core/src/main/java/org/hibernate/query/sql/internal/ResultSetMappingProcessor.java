@@ -318,7 +318,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 								tableAlias,
 								identifierAliases,
 								fetchable,
-								persister.getSubclassPropertyColumnAliases( fetchable.getFetchableName(), suffix ),
+								persister.getSubclassPropertyColumnAliases( index, suffix ),
 								persister instanceof SingleTableEntityPersister singleTableEntityPersister
 										? singleTableEntityPersister.getSubclassPropertyType( index )
 										: persister.getPropertyType( fetchable.getFetchableName() )

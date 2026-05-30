@@ -292,8 +292,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// Don't hold a reference to an empty HashMap:
 		subclassesByDiscriminatorValue = toSmallMap( subclassesByDiscriminatorValueLocal );
-
-		initSubclassPropertyAliasesMap( persistentClass );
 	}
 
 	private static boolean isDiscriminatorInsertable(PersistentClass persistentClass) {

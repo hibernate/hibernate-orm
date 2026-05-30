@@ -5,7 +5,6 @@
 package org.hibernate.tuple;
 
 import org.hibernate.generator.Generator;
-import org.hibernate.id.IdentifierGenerator;
 
 /**
  * @deprecated No direct replacement; see {@link org.hibernate.metamodel.mapping.EntityIdentifierMapping}
@@ -15,9 +14,6 @@ public interface IdentifierAttribute extends Attribute {
 	boolean isVirtual();
 
 	boolean isEmbedded();
-
-	@Deprecated
-	IdentifierGenerator getIdentifierGenerator();
 
 	Generator getGenerator();
 

@@ -31,7 +31,6 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -528,15 +527,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Determine which identifier generation strategy is used for this entity.
 	 *
 	 * @return The identifier generation strategy.
-	 *
-	 * @deprecated use {@link #getGenerator()}
 	 */
-	@Deprecated
-	IdentifierGenerator getIdentifierGenerator();
-
-	default Generator getGenerator() {
-		return getIdentifierGenerator();
-	}
+	Generator getGenerator();
 
 	default BeforeExecutionGenerator getVersionGenerator() {
 		return new VersionGeneration( getVersionMapping() );

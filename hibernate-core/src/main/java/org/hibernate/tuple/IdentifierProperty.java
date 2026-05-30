@@ -5,7 +5,6 @@
 package org.hibernate.tuple;
 
 import org.hibernate.generator.Generator;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.type.Type;
 
 /**
@@ -72,11 +71,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	@Override
 	public boolean isEmbedded() {
 		return embedded;
-	}
-
-	@Override
-	public IdentifierGenerator getIdentifierGenerator() {
-		return (IdentifierGenerator) identifierGenerator;
 	}
 
 	@Override

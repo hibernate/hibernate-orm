@@ -11,7 +11,7 @@ import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextIm
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.envers.enhanced.OrderedSequenceGenerator;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
-import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.orm.test.envers.entities.StrIntTestEntity;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.envers.junit.EnversTest;
@@ -42,7 +42,7 @@ public class MonotonicRevisionNumberTest {
 		EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( SequenceIdRevisionEntity.class.getName() );
-		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		Generator generator = persister.getGenerator();
 		assertTrue( OrderedSequenceGenerator.class.isInstance( generator ) );
 
 		Database database = domainModelScope.getDomainModel().getDatabase();

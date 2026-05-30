@@ -40,8 +40,8 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.GenericGeneratorGeneration;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
@@ -594,13 +594,13 @@ public class DefaultCatalogAndSchemaTest
 				EntityWithExplicitQualifiersWithIncrementGenerator.NAME, expectedExplicitQualifier() );
 	}
 
-	private <T extends IdentifierGenerator> T idGenerator(Class<T> expectedType, Class<?> entityClass) {
+	private <T extends Generator> T idGenerator(Class<T> expectedType, Class<?> entityClass) {
 		final AbstractEntityPersister persister = (AbstractEntityPersister) factoryScope.getSessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityClass );
-		final Object generator = persister.getIdentifierGenerator() instanceof GenericGeneratorGeneration genericGenerator
+		final Generator generator = persister.getGenerator() instanceof GenericGeneratorGeneration genericGenerator
 				? genericGenerator.getDelegate()
-				: persister.getIdentifierGenerator();
+				: persister.getGenerator();
 		return expectedType.cast( generator );
 	}
 

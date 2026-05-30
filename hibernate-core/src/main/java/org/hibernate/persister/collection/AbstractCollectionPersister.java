@@ -41,7 +41,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
@@ -1178,11 +1177,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public EntityPersister getOwnerEntityPersister() {
 		return ownerPersister;
-	}
-
-	@Override @Deprecated
-	public IdentifierGenerator getIdentifierGenerator() {
-		return (IdentifierGenerator) identifierGenerator;
 	}
 
 	@Override

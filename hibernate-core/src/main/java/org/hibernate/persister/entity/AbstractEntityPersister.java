@@ -92,7 +92,6 @@ import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
@@ -688,6 +687,7 @@ public abstract class AbstractEntityPersister
 		final ArrayList<String> names = new ArrayList<>();
 		final ArrayList<String[]> templates = new ArrayList<>();
 		final ArrayList<String[]> propColumns = new ArrayList<>();
+		final ArrayList<String[]> propColumnAliases = new ArrayList<>();
 		final ArrayList<String[]> propColumnReaders = new ArrayList<>();
 		final ArrayList<String[]> propColumnReaderTemplates = new ArrayList<>();
 		final ArrayList<FetchMode> joinedFetchesList = new ArrayList<>();
@@ -707,6 +707,7 @@ public abstract class AbstractEntityPersister
 
 			final int columnSpan = prop.getColumnSpan();
 			final String[] columnNames = new String[columnSpan];
+			final String[] columnAliases = new String[columnSpan];
 			final String[] readers = new String[columnSpan];
 			final String[] readerTemplates = new String[columnSpan];
 			final String[] formulaTemplates = new String[columnSpan];
@@ -715,6 +716,7 @@ public abstract class AbstractEntityPersister
 			for ( int i = 0; i < selectables.size(); i++ ) {
 				final var selectable = selectables.get(i);
 				if ( selectable instanceof Formula ) {
+					columnAliases[i] = selectable.getAlias( dialect, prop.getValue().getTable() );
 					formulaTemplates[i] = selectable.getTemplate( dialect, typeConfiguration );
 					final String formulaAlias = selectable.getAlias( dialect );
 					if ( prop.isSelectable() && !formulaAliases.contains( formulaAlias ) ) {
@@ -725,6 +727,7 @@ public abstract class AbstractEntityPersister
 					final String quotedColumnName = column.getQuotedName( dialect );
 					columnNames[i] = quotedColumnName;
 					final String columnAlias = selectable.getAlias( dialect, prop.getValue().getTable() );
+					columnAliases[i] = columnAlias;
 					if ( prop.isSelectable() && !aliases.contains( columnAlias ) ) {
 						aliases.add( columnAlias );
 					}
@@ -738,6 +741,7 @@ public abstract class AbstractEntityPersister
 				}
 			}
 			propColumns.add( columnNames );
+			propColumnAliases.add( columnAliases );
 			propColumnReaders.add( readers );
 			propColumnReaderTemplates.add( readerTemplates );
 			templates.add( formulaTemplates );
@@ -751,6 +755,7 @@ public abstract class AbstractEntityPersister
 		subclassPropertyTypeClosure = toTypeArray( types );
 		subclassPropertyFormulaTemplateClosure = to2DStringArray( templates );
 		subclassPropertyColumnNameClosure = to2DStringArray( propColumns );
+		subclassPropertyColumnAliasClosure = to2DStringArray( propColumnAliases );
 		subclassPropertyColumnReaderClosure = to2DStringArray( propColumnReaders );
 		subclassPropertyColumnReaderTemplateClosure = to2DStringArray( propColumnReaderTemplates );
 
@@ -2795,7 +2800,7 @@ public abstract class AbstractEntityPersister
 
 		final var propertyType = compositeType.getSubtypes()[componentPropertyIndex];
 		final var propertyColumnNames =
-				getCompositePropertyColumnNames( compositeType, columnNames, componentPropertyIndex );
+				getCompositePropertySelectableValues( compositeType, columnNames, componentPropertyIndex );
 		return dotIndex < 0
 				? new PropertyPath( propertyType, propertyColumnNames )
 				: resolveSubPropertyPath( propertyType, propertyColumnNames,
@@ -2812,9 +2817,9 @@ public abstract class AbstractEntityPersister
 		return -1;
 	}
 
-	private String[] getCompositePropertyColumnNames(
+	private String[] getCompositePropertySelectableValues(
 			CompositeType compositeType,
-			String[] columnNames,
+			String[] selectableValues,
 			int propertyIndex) {
 		final var mappingContext = factory.getRuntimeMetamodels();
 		final var subtypes = compositeType.getSubtypes();
@@ -2822,7 +2827,7 @@ public abstract class AbstractEntityPersister
 		for ( int i = 0; i < propertyIndex; i++ ) {
 			begin += subtypes[i].getColumnSpan( mappingContext );
 		}
-		return slice( columnNames, begin, subtypes[propertyIndex].getColumnSpan( mappingContext ) );
+		return slice( selectableValues, begin, subtypes[propertyIndex].getColumnSpan( mappingContext ) );
 	}
 
 	private PropertyPath resolveEntityIdentifierPropertyPath(
@@ -6696,7 +6701,7 @@ public abstract class AbstractEntityPersister
 
 	@Deprecated private final String[] subclassColumnAliasClosure;
 	@Deprecated private final String[] subclassFormulaAliasClosure;
-	@Deprecated private final Map<String,String[]> subclassPropertyAliases = new HashMap<>();
+	@Deprecated private final String[][] subclassPropertyColumnAliasClosure;
 
 	/**
 	 * @deprecated Hibernate no longer uses aliases to read from result sets
@@ -6715,82 +6720,121 @@ public abstract class AbstractEntityPersister
 	/**
 	 * @deprecated Hibernate no longer uses aliases to read from result sets
 	 */
-	@Deprecated	@Override
-	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
-		final var rawAliases = subclassPropertyAliases.get( propertyName );
-		if ( rawAliases == null ) {
-			return null;
-		}
-		else {
-			final var result = new String[rawAliases.length];
-			for ( int i = 0; i < rawAliases.length; i++ ) {
-				result[i] = new Alias( suffix ).toUnquotedAliasString( rawAliases[i] );
-			}
-			return result;
-		}
+	@Deprecated
+	@Override
+	public String[] getSubclassPropertyColumnAliases(int i, String suffix) {
+		return new Alias( suffix ).toUnquotedAliasStrings( subclassPropertyColumnAliasClosure[i] );
 	}
 
 	/**
-	 * Must be called by subclasses, at the end of their constructors
-	 *
 	 * @deprecated Hibernate no longer uses aliases to read from result sets
 	 */
-	@Deprecated	protected void initSubclassPropertyAliasesMap(PersistentClass model) throws MappingException {
+	@Deprecated	@Override
+	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
+		final var rawAliases = resolveSubclassPropertyColumnAliases( propertyName );
+		return rawAliases == null
+				? null
+				: new Alias( suffix ).toUnquotedAliasStrings( rawAliases );
+	}
 
-		// ALIASES
-		internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosure() );
+	private String[] resolveSubclassPropertyColumnAliases(String propertyName) {
+		if ( ENTITY_CLASS.equals( propertyName ) && isPolymorphic() ) {
+			return new String[] { getDiscriminatorAlias() };
+		}
 
-		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
+		final var identifierAliases = resolveIdentifierPropertyColumnAliases( propertyName );
+		if ( identifierAliases != null ) {
+			return identifierAliases;
+		}
+
+		final int propertyIndex = getSubclassPropertyIndex( propertyName );
+		if ( propertyIndex >= 0 ) {
+			return subclassPropertyColumnAliasClosure[propertyIndex];
+		}
+
+		final int dotIndex = propertyName.indexOf( '.' );
+		if ( dotIndex > 0 ) {
+			final int basePropertyIndex = getSubclassPropertyIndex( propertyName.substring( 0, dotIndex ) );
+			if ( basePropertyIndex >= 0 ) {
+				return resolveSubPropertyColumnAliases(
+						subclassPropertyTypeClosure[basePropertyIndex],
+						subclassPropertyColumnAliasClosure[basePropertyIndex],
+						propertyName.substring( dotIndex + 1 )
+				);
+			}
+		}
+		return null;
+	}
+
+	private String[] resolveIdentifierPropertyColumnAliases(String propertyName) {
+		final var identifierAliases = getIdentifierAliases();
 		if ( !hasNonIdentifierPropertyNamedId() ) {
-			subclassPropertyAliases.put( ENTITY_ID, getIdentifierAliases() );
-		}
-
-		// aliases named identifier ( alias.idname )
-		if ( hasIdentifierProperty() ) {
-			subclassPropertyAliases.put( getIdentifierPropertyName(), getIdentifierAliases() );
-		}
-
-		// aliases for composite ids
-		if ( getIdentifierType() instanceof ComponentType componentId ) {
-			// Fetch embedded identifiers property names from the "virtual" identifier component
-			final var idPropertyNames = componentId.getPropertyNames();
-			final var idAliases = getIdentifierAliases();
-			for ( int i = 0; i < idPropertyNames.length; i++ ) {
-				final String idName = idPropertyNames[i];
-				final var idAlias = new String[] { idAliases[i] };
-				final String idPath = hasIdentifierProperty() ? getIdentifierPropertyName() + "." + idName : idName;
-				subclassPropertyAliases.put( idPath, idAlias );
-				if ( !hasNonIdentifierPropertyNamedId() ) {
-					subclassPropertyAliases.put( ENTITY_ID + "." + idName, idAlias );
-				}
+			if ( ENTITY_ID.equals( propertyName ) ) {
+				return identifierAliases;
+			}
+			final String entityIdPathPrefix = ENTITY_ID + ".";
+			if ( propertyName.startsWith( entityIdPathPrefix ) ) {
+				return resolveSubPropertyColumnAliases(
+						getIdentifierType(),
+						identifierAliases,
+						propertyName.substring( entityIdPathPrefix.length() )
+				);
 			}
 		}
 
-		if ( isPolymorphic() ) {
-			subclassPropertyAliases.put( ENTITY_CLASS, new String[] { getDiscriminatorAlias() } );
+		if ( hasIdentifierProperty() ) {
+			final String identifierPropertyName = getIdentifierPropertyName();
+			if ( identifierPropertyName.equals( propertyName ) ) {
+				return identifierAliases;
+			}
+			final String identifierPropertyPathPrefix = identifierPropertyName + ".";
+			if ( propertyName.startsWith( identifierPropertyPathPrefix ) ) {
+				return resolveSubPropertyColumnAliases(
+						getIdentifierType(),
+						identifierAliases,
+						propertyName.substring( identifierPropertyPathPrefix.length() )
+				);
+			}
+			else {
+				return null;
+			}
+		}
+		else if ( getIdentifierType() instanceof ComponentType ) {
+			return resolveSubPropertyColumnAliases( getIdentifierType(), identifierAliases, propertyName );
+		}
+		else {
+			return null;
 		}
 	}
 
-	private void internalInitSubclassPropertyAliasesMap(String path, List<Property> properties) {
-		for ( var property : properties ) {
-			final String name = path == null ? property.getName() : path + "." + property.getName();
-			final var value = property.getValue();
-			if ( value instanceof Component component ) {
-				internalInitSubclassPropertyAliasesMap( name, component.getProperties() );
-			}
+	private String[] resolveSubPropertyColumnAliases(Type type, String[] columnAliases, String propertyName) {
+		return type instanceof CompositeType compositeType
+				? resolveCompositePropertyColumnAliases( compositeType, columnAliases, propertyName )
+				: null;
+	}
 
-			final var aliases = new String[property.getColumnSpan()];
-			int l = 0;
-			final var dialect = getDialect();
-			final var table = value.getTable();
-			for ( var selectable: property.getSelectables() ) {
-				aliases[l] = selectable.getAlias( dialect, table );
-				l++;
-			}
-
-			subclassPropertyAliases.put( name, aliases );
+	private String[] resolveCompositePropertyColumnAliases(
+			CompositeType compositeType,
+			String[] columnAliases,
+			String propertyName) {
+		final int dotIndex = propertyName.indexOf( '.' );
+		final String componentPropertyName =
+				dotIndex < 0
+						? propertyName
+						: propertyName.substring( 0, dotIndex );
+		final int componentPropertyIndex =
+				getCompositePropertyIndex( compositeType, componentPropertyName );
+		if ( componentPropertyIndex < 0 ) {
+			return null;
 		}
 
+		final var propertyColumnAliases =
+				getCompositePropertySelectableValues( compositeType, columnAliases, componentPropertyIndex );
+		return dotIndex < 0
+				? propertyColumnAliases
+				: resolveSubPropertyColumnAliases( compositeType.getSubtypes()[componentPropertyIndex],
+						propertyColumnAliases,
+						propertyName.substring( dotIndex + 1 ) );
 	}
 
 	public String getDiscriminatorAlias() {

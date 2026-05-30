@@ -564,10 +564,11 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void prepareMappingModel(MappingModelCreationProcess creationProcess, Collection bootCollectionDescriptor) {
+		final var creationContext = creationProcess.getCreationContext();
 		if ( mappedByProperty != null && elementType instanceof EntityType entityType ) {
 			final String entityName = entityType.getAssociatedEntityName();
 			final var persistentClass =
-					creationProcess.getCreationContext().getBootModel()
+					creationContext.getBootModel()
 							.getEntityBinding( entityName );
 			if ( persistentClass.getRecursiveProperty( mappedByProperty ).getValue() instanceof Any ) {
 				// we want to delay processing of where-fragment, and therefore affected SQL, until
@@ -579,7 +580,7 @@ public abstract class AbstractCollectionPersister
 									creationProcess.getEntityPersister( entityName ),
 									mappedByProperty,
 									bootCollectionDescriptor,
-									creationProcess
+									creationContext
 							);
 							buildStaticWhereFragmentSensitiveSql();
 							return true;
@@ -594,7 +595,7 @@ public abstract class AbstractCollectionPersister
 			sqlWhereString = "(" + bootCollectionDescriptor.getWhere() + ")";
 			sqlWhereStringTemplate =
 					renderWhereStringTemplate( sqlWhereString, dialect,
-							creationProcess.getCreationContext().getTypeConfiguration() );
+							creationContext.getTypeConfiguration() );
 		}
 		buildStaticWhereFragmentSensitiveSql();
 	}
@@ -602,17 +603,30 @@ public abstract class AbstractCollectionPersister
 	private void delayedWhereFragmentProcessing(
 			EntityPersister entityPersister,
 			String mappedByProperty,
-			Collection collectionBootDescriptor,
-			MappingModelCreationProcess creationProcess) {
+			Collection bootDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		final String where = getWhere( entityPersister, mappedByProperty, bootDescriptor, creationContext );
+		if ( isNotEmpty( where ) ) {
+			hasWhere = true;
+			sqlWhereString = "(" + where + ")";
+			sqlWhereStringTemplate =
+					renderWhereStringTemplate( sqlWhereString, dialect,
+							creationContext.getTypeConfiguration() );
+		}
+	}
 
-		final String where;
+	@Nullable
+	private String getWhere(
+			EntityPersister entityPersister,
+			String mappedByProperty,
+			Collection collectionBootDescriptor,
+			RuntimeModelCreationContext creationContext) {
 		if ( resolveMappedBy( entityPersister, mappedByProperty )
 					instanceof DiscriminatedAssociationAttributeMapping anyMapping ) {
 			final var discriminatorMapping = anyMapping.getDiscriminatorMapping();
 			final var discriminatorValueDetails =
 					discriminatorMapping.getValueConverter()
 							.getDetailsForEntityName( ownerPersister.getEntityName() );
-			final var creationContext = creationProcess.getCreationContext();
 			//noinspection unchecked
 			final String discriminatorLiteral =
 					discriminatorMapping.getUnderlyingJdbcMapping()
@@ -621,19 +635,11 @@ public abstract class AbstractCollectionPersister
 									creationContext.getDialect(),
 									creationContext.getSessionFactory().getWrapperOptions()
 							);
-			where = getNonEmptyOrConjunctionIfBothNonEmpty( collectionBootDescriptor.getWhere(),
+			return getNonEmptyOrConjunctionIfBothNonEmpty( collectionBootDescriptor.getWhere(),
 					discriminatorMapping.getSelectableName() + "=" + discriminatorLiteral );
 		}
 		else {
-			where = collectionBootDescriptor.getWhere();
-		}
-
-		if ( isNotEmpty( where ) ) {
-			hasWhere = true;
-			sqlWhereString = "(" + where + ")";
-			sqlWhereStringTemplate =
-					renderWhereStringTemplate( sqlWhereString, dialect,
-							creationProcess.getCreationContext().getTypeConfiguration() );
+			return collectionBootDescriptor.getWhere();
 		}
 	}
 

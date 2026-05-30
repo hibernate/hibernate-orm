@@ -1451,6 +1451,11 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	String[] getSubclassPropertyColumnNames(int i);
 
 	/**
+	 * Return the column alias names used to persist/query the indexed property of the class or a subclass.
+	 */
+	String[] getSubclassPropertyColumnAliases(int i, String suffix);
+
+	/**
 	 * Return the column alias names used to persist/query the named property of the class or a subclass (optional operation).
 	 */
 	String[] getSubclassPropertyColumnAliases(String propertyName, String suffix);

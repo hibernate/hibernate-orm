@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.boot.jaxb.mapping.GenerationTiming;
+
 /**
  * Source-agnostic description of information needed to bind a singular attribute.
  *

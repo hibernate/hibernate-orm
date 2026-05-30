@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.mapping.Collection;
+
 /**
  * Defines the ability to perform post-creation processing for collection mappings.
  *
@@ -14,11 +16,9 @@ package org.hibernate.metamodel.mapping.internal;
  */
 public interface InFlightCollectionMapping {
 	/**
-	 * After all hierarchy types have been linked, this method is called to allow the
-	 * mapping model to be prepared which generally includes creating attribute mapping
-	 * descriptors, identifier mapping descriptor, etc.
+	 * After all hierarchy types have been linked, this method is called to allow
+	 * the mapping model to be prepared, which includes creating attribute mapping
+	 * descriptors, identifier mapping descriptor, and so on.
 	 */
-	default void prepareMappingModel(MappingModelCreationProcess creationProcess) {
-		// by default do nothing - support for legacy impls
-	}
+	void prepareMappingModel(MappingModelCreationProcess creationProcess, Collection bootCollectionDescriptor);
 }

@@ -8,12 +8,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonTransientException;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.internal.EntityPersisterConcurrentMap;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -89,9 +86,11 @@ public class MappingModelCreationProcess {
 			}
 		}
 
-		for ( var collectionPersister : collectionPersisterMap.values() ) {
-			if ( collectionPersister instanceof InFlightCollectionMapping inFlightCollectionMapping ) {
-				inFlightCollectionMapping.prepareMappingModel( this );
+		for ( var entry : collectionPersisterMap.entrySet() ) {
+			if ( entry.getValue() instanceof InFlightCollectionMapping inFlightCollectionMapping ) {
+				inFlightCollectionMapping.prepareMappingModel( this,
+						creationContext.getBootModel()
+								.getCollectionBinding( entry.getKey() ) );
 			}
 		}
 
@@ -185,42 +184,42 @@ public class MappingModelCreationProcess {
 		registerInitializationCallback( description, callback );
 	}
 
-	private final Map<NavigableRole,ForeignKeyDescriptor> keyDescriptorMap = new HashMap<>();
-	private final Map<NavigableRole,List<Consumer<ForeignKeyDescriptor>>> keyDescriptorWaitingConsumerMap = new HashMap<>();
+//	private final Map<NavigableRole,ForeignKeyDescriptor> keyDescriptorMap = new HashMap<>();
+//	private final Map<NavigableRole,List<Consumer<ForeignKeyDescriptor>>> keyDescriptorWaitingConsumerMap = new HashMap<>();
 
-	public void withForeignKey(ModelPart keyOwner, Consumer<ForeignKeyDescriptor> consumer) {
-		withForeignKey( keyOwner.getNavigableRole(), consumer );
-	}
+//	public void withForeignKey(ModelPart keyOwner, Consumer<ForeignKeyDescriptor> consumer) {
+//		withForeignKey( keyOwner.getNavigableRole(), consumer );
+//	}
+//
+//	private void withForeignKey(NavigableRole navigableRole, Consumer<ForeignKeyDescriptor> consumer) {
+//		final var keyDescriptor = keyDescriptorMap.get( navigableRole );
+//		if ( keyDescriptor != null ) {
+//			consumer.accept( keyDescriptor );
+//		}
+//		else {
+//			final var existingConsumers = keyDescriptorWaitingConsumerMap.get( navigableRole );
+//			final List<Consumer<ForeignKeyDescriptor>> consumers;
+//			if ( existingConsumers != null ) {
+//				consumers = existingConsumers;
+//			}
+//			else {
+//				consumers = new ArrayList<>();
+//				keyDescriptorWaitingConsumerMap.put( navigableRole, consumers );
+//			}
+//			consumers.add( consumer );
+//		}
+//	}
 
-	private void withForeignKey(NavigableRole navigableRole, Consumer<ForeignKeyDescriptor> consumer) {
-		final var keyDescriptor = keyDescriptorMap.get( navigableRole );
-		if ( keyDescriptor != null ) {
-			consumer.accept( keyDescriptor );
-		}
-		else {
-			final var existingConsumers = keyDescriptorWaitingConsumerMap.get( navigableRole );
-			final List<Consumer<ForeignKeyDescriptor>> consumers;
-			if ( existingConsumers != null ) {
-				consumers = existingConsumers;
-			}
-			else {
-				consumers = new ArrayList<>();
-				keyDescriptorWaitingConsumerMap.put( navigableRole, consumers );
-			}
-			consumers.add( consumer );
-		}
-	}
-
-	public void registerForeignKey(ModelPart keyOwner, ForeignKeyDescriptor keyDescriptor) {
-		final var navigableRole = keyOwner.getNavigableRole();
-		keyDescriptorMap.put( navigableRole, keyDescriptor );
-		final var waitingConsumers = keyDescriptorWaitingConsumerMap.remove( navigableRole );
-		if ( waitingConsumers != null ) {
-			for ( int i = 0; i < waitingConsumers.size(); i++ ) {
-				waitingConsumers.get( i ).accept( keyDescriptor );
-			}
-		}
-	}
+//	public void registerForeignKey(ModelPart keyOwner, ForeignKeyDescriptor keyDescriptor) {
+//		final var navigableRole = keyOwner.getNavigableRole();
+//		keyDescriptorMap.put( navigableRole, keyDescriptor );
+//		final var waitingConsumers = keyDescriptorWaitingConsumerMap.remove( navigableRole );
+//		if ( waitingConsumers != null ) {
+//			for ( int i = 0; i < waitingConsumers.size(); i++ ) {
+//				waitingConsumers.get( i ).accept( keyDescriptor );
+//			}
+//		}
+//	}
 
 	@FunctionalInterface
 	public interface PostInitCallback {
@@ -235,26 +234,18 @@ public class MappingModelCreationProcess {
 		T produceSubMapping(String role, MappingModelCreationProcess creationProcess);
 	}
 
-	private static class PostInitCallbackEntry {
-		private final String description;
-		private final PostInitCallback callback;
-
-		public PostInitCallbackEntry(String description, PostInitCallback callback) {
-			this.description = description;
-			this.callback = callback;
-		}
-
+	private record PostInitCallbackEntry(String description, PostInitCallback callback) {
 		private boolean process() {
-//			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef(
-//					"Starting PostInitCallbackEntry : %s",
-//					description
-//			);
+	//		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef(
+	//				"Starting PostInitCallbackEntry : %s",
+	//				description
+	//		);
 			return callback.process();
 		}
 
-		@Override
-		public String toString() {
-			return "PostInitCallbackEntry - " + description;
+			@Override
+			public String toString() {
+				return "PostInitCallbackEntry - " + description;
+			}
 		}
-	}
 }

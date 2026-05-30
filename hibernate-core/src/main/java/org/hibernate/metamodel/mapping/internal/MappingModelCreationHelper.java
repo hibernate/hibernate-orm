@@ -325,12 +325,7 @@ public class MappingModelCreationHelper {
 				creationProcess
 		);
 
-		Value componentValue = bootProperty.getValue();
-		if ( componentValue instanceof DependantValue && dependantValue != null ) {
-			componentValue = dependantValue.getWrappedValue();
-		}
-
-		final var component = (Component) componentValue;
+		final var component = component( bootProperty, dependantValue );
 		final var embeddableMappingType = EmbeddableMappingTypeImpl.from(
 				component,
 				attrType,
@@ -379,6 +374,19 @@ public class MappingModelCreationHelper {
 		);
 
 		return (EmbeddedAttributeMapping) embeddableMappingType.getEmbeddedValueMapping();
+	}
+
+	private static Component component(Property bootProperty, DependantValue dependantValue) {
+		final var value = bootProperty.getValue();
+		if ( value instanceof DependantValue && dependantValue != null ) {
+			return (Component) dependantValue.getWrappedValue();
+		}
+		else if ( value instanceof Component compositeValue ) {
+			return compositeValue;
+		}
+		else {
+			throw new AssertionFailure( "Not a composite value" );
+		}
 	}
 
 	protected static AttributeMetadata getAttributeMetadata(
@@ -803,7 +811,7 @@ public class MappingModelCreationHelper {
 					( (SimpleValue) bootValueMappingKey ).isConstrained()
 			);
 			attributeMapping.setForeignKeyDescriptor( keyDescriptor );
-			creationProcess.registerForeignKey( collectionDescriptor.getAttributeMapping(), keyDescriptor );
+//			creationProcess.registerForeignKey( collectionDescriptor.getAttributeMapping(), keyDescriptor );
 		}
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			final var keyDescriptor = buildEmbeddableForeignKeyDescriptor(
@@ -821,7 +829,7 @@ public class MappingModelCreationHelper {
 			);
 
 			attributeMapping.setForeignKeyDescriptor( keyDescriptor );
-			creationProcess.registerForeignKey( collectionDescriptor.getAttributeMapping(), keyDescriptor );
+//			creationProcess.registerForeignKey( collectionDescriptor.getAttributeMapping(), keyDescriptor );
 		}
 		else {
 			throw new UnsupportedOperationException(
@@ -1008,7 +1016,7 @@ public class MappingModelCreationHelper {
 			);
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
 			attributeMapping.setupCircularFetchModelPart( creationProcess );
-			creationProcess.registerForeignKey( attributeMapping, foreignKeyDescriptor );
+//			creationProcess.registerForeignKey( attributeMapping, foreignKeyDescriptor );
 		}
 		else if ( fkTarget instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			final var value = bootProperty.getValue();
@@ -1027,7 +1035,7 @@ public class MappingModelCreationHelper {
 			);
 			attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
 			attributeMapping.setupCircularFetchModelPart( creationProcess );
-			creationProcess.registerForeignKey( attributeMapping, embeddedForeignKeyDescriptor );
+//			creationProcess.registerForeignKey( attributeMapping, embeddedForeignKeyDescriptor );
 		}
 		else {
 			throw new UnsupportedOperationException(

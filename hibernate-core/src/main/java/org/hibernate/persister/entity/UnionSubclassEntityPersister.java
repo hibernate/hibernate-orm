@@ -92,6 +92,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
 
+	private final TableMutationDetails[] tableMutationDetails;
+
 	public UnionSubclassEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
@@ -118,8 +120,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		tableName = determineTableName( persistentClass.getTable() );
 		subclassTableNames = new String[]{tableName};
-		initializeTableMutationDetails( 1 );
-		setTableMutationDetails( 0, createTableMutationDetails( persistentClass ) );
+		tableMutationDetails = new TableMutationDetails[] { createTableMutationDetails( persistentClass ) };
 
 		discriminatorValue = new DiscriminatorValue.Literal( persistentClass.getSubclassId() );
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
@@ -383,6 +384,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public boolean isTableCascadeDeleteEnabled(int j) {
 		return false;
+	}
+
+	@Override
+	protected TableMutationDetails getTableMutationDetails(int relativePosition) {
+		return tableMutationDetails[relativePosition];
 	}
 
 	@Override

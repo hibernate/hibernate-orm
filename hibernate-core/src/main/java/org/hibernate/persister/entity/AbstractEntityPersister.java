@@ -3682,17 +3682,6 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected final void initializeTableMutationDetails(int tableSpan) {
-		tableMutationDetails = new TableMutationDetails[tableSpan];
-	}
-
-	protected final void setTableMutationDetails(int relativePosition, TableMutationDetails mutationDetails) {
-		if ( tableMutationDetails == null ) {
-			throw new AssertionFailure( "Table mutation details were not initialized" );
-		}
-		tableMutationDetails[relativePosition] = mutationDetails;
-	}
-
 	protected static TableMutationDetails createTableMutationDetails(PersistentClass persistentClass) {
 		return new TableMutationDetails(
 				createCustomSqlMutationDetails(
@@ -3740,13 +3729,16 @@ public abstract class AbstractEntityPersister
 		return new CustomSqlMutationDetails( createExpectation( expectation, callable ), customSql, callable );
 	}
 
-	private TableMutationDetails getTableMutationDetails(int relativePosition) {
-		if ( tableMutationDetails == null || tableMutationDetails[relativePosition] == null ) {
+	protected abstract TableMutationDetails getTableMutationDetails(int relativePosition);
+
+	private TableMutationDetails resolveTableMutationDetails(int relativePosition) {
+		final var tableMutationDetails = getTableMutationDetails( relativePosition );
+		if ( tableMutationDetails == null ) {
 			throw new AssertionFailure(
 					"Table mutation details were not initialized for table position " + relativePosition
 			);
 		}
-		return tableMutationDetails[relativePosition].resolveCustomSql( this::substituteBrackets );
+		return tableMutationDetails.resolveCustomSql( this::substituteBrackets );
 	}
 
 	protected TableDescriptorBuilder createTableDescriptorBuilder(
@@ -3763,7 +3755,7 @@ public abstract class AbstractEntityPersister
 		} );
 
 		final boolean isIdentifierTable = isIdentifierTable( tableName );
-		final var mutationDetails = getTableMutationDetails( relativePosition );
+		final var mutationDetails = resolveTableMutationDetails( relativePosition );
 
 		return new TableDescriptorBuilder(
 				tableName,
@@ -4035,7 +4027,7 @@ public abstract class AbstractEntityPersister
 
 		final boolean isIdentifierTable = isIdentifierTable( tableExpression );
 		final boolean isSecondaryTable = isSecondaryTable( tableExpression, relativePosition );
-		final var mutationDetails = getTableMutationDetails( relativePosition );
+		final var mutationDetails = resolveTableMutationDetails( relativePosition );
 
 		return new TableMappingBuilder(
 				tableExpression,
@@ -6660,26 +6652,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	public abstract boolean isTableCascadeDeleteEnabled(int j);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// State built and stored here during instantiation, and only used in other
-	// phases of initialization
-	//		- postConstruct
-	//		- postInstantiate
-	//		- prepareMappingModel
-	//		- ...
-	//
-	// This is effectively bootstrap state that is kept around during runtime.
-	//
-	// Would be better to encapsulate and store this state relative to the
-	// `PersisterCreationContext` so it can get released after bootstrap
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	private TableMutationDetails[] tableMutationDetails;
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

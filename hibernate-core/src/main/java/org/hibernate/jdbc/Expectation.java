@@ -141,8 +141,8 @@ public interface Expectation {
 	/**
 	 * No return code checking. Might mean that no checks are required, or that
 	 * failure is indicated by a {@link java.sql.SQLException} being thrown, for
-	 * example, by a {@link java.sql.CallableStatement stored procedure} which
-	 * performs explicit checks.
+	 * example, by a {@linkplain java.sql.CallableStatement stored procedure}
+	 * which performs explicit checks.
 	 *
 	 * @since 6.5
 	 */

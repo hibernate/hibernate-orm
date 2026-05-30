@@ -34,7 +34,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.JoinedList;
-import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
@@ -63,7 +62,6 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.function.Function.identity;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
-import static org.hibernate.jdbc.Expectations.createExpectation;
 
 /**
  * An {@link EntityPersister} implementing the
@@ -120,22 +118,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		tableName = determineTableName( persistentClass.getTable() );
 		subclassTableNames = new String[]{tableName};
-		//Custom SQL
-
-		customSQLInsert = new String[] { persistentClass.getCustomSQLInsert() };
-		insertCallable = new boolean[] { persistentClass.isCustomInsertCallable() };
-		insertExpectations = new Expectation[] { createExpectation( persistentClass.getInsertExpectation(),
-				persistentClass.isCustomInsertCallable() ) };
-
-		customSQLUpdate = new String[] { persistentClass.getCustomSQLUpdate() };
-		updateCallable = new boolean[] { persistentClass.isCustomUpdateCallable() };
-		updateExpectations = new Expectation[] { createExpectation( persistentClass.getUpdateExpectation(),
-				persistentClass.isCustomUpdateCallable() ) };
-
-		customSQLDelete = new String[] { persistentClass.getCustomSQLDelete() };
-		deleteCallable = new boolean[] { persistentClass.isCustomDeleteCallable() };
-		deleteExpectations = new Expectation[] { createExpectation( persistentClass.getDeleteExpectation(),
-				persistentClass.isCustomDeleteCallable() ) };
+		initializeTableMutationDetails( 1 );
+		setTableMutationDetails( 0, createTableMutationDetails( persistentClass ) );
 
 		discriminatorValue = new DiscriminatorValue.Literal( persistentClass.getSubclassId() );
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );

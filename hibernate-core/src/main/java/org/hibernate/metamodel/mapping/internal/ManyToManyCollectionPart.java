@@ -427,7 +427,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 						getCollectionPropertyPath( collectionDescriptor ),
 						creationProcess
 				);
-				creationProcess.registerForeignKey( this, foreignKey );
+//				creationProcess.registerForeignKey( this, foreignKey );
 			}
 			else {
 				final var manyToManyInverse = (PluralAttributeMapping) mappedByPart;

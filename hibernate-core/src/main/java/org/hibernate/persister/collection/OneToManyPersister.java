@@ -115,8 +115,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
-		super.prepareMappingModel( creationProcess );
+	public void prepareMappingModel(MappingModelCreationProcess creationProcess, Collection bootCollectionDescriptor) {
+		super.prepareMappingModel( creationProcess, bootCollectionDescriptor );
 
 		if ( getElementPersister() instanceof UnionSubclassEntityPersister ) {
 			useTablePerSubclassDecomposition = getElementPersister().hasSubclasses();

@@ -123,7 +123,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -248,8 +247,6 @@ public abstract class AbstractCollectionPersister
 	private PluralAttributeMapping attributeMapping;
 	private volatile Set<String> affectingFetchProfiles;
 
-	private Collection collectionBootDescriptor;
-
 	private CollectionTableDescriptor collectionTableDescriptor;
 
 	public AbstractCollectionPersister(
@@ -260,12 +257,10 @@ public abstract class AbstractCollectionPersister
 		factory = creationContext.getSessionFactory();
 		final var factoryOptions = creationContext.getSessionFactoryOptions();
 
-		this.collectionBootDescriptor = collectionBootDescriptor;
-		this.collectionSemantics =
+		collectionSemantics =
 				creationContext.getBootstrapContext().getMetadataBuildingOptions()
 						.getPersistentCollectionRepresentationResolver()
 						.resolveRepresentation( collectionBootDescriptor );
-
 
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		cacheEntryStructure =
@@ -295,9 +290,10 @@ public abstract class AbstractCollectionPersister
 
 		qualifiedTableName = determineTableName( table );
 
-		final int spacesSize = 1 + collectionBootDescriptor.getSynchronizedTables().size();
+		final var synchronizedTables = collectionBootDescriptor.getSynchronizedTables();
+		final int spacesSize = 1 + synchronizedTables.size();
 		spaces = new String[spacesSize];
-		final Iterator<String> tables = collectionBootDescriptor.getSynchronizedTables().iterator();
+		final var tables = synchronizedTables.iterator();
 		for ( int i = 1; i < spacesSize; i++ ) {
 			spaces[i] = tables.next();
 		}
@@ -338,14 +334,12 @@ public abstract class AbstractCollectionPersister
 
 		// ELEMENT
 
-		if ( elementType instanceof EntityType entityType ) {
-			final String entityName = entityType.getAssociatedEntityName();
-			elementPersister = creationContext.getDomainModel().getEntityDescriptor( entityName );
-			// NativeSQL: collect element column and auto-aliases
-		}
-		else {
-			elementPersister = null;
-		}
+		elementPersister =
+				elementType instanceof EntityType entityType
+						// NativeSQL: collect element column and auto-aliases
+						? creationContext.getDomainModel()
+								.getEntityDescriptor( entityType.getAssociatedEntityName() )
+						: null;
 		// Defer this after the element persister was determined,
 		// because it's needed in OneToManyPersister.getTableName()
 		spaces[0] = getTableName();
@@ -569,7 +563,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
-	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
+	public void prepareMappingModel(MappingModelCreationProcess creationProcess, Collection bootCollectionDescriptor) {
 		if ( mappedByProperty != null && elementType instanceof EntityType entityType ) {
 			final String entityName = entityType.getAssociatedEntityName();
 			final var persistentClass =
@@ -584,7 +578,7 @@ public abstract class AbstractCollectionPersister
 							delayedWhereFragmentProcessing(
 									creationProcess.getEntityPersister( entityName ),
 									mappedByProperty,
-									collectionBootDescriptor,
+									bootCollectionDescriptor,
 									creationProcess
 							);
 							buildStaticWhereFragmentSensitiveSql();
@@ -595,9 +589,9 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 
-		if ( isNotEmpty( collectionBootDescriptor.getWhere() ) ) {
+		if ( isNotEmpty( bootCollectionDescriptor.getWhere() ) ) {
 			hasWhere = true;
-			sqlWhereString = "(" + collectionBootDescriptor.getWhere() + ")";
+			sqlWhereString = "(" + bootCollectionDescriptor.getWhere() + ")";
 			sqlWhereStringTemplate =
 					renderWhereStringTemplate( sqlWhereString, dialect,
 							creationProcess.getCreationContext().getTypeConfiguration() );
@@ -732,14 +726,10 @@ public abstract class AbstractCollectionPersister
 		// For one-to-many collections, this represents the element entity's table
 		// For other collection types, this represents the collection table
 		collectionTableDescriptor = buildCollectionTableDescriptor(
-				collectionBootDescriptor,
-				getTableName(),
+				tableMapping,
 				attributeMapping,
 				factory
 		);
-
-		// free up the reference
-		collectionBootDescriptor = null;
 
 		logStaticSQL();
 	}
@@ -1710,15 +1700,18 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private static CollectionTableDescriptor buildCollectionTableDescriptor(
-			Collection collectionBootDescriptor,
-			String qualifiedTableName,
+			CollectionTableMapping tableMapping,
 			PluralAttributeMapping attributeMapping,
 			SessionFactoryImplementor factory) {
-		// NOTE : if ActionQueue is not the graph-based one, isSelfReferential will have no impact
+		final String qualifiedTableName = tableMapping.getTableName();
+		// NOTE: if ActionQueue is not the graph-based one, isSelfReferential will have no impact
 		final boolean isSelfReferential;
 		final boolean hasUniqueKeys;
-		if ( factory.getActionQueueFactory() instanceof GraphBasedActionQueueFactory gbaqf ) {
-			isSelfReferential = gbaqf.getConstraintModel().hasSelfReferentialTable( qualifiedTableName );
+		if ( factory.getActionQueueFactory()
+				instanceof GraphBasedActionQueueFactory graphBasedActionQueueFactory ) {
+			isSelfReferential =
+					graphBasedActionQueueFactory.getConstraintModel()
+							.hasSelfReferentialTable( qualifiedTableName );
 			// Collection-table uniqueness is still not modeled completely enough to use as a negative signal.
 			hasUniqueKeys = true;
 		}
@@ -1729,15 +1722,15 @@ public abstract class AbstractCollectionPersister
 		return new CollectionTableDescriptor(
 				qualifiedTableName,
 				attributeMapping.getNavigableRole(),
-				!collectionBootDescriptor.isOneToMany(),
-				collectionBootDescriptor.isInverse(),
+				tableMapping.isJoinTable(),
+				tableMapping.isInverse(),
 				isSelfReferential,
 				hasUniqueKeys,
-				collectionBootDescriptor.getKey().isCascadeDeleteEnabled(),
-				buildInsertMutationDetails( collectionBootDescriptor ),
-				buildUpdateMutationDetails( collectionBootDescriptor ),
-				buildDeleteMutationDetails( collectionBootDescriptor ),
-				buildDeleteAllMutationDetails( collectionBootDescriptor ),
+				tableMapping.isCascadeDeleteEnabled(),
+				tableMapping.getInsertDetails(),
+				tableMapping.getUpdateDetails(),
+				tableMapping.getDeleteRowDetails(),
+				tableMapping.getDeleteDetails(),
 				buildTableKeyDescriptor( attributeMapping )
 		);
 	}

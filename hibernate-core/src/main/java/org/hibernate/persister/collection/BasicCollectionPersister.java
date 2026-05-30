@@ -23,7 +23,6 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
@@ -94,11 +93,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		this.updateCoordinator = legacyIntegration.createUpdateRowsCoordinator( this );
 		this.deleteRowsCoordinator = legacyIntegration.createDeleteRowsCoordinator( this );
 		this.removeCoordinator = legacyIntegration.createRemoveCoordinator( this );
-	}
-
-	@Override
-	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
-		super.prepareMappingModel( creationProcess );
 	}
 
 	@Override

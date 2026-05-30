@@ -25,7 +25,6 @@ import org.hibernate.action.queue.spi.meta.ColumnDescriptor;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableKeyDescriptor;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -149,6 +148,7 @@ import org.hibernate.metamodel.mapping.internal.UnifiedAnyDiscriminatorConverter
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -229,8 +229,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.MappingContext;
-import org.hibernate.type.OneToOneType;
-import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -273,14 +271,12 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getG
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
-import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAllTrue;
@@ -463,16 +459,6 @@ public abstract class AbstractEntityPersister
 	protected final String[] fullDiscriminatorSQLValues;
 	private final DiscriminatorValue[] fullDiscriminatorValues;
 
-	/**
-	 * Warning:
-	 * When there are duplicated property names in the subclasses
-	 * then propertyPathRegistry will only contain one of those properties.
-	 * To ensure correct results, propertyPathRegistry should only be used
-	 * for the concrete EntityPersister (since the concrete EntityPersister
-	 * cannot have duplicated property names).
-	 */
-	private final PropertyPathRegistry propertyPathRegistry;
-
 	private List<UniqueKeyEntry> uniqueKeyEntries = null; //lazily initialized
 	private ConcurrentHashMap<String,SingleIdArrayLoadPlan> nonLazyPropertyLoadPlansByName;
 
@@ -563,8 +549,6 @@ public abstract class AbstractEntityPersister
 		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections();
 		hasPartitionedSelectionMapping = persistentClass.hasPartitionedSelectionMapping();
 		hasCollectionNotReferencingPK = persistentClass.hasCollectionNotReferencingPK();
-
-		propertyPathRegistry = new PropertyPathRegistry();
 
 		// IDENTIFIER
 
@@ -1571,7 +1555,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {
-		return hasCollections() && getPropertyType( fieldName ) instanceof CollectionType collectionType
+		return hasCollections() && getPropertyTypes()[getPropertyIndex( fieldName )] instanceof CollectionType collectionType
 				? initializedLazyCollection( fieldName, entity, collectionType, session )
 				: initializedLazyField( fieldName, entity, session );
 	}
@@ -2386,7 +2370,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public String[] toColumns(String propertyName) throws QueryException {
-		return propertyPathRegistry.getColumnNames( propertyName );
+		return getPropertyColumnNames( propertyName );
 	}
 
 	/**
@@ -2401,7 +2385,11 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public String[] getPropertyColumnNames(String propertyName) {
-		return propertyPathRegistry.getColumnNames( propertyName );
+		final var propertyPath = resolvePropertyPath( propertyName );
+		if ( propertyPath == null ) {
+			throw new MappingException( "Unknown property: " + propertyName );
+		}
+		return propertyPath.columnNames();
 	}
 
 	private DiscriminatorType<?> discriminatorDomainType;
@@ -2709,378 +2697,188 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void initOrdinaryPropertyPaths(Metadata mapping) throws MappingException {
-		for ( int i = 0; i < getSubclassPropertyNameClosure().length; i++ ) {
-			propertyPathRegistry.initPropertyPaths(
-					getSubclassPropertyNameClosure()[i],
-					getSubclassPropertyTypeClosure()[i],
-					getSubclassPropertyColumnNameClosure()[i],
-					getSubclassPropertyColumnReaderClosure()[i],
-					getSubclassPropertyColumnReaderTemplateClosure()[i],
-					getSubclassPropertyFormulaTemplateClosure()[i],
-					mapping
-			);
+	private PropertyPath resolvePropertyPath(String propertyName) {
+		if ( isEmpty( propertyName ) ) {
+			return null;
 		}
+		else if ( ENTITY_CLASS.equals( propertyName ) && isPolymorphic() ) {
+			return new PropertyPath( getDiscriminatorType(),
+					new String[] { getDiscriminatorColumnName() } );
+		}
+
+		final var identifierPropertyPath =
+				resolveNonAggregatedIdentifierPropertyPath( propertyName );
+		if ( identifierPropertyPath != null ) {
+			return identifierPropertyPath;
+		}
+		else if ( hasIdentifierProperty() && getIdentifierPropertyName().equals( propertyName ) ) {
+			return new PropertyPath( getIdentifierType(), getIdentifierColumnNames() );
+		}
+
+		final int propertyIndex = getSubclassPropertyIndex( propertyName );
+		if ( propertyIndex >= 0 ) {
+			final var type = getSubclassPropertyType( propertyIndex );
+			final var columnNames =
+					resolveAssociationColumnNames( propertyName, type,
+							getSubclassPropertyColumnNames( propertyIndex ) );
+			return new PropertyPath( type, columnNames );
+		}
+		else if ( isIdentifierReference( propertyName ) ) {
+			return new PropertyPath( getIdentifierType(), getIdentifierColumnNames() );
+		}
+
+		final int dotIndex = propertyName.indexOf( '.' );
+		if ( dotIndex > 0 ) {
+			final var basePath = resolvePropertyPath( propertyName.substring( 0, dotIndex ) );
+			if ( basePath != null ) {
+				return resolveSubPropertyPath( basePath.type(), basePath.columnNames(),
+						propertyName.substring( dotIndex + 1 ) );
+			}
+		}
+
+		return resolveEmbeddedPropertyPath( propertyName );
 	}
 
-	private void initIdentifierPropertyPaths(Metadata mapping) throws MappingException {
-		final String idProp = getIdentifierPropertyName();
-		if ( idProp != null ) {
-			propertyPathRegistry.initPropertyPaths(
-					idProp, getIdentifierType(), getIdentifierColumnNames(),
-					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping
-			);
-		}
+	private PropertyPath resolveNonAggregatedIdentifierPropertyPath(String propertyName) {
+		return getIdentifierMapping() instanceof NonAggregatedIdentifierMapping
+				? resolveSubPropertyPath( getIdentifierType(), getIdentifierColumnNames(), propertyName )
+				: null;
+	}
+
+	private PropertyPath resolveEmbeddedPropertyPath(String propertyName) {
 		if ( isIdentifierEmbedded() ) {
-			propertyPathRegistry.initPropertyPaths(
-					null, getIdentifierType(), getIdentifierColumnNames(),
-					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping
-			);
-		}
-		if ( !hasNonIdentifierPropertyNamedId() ) {
-			propertyPathRegistry.initPropertyPaths(
-					ENTITY_ID, getIdentifierType(), getIdentifierColumnNames(),
-					getIdentifierColumnReaders(), getIdentifierColumnReaderTemplates(), null, mapping
-			);
-		}
-	}
-
-	private void initDiscriminatorPropertyPath(Metadata mapping) {
-		propertyPathRegistry.initPropertyPaths(
-				ENTITY_CLASS,
-				getDiscriminatorType(),
-				new String[] {getDiscriminatorColumnName()},
-				new String[] {getDiscriminatorColumnReaders()},
-				new String[] {getDiscriminatorColumnReaderTemplate()},
-				new String[] {getDiscriminatorFormulaTemplate()},
-				mapping
-		);
-	}
-
-	protected void initPropertyPaths(Metadata mapping) throws MappingException {
-		initOrdinaryPropertyPaths( mapping );
-		initOrdinaryPropertyPaths( mapping ); //do two passes, for collection property-ref!
-		initIdentifierPropertyPaths( mapping );
-		if ( isPolymorphic() ) {
-			initDiscriminatorPropertyPath( mapping );
-		}
-	}
-
-	private final class PropertyPathRegistry {
-		private final Map<String, Type> typesByPropertyPath = new HashMap<>();
-		private final Map<String, String[]> columnsByPropertyPath = new HashMap<>();
-		private final Map<String, String[]> columnReadersByPropertyPath = new HashMap<>();
-		private final Map<String, String[]> columnReaderTemplatesByPropertyPath = new HashMap<>();
-
-		// This field is only used during initialization, no need for threadsafety.
-		private Set<String> duplicateIncompatiblePaths;
-
-		Type toType(String propertyName) throws QueryException {
-			Type type = typesByPropertyPath.get( propertyName );
-			if ( type == null ) {
-				throw propertyException( propertyName );
-			}
-			return type;
-		}
-
-		private QueryException propertyException(String propertyName) throws QueryException {
-			return new QueryException( "Could not resolve property: " + propertyName + " of: " + getEntityName() );
-		}
-
-		String[] getColumnNames(String propertyName) {
-			final var cols = columnsByPropertyPath.get( propertyName );
-			if ( cols == null ) {
-				throw new MappingException( "Unknown property: " + propertyName );
-			}
-			return cols;
-		}
-
-		private void logIncompatibleRegistration(String path, Type existingType, Type type) {
-			if ( CORE_LOGGER.isTraceEnabled() ) {
-				CORE_LOGGER.tracev(
-						"Skipped adding attribute [{1}] to base type [{0}] as more than one subtype defined the attribute using incompatible types (strictly speaking the attributes are not inherited); existing type = [{2}], incoming type = [{3}]",
-						getEntityName(),
-						path,
-						existingType,
-						type
-				);
+			final var identifierPath =
+					resolveSubPropertyPath( getIdentifierType(), getIdentifierColumnNames(), propertyName );
+			if ( identifierPath != null ) {
+				return identifierPath;
 			}
 		}
 
-		private void addPropertyPath(
-				String path,
-				Type type,
-				String[] columns,
-				String[] columnReaders,
-				String[] columnReaderTemplates,
-				Metadata mapping) {
-			final Type existingType = typesByPropertyPath.get( path );
-			if ( existingType != null
-					|| ( duplicateIncompatiblePaths != null && duplicateIncompatiblePaths.contains( path ) ) ) {
-				// If types match or the new type is not an association type, there is nothing for us to do.
-				if ( type == existingType || existingType == null || !( type instanceof AssociationType ) ) {
+		for ( int i = 0; i < subclassPropertyTypeClosure.length; i++ ) {
+			final var propertyType = subclassPropertyTypeClosure[i];
+			if ( propertyType instanceof ComponentType componentType && componentType.isEmbedded() ) {
+				final var embeddedPath =
+						resolveSubPropertyPath( componentType, subclassPropertyColumnNameClosure[i], propertyName );
+				if ( embeddedPath != null ) {
+					return embeddedPath;
 				}
-				else if ( !( existingType instanceof AssociationType ) ) {
-					// Workaround for org.hibernate.cfg.annotations.PropertyBinder#bind() adding a component for *ToOne ids.
-				}
-				else {
-					if ( type instanceof AnyType && existingType instanceof AnyType ) {
-						// Let the first type dictate what type the property has.
-					}
-					else {
-						Type commonType = null;
-						final var metadata = (MetadataImplementor) mapping;
-						if ( type instanceof CollectionType collectionType
-								&& existingType instanceof CollectionType existingCollectionType ) {
-							final var thisCollection = metadata.getCollectionBinding( existingCollectionType.getRole() );
-							final var otherCollection = metadata.getCollectionBinding( collectionType.getRole() );
-							if ( thisCollection.isSame( otherCollection ) ) {
-								return;
-							}
-							else {
-								logIncompatibleRegistration( path, existingType, type );
-							}
-						}
-						else if ( type instanceof EntityType entityType2 && existingType instanceof EntityType entityType1 ) {
-							if ( entityType1.getAssociatedEntityName().equals( entityType2.getAssociatedEntityName() ) ) {
-								return;
-							}
-							else {
-								commonType = getCommonType( metadata, entityType1, entityType2 );
-							}
-						}
-						else {
-							logIncompatibleRegistration( path, existingType, type );
-						}
-						if ( commonType == null ) {
-							if ( duplicateIncompatiblePaths == null ) {
-								duplicateIncompatiblePaths = new HashSet<>();
-							}
-							duplicateIncompatiblePaths.add( path );
-							typesByPropertyPath.remove( path );
-							columnsByPropertyPath.put( path, EMPTY_STRING_ARRAY );
-							columnReadersByPropertyPath.put( path, EMPTY_STRING_ARRAY );
-							columnReaderTemplatesByPropertyPath.put( path, EMPTY_STRING_ARRAY );
-						}
-						else {
-							typesByPropertyPath.put( path, commonType );
-						}
-					}
-				}
+			}
+		}
+		return null;
+	}
+
+	private PropertyPath resolveSubPropertyPath(Type type, String[] columnNames, String propertyName) {
+		if ( type instanceof CompositeType compositeType ) {
+			return resolveCompositePropertyPath( compositeType, columnNames, propertyName );
+		}
+		else if ( type instanceof EntityType entityType ) {
+			return resolveEntityIdentifierPropertyPath( entityType, columnNames, propertyName );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private PropertyPath resolveCompositePropertyPath(CompositeType compositeType, String[] columnNames, String propertyName) {
+		final int dotIndex = propertyName.indexOf( '.' );
+		final String componentPropertyName =
+				dotIndex < 0
+						? propertyName
+						: propertyName.substring( 0, dotIndex );
+		final int componentPropertyIndex =
+				getCompositePropertyIndex( compositeType, componentPropertyName );
+		if ( componentPropertyIndex < 0 ) {
+			return null;
+		}
+
+		final var propertyType = compositeType.getSubtypes()[componentPropertyIndex];
+		final var propertyColumnNames =
+				getCompositePropertyColumnNames( compositeType, columnNames, componentPropertyIndex );
+		return dotIndex < 0
+				? new PropertyPath( propertyType, propertyColumnNames )
+				: resolveSubPropertyPath( propertyType, propertyColumnNames,
+						propertyName.substring( dotIndex + 1 ) );
+	}
+
+	private static int getCompositePropertyIndex(CompositeType compositeType, String propertyName) {
+		final String[] propertyNames = compositeType.getPropertyNames();
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			if ( propertyNames[i].equals( propertyName ) ) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	private String[] getCompositePropertyColumnNames(
+			CompositeType compositeType,
+			String[] columnNames,
+			int propertyIndex) {
+		final var mappingContext = factory.getRuntimeMetamodels();
+		final var subtypes = compositeType.getSubtypes();
+		int begin = 0;
+		for ( int i = 0; i < propertyIndex; i++ ) {
+			begin += subtypes[i].getColumnSpan( mappingContext );
+		}
+		return slice( columnNames, begin, subtypes[propertyIndex].getColumnSpan( mappingContext ) );
+	}
+
+	private PropertyPath resolveEntityIdentifierPropertyPath(
+			EntityType entityType,
+			String[] columnNames,
+			String propertyName) {
+		final int dotIndex = propertyName.indexOf( '.' );
+		final String identifierPropertyName =
+				dotIndex < 0
+						? propertyName
+						: propertyName.substring( 0, dotIndex );
+		final var runtimeMetamodels = factory.getRuntimeMetamodels();
+		final var identifierType = entityType.getIdentifierOrUniqueKeyType( runtimeMetamodels );
+		final String identifierOrUniqueKeyPropertyName =
+				entityType.getIdentifierOrUniqueKeyPropertyName( runtimeMetamodels );
+		final boolean matchesIdentifier =
+				entityType.isReferenceToPrimaryKey()
+						&& ENTITY_ID.equals( identifierPropertyName )
+						&& !hasNonIdentifierPropertyNamedId( entityType );
+		final boolean matchesIdentifierOrUniqueKey =
+				!entityType.isNullable()
+						&& identifierOrUniqueKeyPropertyName != null
+						&& identifierOrUniqueKeyPropertyName.equals( identifierPropertyName );
+
+		if ( matchesIdentifier || matchesIdentifierOrUniqueKey ) {
+			return dotIndex < 0
+					? new PropertyPath( identifierType, columnNames )
+					: resolveSubPropertyPath( identifierType, columnNames,
+							propertyName.substring( dotIndex + 1 ) );
+		}
+		return null;
+	}
+
+	private boolean hasNonIdentifierPropertyNamedId(EntityType entityType) {
+		final var associatedPersister = entityType.getAssociatedEntityPersister( factory );
+		return associatedPersister instanceof BaseEntityPersister baseEntityPersister
+			&& baseEntityPersister.hasNonIdentifierPropertyNamedId();
+	}
+
+	private String[] resolveAssociationColumnNames(String path, Type type, String[] columnNames) {
+		if ( type instanceof AssociationType associationType ) {
+			if ( associationType.useLHSPrimaryKey() ) {
+				return getIdentifierColumnNames();
 			}
 			else {
-				typesByPropertyPath.put( path, type );
-				columnsByPropertyPath.put( path, columns );
-				columnReadersByPropertyPath.put( path, columnReaders );
-				columnReaderTemplatesByPropertyPath.put( path, columnReaderTemplates );
-			}
-		}
-
-		private Type getCommonType(MetadataImplementor metadata, EntityType entityType1, EntityType entityType2) {
-			final var thisClass = metadata.getEntityBinding( entityType1.getAssociatedEntityName() );
-			final var otherClass = metadata.getEntityBinding( entityType2.getAssociatedEntityName() );
-			final var commonClass = getCommonPersistentClass( thisClass, otherClass );
-
-			if ( commonClass == null ) {
-				return null;
-			}
-			else if ( entityType1 instanceof ManyToOneType manyToOneType ) {
-				return new ManyToOneType( manyToOneType, commonClass.getEntityName() );
-			}
-			else if ( entityType1 instanceof SpecialOneToOneType specialOneToOneType ) {
-				return new SpecialOneToOneType( specialOneToOneType, commonClass.getEntityName() );
-			}
-			else if ( entityType1 instanceof OneToOneType oneToOneType ) {
-				return new OneToOneType( oneToOneType, commonClass.getEntityName() );
-			}
-			else {
-				throw new IllegalStateException( "Unexpected entity type: " + entityType1 );
-			}
-		}
-
-		private PersistentClass getCommonPersistentClass(PersistentClass clazz1, PersistentClass clazz2) {
-			while ( clazz2 != null
-					&& clazz2.getMappedClass() != null
-					&& clazz1.getMappedClass() != null
-					&& !clazz2.getMappedClass().isAssignableFrom( clazz1.getMappedClass() ) ) {
-				clazz2 = clazz2.getSuperclass();
-			}
-			return clazz2;
-		}
-
-		private void initPropertyPaths(
-				final String path,
-				final Type type,
-				String[] columns,
-				String[] columnReaders,
-				String[] columnReaderTemplates,
-				final String[] formulaTemplates,
-				final Metadata mapping) throws MappingException {
-			assert columns != null : "Incoming columns should not be null : " + path;
-			assert type != null : "Incoming type should not be null : " + path;
-
-			if ( columns.length != type.getColumnSpan( mapping ) ) {
-				throw new MappingException(
-						"broken column mapping for: " + path +
-								" of: " + getEntityName()
-				);
-			}
-
-			if ( type instanceof AnyType || type instanceof CollectionType || type instanceof EntityType ) {
-				final var associationType = (AssociationType) type;
-				if ( associationType.useLHSPrimaryKey() ) {
-					columns = getIdentifierColumnNames();
-					columnReaders = getIdentifierColumnReaders();
-					columnReaderTemplates = getIdentifierColumnReaderTemplates();
-				}
-				else {
-					final String foreignKeyProperty = associationType.getLHSPropertyName();
-					if ( foreignKeyProperty != null && !path.equals( foreignKeyProperty ) ) {
-						// This requires the referenced property to have been processed first.
-						columns = columnsByPropertyPath.get( foreignKeyProperty );
-						if ( columns == null ) {
-							return;
-						}
-						columnReaders = columnReadersByPropertyPath.get( foreignKeyProperty );
-						columnReaderTemplates = columnReaderTemplatesByPropertyPath.get( foreignKeyProperty );
+				final String foreignKeyProperty = associationType.getLHSPropertyName();
+				if ( foreignKeyProperty != null && !path.equals( foreignKeyProperty ) ) {
+					final var foreignKeyPath = resolvePropertyPath( foreignKeyProperty );
+					if ( foreignKeyPath != null ) {
+						return foreignKeyPath.columnNames();
 					}
 				}
 			}
-
-			if ( path != null ) {
-				addPropertyPath( path, type, columns, columnReaders, columnReaderTemplates, mapping );
-			}
-
-			if ( type instanceof AnyType anyType ) {
-				initComponentPropertyPaths(
-						path,
-						anyType,
-						columns,
-						columnReaders,
-						columnReaderTemplates,
-						formulaTemplates,
-						mapping
-				);
-			}
-			else if ( type instanceof ComponentType componentType ) {
-				initComponentPropertyPaths(
-						path,
-						componentType,
-						columns,
-						columnReaders,
-						columnReaderTemplates,
-						formulaTemplates,
-						mapping
-				);
-				if ( componentType.isEmbedded() ) {
-					initComponentPropertyPaths(
-							path == null ? null : qualifier( path ),
-							componentType,
-							columns,
-							columnReaders,
-							columnReaderTemplates,
-							formulaTemplates,
-							mapping
-					);
-				}
-			}
-			else if ( type instanceof EntityType entityType ) {
-				initIdentifierPropertyPaths(
-						path,
-						entityType,
-						columns,
-						columnReaders,
-						columnReaderTemplates,
-						formulaTemplates != null && formulaTemplates.length > 0 ? formulaTemplates : null,
-						mapping
-				);
-			}
 		}
-
-		private void initIdentifierPropertyPaths(
-				final String path,
-				final EntityType entityType,
-				final String[] columns,
-				final String[] columnReaders,
-				final String[] columnReaderTemplates,
-				final String[] formulaTemplates,
-				final Metadata mapping) throws MappingException {
-
-			final var idtype = entityType.getIdentifierOrUniqueKeyType( mapping );
-			final String idPropName = entityType.getIdentifierOrUniqueKeyPropertyName( mapping );
-			boolean hasNonIdentifierPropertyNamedId = hasNonIdentifierPropertyNamedId( entityType, mapping );
-
-			if ( entityType.isReferenceToPrimaryKey() && !hasNonIdentifierPropertyNamedId ) {
-				final String idpath = extendPath( path, ENTITY_ID );
-				addPropertyPath( idpath, idtype, columns, columnReaders, columnReaderTemplates, mapping );
-				initPropertyPaths( idpath, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates,
-						mapping );
-			}
-
-			if ( !entityType.isNullable() && idPropName != null ) {
-				final String idpath2 = extendPath( path, idPropName );
-				addPropertyPath( idpath2, idtype, columns, columnReaders, columnReaderTemplates, mapping );
-				initPropertyPaths( idpath2, idtype, columns, columnReaders, columnReaderTemplates, formulaTemplates,
-						mapping );
-			}
-		}
-
-		private boolean hasNonIdentifierPropertyNamedId(final EntityType entityType, final MappingContext mapping) {
-			try {
-				return mapping.getReferencedPropertyType(
-						entityType.getAssociatedEntityName(),
-						ENTITY_ID
-				) != null;
-			}
-			catch (MappingException e) {
-				return false;
-			}
-		}
-
-		private void initComponentPropertyPaths(
-				final String path,
-				final CompositeType type,
-				final String[] columns,
-				final String[] columnReaders,
-				final String[] columnReaderTemplates,
-				final String[] formulaTemplates,
-				final Metadata mapping) throws MappingException {
-
-			final var types = type.getSubtypes();
-			final var properties = type.getPropertyNames();
-			int begin = 0;
-			for ( int i = 0; i < properties.length; i++ ) {
-				final String subpath = extendPath( path, properties[i] );
-				try {
-					final int length = types[i].getColumnSpan( mapping );
-					final var columnSlice = slice( columns, begin, length );
-					final var columnReaderSlice = slice( columnReaders, begin, length );
-					final var columnReaderTemplateSlice = slice( columnReaderTemplates, begin, length );
-					final var formulaSlice =
-							formulaTemplates == null
-									? null
-									: slice( formulaTemplates, begin, length );
-					initPropertyPaths(
-							subpath,
-							types[i],
-							columnSlice,
-							columnReaderSlice,
-							columnReaderTemplateSlice,
-							formulaSlice,
-							mapping
-					);
-					begin += length;
-				}
-				catch (Exception e) {
-					throw new MappingException( "bug in initComponentPropertyPaths", e );
-				}
-			}
-		}
-
-		private String extendPath(String path, String property) {
-			return isEmpty( path ) ? property : qualify( path, property );
-		}
+		return columnNames;
 	}
+
+	private record PropertyPath(Type type, String[] columnNames) {}
 
 	@Override
 	public String getIdentitySelectString() {
@@ -3675,21 +3473,6 @@ public abstract class AbstractEntityPersister
 
 	protected boolean isSubclassTableIndicatedByTreatAsDeclarations(int subclassTableNumber, Set<String> treatAsDeclarations) {
 		return false;
-	}
-
-	/**
-	 * Post-construct is a callback for {@code AbstractEntityPersister}
-	 * subclasses to call after they are all done with their constructor
-	 * processing. It allows {@code AbstractEntityPersister} to extend
-	 * its construction after subclass-specific details have all been
-	 * taken care of.
-	 *
-	 * @param mapping The mapping
-	 *
-	 * @throws MappingException Indicates a problem accessing the Mapping
-	 */
-	protected void postConstruct(Metadata mapping) throws MappingException {
-		initPropertyPaths( mapping );
 	}
 
 	@Override
@@ -4851,8 +4634,11 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override @Deprecated
 	public Type getPropertyType(String propertyName) throws MappingException {
-		// todo (PropertyMapping) : caller also deprecated (aka, easy to remove)
-		return propertyPathRegistry.toType( propertyName );
+		final var propertyPath = resolvePropertyPath( propertyName );
+		if ( propertyPath == null ) {
+			throw new QueryException( "Could not resolve property: " + propertyName + " of: " + getEntityName() );
+		}
+		return propertyPath.type();
 	}
 
 	@Override

@@ -1,6 +1,15 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.52.Final (May 31, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39275
+
+
+** Bug
+    * HHH-20504 DataException (Parameter is not set) when updating only a collection of a versioned entity with with a @SQLUpdate
+
 Changes in 6.6.51.Final (May 24, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

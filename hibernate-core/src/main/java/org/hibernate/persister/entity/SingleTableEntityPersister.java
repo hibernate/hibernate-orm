@@ -13,7 +13,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -74,7 +73,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	private final String[] spaces;
 
-	private final String[] subclassClosure;
+//	private final String[] subclassClosure;
 
 	private final String[] subclassTableNameClosure;
 	private final boolean[] isNullableSubclassTable;
@@ -267,9 +266,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		subclassPropertyTableNumberClosure = toIntArray( propertyJoinNumbers );
 
-		final int subclassSpan = persistentClass.getSubclassSpan() + 1;
-		subclassClosure = new String[subclassSpan];
-		subclassClosure[0] = getEntityName();
+//		final int subclassSpan = persistentClass.getSubclassSpan() + 1;
+//		subclassClosure = new String[subclassSpan];
+//		subclassClosure[0] = getEntityName();
 		if ( persistentClass.isPolymorphic() ) {
 			addSubclassByDiscriminatorValue(
 					subclassesByDiscriminatorValueLocal,
@@ -281,7 +280,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final var subclasses = persistentClass.getSubclasses();
 			for ( int k = 0; k < subclasses.size(); k++ ) {
 				final var subclass = subclasses.get( k );
-				subclassClosure[k] = subclass.getEntityName();
+//				subclassClosure[k] = subclass.getEntityName();
 				addSubclassByDiscriminatorValue(
 						subclassesByDiscriminatorValueLocal,
 						DiscriminatorHelper.getDiscriminatorValue( subclass ),
@@ -367,15 +366,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLValue;
-	}
-
-	/**
-	 * @deprecated No longer used.
-	 */
-	@Deprecated(forRemoval = true)
-	@Remove
-	public String[] getSubclassClosure() {
-		return subclassClosure;
 	}
 
 	@Override

@@ -19,11 +19,13 @@ import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextIm
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.rowsecurity.CockroachRowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.DB2RowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.PostgreSQLRowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.SQLServerRowLevelSecurity;
@@ -212,11 +214,63 @@ class RowLevelSecurityTest {
 	}
 
 	@Test
+	void cockroachTenantIdRegistersRowLevelSecurityDdl() {
+		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.DIALECT, Cockroach252Dialect.class )
+				.build();
+		try {
+			final var metadata = new MetadataSources( registry )
+					.addAnnotatedClass( Document.class )
+					.buildMetadata();
+			final org.hibernate.mapping.Table table =
+					metadata.getEntityBinding( Document.class.getName() ).getTable();
+			final var context =
+					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+			final List<String> commands = table.getInitCommands( context ).stream()
+					.flatMap( command -> Arrays.stream( command.initCommands() ) )
+					.toList();
+
+			final String predicate = "tenant_id = cast(nullif(substring(current_setting('application_name', true)"
+					+ " from '^hibernate_orm_rls:[^:]*:(.*)$'), '') as uuid)"
+					+ " or split_part(current_setting('application_name', true), ':', 2) = 'true'";
+			assertThat( commands ).containsExactly(
+					"alter table document enable row level security",
+					"alter table document force row level security",
+					"create policy hibernate_tenant_isolation on document using (" + predicate + ")"
+							+ " with check (" + predicate + ")"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
+	void cockroachRowLevelSecurityIsVersionGated() {
+		assertThat( new CockroachDialect( DatabaseVersion.make( 25, 1 ) )
+				.getRowLevelSecurity()
+				.supportsRowLevelSecurity() )
+				.isFalse();
+		assertThat( new CockroachDialect( DatabaseVersion.make( 25, 2 ) )
+				.getRowLevelSecurity()
+				.supportsRowLevelSecurity() )
+				.isTrue();
+	}
+
+	@Test
 	void postgreSqlRowLevelSecurityUsesHibernateTenantSettings() {
 		assertThat( PostgreSQLRowLevelSecurity.INSTANCE.getTenantIdentifierSettingName() )
 				.isEqualTo( "hibernate.tenant_id" );
 		assertThat( PostgreSQLRowLevelSecurity.INSTANCE.getRootTenantIdentifierSettingName() )
 				.isEqualTo( "hibernate.tenant_id_root" );
+	}
+
+	@Test
+	void cockroachRowLevelSecurityUsesApplicationNameSetting() {
+		assertThat( CockroachRowLevelSecurity.INSTANCE.getTenantIdentifierSettingName() )
+				.isEqualTo( "application_name" );
+		assertThat( CockroachRowLevelSecurity.INSTANCE.getRootTenantIdentifierSettingName() )
+				.isEqualTo( "application_name" );
 	}
 
 	@Test
@@ -256,6 +310,12 @@ class RowLevelSecurityTest {
 	public static class SQLServer2016Dialect extends SQLServerDialect {
 		public SQLServer2016Dialect() {
 			super( DatabaseVersion.make( 13 ) );
+		}
+	}
+
+	public static class Cockroach252Dialect extends CockroachDialect {
+		public Cockroach252Dialect() {
+			super( DatabaseVersion.make( 25, 2 ) );
 		}
 	}
 

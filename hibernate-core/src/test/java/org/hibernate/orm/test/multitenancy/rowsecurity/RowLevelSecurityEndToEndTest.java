@@ -15,6 +15,7 @@ import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.cfg.MultiTenancySettings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -138,6 +139,9 @@ class RowLevelSecurityEndToEndTest {
 		if ( dialect instanceof PostgreSQLDialect ) {
 			preparePostgreSqlRlsRoleIfNeeded( scope );
 		}
+		else if ( dialect instanceof CockroachDialect ) {
+			prepareCockroachRlsRoleIfNeeded( scope );
+		}
 		else if ( dialect instanceof SQLServerDialect ) {
 			prepareSqlServerRlsUserIfNeeded( scope );
 		}
@@ -158,6 +162,25 @@ class RowLevelSecurityEndToEndTest {
 						statement.execute( "do $$ begin create role " + RLS_TEST_ROLE
 								+ "; exception when duplicate_object then null; end $$" );
 						statement.execute( "alter role " + RLS_TEST_ROLE + " nosuperuser nobypassrls" );
+						statement.execute( "grant usage on schema public to " + RLS_TEST_ROLE );
+						statement.execute( "grant select, insert, update, delete on table rls_document to "
+								+ RLS_TEST_ROLE );
+					}
+				} );
+			}
+		} );
+	}
+
+	private void prepareCockroachRlsRoleIfNeeded(SessionFactoryScope scope) {
+		currentTenant = ROOT_TENANT;
+		scope.inTransaction( session -> {
+			assertThat( tableHasRowLevelSecurity( session ) ).isTrue();
+			usePostgreSqlRlsTestRole = currentRoleBypassesRowLevelSecurity( session );
+			if ( usePostgreSqlRlsTestRole ) {
+				session.doWork( connection -> {
+					try ( var statement = connection.createStatement() ) {
+						statement.execute( "create role if not exists " + RLS_TEST_ROLE );
+						statement.execute( "alter role " + RLS_TEST_ROLE + " nobypassrls" );
 						statement.execute( "grant usage on schema public to " + RLS_TEST_ROLE );
 						statement.execute( "grant select, insert, update, delete on table rls_document to "
 								+ RLS_TEST_ROLE );

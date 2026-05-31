@@ -2140,15 +2140,16 @@ public class SessionImpl
 	// loading
 
 	@Override
-	protected <T> StatefulFindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options) {
-		return byKey( entityDescriptor, null, null, options );
+	protected <T> StatefulFindByKeyOperation<T> byKey(Class<T> entityClass, EntityPersister entityDescriptor, FindOption... options) {
+		return byKey( entityClass, entityDescriptor, null, null, options );
 	}
 
 	@Override
 	protected <T> StatefulFindByKeyOperation<T> byKey(
+			Class<T> entityClass,
 			EntityPersister entityDescriptor,
 			GraphSemantic graphSemantic,
-			RootGraphImplementor<?> rootGraph,
+			RootGraphImplementor<T> rootGraph,
 			FindOption... options) {
 		return new StatefulFindByKeyOperation<>(
 				entityDescriptor,
@@ -2193,31 +2194,19 @@ public class SessionImpl
 		}
 		final var options = determineFindOptions( lockMode, properties );
 		final var entityDescriptor = requireEntityPersisterForLoad( entityClass );
-		//noinspection unchecked
-		return (T) byKeyWithGraph( entityDescriptor, properties, options ).performFind( primaryKey );
+		return byKeyWithGraph( entityClass, entityDescriptor, properties, options )
+				.performFind( primaryKey );
 	}
 
-	private <T> FindByKeyOperation<T> byKeyWithGraph(EntityPersister entityDescriptor, Map<String, Object> properties, FindOption[] options) {
-		RootGraphImplementor<?> fetchHint;
-		RootGraphImplementor<?> loadHint;
-		if ( properties != null ) {
-			fetchHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_FETCH_GRAPH );
-			loadHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_LOAD_GRAPH );
-			if ( fetchHint == null ) {
-				fetchHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_FETCH_GRAPH );
-			}
-			if ( loadHint == null ) {
-				loadHint = (RootGraphImplementor<?>) properties.get( HINT_SPEC_LOAD_GRAPH );
-			}
-		}
-		else {
-			fetchHint = null;
-			loadHint = null;
-		}
-
-		GraphSemantic graphSemantic = null;
-		RootGraphImplementor<?> graph = null;
-
+	private <T> FindByKeyOperation<T> byKeyWithGraph(
+			Class<T> entityClass,
+			EntityPersister entityDescriptor,
+			Map<String, Object> properties,
+			FindOption[] options) {
+		final var fetchHint = fetchGraphFromHints( properties );
+		final var loadHint = loadGraphFromHints( properties );
+		final GraphSemantic graphSemantic;
+		final RootGraphImplementor<?> graph;
 		if ( fetchHint != null ) {
 			if ( loadHint != null ) {
 				// can't have both
@@ -2233,8 +2222,48 @@ public class SessionImpl
 			graphSemantic = GraphSemantic.LOAD;
 			graph = loadHint;
 		}
+		else {
+			graphSemantic = null;
+			graph = null;
+		}
+		if ( graph != null && graph.getGraphedType().getJavaType() != entityClass ) {
+			throw new IllegalArgumentException( "Fetch graph has wrong root type" );
+		}
+		@SuppressWarnings( "unchecked" ) // safe, we just checked
+		final var castGraph = (RootGraphImplementor<T>) graph;
+		return byKey( entityClass, entityDescriptor, graphSemantic, castGraph, options );
+	}
 
-		return byKey( entityDescriptor, graphSemantic, graph, options );
+	@Nullable
+	private static RootGraphImplementor<?> loadGraphFromHints(Map<String, Object> properties) {
+		if ( properties != null ) {
+			final var loadHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_LOAD_GRAPH );
+			if ( loadHint == null ) {
+				return (RootGraphImplementor<?>) properties.get( HINT_SPEC_LOAD_GRAPH );
+			}
+			else {
+				return loadHint;
+			}
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Nullable
+	private static RootGraphImplementor<?> fetchGraphFromHints(Map<String, Object> properties) {
+		if ( properties != null ) {
+			final var fetchHint = (RootGraphImplementor<?>) properties.get( HINT_JAVAEE_FETCH_GRAPH );
+			if ( fetchHint == null ) {
+				return  (RootGraphImplementor<?>) properties.get( HINT_SPEC_FETCH_GRAPH );
+			}
+			else {
+				return fetchHint;
+			}
+		}
+		else {
+			return null;
+		}
 	}
 
 	private FindOption[] determineFindOptions(LockMode lockMode, Map<String, Object> properties) {

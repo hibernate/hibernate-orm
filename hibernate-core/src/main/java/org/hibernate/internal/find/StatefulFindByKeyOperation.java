@@ -16,7 +16,6 @@ import org.hibernate.ReadOnlyMode;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.LoadEventListener;
@@ -82,7 +81,7 @@ public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T>
 	}
 
 	private T findByNaturalId(Object key) {
-		final SessionImplementor session = loadAccessContext.getSession();
+		final var session = loadAccessContext.getSession();
 
 		performAnyNeededCrossReferenceSynchronizations(
 				getNaturalIdSynchronization() != NaturalIdSynchronization.DISABLED,
@@ -122,8 +121,8 @@ public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T>
 	private T withOptions(StatefulLoadAccessContext loadAccessContext, Supplier<T> action) {
 		final var session = loadAccessContext.getSession();
 
-			final var sessionCacheMode = session.getCacheMode();
-			final var cacheMode = getCacheMode();
+		final var sessionCacheMode = session.getCacheMode();
+		final var cacheMode = getCacheMode();
 		boolean cacheModeChanged = false;
 		try {
 			if ( cacheMode != null ) {

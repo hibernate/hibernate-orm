@@ -1231,8 +1231,6 @@ public abstract class AbstractEntityPersister
 			return NoopCacheEntryHelper.INSTANCE;
 		}
 		else if ( canUseReferenceCacheEntries() ) {
-			setLazy( false );
-			// todo : do we also need to unset proxy factory?
 			return new ReferenceCacheEntryHelper( this );
 		}
 		else {
@@ -4591,10 +4589,26 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean isLazy() {
+		return isLazyByMetadata()
+			&& !canUseReferenceCacheEntries()
+			&& canDelayLoad();
+	}
+
+	private boolean canDelayLoad() {
+		// isLazy() is called while the representation strategy is being built
+		// to decide whether a ProxyFactory should be created.
+		return getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+			|| representationStrategy == null
+			|| representationStrategy.getProxyFactory() != null;
+	}
+
+	@Override
 	public boolean hasProxy() {
 		// skip proxy instantiation if entity is bytecode enhanced
 		return isLazy()
-			&& !getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+			&& !getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+			&& representationStrategy.getProxyFactory() != null;
 	}
 
 	@Override

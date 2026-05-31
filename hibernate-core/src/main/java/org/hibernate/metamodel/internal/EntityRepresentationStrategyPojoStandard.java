@@ -23,7 +23,6 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -144,18 +143,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			// so no need for a ProxyFactory
 			return null;
 		}
+		else if ( proxyJavaType != null && entityPersister.isLazy() ) {
+			return createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
+		}
 		else {
-			if ( proxyJavaType != null && entityPersister.isLazy() ) {
-				final var proxyFactory =
-						createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
-				if ( proxyFactory == null ) {
-					( (AbstractEntityPersister) entityPersister ).setLazy( false );
-				}
-				return proxyFactory;
-			}
-			else {
-				return null;
-			}
+			return null;
 		}
 	}
 

@@ -25,6 +25,9 @@ import org.hibernate.dialect.lock.internal.CockroachLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.rowsecurity.CockroachRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.NoRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.CockroachSqlAstTranslator;
@@ -704,6 +707,13 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return PostgreSQLSequenceSupport.INSTANCE;
+	}
+
+	@Override
+	public RowLevelSecurity getRowLevelSecurity() {
+		return getVersion().isSameOrAfter( 25, 2 )
+				? CockroachRowLevelSecurity.INSTANCE
+				: NoRowLevelSecurity.INSTANCE;
 	}
 
 	@Override

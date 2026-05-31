@@ -57,7 +57,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			String[] idColumns,
 			VirtualIdEmbeddable virtualIdEmbeddable,
 			MappingModelCreationProcess creationProcess) {
-		super( new MutableAttributeMappingList( idClassSource.getPropertySpan() ) );
+		super( idClassSource.getPropertySpan() );
 
 		this.idMapping = idMapping;
 		this.virtualIdEmbeddable = virtualIdEmbeddable;
@@ -123,7 +123,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			SelectableMappings selectableMappings,
 			IdClassEmbeddable inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
-		super( new MutableAttributeMappingList( inverseMappingType.attributeMappings.size() ) );
+		super( inverseMappingType.attributeMappings.size() );
 
 		this.navigableRole = inverseMappingType.getNavigableRole();
 		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;
@@ -147,8 +147,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						selectableMappings,
 						inverseMappingType,
 						creationProcess,
-						this,
-						this.attributeMappings
+						this
 				)
 		);
 	}
@@ -317,8 +316,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
-		// Reset the attribute mappings that were added in previous attempts
-		this.attributeMappings.clear();
+		final var attributeMappings = new ImmutableAttributeMappingList.Builder( compositeType.getPropertyNames().length );
 
 		return finishInitialization(
 				navigableRole,
@@ -337,8 +335,9 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 					}
 				},
 				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
-				this::addAttribute,
+				attributeMappings::add,
 				() -> {
+					this.attributeMappings = attributeMappings.build();
 					// We need the attribute mapping types to finish initialization first before we can build the column mappings
 					creationProcess.registerInitializationCallback(
 							"IdClassEmbeddable(" + getNavigableRole() + ")#initColumnMappings",

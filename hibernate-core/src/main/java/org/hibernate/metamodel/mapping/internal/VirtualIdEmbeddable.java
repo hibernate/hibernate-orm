@@ -42,7 +42,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
-		super( new MutableAttributeMappingList( virtualIdSource.getType().getPropertyNames().length ) );
+		super( virtualIdSource.getType().getPropertyNames().length );
 
 		this.idMapping = idMapping;
 		navigableRole = idMapping.getNavigableRole();
@@ -76,7 +76,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 			SelectableMappings selectableMappings,
 			VirtualIdEmbeddable inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
-		super( new MutableAttributeMappingList( inverseMappingType.attributeMappings.size() ) );
+		super( inverseMappingType.attributeMappings.size() );
 
 		this.navigableRole = inverseMappingType.getNavigableRole();
 		this.idMapping = (NonAggregatedIdentifierMapping) valueMapping;
@@ -89,8 +89,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 						selectableMappings,
 						inverseMappingType,
 						creationProcess,
-						this,
-						this.attributeMappings
+						this
 				)
 		);
 	}
@@ -204,8 +203,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
 
-		// Reset the attribute mappings that were added in previous attempts
-		this.attributeMappings.clear();
+		final var attributeMappings = new ImmutableAttributeMappingList.Builder( compositeType.getPropertyNames().length );
 
 		return finishInitialization(
 				navigableRole,
@@ -224,8 +222,9 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 					}
 				},
 				(column, jdbcEnvironment) -> MappingModelCreationHelper.getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
-				this::addAttribute,
+				attributeMappings::add,
 				() -> {
+					this.attributeMappings = attributeMappings.build();
 					// We need the attribute mapping types to finish initialization first before we can build the column mappings
 					creationProcess.registerInitializationCallback(
 							"VirtualIdEmbeddable(" + navigableRole + ")#initColumnMappings",

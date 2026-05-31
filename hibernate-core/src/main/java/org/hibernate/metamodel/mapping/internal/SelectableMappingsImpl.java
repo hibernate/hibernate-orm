@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -17,12 +16,10 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -52,77 +49,17 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		}
 	}
 
-	@Deprecated(forRemoval = true)
-	public static SelectableMappings from(
-			String containingTableExpression,
-			Value value,
-			int[] propertyOrder,
-			MappingContext mappingContext,
-			TypeConfiguration typeConfiguration,
-			boolean[] insertable,
-			boolean[] updateable,
-			Dialect dialect,
-			SqmFunctionRegistry sqmFunctionRegistry,
-			RuntimeModelCreationContext creationContext) {
-		return from(
-				containingTableExpression,
-				value,
-				propertyOrder,
-				null,
-				mappingContext,
-				typeConfiguration,
-				insertable,
-				updateable,
-				dialect,
-				sqmFunctionRegistry,
-				creationContext
-		);
-	}
-
-	@Deprecated(forRemoval = true)
-	public static SelectableMappings from(
-			String containingTableExpression,
-			Value value,
-			int[] propertyOrder,
-			@Nullable SelectablePath parentSelectablePath,
-			MappingContext mappingContext,
-			TypeConfiguration typeConfiguration,
-			boolean[] insertable,
-			boolean[] updateable,
-			Dialect dialect,
-			SqmFunctionRegistry sqmFunctionRegistry,
-			RuntimeModelCreationContext creationContext) {
-		return from(
-				containingTableExpression,
-				value,
-				propertyOrder,
-				null,
-				parentSelectablePath,
-				mappingContext,
-				typeConfiguration,
-				insertable,
-				updateable,
-				dialect,
-				sqmFunctionRegistry,
-				creationContext
-		);
-	}
-
 	public static SelectableMappings from(
 			String containingTableExpression,
 			Value value,
 			int[] propertyOrder,
 			@Nullable String propertyPath,
 			@Nullable SelectablePath parentSelectablePath,
-			MappingContext mappingContext,
-			TypeConfiguration typeConfiguration,
 			boolean[] insertable,
 			boolean[] updateable,
-			Dialect dialect,
-			SqmFunctionRegistry sqmFunctionRegistry,
 			RuntimeModelCreationContext creationContext) {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
-		resolveJdbcMappings( jdbcMappings, mappingContext, value.getType() );
+		resolveJdbcMappings( jdbcMappings, creationContext.getMetadata(), value.getType() );
 
 		final var selectables = value.getVirtualSelectables();
 		final var selectableMappings = new SelectableMapping[jdbcMappings.size()];
@@ -133,12 +70,10 @@ public class SelectableMappingsImpl implements SelectableMappings {
 					selectables.get( i ).isFormula() ? (propertyPath + "_" + i) : null,
 					parentSelectablePath,
 					jdbcMappings.get( propertyOrder[i] ),
-					typeConfiguration,
 					i < insertable.length && insertable[i],
 					i < updateable.length && updateable[i],
 					false,
 					false,
-					dialect,
 					creationContext
 			);
 		}

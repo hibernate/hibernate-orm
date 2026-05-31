@@ -171,7 +171,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			Property componentProperty,
 			Function<EmbeddableMappingType, EmbeddableValuedModelPart> embeddedPartBuilder,
 			RuntimeModelCreationContext creationContext) {
-		super( new MutableAttributeMappingList( 5 ) );
+		super( 5 );
 		this.representationStrategy = creationContext
 				.getBootstrapContext()
 				.getRepresentationStrategySelector()
@@ -205,7 +205,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		final var aggregateColumn = bootDescriptor.getAggregateColumn();
 		if ( aggregateColumn != null ) {
-			final var dialect = creationContext.getDialect();
 			final boolean insertable;
 			final boolean updatable;
 			if ( componentProperty == null ) {
@@ -225,17 +224,15 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 							? bootDescriptor.getParentAggregateColumn().getSelectablePath()
 							: null,
 					resolveJdbcMapping( bootDescriptor, creationContext ),
-					creationContext.getTypeConfiguration(),
 					insertable,
 					updatable,
 					false,
 					false,
-					dialect,
 					creationContext
 			);
 			final int defaultSqlTypeCode =
 					aggregateMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
-			final var aggregateSupport = dialect.getAggregateSupport();
+			final var aggregateSupport = creationContext.getDialect().getAggregateSupport();
 			final int sqlTypeCode =
 					defaultSqlTypeCode == ARRAY
 							? aggregateColumn.getTypeCode()
@@ -361,7 +358,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			SelectableMappings selectableMappings,
 			EmbeddableMappingType inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
-		super( new MutableAttributeMappingList( 5 ) );
+		super( 5 );
 
 		this.embeddableJtd = inverseMappingType.getJavaType();
 		this.representationStrategy = inverseMappingType.getRepresentationStrategy();
@@ -383,8 +380,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						selectableMappings,
 						inverseMappingType,
 						creationProcess,
-						this,
-						attributeMappings
+						this
 				)
 		);
 	}
@@ -451,8 +447,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		int attributeIndex = 0;
 		int columnPosition = 0;
 
-		// Reset the attribute mappings that were added in previous attempts
-		attributeMappings.clear();
+		final var attributeMappings = new ImmutableAttributeMappingList.Builder( bootDescriptor.getPropertySpan() );
 
 		for ( final var bootPropertyDescriptor : bootDescriptor.getProperties() ) {
 			final AttributeMapping attributeMapping;
@@ -663,10 +658,12 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				}
 			}
 
-			addAttribute( attributeMapping );
+			addAttribute( attributeMappings, attributeMapping );
 
 			attributeIndex++;
 		}
+
+		this.attributeMappings = attributeMappings.build();
 
 		// We need the attribute mapping types to finish initialization first before we can build the column mappings
 		creationProcess.registerInitializationCallback(

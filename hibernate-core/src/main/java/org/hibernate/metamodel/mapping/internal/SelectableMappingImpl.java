@@ -7,15 +7,12 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.Locale;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Christian Beikov
@@ -106,122 +103,6 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		this.isFormula = isFormula;
 	}
 
-	@Deprecated(forRemoval = true)
-	public static SelectableMapping from(
-			final String containingTableExpression,
-			final Selectable selectable,
-			final JdbcMapping jdbcMapping,
-			final TypeConfiguration typeConfiguration,
-			boolean insertable,
-			boolean updateable,
-			boolean partitioned,
-			final Dialect dialect,
-			final SqmFunctionRegistry sqmFunctionRegistry,
-			RuntimeModelCreationContext creationContext) {
-		return from(
-				containingTableExpression,
-				selectable,
-				null,
-				jdbcMapping,
-				typeConfiguration,
-				insertable,
-				updateable,
-				partitioned,
-				false,
-				dialect,
-				sqmFunctionRegistry,
-				creationContext
-		);
-	}
-
-	@Deprecated(forRemoval = true)
-	public static SelectableMapping from(
-			final String containingTableExpression,
-			final Selectable selectable,
-			final JdbcMapping jdbcMapping,
-			final TypeConfiguration typeConfiguration,
-			boolean insertable,
-			boolean updateable,
-			boolean partitioned,
-			boolean forceNotNullable,
-			final Dialect dialect,
-			final SqmFunctionRegistry sqmFunctionRegistry,
-			RuntimeModelCreationContext creationContext) {
-		return from(
-				containingTableExpression,
-				selectable,
-				null,
-				jdbcMapping,
-				typeConfiguration,
-				insertable,
-				updateable,
-				partitioned,
-				forceNotNullable,
-				dialect,
-				sqmFunctionRegistry,
-				creationContext
-		);
-	}
-
-	@Deprecated(forRemoval = true)
-	public static SelectableMapping from(
-			final String containingTableExpression,
-			final Selectable selectable,
-			@Nullable final SelectablePath parentPath,
-			final JdbcMapping jdbcMapping,
-			final TypeConfiguration typeConfiguration,
-			boolean insertable,
-			boolean updateable,
-			boolean partitioned,
-			final Dialect dialect,
-			final SqmFunctionRegistry sqmFunctionRegistry,
-			RuntimeModelCreationContext creationContext) {
-		return from(
-				containingTableExpression,
-				selectable,
-				parentPath,
-				jdbcMapping,
-				typeConfiguration,
-				insertable,
-				updateable,
-				partitioned,
-				false,
-				dialect,
-				sqmFunctionRegistry,
-				creationContext
-		);
-	}
-
-	@Deprecated(forRemoval = true)
-	public static SelectableMapping from(
-			final String containingTableExpression,
-			final Selectable selectable,
-			@Nullable final SelectablePath parentPath,
-			final JdbcMapping jdbcMapping,
-			final TypeConfiguration typeConfiguration,
-			boolean insertable,
-			boolean updateable,
-			boolean partitioned,
-			boolean forceNotNullable,
-			final Dialect dialect,
-			final SqmFunctionRegistry sqmFunctionRegistry,
-			RuntimeModelCreationContext creationContext) {
-		return from(
-				containingTableExpression,
-				selectable,
-				selectable.isFormula() ? selectable.getText() : null,
-				parentPath,
-				jdbcMapping,
-				typeConfiguration,
-				insertable,
-				updateable,
-				partitioned,
-				forceNotNullable,
-				dialect,
-				creationContext
-		);
-	}
-
 	public static SelectableMapping from(
 			final String containingTableExpression,
 			final Selectable selectable,
@@ -230,13 +111,12 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			@Nullable final String propertyPath,
 			@Nullable final SelectablePath parentPath,
 			final JdbcMapping jdbcMapping,
-			final TypeConfiguration typeConfiguration,
 			boolean insertable,
 			boolean updateable,
 			boolean partitioned,
 			boolean forceNotNullable,
-			final Dialect dialect,
 			RuntimeModelCreationContext creationContext) {
+		final var dialect = creationContext.getDialect();
 		final String columnExpression;
 		final Long length;
 		final Integer arrayLength;
@@ -247,7 +127,9 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		final boolean isLob;
 		final boolean isNullable;
 		if ( selectable.isFormula() ) {
-			columnExpression = selectable.getTemplate( dialect, typeConfiguration );
+			columnExpression =
+					selectable.getTemplate( dialect,
+							creationContext.getTypeConfiguration() );
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -278,7 +160,8 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				columnExpression,
 				selectablePath,
 				selectable.getCustomReadExpression(),
-				selectable.getWriteExpr( jdbcMapping, dialect, creationContext.getBootModel() ),
+				selectable.getWriteExpr( jdbcMapping, dialect,
+						creationContext.getBootModel() ),
 				length,
 				arrayLength,
 				precision,

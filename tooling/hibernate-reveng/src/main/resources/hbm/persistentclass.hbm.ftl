@@ -45,9 +45,6 @@
 <#if c2h.needsDiscriminator(clazz)>
     discriminator-value="${clazz.discriminatorValue}"
 </#if>
-<#if clazz.isExplicitPolymorphism()>
-    polymorphism="explicit"
-</#if>
 <#if clazz.isLazy() && !c2h.getClassName(clazz).equals(c2h.getProxyInterfaceName(clazz))>
     proxy="${c2h.getProxyInterfaceName(clazz)}"
 <#elseif !clazz.isLazy()>

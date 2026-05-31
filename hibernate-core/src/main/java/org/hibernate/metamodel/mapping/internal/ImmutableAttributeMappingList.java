@@ -49,32 +49,30 @@ public final class ImmutableAttributeMappingList implements AttributeMappingsLis
 		}
 	}
 
-	//Intentionally not implementing Iterator
-	public final class AttributeMappingIterator {
-
-		private int idx = 0;
-
-		public boolean hasNext() {
-			return idx < ImmutableAttributeMappingList.this.list.length;
-		}
-
-		public AttributeMapping next() {
-			return ImmutableAttributeMappingList.this.list[idx++];
-		}
-
-	}
-
 	public static final class Builder {
 
 		private final ArrayList<AttributeMapping> builderList;
 
 		public Builder(final int sizeHint) {
-			this.builderList = new ArrayList<>( sizeHint );
+			builderList = new ArrayList<>( sizeHint );
 		}
 
 		public void add(final AttributeMapping attributeMapping) {
 			Objects.requireNonNull( attributeMapping );
-			this.builderList.add( attributeMapping );
+			builderList.add( attributeMapping );
+		}
+
+		int size() {
+			return builderList.size();
+		}
+
+		AttributeMapping get(final int i) {
+			return builderList.get( i );
+		}
+
+		void set(final int i, final AttributeMapping attributeMapping) {
+			Objects.requireNonNull( attributeMapping );
+			builderList.set( i, attributeMapping );
 		}
 
 		public AttributeMappingsList build() {

@@ -22,21 +22,6 @@ public interface FilterRestrictable {
 	/**
 	 * Applies just the {@link org.hibernate.annotations.Filter}
 	 * values enabled for the associated entity
-	 * @deprecated Use {@link #applyFilterRestrictions(Consumer, TableGroup, boolean, Map, boolean, SqlAstCreationState)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	default void applyFilterRestrictions(
-			Consumer<Predicate> predicateConsumer,
-			TableGroup tableGroup,
-			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
-			SqlAstCreationState creationState) {
-		applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, false, creationState );
-	}
-
-	/**
-	 * Applies just the {@link org.hibernate.annotations.Filter}
-	 * values enabled for the associated entity
 	 */
 	void applyFilterRestrictions(
 			Consumer<Predicate> predicateConsumer,

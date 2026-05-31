@@ -385,14 +385,6 @@ public abstract sealed class PersistentClass
 
 	public abstract PersistentClass getSuperclass();
 
-	/**
-	 * @deprecated No longer supported
-	 */
-	@Deprecated
-	public boolean isExplicitPolymorphism() {
-		return false;
-	}
-
 	public abstract boolean isDiscriminatorInsertable();
 
 	public abstract List<Property> getPropertyClosure();

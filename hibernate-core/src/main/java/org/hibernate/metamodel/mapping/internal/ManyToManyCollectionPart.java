@@ -501,12 +501,10 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					propertyPath,
 					null,
 					targetModelPart.getJdbcMapping(),
-					creationProcess.getCreationContext().getTypeConfiguration(),
 					true,
 					false,
 					false,
 					false,
-					creationProcess.getCreationContext().getDialect(),
 					creationProcess.getCreationContext()
 			);
 
@@ -540,12 +538,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					getPropertyOrder( elementBootDescriptor, creationProcess ),
 					propertyPath,
 					null,
-					creationProcess.getCreationContext().getMetadata(),
-					creationProcess.getCreationContext().getTypeConfiguration(),
 					elementBootDescriptor.getColumnInsertability(),
 					elementBootDescriptor.getColumnUpdateability(),
-					creationProcess.getCreationContext().getDialect(),
-					creationProcess.getSqmFunctionRegistry(),
 					creationProcess.getCreationContext()
 			);
 
@@ -685,12 +679,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 						getPropertyOrder( fkBootDescriptorSource, creationProcess ),
 						propertyPath,
 						null,
-						creationProcess.getCreationContext().getMetadata(),
-						creationProcess.getCreationContext().getTypeConfiguration(),
 						fkBootDescriptorSource.getColumnInsertability(),
 						fkBootDescriptorSource.getColumnUpdateability(),
-						creationProcess.getCreationContext().getDialect(),
-						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 				return foreignKeyDescriptor.withKeySelectionMapping(
@@ -731,12 +721,10 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				propertyPath,
 				null,
 				basicFkTargetPart.getJdbcMapping(),
-				creationProcess.getCreationContext().getTypeConfiguration(),
 				columnInsertable,
 				columnUpdateable,
 				fkValue.isPartitionKey(),
 				false,
-				dialect,
 				creationProcess.getCreationContext()
 		);
 

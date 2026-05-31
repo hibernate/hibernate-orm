@@ -4,6 +4,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
+import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.BasicValue;
@@ -88,40 +91,13 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			throw new IllegalStateException( "Temporal starting and ending columns must use the same JDBC mapping" );
 		}
 
-		final var typeConfiguration = creationContext.getTypeConfiguration();
+		startingColumnMapping = startingColumnMapping( tableName, startingColumn, creationContext );
+		endingColumnMapping = endingColumnMapping( tableName, endingColumn, creationContext );
+
 		final var dialect = creationContext.getDialect();
-		final var sessionFactory = creationContext.getSessionFactory();
-
-		startingColumnMapping = SelectableMappingImpl.from(
-				tableName,
-				startingColumn,
-				null,
-				null,
-				jdbcMapping,
-				typeConfiguration,
-				true,
-				false,
-				false,
-				false,
-				dialect,
-				creationContext
-		);
-		endingColumnMapping = SelectableMappingImpl.from(
-				tableName,
-				endingColumn,
-				null,
-				null,
-				jdbcMapping,
-				typeConfiguration,
-				true,
-				true,
-				false,
-				false,
-				dialect,
-				creationContext
-		);
-
-		if ( sessionFactory.getChangesetCoordinator().useServerTimestamp( dialect ) ) {
+		if ( creationContext.getSessionFactory()
+				.getChangesetCoordinator()
+				.useServerTimestamp( dialect ) ) {
 			currentTimestampFunctionName = dialect.currentTimestamp();
 			currentTimestampExpression =
 					new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping );
@@ -130,6 +106,44 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			currentTimestampFunctionName = null;
 			currentTimestampExpression = null;
 		}
+	}
+
+	@Nonnull
+	private SelectableMapping endingColumnMapping(
+			String tableName,
+			Column endingColumn,
+			RuntimeModelCreationContext creationContext) {
+		return SelectableMappingImpl.from(
+				tableName,
+				endingColumn,
+				null,
+				null,
+				jdbcMapping,
+				true,
+				true,
+				false,
+				false,
+				creationContext
+		);
+	}
+
+	@Nonnull
+	private SelectableMapping startingColumnMapping(
+			String tableName,
+			Column startingColumn,
+			RuntimeModelCreationContext creationContext) {
+		return SelectableMappingImpl.from(
+				tableName,
+				startingColumn,
+				null,
+				null,
+				jdbcMapping,
+				true,
+				false,
+				false,
+				false,
+				creationContext
+		);
 	}
 
 	@Override

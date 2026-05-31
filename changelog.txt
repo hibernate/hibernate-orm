@@ -1,6 +1,16 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.29.Final (May 31, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39274
+
+
+** Bug
+    * HHH-20499 Ensure LONG32 JdbcType with LOB DDL type, bound via setString, are treated as LOBs
+    * HHH-20159 Wrong aliases in tuple transformer
+
 Changes in 7.1.28.Final (May 24, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -113,7 +113,7 @@ abstract class BaseEntityPersister implements Serializable {
 
 	private final int[] naturalIdPropertyNumbers;
 	private final boolean hasImmutableNaturalId;
-	private final boolean hasCacheableNaturalId;
+//	private final boolean hasCacheableNaturalId;
 
 	private final boolean lazy;
 	private final boolean hasCascades;
@@ -367,12 +367,12 @@ abstract class BaseEntityPersister implements Serializable {
 		if ( naturalIdNumbers.isEmpty() ) {
 			naturalIdPropertyNumbers = null;
 			hasImmutableNaturalId = false;
-			hasCacheableNaturalId = false;
+//			hasCacheableNaturalId = false;
 		}
 		else {
 			naturalIdPropertyNumbers = toIntArray( naturalIdNumbers );
 			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
-			hasCacheableNaturalId = persistentClass.getNaturalIdCacheRegionName() != null;
+//			hasCacheableNaturalId = persistentClass.getNaturalIdCacheRegionName() != null;
 		}
 
 		hasPreInsertGeneratedValues = foundPreInsertGeneratedValues;
@@ -649,9 +649,9 @@ abstract class BaseEntityPersister implements Serializable {
 		return naturalIdPropertyNumbers!=null;
 	}
 
-	public boolean isNaturalIdentifierCached() {
-		return hasNaturalIdentifier() && hasCacheableNaturalId;
-	}
+//	public boolean isNaturalIdentifierCached() {
+//		return hasNaturalIdentifier() && hasCacheableNaturalId;
+//	}
 
 	public boolean hasImmutableNaturalId() {
 		return hasImmutableNaturalId;

@@ -66,13 +66,13 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
  */
 public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType,
 		EmbeddableMappingType.ConcreteEmbeddableType {
-	final protected MutableAttributeMappingList attributeMappings;
+	protected AttributeMappingsList attributeMappings;
 	protected SelectableMappings selectableMappings;
 	protected Getter[] getterCache;
 	protected Setter[] setterCache;
 
-	public AbstractEmbeddableMapping(MutableAttributeMappingList attributeMappings) {
-		this.attributeMappings = attributeMappings;
+	public AbstractEmbeddableMapping(int attributeMappingSizeHint) {
+		attributeMappings = new ImmutableAttributeMappingList.Builder( attributeMappingSizeHint ).build();
 	}
 
 	@Override
@@ -185,14 +185,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			SelectableMappings selectableMappings,
 			EmbeddableMappingType inverseMappingType,
 			MappingModelCreationProcess creationProcess,
-			ManagedMappingType declaringType,
-			MutableAttributeMappingList mappings) {
+			ManagedMappingType declaringType) {
 		final int size = inverseMappingType.getNumberOfAttributeMappings();
 		if ( size == 0 ) {
 			return false;
 		}
-		// Reset the attribute mappings that were added in previous attempts
-		mappings.clear();
+		final var mappings = new ImmutableAttributeMappingList.Builder( size );
 		int currentIndex = 0;
 		// We copy the attributes from the inverse mappings and replace the selection mappings
 		for ( int j = 0; j < size; j++ ) {
@@ -256,6 +254,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 			}
 			mappings.add( attributeMapping );
 		}
+		attributeMappings = mappings.build();
 		buildGetterSetterCache();
 		return true;
 	}
@@ -740,12 +739,14 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		return span;
 	}
 
-	protected void addAttribute(AttributeMapping attributeMapping) {
+	protected void addAttribute(
+			ImmutableAttributeMappingList.Builder attributeMappings,
+			AttributeMapping attributeMapping) {
 		// check if we've already seen this attribute...
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final var previous = attributeMappings.get( i );
 			if ( attributeMapping.getAttributeName().equals( previous.getAttributeName() ) ) {
-				attributeMappings.setAttributeMapping( i, attributeMapping );
+				attributeMappings.set( i, attributeMapping );
 				return;
 			}
 		}

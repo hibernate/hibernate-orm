@@ -37,9 +37,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;
@@ -51,7 +49,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
-import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
 /**
  * Mapping of an entity
@@ -540,32 +537,6 @@ public interface EntityMappingType
 	interface ConstraintOrderedTableConsumer {
 		void consume(String tableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
 	}
-
-	// Customer <- DomesticCustomer <- OtherCustomer
-
-	@Deprecated(forRemoval = true)
-	default Object[] extractConcreteTypeStateValues(
-			Map<AttributeMapping, DomainResultAssembler> assemblerMapping,
-			RowProcessingState rowProcessingState) {
-		// todo (6.0) : getNumberOfAttributeMappings() needs to be fixed for this to work - bad walking of hierarchy
-		final var values = new Object[ getNumberOfAttributeMappings() ];
-		forEachAttributeMapping(
-				attribute -> {
-					final DomainResultAssembler<?> assembler = assemblerMapping.get( attribute );
-					final Object value;
-					if ( assembler == null ) {
-						value = UNFETCHED_PROPERTY;
-					}
-					else {
-						value = assembler.assemble( rowProcessingState );
-					}
-
-					values[attribute.getStateArrayPosition()] = value;
-				}
-		);
-		return values;
-	}
-
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

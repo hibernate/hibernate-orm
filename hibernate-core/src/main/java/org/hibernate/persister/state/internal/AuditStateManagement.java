@@ -323,8 +323,6 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			JdbcMapping csIdJdbcMapping,
 			JdbcMapping modTypeJdbcMapping,
 			MappingModelCreationProcess creationProcess) {
-		final var creationContext = creationProcess.getCreationContext();
-		final var typeConfiguration = creationContext.getTypeConfiguration();
 		return new AuditMappingImpl.TableAuditInfo(
 				auditTableName,
 				toSelectableMapping(
@@ -356,19 +354,20 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		if ( column == null ) {
 			return null;
 		}
-		final var creationContext = creationProcess.getCreationContext();
-		return SelectableMappingImpl.from(
-				tableName,
-				column,
-				jdbcMapping,
-				creationContext.getTypeConfiguration(),
-				true,
-				false,
-				false,
-				creationContext.getDialect(),
-				creationContext.getSessionFactory().getQueryEngine().getSqmFunctionRegistry(),
-				creationContext
-		);
+		else {
+			return SelectableMappingImpl.from(
+					tableName,
+					column,
+					column.isFormula() ? column.getText() : null,
+					null,
+					jdbcMapping,
+					true,
+					false,
+					false,
+					false,
+					creationProcess.getCreationContext()
+			);
+		}
 	}
 
 	private static JdbcMapping resolveJdbcMapping(TypeConfiguration typeConfiguration, Class<?> javaType) {

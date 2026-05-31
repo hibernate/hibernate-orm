@@ -1,6 +1,17 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.17.Final (May 31, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39276
+
+
+** Bug
+    * HHH-20500 SchemaManager#truncate(String tableName) fails with UnsupportedOperationException
+    * HHH-20499 Ensure LONG32 JdbcType with LOB DDL type, bound via setString, are treated as LOBs
+    * HHH-20159 Wrong aliases in tuple transformer
+
 Changes in 7.2.16.Final (May 24, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

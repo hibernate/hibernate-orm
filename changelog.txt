@@ -1,6 +1,27 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.7.Final (May 31, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39273
+
+
+** Bug
+    * HHH-20504 DataException (Parameter is not set) when updating only a collection of a versioned entity with with a @SQLUpdate
+    * HHH-20500 SchemaManager#truncate(String tableName) fails with UnsupportedOperationException
+    * HHH-20499 Ensure LONG32 JdbcType with LOB DDL type, bound via setString, are treated as LOBs
+    * HHH-20484 HbmXmlTransformer Generates Invalid <generic-generator> for <generator class="native"/>
+    * HHH-20483 HbmXmlTransformer removes quotes from table names
+    * HHH-20481 HbmXmlTransformer should normalize <map-key> type attribute values to Java type names during XML Conversion 
+    * HHH-20477 HbmXmlTransformer Ignores Cascade Attributes for <many-to-many> Mappings
+    * HHH-20454  HbmXmlTransformer generates an incorrect mapping for an HBM file containing a <many-to-one> association with a property-ref attribute.
+    * HHH-20451 Hbm <map-key-many-to-many> is ignored during HbmXmlTransformer conversion
+    * HHH-20159 Wrong aliases in tuple transformer
+
+** Improvement
+    * HHH-19417 FetchProfile not properly overridden in mapping.xml
+
 Changes in 7.3.6.Final (May 24, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

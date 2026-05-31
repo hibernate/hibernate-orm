@@ -115,7 +115,7 @@ abstract class BaseEntityPersister implements Serializable {
 	private final boolean hasImmutableNaturalId;
 	private final boolean hasCacheableNaturalId;
 
-	private boolean lazy; //not final because proxy factory creation can fail
+	private final boolean lazy;
 	private final boolean hasCascades;
 	private final boolean hasToOnes;
 	private final boolean hasCascadePersist;
@@ -393,7 +393,7 @@ abstract class BaseEntityPersister implements Serializable {
 			CORE_LOGGER.lazyPropertyFetchingAvailable( name );
 		}
 
-		lazy = isLazy( persistentClass, bytecodeEnhancementMetadata );
+		lazy = determineLazyByMetadata( persistentClass, bytecodeEnhancementMetadata );
 
 		mutable = persistentClass.isMutable();
 		isAbstract = isAbstract( persistentClass );
@@ -465,7 +465,7 @@ abstract class BaseEntityPersister implements Serializable {
 		}
 	}
 
-	private boolean isLazy(PersistentClass persistentClass, BytecodeEnhancementMetadata enhancementMetadata) {
+	private boolean determineLazyByMetadata(PersistentClass persistentClass, BytecodeEnhancementMetadata enhancementMetadata) {
 		return persistentClass.isLazy()
 				// TODO: this disables laziness even in non-pojo entity modes:
 				&& ( !persistentClass.hasPojoRepresentation() || !isFinalClass( persistentClass.getProxyInterface() ) )
@@ -851,11 +851,11 @@ abstract class BaseEntityPersister implements Serializable {
 	}
 
 	public boolean isLazy() {
-		return lazy;
+		return isLazyByMetadata();
 	}
 
-	public void setLazy(boolean lazy) {
-		this.lazy = lazy;
+	protected final boolean isLazyByMetadata() {
+		return lazy;
 	}
 
 	public boolean isVersioned() {

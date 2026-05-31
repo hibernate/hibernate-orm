@@ -420,23 +420,29 @@ abstract class AbstractSharedSessionContract
 	/**
 	 * Create a FindByKeyOperation to be used for {@code find()} and {@code get()} handling.
 	 *
+	 * @param entityClass
 	 * @param entityDescriptor The entity type being loaded.
 	 * @param options Any options to apply.
 	 */
-	protected abstract <T> FindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options);
+	protected abstract <T> FindByKeyOperation<T> byKey(
+			@Nullable Class<T> entityClass,
+			EntityPersister entityDescriptor,
+			FindOption... options);
 
 	/**
 	 * Create a FindByKeyOperation to be used for {@code find()} and {@code get()} handling.
 	 *
+	 * @param entityClass
 	 * @param entityDescriptor The entity type being loaded.
 	 * @param graphSemantic Semantic of the supplied {@code rootGraph}.
 	 * @param rootGraph The EntityGraph to apply to the load.
 	 * @param options Any options to apply.
 	 */
 	protected abstract <T> FindByKeyOperation<T> byKey(
+			Class<T> entityClass,
 			EntityPersister entityDescriptor,
 			GraphSemantic graphSemantic,
-			RootGraphImplementor<?> rootGraph,
+			RootGraphImplementor<T> rootGraph,
 			FindOption... options);
 
 	/**
@@ -490,8 +496,7 @@ abstract class AbstractSharedSessionContract
 		checkOpen();
 
 		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
-		//noinspection unchecked
-		return (T) byKey( persister ).performFind( id );
+		return byKey( entityClass, persister ).performFind( id );
 	}
 
 	@Override
@@ -500,8 +505,7 @@ abstract class AbstractSharedSessionContract
 		checkOpen();
 
 		final var persister = requireEntityPersisterForLoad( entityClass.getName() );
-		//noinspection unchecked
-		return (T) byKey( persister, findOptions ).performFind( key );
+		return byKey( entityClass, persister, findOptions ).performFind( key );
 	}
 
 	@Override
@@ -514,15 +518,15 @@ abstract class AbstractSharedSessionContract
 			case POJO -> requireEntityPersisterForLoad( type.getJavaType() );
 			case MAP -> requireEntityPersisterForLoad( type.getTypeName() );
 		};
-		//noinspection unchecked
-		return (T) byKey( entityDescriptor, GraphSemantic.LOAD, graph, findOptions ).performFind( key );
+		return byKey( type.getJavaType(), entityDescriptor, GraphSemantic.LOAD, graph, findOptions )
+				.performFind( key );
 	}
 
 	@Override
 	public Object find(@Nonnull String entityName, @Nonnull Object key, @Nullable FindOption... findOptions) {
 		checkOpen();
 		final var entityDescriptor = requireEntityPersisterForLoad( entityName );
-		return byKey( entityDescriptor, findOptions ).performFind( key );
+		return byKey( null, entityDescriptor, findOptions ).performFind( key );
 	}
 
 	@Override

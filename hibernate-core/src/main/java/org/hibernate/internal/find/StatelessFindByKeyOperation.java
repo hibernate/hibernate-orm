@@ -27,7 +27,6 @@ import java.util.function.Supplier;
 
 import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
-import static org.hibernate.internal.find.Helper.checkTransactionNeededForLock;
 
 /**
  * @author Steve Ebersole
@@ -72,7 +71,7 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 	}
 
 	private T findByNaturalId(Object key) {
-		final StatelessSessionImplementor session = loadAccessContext.getStatelessSession();
+		final var session = loadAccessContext.getStatelessSession();
 
 		performAnyNeededCrossReferenceSynchronizations(
 				getNaturalIdSynchronization() != NaturalIdSynchronization.DISABLED,
@@ -97,7 +96,7 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 	}
 
 	private T withOptions(StatelessSessionImplementor session, Supplier<T> action) {
-		var persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 
 		final var sessionCacheMode = session.getCacheMode();
 		final var cacheMode = CacheMode.fromJpaModes( getCacheRetrieveMode(), getCacheStoreMode() );
@@ -153,11 +152,13 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 	}
 
 	private T findById(Object key) {
-		final Object keyToLoad = Helper.coerceId( getEntityDescriptor(), key, loadAccessContext.getStatelessSession().getFactory() );
+		final Object keyToLoad =
+				Helper.coerceId( getEntityDescriptor(), key,
+						loadAccessContext.getStatelessSession().getFactory() );
 
-		var session = loadAccessContext.getStatelessSession();
+		final var session = loadAccessContext.getStatelessSession();
 
-		var temporaryPersistenceContext = session.getPersistenceContext();
+		final var temporaryPersistenceContext = session.getPersistenceContext();
 			if ( getEntityDescriptor().canReadFromCache() ) {
 				final Object cachedEntity = loadFromSecondLevelCache( key, loadAccessContext );
 				if ( cachedEntity != null ) {

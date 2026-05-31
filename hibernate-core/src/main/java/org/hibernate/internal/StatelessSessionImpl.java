@@ -1084,15 +1084,16 @@ public class StatelessSessionImpl
 	// loading
 
 	@Override
-	protected <T> FindByKeyOperation<T> byKey(EntityPersister entityDescriptor, FindOption... options) {
-		return byKey( entityDescriptor, null, null, options );
+	protected <T> FindByKeyOperation<T> byKey(Class<T> entityClass, EntityPersister entityDescriptor, FindOption... options) {
+		return byKey( entityClass, entityDescriptor, null, null, options );
 	}
 
 	@Override
 	protected <T> FindByKeyOperation<T> byKey(
+			Class<T> entityClass,
 			EntityPersister entityDescriptor,
 			GraphSemantic graphSemantic,
-			RootGraphImplementor<?> rootGraph,
+			RootGraphImplementor<T> rootGraph,
 			FindOption... options) {
 		return new StatelessFindByKeyOperation<>(
 				entityDescriptor,

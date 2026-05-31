@@ -43,6 +43,8 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.rowsecurity.NoRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
@@ -322,6 +324,11 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return SPANNER_SEQUENCE_SUPPORT;
+	}
+
+	@Override
+	public RowLevelSecurity getRowLevelSecurity() {
+		return NoRowLevelSecurity.INSTANCE;
 	}
 
 	@Override

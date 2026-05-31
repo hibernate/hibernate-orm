@@ -10,17 +10,19 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.AttributeBinder;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Sets up filters associated with a {@link TenantId} field
@@ -59,10 +61,10 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			);
 		}
 		else {
-			final JavaType<?> tenantIdTypeJtd = tenantIdType.getJavaTypeDescriptor();
-			final JdbcMapping jdbcMapping = filterDefinition.getParameterJdbcMapping( PARAMETER_NAME );
+			final var tenantIdTypeJtd = tenantIdType.getJavaTypeDescriptor();
+			final var jdbcMapping = filterDefinition.getParameterJdbcMapping( PARAMETER_NAME );
 			assert jdbcMapping != null;
-			final JavaType<?> parameterJavaType = jdbcMapping.getJavaTypeDescriptor();
+			final var parameterJavaType = jdbcMapping.getJavaTypeDescriptor();
 			if ( !parameterJavaType.getJavaTypeClass().equals( tenantIdTypeJtd.getJavaTypeClass() ) ) {
 				throw new MappingException(
 						"all @TenantId fields must have the same type: "
@@ -82,8 +84,33 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 				emptyMap()
 		);
 
+		if ( isRowLevelSecurityEnabled( buildingContext ) ) {
+			addRowLevelSecurity( collector.getDatabase().getDialect().getRowLevelSecurity(), collector, property );
+		}
+
 		property.resetUpdateable( false );
 		property.resetOptional( false );
+	}
+
+	private static boolean isRowLevelSecurityEnabled(MetadataBuildingContext buildingContext) {
+		return getBoolean(
+				MULTI_TENANT_RLS_ENABLED,
+				buildingContext.getBootstrapContext().getConfigurationService().getSettings(),
+				true
+		);
+	}
+
+	private static void addRowLevelSecurity(
+			RowLevelSecurity rowLevelSecurity,
+			InFlightMetadataCollector collector,
+			Property property) {
+		if ( rowLevelSecurity.supportsRowLevelSecurity() ) {
+			final var table = property.getValue().getTable();
+			if ( property.getSelectables().get( 0 ) instanceof Column column
+					&& table.isPhysicalTable() && !table.isView() ) {
+				rowLevelSecurity.addTenantIdTableInitCommands( collector, table, column, column.getSqlType( collector ) );
+			}
+		}
 	}
 
 	private String columnNameOrFormula(Property property) {

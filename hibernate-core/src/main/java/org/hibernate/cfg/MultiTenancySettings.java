@@ -92,4 +92,16 @@ public interface MultiTenancySettings {
 	 */
 	@Incubating
 	String MULTI_TENANT_CREDENTIALS_MAPPER = "hibernate.multi_tenant.credentials_mapper";
+
+	/**
+	 * Specifies whether database-level row-level security (RLS) for multi-tenancy is enabled.
+	 * <p>
+	 * By default, row-level security is used if the database supports it.
+	 *
+	 * @since 8.0
+	 *
+	 * @settingDefault true
+	 */
+	@Incubating
+	String MULTI_TENANT_RLS_ENABLED = "hibernate.multi_tenant.rls_enabled";
 }

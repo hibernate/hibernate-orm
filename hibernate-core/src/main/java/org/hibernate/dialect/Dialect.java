@@ -53,6 +53,8 @@ import org.hibernate.dialect.lock.internal.SqlAstBasedLockingStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.rowsecurity.NoRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temporal.DefaultTemporalTableSupport;
@@ -2196,6 +2198,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 **/
 	public SequenceSupport getSequenceSupport() {
 		return NoSequenceSupport.INSTANCE;
+	}
+
+	/**
+	 * Get the row-level security support for this dialect.
+	 */
+	@Incubating
+	public RowLevelSecurity getRowLevelSecurity() {
+		return NoRowLevelSecurity.INSTANCE;
 	}
 
 	/**

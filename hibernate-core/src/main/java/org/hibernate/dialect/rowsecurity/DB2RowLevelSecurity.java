@@ -1,0 +1,166 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.dialect.rowsecurity;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
+
+/**
+ * Row-level security support for Db2 row and column access control.
+ *
+ * @author Gavin King
+ */
+public class DB2RowLevelSecurity implements RowLevelSecurity {
+	public static final DB2RowLevelSecurity INSTANCE = new DB2RowLevelSecurity();
+
+	public static final String TENANT_IDENTIFIER_VARIABLE = "hibernate.tenant_id";
+	public static final String ROOT_TENANT_IDENTIFIER_VARIABLE = "hibernate.tenant_id_root";
+	public static final String TENANT_ISOLATION_PERMISSION = "hibernate_tenant_isolation";
+
+	@Override
+	public boolean supportsRowLevelSecurity() {
+		return true;
+	}
+
+	@Override
+	public void addTenantIdTableInitCommands(
+			InFlightMetadataCollector collector,
+			Table table,
+			Column tenantIdentifierColumn,
+			String tenantIdentifierColumnType) {
+		if ( supportsRowLevelSecurity() ) {
+			collector.getDatabase().addAuxiliaryDatabaseObject( SessionVariables.INSTANCE );
+			table.addInitCommand( context -> new InitCommand(
+					getTenantIdTableCreateStrings(
+							table,
+							tenantIdentifierColumn,
+							tenantIdentifierColumnType,
+							context
+					)
+			) );
+		}
+	}
+
+	@Override
+	public String[] getTenantIdTableCreateStrings(
+			Table table,
+			Column tenantIdentifierColumn,
+			String tenantIdentifierColumnType,
+			SqlStringGenerationContext context) {
+		final String tableName = table.getQualifiedName( context );
+		return new String[] {
+				"create or replace permission " + permissionName( table ) + " on " + tableName
+						+ " for rows where "
+						+ tenantPredicateWithRoot( tenantIdentifierColumn, tenantIdentifierColumnType, context )
+						+ " enforced for all access enable",
+				"alter table " + tableName + " activate row access control"
+		};
+	}
+
+	private static String permissionName(Table table) {
+		return TENANT_ISOLATION_PERMISSION + "_" + Integer.toUnsignedString(
+				table.getQualifiedTableName().toString().hashCode(),
+				36
+		);
+	}
+
+	private static String tenantPredicateWithRoot(
+			Column tenantIdentifierColumn,
+			String tenantIdentifierColumnType,
+			SqlStringGenerationContext context) {
+		return tenantDiscriminatorPredicate( tenantIdentifierColumn, tenantIdentifierColumnType, context )
+				+ " or " + ROOT_TENANT_IDENTIFIER_VARIABLE + " = 1";
+	}
+
+	private static String tenantDiscriminatorPredicate(
+			Column tenantIdentifierColumn,
+			String tenantIdentifierColumnType,
+			SqlStringGenerationContext context) {
+		final String tenantIdentifierColumnName =
+				tenantIdentifierColumn.getQuotedName( context.getDialect() );
+		if ( isUuidBinaryType( tenantIdentifierColumnType ) ) {
+			return tenantIdentifierColumnName
+					+ " = varchar_bit_format("
+					+ TENANT_IDENTIFIER_VARIABLE
+					+ ", 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')";
+		}
+		return tenantIdentifierColumnName
+				+ " = cast(" + TENANT_IDENTIFIER_VARIABLE + " as " + tenantIdentifierColumnType + ")";
+	}
+
+	private static boolean isUuidBinaryType(String tenantIdentifierColumnType) {
+		final String type = tenantIdentifierColumnType.toLowerCase();
+		return type.equals( "binary(16)" )
+			|| type.equals( "char(16) for bit data" )
+			|| type.equals( "varchar(16) for bit data" );
+	}
+
+	@Override
+	public void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root) throws SQLException {
+		try ( var statement = connection.prepareStatement( "set " + TENANT_IDENTIFIER_VARIABLE + " = ?" ) ) {
+			statement.setString( 1, tenantIdentifier );
+			statement.execute();
+		}
+		try ( var statement =
+				connection.prepareStatement( "set " + ROOT_TENANT_IDENTIFIER_VARIABLE + " = ?" ) ) {
+			statement.setInt( 1, root ? 1 : 0 );
+			statement.execute();
+		}
+	}
+
+	@Override
+	public String getTenantIdentifierSettingName() {
+		return TENANT_IDENTIFIER_VARIABLE;
+	}
+
+	@Override
+	public String getRootTenantIdentifierSettingName() {
+		return ROOT_TENANT_IDENTIFIER_VARIABLE;
+	}
+
+	private static class SessionVariables implements AuxiliaryDatabaseObject {
+		private static final SessionVariables INSTANCE = new SessionVariables();
+
+		@Override
+		public boolean appliesToDialect(Dialect dialect) {
+			return dialect instanceof DB2Dialect;
+		}
+
+		@Override
+		public boolean beforeTablesOnCreation() {
+			return true;
+		}
+
+		@Override
+		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
+			return new String[] {
+					"create or replace variable " + TENANT_IDENTIFIER_VARIABLE + " varchar(255)",
+					"create or replace variable " + ROOT_TENANT_IDENTIFIER_VARIABLE + " smallint default 0"
+			};
+		}
+
+		@Override
+		public String[] sqlDropStrings(SqlStringGenerationContext context) {
+			return new String[] {
+					"drop variable " + TENANT_IDENTIFIER_VARIABLE,
+					"drop variable " + ROOT_TENANT_IDENTIFIER_VARIABLE
+			};
+		}
+
+		@Override
+		public String getExportIdentifier() {
+			return "hibernate-row-level-security-db2-variables";
+		}
+	}
+}

@@ -20,13 +20,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SessionFactory
 @DomainModel(annotatedClasses = { Account.class, Client.class })
 @ServiceRegistry(
 		settings = {
-				@Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop"),
+				@Setting(name = MULTI_TENANT_RLS_ENABLED, value = "false")
 		}
 )
 public class TenantLongIdTest implements SessionFactoryProducer {

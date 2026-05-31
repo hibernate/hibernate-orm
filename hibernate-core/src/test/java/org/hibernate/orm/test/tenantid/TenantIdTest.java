@@ -40,6 +40,7 @@ import jakarta.persistence.EntityManagerFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,7 +56,8 @@ import java.util.Map;
 @DomainModel(annotatedClasses = { Account.class, Client.class, Record.class })
 @ServiceRegistry(
 		settings = {
-				@Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop"),
+				@Setting(name = MULTI_TENANT_RLS_ENABLED, value = "false")
 		},
 		settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = MutableClockSettingProvider.class)
 )

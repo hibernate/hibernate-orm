@@ -133,6 +133,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class RowLevelSecurity implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getRowLevelSecurity().supportsRowLevelSecurity();
+		}
+	}
+
 	public static class SupportsExpectedLobUsagePattern implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsExpectedLobUsagePattern();

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,7 +35,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 @DomainModel(annotatedClasses = { Account.class, Client.class })
 @ServiceRegistry(
 		settings = {
-				@Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
+				@Setting(name = JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop"),
+				@Setting(name = MULTI_TENANT_RLS_ENABLED, value = "false")
 		}
 )
 public class TenantUuidTest implements SessionFactoryProducer {

@@ -28,6 +28,9 @@ import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
+import org.hibernate.dialect.rowsecurity.NoRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.SQLServerRowLevelSecurity;
 import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -751,6 +754,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return getVersion().isSameOrAfter( 16 )
 				? SQLServer16SequenceSupport.INSTANCE
 				: SQLServerSequenceSupport.INSTANCE;
+	}
+
+	@Override
+	public RowLevelSecurity getRowLevelSecurity() {
+		return getVersion().isSameOrAfter( 13 )
+				? SQLServerRowLevelSecurity.INSTANCE
+				: NoRowLevelSecurity.INSTANCE;
 	}
 
 	@Override

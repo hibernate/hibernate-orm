@@ -51,6 +51,7 @@ import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedStatelessSessionBuilderImpl;
 import org.hibernate.engine.creation.internal.options.SharedStatefulOptions;
 import org.hibernate.engine.creation.internal.options.SharedStatelessOptions;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.extension.spi.Extension;
 import org.hibernate.engine.extension.spi.ExtensionIntegrationContext;
 import org.hibernate.engine.extension.spi.ExtensionIntegrationService;
@@ -159,10 +160,12 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE
 import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
@@ -1174,6 +1177,51 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	public void afterTransactionBegin() {
+		setUpRowLevelSecurity();
+	}
+
+	private void setUpRowLevelSecurity() {
+		if ( usesRowLevelSecurity() ) {
+			setUpRowLevelSecurity( getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
+		}
+	}
+
+	private void setUpRowLevelSecurity(Connection connection) {
+		if ( usesRowLevelSecurity() ) {
+			final Object tenantIdentifier = getTenantIdentifierValue();
+			if ( tenantIdentifier == null ) {
+				throw new HibernateException(
+						"SessionFactory configured for multi-tenancy, but no tenant identifier specified"
+				);
+			}
+
+			final var resolver = factory.getCurrentTenantIdentifierResolver();
+			final boolean root = resolver != null && resolver.isRoot( tenantIdentifier );
+			try {
+				getJdbcServices().getDialect().getRowLevelSecurity()
+						.setTenantIdentifier( connection, getTenantIdentifier(), root );
+			}
+			catch (SQLException e) {
+				throw getJdbcServices().getSqlExceptionHelper().convert(
+						e,
+						"Unable to set row-level security tenant identifier"
+				);
+			}
+		}
+	}
+
+	private boolean usesRowLevelSecurity() {
+		return isRowLevelSecurityEnabled()
+			&& factory.getDefinedFilterNames().contains( TenantIdBinder.FILTER_NAME )
+			&& getJdbcServices().getDialect().getRowLevelSecurity().supportsRowLevelSecurity();
+	}
+
+	private boolean isRowLevelSecurityEnabled() {
+		return getBoolean(
+				MULTI_TENANT_RLS_ENABLED,
+				factory.getServiceRegistry().requireService( ConfigurationService.class ).getSettings(),
+				true
+		);
 	}
 
 	protected void initializeCurrentChangesetIdentifier() {
@@ -1376,6 +1424,7 @@ abstract class AbstractSharedSessionContract
 			initialSchema = connection.getSchema();
 			connection.setSchema( tenantSchema() );
 		}
+		setUpRowLevelSecurity( connection );
 		if ( readOnly && manageReadOnly() ) {
 			connection.setReadOnly( true );
 		}

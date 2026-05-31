@@ -834,14 +834,6 @@ abstract class BaseEntityPersister implements Serializable {
 		return superclass;
 	}
 
-	/**
-	 * @deprecated No longer supported
-	 */
-	@Deprecated
-	public boolean isExplicitPolymorphism() {
-		return false;
-	}
-
 	public boolean isInherited() {
 		return inherited;
 	}

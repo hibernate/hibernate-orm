@@ -58,16 +58,15 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 			ParameterUsage usage) {
 		// Normalize column name BEFORE calling resolveValueDescriptor because
 		// AbstractJdbcMutation.findValueDescriptor expects normalized names
-		final String normalizedColumnName = ( columnName );
 		final var jdbcValueDescriptor =
-				jdbcValueDescriptorAccess.resolveValueDescriptor( tableName, normalizedColumnName, usage );
+				jdbcValueDescriptorAccess.resolveValueDescriptor( tableName, columnName, usage );
 		if ( jdbcValueDescriptor == null ) {
 			throw new UnknownParameterException( mutationType, mutationTarget, tableName, columnName, usage );
 		}
-		// Normalize table name for storage to match cycle breaking lookups
+		// Normalize table name for storage to match cycle-breaking lookups
 		final String physicalTableName = jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName );
 		resolveBindingGroup( ( physicalTableName ) )
-				.bindValue( normalizedColumnName, value, jdbcValueDescriptor );
+				.bindValue( columnName, value, jdbcValueDescriptor );
 	}
 
 	private BindingGroup resolveBindingGroup(String tableName) {

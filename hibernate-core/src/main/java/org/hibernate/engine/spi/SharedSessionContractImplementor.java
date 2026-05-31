@@ -20,7 +20,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.audit.spi.AuditWorkQueue;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
@@ -644,52 +643,6 @@ public interface SharedSessionContractImplementor
 	 * @param success {@code true} if the operation a success
 	 */
 	void afterOperation(boolean success);
-
-	/**
-	 * Cast this object to {@link SessionImplementor}, if possible.
-	 *
-	 * @throws ClassCastException if the cast is not possible
-	 *
-	 * @deprecated No longer useful, since Java made downcasting safer
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	@Nonnull
-	default SessionImplementor asSessionImplementor() {
-		throw new ClassCastException( "session is not a SessionImplementor" );
-	}
-
-	/**
-	 * Does this object implement {@link SessionImplementor}?
-	 *
-	 * @deprecated No longer useful, since Java made downcasting safer
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default boolean isSessionImplementor() {
-		return this instanceof SessionImplementor;
-	}
-
-	/**
-	 * Cast this object to {@link StatelessSession}, if possible.
-	 *
-	 * @throws ClassCastException if the cast is not possible
-	 *
-	 * @deprecated No longer useful, since Java made downcasting safer
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	@Nonnull
-	default StatelessSession asStatelessSession() {
-		return (StatelessSession) this;
-	}
-
-	/**
-	 * Does this object implement {@link StatelessSession}?
-	 *
-	 * @deprecated No longer useful, since Java made downcasting safer
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default boolean isStatelessSession() {
-		return this instanceof StatelessSession;
-	}
 
 	/**
 	 * Cascade the lock operation to the given child entity.

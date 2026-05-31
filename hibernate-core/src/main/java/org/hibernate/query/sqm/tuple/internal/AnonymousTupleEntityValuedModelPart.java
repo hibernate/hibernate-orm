@@ -582,11 +582,6 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public boolean isExplicitPolymorphism() {
-		return false;
-	}
-
-	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return delegate.forEachJdbcType( offset, action );
 	}

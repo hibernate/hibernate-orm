@@ -21,7 +21,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.mapping.Contributable;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.internal.EntityRepresentationStrategyMap;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -246,14 +245,6 @@ public interface EntityMappingType
 	default Set<String> getSubclassEntityNames() {
 		return getEntityPersister().getSubclassEntityNames();
 	}
-
-	/**
-	 * Is this class explicit polymorphism only?
-	 *
-	 * @deprecated No longer supported
-	 */
-	@Deprecated
-	boolean isExplicitPolymorphism();
 
 	/**
 	 * The discriminator value which indicates this entity mapping
@@ -719,15 +710,6 @@ public interface EntityMappingType
 	// todo (6.0) : look to remove need for this.  at the very least, move it to an SPI contract
 	@Internal
 	EntityPersister getEntityPersister();
-
-	/**
-	 * @deprecated See {@link Contributable#getContributor()}
-	 */
-	@Deprecated
-	default String getContributor() {
-		// todo (6.0) : needed for the HHH-14470 half related to HHH-14469
-		return "orm";
-	}
 
 	@Override
 	default String getPartName() {

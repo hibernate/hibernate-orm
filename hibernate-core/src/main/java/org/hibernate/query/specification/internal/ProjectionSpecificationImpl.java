@@ -29,6 +29,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 
+import org.hibernate.query.sqm.internal.SimpleSqmCopyContext;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -86,20 +88,22 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 
 	@Override
 	public CriteriaQuery<Object[]> buildCriteria(CriteriaBuilder builder) {
-		var impl = (SelectionSpecificationImpl<T>) selectionSpecification;
-		// TODO: handle HQL, existing criteria
-		final var tupleQuery =
-				(SqmSelectStatement<Object[]>)
-						builder.createQuery(Object[].class);
-		final var root = tupleQuery.from( impl.getResultType() );
-		// This cast is completely bogus
-		final var castStatement = (SqmSelectStatement<T>) tupleQuery;
-		impl.getSpecifications().forEach( spec -> spec.accept( castStatement, root ) );
+		final var baseCriteria = selectionSpecification.buildCriteria( builder );
+		final var baseSqm = (SqmSelectStatement<T>) baseCriteria;
+		final var tupleQuery = baseSqm.createCopy( new SimpleSqmCopyContext(), Object[].class );
+		@SuppressWarnings("unchecked")
+		final var root = (SqmRoot<T>) tupleQuery.getQuerySpec().getFromClause().getRoots().get( 0 );
 		final var nodeBuilder = (NodeBuilder) builder;
 		final var selectClause = tupleQuery.getQuerySpec().getSelectClause();
 		for ( int i = 0; i < specifications.size(); i++ ) {
 			final var selection = specifications.get( i ).apply( tupleQuery, root );
-			selectClause.addSelection( new SqmSelection<>( selection, selection.getAlias(), nodeBuilder ) );
+			final var sqmSelection = new SqmSelection<>( selection, selection.getAlias(), nodeBuilder );
+			if ( i == 0 ) {
+				selectClause.setSelection( sqmSelection );
+			}
+			else {
+				selectClause.addSelection( sqmSelection );
+			}
 		}
 		return tupleQuery;
 	}

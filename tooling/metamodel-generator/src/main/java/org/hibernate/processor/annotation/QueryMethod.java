@@ -10,18 +10,26 @@ import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.util.List;
+import java.util.StringTokenizer;
 
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 import static org.hibernate.processor.util.Constants.BOOLEAN;
+import static org.hibernate.processor.util.Constants.JD_PAGE;
+import static org.hibernate.processor.util.Constants.LIST;
+import static org.hibernate.processor.util.Constants.OPTIONAL;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
 import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.STATIC_STATEMENT_REFERENCE;
 import static org.hibernate.processor.util.Constants.STATIC_TYPED_QUERY_REFERENCE;
+import static org.hibernate.processor.util.Constants.STREAM;
 import static org.hibernate.processor.util.Constants.VOID;
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 
 /**
  * @author Gavin King
@@ -36,6 +44,8 @@ public class QueryMethod extends AbstractQueryMethod {
 	private final boolean isUpdate;
 	private final boolean isNative;
 	private final boolean generatedQueryReferenceMethod;
+	private final @Nullable ResultSelection querySelection;
+	private final @Nullable String entity;
 
 	QueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -63,7 +73,9 @@ public class QueryMethod extends AbstractQueryMethod {
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
 			String fullReturnType,
-			boolean nullable) {
+			boolean nullable,
+			@Nullable ResultSelection querySelection,
+			@Nullable String entity) {
 		super( annotationMetaEntity, method,
 				methodName,
 				paramNames, paramTypes, returnTypeName,
@@ -81,6 +93,8 @@ public class QueryMethod extends AbstractQueryMethod {
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;
 		this.generatedQueryReferenceMethod = generatedQueryReferenceMethod;
+		this.querySelection = querySelection;
+		this.entity = entity;
 	}
 
 	@Override
@@ -108,8 +122,30 @@ public class QueryMethod extends AbstractQueryMethod {
 		return containerType == null && !isUpdate;
 	}
 
+	private boolean usesProjectionSpecification() {
+		return querySelection != null
+			&& querySelection.recordProjection()
+			&& entity != null
+			&& !isUpdate
+			&& !isNative
+			&& !isReactive()
+			&& isProjectionSpecificationContainer();
+	}
+
+	private boolean isProjectionSpecificationContainer() {
+		return containerType == null
+			|| "[]".equals( containerType )
+			|| LIST.equals( containerType )
+			|| OPTIONAL.equals( containerType )
+			|| STREAM.equals( containerType )
+			|| JD_PAGE.equals( containerType );
+	}
+
 	@Override
 	public String getAttributeDeclarationString() {
+		if ( usesProjectionSpecification() ) {
+			return getProjectionSpecificationAttributeDeclarationString();
+		}
 		final List<String> paramTypes = parameterTypes();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
@@ -139,6 +175,193 @@ public class QueryMethod extends AbstractQueryMethod {
 		chainSessionEnd( isUpdate, declaration );
 		closingBrace( declaration );
 		return declaration.toString();
+	}
+
+	private String getProjectionSpecificationAttributeDeclarationString() {
+		final List<String> paramTypes = parameterTypes();
+		final StringBuilder declaration = new StringBuilder();
+		comment( declaration );
+		modifiers( declaration, paramTypes );
+		preamble( declaration, paramTypes );
+		chainSession( declaration );
+		nullChecks( declaration, paramTypes );
+		// var _spec = SelectionSpecification.create(EntityType.class, QUERY_CONSTANT);
+		declaration
+				.append( "\tvar _spec = " )
+				.append( annotationMetaEntity.importType( specificationType() ) )
+				.append( ".create(" )
+				.append( annotationMetaEntity.importType( entity ) )
+				.append( ".class, " )
+				.append( getConstantName() )
+				.append( ");\n" );
+		handleRestrictionParameters( declaration, paramTypes );
+		collectOrdering( declaration, paramTypes, containerType );
+		createProjectionSpecification( declaration );
+		inTry( declaration );
+		// var _select = _projection.createQuery(session)
+		declaration.append( "\t\tvar _select = _projection.createQuery(" );
+		localSession( declaration );
+		declaration.append( ")" );
+		setParameters( declaration, paramTypes );
+		QueryOptionsSupport.setQueryOptions( this, declaration, false, false );
+		declaration.append( ";\n" );
+		executeProjectionQuery( declaration, paramTypes );
+		convertExceptions( declaration );
+		chainSessionEnd( false, declaration );
+		closingBrace( declaration );
+		return declaration.toString();
+	}
+
+	private void createProjectionSpecification(StringBuilder declaration) {
+		declaration
+				.append( "\tvar _projection = " )
+				.append( annotationMetaEntity.importType( "org.hibernate.query.specification.ProjectionSpecification" ) )
+				.append( ".create(_spec);\n" );
+		for ( int i = 0; i < querySelection.paths().size(); i++ ) {
+			declaration
+					.append( "\tvar " )
+					.append( projectionVariableName( i ) )
+					.append( " = _projection.select(" );
+			projectionSelection( declaration, querySelection.paths().get( i ) );
+			declaration
+					.append( ");\n" );
+		}
+	}
+
+	private void projectionSelection(StringBuilder declaration, String path) {
+		final StringTokenizer tokens = new StringTokenizer( path, "." );
+		if ( tokens.countTokens() == 1 && !ID_ROLE_NAME.equals( path ) ) {
+			metamodelAttribute( declaration, entity, path );
+		}
+		else {
+			declaration
+					.append( annotationMetaEntity.importType( "org.hibernate.query.restriction.Path" ) )
+					.append( ".from(" )
+					.append( annotationMetaEntity.importType( entity ) )
+					.append( ".class)" );
+			String typeName = entity;
+			while ( typeName != null && tokens.hasMoreTokens() ) {
+				final String memberName = tokens.nextToken();
+				declaration.append( ".to(" );
+				if ( ID_ROLE_NAME.equals( memberName ) ) {
+					declaration
+							.append( '"' )
+							.append( memberName )
+							.append( "\", " )
+							.append( annotationMetaEntity.importType( "java.lang.Object" ) )
+							.append( ".class" );
+				}
+				else {
+					metamodelAttribute( declaration, typeName, memberName );
+				}
+				declaration.append( ")" );
+				typeName = annotationMetaEntity.getMemberType( typeName, memberName );
+			}
+		}
+	}
+
+	private void metamodelAttribute(StringBuilder declaration, String typeName, String memberName) {
+		final TypeElement typeElement =
+				annotationMetaEntity.getContext().getElementUtils()
+						.getTypeElement( typeName );
+		declaration
+				.append( annotationMetaEntity.importType(
+						getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
+				.append( '.' )
+				.append( memberName );
+	}
+
+	private void executeProjectionQuery(StringBuilder declaration, List<String> paramTypes) {
+		final String indent = dataRepository && !isReactive() ? "\t\t" : "\t";
+		if ( containerType == null ) {
+			declaration
+					.append( indent )
+					.append( "var _result = _select\n" );
+			setFirstResultLimit( declaration );
+			handlePageParameters( declaration, paramTypes, null );
+			declaration
+					.append( nullable ? "\t\t\t.getSingleResultOrNull();\n" : "\t\t\t.getSingleResult();\n" )
+					.append( indent )
+					.append( "return " );
+			if ( nullable ) {
+				declaration.append( "_result == null ? null : " );
+			}
+			projectionResult( declaration, "_result" );
+		}
+		else {
+			declaration
+					.append( indent )
+					.append( "return _select\n" );
+			setFirstResultLimit( declaration );
+			handlePageParameters( declaration, paramTypes, containerType );
+			switch ( containerType ) {
+				case "[]":
+					declaration
+							.append( "\t\t\t.getResultList()\n" )
+							.append( "\t\t\t.stream()\n" )
+							.append( "\t\t\t.map(_result -> " );
+					projectionResult( declaration, "_result" );
+					declaration
+							.append( ")\n" )
+							.append( "\t\t\t.toArray(" )
+							.append( annotationMetaEntity.importType( returnTypeName ) )
+							.append( "[]::new)" );
+					break;
+				case OPTIONAL:
+					declaration
+							.append( "\t\t\t.uniqueResultOptional()\n" )
+							.append( "\t\t\t.map(_result -> " );
+					projectionResult( declaration, "_result" );
+					declaration.append( ")" );
+					break;
+				case STREAM:
+					declaration
+							.append( "\t\t\t.getResultStream()\n" )
+							.append( "\t\t\t.map(_result -> " );
+					projectionResult( declaration, "_result" );
+					declaration.append( ")" );
+					break;
+				case LIST:
+					declaration
+							.append( "\t\t\t.getResultList()\n" )
+							.append( "\t\t\t.stream()\n" )
+							.append( "\t\t\t.map(_result -> " );
+					projectionResult( declaration, "_result" );
+					declaration
+							.append( ")\n" )
+							.append( "\t\t\t.toList()" );
+					break;
+				default:
+					break;
+			}
+		}
+	}
+
+	private void projectionResult(StringBuilder declaration, String resultVariable) {
+		declaration
+				.append( "new " )
+				.append( annotationMetaEntity.importType( querySelection.resultTypeName() ) )
+				.append( "(" );
+		for ( int i = 0; i < querySelection.paths().size(); i++ ) {
+			if ( i > 0 ) {
+				declaration.append( ", " );
+			}
+			declaration
+					.append( projectionVariableName( i ) )
+					.append( ".in(" )
+					.append( resultVariable )
+					.append( ")" );
+		}
+		declaration.append( ")" );
+	}
+
+	private String projectionVariableName(int index) {
+		return "_" + unqualifiedName( querySelection.resultTypeName() )
+				+ "_" + querySelection.componentNames().get( index );
+	}
+
+	private static String unqualifiedName(String name) {
+		return name.substring( Math.max( name.lastIndexOf( '.' ), name.lastIndexOf( '$' ) ) + 1 );
 	}
 
 	String specificationType() {

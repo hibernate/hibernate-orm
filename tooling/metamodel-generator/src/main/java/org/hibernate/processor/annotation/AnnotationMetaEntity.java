@@ -4170,6 +4170,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				!isNative && annotationTypeMatches( mirror, JD_QUERY )
 						? querySelection( method, returnType, mirror, queryString )
 						: null;
+		final boolean isRecordProjection = querySelection != null && querySelection.recordProjection();
 		final String selectedQueryString =
 				querySelection == null ? queryString : addSelectClause( queryString, querySelection );
 		final String processedQuery;
@@ -4178,8 +4179,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			validateSql( method, mirror, processedQuery, paramNames, value );
 		}
 		else {
-			processedQuery = addFromClauseIfNecessary( selectedQueryString, implicitEntityName( resultType ) );
-			validateHql( method, returnType, mirror, value, processedQuery, paramNames, paramTypes );
+			final String validationQuery =
+					addFromClauseIfNecessary( selectedQueryString, implicitEntityName( resultType ) );
+			validateHql( method, returnType, mirror, value, validationQuery, paramNames, paramTypes );
+			processedQuery = isRecordProjection
+					? addFromClauseIfNecessary( queryString, implicitEntityName( resultType ) )
+					: validationQuery;
 		}
 		final boolean mutation = isMutationStatement( queryString );
 		if ( mutation && hasAnnotation( method, JD_FIRST ) ) {
@@ -4200,6 +4205,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						? nativeResultSetMapping( method, returnType, containerTypeName )
 						: null;
 
+		final TypeElement entityType = implicitEntityType(
+				resultType == null ? null : (TypeElement) resultType.asElement() );
 		final QueryMethod attribute =
 				new QueryMethod(
 						this, method,
@@ -4222,7 +4229,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
 						fullReturnType( method ),
-						hasAnnotation( method, NULLABLE )
+						hasAnnotation( method, NULLABLE ),
+						isRecordProjection ? querySelection : null,
+						isRecordProjection && entityType != null
+								? entityType.getQualifiedName().toString()
+								: null
 					);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
 	}

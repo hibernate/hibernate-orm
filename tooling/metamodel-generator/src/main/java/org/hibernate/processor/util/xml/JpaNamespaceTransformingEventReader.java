@@ -4,6 +4,8 @@
  */
 package org.hibernate.processor.util.xml;
 
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -85,7 +87,7 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 	private static final String EMPTY_PREFIX = "";
 
 	private final XMLEventFactory xmlEventFactory;
-	private String currentDocumentNamespaceUri;
+	private @Nullable String currentDocumentNamespaceUri;
 
 	public JpaNamespaceTransformingEventReader(XMLEventReader reader) {
 		super( reader );
@@ -155,7 +157,7 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 		while ( existingAttributesIterator.hasNext() ) {
 			var attribute = existingAttributesIterator.next();
 			if ( VERSION_ATTRIBUTE_NAME.equals( attribute.getName().getLocalPart() ) ) {
-				if ( currentDocumentNamespaceUri.equals( DEFAULT_PERSISTENCE_NAMESPACE ) ) {
+				if ( DEFAULT_PERSISTENCE_NAMESPACE.equals( currentDocumentNamespaceUri ) ) {
 					if ( !DEFAULT_PERSISTENCE_VERSION.equals( attribute.getName().getPrefix() ) ) {
 						newElementAttributeList.add(
 								xmlEventFactory.createAttribute(

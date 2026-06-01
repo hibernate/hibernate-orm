@@ -41,8 +41,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 		if ( typeMirror instanceof TypeVariable ) {
 			// Top level type variables don't need to render the upper bound as `T extends Type`
 			final var typeVariableElement = ( (TypeVariable) typeMirror ).asElement();
-			if ( typeVariableElement instanceof TypeParameterElement ) {
-				final var typeParameter = (TypeParameterElement) typeVariableElement;
+			if ( typeVariableElement instanceof TypeParameterElement typeParameter ) {
 				if ( typeParameter.getEnclosingElement().getKind() == ElementKind.METHOD ) {
 					// But for method level type variable we return the upper bound
 					// because the type variable has no meaning except for that method

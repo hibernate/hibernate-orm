@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
@@ -133,7 +134,7 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 		return resultType != null && isVoid( resultType );
 	}
 
-	TypeMirror completionStageResultType() {
+	@Nullable TypeMirror completionStageResultType() {
 		return completionStageResultType( method.getReturnType() );
 	}
 
@@ -162,7 +163,7 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 		return completionStageResultType( returnType ) != null;
 	}
 
-	private static TypeMirror completionStageResultType(TypeMirror returnType) {
+	private static @Nullable TypeMirror completionStageResultType(TypeMirror returnType) {
 		if ( returnType.getKind() == TypeKind.DECLARED ) {
 			final var declaredType = (DeclaredType) returnType;
 			final var typeElement = (TypeElement) declaredType.asElement();

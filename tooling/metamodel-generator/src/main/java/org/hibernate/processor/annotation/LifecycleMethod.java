@@ -19,6 +19,7 @@ import java.util.StringJoiner;
 
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.type.TypeKind.VOID;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.Constants.COMPLETION_STAGE;
 import static org.hibernate.processor.util.Constants.HIB_STATELESS_SESSION;
 import static org.hibernate.processor.util.Constants.LIST;
@@ -468,7 +469,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			return methodTypeParameters.contains( value )
 					? value
 					: annotationMetaEntity.importType(
-							resolveTypeName( element, method.getEnclosingElement(), value ) );
+							resolveTypeName( element, castNonNull( method.getEnclosingElement() ), value ) );
 		}
 		else if ( type instanceof WildcardType wildcardType ) {
 			return "?"

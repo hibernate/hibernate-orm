@@ -132,12 +132,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean lifecycleEventListener;
 	private final boolean quarkusInjection;
 	private final boolean springInjection;
-	private String qualifiedName;
+	private @Nullable String qualifiedName; // Lazily initialized
 	private final boolean jakartaDataStaticModel;
 	private final boolean repositoryGeneration;
 	private final boolean repositoryQueryMetamodel;
 
-	private AccessTypeInformation entityAccessTypeInfo;
+	private @Nullable AccessTypeInformation entityAccessTypeInfo; // Lazily initialized, null for repositories
 
 	/**
 	 * Whether the members of this type have already been initialized or not.
@@ -157,7 +157,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * lazily is required for embeddables and mapped supertypes, to only pull in those members matching the access
 	 * type as configured via the embedding entity or subclass (also see METAGEN-85).
 	 */
-	private Metamodel entityToMerge;
+	private @Nullable Metamodel entityToMerge;
 
 	/**
 	 * True if this "metamodel class" is actually an instantiable DAO-style repository.
@@ -280,7 +280,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	public AccessTypeInformation getEntityAccessTypeInfo() {
-		return entityAccessTypeInfo;
+		// AnnotationMetaEntity class can represent a repository, in which case this is null,
+		// but this getter should not be called.
+		// TODO split this class between AnnotationMetaEntity and AnnotationMetaRepository
+		return castNonNull( entityAccessTypeInfo );
 	}
 
 	@Override
@@ -508,7 +511,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							queryMethods.add( method );
 						}
 					}
-					else if ( method.getEnclosingElement().getKind().isInterface()
+					else if ( castNonNull( method.getEnclosingElement() ).getKind().isInterface()
 							&& !method.isDefault()
 							&& !method.getModifiers().contains( Modifier.PRIVATE )
 							&& !isSessionGetter( method ) ) {
@@ -1814,7 +1817,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean isPersistent(Element memberOfClass, AccessType membersKind) {
-		return (entityAccessTypeInfo.getAccessType() == membersKind
+		return (getEntityAccessTypeInfo().getAccessType() == membersKind
 				|| determineAnnotationSpecifiedAccessType( memberOfClass ) != null)
 			&& !containsAnnotation( memberOfClass, TRANSIENT )
 			&& !memberOfClass.getModifiers().contains( Modifier.TRANSIENT )
@@ -2315,7 +2318,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return returnType;
 	}
 
-	private static TypeMirror completionStageResultType(TypeMirror returnType) {
+	private static @Nullable TypeMirror completionStageResultType(TypeMirror returnType) {
 		if ( returnType.getKind() == TypeKind.DECLARED ) {
 			final var declaredType = (DeclaredType) returnType;
 			final var typeElement = (TypeElement) declaredType.asElement();
@@ -3034,7 +3037,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return requireNonNullElse(
 				resolveTypeMirror(
 						entity,
-						member.getEnclosingElement(),
+						// A member always has an enclosing class
+						castNonNull( member.getEnclosingElement() ),
 						memberType.toString()
 				), memberType
 		);
@@ -3268,7 +3272,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static TypeMirror typeArgumentUpperBound(TypeMirror typeArgument) {
+	private static @Nullable TypeMirror typeArgumentUpperBound(TypeMirror typeArgument) {
 		return typeArgument.getKind() == TypeKind.WILDCARD
 				? ((WildcardType) typeArgument).getSuperBound()
 				: typeArgument;
@@ -3811,7 +3815,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final var attributeType = requireNonNullElse(
 					resolveTypeMirror(
 							entityType,
-							member.getEnclosingElement(),
+							// A member always has an enclosing class
+							castNonNull( member.getEnclosingElement() ),
 							memberType.toString()
 					), memberType
 			);
@@ -5780,9 +5785,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static String messageWithLocation(Element element, String message) {
-		return element.getKind() == ElementKind.PARAMETER
-				? message + " for parameter '" + element.getSimpleName()
-						+ "' of inherited member '" + element.getEnclosingElement().getSimpleName() + "'"
+		return element.getKind() == ElementKind.PARAMETER && element instanceof VariableElement param
+				? message + " for parameter '" + param.getSimpleName()
+						+ "' of inherited member '" + param.getEnclosingElement().getSimpleName() + "'"
 				: message + " for inherited member '" + element.getSimpleName() + "'";
 	}
 

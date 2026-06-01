@@ -6,6 +6,7 @@ package org.hibernate.processor.annotation;
 
 import org.hibernate.processor.model.Metamodel;
 
+import jakarta.annotation.Nullable;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.type.TypeKind;
@@ -94,7 +95,7 @@ class ResultSetMappingMetaAttribute extends NameMetaAttribute {
 		return className == null ? JAVA_OBJECT : className;
 	}
 
-	private static String annotationClassNameOrNull(AnnotationMirror annotation, String member) {
+	private static @Nullable String annotationClassNameOrNull(AnnotationMirror annotation, String member) {
 		final var value = getAnnotationValue( annotation, member );
 		if ( value == null ) {
 			return null;

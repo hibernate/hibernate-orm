@@ -26,7 +26,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -55,7 +54,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -451,9 +449,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		for ( final var bootPropertyDescriptor : bootDescriptor.getProperties() ) {
 			final AttributeMapping attributeMapping;
-
-			final Type subtype = subtypes[attributeIndex];
-			final Value value = bootPropertyDescriptor.getValue();
+			final var subtype = subtypes[attributeIndex];
+			final var value = bootPropertyDescriptor.getValue();
 			if ( subtype instanceof BasicType ) {
 				final var basicValue = (BasicValue) value;
 				final var selectable =
@@ -538,9 +535,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						nullable,
 						insertability[columnPosition],
 						updateability[columnPosition],
-						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
-						compositeType.getCascadeStyle( attributeIndex ),
-						creationProcess
+						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor )
 				);
 
 				columnPosition++;
@@ -684,8 +679,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return false;
 	}
 
-	private static MutabilityPlan<?> getMutabilityPlan(boolean updateable) {
-		if ( updateable ) {
+	private static MutabilityPlan<?> getMutabilityPlan(boolean updatable) {
+		if ( updatable ) {
 			return new MutabilityPlan<>() {
 				@Override
 				public boolean isMutable() {

@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -342,7 +341,10 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 	}
 
 	@Override
-	public boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart) {
+	public boolean canUseParentTableGroup(
+			TableGroupProducer producer,
+			NavigablePath navigablePath,
+			ValuedModelPart valuedModelPart) {
 		return foreignKey.isKeyPart( valuedModelPart );
 	}
 
@@ -454,8 +456,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					(EntityType) collectionDescriptor.getElementType(),
 					fkTargetModelPart,
 					getCollectionPropertyPath( collectionDescriptor ),
-					creationProcess,
-					collectionDescriptor.getFactory().getJdbcServices().getDialect()
+					creationProcess
 			);
 		}
 		else {
@@ -466,8 +467,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					(EntityType) collectionDescriptor.getIndexType(),
 					fkTargetModelPart,
 					null, // No @MapKeyFormula or @OrderFormula
-					creationProcess,
-					collectionDescriptor.getFactory().getJdbcServices().getDialect()
+					creationProcess
 			);
 		}
 
@@ -591,8 +591,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			EntityType entityType,
 			ModelPart fkTargetModelPart,
 			@Nullable String propertyPath,
-			MappingModelCreationProcess creationProcess,
-			Dialect dialect) {
+			MappingModelCreationProcess creationProcess) {
 		assert fkTargetModelPart != null;
 
 		// If this is mapped by a to-one attribute, we can use the FK of that attribute
@@ -631,7 +630,6 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					fkBootDescriptorSource,
 					entityType,
 					creationProcess,
-					dialect,
 					collectionTableName,
 					basicFkTarget,
 					propertyPath
@@ -649,7 +647,6 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					false,
 					fkBootDescriptorSource.getColumnInsertability(),
 					fkBootDescriptorSource.getColumnUpdateability(),
-					dialect,
 					creationProcess
 			);
 		}
@@ -699,7 +696,6 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			Value fkBootDescriptorSource,
 			EntityType entityType,
 			MappingModelCreationProcess creationProcess,
-			Dialect dialect,
 			String fkKeyTableName,
 			BasicValuedModelPart basicFkTargetPart,
 			@Nullable String propertyPath) {

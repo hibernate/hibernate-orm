@@ -1,6 +1,6 @@
 services:
   tidb:
-    image: ${TIDB_IMAGE:-docker.io/pingcap/tidb:v8.5.5@sha256:16cb073f5fa2204c51a4a7a8ec4771b46557de1649ed75afe0d1db002c024084}
+    image: ${TIDB_IMAGE:-docker.io/pingcap/tidb:v8.5.6@sha256:a4ac24fd63c20195d062156531e9269d6ef84d4e4a6d7fea664d09e4b5c0f3d4}
     container_name: tidb
     ports:
       - "4000:4000"

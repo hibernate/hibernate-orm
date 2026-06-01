@@ -37,6 +37,7 @@ import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.EntityResult;
@@ -70,20 +71,33 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	//			memento for its resolution
 
 	public static SqlResultSetMappingDescriptor from(SqlResultSetMapping mappingAnnotation, String name) {
+		return from( mappingAnnotation, name, null );
+	}
+
+	public static SqlResultSetMappingDescriptor from(
+			SqlResultSetMapping mappingAnnotation,
+			String name,
+			@Nullable String location) {
 		return from(
 				name,
 				mappingAnnotation.entities(),
 				mappingAnnotation.classes(),
-				mappingAnnotation.columns()
+				mappingAnnotation.columns(),
+				location
 		);
 	}
 
 	public static SqlResultSetMappingDescriptor from(NamedNativeQuery namedNativeQuery) {
+		return from( namedNativeQuery, null );
+	}
+
+	public static SqlResultSetMappingDescriptor from(NamedNativeQuery namedNativeQuery, @Nullable String location) {
 		return from(
 				namedNativeQuery.name(),
 				namedNativeQuery.entities(),
 				namedNativeQuery.classes(),
-				namedNativeQuery.columns()
+				namedNativeQuery.columns(),
+				location
 		);
 	}
 
@@ -92,6 +106,15 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			EntityResult[] entityResults,
 			ConstructorResult[] constructorResults,
 			ColumnResult[] columnResults) {
+		return from( name, entityResults, constructorResults, columnResults, null );
+	}
+
+	public static SqlResultSetMappingDescriptor from(
+			String name,
+			EntityResult[] entityResults,
+			ConstructorResult[] constructorResults,
+			ColumnResult[] columnResults,
+			@Nullable String location) {
 		final List<ResultDescriptor> resultDescriptors = arrayList(
 				entityResults.length + constructorResults.length + columnResults.length
 		);
@@ -110,7 +133,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 		}
 
-		return new SqlResultSetMappingDescriptor( name, resultDescriptors );
+		return new SqlResultSetMappingDescriptor( name, location, resultDescriptors );
 	}
 
 	public static SqlResultSetMappingDescriptor from(SqlResultSetMapping mappingAnnotation) {
@@ -118,16 +141,26 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	}
 
 	private final String mappingName;
+	private final @Nullable String location;
 	private final List<ResultDescriptor> resultDescriptors;
 
-	private SqlResultSetMappingDescriptor(String mappingName, List<ResultDescriptor> resultDescriptors) {
+	private SqlResultSetMappingDescriptor(
+			String mappingName,
+			@Nullable String location,
+			List<ResultDescriptor> resultDescriptors) {
 		this.mappingName = mappingName;
+		this.location = location;
 		this.resultDescriptors = resultDescriptors;
 	}
 
 	@Override
 	public String getRegistrationName() {
 		return mappingName;
+	}
+
+	@Override
+	public @Nullable String getLocation() {
+		return location;
 	}
 
 	@Override

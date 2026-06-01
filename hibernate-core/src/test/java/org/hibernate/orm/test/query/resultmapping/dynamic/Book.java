@@ -57,6 +57,10 @@ import java.time.LocalDate;
 				}
 		)
 )
+@SqlResultSetMapping(name = "book-and-id",
+		entities = @EntityResult(entityClass = Book.class),
+		columns = @ColumnResult(name = "id", type = Integer.class)
+)
 public class Book {
 	@Id
 	private Integer id;

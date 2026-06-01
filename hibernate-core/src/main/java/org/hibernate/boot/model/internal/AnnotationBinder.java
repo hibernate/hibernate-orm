@@ -204,7 +204,7 @@ public final class AnnotationBinder {
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.SQL_RESULT_SET_MAPPING,
 				sourceModelContext,
-				usage -> bindSqlResultSetMapping( usage, context,false )
+				usage -> bindSqlResultSetMapping( usage, context, annotationTarget, false )
 		);
 
 		annotationTarget.forEachRepeatedAnnotationUsages(

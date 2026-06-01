@@ -10,7 +10,9 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.spi.AnnotationTarget;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.SqlResultSetMapping;
 
 /**
@@ -21,11 +23,21 @@ public class ResultSetMappingSecondPass implements QuerySecondPass {
 
 	private final SqlResultSetMapping annotation;
 	private final MetadataBuildingContext context;
+	private final @Nullable AnnotationTarget location;
 	private final boolean isDefault;
 
 	public ResultSetMappingSecondPass(SqlResultSetMapping annotation, MetadataBuildingContext context, boolean isDefault) {
+		this( annotation, context, null, isDefault );
+	}
+
+	public ResultSetMappingSecondPass(
+			SqlResultSetMapping annotation,
+			MetadataBuildingContext context,
+			@Nullable AnnotationTarget location,
+			boolean isDefault) {
 		this.annotation = annotation;
 		this.context = context;
+		this.location = location;
 		this.isDefault = isDefault;
 	}
 
@@ -35,7 +47,11 @@ public class ResultSetMappingSecondPass implements QuerySecondPass {
 			return;
 		}
 
-		final var mappingDefinition = SqlResultSetMappingDescriptor.from( annotation );
+		final var mappingDefinition = SqlResultSetMappingDescriptor.from(
+				annotation,
+				annotation.name(),
+				location == null ? null : location.getName()
+		);
 
 		if ( isDefault ) {
 			context.getMetadataCollector().addDefaultResultSetMapping( mappingDefinition );

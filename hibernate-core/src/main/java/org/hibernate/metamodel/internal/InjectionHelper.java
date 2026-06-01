@@ -7,6 +7,8 @@ package org.hibernate.metamodel.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.query.NamedQueryDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 
 import java.lang.reflect.Field;
@@ -42,6 +44,22 @@ public class InjectionHelper {
 					'_' + javaIdentifier( definition.getRegistrationName() ) + '_';
 			try {
 				injectField( metamodelClass, fieldName, definition, false );
+			}
+			catch ( NoSuchFieldException e ) {
+				// ignore
+			}
+		}
+	}
+
+	public static void injectResultSetMapping(
+			NamedResultSetMappingDescriptor definition,
+			Class<?> metamodelClass,
+			SessionFactoryImplementor sessionFactory) {
+		if ( metamodelClass != null ) {
+			final String fieldName = '_' + javaIdentifier( definition.getRegistrationName() );
+			try {
+				final var memento = definition.resolve( () -> sessionFactory );
+				injectField( metamodelClass, fieldName, memento.toJpaMapping( sessionFactory ), false );
 			}
 			catch ( NoSuchFieldException e ) {
 				// ignore

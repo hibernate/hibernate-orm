@@ -14,7 +14,7 @@ To run the Jakarta Persistence TCK from the terminal execute:
 
 [source,bash]
 ----
-./gradlew :hibernate-tck-runner:test -Pdb=pgsql_ci
+./gradlew :hibernate-tck-runner:test -Pdb=pgsql_ci -Pruntck=true
 ----
 
 [NOTE]

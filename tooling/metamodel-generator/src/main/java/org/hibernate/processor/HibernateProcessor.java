@@ -89,10 +89,14 @@ import static org.hibernate.processor.util.Constants.JD_UPDATE;
 import static org.hibernate.processor.util.Constants.MAPPED_SUPERCLASS;
 import static org.hibernate.processor.util.Constants.NAMED_ENTITY_GRAPH;
 import static org.hibernate.processor.util.Constants.NAMED_ENTITY_GRAPHS;
+import static org.hibernate.processor.util.Constants.NAMED_NATIVE_STATEMENT;
+import static org.hibernate.processor.util.Constants.NAMED_NATIVE_STATEMENTS;
 import static org.hibernate.processor.util.Constants.NAMED_NATIVE_QUERIES;
 import static org.hibernate.processor.util.Constants.NAMED_NATIVE_QUERY;
 import static org.hibernate.processor.util.Constants.NAMED_QUERIES;
 import static org.hibernate.processor.util.Constants.NAMED_QUERY;
+import static org.hibernate.processor.util.Constants.NAMED_STATEMENT;
+import static org.hibernate.processor.util.Constants.NAMED_STATEMENTS;
 import static org.hibernate.processor.util.Constants.NATIVE_QUERY;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
 import static org.hibernate.processor.util.Constants.SQL;
@@ -123,6 +127,7 @@ import static org.hibernate.processor.util.TypeUtils.isMemberType;
 		HIB_FETCH_PROFILE, HIB_FETCH_PROFILES, HIB_FILTER_DEF, HIB_FILTER_DEFS,
 		HIB_NAMED_QUERY, HIB_NAMED_QUERIES, HIB_NAMED_NATIVE_QUERY, HIB_NAMED_NATIVE_QUERIES,
 		// standard for JPA 4
+		NAMED_STATEMENT, NAMED_STATEMENTS, NAMED_NATIVE_STATEMENT, NAMED_NATIVE_STATEMENTS,
 		JAKARTA_QUERY, NATIVE_QUERY, QUERY_OPTIONS,
 		ENTITY_RESULT, ENTITY_RESULTS, CONSTRUCTOR_RESULT, CONSTRUCTOR_RESULTS, COLUMN_RESULT, COLUMN_RESULTS,
 		// Hibernate query methods
@@ -752,6 +757,10 @@ public class HibernateProcessor extends AbstractProcessor {
 				NAMED_QUERIES,
 				NAMED_NATIVE_QUERY,
 				NAMED_NATIVE_QUERIES,
+				NAMED_STATEMENT,
+				NAMED_STATEMENTS,
+				NAMED_NATIVE_STATEMENT,
+				NAMED_NATIVE_STATEMENTS,
 				SQL_RESULT_SET_MAPPING,
 				SQL_RESULT_SET_MAPPINGS,
 				NAMED_ENTITY_GRAPH,

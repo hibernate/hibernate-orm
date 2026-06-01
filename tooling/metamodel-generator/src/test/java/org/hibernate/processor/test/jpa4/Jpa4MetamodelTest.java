@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import jakarta.persistence.StatementReference;
 import jakarta.persistence.metamodel.BooleanAttribute;
 import jakarta.persistence.metamodel.ComparableAttribute;
 import jakarta.persistence.metamodel.NumericAttribute;
@@ -21,6 +22,7 @@ import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.getFieldFromMetamodelFor;
+import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfNameFieldInMetamodelFor;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -41,10 +43,24 @@ class Jpa4MetamodelTest {
 		assertAttribute( "payload", SingularAttribute.class, Book.class, Object.class );
 	}
 
+	@Test
+	@WithClasses({ Book.class, Status.class })
+	void generatedMetamodelUsesStatementReferences() {
+		assertStatementReference( "STATEMENT_UPDATE_BOOK_TITLE", "_updateBookTitle_" );
+		assertStatementReference( "STATEMENT_DELETE_UNPUBLISHED_BOOKS", "_deleteUnpublishedBooks_" );
+		assertStatementReference( "STATEMENT_NATIVE_BOOK_DELETE", "_nativeBookDelete_" );
+		assertStatementReference( "STATEMENT_NATIVE_BOOK_UPDATE", "_native_book_update_" );
+	}
+
 	private static void assertAttribute(String fieldName, Class<?> expectedRawType, Type... expectedTypeArguments) {
 		final var field = getFieldFromMetamodelFor( Book.class, fieldName );
 		final var parameterizedType = assertInstanceOf( ParameterizedType.class, field.getGenericType() );
 		assertEquals( expectedRawType, parameterizedType.getRawType() );
 		assertArrayEquals( expectedTypeArguments, parameterizedType.getActualTypeArguments() );
+	}
+
+	private static void assertStatementReference(String nameField, String referenceField) {
+		assertPresenceOfNameFieldInMetamodelFor( Book.class, nameField, "Missing named statement attribute." );
+		assertEquals( StatementReference.class, getFieldFromMetamodelFor( Book.class, referenceField ).getType() );
 	}
 }

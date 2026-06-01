@@ -43,6 +43,10 @@ public final class Constants {
 	public static final String NAMED_QUERIES = "jakarta.persistence.NamedQueries";
 	public static final String NAMED_NATIVE_QUERY = "jakarta.persistence.NamedNativeQuery";
 	public static final String NAMED_NATIVE_QUERIES = "jakarta.persistence.NamedNativeQueries";
+	public static final String NAMED_STATEMENT = "jakarta.persistence.NamedStatement";
+	public static final String NAMED_STATEMENTS = "jakarta.persistence.NamedStatements";
+	public static final String NAMED_NATIVE_STATEMENT = "jakarta.persistence.NamedNativeStatement";
+	public static final String NAMED_NATIVE_STATEMENTS = "jakarta.persistence.NamedNativeStatements";
 	public static final String SQL_RESULT_SET_MAPPING = "jakarta.persistence.SqlResultSetMapping";
 	public static final String SQL_RESULT_SET_MAPPINGS = "jakarta.persistence.SqlResultSetMappings";
 	public static final String ENTITY_RESULT = "jakarta.persistence.EntityResult";

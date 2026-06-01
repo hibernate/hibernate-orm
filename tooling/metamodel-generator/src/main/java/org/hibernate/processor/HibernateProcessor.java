@@ -283,9 +283,9 @@ public class HibernateProcessor extends AbstractProcessor {
 		var quarkusOrmPanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.orm.panache" );
-		var quarkusPanache2Package =
+		var quarkusDataHibernatePackage =
 				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( "io.quarkus.hibernate.panache" );
+						.getPackageElement( "io.quarkus.data.hibernate" );
 		var quarkusReactivePanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.reactive.panache" );
@@ -321,7 +321,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setUsesQuarkusReactive( packagePresent(quarkusReactivePanachePackage) );
 		context.setSpringInjection( packagePresent(springBeansPackage) );
 		context.setAddComponentAnnotation( packagePresent(springStereotypePackage) );
-		context.setUsesQuarkusPanache2( packagePresent(quarkusPanache2Package) );
+		context.setUsesQuarkusDataHibernate( packagePresent(quarkusDataHibernatePackage) );
 		context.setUsesQuarkusReactiveCommon( packagePresent(quarkusReactivePanacheCommonPackage) );
 
 		final var options = environment.getOptions();
@@ -584,7 +584,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private boolean isImplicitRepository(TypeElement typeElement) {
-		if ( AnnotationMetaEntity.isPanache2Repository( typeElement ) ) {
+		if ( AnnotationMetaEntity.isQuarkusDataRepository( typeElement ) ) {
 			return true;
 		}
 		for ( var member : typeElement.getEnclosedElements() ) {

@@ -23,18 +23,17 @@ import org.hibernate.sql.results.graph.collection.internal.DetachedCollectionDom
 public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInterpretation<T> {
 
 	public static SqmPathInterpretation<?> from(SqmPluralValuedSimplePath<?> sqmPath, SqmToSqlAstConverter converter) {
-		final TableGroup tableGroup = converter.getFromClauseAccess()
-				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
-
-		final PluralAttributeMapping mapping = (PluralAttributeMapping) tableGroup.getModelPart().findSubPart(
-				sqmPath.getReferencedPathSource().getPathName(),
-				null
-		);
-
+		final var tableGroup =
+				converter.getFromClauseAccess()
+						.findTableGroup( sqmPath.getLhs().getNavigablePath() );
 		return new PluralValuedSimplePathInterpretation<>(
 				null,
 				sqmPath.getNavigablePath(),
-				mapping,
+				(PluralAttributeMapping)
+						tableGroup.getModelPart().findSubPart(
+								sqmPath.getReferencedPathSource().getPathName(),
+								null
+						),
 				tableGroup,
 				sqmPath instanceof SqmPluralPartSelectionPath<?> pluralPartSelectionPath
 						? pluralPartSelectionPath.getSelectedPartNature()

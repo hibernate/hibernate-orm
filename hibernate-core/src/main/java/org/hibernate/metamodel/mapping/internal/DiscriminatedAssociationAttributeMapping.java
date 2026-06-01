@@ -102,7 +102,7 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public DiscriminatorMapping getDiscriminatorMapping() {
-		return discriminatorMapping.getDiscriminatorPart();
+		return discriminatorMapping.getDiscriminatorMapping();
 	}
 
 	@Override
@@ -168,13 +168,13 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		discriminatorMapping.getDiscriminatorPart().applySqlSelections( navigablePath, tableGroup, creationState );
+		discriminatorMapping.getDiscriminatorMapping().applySqlSelections( navigablePath, tableGroup, creationState );
 		discriminatorMapping.getKeyPart().applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState, BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		discriminatorMapping.getDiscriminatorPart().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
+		discriminatorMapping.getDiscriminatorMapping().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 		discriminatorMapping.getKeyPart().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
@@ -197,7 +197,7 @@ public class DiscriminatedAssociationAttributeMapping
 	public Fetchable getFetchable(int position) {
 		return switch ( position ) {
 			case 0 -> {
-				final var discriminatorPart = getDiscriminatorPart();
+				final var discriminatorPart = getDiscriminatorMapping();
 				assert discriminatorPart.getFetchableKey() == 0;
 				yield discriminatorPart;
 			}
@@ -212,18 +212,18 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public String getContainingTableExpression() {
-		return getDiscriminatorPart().getContainingTableExpression();
+		return getDiscriminatorMapping().getContainingTableExpression();
 	}
 
 	@Override
 	public int getJdbcTypeCount() {
-		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+		return getDiscriminatorMapping().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 	}
 
 	@Override
 	public JdbcMapping getJdbcMapping(final int index) {
 		return switch ( index ) {
-			case 0 -> discriminatorMapping.getDiscriminatorPart().getJdbcMapping();
+			case 0 -> discriminatorMapping.getDiscriminatorMapping().getJdbcMapping();
 			case 1 -> discriminatorMapping.getKeyPart().getJdbcMapping();
 			default -> throw new IndexOutOfBoundsException( index );
 		};
@@ -232,7 +232,7 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public SelectableMapping getSelectable(int columnIndex) {
 		if ( columnIndex == 0 ) {
-			return getDiscriminatorPart();
+			return getDiscriminatorMapping();
 		}
 		return getKeyPart();
 	}
@@ -252,7 +252,7 @@ public class DiscriminatedAssociationAttributeMapping
 		final Object identifier = identifierMapping.getIdentifier( value );
 
 		return new Object[] {
-				discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session ),
+				discriminatorMapping.getDiscriminatorMapping().disassemble( discriminator, session ),
 				identifierMapping.disassemble( identifier, session )
 		};
 	}
@@ -269,7 +269,7 @@ public class DiscriminatedAssociationAttributeMapping
 			final Object discriminator =
 					discriminatorMapping.getModelPart()
 							.resolveDiscriminatorForEntityType( concreteMappingType );
-			discriminatorMapping.getDiscriminatorPart().addToCacheKey( cacheKey, discriminator, session );
+			discriminatorMapping.getDiscriminatorMapping().addToCacheKey( cacheKey, discriminator, session );
 
 			final var identifierMapping = concreteMappingType.getIdentifierMapping();
 			identifierMapping.addToCacheKey( cacheKey, identifierMapping.getIdentifier( value ), session );
@@ -287,7 +287,7 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		discriminatorMapping.getDiscriminatorPart().forEachSelectable( offset, consumer );
+		discriminatorMapping.getDiscriminatorMapping().forEachSelectable( offset, consumer );
 		discriminatorMapping.getKeyPart().forEachSelectable( offset + 1, consumer );
 
 		return 2;
@@ -295,7 +295,7 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
-		action.accept( 0, discriminatorMapping.getDiscriminatorPart().getJdbcMapping() );
+		action.accept( 0, discriminatorMapping.getDiscriminatorMapping().getJdbcMapping() );
 		action.accept( 1, discriminatorMapping.getKeyPart().getJdbcMapping() );
 		return 2;
 	}
@@ -314,7 +314,7 @@ public class DiscriminatedAssociationAttributeMapping
 					x,
 					y,
 					null,
-					discriminatorMapping.getDiscriminatorPart().getJdbcMapping()
+					discriminatorMapping.getDiscriminatorMapping().getJdbcMapping()
 			);
 			valuesConsumer.consume(
 					offset + 1,
@@ -332,7 +332,7 @@ public class DiscriminatedAssociationAttributeMapping
 						x,
 						y,
 						values[0],
-						discriminatorMapping.getDiscriminatorPart().getJdbcMapping()
+						discriminatorMapping.getDiscriminatorMapping().getJdbcMapping()
 				);
 				valuesConsumer.consume(
 						offset + 1,
@@ -349,13 +349,13 @@ public class DiscriminatedAssociationAttributeMapping
 						discriminatorMapping.getModelPart()
 								.resolveDiscriminatorForEntityType( concreteMappingType );
 				final Object disassembledDiscriminator =
-						discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session );
+						discriminatorMapping.getDiscriminatorMapping().disassemble( discriminator, session );
 				valuesConsumer.consume(
 						offset,
 						x,
 						y,
 						disassembledDiscriminator,
-						discriminatorMapping.getDiscriminatorPart().getJdbcMapping()
+						discriminatorMapping.getDiscriminatorMapping().getJdbcMapping()
 				);
 
 				final var identifierMapping = concreteMappingType.getIdentifierMapping();
@@ -398,13 +398,13 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		int span = getDiscriminatorPart().forEachJdbcType( offset, action );
+		int span = getDiscriminatorMapping().forEachJdbcType( offset, action );
 		return span + getKeyPart().forEachJdbcType( offset + span, action );
 	}
 
 	@Override
 	public void visitFetchables(Consumer<? super Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
-		fetchableConsumer.accept( getDiscriminatorPart() );
+		fetchableConsumer.accept( getDiscriminatorMapping() );
 		fetchableConsumer.accept( getKeyPart() );
 	}
 
@@ -421,19 +421,19 @@ public class DiscriminatedAssociationAttributeMapping
 
 	@Override
 	public void forEachSubPart(IndexedConsumer<ModelPart> consumer, EntityMappingType treatTarget) {
-		consumer.accept( 0, getDiscriminatorPart() );
+		consumer.accept( 0, getDiscriminatorMapping() );
 		consumer.accept( 1, getKeyPart() );
 	}
 
 	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
-		consumer.accept( getDiscriminatorPart() );
+		consumer.accept( getDiscriminatorMapping() );
 		consumer.accept( getKeyPart() );
 	}
 
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
-		return discriminatorMapping.getDiscriminatorPart().isPartitioned()
+		return discriminatorMapping.getDiscriminatorMapping().isPartitioned()
 			|| discriminatorMapping.getKeyPart().isPartitioned();
 	}
 

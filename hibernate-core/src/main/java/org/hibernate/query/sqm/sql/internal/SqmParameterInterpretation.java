@@ -10,9 +10,7 @@ import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.SemanticException;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -23,7 +21,6 @@ import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -40,15 +37,15 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 		if ( valueMapping instanceof EntityAssociationMapping mapping ) {
 			this.valueMapping = mapping.getForeignKeyDescriptor().getPart( mapping.getSideNature() );
 		}
-		else if ( valueMapping instanceof EntityValuedModelPart ) {
-			this.valueMapping = ( (EntityValuedModelPart) valueMapping ).getEntityMappingType().getIdentifierMapping();
+		else if ( valueMapping instanceof EntityValuedModelPart entityValuedModelPart ) {
+			this.valueMapping = entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
 		}
 		else {
 			this.valueMapping = valueMapping;
 		}
 
 		assert jdbcParameters != null;
-		assert jdbcParameters.size() > 0;
+		assert !jdbcParameters.isEmpty();
 
 		this.jdbcParameters = jdbcParameters;
 	}
@@ -66,7 +63,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	public Expression getResolvedExpression() {
 		// We need to defer the resolution because the JdbcParameter might be replaced in BaseSqmToSqlAstConverter#replaceJdbcParametersType
 		if ( resolvedExpression == null ) {
-			return this.resolvedExpression = determineResolvedExpression( jdbcParameters, this.valueMapping );
+			resolvedExpression = determineResolvedExpression( jdbcParameters, this.valueMapping );
 		}
 		return resolvedExpression;
 	}
@@ -85,27 +82,26 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	public DomainResult<?> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final Expression resolvedExpression = getResolvedExpression();
+		final var resolvedExpression = getResolvedExpression();
 		if ( resolvedExpression instanceof SqlTuple ) {
 			throw new SemanticException( "Composite query parameter cannot be used in select" );
 		}
 
-		final JdbcMapping jdbcMapping = resolvedExpression.getExpressionType().getSingleJdbcMapping();
-		final JavaType<?> jdbcJavaType = jdbcMapping.getJdbcJavaType();
-		final BasicValueConverter<?, ?> converter = jdbcMapping.getValueConverter();
-
-		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-				resolvedExpression,
-				jdbcJavaType,
-				null,
-				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
-		);
-
+		final var jdbcMapping = resolvedExpression.getExpressionType().getSingleJdbcMapping();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var sqlSelection =
+				sqlAstCreationState.getSqlExpressionResolver()
+						.resolveSqlSelection(
+								resolvedExpression,
+								jdbcMapping.getJdbcJavaType(),
+								null,
+								sqlAstCreationState.getCreationContext().getTypeConfiguration()
+						);
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				jdbcMapping.getMappedJavaType(),
-				converter,
+				jdbcMapping.getValueConverter(),
 				null,
 				false,
 				false
@@ -114,10 +110,8 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 
 	@Override
 	public SqlTuple getSqlTuple() {
-		final Expression resolvedExpression = getResolvedExpression();
-		return resolvedExpression instanceof SqlTuple
-				? (SqlTuple) resolvedExpression
-				: null;
+		final var resolvedExpression = getResolvedExpression();
+		return resolvedExpression instanceof SqlTuple tuple ? tuple : null;
 	}
 
 	@Override
@@ -126,16 +120,17 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 	}
 
 	public SqlSelection resolveSqlSelection(DomainResultCreationState creationState) {
-		final Expression resolvedExpression = getResolvedExpression();
+		final var resolvedExpression = getResolvedExpression();
 		if ( resolvedExpression instanceof SqlTuple ) {
 			throw new SemanticException( "Composite query parameter cannot be used in select" );
 		}
 
-		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		return sqlAstCreationState.getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
 				resolvedExpression.getExpressionType().getSingleJdbcMapping().getMappedJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 }

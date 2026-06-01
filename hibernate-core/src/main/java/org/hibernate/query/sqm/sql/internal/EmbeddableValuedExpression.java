@@ -8,16 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -26,7 +22,6 @@ import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableExpressionResultImpl;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A computed expression that produces an embeddable valued model part.
@@ -70,13 +65,13 @@ public class EmbeddableValuedExpression<T> implements Expression, DomainResultPr
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		final EmbeddableMappingType mappingType = mapping.getEmbeddableTypeDescriptor();
+		final var mappingType = mapping.getEmbeddableTypeDescriptor();
 		final int numberOfAttributeMappings = mappingType.getNumberOfAttributeMappings();
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
-			final AttributeMapping attributeMapping = mappingType.getAttributeMapping( i );
+			final var attributeMapping = mappingType.getAttributeMapping( i );
 			assert attributeMapping instanceof BasicAttributeMapping;
 			sqlExpressionResolver.resolveSqlSelection(
 					sqlExpression.getExpressions().get( i ),
@@ -89,7 +84,7 @@ public class EmbeddableValuedExpression<T> implements Expression, DomainResultPr
 
 	@Override
 	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
-		for ( Expression expression : sqlExpression.getExpressions() ) {
+		for ( var expression : sqlExpression.getExpressions() ) {
 			if ( !( expression instanceof ColumnReference ) ) {
 				throw new IllegalArgumentException( "Expecting ColumnReference, found : " + expression );
 			}

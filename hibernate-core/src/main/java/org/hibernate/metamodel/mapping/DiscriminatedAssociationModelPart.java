@@ -20,14 +20,6 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface DiscriminatedAssociationModelPart extends Discriminable, Fetchable, FetchableContainer, TableGroupJoinProducer {
-	/**
-	 * @deprecated Use {@link #getDiscriminatorMapping} instead.
-	 */
-	@Deprecated( since = "6.2", forRemoval = true )
-	default BasicValuedModelPart getDiscriminatorPart() {
-		return getDiscriminatorMapping();
-	}
-
 	BasicValuedModelPart getKeyPart();
 
 	EntityMappingType resolveDiscriminatorValue(Object discriminatorValue);

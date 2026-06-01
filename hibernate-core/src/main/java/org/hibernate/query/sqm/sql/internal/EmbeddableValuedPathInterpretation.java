@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -47,22 +46,27 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		final TableGroup tableGroup =
 				sqlAstCreationState.getFromClauseAccess()
 						.getTableGroup( sqmPath.getNavigablePath().getParent() );
-		EntityMappingType treatTarget = null;
+		final EntityMappingType treatTarget;
 		if ( jpaQueryComplianceEnabled ) {
-			final MappingMetamodel mappingMetamodel =
-					sqlAstCreationState.getCreationContext().getMappingMetamodel();
+			final var mappingMetamodel = sqlAstCreationState.getCreationContext().getMappingMetamodel();
 			if ( lhs instanceof SqmTreatedPath<?, ?> treatedPath
 					&& treatedPath.getTreatTarget().getPersistenceType() == ENTITY ) {
-				final EntityDomainType<?> treatTargetDomainType = (EntityDomainType<?>) treatedPath.getTreatTarget();
+				final var treatTargetDomainType = (EntityDomainType<?>) treatedPath.getTreatTarget();
 				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
 			}
 			else if ( lhs.getNodeType() instanceof EntityDomainType<?> entityDomainType ) {
 				treatTarget = mappingMetamodel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 			}
+			else {
+				treatTarget = null;
+			}
+		}
+		else {
+			treatTarget = null;
 		}
 
 		// Use the target type to find the sub part if needed, otherwise just use the container
-		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart)
+		final var mapping = (EmbeddableValuedModelPart)
 				getTargetMappingIfNeeded( sqmPath, tableGroup.getModelPart(), sqlAstCreationState )
 						.findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
 
@@ -124,7 +128,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 
 	@Override
 	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
-		for ( Expression expression : sqlExpression.getExpressions() ) {
+		for ( var expression : sqlExpression.getExpressions() ) {
 			if ( expression instanceof ColumnReference columnReference ) {
 				columnReferenceConsumer.accept( columnReference );
 			}

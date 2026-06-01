@@ -115,6 +115,10 @@
                              minOccurs="0" maxOccurs="unbounded"/>
                 <xsd:element name="named-native-query" type="orm:named-native-query"
                              minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element name="named-statement" type="orm:named-statement"
+                             minOccurs="0" maxOccurs="unbounded"/>
+                <xsd:element name="named-native-statement" type="orm:named-native-statement"
+                             minOccurs="0" maxOccurs="unbounded"/>
                 <xsd:element name="named-stored-procedure-query"
                              type="orm:named-stored-procedure-query"
                              minOccurs="0" maxOccurs="unbounded"/>

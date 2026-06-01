@@ -117,6 +117,14 @@ public final class AnnotationBinder {
 			bindNativeQuery( queryRegistration.configuration(), context, null, true );
 		} );
 
+		globalRegistrations.getNamedStatementRegistrations().forEach( (name, statementRegistration) -> {
+			bindStatement( statementRegistration.configuration(), context, null );
+		} );
+
+		globalRegistrations.getNamedNativeStatementRegistrations().forEach( (name, statementRegistration) -> {
+			bindNativeStatement( statementRegistration.configuration(), context, null );
+		} );
+
 		globalRegistrations.getNamedStoredProcedureQueryRegistrations().forEach( (name, queryRegistration) -> {
 			bindNamedStoredProcedureQuery( queryRegistration.configuration(), context, true );
 		} );

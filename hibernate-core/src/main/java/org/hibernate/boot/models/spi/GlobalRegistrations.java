@@ -56,6 +56,10 @@ public interface GlobalRegistrations {
 
 	Map<String, NamedNativeQueryRegistration> getNamedNativeQueryRegistrations();
 
+	Map<String, NamedStatementRegistration> getNamedStatementRegistrations();
+
+	Map<String, NamedNativeStatementRegistration> getNamedNativeStatementRegistrations();
+
 	Map<String, NamedStoredProcedureQueryRegistration> getNamedStoredProcedureQueryRegistrations();
 
 	List<DatabaseObjectRegistration>  getDatabaseObjectRegistrations();

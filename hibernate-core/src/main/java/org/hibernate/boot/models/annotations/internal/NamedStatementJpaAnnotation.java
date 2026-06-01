@@ -5,7 +5,10 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import jakarta.persistence.NamedStatement;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStatementImpl;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.xml.internal.QueryProcessing;
+import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
@@ -80,18 +83,9 @@ public class NamedStatementJpaAnnotation implements NamedStatement {
 	}
 
 
-	// todo (jpa4) : hook in xsd
-
-//	public void apply(JaxbNamedHqlQueryImpl jaxbNamedQuery, XmlDocumentContext xmlDocumentContext) {
-//		name( jaxbNamedQuery.getName() );
-//		query( jaxbNamedQuery.getQuery() );
-//
-//		resultClass( TypeHelper.resolveClassReference( jaxbNamedQuery.getResultClass(), xmlDocumentContext, void.class ) );
-//		entityGraph( jaxbNamedQuery.getEntityGraph() );
-//
-//		lockMode( coalesce( jaxbNamedQuery.getLockMode(), jakarta.persistence.LockModeType.NONE ) );
-//		lockScope( coalesce( jaxbNamedQuery.getLockScope(), PessimisticLockScope.NORMAL ) );
-//
-//		hints( QueryProcessing.collectQueryHints( jaxbNamedQuery.getHints(), xmlDocumentContext ) );
-//	}
+	public void apply(JaxbNamedStatementImpl jaxbStatement, XmlDocumentContext xmlDocumentContext) {
+		name( jaxbStatement.getName() );
+		statement( jaxbStatement.getStatement() );
+		hints( QueryProcessing.collectQueryHints( jaxbStatement.getHints(), xmlDocumentContext ) );
+	}
 }

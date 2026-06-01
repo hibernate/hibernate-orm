@@ -49,6 +49,12 @@
             <bindings node=".//xsd:element[@name='named-native-query']">
                 <property name="namedNativeQueries"/>
             </bindings>
+            <bindings node=".//xsd:element[@name='named-statement']">
+                <property name="namedStatements"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='named-native-statement']">
+                <property name="namedNativeStatements"/>
+            </bindings>
             <bindings node=".//xsd:element[@name='named-stored-procedure-query']">
                 <property name="namedProcedureQueries"/>
             </bindings>
@@ -119,6 +125,14 @@
 
             <bindings node=".//xsd:element[@name='named-native-query']">
                 <property name="namedNativeQueries"/>
+            </bindings>
+
+            <bindings node=".//xsd:element[@name='named-statement']">
+                <property name="namedStatements"/>
+            </bindings>
+
+            <bindings node=".//xsd:element[@name='named-native-statement']">
+                <property name="namedNativeStatements"/>
             </bindings>
 
             <bindings node=".//xsd:element[@name='named-stored-procedure-query']">
@@ -595,6 +609,20 @@
             <bindings node=".//xsd:element[@name='synchronize']">
                 <property name="synchronizations"/>
             </bindings>
+            <bindings node=".//xsd:element[@name='hint']">
+                <property name="hints"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='named-statement']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHintContainer</inheritance:implements>
+            <bindings node=".//xsd:element[@name='hint']">
+                <property name="hints"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='named-native-statement']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHintContainer</inheritance:implements>
             <bindings node=".//xsd:element[@name='hint']">
                 <property name="hints"/>
             </bindings>

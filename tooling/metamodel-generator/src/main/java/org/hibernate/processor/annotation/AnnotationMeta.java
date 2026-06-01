@@ -58,8 +58,10 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	void checkNamedQueries() {
+		// If we're a package, this represents the module and is nullable
+		@Nullable var enclosingElement = getElement().getEnclosingElement();
 		var checkHql = containsAnnotation( getElement(), Constants.CHECK_HQL )
-						|| containsAnnotation( getElement().getEnclosingElement(), Constants.CHECK_HQL );
+						|| enclosingElement != null && containsAnnotation( enclosingElement, Constants.CHECK_HQL );
 		handleNamedQueryAnnotation( NAMED_QUERY, checkHql );
 		handleNamedQueryRepeatableAnnotation( Constants.NAMED_QUERIES, checkHql );
 		handleNamedQueryAnnotation( Constants.HIB_NAMED_QUERY, checkHql );

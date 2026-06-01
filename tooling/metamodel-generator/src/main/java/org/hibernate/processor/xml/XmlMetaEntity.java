@@ -136,6 +136,7 @@ public class XmlMetaEntity implements Metamodel {
 		this.isMetaComplete = initIsMetaComplete( context, metaComplete );
 	}
 
+	@NullnessUtil.Initializer
 	private void init() {
 		context.logMessage( Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + "." );
 
@@ -250,7 +251,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private @Nullable String[] determineTypes(String propertyName, String explicitTargetEntity, @Nullable String explicitMapKeyClass, DeclaredType type) {
-		@Nullable var types = new String[3];
+		var types = new String[3];
 		determineTargetType( type, propertyName, explicitTargetEntity, types );
 		if ( determineCollectionType( type, types ).equals( Constants.MAP_ATTRIBUTE ) ) {
 			determineMapType( type, explicitMapKeyClass, types );
@@ -258,7 +259,7 @@ public class XmlMetaEntity implements Metamodel {
 		return types;
 	}
 
-	private void determineMapType(DeclaredType type, @Nullable String explicitMapKeyClass, @Nullable String[] types) {
+	private void determineMapType(DeclaredType type, @Nullable String explicitMapKeyClass, String[] types) {
 		if ( explicitMapKeyClass != null ) {
 			types[2] = explicitMapKeyClass;
 		}
@@ -267,11 +268,11 @@ public class XmlMetaEntity implements Metamodel {
 		}
 	}
 
-	private String determineCollectionType(DeclaredType type, @Nullable String[] types) {
+	private String determineCollectionType(DeclaredType type, String[] types) {
 		return NullnessUtil.castNonNull( types[1] = Constants.COLLECTIONS.get( type.asElement().toString() ) );
 	}
 
-	private void determineTargetType(DeclaredType type, String propertyName, String explicitTargetEntity, @Nullable String[] types) {
+	private void determineTargetType(DeclaredType type, String propertyName, String explicitTargetEntity, String[] types) {
 		var typeArguments = type.getTypeArguments();
 
 		if ( typeArguments.isEmpty() && explicitTargetEntity == null ) {
@@ -457,7 +458,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private boolean parseElementCollection(JaxbElementCollectionImpl collection) {
-		@Nullable String[] types;
+		String[] types;
 		XmlMetaCollection metaCollection;
 		var elementKind = getElementKind( collection.getAccess() );
 		var explicitTargetClass = determineExplicitTargetEntity( collection.getTargetClass() );
@@ -513,7 +514,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private boolean parseOneToMany(JaxbOneToManyImpl oneToMany) {
-		@Nullable String[] types;
+		String[] types;
 		XmlMetaCollection metaCollection;
 		var elementKind = getElementKind( oneToMany.getAccess() );
 		var explicitTargetClass = determineExplicitTargetEntity( oneToMany.getTargetEntity() );
@@ -541,7 +542,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private boolean parseManyToMany(JaxbManyToManyImpl manyToMany) {
-		@Nullable String[] types;
+		String[] types;
 		XmlMetaCollection metaCollection;
 		var elementKind = getElementKind( manyToMany.getAccess() );
 		var explicitTargetClass = determineExplicitTargetEntity( manyToMany.getTargetEntity() );

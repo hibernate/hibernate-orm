@@ -113,8 +113,9 @@ public final class ClassWriter {
 			if ( context.addGeneratedAnnotation() ) {
 				pw.println( writeGeneratedAnnotation( entity, context ) );
 			}
-			if ( context.addSuppressWarningsAnnotation() ) {
-				pw.println( writeSuppressWarnings(context) );
+			var suppressedWarnings = context.getSuppressedWarnings();
+			if ( suppressedWarnings != null ) {
+				pw.println( writeSuppressWarnings( suppressedWarnings ) );
 			}
 			entity.inheritedAnnotations()
 					.forEach( annotation -> {
@@ -347,9 +348,8 @@ public final class ClassWriter {
 		return generatedAnnotation.toString();
 	}
 
-	private static String writeSuppressWarnings(Context context) {
+	private static String writeSuppressWarnings(String[] warnings) {
 		final var annotation = new StringBuilder("@SuppressWarnings({");
-		final var warnings = context.getSuppressedWarnings();
 		for (int i = 0; i < warnings.length; i++) {
 			if ( i>0 ) {
 				annotation.append(", ");

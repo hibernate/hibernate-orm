@@ -618,8 +618,10 @@ public class HibernateProcessor extends AbstractProcessor {
 	private void createMetaModelClasses() {
 
 		for ( var aux : context.getMetaAuxiliaries() ) {
-			if ( !context.isAlreadyGenerated(aux)
-				&& !isClassRecordOrInterfaceType( aux.getElement().getEnclosingElement() ) ) {
+			final Element enclosingElement = aux.getElement().getEnclosingElement();
+			if ( !context.isAlreadyGenerated( aux )
+				&& ( enclosingElement == null /* means aux is a package */
+					|| !isClassRecordOrInterfaceType( enclosingElement ) ) ) {
 				context.logMessage( Diagnostic.Kind.OTHER,
 						"Writing metamodel for auxiliary '" + aux + "'" );
 				ClassWriter.writeFile( aux, context );
@@ -801,7 +803,7 @@ public class HibernateProcessor extends AbstractProcessor {
 							&& alreadyExistingMetaEntity == null
 							// let a handwritten metamodel "override" the generated one
 							// (this is used in the Jakarta Data TCK)
-							&& !hasHandwrittenMetamodel(element) ) {
+							&& !hasHandwrittenMetamodel(typeElement) ) {
 						final var parentDataEntity =
 								parentMetadata( parent, context::getDataMetaEntity );
 						final var dataMetaEntity =
@@ -820,7 +822,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 	}
 
-	private static boolean hasHandwrittenMetamodel(Element element) {
+	private static boolean hasHandwrittenMetamodel(TypeElement element) {
 		return element.getEnclosingElement().getEnclosedElements()
 				.stream().anyMatch(e -> e.getSimpleName()
 						.contentEquals('_' + element.getSimpleName().toString()));

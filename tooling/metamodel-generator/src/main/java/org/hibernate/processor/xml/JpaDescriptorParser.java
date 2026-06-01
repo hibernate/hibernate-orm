@@ -298,7 +298,7 @@ public final class JpaDescriptorParser {
 		return context.getElementUtils().getTypeElement( fullyQualifiedClassName );
 	}
 
-	private AccessType determineEntityAccessType(JaxbEntityMappingsImpl mappings) {
+	private @Nullable AccessType determineEntityAccessType(JaxbEntityMappingsImpl mappings) {
 		final var mappingsAccess = mappings.getAccess();
 		return mappingsAccess != null ? mappingsAccess : context.getPersistenceUnitDefaultAccessType();
 	}
@@ -321,7 +321,7 @@ public final class JpaDescriptorParser {
 
 	private void addAccessTypeInfo(
 			String packageName, String simpleName,
-			AccessType accessType, AccessType defaultAccessType) {
+			AccessType accessType, @Nullable AccessType defaultAccessType) {
 		final var className = determineFullyQualifiedClassName( packageName, simpleName );
 		context.addAccessTypeInformation( className,
 				new AccessTypeInformation( className, accessType, defaultAccessType ) );

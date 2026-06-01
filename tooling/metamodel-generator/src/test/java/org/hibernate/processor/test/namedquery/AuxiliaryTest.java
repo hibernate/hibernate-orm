@@ -6,6 +6,7 @@ package org.hibernate.processor.test.namedquery;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
@@ -77,6 +78,15 @@ class AuxiliaryTest {
 				"MAPPING_RESULT_SET_MAPPING_TWO",
 				"Missing fetch profile attribute."
 		);
+		assertPresenceOfNameFieldInMetamodelFor(
+				Main.class,
+				"MAPPING_COMPOUND_MAPPING",
+				"Missing result set mapping."
+		);
+		checkResultSetMapping( "_bookNativeQueryResult", Book.class );
+		checkResultSetMapping( "_result_set_mapping_one", String.class );
+		checkResultSetMapping( "_result_set_mapping_two", TitleAndIsbn.class );
+		checkResultSetMapping( "_compound_mapping", Object[].class );
 		assertPresenceOfNameFieldInMetamodelFor(
 				Main.class,
 				"QUERY__SYSDATE_",
@@ -177,5 +187,18 @@ class AuxiliaryTest {
 						.getGenericType();
 		assertEquals(TypedQueryReference.class, fieldType.getRawType());
 		assertEquals( type, fieldType.getActualTypeArguments()[0]);
+	}
+
+	private static void checkResultSetMapping(String name, Class<?> type) {
+		assertPresenceOfFieldInMetamodelFor(
+				Main.class,
+				name,
+				"Missing result set mapping."
+		);
+		ParameterizedType fieldType = (ParameterizedType)
+				getFieldFromMetamodelFor( Main.class, name )
+						.getGenericType();
+		assertEquals( ResultSetMapping.class, fieldType.getRawType() );
+		assertEquals( type, fieldType.getActualTypeArguments()[0] );
 	}
 }

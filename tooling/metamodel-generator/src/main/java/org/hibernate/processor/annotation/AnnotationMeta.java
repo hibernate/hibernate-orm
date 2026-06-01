@@ -211,6 +211,8 @@ public abstract class AnnotationMeta implements Metamodel {
 			case "PROFILE_" ->
 					new EnabledFetchProfileMetaAttribute( this, name, prefix,
 							HIB_ENABLED_FETCH_PROFILE );
+			case "MAPPING_" ->
+					new ResultSetMappingMetaAttribute( this, mirror, name, prefix );
 			default ->
 					new NameMetaAttribute( this, name, prefix );
 		};

@@ -4,6 +4,9 @@
  */
 package org.hibernate.processor.test.namedquery;
 
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.EntityResult;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQueries;
@@ -19,7 +22,27 @@ import org.hibernate.annotations.FetchProfiles;
 @FetchProfiles({@FetchProfile(name = "fetch.one"), @FetchProfile(name = "fetch#two")})
 @NamedNativeQuery(name = "bookNativeQuery", query = "select * from Book")
 @NamedNativeQueries(@NamedNativeQuery(name = "(sysdate)", query = "select sysdate from dual"))
-@SqlResultSetMapping(name = "bookNativeQueryResult")
-@SqlResultSetMappings({@SqlResultSetMapping(name="result set mapping one"), @SqlResultSetMapping(name = "result_set-mapping-two")})
+@SqlResultSetMapping(name = "bookNativeQueryResult", entities = @EntityResult(entityClass = Book.class))
+@SqlResultSetMappings({
+		@SqlResultSetMapping(
+				name = "result set mapping one",
+				columns = @ColumnResult(name = "title", type = String.class)
+		),
+		@SqlResultSetMapping(
+				name = "result_set-mapping-two",
+				classes = @ConstructorResult(
+						targetClass = TitleAndIsbn.class,
+						columns = {
+								@ColumnResult(name = "title"),
+								@ColumnResult(name = "isbn")
+						}
+				)
+		),
+		@SqlResultSetMapping(
+				name = "compound mapping",
+				entities = @EntityResult(entityClass = Book.class),
+				columns = @ColumnResult(name = "title", type = String.class)
+		)
+})
 public class Main {
 }

@@ -1120,32 +1120,6 @@ public class MappingModelCreationHelper {
 		return false;
 	}
 
-	@Deprecated(forRemoval = true)
-	public static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
-			EmbeddableValuedModelPart embeddableValuedModelPart,
-			Value bootValueMapping,
-			ManagedMappingType keyDeclaringType,
-			TableGroupProducer keyDeclaringTableGroupProducer,
-			boolean inverse,
-			boolean[] insertable,
-			boolean[] updateable,
-			Dialect dialect,
-			MappingModelCreationProcess creationProcess) {
-		return buildEmbeddableForeignKeyDescriptor(
-				null,
-				embeddableValuedModelPart,
-				bootValueMapping,
-				keyDeclaringType,
-				keyDeclaringTableGroupProducer,
-				null,
-				inverse,
-				insertable,
-				updateable,
-				dialect,
-				creationProcess
-		);
-	}
-
 	public static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
 			String propertyPath,
 			EmbeddableValuedModelPart embeddableValuedModelPart,

@@ -4,17 +4,14 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.persister.entity.EntityPersister;
 
-import static java.util.stream.Collectors.toUnmodifiableMap;
-
 /**
- * Concurrent Map implementation of mappings entity name -> EntityPersister.
- * Concurrency is optimised for read operations; write operations will
+ * Concurrent Map implementation of mappings entity name to EntityPersister.
+ * Concurrency is optimized for read operations; write operations will
  * acquire a lock and are relatively costly: only use for long living,
  * read-mostly use cases.
  * This implementation attempts to avoid type pollution problems.
@@ -68,33 +65,15 @@ public final class EntityPersisterConcurrentMap {
 	}
 
 	/**
-	 * @deprecated Higly inefficient - do not use; this exists
-	 * to support other deprecated methods and will be removed.
-	 */
-	@Deprecated(forRemoval = true)
-	public Map<String, EntityPersister> convertToMap() {
-		return map.entrySet().stream().collect( toUnmodifiableMap(
-				Map.Entry::getKey,
-				e -> e.getValue().entityPersister
-		) );
-	}
-
-	/**
 	 * Implementation note: since EntityPersister is an highly used
 	 * interface, we intentionally avoid using a generic Map referring
 	 * to it to avoid type pollution.
 	 * Using a concrete holder class bypasses the problem, at a minimal
 	 * tradeoff of memory.
 	 */
-	private final static class EntityPersisterHolder {
-
-		private final EntityPersister entityPersister;
-
-		EntityPersisterHolder(final EntityPersister entityPersister) {
+	private record EntityPersisterHolder(EntityPersister entityPersister) {
+		private EntityPersisterHolder {
 			Objects.requireNonNull( entityPersister );
-			this.entityPersister = entityPersister;
 		}
-
 	}
-
 }

@@ -127,6 +127,36 @@ A unique constraint is now added to the table mapped by an `@ElementCollection` 
 
 A column mapped by a `@CreationTimestamp` or `@UpdateTimestamp` generator now has a `NOT NULL` constraint added automatically.
 
+[[oracle-value-lobs]]
+=== Oracle Value-Based LOBs
+
+On Oracle 23c and above, Hibernate now generates `lob(column) query as value` clauses in DDL
+for LOB columns mapped as Java types (e.g. `byte[]`, `String`) rather than JDBC LOB locator types
+(`java.sql.Blob`, `java.sql.Clob`).
+
+Value-based LOB access can improve performance by avoiding the use of LOB locators, allowing the
+database to treat LOB data inline.
+See the https://docs.oracle.com/en/database/oracle/oracle-database/26/adlob/value-based-LOBs.html[Oracle documentation] for more details.
+
+Value-based LOBs use https://docs.oracle.com/en/database/oracle/oracle-database/23/adlob/using-oracle-LOBs-storage.html[SecureFiles] storage,
+which requires a tablespace with Automatic Segment Space Management (ASSM).
+Attempting to create value LOB tables in a tablespace that uses Manual Segment Space Management
+(MSSM), such as the default `SYSTEM` tablespace, will fail with
+https://docs.oracle.com/en/database/oracle/oracle-database/23/errmg/ORA-43750.html[`ORA-43853`].
+Use an application user with a tablespace that supports ASSM (e.g. `USERS`)
+rather than the `SYSTEM` user.
+
+Additionally, some Oracle 23c versions contain a database kernel bug that causes `ORA-00600` internal
+errors when `FOR UPDATE ... SKIP LOCKED` queries are executed against tables with value-based LOBs.
+
+If you encounter either of these errors and cannot change the tablespace or Oracle version,
+the feature can be disabled by setting:
+
+[source,properties]
+----
+hibernate.dialect.oracle.value_lob_enabled=false
+----
+
 [[envers-migration]]
 == Optional: Migrating from Hibernate Envers to core `@Audited`
 

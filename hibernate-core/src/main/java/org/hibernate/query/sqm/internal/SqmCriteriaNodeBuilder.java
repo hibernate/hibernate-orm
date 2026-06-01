@@ -1901,6 +1901,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 
 		@Override
+		@Nonnull
 		public PersistenceType getPersistenceType() {
 			return BASIC;
 		}
@@ -1911,6 +1912,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 
 		@Override
+		@Nonnull
 		public Class<T> getJavaType() {
 			return javaType.getJavaTypeClass();
 		}

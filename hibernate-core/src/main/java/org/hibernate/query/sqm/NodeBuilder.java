@@ -294,36 +294,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	<T> SqmPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression);
 
-	@Override @Deprecated
-	default <T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
-		return arrayIncludes( arrayExpression, subArrayExpression );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
-		return arrayIncludes( arrayExpression, subArray );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
-		return arrayIncludes( array, subArrayExpression );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
-		return arrayIncludesNullable( arrayExpression, subArrayExpression );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
-		return arrayIncludesNullable( arrayExpression, subArray );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
-		return arrayIncludesNullable( array, subArrayExpression );
-	}
-
 	@Override
 	<T> SqmPredicate arrayIncludes(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
 
@@ -341,36 +311,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Override
 	<T> SqmPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression);
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
-		return arrayIntersects( arrayExpression1, arrayExpression2 );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
-		return arrayIntersects( arrayExpression1, array2 );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
-		return arrayIntersects( array1, arrayExpression2 );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
-		return arrayIntersectsNullable( arrayExpression1, arrayExpression2 );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
-		return arrayIntersectsNullable( arrayExpression1, array2 );
-	}
-
-	@Override @Deprecated
-	default <T> SqmPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
-		return arrayIntersectsNullable( array1, arrayExpression2 );
-	}
 
 	@Override
 	<T> SqmPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
@@ -573,46 +513,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	<E> SqmPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression);
 
 	@Override
-	default <E> SqmPredicate collectionContainsAll(
-			Expression<? extends Collection<E>> collectionExpression,
-			Expression<? extends Collection<? extends E>> subCollectionExpression) {
-		return collectionIncludes( collectionExpression, subCollectionExpression );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionContainsAll(
-			Expression<? extends Collection<E>> collectionExpression,
-			Collection<? extends E> subCollection) {
-		return collectionIncludes( collectionExpression, subCollection );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionContainsAll(
-			Collection<E> collection,
-			Expression<? extends Collection<? extends E>> subCollectionExpression) {
-		return collectionIncludes( collection, subCollectionExpression );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionContainsAllNullable(
-			Expression<? extends Collection<E>> collectionExpression,
-			Expression<? extends Collection<? extends E>> subCollectionExpression) {
-		return collectionIncludesNullable( collectionExpression, subCollectionExpression );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionContainsAllNullable(
-			Expression<? extends Collection<E>> collectionExpression,
-			Collection<? extends E> subCollection) {
-		return collectionIncludesNullable( collectionExpression, subCollection );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionContainsAllNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression) {
-		return collectionIncludesNullable( collection, subCollectionExpression );
-	}
-
-	@Override
 	<E> SqmPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
 	@Override
@@ -629,36 +529,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Override
 	<E> SqmPredicate collectionIncludesNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
-
-	@Override
-	default <E> SqmPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2) {
-		return collectionIntersects( collectionExpression1, collectionExpression2 );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2) {
-		return collectionIntersects( collectionExpression1, collection2 );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionOverlaps(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2) {
-		return collectionIntersects( collection1, collectionExpression2 );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2) {
-		return collectionIntersectsNullable( collectionExpression1, collectionExpression2 );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2) {
-		return collectionIntersectsNullable( collectionExpression1, collection2 );
-	}
-
-	@Override
-	default <E> SqmPredicate collectionOverlapsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2) {
-		return collectionIntersectsNullable( collection1, collectionExpression2 );
-	}
 
 	@Override
 	<E> SqmPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);

@@ -30,7 +30,7 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 	public static <T> DiscriminatedAssociationPathInterpretation<T> from(
 			SqmAnyValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter converter) {
-		final TableGroup tableGroup =
+		final var tableGroup =
 				converter.getFromClauseAccess()
 						.findTableGroup( sqmPath.getLhs().getNavigablePath() );
 		final var mapping =
@@ -114,11 +114,11 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 
 	@Override
 	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
-		for ( Expression expression : sqlTuple.getExpressions() ) {
-			if ( !( expression instanceof ColumnReference ) ) {
+		for ( var expression : sqlTuple.getExpressions() ) {
+			if ( !( expression instanceof ColumnReference columnReference ) ) {
 				throw new IllegalArgumentException( "Expecting ColumnReference, found : " + expression );
 			}
-			columnReferenceConsumer.accept( (ColumnReference) expression );
+			columnReferenceConsumer.accept( columnReference );
 		}
 	}
 }

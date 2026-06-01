@@ -24,7 +24,6 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.internal.EntityRepresentationStrategyMap;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;

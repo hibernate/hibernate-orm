@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
@@ -39,9 +39,9 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 			TableGroup tableGroup,
 			SqlAstCreationState sqlAstCreationState) {
 		super( navigablePath, mapping, tableGroup );
-
-		final JdbcMapping jdbcMappingToUse = mapping.getJdbcMapping();
-		expression = getDiscriminatorMapping().resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, sqlAstCreationState );
+		final var jdbcMappingToUse = mapping.getJdbcMapping();
+		expression = getDiscriminatorMapping()
+				.resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, sqlAstCreationState );
 	}
 
 	public DiscriminatorPathInterpretation(
@@ -50,43 +50,51 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 			TableGroup tableGroup,
 			SqlAstCreationState sqlAstCreationState) {
 		super( navigablePath, mapping.getDiscriminatorMapping(), tableGroup );
-
-		final JdbcMapping jdbcMappingToUse = mapping.getDiscriminatorMapping().getJdbcMapping();
-		expression = getDiscriminatorMapping().resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, sqlAstCreationState );
+		final var jdbcMappingToUse = mapping.getDiscriminatorMapping().getJdbcMapping();
+		expression = getDiscriminatorMapping()
+				.resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, sqlAstCreationState );
 	}
 
 	public static SqmPathInterpretation<?> from(
 			DiscriminatorSqmPath<?> path,
 			SqmToSqlAstConverter converter) {
 
-		final NavigablePath navigablePath = path.getNavigablePath();
-		final TableGroup tableGroup = converter.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
-		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		final var navigablePath = path.getNavigablePath();
+		final var tableGroup = converter.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
+		final var modelPart = tableGroup.getModelPart();
 
-		if ( path instanceof EntityDiscriminatorSqmPath<?> ) {
-			assert ((EntityDiscriminatorSqmPath<?>) path).getEntityDescriptor().hasSubclasses();
-			final EntityMappingType entityMapping;
-			if ( modelPart instanceof EntityValuedModelPart ) {
-				entityMapping = ( (EntityValuedModelPart) modelPart ).getEntityMappingType();
-			}
-			else {
-				entityMapping = (EntityMappingType) ( (PluralAttributeMapping) modelPart ).getElementDescriptor().getPartMappingType();
-			}
+		if ( path instanceof EntityDiscriminatorSqmPath<?> entityDiscriminatorSqmPath ) {
+			assert entityDiscriminatorSqmPath.getEntityDescriptor().hasSubclasses();
+			final var entityMapping = entityMappingType( modelPart );
 			return new DiscriminatorPathInterpretation<>( navigablePath, entityMapping, tableGroup, converter );
 		}
-		else {
-			final EmbeddedDiscriminatorSqmPath<?> embeddableDiscriminator = (EmbeddedDiscriminatorSqmPath<?>) path;
-			final DiscriminatorMapping discriminator = (DiscriminatorMapping) resolveMappingModelExpressible(
-					embeddableDiscriminator,
-					converter.getCreationContext().getMappingMetamodel(),
-					converter.getFromClauseAccess()::findTableGroup
-			);
+		else if ( path instanceof EmbeddedDiscriminatorSqmPath<?> embeddedDiscriminatorSqmPath ) {
 			return new DiscriminatorPathInterpretation<>(
 					navigablePath,
-					discriminator,
+					(DiscriminatorMapping)
+							resolveMappingModelExpressible(
+									embeddedDiscriminatorSqmPath,
+									converter.getCreationContext().getMappingMetamodel(),
+									converter.getFromClauseAccess()::findTableGroup
+							),
 					tableGroup,
 					converter
 			);
+		}
+		else {
+			throw new AssertionFailure( "Unrecognized path type" );
+		}
+	}
+
+	private static EntityMappingType entityMappingType(ModelPartContainer modelPart) {
+		if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+			return entityValuedModelPart.getEntityMappingType();
+		}
+		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping) {
+			return  (EntityMappingType) pluralAttributeMapping.getElementDescriptor().getPartMappingType();
+		}
+		else {
+			throw new AssertionFailure( "Unrecognized model part type" );
 		}
 	}
 

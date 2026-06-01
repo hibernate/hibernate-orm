@@ -295,7 +295,7 @@ public class SqmMutationStrategyHelper {
 			final String newPrefix = prefix + "_" + discriminatedPart.getPartName() + "_";
 			forEachSelectableMapping(
 					newPrefix + "discriminator",
-					discriminatedPart.getDiscriminatorPart(),
+					discriminatedPart.getDiscriminatorMapping(),
 					consumer
 			);
 			forEachSelectableMapping(

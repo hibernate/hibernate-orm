@@ -400,7 +400,8 @@ public class StructJdbcType implements StructuredJdbcType {
 			}
 			else if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping discriminatedMapping ) {
 				wrapRawJdbcValue(
-						discriminatedMapping.getDiscriminatorPart().getSingleJdbcMapping(),
+						discriminatedMapping.getDiscriminatorMapping()
+								.getSingleJdbcMapping(),
 						jdbcValues,
 						jdbcIndex,
 						options

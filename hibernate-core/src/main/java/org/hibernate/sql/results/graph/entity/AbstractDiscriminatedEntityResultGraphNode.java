@@ -39,7 +39,7 @@ public abstract class AbstractDiscriminatedEntityResultGraphNode implements Doma
 		this.fetches = creationState.visitFetches( this );
 		assert fetches.size() == 2;
 
-		discriminatorValueFetch = fetches.get( graphedPart.getDiscriminatorPart() );
+		discriminatorValueFetch = fetches.get( graphedPart.getDiscriminatorMapping() );
 		keyValueFetch = fetches.get( graphedPart.getKeyPart() );
 	}
 
@@ -87,7 +87,7 @@ public abstract class AbstractDiscriminatedEntityResultGraphNode implements Doma
 
 	@Override
 	public Fetch findFetch(Fetchable fetchable) {
-		if ( graphedPart.getDiscriminatorPart() == fetchable ) {
+		if ( graphedPart.getDiscriminatorMapping() == fetchable ) {
 			return discriminatorValueFetch;
 		}
 

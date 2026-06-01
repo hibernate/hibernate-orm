@@ -28,10 +28,10 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 			NonAggregatedCompositeSimplePath<T> sqmPath,
 			SqmToSqlAstConverter converter,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final TableGroup tableGroup =
+		final var tableGroup =
 				sqlAstCreationState.getFromClauseAccess()
 						.findTableGroup( sqmPath.getLhs().getNavigablePath() );
-		final NonAggregatedIdentifierMapping mapping =
+		final var mapping =
 				(NonAggregatedIdentifierMapping)
 						tableGroup.getModelPart()
 								.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );

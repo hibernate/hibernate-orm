@@ -183,7 +183,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return modelPart;
 	}
 
-	public DiscriminatorMapping getDiscriminatorPart() {
+	public DiscriminatorMapping getDiscriminatorMapping() {
 		return discriminatorPart;
 	}
 
@@ -213,23 +213,23 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			ModelPart.JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
-			valueConsumer.consume( offset, x, y, null, getDiscriminatorPart() );
+			valueConsumer.consume( offset, x, y, null, getDiscriminatorMapping() );
 			valueConsumer.consume( offset + 1, x, y, null, getKeyPart() );
-			return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+			return getDiscriminatorMapping().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 		}
 		else {
 			final var concreteMappingType = determineConcreteType( domainValue, session );
 
 			final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
-			final Object disassembledDiscriminator = getDiscriminatorPart().disassemble( discriminator, session );
-			valueConsumer.consume( offset, x, y, disassembledDiscriminator, getDiscriminatorPart() );
+			final Object disassembledDiscriminator = getDiscriminatorMapping().disassemble( discriminator, session );
+			valueConsumer.consume( offset, x, y, disassembledDiscriminator, getDiscriminatorMapping() );
 
 			final var identifierMapping = concreteMappingType.getIdentifierMapping();
 			final Object identifier = identifierMapping.getIdentifier( domainValue );
 			final Object disassembledKey = getKeyPart().disassemble( identifier, session );
 			valueConsumer.consume( offset + 1, x, y, disassembledKey, getKeyPart() );
 		}
-		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+		return getDiscriminatorMapping().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 	}
 
 	public <X, Y> int decompose(
@@ -240,20 +240,20 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			ModelPart.JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		if ( domainValue == null ) {
-			valueConsumer.consume( offset, x, y, null, getDiscriminatorPart() );
+			valueConsumer.consume( offset, x, y, null, getDiscriminatorMapping() );
 			valueConsumer.consume( offset + 1, x, y, null, getKeyPart() );
 		}
 		else {
 			final var concreteMappingType = determineConcreteType( domainValue, session );
 
 			final Object discriminator = getModelPart().resolveDiscriminatorForEntityType( concreteMappingType );
-			getDiscriminatorPart().decompose( discriminator, offset, x, y, valueConsumer, session );
+			getDiscriminatorMapping().decompose( discriminator, offset, x, y, valueConsumer, session );
 
 			final var identifierMapping = concreteMappingType.getIdentifierMapping();
 			final Object identifier = identifierMapping.getIdentifier( domainValue );
 			getKeyPart().decompose( identifier, offset + 1, x, y, valueConsumer, session );
 		}
-		return getDiscriminatorPart().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
+		return getDiscriminatorMapping().getJdbcTypeCount() + getKeyPart().getJdbcTypeCount();
 	}
 
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
@@ -267,7 +267,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 	public ModelPart findSubPart(String name, EntityMappingType treatTarget) {
 		if ( AnyDiscriminatorPart.ROLE_NAME.equals( name ) ) {
-			return getDiscriminatorPart();
+			return getDiscriminatorMapping();
 		}
 
 		if ( AnyKeyPart.KEY_NAME.equals( name ) ) {

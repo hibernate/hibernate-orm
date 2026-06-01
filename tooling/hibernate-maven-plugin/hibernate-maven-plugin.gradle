@@ -32,11 +32,7 @@ dependencies {
     implementation(libs.maven.pluginApi) {
         exclude group: 'com.google.guava', module: 'guava'
     }
-    implementation(libs.maven.fileManagement) {
-        // file-management 3.2.0 pulls in plexus-utils 4.x (via maven-parent:44) which is
-        // incompatible with Maven 3's runtime; exclude it so the 3.x version from maven-core wins
-        exclude group: 'org.codehaus.plexus', module: 'plexus-utils'
-    }
+    implementation(libs.maven.fileManagement)
 
     compileOnly libs.maven.pluginToolsAnnotations
 
@@ -48,6 +44,7 @@ dependencies {
     intTestRuntimeOnly libs.maven.resolverBasic
     intTestRuntimeOnly libs.test.logbackClassic
     intTestRuntimeOnly libs.maven.resolverHttp
+    intTestRuntimeOnly libs.maven.plexusXml
     intTestRuntimeOnly libs.jdbc.h2
 }
 

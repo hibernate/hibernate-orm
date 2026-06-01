@@ -93,10 +93,11 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 						resultBuilder.visitFetchBuilders( this::processFetchBuilder );
 					}
 					else if ( resultBuilder instanceof NativeQuery.CollectionReturn collectionReturn ) {
-						alias2Return.put( collectionReturn.getTableAlias(), collectionReturn );
+						final String tableAlias = collectionReturn.getTableAlias();
+						alias2Return.put( tableAlias, collectionReturn );
 						addCollection(
 								collectionReturn.getNavigablePath().getFullPath(),
-								collectionReturn.getTableAlias(),
+								tableAlias,
 								emptyMap() //fetchReturn.getPropertyResultsMap()
 						);
 					}
@@ -150,28 +151,30 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			ResultBuilder resultBuilder,
 			Set<String> visited) {
 		if ( resultBuilder instanceof NativeQuery.RootReturn rootReturn ) {
-			final String suffix = alias2Suffix.get( rootReturn.getTableAlias() );
-			visited.add( rootReturn.getTableAlias() );
+			final String tableAlias = rootReturn.getTableAlias();
+			final String suffix = alias2Suffix.get( tableAlias );
+			visited.add( tableAlias );
 			if ( suffix == null ) {
 				resultSetMapping.addResultBuilder( resultBuilder );
 			}
 			else {
 				final var resultBuilderEntity = createSuffixedResultBuilder( rootReturn, suffix );
 				resultSetMapping.addResultBuilder( resultBuilderEntity );
-				alias2Return.put( rootReturn.getTableAlias(), resultBuilderEntity );
+				alias2Return.put( tableAlias, resultBuilderEntity );
 			}
 		}
 		else if ( resultBuilder instanceof NativeQuery.CollectionReturn collectionReturn ) {
-			final String suffix = alias2CollectionSuffix.get( collectionReturn.getTableAlias() );
+			final String tableAlias = collectionReturn.getTableAlias();
+			final String suffix = alias2CollectionSuffix.get( tableAlias );
 			if ( suffix == null ) {
 				resultSetMapping.addResultBuilder( resultBuilder );
 			}
 			else {
 				final var resultBuilderCollection =
 						createSuffixedResultBuilder( collectionReturn, suffix,
-								alias2Suffix.get( collectionReturn.getTableAlias() ) );
+								alias2Suffix.get( tableAlias ) );
 				resultSetMapping.addResultBuilder( resultBuilderCollection );
-				alias2Return.put( collectionReturn.getTableAlias(), resultBuilderCollection );
+				alias2Return.put( tableAlias, resultBuilderCollection );
 			}
 		}
 		else {
@@ -183,21 +186,23 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			ResultSetMapping resultSetMapping,
 			LegacyFetchBuilder fetchBuilder,
 			Set<String> visited) {
-		if ( !visited.add( fetchBuilder.getTableAlias() ) ) {
+		final String tableAlias = fetchBuilder.getTableAlias();
+		if ( !visited.add( tableAlias ) ) {
 			return;
 		}
 
-		final String suffix = alias2Suffix.get( fetchBuilder.getTableAlias() );
+		final String suffix = alias2Suffix.get( tableAlias );
 		if ( suffix == null ) {
 			resultSetMapping.addLegacyFetchBuilder( fetchBuilder );
 		}
 		else {
-			if ( !visited.contains( fetchBuilder.getOwnerAlias() ) ) {
+			final String ownerAlias = fetchBuilder.getOwnerAlias();
+			if ( !visited.contains( ownerAlias ) ) {
 				applyFetchBuilder(
 						resultSetMapping,
 						// At this point, only legacy fetch builders weren't visited
 						(DynamicFetchBuilderLegacy)
-								alias2Return.get( fetchBuilder.getOwnerAlias() ),
+								alias2Return.get( ownerAlias ),
 						visited
 				);
 			}
@@ -206,29 +211,30 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			// we can add this builder
 			final var ownerBuilder =
 					(DynamicResultBuilderEntityStandard)
-							alias2Return.get( fetchBuilder.getOwnerAlias() );
+							alias2Return.get( ownerAlias );
 			final var resultBuilderEntity =
 					createSuffixedResultBuilder(
-							alias2Persister.get( fetchBuilder.getTableAlias() )
+							alias2Persister.get( tableAlias )
 									.findContainingEntityMapping(),
-							fetchBuilder.getTableAlias(),
+							tableAlias,
 							suffix,
 							null,
 							determineNavigablePath( fetchBuilder )
 					);
+			final var fetchable = fetchBuilder.getFetchable();
 			ownerBuilder.addFetchBuilder(
-					fetchBuilder.getFetchable(),
+					fetchable,
 					new DynamicFetchBuilderLegacy(
-							fetchBuilder.getTableAlias(),
-							fetchBuilder.getOwnerAlias(),
-							fetchBuilder.getFetchable(),
+							tableAlias,
+							ownerAlias,
+							fetchable,
 							columnNames( resultBuilderEntity, fetchBuilder ),
 							emptyMap(),
 							resultBuilderEntity
 					)
 			);
 //			resultSetMapping.addResultBuilder( resultBuilderEntity );
-			alias2Return.put( fetchBuilder.getTableAlias(), resultBuilderEntity );
+			alias2Return.put( tableAlias, resultBuilderEntity );
 		}
 	}
 
@@ -240,12 +246,13 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 						.getSubclassPropertyColumnAliases( fetchBuilder.getFetchable().getFetchableName(),
 								alias2Suffix.get( fetchBuilder.getOwnerAlias() ) );
 		if ( columnAliases.length == 0 ) {
-			final var collectionPersister = alias2CollectionPersister.get( fetchBuilder.getTableAlias() );
+			final String tableAlias = fetchBuilder.getTableAlias();
+			final var collectionPersister = alias2CollectionPersister.get( tableAlias );
 			if ( collectionPersister == null ) {
 				return emptyList();
 			}
 			else {
-				final String collectionSuffix = alias2CollectionSuffix.get( fetchBuilder.getTableAlias() );
+				final String collectionSuffix = alias2CollectionSuffix.get( tableAlias );
 				if ( collectionPersister.hasIndex() ) {
 					final var fetchable = (PluralAttributeMapping) fetchBuilder.getFetchable();
 					resultBuilder.addProperty( fetchable.getIndexDescriptor(),
@@ -260,33 +267,38 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private NavigablePath determineNavigablePath(LegacyFetchBuilder fetchBuilder) {
-		final var ownerResult = alias2Return.get( fetchBuilder.getOwnerAlias() );
-		final NavigablePath basePath;
+		final String ownerAlias = fetchBuilder.getOwnerAlias();
+		final var basePath = determineBasePath( alias2Return.get( ownerAlias ) );
+		final var path =
+				alias2CollectionPersister.containsKey( ownerAlias )
+						? basePath.append( CollectionPart.Nature.ELEMENT.getName() )
+						: basePath;
+		return path.append( fetchBuilder.getFetchable().getFetchableName() );
+	}
+
+	private NavigablePath determineBasePath(NativeQuery.ResultNode ownerResult) {
 		if ( ownerResult instanceof NativeQuery.RootReturn rootReturn ) {
-			basePath = rootReturn.getNavigablePath();
+			return rootReturn.getNavigablePath();
 		}
 		else if ( ownerResult instanceof DynamicFetchBuilderLegacy dynamicFetchBuilderLegacy ) {
-			basePath = determineNavigablePath( dynamicFetchBuilderLegacy );
+			return determineNavigablePath( dynamicFetchBuilderLegacy );
 		}
 		else {
 			throw new AssertionFailure( "Unexpected fetch builder" );
 		}
-		final NavigablePath path = alias2CollectionPersister.containsKey( fetchBuilder.getOwnerAlias() )
-				? basePath.append( CollectionPart.Nature.ELEMENT.getName() )
-				: basePath;
-		return path.append( fetchBuilder.getFetchable().getFetchableName() );
 	}
 
 	private DynamicResultBuilderEntityStandard createSuffixedResultBuilder(
 			NativeQuery.RootReturn rootReturn,
 			String suffix) {
+		final var entityMapping = rootReturn.getEntityMapping();
+		final String tableAlias = rootReturn.getTableAlias();
 		return createSuffixedResultBuilder(
-				rootReturn.getEntityMapping(),
-				rootReturn.getTableAlias(),
+				entityMapping,
+				tableAlias,
 				suffix,
 				rootReturn.getLockMode(),
-				new NavigablePath( rootReturn.getEntityMapping().getEntityName(),
-						rootReturn.getTableAlias() )
+				new NavigablePath( entityMapping.getEntityName(), tableAlias )
 		);
 	}
 
@@ -301,7 +313,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		resultBuilderEntity.setLockMode( lockMode );
 
 		final var persister = entityMapping.getEntityPersister();
-		final String[] identifierAliases = persister.getIdentifierAliases( suffix );
+		final var identifierAliases = persister.getIdentifierAliases( suffix );
 		resultBuilderEntity.addIdColumnAliases( identifierAliases );
 		resultBuilderEntity.setDiscriminatorAlias( persister.getDiscriminatorAlias( suffix ) );
 		if ( persister.hasIdentifierProperty() ) {
@@ -354,11 +366,8 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					asList( columnAliases ),
 					new HashMap<>()
 			);
-			final String[] propertyNames = componentType.getPropertyNames();
-			final Type[] propertyTypes = componentType.getSubtypes();
 			int aliasIndex = 0;
-			for ( int i = 0; i < propertyNames.length; i++ ) {
-				final Type type = propertyTypes[i];
+			for ( var type : componentType.getSubtypes() ) {
 				final int columnSpan = type.getColumnSpan( loadable.getFactory().getRuntimeMetamodels() );
 				addFetchBuilder(
 						suffix,
@@ -384,10 +393,14 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 					final String[] targetAliases = new String[1];
 					targetAliases[0] = toOne.getTargetKeyPropertyName();
 					resultBuilderEntity.addProperty( fetchable, targetAliases );
-					return;
+				}
+				else {
+					resultBuilderEntity.addProperty( fetchable, columnAliases );
 				}
 			}
-			resultBuilderEntity.addProperty( fetchable, columnAliases );
+			else {
+				resultBuilderEntity.addProperty( fetchable, columnAliases );
+			}
 		}
 	}
 
@@ -412,8 +425,8 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			String suffix, String entitySuffix, CollectionPersister collectionPersister) {
 		if ( collectionPersister.getElementType().isEntityType() ) {
 			final var elementPersister = collectionPersister.getElementPersister();
-			final String[] propertyNames = elementPersister.getPropertyNames();
-			final String[] identifierAliases = elementPersister.getIdentifierAliases( entitySuffix );
+			final var propertyNames = elementPersister.getPropertyNames();
+			final var identifierAliases = elementPersister.getIdentifierAliases( entitySuffix );
 			final String discriminatorAlias = elementPersister.getDiscriminatorAlias( entitySuffix );
 			final int size =
 					propertyNames.length + identifierAliases.length
@@ -538,7 +551,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 			final var ownerPersister = alias2Persister.get( ownerAlias );
 			final String fetchableName = fetchReturn.getFetchable().getFetchableName();
-			final Type returnType = ownerPersister.getPropertyType( fetchableName );
+			final var returnType = ownerPersister.getPropertyType( fetchableName );
 			if ( returnType instanceof CollectionType ) {
 				addCollection(
 						ownerPersister.getEntityName() + '.' + fetchableName,

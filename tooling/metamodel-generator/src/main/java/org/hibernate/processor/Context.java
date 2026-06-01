@@ -106,7 +106,7 @@ public final class Context {
 
 	private boolean usesQuarkusOrm = false;
 	private boolean usesQuarkusReactive = false;
-	private boolean usesQuarkusPanache2 = false;
+	private boolean usesQuarkusDataHibernate = false;
 	private boolean usesQuarkusReactiveCommon = false;
 
 	private String[] includes = {"*"};
@@ -474,12 +474,12 @@ public final class Context {
 		return usesQuarkusReactive;
 	}
 
-	public void setUsesQuarkusPanache2(boolean b) {
-		usesQuarkusPanache2 = b;
+	public void setUsesQuarkusDataHibernate(boolean b) {
+		usesQuarkusDataHibernate = b;
 	}
 
-	public boolean usesQuarkusPanache2() {
-		return usesQuarkusPanache2;
+	public boolean usesQuarkusDataHibernate() {
+		return usesQuarkusDataHibernate;
 	}
 
 	public void setUsesQuarkusReactiveCommon(boolean b) {

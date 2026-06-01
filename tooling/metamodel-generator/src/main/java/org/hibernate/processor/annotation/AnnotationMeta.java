@@ -39,6 +39,10 @@ public abstract class AnnotationMeta implements Metamodel {
 		addAuxiliaryMembersForRepeatableAnnotation( Constants.NAMED_QUERIES, "QUERY_" );
 		addAuxiliaryMembersForAnnotation( Constants.NAMED_NATIVE_QUERY, "QUERY_" );
 		addAuxiliaryMembersForRepeatableAnnotation( Constants.NAMED_NATIVE_QUERIES, "QUERY_" );
+		addAuxiliaryMembersForAnnotation( Constants.NAMED_STATEMENT, "STATEMENT_" );
+		addAuxiliaryMembersForRepeatableAnnotation( Constants.NAMED_STATEMENTS, "STATEMENT_" );
+		addAuxiliaryMembersForAnnotation( Constants.NAMED_NATIVE_STATEMENT, "STATEMENT_" );
+		addAuxiliaryMembersForRepeatableAnnotation( Constants.NAMED_NATIVE_STATEMENTS, "STATEMENT_" );
 		addAuxiliaryMembersForAnnotation( Constants.SQL_RESULT_SET_MAPPING, "MAPPING_" );
 		addAuxiliaryMembersForRepeatableAnnotation( Constants.SQL_RESULT_SET_MAPPINGS, "MAPPING_" );
 		addAuxiliaryMembersForAnnotation( Constants.NAMED_ENTITY_GRAPH, "GRAPH_" );
@@ -208,6 +212,8 @@ public abstract class AnnotationMeta implements Metamodel {
 			case "GRAPH_" ->
 					new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
 							ENTITY_GRAPH, null );
+			case "STATEMENT_" ->
+					new StatementMetaAttribute( this, name, prefix, statementString( mirror ) );
 			case "PROFILE_" ->
 					new EnabledFetchProfileMetaAttribute( this, name, prefix,
 							HIB_ENABLED_FETCH_PROFILE );
@@ -216,6 +222,11 @@ public abstract class AnnotationMeta implements Metamodel {
 			default ->
 					new NameMetaAttribute( this, name, prefix );
 		};
+	}
+
+	private static @Nullable String statementString(AnnotationMirror mirror) {
+		final AnnotationValue statement = getAnnotationValue( mirror, "statement" );
+		return statement == null ? null : statement.getValue().toString();
 	}
 
 	protected String getSessionVariableName() {

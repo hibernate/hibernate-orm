@@ -198,8 +198,13 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 
 	@Override
 	public <R> ColumnMapping<R> toJpaMappingElement(SessionFactory sessionFactory) {
+		final Class<?> resultJavaType = getResultJavaType();
+		if ( resultJavaType == null ) {
+			//noinspection unchecked
+			return (ColumnMapping<R>) ColumnMapping.of( explicitColumnName );
+		}
 		//noinspection unchecked
-		return ColumnMapping.of( explicitColumnName, (Class<R>) getResultJavaType() );
+		return ColumnMapping.of( explicitColumnName, (Class<R>) resultJavaType );
 	}
 
 	@Override

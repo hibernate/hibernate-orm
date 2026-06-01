@@ -58,11 +58,20 @@ public class InjectionHelper {
 		if ( metamodelClass != null ) {
 			final String fieldName = '_' + javaIdentifier( definition.getRegistrationName() );
 			try {
+				metamodelClass.getDeclaredField( fieldName );
 				final var memento = definition.resolve( () -> sessionFactory );
 				injectField( metamodelClass, fieldName, memento.toJpaMapping( sessionFactory ), false );
 			}
 			catch ( NoSuchFieldException e ) {
 				// ignore
+			}
+			catch ( RuntimeException e ) {
+				CORE_LOGGER.debugf(
+						e,
+						"Unable to inject result set mapping reference [%s] into static metamodel class [%s]",
+						definition.getRegistrationName(),
+						metamodelClass.getName()
+				);
 			}
 		}
 	}

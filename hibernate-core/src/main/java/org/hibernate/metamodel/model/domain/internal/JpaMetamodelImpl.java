@@ -693,25 +693,32 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 		applyNamedEntityGraphs( namedEntityGraphDefinitions );
 
-		populateStaticMetamodel( bootMetamodel, context, runtimeModelCreationContext.getSessionFactory() );
+		populateStaticMetamodel( bootMetamodel, context );
 	}
 
 	private void populateStaticMetamodel(
 			MetadataImplementor bootMetamodel,
-			MetadataContext context,
-			SessionFactoryImplementor sessionFactory) {
+			MetadataContext context) {
 		bootMetamodel.visitNamedHqlQueryDefinitions( definition
 				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
 		bootMetamodel.visitNamedNativeQueryDefinitions( definition
 				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
+		for ( var definition : bootMetamodel.getNamedEntityGraphs().values() ) {
+			if ( definition.entityName() != null ) {
+				injectEntityGraph( definition, graphMetamodelClass( definition, context ), this );
+			}
+		}
+	}
+
+	public void populateStaticMetamodelResultSetMappings(
+			MetadataImplementor bootMetamodel,
+			SessionFactoryImplementor sessionFactory) {
 		bootMetamodel.visitNamedResultSetMappingDefinition( definition
 				-> injectResultSetMapping(
 						definition,
-						resultSetMappingMetamodelClass( definition, context ),
+						resultSetMappingMetamodelClass( definition ),
 						sessionFactory
 				) );
-		bootMetamodel.getNamedEntityGraphs().values().stream().filter( (definition) -> definition.entityName() != null )
-				.forEach( definition -> injectEntityGraph( definition, graphMetamodelClass( definition, context ), this ) );
 	}
 
 	private Class<?> namedQueryMetamodelClass(NamedQueryDefinition<?> definition, MetadataContext context) {
@@ -719,13 +726,31 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return location == null ? null : context.metamodelClass( managedTypeByName.get( location ) );
 	}
 
-	private Class<?> resultSetMappingMetamodelClass(NamedResultSetMappingDescriptor definition, MetadataContext context) {
+	private Class<?> resultSetMappingMetamodelClass(NamedResultSetMappingDescriptor definition) {
 		final String location = definition.getLocation();
-		return location == null ? null : context.metamodelClass( managedTypeByName.get( location ) );
+		return location == null ? null : metamodelClass( managedTypeByName.get( location ) );
 	}
 
 	private Class<?> graphMetamodelClass(NamedEntityGraphDefinition definition, MetadataContext context) {
 		return context.metamodelClass( managedTypeByName.get( definition.entityName() ) );
+	}
+
+	private Class<?> metamodelClass(ManagedDomainType<?> managedDomainType) {
+		if ( managedDomainType == null ) {
+			return null;
+		}
+		try {
+			return classLoaderService.classForName( metamodelClassName( managedDomainType.getJavaType() ) );
+		}
+		catch ( ClassLoadingException ignore ) {
+			return null;
+		}
+	}
+
+	private static String metamodelClassName(Class<?> javaType) {
+		return javaType.isMemberClass()
+				? metamodelClassName( javaType.getEnclosingClass() ) + "$" + javaType.getSimpleName() + "_"
+				: javaType.getName() + '_';
 	}
 
 	public static void addAllowedEnumLiteralsToEnumTypesMap(

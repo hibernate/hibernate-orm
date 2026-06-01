@@ -90,6 +90,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -360,6 +361,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// really know or control who's calling back to us while
 			// we're in an incompletely-initialized state
 			typeConfiguration.scope( this );
+
+			if ( mappingMetamodelImpl.getJpaMetamodel() instanceof JpaMetamodelImpl jpaMetamodel ) {
+				jpaMetamodel.populateStaticMetamodelResultSetMappings( bootMetamodel, this );
+			}
 
 			actionQueueFactory = serviceRegistry.requireService( ActionQueueFactoryService.class )
 					.buildActionQueueFactory( this );

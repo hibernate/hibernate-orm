@@ -13,6 +13,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -22,7 +23,6 @@ import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
 import org.hibernate.collection.internal.StandardListSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -35,7 +35,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
@@ -59,6 +58,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -72,6 +72,7 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
@@ -213,9 +214,7 @@ public class MappingModelCreationHelper {
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
-			PropertyAccess propertyAccess,
-			CascadeStyle cascadeStyle,
-			MappingModelCreationProcess creationProcess) {
+			PropertyAccess propertyAccess) {
 		final var value = (SimpleValue) bootProperty.getValue();
 		final var resolution = ( (Resolvable) value ).resolve();
 		final var attributeMetadata =
@@ -489,7 +488,6 @@ public class MappingModelCreationHelper {
 		final var bootValueMapping = (Collection) bootProperty.getValue();
 
 		final var creationContext = creationProcess.getCreationContext();
-		final var dialect = creationContext.getDialect();
 		final var domainModel = creationContext.getDomainModel();
 
 		final var collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
@@ -506,7 +504,6 @@ public class MappingModelCreationHelper {
 				tableExpression,
 				collectionDescriptor,
 				sqlAliasStem,
-				dialect,
 				creationProcess
 		);
 
@@ -521,27 +518,13 @@ public class MappingModelCreationHelper {
 						jtdRegistry.getDescriptor( Object[].class ),
 						StandardArraySemantics.INSTANCE
 				);
-
-				final var index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
-				final var selectableMapping = SelectableMappingImpl.from(
-						tableExpression,
-						index.getSelectables().get( 0 ),
-						null, // No support for @OrderFormula
-						null,
-						creationContext.getTypeConfiguration()
-								.getBasicTypeForJavaType( Integer.class ),
-						index.isColumnInsertable( 0 ),
-						index.isColumnUpdateable( 0 ),
-						false,
-						false,
-						creationProcess.getCreationContext()
-				);
-				indexDescriptor = new BasicValuedCollectionPart(
+				indexDescriptor = collectionPart(
+						creationProcess,
+						(IndexedCollection) bootValueMapping,
+						creationContext,
 						collectionDescriptor,
-						CollectionPart.Nature.INDEX,
-						selectableMapping
+						tableExpression
 				);
-
 				break;
 			}
 			case BAG: {
@@ -549,9 +532,7 @@ public class MappingModelCreationHelper {
 						jtdRegistry.getDescriptor( java.util.Collection.class ),
 						StandardBagSemantics.INSTANCE
 				);
-
 				indexDescriptor = null;
-
 				break;
 			}
 			case ID_BAG: {
@@ -559,47 +540,29 @@ public class MappingModelCreationHelper {
 						jtdRegistry.getDescriptor( java.util.Collection.class ),
 						StandardIdentifierBagSemantics.INSTANCE
 				);
-
 				indexDescriptor = null;
-
 				final String identifierColumnName = collectionDescriptor.getIdentifierColumnName();
 				assert identifierColumnName != null;
-
 				identifierDescriptor = new CollectionIdentifierDescriptorImpl(
 						collectionDescriptor,
 						tableExpression,
 						identifierColumnName,
 						(BasicType<?>) collectionDescriptor.getIdentifierType()
 				);
-
 				break;
 			}
 			case LIST: {
-				final var index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
-				final var selectableMapping = SelectableMappingImpl.from(
-						tableExpression,
-						index.getSelectables().get( 0 ),
-						null, // No support for @OrderFormula
-						null,
-						creationContext.getTypeConfiguration()
-								.getBasicTypeForJavaType( Integer.class ),
-						index.isColumnInsertable( 0 ),
-						index.isColumnUpdateable( 0 ),
-						false,
-						false,
-						creationProcess.getCreationContext()
-				);
-				indexDescriptor = new BasicValuedCollectionPart(
+				indexDescriptor = collectionPart(
+						creationProcess,
+						(IndexedCollection) bootValueMapping,
+						creationContext,
 						collectionDescriptor,
-						CollectionPart.Nature.INDEX,
-						selectableMapping
+						tableExpression
 				);
-
 				collectionMappingType = new CollectionMappingTypeImpl<>(
 						jtdRegistry.getDescriptor( List.class ),
 						StandardListSemantics.INSTANCE
 				);
-
 				break;
 			}
 			case MAP:
@@ -622,10 +585,8 @@ public class MappingModelCreationHelper {
 						collectionDescriptor,
 						mapKeyTableExpression,
 						sqlAliasStem,
-						dialect,
 						creationProcess
 				);
-
 				break;
 			}
 			case SET:
@@ -641,7 +602,6 @@ public class MappingModelCreationHelper {
 				);
 
 				indexDescriptor = null;
-
 				break;
 			}
 			default: {
@@ -718,7 +678,6 @@ public class MappingModelCreationHelper {
 							bootValueMapping,
 							collectionDescriptor,
 							declaringType,
-							dialect,
 							creationProcess
 					);
 					return true;
@@ -728,15 +687,43 @@ public class MappingModelCreationHelper {
 		return pluralAttributeMapping;
 	}
 
+	@Nonnull
+	private static CollectionPart collectionPart(
+			MappingModelCreationProcess creationProcess,
+			IndexedCollection bootValueMapping,
+			RuntimeModelCreationContext creationContext,
+			CollectionPersister collectionDescriptor,
+			String tableExpression) {
+		final var index = (BasicValue) bootValueMapping.getIndex();
+		final var selectableMapping = SelectableMappingImpl.from(
+				tableExpression,
+				index.getSelectables().get( 0 ),
+				null, // No support for @OrderFormula
+				null,
+				creationContext.getTypeConfiguration()
+						.getBasicTypeForJavaType( Integer.class ),
+				index.isColumnInsertable( 0 ),
+				index.isColumnUpdateable( 0 ),
+				false,
+				false,
+				creationProcess.getCreationContext()
+		);
+		return new BasicValuedCollectionPart(
+				collectionDescriptor,
+				CollectionPart.Nature.INDEX,
+				selectableMapping
+		);
+	}
+
 	private static void interpretPluralAttributeMappingKeyDescriptor(
 			PluralAttributeMappingImpl attributeMapping,
 			Collection bootValueMapping,
 			CollectionPersister collectionDescriptor,
 			ManagedMappingType declaringType,
-			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
+		final String mappedByProperty = collectionDescriptor.getMappedByProperty();
 		final ModelPart attributeMappingSubPart;
-		if ( isEmpty( collectionDescriptor.getMappedByProperty() ) ) {
+		if ( isEmpty( mappedByProperty ) ) {
 			attributeMappingSubPart = null;
 		}
 		else {
@@ -744,7 +731,7 @@ public class MappingModelCreationHelper {
 					(ModelPartContainer)
 							attributeMapping.getElementDescriptor().getPartMappingType();
 			attributeMappingSubPart =
-					partMappingType.findSubPart( collectionDescriptor.getMappedByProperty(), null );
+					partMappingType.findSubPart( mappedByProperty, null );
 		}
 
 		if ( attributeMappingSubPart instanceof ToOneAttributeMapping referencedAttributeMapping ) {
@@ -752,15 +739,14 @@ public class MappingModelCreationHelper {
 					attributeMapping,
 					referencedAttributeMapping,
 					referencedAttributeMapping.findContainingEntityMapping().getEntityPersister(),
-					collectionDescriptor.getMappedByProperty(),
-					dialect,
+					mappedByProperty,
 					creationProcess
 			);
 			return;
 		}
 
-		final KeyValue bootValueMappingKey = bootValueMapping.getKey();
-		final Type keyType = bootValueMappingKey.getType();
+		final var bootValueMappingKey = bootValueMapping.getKey();
+		final var keyType = bootValueMappingKey.getType();
 		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
 		final boolean isReferenceToPrimaryKey = lhsPropertyName == null;
 		final String collectionTableName = collectionDescriptor.getTableName();
@@ -822,7 +808,6 @@ public class MappingModelCreationHelper {
 					false,
 					bootValueMappingKey.getColumnInsertability(),
 					bootValueMappingKey.getColumnUpdateability(),
-					dialect,
 					creationProcess
 			);
 
@@ -837,7 +822,8 @@ public class MappingModelCreationHelper {
 	}
 
 	static String getCollectionPropertyPath(CollectionPersister collectionPersister) {
-		return collectionPersister.getNavigableRole().getFullPath().substring( collectionPersister.getOwnerEntityPersister().getNavigableRole().getFullPath().length() + 1 );
+		return collectionPersister.getNavigableRole().getFullPath()
+				.substring( collectionPersister.getOwnerEntityPersister().getNavigableRole().getFullPath().length() + 1 );
 	}
 
 	static String getPropertyPath(NavigableRole navigableRole) {
@@ -860,7 +846,6 @@ public class MappingModelCreationHelper {
 	 * @param bootProperty The property
 	 * @param bootValueMapping The value mapping
 	 * @param inversePropertyAccess Access to the inverse property
-	 * @param dialect Current dialect
 	 * @param creationProcess Current creation process
 	 * @return true if the foreign key is actually set
 	 */
@@ -869,7 +854,6 @@ public class MappingModelCreationHelper {
 			Property bootProperty,
 			ToOne bootValueMapping,
 			PropertyAccess inversePropertyAccess,
-			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		if ( attributeMapping.getForeignKeyDescriptor() != null ) {
 			// already built/known
@@ -917,7 +901,6 @@ public class MappingModelCreationHelper {
 						toOneAttributeMapping,
 						referencedEntityDescriptor,
 						referencedPropertyName,
-						dialect,
 						creationProcess
 				);
 			}
@@ -932,7 +915,6 @@ public class MappingModelCreationHelper {
 						true,
 						bootValueMapping.getColumnInsertability(),
 						bootValueMapping.getColumnUpdateability(),
-						dialect,
 						creationProcess
 				);
 				attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
@@ -1026,7 +1008,6 @@ public class MappingModelCreationHelper {
 					swapDirection,
 					value.getColumnInsertability(),
 					value.getColumnUpdateability(),
-					dialect,
 					creationProcess
 			);
 			attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
@@ -1130,7 +1111,6 @@ public class MappingModelCreationHelper {
 			boolean inverse,
 			boolean[] insertable,
 			boolean[] updateable,
-			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		final var parentSelectablePath = getSelectablePath( keyDeclaringType );
 		final boolean hasConstraint;
@@ -1153,7 +1133,6 @@ public class MappingModelCreationHelper {
 			);
 		}
 		else {
-
 			hasConstraint =
 					bootValueMapping instanceof OneToMany
 							// We assume there is a constraint if the mapping is not nullable
@@ -1268,24 +1247,14 @@ public class MappingModelCreationHelper {
 			ToOneAttributeMapping referencedAttributeMapping,
 			EntityPersister referencedEntityDescriptor,
 			String referencedPropertyName,
-			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
-		var foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
-		if ( foreignKeyDescriptor == null ) {
-			final var entityBinding =
-					creationProcess.getCreationContext().getBootModel()
-							.getEntityBinding( referencedEntityDescriptor.getEntityName() );
-			final var property = entityBinding.getRecursiveProperty( referencedPropertyName );
-			interpretToOneKeyDescriptor(
-					referencedAttributeMapping,
-					property,
-					(ToOne) property.getValue(),
-					referencedAttributeMapping.getPropertyAccess(),
-					dialect,
-					creationProcess
-			);
-			foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
-		}
+		final var foreignKeyDescriptor =
+				foreignKeyDescriptor(
+						referencedAttributeMapping,
+						referencedEntityDescriptor,
+						referencedPropertyName,
+						creationProcess
+				);
 
 		final var declaringEntityMapping = attributeMapping.findContainingEntityMapping();
 		final var targetPart = foreignKeyDescriptor.getTargetPart();
@@ -1301,6 +1270,31 @@ public class MappingModelCreationHelper {
 		}
 		else {
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
+		}
+	}
+
+	private static ForeignKeyDescriptor foreignKeyDescriptor(
+			ToOneAttributeMapping referencedAttributeMapping,
+			EntityPersister referencedEntityDescriptor,
+			String referencedPropertyName,
+			MappingModelCreationProcess creationProcess) {
+		final var foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
+		if ( foreignKeyDescriptor == null ) {
+			final var entityBinding =
+					creationProcess.getCreationContext().getBootModel()
+							.getEntityBinding( referencedEntityDescriptor.getEntityName() );
+			final var property = entityBinding.getRecursiveProperty( referencedPropertyName );
+			interpretToOneKeyDescriptor(
+					referencedAttributeMapping,
+					property,
+					(ToOne) property.getValue(),
+					referencedAttributeMapping.getPropertyAccess(),
+					creationProcess
+			);
+			return referencedAttributeMapping.getForeignKeyDescriptor();
+		}
+		else {
+			return foreignKeyDescriptor;
 		}
 	}
 
@@ -1323,7 +1317,6 @@ public class MappingModelCreationHelper {
 			CollectionPersister collectionDescriptor,
 			String tableExpression,
 			String sqlAliasStem,
-			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		assert bootValueMapping instanceof IndexedCollection;
 		final var indexedCollection = (IndexedCollection) bootValueMapping;
@@ -1434,7 +1427,6 @@ public class MappingModelCreationHelper {
 			String tableExpression,
 			CollectionPersister collectionDescriptor,
 			String sqlAliasStem,
-			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		final Value element = bootDescriptor.getElement();
 
@@ -1890,7 +1882,6 @@ public class MappingModelCreationHelper {
 							bootProperty,
 							(ToOne) bootProperty.getValue(),
 							null,
-							creationProcess.getCreationContext().getDialect(),
 							creationProcess
 					)
 			);

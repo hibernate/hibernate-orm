@@ -377,9 +377,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						nullable,
 						value.isColumnInsertable( 0 ),
 						value.isColumnUpdateable( 0 ),
-						propertyAccess,
-						compositeType.getCascadeStyle( attributeIndex ),
-						creationProcess
+						propertyAccess
 				);
 
 				columnPosition++;
@@ -389,16 +387,16 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 				final boolean nullable = bootValueMapping.isNullable();
 				final boolean insertable = value.isColumnInsertable( 0 );
-				final boolean updateable = value.isColumnUpdateable( 0 );
+				final boolean updatable = value.isColumnUpdateable( 0 );
 				final boolean includeInOptimisticLocking = bootPropertyDescriptor.isOptimisticLocked();
 				final var cascadeStyle = compositeType.getCascadeStyle( attributeIndex );
 
 				final var attributeMetadataAccess = new SimpleAttributeMetadata(
 						propertyAccess,
-						getMutabilityPlan( updateable ),
+						getMutabilityPlan( updatable ),
 						nullable,
 						insertable,
-						updateable,
+						updatable,
 						includeInOptimisticLocking,
 						true,
 						cascadeStyle

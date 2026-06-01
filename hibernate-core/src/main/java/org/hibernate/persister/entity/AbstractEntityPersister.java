@@ -5977,9 +5977,7 @@ public abstract class AbstractEntityPersister
 					column.isNullable(),
 					value.isColumnInsertable( 0 ),
 					value.isColumnUpdateable( 0 ),
-					propertyAccess,
-					cascadeStyle,
-					creationProcess
+					propertyAccess
 			);
 		}
 
@@ -6083,9 +6081,7 @@ public abstract class AbstractEntityPersister
 					nullable,
 					value.isColumnInsertable( 0 ),
 					value.isColumnUpdateable( 0 ),
-					propertyAccess,
-					cascadeStyle,
-					creationProcess
+					propertyAccess
 			);
 		}
 		else if ( attrType instanceof AnyType anyType ) {
@@ -6116,7 +6112,7 @@ public abstract class AbstractEntityPersister
 					creationProcess
 			);
 		}
-		else if ( attrType instanceof CompositeType ) {
+		else if ( attrType instanceof CompositeType compositeType ) {
 			return buildEmbeddedAttributeMapping(
 					attrName,
 					stateArrayPosition,
@@ -6125,7 +6121,7 @@ public abstract class AbstractEntityPersister
 					bootProperty.getValue() instanceof DependantValue depValue ? depValue : null,
 					0,
 					this,
-					(CompositeType) attrType,
+					compositeType,
 					tableExpression,
 					null,
 					propertyAccess,

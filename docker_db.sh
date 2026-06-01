@@ -62,25 +62,25 @@ COMPOSE_PROJECT="hibernate_orm"
 compose_up() {
     local compose_file="docker-compose/$1"
     local max_retries="${2:-120}"
-    local extra_files=""
+    local compose_args=(-p "$COMPOSE_PROJECT" -f "$compose_file")
 
     if [[ "$IS_OSX" == "true" ]]; then
         local osx_override="$(dirname "$compose_file")/osx-override.yml"
         if [[ -f "$osx_override" ]]; then
-            extra_files="-f $osx_override"
+            compose_args+=(-f "$osx_override")
         fi
     fi
 
     echo "Starting database using $compose_file"
 
-    $CONTAINER_CLI compose -p "$COMPOSE_PROJECT" -f "$compose_file" $extra_files up -d $COMPOSE_WAIT $REMOVE_ORPHANS || {
+    $CONTAINER_CLI compose "${compose_args[@]}" up -d $COMPOSE_WAIT $REMOVE_ORPHANS || {
         echo "Error: Docker compose failed to start."
         exit 1
     }
 
     # Docker would already wait for a healthy container but with podman there may be issues
     #  in that case we just run an extra check to be caution:
-    compose_wait "$max_retries" -p "$COMPOSE_PROJECT" -f "$compose_file"
+    compose_wait "$max_retries" "${compose_args[@]}"
 }
 
 compose_down() {
@@ -394,6 +394,7 @@ db2_11_5() {
     db2_osx_setup
     compose_up "versioned/db2-11.5/docker-compose.yaml"
     db2_post_setup
+    db2_warn_if_localhost_port_shadowed
 }
 
 db2_12_1() {
@@ -402,6 +403,7 @@ db2_12_1() {
     compose_up "latest/db2/docker-compose.yaml"
     db2_post_setup
     db2_setup
+    db2_warn_if_localhost_port_shadowed
 }
 
 # OSX/Mac M1 workaround for DB2 containers
@@ -437,15 +439,36 @@ db2_post_setup() {
 }
 
 db2_setup() {
-    pids=()
+    local pids=()
     for n in $(seq 1 $DB_COUNT)
     do
       $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'create tenant ORM_${n}';" &
-      pids[${i}]=$!
+      pids+=("$!")
     done
-    for pid in ${pids[*]}; do
-        wait $pid
+    local failed=0
+    for pid in "${pids[@]}"; do
+        wait "$pid" || failed=1
     done
+    if [[ "$failed" -ne 0 ]]; then
+        echo "Error: DB2 tenant setup failed."
+        exit 1
+    fi
+}
+
+db2_warn_if_localhost_port_shadowed() {
+    if [[ "$IS_OSX" != "true" ]] || ! command -v lsof > /dev/null; then
+        return
+    fi
+
+    local listeners
+    listeners=$(lsof -nP -iTCP@127.0.0.1:50000 -sTCP:LISTEN 2>/dev/null \
+        | awk 'NR > 1 && $1 !~ /^(com\.docker|gvproxy|rootlessport|vpnkit)$/ { print $1 " " $2 }' \
+        | sort -u)
+    if [[ -n "$listeners" ]]; then
+        echo "Warning: 127.0.0.1:50000 is already listened on by:"
+        echo "$listeners" | sed 's/^/  /'
+        echo "Warning: if JDBC cannot connect through localhost, use -DdbHost=[::1] for DB2 Gradle tests."
+    fi
 }
 
 db2_spatial() {

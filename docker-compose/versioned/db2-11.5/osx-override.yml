@@ -1,6 +1,7 @@
 services:
-  db2spatial:
+  db2:
     platform: linux/amd64
+    network_mode: bridge
     environment:
       IS_OSXFS: "true"
     volumes:

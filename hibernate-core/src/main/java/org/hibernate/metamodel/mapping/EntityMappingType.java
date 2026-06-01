@@ -203,8 +203,8 @@ public interface EntityMappingType
 	 * Retrieve mappings for all subtypes
 	 */
 	default Collection<EntityMappingType> getSubMappingTypes() {
-		final MappingMetamodelImplementor mappingMetamodel = getEntityPersister().getFactory().getMappingMetamodel();
-		final Set<String> subclassEntityNames = getSubclassEntityNames();
+		final var mappingMetamodel = getEntityPersister().getFactory().getMappingMetamodel();
+		final var subclassEntityNames = getSubclassEntityNames();
 		final List<EntityMappingType> mappingTypes = new ArrayList<>( subclassEntityNames.size() );
 		for ( String subclassEntityName : subclassEntityNames ) {
 			mappingTypes.add( mappingMetamodel.getEntityDescriptor( subclassEntityName ) );
@@ -252,7 +252,7 @@ public interface EntityMappingType
 	DiscriminatorValue getDiscriminatorValue();
 
 	default String getDiscriminatorSQLValue() {
-		final DiscriminatorValue discriminatorValue = getDiscriminatorValue();
+		final var discriminatorValue = getDiscriminatorValue();
 		if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
 			return String.valueOf( literal.value() );
 		}
@@ -268,11 +268,10 @@ public interface EntityMappingType
 	}
 
 	default EntityMappingType getRootEntityDescriptor() {
-		final EntityMappingType superMappingType = getSuperMappingType();
-		if ( superMappingType == null ) {
-			return this;
-		}
-		return superMappingType.getRootEntityDescriptor();
+		final var superMappingType = getSuperMappingType();
+		return superMappingType == null
+				? this
+				: superMappingType.getRootEntityDescriptor();
 	}
 
 	/**
@@ -380,7 +379,7 @@ public interface EntityMappingType
 
 	@Nonnull
 	default NaturalIdMapping requireNaturalIdMapping() {
-		var mapping = getNaturalIdMapping();
+		final var mapping = getNaturalIdMapping();
 		if ( mapping == null ) {
 			throw new HibernateException( format( "Entity %s does not specify a natural id", getEntityName() ) );
 		}
@@ -520,7 +519,7 @@ public interface EntityMappingType
 
 	default RootGraphImplementor<?> createRootGraph(SharedSessionContractImplementor session) {
 		final var factory = session.getSessionFactory();
-		return getRepresentationStrategy() instanceof EntityRepresentationStrategyMap strategyMap
+		return getRepresentationStrategy() instanceof EntityRepresentationStrategyMap
 				? factory.createGraphForDynamicEntity( getEntityName() )
 				: factory.createEntityGraph( getMappedJavaType().getJavaTypeClass() );
 	}

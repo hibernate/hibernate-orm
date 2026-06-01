@@ -96,6 +96,8 @@ public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
 
 	List<JaxbNamedHqlQueryImpl> getNamedQueries();
 	List<JaxbNamedNativeQueryImpl> getNamedNativeQueries();
+	List<JaxbNamedStatementImpl> getNamedStatements();
+	List<JaxbNamedNativeStatementImpl> getNamedNativeStatements();
 	List<JaxbNamedStoredProcedureQueryImpl> getNamedStoredProcedureQueries();
 	List<JaxbSqlResultSetMappingImpl> getSqlResultSetMappings();
 

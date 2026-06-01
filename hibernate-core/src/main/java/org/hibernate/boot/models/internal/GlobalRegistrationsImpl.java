@@ -32,7 +32,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterDefImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJavaTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJdbcTypeRegistrationImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeStatementImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStatementImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHintContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
@@ -58,8 +60,10 @@ import org.hibernate.boot.models.spi.JavaTypeRegistration;
 import org.hibernate.boot.models.spi.JdbcTypeRegistration;
 import org.hibernate.boot.models.spi.LifecycleEventHandler;
 import org.hibernate.boot.models.JpaEventListenerStyle;
+import org.hibernate.boot.models.spi.NamedNativeStatementRegistration;
 import org.hibernate.boot.models.spi.NamedNativeQueryRegistration;
 import org.hibernate.boot.models.spi.NamedQueryRegistration;
+import org.hibernate.boot.models.spi.NamedStatementRegistration;
 import org.hibernate.boot.models.spi.NamedStoredProcedureQueryRegistration;
 import org.hibernate.boot.models.spi.SequenceGeneratorRegistration;
 import org.hibernate.boot.models.spi.SqlResultSetMappingRegistration;
@@ -155,6 +159,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	private Map<String, SqlResultSetMappingRegistration> sqlResultSetMappingRegistrations;
 	private Map<String, NamedQueryRegistration> namedQueryRegistrations;
 	private Map<String, NamedNativeQueryRegistration> namedNativeQueryRegistrations;
+	private Map<String, NamedStatementRegistration> namedStatementRegistrations;
+	private Map<String, NamedNativeStatementRegistration> namedNativeStatementRegistrations;
 	private Map<String, NamedStoredProcedureQueryRegistration> namedStoredProcedureQueryRegistrations;
 
 	private List<DatabaseObjectRegistration> databaseObjectRegistrations;
@@ -262,6 +268,16 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	@Override
 	public Map<String, NamedNativeQueryRegistration> getNamedNativeQueryRegistrations() {
 		return namedNativeQueryRegistrations == null ? emptyMap() : namedNativeQueryRegistrations;
+	}
+
+	@Override
+	public Map<String, NamedStatementRegistration> getNamedStatementRegistrations() {
+		return namedStatementRegistrations == null ? emptyMap() : namedStatementRegistrations;
+	}
+
+	@Override
+	public Map<String, NamedNativeStatementRegistration> getNamedNativeStatementRegistrations() {
+		return namedNativeStatementRegistrations == null ? emptyMap() : namedNativeStatementRegistrations;
 	}
 
 	@Override
@@ -1054,6 +1070,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 		collectNamedSqlResultSetMappings( jaxbRoot.getSqlResultSetMappings(), xmlDocumentContext );
 		collectNamedQueries( jaxbRoot.getNamedQueries(), xmlDocumentContext );
 		collectNamedNativeQueries( jaxbRoot.getNamedNativeQueries(), xmlDocumentContext );
+		collectNamedStatements( jaxbRoot.getNamedStatements(), xmlDocumentContext );
+		collectNamedNativeStatements( jaxbRoot.getNamedNativeStatements(), xmlDocumentContext );
 		collectStoredProcedureQueries( jaxbRoot.getNamedProcedureQueries(), xmlDocumentContext );
 	}
 
@@ -1264,6 +1282,56 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 		}
 
 		return hints.toArray(QueryHint[]::new);
+	}
+
+	private void collectNamedStatements(
+			List<JaxbNamedStatementImpl> namedStatements,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( !isEmpty( namedStatements ) ) {
+			if ( namedStatementRegistrations == null ) {
+				namedStatementRegistrations = new HashMap<>();
+			}
+
+			for ( var jaxbStatement : namedStatements ) {
+				final var statementAnnotation = JpaAnnotations.NAMED_STATEMENT.createUsage( sourceModelContext );
+				final String name = jaxbStatement.getName();
+
+				namedStatementRegistrations.put( name,
+						new NamedStatementRegistration( name, statementAnnotation ) );
+
+				statementAnnotation.name( name );
+				statementAnnotation.statement( jaxbStatement.getStatement() );
+				statementAnnotation.hints( QueryProcessing.collectQueryHints(
+						jaxbStatement.getHints(),
+						xmlDocumentContext
+				) );
+			}
+		}
+	}
+
+	private void collectNamedNativeStatements(
+			List<JaxbNamedNativeStatementImpl> namedNativeStatements,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( !isEmpty( namedNativeStatements ) ) {
+			if ( namedNativeStatementRegistrations == null ) {
+				namedNativeStatementRegistrations = new HashMap<>();
+			}
+
+			for ( var jaxbStatement : namedNativeStatements ) {
+				final var statementAnnotation = JpaAnnotations.NAMED_NATIVE_STATEMENT.createUsage( sourceModelContext );
+				final String name = jaxbStatement.getName();
+
+				namedNativeStatementRegistrations.put( name,
+						new NamedNativeStatementRegistration( name, statementAnnotation ) );
+
+				statementAnnotation.name( name );
+				statementAnnotation.statement( jaxbStatement.getStatement() );
+				statementAnnotation.hints( QueryProcessing.collectQueryHints(
+						jaxbStatement.getHints(),
+						xmlDocumentContext
+				) );
+			}
+		}
 	}
 
 	private void collectStoredProcedureQueries(

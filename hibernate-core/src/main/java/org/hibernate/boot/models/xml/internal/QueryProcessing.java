@@ -15,7 +15,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFieldResultImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeStatementImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStatementImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHint;
@@ -31,10 +33,14 @@ import org.hibernate.boot.models.annotations.internal.NamedNativeQueriesAnnotati
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueriesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeStatementJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeStatementsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueriesAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueriesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedStatementJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedStatementsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedStoredProcedureQueriesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedStoredProcedureQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.QueryHintJpaAnnotation;
@@ -42,7 +48,6 @@ import org.hibernate.boot.models.annotations.internal.StoredProcedureParameterJp
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 
@@ -50,12 +55,16 @@ import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
+import jakarta.persistence.NamedNativeStatement;
+import jakarta.persistence.NamedStatement;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.StoredProcedureParameter;
 
 import static org.hibernate.boot.models.JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Processing of queries from XML
@@ -67,7 +76,7 @@ public class QueryProcessing {
 			JaxbEntityImpl jaxbEntity,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbEntity.getNamedQueries() ) ) {
+		if ( isEmpty( jaxbEntity.getNamedQueries() ) ) {
 			return;
 		}
 
@@ -78,7 +87,7 @@ public class QueryProcessing {
 		for ( int i = 0; i < jaxbEntity.getNamedQueries().size(); i++ ) {
 			final JaxbNamedHqlQueryImpl jaxbNamedQuery = jaxbEntity.getNamedQueries().get( i );
 
-			if ( CollectionHelper.isNotEmpty( jaxbNamedQuery.getHints() ) ) {
+			if ( isNotEmpty( jaxbNamedQuery.getHints() ) ) {
 				// treat this as a Jakarta Persistence named-query
 				if ( namedJpqlQueryList == null ) {
 					namedJpqlQueryList = new ArrayList<>();
@@ -118,7 +127,7 @@ public class QueryProcessing {
 
 	public static final QueryHint[] NO_HINTS = new QueryHint[0];
 	public static QueryHint[] collectQueryHints(List<JaxbQueryHintImpl> jaxbHints, XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbHints ) ) {
+		if ( isEmpty( jaxbHints ) ) {
 			return NO_HINTS;
 		}
 
@@ -139,7 +148,7 @@ public class QueryProcessing {
 			MutableClassDetails classDetails,
 			JaxbEntityMappingsImpl jaxbRoot,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbEntity.getNamedNativeQueries() ) ) {
+		if ( isEmpty( jaxbEntity.getNamedNativeQueries() ) ) {
 			return;
 		}
 
@@ -189,10 +198,64 @@ public class QueryProcessing {
 	}
 
 	private static boolean needsJpaNativeQuery(JaxbNamedNativeQueryImpl jaxbNamedQuery) {
-		return CollectionHelper.isNotEmpty( jaxbNamedQuery.getHints() )
-				|| CollectionHelper.isNotEmpty( jaxbNamedQuery.getColumnResult() )
-				|| CollectionHelper.isNotEmpty( jaxbNamedQuery.getConstructorResult() )
-				|| CollectionHelper.isNotEmpty( jaxbNamedQuery.getEntityResult() );
+		return isNotEmpty( jaxbNamedQuery.getHints() )
+			|| isNotEmpty( jaxbNamedQuery.getColumnResult() )
+			|| isNotEmpty( jaxbNamedQuery.getConstructorResult() )
+			|| isNotEmpty( jaxbNamedQuery.getEntityResult() );
+	}
+
+	public static void applyNamedStatements(
+			JaxbEntityImpl jaxbEntity,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		final List<JaxbNamedStatementImpl> jaxbStatements = jaxbEntity.getNamedStatements();
+		if ( isEmpty( jaxbStatements ) ) {
+			return;
+		}
+
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final NamedStatementsJpaAnnotation namedStatementsUsage = (NamedStatementsJpaAnnotation) classDetails.replaceAnnotationUsage(
+				JpaAnnotations.NAMED_STATEMENT,
+				JpaAnnotations.NAMED_STATEMENTS,
+				modelBuildingContext
+		);
+
+		final NamedStatement[] statements = new NamedStatement[jaxbStatements.size()];
+		namedStatementsUsage.value( statements );
+
+		for ( int i = 0; i < jaxbStatements.size(); i++ ) {
+			final NamedStatementJpaAnnotation statement = JpaAnnotations.NAMED_STATEMENT.createUsage( modelBuildingContext );
+			statements[i] = statement;
+
+			statement.apply( jaxbStatements.get( i ), xmlDocumentContext );
+		}
+	}
+
+	public static void applyNamedNativeStatements(
+			JaxbEntityImpl jaxbEntity,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		final List<JaxbNamedNativeStatementImpl> jaxbStatements = jaxbEntity.getNamedNativeStatements();
+		if ( isEmpty( jaxbStatements ) ) {
+			return;
+		}
+
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final NamedNativeStatementsJpaAnnotation namedStatementsUsage = (NamedNativeStatementsJpaAnnotation) classDetails.replaceAnnotationUsage(
+				JpaAnnotations.NAMED_NATIVE_STATEMENT,
+				JpaAnnotations.NAMED_NATIVE_STATEMENTS,
+				modelBuildingContext
+		);
+
+		final NamedNativeStatement[] statements = new NamedNativeStatement[jaxbStatements.size()];
+		namedStatementsUsage.value( statements );
+
+		for ( int i = 0; i < jaxbStatements.size(); i++ ) {
+			final NamedNativeStatementJpaAnnotation statement = JpaAnnotations.NAMED_NATIVE_STATEMENT.createUsage( modelBuildingContext );
+			statements[i] = statement;
+
+			statement.apply( jaxbStatements.get( i ), xmlDocumentContext );
+		}
 	}
 
 
@@ -200,7 +263,7 @@ public class QueryProcessing {
 	public static ColumnResult[] extractColumnResults(
 			List<JaxbColumnResultImpl> jaxbColumnResultList,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbColumnResultList ) ) {
+		if ( isEmpty( jaxbColumnResultList ) ) {
 			return NO_COLUMN_RESULTS;
 		}
 
@@ -223,7 +286,7 @@ public class QueryProcessing {
 	public static ConstructorResult[] extractConstructorResults(
 			List<JaxbConstructorResultImpl> jaxbConstructorResultList,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbConstructorResultList ) ) {
+		if ( isEmpty( jaxbConstructorResultList ) ) {
 			return NO_CONSTRUCTOR_RESULTS;
 		}
 
@@ -235,7 +298,7 @@ public class QueryProcessing {
 
 			final JaxbConstructorResultImpl jaxbConstructorResult = jaxbConstructorResultList.get( i );
 			constructorResult.targetClass( xmlDocumentContext.resolveJavaType( jaxbConstructorResult.getTargetClass() ).toJavaClass() );
-			if ( CollectionHelper.isNotEmpty( jaxbConstructorResult.getColumns() ) ) {
+			if ( isNotEmpty( jaxbConstructorResult.getColumns() ) ) {
 				final ColumnResult[] columnResults = extractColumnResults(
 						jaxbConstructorResult.getColumns(),
 						xmlDocumentContext
@@ -244,7 +307,7 @@ public class QueryProcessing {
 					constructorResult.columns( columnResults );
 				}
 			}
-			if ( CollectionHelper.isNotEmpty( jaxbConstructorResult.getEntities() ) ) {
+			if ( isNotEmpty( jaxbConstructorResult.getEntities() ) ) {
 				final EntityResult[] entityResults = extractEntityResults(
 						jaxbConstructorResult.getEntities(),
 						xmlDocumentContext
@@ -261,7 +324,7 @@ public class QueryProcessing {
 	public static EntityResult[] extractEntityResults(
 			List<JaxbEntityResultImpl> jaxbEntityResults,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbEntityResults ) ) {
+		if ( isEmpty( jaxbEntityResults ) ) {
 			return NO_ENTITY_RESULTS;
 		}
 
@@ -294,7 +357,7 @@ public class QueryProcessing {
 	private static FieldResult[] extractFieldResults(
 			List<JaxbFieldResultImpl> jaxbFieldResults,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbFieldResults ) ) {
+		if ( isEmpty( jaxbFieldResults ) ) {
 			return null;
 		}
 
@@ -316,7 +379,7 @@ public class QueryProcessing {
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final List<JaxbNamedStoredProcedureQueryImpl> jaxbQueries = jaxbEntity.getNamedStoredProcedureQueries();
-		if ( CollectionHelper.isEmpty( jaxbQueries ) ) {
+		if ( isEmpty( jaxbQueries ) ) {
 			return;
 		}
 
@@ -343,7 +406,7 @@ public class QueryProcessing {
 	public static StoredProcedureParameter[] collectParameters(
 			List<JaxbStoredProcedureParameterImpl> jaxbParameters,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbParameters ) ) {
+		if ( isEmpty( jaxbParameters ) ) {
 			return NO_PARAMS;
 		}
 
@@ -361,7 +424,7 @@ public class QueryProcessing {
 
 	private static final Class<?>[] NO_CLASSES = new Class[0];
 	public static Class<?>[] collectResultClasses(List<String> resultClasses, XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( resultClasses ) ) {
+		if ( isEmpty( resultClasses ) ) {
 			return NO_CLASSES;
 		}
 		final Class<?>[] result = new Class<?>[resultClasses.size()];
@@ -372,7 +435,7 @@ public class QueryProcessing {
 	}
 
 	public static String[] collectResultMappings(List<String> resultClasses, XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( resultClasses ) ) {
+		if ( isEmpty( resultClasses ) ) {
 			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 		return resultClasses.toArray( String[]::new );

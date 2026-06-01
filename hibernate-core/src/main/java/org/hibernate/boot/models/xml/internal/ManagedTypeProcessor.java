@@ -251,6 +251,8 @@ public class ManagedTypeProcessor {
 
 		QueryProcessing.applyNamedQueries( jaxbEntity, classDetails, xmlDocumentContext );
 		QueryProcessing.applyNamedNativeQueries( jaxbEntity, classDetails, jaxbRoot, xmlDocumentContext );
+		QueryProcessing.applyNamedStatements( jaxbEntity, classDetails, xmlDocumentContext );
+		QueryProcessing.applyNamedNativeStatements( jaxbEntity, classDetails, xmlDocumentContext );
 		QueryProcessing.applyNamedProcedureQueries( jaxbEntity, classDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyFilters( jaxbEntity.getFilters(), classDetails, xmlDocumentContext );

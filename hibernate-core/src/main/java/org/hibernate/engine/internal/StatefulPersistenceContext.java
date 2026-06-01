@@ -1520,12 +1520,12 @@ class StatefulPersistenceContext implements PersistenceContext {
 		// 		NOTE: decided to put this here rather than in the above loop as I was nervous about the performance
 		//		of the loop-in-loop especially considering this is far more likely the 'edge case'
 		if ( mergeMap != null ) {
-			for ( Object entry : mergeMap.entrySet() ) {
-				final var mergeMapEntry = (Entry<?,?>) entry;
-				final var lazyInitializer = extractLazyInitializer( mergeMapEntry.getKey() );
+			for ( var entry : mergeMap.entrySet() ) {
+				final Object object = entry.getKey();
+				final var lazyInitializer = extractLazyInitializer( object );
 				if ( lazyInitializer != null ) {
 					if ( persister.isSubclassEntityName( lazyInitializer.getEntityName() ) ) {
-						final var proxy = asHibernateProxy( mergeMapEntry.getKey() );
+						final var proxy = asHibernateProxy( object );
 						boolean found = isFoundInParent(
 								propertyName,
 								childEntity,

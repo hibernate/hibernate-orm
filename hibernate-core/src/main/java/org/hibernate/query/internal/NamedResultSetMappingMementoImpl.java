@@ -9,9 +9,12 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.results.spi.ResultSetMapping;
 
+import jakarta.persistence.sql.MappingElement;
+
 import java.util.List;
 import java.util.function.Consumer;
 
+import static jakarta.persistence.sql.ResultSetMapping.compound;
 import static java.util.Collections.unmodifiableList;
 
 /**
@@ -52,18 +55,34 @@ public class NamedResultSetMappingMementoImpl implements NamedResultSetMappingMe
 
 	@Override
 	public <R> boolean canBeTreatedAsResultSetMapping(Class<R> resultType, SessionFactory sessionFactory) {
-		if ( getResultMementos().size() != 1 ) {
-			return false;
+		if ( getResultMementos().size() == 1 ) {
+			var resultMemento = getResultMementos().get( 0 );
+			return resultMemento.canBeTreatedAsResultSetMapping( resultType, sessionFactory );
 		}
-		var resultMemento = getResultMementos().get( 0 );
-		return resultMemento.canBeTreatedAsResultSetMapping( resultType, sessionFactory );
+		return resultType.isAssignableFrom( Object[].class );
 	}
 
 	@Override
 	public <R> jakarta.persistence.sql.ResultSetMapping<R> toJpaMapping(SessionFactory sessionFactory) {
-		assert getResultMementos().size() == 1;
-		var resultMemento = getResultMementos().get( 0 );
+		if ( getResultMementos().size() == 1 ) {
+			var resultMemento = getResultMementos().get( 0 );
+			return resultMemento.toJpaMapping( sessionFactory );
+		}
 
-		return resultMemento.toJpaMapping( sessionFactory );
+		final var elements = new MappingElement<?>[getResultMementos().size()];
+		for ( int i = 0; i < elements.length; i++ ) {
+			final var resultSetMapping = getResultMementos().get( i ).toJpaMapping( sessionFactory );
+			if ( resultSetMapping instanceof MappingElement<?> element ) {
+				elements[i] = element;
+			}
+			else {
+				throw new UnsupportedOperationException(
+						"Result set mapping element does not implement MappingElement: " + resultSetMapping
+				);
+			}
+		}
+
+		//noinspection unchecked
+		return (jakarta.persistence.sql.ResultSetMapping<R>) compound( elements );
 	}
 }

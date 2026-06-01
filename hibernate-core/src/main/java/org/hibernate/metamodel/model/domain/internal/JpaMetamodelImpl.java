@@ -26,6 +26,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.query.NamedQueryDefinition;
+import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -63,6 +64,7 @@ import static java.util.Collections.emptySet;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectEntityGraph;
+import static org.hibernate.metamodel.internal.InjectionHelper.injectResultSetMapping;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectTypedQueryReference;
 
 /**
@@ -691,19 +693,33 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 		applyNamedEntityGraphs( namedEntityGraphDefinitions );
 
-		populateStaticMetamodel( bootMetamodel, context );
+		populateStaticMetamodel( bootMetamodel, context, runtimeModelCreationContext.getSessionFactory() );
 	}
 
-	private void populateStaticMetamodel(MetadataImplementor bootMetamodel, MetadataContext context) {
+	private void populateStaticMetamodel(
+			MetadataImplementor bootMetamodel,
+			MetadataContext context,
+			SessionFactoryImplementor sessionFactory) {
 		bootMetamodel.visitNamedHqlQueryDefinitions( definition
 				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
 		bootMetamodel.visitNamedNativeQueryDefinitions( definition
 				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
+		bootMetamodel.visitNamedResultSetMappingDefinition( definition
+				-> injectResultSetMapping(
+						definition,
+						resultSetMappingMetamodelClass( definition, context ),
+						sessionFactory
+				) );
 		bootMetamodel.getNamedEntityGraphs().values().stream().filter( (definition) -> definition.entityName() != null )
 				.forEach( definition -> injectEntityGraph( definition, graphMetamodelClass( definition, context ), this ) );
 	}
 
 	private Class<?> namedQueryMetamodelClass(NamedQueryDefinition<?> definition, MetadataContext context) {
+		final String location = definition.getLocation();
+		return location == null ? null : context.metamodelClass( managedTypeByName.get( location ) );
+	}
+
+	private Class<?> resultSetMappingMetamodelClass(NamedResultSetMappingDescriptor definition, MetadataContext context) {
 		final String location = definition.getLocation();
 		return location == null ? null : context.metamodelClass( managedTypeByName.get( location ) );
 	}

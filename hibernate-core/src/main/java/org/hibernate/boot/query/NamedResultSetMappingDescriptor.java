@@ -9,6 +9,8 @@ import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 
+import jakarta.annotation.Nullable;
+
 /**
  * Models the "boot view" of a ResultSet mapping used in the mapping
  * of native and procedure queries.
@@ -24,6 +26,16 @@ public interface NamedResultSetMappingDescriptor {
 	 * The name under which the result-set-mapping is to be registered
 	 */
 	String getRegistrationName();
+
+	/**
+	 * The location at which the defining result set mapping annotation occurs,
+	 * usually a class or package name. Null for result set mappings declared
+	 * in XML or otherwise not associated with a static metamodel class.
+	 */
+	@Nullable
+	default String getLocation() {
+		return null;
+	}
 
 	/**
 	 * Create a representation of the described ResultSet mapping for the purpose of

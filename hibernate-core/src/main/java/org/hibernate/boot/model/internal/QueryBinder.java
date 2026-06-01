@@ -184,7 +184,11 @@ public abstract class QueryBinder {
 					);
 				}
 
-				final var mappingDefinition = SqlResultSetMappingDescriptor.from( namedNativeQuery );
+				final var mappingDefinition =
+						SqlResultSetMappingDescriptor.from(
+								namedNativeQuery,
+								location == null ? null : location.getName()
+						);
 				if ( isDefault ) {
 					collector.addDefaultResultSetMapping( mappingDefinition );
 				}
@@ -476,7 +480,13 @@ public abstract class QueryBinder {
 		final var columnResults = repeatedAnnotations( methodDetails, ColumnResult.class, modelsContext );
 		if ( entityResults.length > 0 || constructorResults.length > 0 || columnResults.length > 0 ) {
 			context.getMetadataCollector().addResultSetMapping(
-					SqlResultSetMappingDescriptor.from( registrationName, entityResults, constructorResults, columnResults )
+					SqlResultSetMappingDescriptor.from(
+							registrationName,
+							entityResults,
+							constructorResults,
+							columnResults,
+							staticQueryLocation( methodDetails.getDeclaringType(), methodDetails )
+					)
 			);
 			return registrationName;
 		}
@@ -889,9 +899,17 @@ public abstract class QueryBinder {
 			SqlResultSetMapping resultSetMappingAnn,
 			MetadataBuildingContext context,
 			boolean isDefault) {
+		bindSqlResultSetMapping( resultSetMappingAnn, context, null, isDefault );
+	}
+
+	public static void bindSqlResultSetMapping(
+			SqlResultSetMapping resultSetMappingAnn,
+			MetadataBuildingContext context,
+			AnnotationTarget location,
+			boolean isDefault) {
 		//no need to handle inSecondPass
 		context.getMetadataCollector()
-				.addSecondPass( new ResultSetMappingSecondPass( resultSetMappingAnn, context, isDefault ) );
+				.addSecondPass( new ResultSetMappingSecondPass( resultSetMappingAnn, context, location, isDefault ) );
 	}
 
 	private record JdbcCall(String callableName, boolean resultParameter, ArrayList<String> parameters) {

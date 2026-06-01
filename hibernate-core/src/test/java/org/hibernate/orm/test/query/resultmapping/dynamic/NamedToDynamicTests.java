@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.query.resultmapping.dynamic;
 
 import jakarta.persistence.sql.ColumnMapping;
+import jakarta.persistence.sql.CompoundMapping;
 import jakarta.persistence.sql.ConstructorMapping;
 import jakarta.persistence.sql.EntityMapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -68,6 +69,17 @@ public class NamedToDynamicTests {
 		assertThat( bookExplicitMapping.discriminatorColumn() ).isNull();
 		assertThat( bookExplicitMapping.fields() ).hasSize( 4 );
 		// "unfortunately" our memento objects do not keep the ordering
+	}
+
+	@Test
+	void testStaticMetamodelResultSetMappingsArePopulated(SessionFactoryScope factoryScope) {
+		assertThat( Book_._book_dto ).isInstanceOf( ConstructorMapping.class );
+		assertThat( Book_._book_drop_down ).isInstanceOf( ConstructorMapping.class );
+		assertThat( Book_._id ).isInstanceOf( ColumnMapping.class );
+		assertThat( Book_._book_implicit ).isInstanceOf( EntityMapping.class );
+		assertThat( Book_._book_explicit ).isInstanceOf( EntityMapping.class );
+		assertThat( Book_._book_and_id ).isInstanceOf( CompoundMapping.class );
+		assertThat( Book_._book_and_id.type() ).isEqualTo( Object[].class );
 	}
 
 }

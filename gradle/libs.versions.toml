@@ -97,6 +97,7 @@ maven = "3.9.14"
 mavenPluginTools = "3.15.1"
 mavenFileManagement = "3.2.0"
 mavenTransport = "1.9.24"
+mavenPlexusXml = "4.1.1"
 
 #Buildscript
 forbiddenapis = "3.8"
@@ -247,6 +248,7 @@ maven-embedder = { group = "org.apache.maven", name = "maven-embedder", version.
 maven-compat = { group = "org.apache.maven", name = "maven-compat", version.ref = "maven" }
 maven-resolverHttp = { group = "org.apache.maven.resolver", name = "maven-resolver-transport-http", version.ref = "mavenTransport" }
 maven-resolverBasic = { group = "org.apache.maven.resolver", name = "maven-resolver-connector-basic", version.ref = "mavenTransport" }
+maven-plexusXml = { group = "org.codehaus.plexus", name = "plexus-xml", version.ref = "mavenPlexusXml" }
 
 # Buildscript
 buildscript-forbiddenapis = { group = "de.thetaphi", name = "forbiddenapis", version.ref = "forbiddenapis" }

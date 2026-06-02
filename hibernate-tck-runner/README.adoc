@@ -22,6 +22,22 @@ To run the Jakarta Persistence TCK from the terminal execute:
 Make sure to include the `pgsql_ci` database parameter!
 ====
 
+== Testing with a locally built Jakarta Persistence
+
+If you are developing changes to the Jakarta Persistence and want to test them against the TCK
+without publishing upstream, you can install the Jakarta Persistence artifacts to your local Maven repository
+(`mvn clean install -DskipTests` in the Jakarta Persistence project) and then run the TCK with:
+
+[source,bash]
+----
+./gradlew :hibernate-tck-runner:test -Pdb=pgsql_ci -Pruntck=true -DenableMavenLocalRepo=true
+----
+
+The `-DenableMavenLocalRepo=true` system property adds `mavenLocal()` as a repository so that
+locally built artifacts are picked up. This flag works for the main build as well, not just the TCK runner.
+
+== Testing from the IDE
+
 Tests can be executed from the IDE as well. The steps below are specific to Intellij IDEA,
 but should be applicable to any other IDE.
 

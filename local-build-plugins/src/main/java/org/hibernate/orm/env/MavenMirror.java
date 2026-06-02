@@ -4,7 +4,9 @@
  */
 package org.hibernate.orm.env;
 
+import org.gradle.api.Action;
 import org.gradle.api.artifacts.dsl.RepositoryHandler;
+import org.gradle.api.artifacts.repositories.RepositoryContentDescriptor;
 
 /**
  * Configures Maven Central or a mirror of it, based on the {@code MAVEN_MIRROR} environment
@@ -14,6 +16,26 @@ import org.gradle.api.artifacts.dsl.RepositoryHandler;
  * @see <a href="https://blog.gradle.org/maven-central-mirror">Gradle Maven Central Mirror</a>
  */
 public class MavenMirror {
+
+	/**
+	 * Adds a {@code mavenLocal()} repository if the {@code enableMavenLocalRepo} system property is set.
+	 * Useful for local development to pick up locally built artifacts.
+	 *
+	 * @param contentFilter optional content filter, e.g. {@code c -> c.includeGroup("jakarta.persistence")}
+	 */
+	public static void maybeAddMavenLocal(RepositoryHandler repositories, Action<RepositoryContentDescriptor> contentFilter) {
+		if ( "true".equalsIgnoreCase( resolve( "enableMavenLocalRepo" ) ) ) {
+			repositories.mavenLocal( repo -> {
+				if ( contentFilter != null ) {
+					repo.content( contentFilter );
+				}
+			} );
+		}
+	}
+
+	public static void maybeAddMavenLocal(RepositoryHandler repositories) {
+		maybeAddMavenLocal( repositories, null );
+	}
 
 	/**
 	 * @return {@code true} if a mirror was configured, {@code false} if plain Maven Central was added

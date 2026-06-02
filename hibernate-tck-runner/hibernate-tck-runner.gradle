@@ -11,14 +11,8 @@ plugins {
 description = 'Hibernate ORM\'s Jakarta Persistence TCK runner'
 
 repositories {
-    if ( project.hasProperty('enableMavenLocalRepo') ) {
-        // Useful for local development when you want to write a TCK test and run it,
-        // disabled otherwise
-        mavenLocal() {
-            content {
-                includeGroup "jakarta.persistence"
-            }
-        }
+    org.hibernate.orm.env.MavenMirror.maybeAddMavenLocal(it) { content ->
+        content.includeGroup "jakarta.persistence"
     }
     maven {
         name = "Central Portal Snapshots"

@@ -22,6 +22,11 @@ To do so, set the `MAVEN_MIRROR` environment variable to the URL of your mirror,
 e.g. `http://something-on-aws.com/path/to/repo`.
 Alternatively, you can pass `-DMAVEN_MIRROR=...` to the `gradle` command.
 
+To pick up locally built dependencies (e.g. a local Jakarta Persistence build),
+pass `-DenableMavenLocalRepo=true` to the `gradle` command.
+This adds `mavenLocal()` as a repository, which is disabled by default
+to ensure reproducible builds on CI.
+
 ### GitHub Actions workflows
 
 TODO: describe the workflows available.

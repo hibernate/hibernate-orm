@@ -3873,8 +3873,13 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL json_object() function
 	 */
+	@Deprecated(forRemoval = true)
 	public void jsonObject_postgresql() {
-		functionRegistry.register( "json_object", new PostgreSQLJsonObjectFunction( typeConfiguration ) );
+		jsonObject_postgresql( false );
+	}
+
+	public void jsonObject_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_object", new PostgreSQLJsonObjectFunction( typeConfiguration, supportsStandard ) );
 	}
 
 	/**
@@ -3943,8 +3948,16 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL json_array() function
 	 */
+	@Deprecated(forRemoval = true)
 	public void jsonArray_postgresql() {
-		functionRegistry.register( "json_array", new PostgreSQLJsonArrayFunction( typeConfiguration ) );
+		jsonArray_postgresql( false );
+	}
+
+	/**
+	 * PostgreSQL json_array() function
+	 */
+	public void jsonArray_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_array", new PostgreSQLJsonArrayFunction( typeConfiguration, supportsStandard ) );
 	}
 
 	/**

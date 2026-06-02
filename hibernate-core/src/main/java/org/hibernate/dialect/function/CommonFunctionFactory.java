@@ -3921,6 +3921,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * H2 json_object() function
+	 */
+	public void jsonObject_h2() {
+		functionRegistry.register( "json_object", new H2JsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
 	 * DB2 json_object() function
 	 */
 	public void jsonObject_db2() {
@@ -3974,6 +3981,13 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArray() {
 		functionRegistry.register( "json_array", new JsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_array() function
+	 */
+	public void jsonArray_h2() {
+		functionRegistry.register( "json_array", new H2JsonArrayFunction( typeConfiguration ) );
 	}
 
 	/**

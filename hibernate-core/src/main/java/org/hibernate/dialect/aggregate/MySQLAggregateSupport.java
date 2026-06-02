@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.LinkedHashMap;
@@ -174,6 +175,12 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 	}
 
 	private String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
+		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
+		return sqlAppender.toString();
+	}
+
+	public void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
@@ -181,28 +188,47 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 			case LONG32VARBINARY:
 			case BLOB:
 				// We encode binary data as hex
-				return "hex(" + customWriteExpression + ")";
+				sqlAppender.appendSql( "hex(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ")" );
+				break;
 			case BOOLEAN:
-				return "(" + customWriteExpression + ")=true";
+				sqlAppender.appendSql( "(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ")=true" );
+				break;
 			case TIMESTAMP:
-				return "date_format(" + customWriteExpression + ",'%Y-%m-%dT%T.%f')";
+				sqlAppender.appendSql( "date_format(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ",'%Y-%m-%dT%T.%f')" );
+				break;
 			case TIMESTAMP_UTC:
-				return "date_format(" + customWriteExpression + ",'%Y-%m-%dT%T.%fZ')";
+				sqlAppender.appendSql( "date_format(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ",'%Y-%m-%dT%T.%fZ')" );
+				break;
 			case UUID:
 				if ( jdbcMapping.getJdbcType().isBinary() ) {
 					if ( uuidFunctions ) {
-						return "bin_to_uuid(" + customWriteExpression + ")";
+						sqlAppender.appendSql( "bin_to_uuid(" );
+						renderFunction.run();
+						sqlAppender.appendSql( ")" );
 					}
 					else if ( jsonType ) {
-						return "insert(insert(insert(insert(lower(hex(" + customWriteExpression + ")),21,0,'-'),17,0,'-'),13,0,'-'),9,0,'-')";
+						sqlAppender.appendSql( "insert(insert(insert(insert(lower(hex(" );
+						renderFunction.run();
+						sqlAppender.appendSql( ")),21,0,'-'),17,0,'-'),13,0,'-'),9,0,'-')" );
 					}
 					else {
-						return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\\\1-\\\\2-\\\\3-\\\\4-\\\\5')";
+						sqlAppender.appendSql( "regexp_replace(lower(hex(" );
+						renderFunction.run();
+						sqlAppender.appendSql( ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\\\1-\\\\2-\\\\3-\\\\4-\\\\5')" );
 					}
+					break;
 				}
 				// Fall-through intended
 			default:
-				return customWriteExpression;
+				renderFunction.run();
 		}
 	}
 

@@ -11,7 +11,14 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * MariaDB json_value function.
@@ -35,14 +42,31 @@ public class MariaDBJsonValueFunction extends JsonValueFunction {
 		if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonValueEmptyBehavior.NULL ) {
 			throw new QueryException( "Can't emulate on empty clause on MariaDB" );
 		}
-		if ( arguments.returningType() != null ) {
-			if ( arguments.returningType().getJdbcMapping().getJdbcType().isBoolean() ) {
-				sqlAppender.append( "case " );
+			final JdbcType jdbcType = arguments.returningType() == null
+					? null
+					: arguments.returningType().getJdbcMapping().getJdbcType();
+			if ( jdbcType != null ) {
+				switch ( jdbcType.getDefaultSqlTypeCode() ) {
+					case BOOLEAN:
+						sqlAppender.append( "case " );
+						break;
+					case BINARY:
+					case VARBINARY:
+					case LONG32VARBINARY:
+						// We encode binary data as hex, so we have to decode here
+						sqlAppender.append( "unhex(json_unquote(" );
+						break;
+					case UUID:
+						if ( jdbcType.isBinary() ) {
+							sqlAppender.append( "unhex(replace(json_unquote(" );
+							break;
+						}
+						// Fall-through intended
+					default:
+						sqlAppender.append( "cast(" );
+						break;
+				}
 			}
-			else {
-				sqlAppender.append( "cast(" );
-			}
-		}
 		sqlAppender.appendSql( "json_unquote(nullif(json_extract(" );
 		arguments.jsonDocument().accept( walker );
 		sqlAppender.appendSql( "," );
@@ -58,14 +82,27 @@ public class MariaDBJsonValueFunction extends JsonValueFunction {
 			);
 		}
 		sqlAppender.appendSql( "),'null'))" );
-		if ( arguments.returningType() != null ) {
-			if ( arguments.returningType().getJdbcMapping().getJdbcType().isBoolean() ) {
-				sqlAppender.append( " when 'true' then true when 'false' then false end " );
-			}
-			else {
-				sqlAppender.appendSql( " as " );
-				arguments.returningType().accept( walker );
-				sqlAppender.appendSql( ')' );
+		if ( jdbcType != null ) {
+			switch ( jdbcType.getDefaultSqlTypeCode() ) {
+				case BOOLEAN:
+					sqlAppender.append( " when 'true' then true when 'false' then false end" );
+					break;
+				case BINARY:
+				case VARBINARY:
+				case LONG32VARBINARY:
+					sqlAppender.append( "))" );
+					break;
+				case UUID:
+					if ( jdbcType.isBinary() ) {
+						sqlAppender.append( "),'-',''))" );
+						break;
+					}
+					// Fall-through intended
+				default:
+					sqlAppender.appendSql( " as " );
+					arguments.returningType().accept( walker );
+					sqlAppender.appendSql( ')' );
+					break;
 			}
 		}
 	}

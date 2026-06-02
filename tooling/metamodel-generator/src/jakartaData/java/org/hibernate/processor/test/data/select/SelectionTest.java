@@ -57,26 +57,17 @@ class SelectionTest {
 				"_builder.construct(Named.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" )
 				|| repository.contains(
 						"_builder.construct(SelectionRepository.Named.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" ) );
-		assertTrue( repository.contains( "var _spec = SelectionSpecification.create(SelectionBook.class);" ) );
-		assertTrue( repository.contains( "var _projection = ProjectionSpecification.create(_spec);" ) );
-		assertTrue( repository.contains( "var _TitleAndPages_title = _projection.select(SelectionBook_.title);" ) );
-		assertTrue( repository.contains( "var _TitleAndPages_pages = _projection.select(SelectionBook_.pages);" ) );
-		assertTrue( repository.contains(
-				".map(_result -> new TitleAndPages(_TitleAndPages_title.in(_result), _TitleAndPages_pages.in(_result)))" )
-				|| repository.contains(
-						".map(_result -> new SelectionRepository.TitleAndPages(_TitleAndPages_title.in(_result), _TitleAndPages_pages.in(_result)))" ) );
-		assertTrue( repository.contains( "var _Renamed_name = _projection.select(SelectionBook_.title);" ) );
-		assertTrue( repository.contains( "var _Renamed_pageCount = _projection.select(SelectionBook_.pages);" ) );
-		assertTrue( repository.contains(
-				".map(_result -> new Renamed(_Renamed_name.in(_result), _Renamed_pageCount.in(_result)))" )
-				|| repository.contains(
-						".map(_result -> new SelectionRepository.Renamed(_Renamed_name.in(_result), _Renamed_pageCount.in(_result)))" ) );
+		assertFalse( repository.contains( "SelectionSpecification.create(SelectionBook.class)" ) );
+		assertFalse( repository.contains( "ProjectionSpecification.create" ) );
+		assertFalse( repository.contains( "_projection.select" ) );
 		assertTrue( repository.contains( ".setMaxResults(1)" ) );
 		assertTrue( repository.contains( ".setMaxResults(3)" ) );
 		assertTrue( repository.contains( ".setMaxResults(2)" ) );
 		assertTrue( repository.contains(
-				"SelectionBook firstByStatus(SelectionStatus status, @Nonnull Order<SelectionBook> order)" ) );
-		assertTrue( repository.contains( "for (var _sort : order.sorts())" ) );
+				"SelectionBook firstByStatus(SelectionStatus status, @Nonnull Order<SelectionBook> order)" )
+				|| repository.contains(
+						"SelectionBook firstByStatus(SelectionStatus status, @Nonnull jakarta.data.Order<SelectionBook> order)" ) );
+		assertTrue( repository.contains( "applyOrder(order, _query, _entity, _builder);" ) );
 		assertTrue( repository.contains(
 				"var _reference = _builder.augment(SelectionRepository_.queryTitlesByStatus(status), _query -> {" ) );
 		assertTrue( repository.contains(

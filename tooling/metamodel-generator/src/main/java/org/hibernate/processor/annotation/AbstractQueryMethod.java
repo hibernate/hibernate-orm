@@ -13,8 +13,10 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.util.Constants.BOXED_VOID;
 import static org.hibernate.processor.util.Constants.COLLECTORS;
 import static org.hibernate.processor.util.Constants.HIB_JAKARTA_DATA_RESTRICTION;
@@ -149,6 +151,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	@Nullable String restrictionTypeName() {
 		return returnTypeName;
+	}
+
+	String parameterVariableName(int index) {
+		return parameterName( paramNames.get( index ) );
 	}
 
 	String strip(final String fullType) {
@@ -329,39 +335,20 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
 			if ( isRestrictionParam(paramType) ) {
-				final boolean multipleRestrictions = paramType.startsWith(LIST) || paramType.endsWith("[]");
 				if ( isJakartaDataRestrictionParam( paramType ) ) {
 					declaration
 							.append( "\t_spec.restrict(" )
 							.append( annotationMetaEntity.staticImport(
 									HIB_JAKARTA_DATA_RESTRICTION, "adaptRestriction" ) )
 							.append( "(" );
-					if ( multipleRestrictions ) {
-						declaration
-								.append( annotationMetaEntity.importType( JD_RESTRICT ) )
-								.append( ".all(" )
-								.append( paramName )
-								.append( ")" );
-					}
-					else {
-						declaration.append( paramName );
-					}
+					restrictionArgument( declaration, paramType, paramName, JD_RESTRICT );
 					declaration.append( "));\n" );
-				}
-				else if ( multipleRestrictions ) {
-					declaration
-							.append( "\t_spec.restrict(" )
-							.append( annotationMetaEntity.importType(HIB_RESTRICTION) )
-							.append( ".all(" )
-							.append( paramName )
-							.append( "));\n" );
-
 				}
 				else {
 					declaration
-							.append( "\t_spec.restrict(" )
-							.append( paramName )
-							.append( ");\n" );
+							.append( "\t_spec.restrict(" );
+					restrictionArgument( declaration, paramType, paramName, HIB_RESTRICTION );
+					declaration.append( ");\n" );
 				}
 			}
 			else if ( isRangeParam(paramType) ) {
@@ -384,6 +371,130 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				}
 			}
 		}
+	}
+
+	void applyCriteriaRestrictionParameters(
+			StringBuilder declaration,
+			List<String> paramTypes,
+			String indent) {
+		applyCriteriaRestrictionParameters( declaration, paramTypes, indent, true );
+	}
+
+	void applyCriteriaRestrictionParameters(
+			StringBuilder declaration,
+			List<String> paramTypes,
+			String indent,
+			boolean includeRanges) {
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			final String paramName = parameterVariableName( i );
+			final String paramType = paramTypes.get( i );
+			if ( isRestrictionParam( paramType ) ) {
+				applyCriteriaRestrictionParameter( declaration, paramType, paramName, indent );
+			}
+			else if ( includeRanges && isRangeParam( paramType ) ) {
+				applyCriteriaRangeParameter( declaration, i, paramName, indent );
+			}
+		}
+	}
+
+	private void applyCriteriaRestrictionParameter(
+			StringBuilder declaration,
+			String paramType,
+			String paramName,
+			String indent) {
+		declaration.append( indent );
+		if ( isJakartaDataRestrictionParam( paramType ) ) {
+			declaration
+					.append( annotationMetaEntity.staticImport(
+							HIB_JAKARTA_DATA_RESTRICTION, "applyRestriction" ) )
+					.append( "(" );
+			restrictionArgument( declaration, paramType, paramName, JD_RESTRICT );
+			declaration.append( ", _query, _entity, _builder);\n" );
+		}
+		else {
+			restrictionArgument( declaration, paramType, paramName, HIB_RESTRICTION );
+			declaration.append( ".apply(_query, _entity);\n" );
+		}
+	}
+
+	private void applyCriteriaRangeParameter(
+			StringBuilder declaration,
+			int index,
+			String paramName,
+			String indent) {
+		final String restrictionTypeName = restrictionTypeName();
+		if ( restrictionTypeName != null ) {
+			final TypeElement entityElement =
+					annotationMetaEntity.getContext().getElementUtils()
+							.getTypeElement( restrictionTypeName );
+			declaration
+					.append( indent )
+					.append( annotationMetaEntity.importType( HIB_RESTRICTION ) )
+					.append( ".restrict(" )
+					.append( annotationMetaEntity.importType(
+							getGeneratedClassFullyQualifiedName( entityElement, false ) ) )
+					.append( '.' )
+					.append( paramNames.get( index ) )
+					.append( ", " )
+					.append( paramName )
+					.append( ").apply(_query, _entity);\n" );
+		}
+	}
+
+	private void restrictionArgument(
+			StringBuilder declaration,
+			String paramType,
+			String paramName,
+			String restrictionsType) {
+		if ( isMultipleRestrictions( paramType ) ) {
+			declaration
+					.append( annotationMetaEntity.importType( restrictionsType ) )
+					.append( ".all(" )
+					.append( paramName )
+					.append( ")" );
+		}
+		else {
+			declaration.append( paramName );
+		}
+	}
+
+	private static boolean isMultipleRestrictions(String paramType) {
+		return paramType.startsWith(LIST) || paramType.endsWith("[]");
+	}
+
+	void selectionExpression(StringBuilder declaration, String path, String typeName) {
+		declaration.append( "_entity" );
+		path( declaration, path, typeName );
+	}
+
+	void path(StringBuilder declaration, String path, String typeName) {
+		final StringTokenizer tokens = new StringTokenizer( path, "." );
+		while ( typeName != null && tokens.hasMoreTokens() ) {
+			final String memberName = tokens.nextToken();
+			declaration.append( ".get(" );
+			if ( ID_ROLE_NAME.equals( memberName ) ) {
+				declaration
+						.append( '"' )
+						.append( memberName )
+						.append( '"' );
+			}
+			else {
+				metamodelAttribute( declaration, typeName, memberName );
+			}
+			declaration.append( ')' );
+			typeName = annotationMetaEntity.getMemberType( typeName, memberName );
+		}
+	}
+
+	void metamodelAttribute(StringBuilder declaration, String typeName, String memberName) {
+		final TypeElement typeElement =
+				annotationMetaEntity.getContext().getElementUtils()
+						.getTypeElement( typeName );
+		declaration
+				.append( annotationMetaEntity.importType(
+						getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
+				.append( '.' )
+				.append( memberName );
 	}
 
 	void convertExceptions(StringBuilder declaration) {
@@ -616,155 +727,366 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void collectOrdering(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
-		if ( hasOrdering(paramTypes) ) {
-			final String orderingTypeName = orderingTypeName();
-			if ( orderingTypeName != null ) {
-				final boolean cursoredPage = isJakartaCursoredPage( containerType );
-				final String add;
-				if ( cursoredPage ) {
-					// we need to collect them together in a List
-					declaration
-							.append("\tvar _orders = new ")
-							.append(annotationMetaEntity.importType("java.util.ArrayList"))
-							.append("<")
-							.append(annotationMetaEntity.importType(HIB_ORDER))
-							.append("<? super ")
-							.append(annotationMetaEntity.importType(orderingTypeName))
-							.append(">>();\n");
-					add = "_orders.add";
-				}
-				else {
-					add = "_spec.sort";
-				}
+		if ( !hasOrder() ) {
+			return;
+		}
+		final String orderingTypeName = orderingTypeName();
+		if ( orderingTypeName == null ) {
+			return;
+		}
+		final boolean cursoredPage = isJakartaCursoredPage( containerType );
+		final String add;
+		if ( cursoredPage ) {
+			// we need to collect them together in a List
+			declaration
+					.append("\tvar _orders = new ")
+					.append(annotationMetaEntity.importType("java.util.ArrayList"))
+					.append("<")
+					.append(annotationMetaEntity.importType(HIB_ORDER))
+					.append("<? super ")
+					.append(annotationMetaEntity.importType(orderingTypeName))
+					.append(">>();\n");
+			add = "_orders.add";
+		}
+		else {
+			add = "_spec.sort";
+		}
 
-				// static orders declared using @OrderBy must come first
-				for ( OrderBy orderBy : orderBys ) {
-					annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
-					declaration
-							.append("\t")
-							.append(add)
-							.append('(')
-							.append(annotationMetaEntity.staticImport(HIB_ORDER, orderBy.descending  ? "desc" : "asc"))
-							.append('(')
-							.append(annotationMetaEntity.importType(orderingTypeName))
-							.append(".class, \"")
-							.append(orderBy.fieldName)
-							.append("\")");
-					if ( orderBy.ignoreCase ) {
-						declaration
-								.append("\n\t.ignoringCase()");
-					}
-					declaration
-							.append(");\n");
-
-				}
-				for (int i = 0; i < paramTypes.size(); i++) {
-					final String type = paramTypes.get(i);
-					final String name = paramNames.get(i);
-					if ( type.startsWith(HIB_ORDER) && type.endsWith("...") ) {
-						declaration
-								.append("\tfor (var _sort : ")
-								.append(name)
-								.append(") {\n")
-								.append("\t\t")
-								.append(add)
-								.append("(_sort);\n")
-								.append("\t}\n");
-					}
-					else if ( type.startsWith(HIB_ORDER) ) {
-						declaration
-								.append("\t")
-								.append(add)
-								.append('(')
-								.append(name)
-								.append(");\n");
-					}
-					else if ( type.startsWith(LIST + "<" + HIB_ORDER) ) {
-						if ( cursoredPage ) {
-							declaration
-									.append("\t_orders.addAll(")
-									.append(name)
-									.append(");\n");
-						}
-						else {
-							declaration
-									.append("\tfor (var _sort : ")
-									.append(name)
-									.append(") {\n")
-									.append("\t\t")
-									.append(add)
-									.append("(_sort);\n")
-									.append("\t}\n");
-						}
-					}
-					else if ( type.startsWith(JD_ORDER) ) {
-						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
-						declaration
-								.append("\tfor (var _sort : ")
-								.append(name)
-								.append(".sorts()) {\n")
-								.append("\t\t")
-								.append(add)
-								.append('(')
-								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
-								.append('(')
-								.append(annotationMetaEntity.importType(orderingTypeName))
-								.append(".class, _sort.property())")
-								.append("\n\t\t\t\t\t")
-								.append(".reversedIf(_sort.isDescending())")
-								.append("\n\t\t\t\t\t")
-								.append(".ignoringCaseIf(_sort.ignoreCase()));\n")
-								.append("\t}\n");
-					}
-					else if ( type.startsWith(JD_SORT) && type.endsWith("...") ) {
-						// almost identical
-						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
-						declaration
-								.append("\tfor (var _sort : ")
-								.append(name)
-								.append(") {\n")
-								.append("\t\t")
-								.append(add)
-								.append('(')
-								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
-								.append('(')
-								.append(annotationMetaEntity.importType(orderingTypeName))
-								.append(".class, _sort.property())")
-								.append("\n\t\t\t\t\t")
-								.append(".reversedIf(_sort.isDescending())")
-								.append("\n\t\t\t\t\t")
-								.append(".ignoringCaseIf(_sort.ignoreCase()));\n")
-								.append("\t}\n");
-					}
-					else if ( type.startsWith(JD_SORT) ) {
-						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
-						declaration
-								.append("\t")
-								.append(add)
-								.append('(')
-								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
-								.append('(')
-								.append(annotationMetaEntity.importType(orderingTypeName))
-								.append(".class, ")
-								.append(name)
-								.append(".property())")
-								.append("\n\t\t\t\t\t")
-								.append(".reversedIf(")
-								.append(name)
-								.append(".isDescending())")
-								.append("\n\t\t\t\t\t")
-								.append(".ignoringCaseIf(")
-								.append(name)
-								.append(".ignoreCase()));\n");
-					}
-				}
-			}
+		// static orders declared using @OrderBy must come first
+		for ( OrderBy orderBy : orderBys ) {
+			annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
+			collectStaticOrder( declaration, add, orderBy, orderingTypeName );
+		}
+		for ( int i = 0; i < paramTypes.size(); i++ ) {
+			collectOrderingParameter(
+					declaration,
+					paramTypes.get( i ),
+					paramNames.get( i ),
+					add,
+					orderingTypeName,
+					cursoredPage );
 		}
 	}
 
-	private boolean hasOrdering(List<String> paramTypes) {
-		return paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam)
-			|| !orderBys.isEmpty();
+	private void collectOrderingParameter(
+			StringBuilder declaration,
+			String type,
+			String name,
+			String add,
+			String orderingTypeName,
+			boolean cursoredPage) {
+		if ( type.startsWith(HIB_ORDER) && type.endsWith("...") ) {
+			collectOrders( declaration, name, add );
+		}
+		else if ( type.startsWith(HIB_ORDER) ) {
+			collectOrder( declaration, add, name, "\t" );
+		}
+		else if ( type.startsWith(LIST + "<" + HIB_ORDER) ) {
+			if ( cursoredPage ) {
+				collectAllOrders( declaration, name );
+			}
+			else {
+				collectOrders( declaration, name, add );
+			}
+		}
+		else if ( type.startsWith(JD_ORDER) ) {
+			collectJakartaDataSorts( declaration, name + ".sorts()", add, orderingTypeName );
+		}
+		else if ( type.startsWith(JD_SORT) && type.endsWith("...") ) {
+			collectJakartaDataSorts( declaration, name, add, orderingTypeName );
+		}
+		else if ( type.startsWith(JD_SORT) ) {
+			collectJakartaDataSort( declaration, name, add, orderingTypeName );
+		}
+	}
+
+	private void collectStaticOrder(
+			StringBuilder declaration,
+			String add,
+			OrderBy orderBy,
+			String orderingTypeName) {
+		declaration
+				.append("\t")
+				.append(add)
+				.append('(');
+		staticOrderExpression( declaration, orderBy, orderingTypeName );
+		declaration.append(");\n");
+	}
+
+	private static void collectOrder(StringBuilder declaration, String add, String order, String indent) {
+		declaration
+				.append(indent)
+				.append(add)
+				.append('(')
+				.append(order)
+				.append(");\n");
+	}
+
+	private static void collectOrders(StringBuilder declaration, String orders, String add) {
+		forEach( declaration, orders, "\t", "_sort" );
+		collectOrder( declaration, add, "_sort", "\t\t" );
+		endForEach( declaration, "\t" );
+	}
+
+	private static void collectAllOrders(StringBuilder declaration, String orders) {
+		declaration
+				.append("\t_orders.addAll(")
+				.append(orders)
+				.append(");\n");
+	}
+
+	private void collectJakartaDataSorts(
+			StringBuilder declaration,
+			String sorts,
+			String add,
+			String orderingTypeName) {
+		annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
+		forEach( declaration, sorts, "\t", "_sort" );
+		declaration
+				.append("\t\t")
+				.append(add)
+				.append('(');
+		jakartaDataSort( declaration, "_sort", orderingTypeName );
+		declaration.append(");\n");
+		endForEach( declaration, "\t" );
+	}
+
+	private void collectJakartaDataSort(
+			StringBuilder declaration,
+			String sort,
+			String add,
+			String orderingTypeName) {
+		annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
+		declaration
+				.append("\t")
+				.append(add)
+				.append('(');
+		jakartaDataSort( declaration, sort, orderingTypeName );
+		declaration.append(");\n");
+	}
+
+	private void jakartaDataSort(
+			StringBuilder declaration,
+			String sort,
+			String orderingTypeName) {
+		declaration
+				.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
+				.append('(')
+				.append(annotationMetaEntity.importType(orderingTypeName))
+				.append(".class, ")
+				.append(sort)
+				.append(".property())")
+				.append("\n\t\t\t\t\t")
+				.append(".reversedIf(")
+				.append(sort)
+				.append(".isDescending())")
+				.append("\n\t\t\t\t\t")
+				.append(".ignoringCaseIf(")
+				.append(sort)
+				.append(".ignoreCase())");
+	}
+
+	void applyCriteriaOrdering(
+			StringBuilder declaration,
+			List<String> paramTypes,
+			String indent,
+			String orderingTypeName) {
+		applyCriteriaOrdering( declaration, paramTypes, indent, orderingTypeName, true );
+	}
+
+	void applyCriteriaOrdering(
+			StringBuilder declaration,
+			List<String> paramTypes,
+			String indent,
+			String orderingTypeName,
+			boolean includeHibernateOrders) {
+		if ( !hasCriteriaOrdering( paramTypes, includeHibernateOrders ) ) {
+			return;
+		}
+		for ( OrderBy orderBy : orderBys ) {
+			applyStaticCriteriaOrder( declaration, orderBy, indent, orderingTypeName );
+		}
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			applyCriteriaOrderParameter(
+					declaration,
+					paramTypes.get( i ),
+					parameterVariableName( i ),
+					indent,
+					includeHibernateOrders );
+		}
+	}
+
+	private boolean hasCriteriaOrdering(List<String> paramTypes, boolean includeHibernateOrders) {
+		return !orderBys.isEmpty()
+			|| paramTypes.stream()
+					.anyMatch( type -> includeHibernateOrders
+							? isOrderParam( type )
+							: isJakartaDataOrderingParam( type ) );
+	}
+
+	private void applyCriteriaOrderParameter(
+			StringBuilder declaration,
+			String paramType,
+			String paramName,
+			String indent,
+			boolean includeHibernateOrders) {
+		if ( includeHibernateOrders && isHibernateOrderSequence( paramType ) ) {
+			applyHibernateCriteriaOrderingSequence( declaration, paramName, indent );
+		}
+		else if ( includeHibernateOrders && paramType.startsWith( HIB_ORDER ) ) {
+			applyHibernateCriteriaOrdering( declaration, paramName, indent );
+		}
+		else if ( paramType.startsWith( JD_ORDER ) ) {
+			applyCriteriaOrdering( declaration, "applyOrder", paramName, indent );
+		}
+		else if ( isJakartaDataSortSequence( paramType ) ) {
+			applyCriteriaOrderingSequence( declaration, "applySort", paramName, indent );
+		}
+		else if ( paramType.startsWith( JD_SORT ) ) {
+			applyCriteriaOrdering( declaration, "applySort", paramName, indent );
+		}
+	}
+
+	private static boolean isHibernateOrderSequence(String paramType) {
+		return paramType.startsWith( LIST + "<" + HIB_ORDER )
+			|| paramType.startsWith( HIB_ORDER ) && ( paramType.endsWith( "..." ) || paramType.endsWith( "[]" ) );
+	}
+
+	private static boolean isJakartaDataOrderingParam(String paramType) {
+		return paramType.startsWith( JD_ORDER )
+			|| paramType.startsWith( JD_SORT );
+	}
+
+	private static boolean isJakartaDataSortSequence(String paramType) {
+		return paramType.startsWith( JD_SORT )
+			&& ( paramType.endsWith( "..." ) || paramType.endsWith( "[]" ) );
+	}
+
+	private static void forEach(
+			StringBuilder declaration,
+			String source,
+			String indent,
+			String variable) {
+		declaration
+				.append( indent )
+				.append( "for (var " )
+				.append( variable )
+				.append( " : " )
+				.append( source )
+				.append( ") {\n" );
+	}
+
+	private static void endForEach(StringBuilder declaration, String indent) {
+		declaration
+				.append( indent )
+				.append( "}\n" );
+	}
+
+	private void applyStaticCriteriaOrder(
+			StringBuilder declaration,
+			OrderBy orderBy,
+			String indent,
+			String orderingTypeName) {
+		declaration
+				.append( indent )
+				.append( annotationMetaEntity.staticImport(
+						HIB_JAKARTA_DATA_RESTRICTION, "applySort" ) )
+				.append( "(" );
+		staticSortExpression( declaration, orderBy, orderingTypeName );
+		declaration.append( ", _query, _entity, _builder);\n" );
+	}
+
+	private void staticSortExpression(
+			StringBuilder declaration,
+			OrderBy orderBy,
+			String orderingTypeName) {
+		staticDataMetamodelAttribute( declaration, orderBy, orderingTypeName );
+		declaration
+				.append( '.' )
+				.append( sortMethod( orderBy ) )
+				.append( "()" );
+	}
+
+	private void staticDataMetamodelAttribute(
+			StringBuilder declaration,
+			OrderBy orderBy,
+			String orderingTypeName) {
+		final TypeElement typeElement =
+				annotationMetaEntity.getContext().getElementUtils()
+						.getTypeElement( orderingTypeName );
+		declaration
+				.append( annotationMetaEntity.importType(
+						getGeneratedClassFullyQualifiedName( typeElement, true ) ) )
+				.append( '.' )
+				.append( orderBy.fieldName.replace( '.', '_' ) );
+	}
+
+	private static String sortMethod(OrderBy orderBy) {
+		if ( orderBy.descending ) {
+			return orderBy.ignoreCase ? "descIgnoreCase" : "desc";
+		}
+		else {
+			return orderBy.ignoreCase ? "ascIgnoreCase" : "asc";
+		}
+	}
+
+	private void staticOrderExpression(
+			StringBuilder declaration,
+			OrderBy orderBy,
+			String orderingTypeName) {
+		declaration
+				.append( annotationMetaEntity.staticImport( HIB_ORDER, orderBy.descending ? "desc" : "asc" ) )
+				.append( "(" )
+				.append( annotationMetaEntity.importType( orderingTypeName ) )
+				.append( ".class, \"" )
+				.append( orderBy.fieldName )
+				.append( "\")" );
+		if ( orderBy.ignoreCase ) {
+			declaration.append( ".ignoringCase()" );
+		}
+	}
+
+	private void applyCriteriaOrderingSequence(
+			StringBuilder declaration,
+			String operation,
+			String ordering,
+			String indent) {
+		forEach( declaration, ordering, indent, "_sort" );
+		applyCriteriaOrdering( declaration, operation, "_sort", indent + '\t' );
+		endForEach( declaration, indent );
+	}
+
+	private static void applyHibernateCriteriaOrderingSequence(
+			StringBuilder declaration,
+			String ordering,
+			String indent) {
+		forEach( declaration, ordering, indent, "_sort" );
+		applyHibernateCriteriaOrdering( declaration, "_sort", indent + '\t' );
+		endForEach( declaration, indent );
+	}
+
+	private static void applyHibernateCriteriaOrdering(
+			StringBuilder declaration,
+			String ordering,
+			String indent) {
+		declaration
+				.append( indent )
+				.append( ordering )
+				.append( ".apply(_query, _entity, _builder);\n" );
+	}
+
+	private void applyCriteriaOrdering(
+			StringBuilder declaration,
+			String operation,
+			String ordering,
+			String indent) {
+		declaration
+				.append( indent )
+				.append( annotationMetaEntity.staticImport(
+						HIB_JAKARTA_DATA_RESTRICTION, operation ) )
+				.append( "(" )
+				.append( ordering )
+				.append( ", _query, _entity, _builder);\n" );
 	}
 
 	boolean isUsingSpecification() {

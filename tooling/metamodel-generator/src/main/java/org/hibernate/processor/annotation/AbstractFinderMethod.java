@@ -15,7 +15,7 @@ import static org.hibernate.processor.util.Constants.HIB_SESSION;
 /**
  * @author Gavin King
  */
-public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
+public abstract class AbstractFinderMethod extends AbstractQueryMethod {
 	final @Nullable String containerType;
 	final String entity;
 	final List<String> fetchProfiles;
@@ -138,15 +138,6 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 				.append('.')
 				.append("\n *");
 		see( declaration );
-//		declaration
-//				.append("\n *");
-//		for (String param : paramNames) {
-//			declaration
-//					.append("\n * @see ")
-//					.append(annotationMetaEntity.importType(entity))
-//					.append('#')
-//					.append(param);
-//		}
 		declaration
 				.append("\n **/\n");
 	}

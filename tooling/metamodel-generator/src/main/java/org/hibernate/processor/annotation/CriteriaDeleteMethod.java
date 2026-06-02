@@ -46,11 +46,6 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 		return true;
 	}
 
-//	@Override
-//	String returnType() {
-//		return returnType;
-//	}
-
 	@Override
 	void executeQuery(StringBuilder declaration, List<String> paramTypes) {
 		createSpecification( declaration );

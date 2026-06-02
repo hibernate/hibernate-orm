@@ -3296,7 +3296,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final AnnotationMirror orderByList = getAnnotationMirror( method, JD_ORDER_BY_LIST );
 			if ( orderByList != null ) {
 				final List<OrderBy> result = new ArrayList<>();
-				@SuppressWarnings("unchecked") final List<AnnotationValue> list = (List<AnnotationValue>)
+				@SuppressWarnings("unchecked")
+				final List<AnnotationValue> list = (List<AnnotationValue>)
 						castNonNull( getAnnotationValue( orderByList ) ).getValue();
 				for ( AnnotationValue element : list ) {
 					result.add( orderByExpression( castNonNull( (AnnotationMirror) element.getValue() ), entityType,
@@ -3421,10 +3422,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return emptyList();
 			}
 			else {
-				@SuppressWarnings(
-						"unchecked") final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles.getValue();
-				final List<String> result = annotationValues.stream().map( AnnotationValue::toString )
-						.collect( toList() );
+				@SuppressWarnings("unchecked")
+				final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles.getValue();
+				final List<String> result = annotationValues.stream().map( AnnotationValue::toString ).collect( toList() );
 				if ( result.stream().anyMatch( "<error>"::equals ) ) {
 					throw new ProcessLaterException();
 				}

@@ -513,8 +513,8 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.jsonValue_cockroachdb();
 		functionFactory.jsonQuery_cockroachdb();
 		functionFactory.jsonExists_cockroachdb();
-		functionFactory.jsonObject_postgresql();
-		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonObject_postgresql( false );
+		functionFactory.jsonArray_postgresql( false );
 		functionFactory.jsonArrayAgg_postgresql( false );
 		functionFactory.jsonObjectAgg_postgresql( false );
 		functionFactory.jsonSet_postgresql();

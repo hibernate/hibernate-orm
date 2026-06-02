@@ -83,7 +83,7 @@ dependencyResolutionManagement {
             version "maxSupportedBytecode", "22"
         }
         libs {
-            def antlrVersion = version "antlr", "4.13.0"
+            def antlrVersion = version "antlr", "4.13.2"
             // WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
             // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
             def byteBuddyVersion = version "byteBuddy", "1.17.8"

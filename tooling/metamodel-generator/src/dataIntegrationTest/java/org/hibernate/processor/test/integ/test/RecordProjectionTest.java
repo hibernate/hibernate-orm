@@ -4,9 +4,9 @@
  */
 package org.hibernate.processor.test.integ.test;
 
-import org.hibernate.processor.test.integ.model.Employee;
 import org.hibernate.processor.test.integ.model.EmployeeInfo;
 import org.hibernate.processor.test.integ.model.EmployeeSummary;
+import org.hibernate.processor.test.integ.model.ProjectionEmployee;
 import org.hibernate.processor.test.integ.repository.EmployeeProjections;
 import org.hibernate.processor.test.integ.repository._EmployeeProjections;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * which entity attributes to retrieve.
  */
 @DomainModel(
-		annotatedClasses = { Employee.class, EmployeeProjections.class }
+		annotatedClasses = { ProjectionEmployee.class, EmployeeProjections.class }
 )
 @SessionFactory
 class RecordProjectionTest {
@@ -39,9 +39,9 @@ class RecordProjectionTest {
 	}
 
 	private void seedEmployees(_EmployeeProjections repo) {
-		repo.save( new Employee( 1L, "Alice", "Engineering", 120_000.0 ) );
-		repo.save( new Employee( 2L, "Bob", "Engineering", 110_000.0 ) );
-		repo.save( new Employee( 3L, "Carol", "Marketing", 95_000.0 ) );
+		repo.save( new ProjectionEmployee( 1L, "Alice", "Engineering", 120_000.0 ) );
+		repo.save( new ProjectionEmployee( 2L, "Bob", "Engineering", 110_000.0 ) );
+		repo.save( new ProjectionEmployee( 3L, "Carol", "Marketing", 95_000.0 ) );
 	}
 
 	@Test

@@ -9,7 +9,9 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -66,6 +68,8 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	public void testJsonValueUuid(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create a JSON object with UUID and extract it back
@@ -81,6 +85,8 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	public void testJsonValueBinary(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create a JSON object with binary data and extract it back
@@ -96,6 +102,8 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	public void testJsonValueTimestamp(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create a JSON object with timestamp and extract it back
@@ -111,6 +119,8 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	public void testJsonValueInstant(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create a JSON object with instant and extract it back
@@ -126,6 +136,8 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	public void testJsonValueTime(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create a JSON object with time and extract it back
@@ -141,6 +153,7 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	public void testJsonObjectWithUuid(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create JSON object with UUID
@@ -155,6 +168,7 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	public void testJsonObjectWithBinary(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create JSON object with binary data
@@ -169,6 +183,7 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArray.class)
 	public void testJsonArrayWithUuid(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create JSON array with UUID
@@ -183,6 +198,7 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArray.class)
 	public void testJsonArrayWithBinary(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create JSON array with binary data
@@ -197,6 +213,7 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	public void testJsonObjectMultipleSpecialTypes(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create JSON object with multiple special types
@@ -229,6 +246,8 @@ public class JsonFunctionsSpecialTypesTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	public void testJsonValueChainedExtraction(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Test extracting UUID from a nested JSON structure

@@ -99,6 +99,9 @@ public interface BookAuthorRepository {
 	Author author(String ssn);
 
 	@Find
+	Stream<Author> allAuthors(Order<Author> order);
+
+	@Find
 	List<Author> authors(@By("ssn") String[] ssns);
 
 	@Find

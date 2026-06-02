@@ -235,7 +235,8 @@ public class JsonFunctionsSpecialTypesTest {
 			// Some databases have trailing zeros for the nanoseconds part
 			assertTrue( json.contains( "\"" + toEncodedString( TEST_TIMESTAMP ) ) );
 			// Some databases (like Oracle) may include date portion, so just check for the time part
-			assertTrue( json.contains( TEST_TIME + "\"" ) );
+			// Trim trailing fractional second zeros that some databases will add
+			assertTrue( json.replace( ".000000", "" ).contains( TEST_TIME + "\"" ) );
 		} );
 	}
 

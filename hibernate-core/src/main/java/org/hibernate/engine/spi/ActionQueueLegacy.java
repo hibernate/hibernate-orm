@@ -41,6 +41,7 @@ import org.hibernate.action.spi.Executable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -224,6 +225,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 		};
 
 		public abstract ExecutableList<?> getActions(ActionQueueLegacy instance);
+		@NullnessUtil.Initializer
 		public abstract void ensureInitialized(ActionQueueLegacy instance);
 	}
 
@@ -232,6 +234,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	 *
 	 * @param session The session "owning" this queue.
 	 */
+	@SuppressWarnings( "NullAway" )
 	public ActionQueueLegacy(SessionImplementor session) {
 		this.session = session;
 		isTransactionCoordinatorShared = false;

@@ -139,7 +139,12 @@ if (!skipErrorProne) {
 
             nullaway {
                 error()
-                annotatedPackages.add("org.hibernate.processor")
+                annotatedPackages.add('org.hibernate.processor')
+                annotatedPackages.add('org.hibernate.(jdbc|exception|integrator|processor|spi|pretty|property.access|query.sqm.tree|stat)')
+                annotatedPackages.add('org.hibernate.engine.(config|jndi|profile|spi|transaction)')
+                annotatedPackages.add('org.hibernate.(action|context|bytecode|service).spi')
+                // Note subpackages are implicitly included. Exclude them with unannotatedSubPackages.add(...).
+
                 onlyNullMarked = false
                 treatGeneratedAsUnannotated = true
                 checkContracts = true

@@ -113,7 +113,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		// Since the last argument is the Columns object, though that needs the `this` reference,
 		// we need to construct an array with a null slot at the end, where the Columns instance is put into.
 		// Suppress nullness checks as this will eventually turn non-nullable
-		@SuppressWarnings("nullness")
+		@SuppressWarnings("NullAway")
 		final SqmTypedNode<?>[] array = jsonPath == null
 				? new SqmTypedNode[] {document, null}
 				: new SqmTypedNode[] {document, jsonPath, null};

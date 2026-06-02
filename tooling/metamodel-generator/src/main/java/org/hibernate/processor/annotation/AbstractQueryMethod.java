@@ -459,7 +459,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			|| isJakartaDataRestrictionParam(parameterType);
 	}
 
-	private static boolean isJakartaDataRestrictionParam(String parameterType) {
+	static boolean isJakartaDataRestrictionParam(String parameterType) {
 		return parameterType.startsWith(JD_RESTRICTION)
 			|| parameterType.startsWith(LIST + "<" + JD_RESTRICTION);
 	}

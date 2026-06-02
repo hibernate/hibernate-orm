@@ -212,10 +212,13 @@ public class JsonFunctionsSpecialTypesTest {
 			).getResultList();
 
 			assertEquals( 1, results.size() );
-			assertTrue( results.get( 0 ).contains( "\"" + TEST_UUID + "\"" ) );
-			assertTrue( results.get( 0 ).contains( "\"" + PrimitiveByteArrayJavaType.INSTANCE.toString( TEST_BINARY ) + "\"" ) );
-			assertTrue( results.get( 0 ).contains( "\"" + toEncodedString( TEST_TIMESTAMP ) ) );
-			assertTrue( results.get( 0 ).contains( "\"" + TEST_TIME + "\"" ) );
+			final String json = results.get( 0 );
+			assertTrue( json.contains( "\"" + TEST_UUID + "\"" ) );
+			assertTrue( json.contains( "\"" + PrimitiveByteArrayJavaType.INSTANCE.toString( TEST_BINARY ) + "\"" ) );
+			// Some databases have trailing zeros for the nanoseconds part
+			assertTrue( json.contains( "\"" + toEncodedString( TEST_TIMESTAMP ) ) );
+			// Some databases (like Oracle) may include date portion, so just check for the time part
+			assertTrue( json.contains( TEST_TIME + "\"" ) );
 		} );
 	}
 

@@ -109,6 +109,29 @@ The `SpannerPostgreSQLDialect`, which was previously part of the `hibernate-comm
 
 Users currently using the community dialect must update their dialect configuration to use `org.hibernate.dialect.SpannerPostgreSQLDialect` (or rely on Hibernate's automatic dialect resolution).
 
+[[json-function-changes]]
+=== JSON function changes in ORM 7.4.4.Final
+
+JSON functions like `json_object` and `json_array` were previously not consistently behaving in a way that is compatible
+with the `AggregateSupport` of the `Dialect` when it comes to converting values of data types to JSON values,
+that have no obvious or multiple possible mappings, like binary, uuid, timestamp etc.
+Similarly, `json_value` was not able to extract data of such data types from a JSON document.
+
+To solve these problems and align the behavior with `AggregateSupport`, the implementations of `json_object`, `json_array` and `json_value`
+have been adapted for multiple dialects. Here is a quick outline of the behavior changes:
+
+==== DB2, Oracle, HSQLDB, MySQL
+
+* `json_array` and `json_object` now encode binary and UUID data as HEX string
+* `json_array` and `json_object` encode temporal data in ISO 8601 format with the `T` separator between date and time
+* `json_value` expects a HEX string when returning the `binary` or `uuid` type
+
+==== H2, PostgreSQL, CockroachDB, SQL Server
+
+* `json_array` and `json_object` now encodes binary data as HEX string
+* `json_value` expects a HEX string when returning the `binary` type
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

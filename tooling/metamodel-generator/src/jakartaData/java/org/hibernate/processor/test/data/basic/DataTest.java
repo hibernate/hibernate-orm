@@ -83,6 +83,9 @@ class DataTest {
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.countBooksWithIsbn())" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.countBooksWithIsbn2())" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.withNoOrder2())" ) );
+		assertTrue( repository.contains( "Stream<Author> allAuthors(@Nonnull Order<Author> order)" ) );
+		assertTrue( repository.contains( "applyOrder(order, _query, _entity, _builder);" ) );
+		assertFalse( repository.contains( "order.apply(_query, _entity, _builder);" ) );
 		assertFalse( repository.contains( "createNamedQuery(\"BookAuthorRepository.countBooksWithIsbn\", long.class)" ) );
 		assertFalse( repository.contains( "createNamedQuery(\"BookAuthorRepository.countBooksWithIsbn2\", boolean.class)" ) );
 		assertFalse( repository.contains( "createNamedQuery(\"BookAuthorRepository.withNoOrder2\", Author.class)" ) );

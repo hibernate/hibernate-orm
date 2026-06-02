@@ -307,7 +307,7 @@ class Jpa4OptionsTest {
 
 		@Override
 		@Nonnull
-		public Class<? extends R> getResultType() {
+		public Class<R> getResultType() {
 			return resultType;
 		}
 

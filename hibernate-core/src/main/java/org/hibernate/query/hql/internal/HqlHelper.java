@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.hql.internal;
 
-import java.util.List;
-
 import org.antlr.v4.runtime.Token;
 
 import jakarta.annotation.Nullable;
@@ -76,27 +74,6 @@ public final class HqlHelper {
 			}
 			return hql + " from " + entityName;
 		}
-	}
-
-	/**
-	 * If the given HQL string has no {@code select} clause,
-	 * prepend {@code select attr1, attr2, ...} using the
-	 * given attribute names. Used to infer a select clause
-	 * from Java record component names for projection queries.
-	 *
-	 * @param hql the HQL query string (should already have a {@code from} clause)
-	 * @param attributeNames the attribute names to select
-	 * @return the HQL string with a {@code select} clause
-	 */
-	public static String addSelectClauseIfNecessary(String hql, List<String> attributeNames) {
-		if ( attributeNames.isEmpty()
-				|| hql.isBlank()
-				|| isMutationStatement( hql )
-				|| hql.stripLeading().regionMatches( true, 0, "select", 0, 6 ) ) {
-			return hql;
-		}
-
-		return "select " + String.join( ", ", attributeNames ) + " " + hql;
 	}
 
 	/**

@@ -41,6 +41,9 @@ public interface EmployeeProjections extends DataRepository<Employee, Long> {
 	@Query("where department = :dept order by name")
 	List<EmployeeSummary> summaryByDepartment(@Param("dept") String department);
 
+	@Query("where department = ?1 order by name")
+	List<EmployeeSummary> summaryByDepartmentPositional(String department);
+
 	@Query("where id = :id")
 	Optional<EmployeeSummary> summaryById(@Param("id") long id);
 }

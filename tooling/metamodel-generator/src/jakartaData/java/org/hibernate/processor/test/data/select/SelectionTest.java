@@ -38,6 +38,7 @@ class SelectionTest {
 	})
 	void generatedRepositorySupportsSelectAndFirst() {
 		final String repository = getMetaModelSourceAsString( SelectionRepository.class, true );
+		final String normalizedRepository = repository.replaceAll( "\\s+", " " );
 		System.out.println( repository );
 		assertMetamodelClassGeneratedFor( SelectionBook.class );
 		assertMetamodelClassGeneratedFor( SelectionRepository.class, true );
@@ -76,8 +77,14 @@ class SelectionTest {
 		assertTrue( repository.contains(
 				"SelectionBook firstByStatus(SelectionStatus status, @Nonnull Order<SelectionBook> order)" ) );
 		assertTrue( repository.contains( "for (var _sort : order.sorts())" ) );
-		assertTrue( repository.contains( "select title from SelectionBook where status = :status" ) );
-		assertTrue( repository.contains( "select title, pages from SelectionBook where status = :status" ) );
+		assertTrue( repository.contains(
+				"var _reference = _builder.augment(SelectionRepository_.queryTitlesByStatus(status), _query -> {" ) );
+		assertTrue( repository.contains(
+				"var _reference = _builder.augment(SelectionRepository_.queryRenamedByStatus(status), _query -> {" ) );
+		assertTrue( normalizedRepository.contains(
+				"_query.select(_builder.construct(QueryRenamed.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages)));" )
+				|| normalizedRepository.contains(
+						"_query.select(_builder.construct(SelectionRepository.QueryRenamed.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages)));" ) );
 	}
 
 	@Test

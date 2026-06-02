@@ -307,12 +307,14 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
+	@Nonnull
 	public Set<SqmRoot<?>> getRoots() {
 		assert getFromClause() != null;
 		return new HashSet<>( getFromClause().getRoots() );
 	}
 
 	@Override
+	@Nonnull
 	public List<SqmRoot<?>> getRootList() {
 		assert getFromClause() != null;
 		return getFromClause().getRoots();

@@ -120,6 +120,7 @@ import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.internal.NativeMutationOrSelectionQueryImpl;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.sqm.internal.AugmentedTypedQueryReference;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
@@ -1727,6 +1728,22 @@ abstract class AbstractSharedSessionContract
 			final SelectionQueryImplementor<R> selectionQuery;
 			if ( typedQueryReference instanceof SelectionSpecificationImpl<R> specification ) {
 				selectionQuery = specification.createQuery( this );
+			}
+			else if ( typedQueryReference instanceof AugmentedTypedQueryReference<R> augmentedReference ) {
+				final var criteriaQuery = augmentedReference.getCriteriaQuery();
+				final var sqmMemento = augmentedReference.getSqmMemento();
+				final var query = sqmMemento == null
+						? new SelectionQueryImpl<>( criteriaQuery, criteriaQuery.getResultType(), this )
+						: new SelectionQueryImpl<>( sqmMemento, criteriaQuery, criteriaQuery.getResultType(), this );
+				bindReferenceArguments( query, augmentedReference );
+				augmentedReference.getHints().forEach( query::setHint );
+
+				final String entityGraphName = augmentedReference.getEntityGraphName();
+				if ( !isEmpty( entityGraphName ) ) {
+					query.setHint( HINT_SPEC_LOAD_GRAPH, entityGraphName );
+				}
+				augmentedReference.getOptions().forEach( query::addOption );
+				selectionQuery = query;
 			}
 			else {
 				final var resultType = (Class<R>) typedQueryReference.getResultType();

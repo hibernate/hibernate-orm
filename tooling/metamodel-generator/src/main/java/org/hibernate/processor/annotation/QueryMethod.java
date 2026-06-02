@@ -572,8 +572,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void appendJakartaDataSort(StringBuilder declaration, String sort, String indent) {
 		declaration
 				.append( indent )
-				.append( annotationMetaEntity.importType( "jakarta.persistence.criteria.Expression" ) )
-				.append( "<?> _sortExpression =\n" )
+				.append( "var _sortExpression =\n" )
 				.append( indent )
 				.append( "\t\t" )
 				.append( sort )

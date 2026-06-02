@@ -11,7 +11,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
-import org.hibernate.processor.util.NullnessUtil;
+import org.hibernate.internal.util.NullnessUtil;
 
 import static org.hibernate.processor.util.Constants.COLLECTIONS;
 import static org.hibernate.processor.util.StringUtil.isProperty;

@@ -58,7 +58,7 @@ import static org.hibernate.processor.util.Constants.MAP;
 import static org.hibernate.processor.util.Constants.MAPPED_SUPERCLASS;
 import static org.hibernate.processor.util.Constants.ONE_TO_MANY;
 import static org.hibernate.processor.util.Constants.ONE_TO_ONE;
-import static org.hibernate.processor.util.NullnessUtil.castNonNull;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.isProperty;
 import static org.hibernate.processor.util.StringUtil.removeDollar;
 

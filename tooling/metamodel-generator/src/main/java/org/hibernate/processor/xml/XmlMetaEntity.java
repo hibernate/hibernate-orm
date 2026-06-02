@@ -37,7 +37,7 @@ import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.Constants;
-import org.hibernate.processor.util.NullnessUtil;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.processor.util.StringUtil;
 import org.hibernate.processor.util.TypeUtils;
 

@@ -4,7 +4,7 @@
  */
 package org.hibernate.processor;
 
-import org.hibernate.processor.util.NullnessUtil;
+import org.hibernate.internal.util.NullnessUtil;
 
 /**
  * Information about the Meta Model Generator version.

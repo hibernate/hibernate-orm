@@ -4,6 +4,7 @@
  */
 package org.hibernate.property.access.internal;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.metamodel.RepresentationMode;
@@ -68,7 +69,7 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 
 	}
 
-	private StrategySelector strategySelectorService;
+	private @Nullable StrategySelector strategySelectorService;
 
 	protected StrategySelector strategySelectorService() {
 		if ( strategySelectorService == null ) {

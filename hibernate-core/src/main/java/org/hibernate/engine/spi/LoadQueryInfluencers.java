@@ -45,7 +45,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private CascadingFetchProfile enabledCascadingFetchProfile;
+	private @Nullable CascadingFetchProfile enabledCascadingFetchProfile;
 
 	//Lazily initialized!
 	private @Nullable HashSet<String> enabledFetchProfileNames;
@@ -61,8 +61,8 @@ public class LoadQueryInfluencers implements Serializable {
 
 	private final EffectiveEntityGraph effectiveEntityGraph;
 
-	private Boolean readOnly;
-	private Object temporalIdentifier;
+	private @Nullable Boolean readOnly;
+	private @Nullable Object temporalIdentifier;
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -101,7 +101,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return sessionFactory;
 	}
 
-	public Object getTemporalIdentifier() {
+	public @Nullable Object getTemporalIdentifier() {
 		return temporalIdentifier;
 	}
 
@@ -133,7 +133,7 @@ public class LoadQueryInfluencers implements Serializable {
 	 * handling a {@linkplain org.hibernate.Session#merge merge} to
 	 * immediately load additional based on {@linkplain jakarta.persistence.CascadeType#MERGE}
 	 */
-	public CascadingFetchProfile getEnabledCascadingFetchProfile() {
+	public  @Nullable CascadingFetchProfile getEnabledCascadingFetchProfile() {
 		return enabledCascadingFetchProfile;
 	}
 
@@ -286,11 +286,11 @@ public class LoadQueryInfluencers implements Serializable {
 		return effectiveEntityGraph;
 	}
 
-	public Boolean getReadOnly() {
+	public @Nullable Boolean getReadOnly() {
 		return readOnly;
 	}
 
-	public void setReadOnly(Boolean readOnly) {
+	public void setReadOnly(@Nullable Boolean readOnly) {
 		this.readOnly = readOnly;
 	}
 

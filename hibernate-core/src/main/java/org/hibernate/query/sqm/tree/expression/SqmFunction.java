@@ -179,7 +179,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SemanticPathPart
 
-	private SqmFunctionPath<T> functionPath;
+	private @Nullable SqmFunctionPath<T> functionPath;
 
 	private SqmFunctionPath<T> getFunctionPath() {
 		SqmFunctionPath<T> path = functionPath;

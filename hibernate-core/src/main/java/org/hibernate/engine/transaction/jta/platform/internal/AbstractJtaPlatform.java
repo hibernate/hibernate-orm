@@ -7,6 +7,7 @@ package org.hibernate.engine.transaction.jta.platform.internal;
 import java.util.Map;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.transaction.Synchronization;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
@@ -92,7 +93,7 @@ public abstract class AbstractJtaPlatform
 		return cacheUserTransaction;
 	}
 
-	private TransactionManager transactionManager;
+	private @Nullable TransactionManager transactionManager;
 
 	@Override
 	public TransactionManager retrieveTransactionManager() {
@@ -112,7 +113,7 @@ public abstract class AbstractJtaPlatform
 		return retrieveTransactionManager();
 	}
 
-	private UserTransaction userTransaction;
+	private @Nullable UserTransaction userTransaction;
 
 	@Override
 	public UserTransaction retrieveUserTransaction() {

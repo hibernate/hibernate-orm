@@ -33,7 +33,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  * @author Steve Ebersole
  */
 public class SqmFromClause implements Serializable, SqmCacheable {
-	private List<SqmRoot<?>> domainRoots;
+	private @Nullable List<SqmRoot<?>> domainRoots;
 
 	public SqmFromClause() {
 	}

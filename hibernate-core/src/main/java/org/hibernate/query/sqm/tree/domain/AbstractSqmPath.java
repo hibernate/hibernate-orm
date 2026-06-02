@@ -61,7 +61,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	 * E.g., given {@code p.mate.mate} the {@code SqmRoot} identified by {@code p} would
 	 * have a reusable path for the {@code p.mate} path.
 	 */
-	private Map<ReusablePathKey, SqmPath<?>> reusablePaths;
+	private @Nullable Map<ReusablePathKey, SqmPath<?>> reusablePaths;
 
 	private record ReusablePathKey(String name, ReusablePathAccess access) {
 		private static ReusablePathKey normal(String name) {

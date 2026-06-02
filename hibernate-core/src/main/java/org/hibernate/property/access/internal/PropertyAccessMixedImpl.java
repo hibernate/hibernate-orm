@@ -33,6 +33,7 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 	private final PropertyAccessStrategy strategy;
 
 	private final Getter getter;
+	@Nullable
 	private final Setter setter;
 
 	public PropertyAccessMixedImpl(PropertyAccessStrategy strategy, Class<?> containerJavaType, String propertyName) {
@@ -101,6 +102,7 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 	}
 
 	@Override
+	@Nullable
 	public Setter getSetter() {
 		return setter;
 	}

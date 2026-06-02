@@ -977,10 +977,10 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 		private static class InsertInfo {
 			private final AbstractEntityInsertAction insertAction;
 			// Inserts in this set must be executed before this insert
-			private Set<InsertInfo> transitiveIncomingDependencies;
+			private @Nullable Set<InsertInfo> transitiveIncomingDependencies;
 			// Child dependencies of i.e. one-to-many or inverse one-to-one
 			// It's necessary to have this for unidirectional associations, to propagate incoming dependencies
-			private Set<InsertInfo> outgoingDependencies;
+			private @Nullable Set<InsertInfo> outgoingDependencies;
 			// The current index of the insert info within an insert schedule
 			private int index;
 
@@ -1012,17 +1012,17 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 				if ( transitiveIncomingDependencies != null ) {
 					visited.addAll( transitiveIncomingDependencies );
 					for ( var insertInfo : transitiveIncomingDependencies.toArray( new InsertInfo[0] ) ) {
-						insertInfo.addTransitiveDependencies(this, visited);
+						insertInfo.addTransitiveDependencies(this.transitiveIncomingDependencies, visited);
 					}
 					visited.clear();
 				}
 			}
 
-			private void addTransitiveDependencies(InsertInfo origin, Set<InsertInfo> visited) {
+			private void addTransitiveDependencies(Set<InsertInfo> origin, Set<InsertInfo> visited) {
 				if ( transitiveIncomingDependencies != null ) {
 					for ( var insertInfo : transitiveIncomingDependencies ) {
 						if ( visited.add( insertInfo ) ) {
-							origin.transitiveIncomingDependencies.add( insertInfo );
+							origin.add( insertInfo );
 							insertInfo.addTransitiveDependencies( origin, visited );
 						}
 					}

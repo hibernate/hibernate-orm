@@ -1897,15 +1897,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( isNative && ( !repository || method.isDefault() ) ) {
 					validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
 				}
+				final ResultSelection querySelection =
+						!isNative && ( annotationTypeMatches( mirror, JD_QUERY )
+								|| annotationTypeMatches( mirror, JAKARTA_QUERY ) )
+								? querySelection( method, queryReturnType.validationReturnType, mirror, queryString )
+								: null;
+				final TypeMirror validationReturnType =
+						querySelection == null || primaryEntity == null
+								? queryReturnType.validationReturnType
+								: primaryEntity.asType();
 				final String processedQuery =
-						staticQueryValidationString( method, queryReturnType.validationReturnType, mirror, queryString );
-				checkParameters( method, queryReturnType.validationReturnType,
+						staticQueryValidationString( validationReturnType, mirror, queryString );
+				checkParameters( method, validationReturnType,
 						paramNames, paramTypes, mirror, value, queryString, isNative );
 				if ( isNative ) {
 					validateSql( method, mirror, queryString, paramNames, value );
 				}
 				else {
-					validateHql( method, queryReturnType.validationReturnType,
+					validateHql( method, validationReturnType,
 							mirror, value, processedQuery, paramNames, paramTypes );
 				}
 				if ( canBindReferenceArguments( queryString, isNative, paramNames, paramTypes ) ) {
@@ -1933,21 +1942,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private String staticQueryValidationString(
-			ExecutableElement method,
 			@Nullable TypeMirror returnType,
 			AnnotationMirror mirror,
 			String queryString) {
 		if ( annotationTypeMatches( mirror, JD_QUERY ) || annotationTypeMatches( mirror, JAKARTA_QUERY ) ) {
-			final ResultSelection querySelection = querySelection( method, returnType, mirror, queryString );
-			final String selectedQueryString =
-					querySelection == null
-							? queryString
-							: addSelectClause( queryString, querySelection );
 			final DeclaredType declaredReturnType =
 					returnType != null && returnType.getKind() == TypeKind.DECLARED
 							? (DeclaredType) returnType
 							: null;
-			return addFromClauseIfNecessary( selectedQueryString, implicitEntityName( declaredReturnType ) );
+			return addFromClauseIfNecessary( queryString, implicitEntityName( declaredReturnType ) );
 		}
 		else {
 			return queryString;
@@ -2994,9 +2997,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			return null;
 		}
-		final boolean recordReturn = returnType.getKind() == TypeKind.DECLARED
-				&& ((DeclaredType) returnType).asElement().getKind() == ElementKind.RECORD;
-		if ( !explicitMethodSelect && !recordReturn ) {
+		if ( !explicitMethodSelect && !isRecordReturn( returnType ) ) {
 			return null;
 		}
 		if ( returnType.getKind() == TypeKind.DECLARED
@@ -3009,9 +3010,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return null;
 		}
 		if ( hasSelectClause( queryString ) ) {
-			if ( explicitMethodSelect || recordHasSelectAnnotation( returnType ) ) {
+			if ( explicitMethodSelect ) {
 				message( method, query,
-						"'@Select' may only be used on a '@Query' method with no explicit SELECT clause",
+						"'@Select' may not be used on a '@Query' method with an explicit SELECT clause",
 						Diagnostic.Kind.ERROR );
 			}
 			return null;
@@ -3025,17 +3026,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return resultSelection( method, returnType, primaryEntity, true );
 	}
 
-	private boolean recordHasSelectAnnotation(TypeMirror returnType) {
-		if ( returnType.getKind() != TypeKind.DECLARED ) {
-			return false;
-		}
-		final TypeElement typeElement = (TypeElement) ((DeclaredType) returnType).asElement();
-		return typeElement.getKind() == ElementKind.RECORD
-			&& typeElement.getRecordComponents().stream().anyMatch( this::hasSelectAnnotation );
-	}
-
-	private static String addSelectClause(String queryString, ResultSelection selection) {
-		return HqlHelper.addSelectClauseIfNecessary( queryString, selection.paths() );
+	private static boolean isRecordReturn(TypeMirror returnType) {
+		return returnType.getKind() == TypeKind.DECLARED
+			&& ((DeclaredType) returnType).asElement().getKind() == ElementKind.RECORD;
 	}
 
 	private static boolean hasSelectClause(String hql) {
@@ -4170,16 +4163,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				!isNative && annotationTypeMatches( mirror, JD_QUERY )
 						? querySelection( method, returnType, mirror, queryString )
 						: null;
-		final String selectedQueryString =
-				querySelection == null ? queryString : addSelectClause( queryString, querySelection );
+		final TypeMirror validationReturnType =
+				querySelection == null || primaryEntity == null
+						? returnType
+						: primaryEntity.asType();
+		final DeclaredType validationResultType =
+				resultType( method, validationReturnType, mirror, value );
 		final String processedQuery;
 		if ( isNative ) {
-			processedQuery = selectedQueryString;
+			processedQuery = queryString;
 			validateSql( method, mirror, processedQuery, paramNames, value );
 		}
 		else {
-			processedQuery = addFromClauseIfNecessary( selectedQueryString, implicitEntityName( resultType ) );
-			validateHql( method, returnType, mirror, value, processedQuery, paramNames, paramTypes );
+			processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName( validationResultType ) );
+			validateHql( method, validationReturnType, mirror, value, processedQuery, paramNames, paramTypes );
 		}
 		final boolean mutation = isMutationStatement( queryString );
 		if ( mutation && hasAnnotation( method, JD_FIRST ) ) {
@@ -4219,6 +4216,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						sessionType[0],
 						sessionType[1],
 						orderBys,
+						querySelection,
+						querySelection == null || primaryEntity == null
+								? null
+								: primaryEntity.getQualifiedName().toString(),
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
 						fullReturnType( method ),

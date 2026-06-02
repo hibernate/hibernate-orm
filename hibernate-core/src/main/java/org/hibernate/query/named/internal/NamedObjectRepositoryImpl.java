@@ -106,7 +106,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	@SuppressWarnings("unchecked")
 	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
 		final Map<String, TypedQueryReference<R>> matches = mapOfSize( selectionMementos.size() );
-		for ( Map.Entry<String, NamedSelectionMemento<?>> entry : selectionMementos.entrySet() ) {
+		for ( var entry : selectionMementos.entrySet() ) {
 			if ( resultType.equals( entry.getValue().getResultType() ) ) {
 				matches.put( entry.getKey(), (NamedSelectionMemento<R>) entry.getValue() );
 			}

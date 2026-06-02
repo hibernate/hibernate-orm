@@ -526,7 +526,7 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeMutationMementoImpl<R> toMutationMemento(String name) {
 		errorIfSelectForSure();
-		final QueryOptions options = getQueryOptions();
+		final var options = getQueryOptions();
 		return new NativeMutationMementoImpl<>(
 				name,
 				originalSqlString,
@@ -543,7 +543,7 @@ public class NativeQueryImpl<R>
 	@SuppressWarnings("removal")
 	public NativeSelectionMementoImpl<R> toSelectionMemento(String name) {
 		errorIfNotSelectForSure();
-		final QueryOptions options = getQueryOptions();
+		final var options = getQueryOptions();
 		return new NativeSelectionMementoImpl<>(
 				name,
 				originalSqlString,

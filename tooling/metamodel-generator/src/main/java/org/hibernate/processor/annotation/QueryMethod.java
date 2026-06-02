@@ -10,8 +10,11 @@ import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.util.List;
+import java.util.StringTokenizer;
 
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 import static org.hibernate.processor.util.Constants.BOOLEAN;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
@@ -22,6 +25,7 @@ import static org.hibernate.processor.util.Constants.VOID;
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 
 /**
  * @author Gavin King
@@ -36,6 +40,8 @@ public class QueryMethod extends AbstractQueryMethod {
 	private final boolean isUpdate;
 	private final boolean isNative;
 	private final boolean generatedQueryReferenceMethod;
+	private final @Nullable ResultSelection selection;
+	private final @Nullable String selectionEntity;
 
 	QueryMethod(
 			AnnotationMetaEntity annotationMetaEntity,
@@ -60,6 +66,8 @@ public class QueryMethod extends AbstractQueryMethod {
 			String sessionType,
 			String sessionName,
 			List<OrderBy> orderBys,
+			@Nullable ResultSelection selection,
+			@Nullable String selectionEntity,
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
 			String fullReturnType,
@@ -81,6 +89,8 @@ public class QueryMethod extends AbstractQueryMethod {
 		this.isUpdate = isUpdate;
 		this.isNative = isNative;
 		this.generatedQueryReferenceMethod = generatedQueryReferenceMethod;
+		this.selection = selection;
+		this.selectionEntity = selectionEntity;
 	}
 
 	@Override
@@ -111,6 +121,9 @@ public class QueryMethod extends AbstractQueryMethod {
 	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
+		if ( usesAugmentedQueryReference() ) {
+			return getAugmentedQueryReferenceAttributeDeclarationString( paramTypes );
+		}
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration, paramTypes );
@@ -141,6 +154,28 @@ public class QueryMethod extends AbstractQueryMethod {
 		return declaration.toString();
 	}
 
+	private String getAugmentedQueryReferenceAttributeDeclarationString(List<String> paramTypes) {
+		final StringBuilder declaration = new StringBuilder();
+		comment( declaration );
+		modifiers( declaration, paramTypes );
+		preamble( declaration, paramTypes );
+		nullChecks( declaration, paramTypes );
+		createAugmentedQueryReference( declaration );
+		chainSession( declaration );
+		inTry( declaration );
+		createQuery( declaration, true );
+		declaration.append( ";\n" );
+		results( declaration, paramTypes, containerType );
+		select( declaration );
+		setFirstResultLimit( declaration );
+		handlePageParameters( declaration, paramTypes, containerType );
+		execute( declaration, initiallyUnwrapped() );
+		convertExceptions( declaration );
+		chainSessionEnd( false, declaration );
+		closingBrace( declaration );
+		return declaration.toString();
+	}
+
 	String specificationType() {
 		return isUpdate
 				? "org.hibernate.query.specification.MutationSpecification"
@@ -158,7 +193,12 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append('\t');
 			declaration.append("var _select = ");
 		}
-		if ( useSpecificationCreateQuery() ) {
+		if ( usesAugmentedQueryReference() ) {
+			localSession( declaration );
+			declaration
+					.append( ".createQuery(_reference)" );
+		}
+		else if ( useSpecificationCreateQuery() ) {
 			declaration
 					.append("_spec.createQuery(");
 			localSession( declaration );
@@ -258,9 +298,17 @@ public class QueryMethod extends AbstractQueryMethod {
 			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
 
+	private boolean usesAugmentedQueryReference() {
+		return selection != null
+			&& selectionEntity != null
+			&& !isUpdate
+			&& !isNative
+			&& !isReactive();
+	}
+
 	private boolean bindsParametersFromReference() {
 		return namedQueryName != null
-			&& ( useSpecificationCreateQuery() || useQueryReferenceCreateQuery() );
+			&& ( usesAugmentedQueryReference() || useSpecificationCreateQuery() || useQueryReferenceCreateQuery() );
 	}
 
 	private boolean useQueryReferenceCreateQuery() {
@@ -368,6 +416,76 @@ public class QueryMethod extends AbstractQueryMethod {
 		);
 		declaration
 				.append( "\n\t)" );
+	}
+
+	private void createAugmentedQueryReference(StringBuilder declaration) {
+		final ResultSelection selection = castNonNull( this.selection );
+		final String selectionEntity = castNonNull( this.selectionEntity );
+		declaration
+				.append( "\tvar _builder = " );
+		localSession( declaration );
+		declaration
+				.append( ".getCriteriaBuilder();\n" )
+				.append( "\tvar _reference = _builder.augment(" );
+		createQueryReference( declaration );
+		declaration
+				.append( ", _query -> {\n" )
+				.append( "\t\tvar _entity = (" )
+				.append( annotationMetaEntity.importType( "jakarta.persistence.criteria.Root" ) )
+				.append( "<" )
+				.append( annotationMetaEntity.importType( selectionEntity ) )
+				.append( ">) _query.getRoots().iterator().next();\n" )
+				.append( "\t\t_query.select(" );
+		if ( selection.recordProjection() ) {
+			declaration
+					.append( "_builder.construct(" )
+					.append( annotationMetaEntity.importType( selection.resultTypeName() ) )
+					.append( ".class" );
+			for ( String path : selection.paths() ) {
+				declaration.append( ",\n\t\t\t\t\t\t" );
+				selectionExpression( declaration, path, selectionEntity );
+			}
+			declaration.append( ")" );
+		}
+		else {
+			selectionExpression( declaration, selection.paths().get( 0 ), selectionEntity );
+		}
+		declaration.append( ")" );
+		declaration
+				.append( ";\n" )
+				.append( "\t});\n" );
+	}
+
+	private void selectionExpression(StringBuilder declaration, String path, String entity) {
+		declaration.append( "_entity" );
+		path( declaration, path, entity );
+	}
+
+	private void path(StringBuilder declaration, String path, String entity) {
+		final StringTokenizer tokens = new StringTokenizer( path, "." );
+		String typeName = entity;
+		while ( typeName != null && tokens.hasMoreTokens() ) {
+			final TypeElement typeElement =
+					annotationMetaEntity.getContext().getElementUtils()
+							.getTypeElement( typeName );
+			final String memberName = tokens.nextToken();
+			declaration.append( ".get(" );
+			if ( ID_ROLE_NAME.equals( memberName ) ) {
+				declaration
+						.append( '"' )
+						.append( memberName )
+						.append( '"' );
+			}
+			else {
+				declaration
+						.append( annotationMetaEntity.importType(
+								getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
+						.append( '.' )
+						.append( memberName );
+			}
+			declaration.append( ')' );
+			typeName = annotationMetaEntity.getMemberType( typeName, memberName );
+		}
 	}
 
 	private List<String> queryParameterNames() {

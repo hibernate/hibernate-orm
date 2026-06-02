@@ -67,6 +67,7 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -82,8 +83,8 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.criteria.spi.CriteriaBuilderExtension;
+import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.specification.MutationSpecification;
-import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -186,6 +187,8 @@ import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.classInstantiation;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.listInstantiation;
 import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.mapInstantiation;
+import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
+import static org.hibernate.query.sqm.tree.SqmCopyContext.simpleContext;
 import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.createConvertedParameterType;
 
 /**
@@ -469,9 +472,57 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public <T> TypedQueryReference<T> augment(
 			@Nonnull TypedQueryReference<T> reference,
 			@Nonnull Consumer<CriteriaQuery<T>> augmentation) {
-		return SelectionSpecification.create( reference )
-				.augment( (builder, query, root) -> augmentation.accept( query ) )
-				.reference();
+		final var buildResult = buildCriteriaQuery( reference );
+		augmentation.accept( buildResult.sqmStatement );
+		return new AugmentedTypedQueryReference<>( reference, buildResult.sqmStatement, buildResult.sqmMemento );
+	}
+
+	private <T> SqmBuildResult<T> buildCriteriaQuery(TypedQueryReference<T> reference) {
+		@SuppressWarnings("unchecked")
+		final var resultType = (Class<T>) reference.getResultType();
+		final var namedMemento = queryEngine.getNamedObjectRepository()
+				.getQueryMementoByName( reference.getName(), false );
+		if ( namedMemento instanceof NamedSqmQueryMemento<?> sqmMemento ) {
+			return new SqmBuildResult<>( createCriteriaQuery( sqmMemento, resultType ), sqmMemento );
+		}
+		else {
+			throw new IllegalSelectQueryException(
+					"CriteriaBuilder.augment() only supports HQL query references: " + reference.getName()
+			);
+		}
+	}
+
+	private <T> SqmSelectStatement<T> createCriteriaQuery(NamedSqmQueryMemento<?> sqmMemento, Class<T> resultType) {
+		final var sqmStatement = sqmMemento.getSqmStatement();
+		if ( sqmStatement == null ) {
+			return createCriteriaQuery( sqmMemento.getHqlString(), resultType );
+		}
+		else if ( sqmStatement instanceof SqmSelectStatement<?> selectStatement ) {
+			return selectStatement.createCopy( simpleContext( SqmQuerySource.CRITERIA ), resultType );
+		}
+		else {
+			throw new IllegalSelectQueryException(
+					"Expecting a selection query, but found '" + sqmMemento.getHqlString() + "'",
+					sqmMemento.getHqlString()
+			);
+		}
+	}
+
+	private <T> SqmSelectStatement<T> createCriteriaQuery(String hql, Class<T> resultType) {
+		final var hqlInterpretation =
+				queryEngine.getInterpretationCache()
+						.resolveHqlInterpretation( hql, resultType, queryEngine.getHqlTranslator() );
+		if ( hqlInterpretation.getSqmStatement() instanceof SqmSelectStatement<?> selectStatement ) {
+			return selectStatement.createCopy( noParamCopyContext( SqmQuerySource.CRITERIA ), resultType );
+		}
+		else {
+			throw new IllegalSelectQueryException( "Expecting a selection query, but found '" + hql + "'", hql );
+		}
+	}
+
+	private record SqmBuildResult<T>(
+			SqmSelectStatement<T> sqmStatement,
+			@Nullable NamedSqmQueryMemento<?> sqmMemento) {
 	}
 
 	@Nonnull

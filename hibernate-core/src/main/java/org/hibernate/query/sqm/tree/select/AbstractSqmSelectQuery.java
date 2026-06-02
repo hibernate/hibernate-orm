@@ -256,6 +256,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	/**
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRootList()
 	 */
+	@Nonnull
 	public List<? extends JpaRoot<?>> getRootList() {
 		return getQuerySpec().getRootList();
 	}
@@ -263,6 +264,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	/**
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(int, Class)
 	 */
+	@Nonnull
 	public <E> JpaRoot<? extends E> getRoot(int position, Class<E> type) {
 		final var rootList = getQuerySpec().getRootList();
 		if ( rootList.size() <= position ) {
@@ -274,6 +276,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	/**
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(String, Class)
 	 */
+	@Nonnull
 	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
 		for ( var root : getQuerySpec().getRootList() ) {
 			final String rootAlias = root.getAlias();

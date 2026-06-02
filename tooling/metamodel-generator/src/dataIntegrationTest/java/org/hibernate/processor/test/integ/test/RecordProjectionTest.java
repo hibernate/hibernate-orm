@@ -143,6 +143,12 @@ class RecordProjectionTest {
 			assertEquals( "Alice", summaries.get( 0 ).employeeName() );
 			assertEquals( "Engineering", summaries.get( 0 ).dept() );
 			assertEquals( 120_000.0, summaries.get( 0 ).salary() );
+
+			List<EmployeeSummary> positionalSummaries = repo.summaryByDepartmentPositional( "Engineering" );
+			assertEquals( 2, positionalSummaries.size() );
+			assertEquals( "Alice", positionalSummaries.get( 0 ).employeeName() );
+			assertEquals( "Engineering", positionalSummaries.get( 0 ).dept() );
+			assertEquals( 120_000.0, positionalSummaries.get( 0 ).salary() );
 		} );
 	}
 

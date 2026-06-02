@@ -3322,9 +3322,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final AnnotationValue ignoreCaseOrNull = getAnnotationValue( orderBy, "ignoreCase" );
 		final boolean descending = descendingOrNull != null && (Boolean) descendingOrNull.getValue();
 		final boolean ignoreCase = ignoreCaseOrNull != null && (Boolean) ignoreCaseOrNull.getValue();
-		final String path = fieldName
-				.replace( '$', '.' )
-				.replace( '_', '.' ); //Jakarta Data allows _ here
+		final String path = isIdRef( fieldName )
+				? idAttributeName( entityType )
+				: fieldName
+						.replace( '$', '.' )
+						.replace( '_', '.' ); //Jakarta Data allows _ here
 		if ( memberMatchingPath( entityType, path ) == null ) {
 			message( method, orderBy,
 					"no matching field named '" + fieldName

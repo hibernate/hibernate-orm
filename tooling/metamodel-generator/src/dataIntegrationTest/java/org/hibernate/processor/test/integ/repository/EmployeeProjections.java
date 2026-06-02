@@ -9,19 +9,19 @@ import jakarta.data.repository.Param;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
-import org.hibernate.processor.test.integ.model.Employee;
 import org.hibernate.processor.test.integ.model.EmployeeInfo;
 import org.hibernate.processor.test.integ.model.EmployeeSummary;
+import org.hibernate.processor.test.integ.model.ProjectionEmployee;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 @Repository
-public interface EmployeeProjections extends DataRepository<Employee, Long> {
+public interface EmployeeProjections extends DataRepository<ProjectionEmployee, Long> {
 
 	@Save
-	void save(Employee employee);
+	void save(ProjectionEmployee employee);
 
 	@Query("where department = :dept order by name")
 	EmployeeInfo[] infoArrayByDepartment(@Param("dept") String department);

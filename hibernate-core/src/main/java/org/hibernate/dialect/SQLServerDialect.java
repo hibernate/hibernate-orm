@@ -573,6 +573,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 					return "format(?1,'hh\\:mm\\:ss')";
 			}
 		}
+		else if ( to == CastType.JSON ) {
+			return "json_query(cast(?1 as nvarchar(max)))";
+		}
 		return super.castPattern( from, to );
 	}
 

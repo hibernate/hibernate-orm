@@ -59,6 +59,7 @@ public class JavaxLangModelLibraryModels implements LibraryModels {
 		return ImmutableSet.<MethodRef>builder()
 				// These element types always have an enclosing element in valid Java programs
 				.add(MethodRef.methodRef("javax.lang.model.element.TypeElement", "getEnclosingElement()"))
+				// TODO this entry, and only this one, seems to be ignored by NullAway for some reason.
 				.add(MethodRef.methodRef("javax.lang.model.element.ExecutableElement", "getEnclosingElement()"))
 				.add(MethodRef.methodRef("javax.lang.model.element.VariableElement", "getEnclosingElement()"))
 				.add(MethodRef.methodRef("javax.lang.model.element.TypeParameterElement", "getEnclosingElement()"))

@@ -42,8 +42,8 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	private final List<SqmQueryPart<T>> queryParts;
 	private SetOperator setOperator;
 
-	@SuppressWarnings("nullness")
 	@Deprecated(forRemoval = true)
+	@SuppressWarnings("NullAway")
 	public SqmQueryGroup(SqmQueryPart<T> queryPart) {
 		this( queryPart.nodeBuilder(), null, listOf( queryPart ) );
 	}

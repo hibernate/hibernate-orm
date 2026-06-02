@@ -31,6 +31,7 @@ public final class ServiceBinding<R extends Service> {
 	private final ServiceLifecycleOwner lifecycleOwner;
 	private final Class<R> serviceRole;
 	private final @Nullable ServiceInitiator<R> serviceInitiator;
+	@SuppressWarnings( "NullAway.Init" )
 	private volatile R service;
 
 	public ServiceBinding(ServiceLifecycleOwner lifecycleOwner, Class<R> serviceRole, R service) {

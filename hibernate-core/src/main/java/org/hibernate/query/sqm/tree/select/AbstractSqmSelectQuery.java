@@ -15,6 +15,7 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.AssertionFailure;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaFunctionRoot;
@@ -244,6 +245,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		return sqmQueryPart;
 	}
 
+	@NullnessUtil.Initializer
 	public void setQueryPart(SqmQueryPart<T> sqmQueryPart) {
 		this.sqmQueryPart = sqmQueryPart;
 	}

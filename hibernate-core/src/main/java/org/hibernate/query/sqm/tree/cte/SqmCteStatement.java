@@ -44,6 +44,9 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableNode, JpaCteCriteria<T> {
 	private final SqmCteContainer cteContainer;
 	private final SqmCteTable<T> cteTable;
+	// Need to suppress static analysis errors because passing the `this` reference is unsafe,
+	// though we make it safe by not calling any methods on it until initialization finishes
+	@SuppressWarnings( "NullAway.Init" )
 	private SqmSelectQuery<?> cteDefinition;
 	private CteMaterialization materialization;
 	private @Nullable CteSearchClauseKind searchClauseKind;
@@ -74,7 +77,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 
 	// Need to suppress static analysis errors because passing the `this` reference is unsafe,
 	// though we make it safe by not calling any methods on it until initialization finishes
-	@SuppressWarnings({"uninitialized", "argument"})
+	@SuppressWarnings({"uninitialized", "argument", "NullAway.Init"})
 	public SqmCteStatement(
 			String name,
 			SqmSelectQuery<T> nonRecursiveQueryPart,

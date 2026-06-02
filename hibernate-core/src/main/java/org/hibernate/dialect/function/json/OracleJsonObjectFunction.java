@@ -6,8 +6,10 @@ package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
+import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CastFunction;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -32,10 +34,11 @@ public class OracleJsonObjectFunction extends JsonObjectFunction {
 
 	@Override
 	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
+		final SessionFactoryImplementor sessionFactory = walker.getSessionFactory();
 		if ( ExpressionTypeHelper.isNonNativeBoolean( value ) ) {
 			CastFunction castFunction = this.castFunction;
 			if ( castFunction == null ) {
-				castFunction = this.castFunction = (CastFunction) walker.getSessionFactory()
+				castFunction = this.castFunction = (CastFunction) sessionFactory
 						.getQueryEngine()
 						.getSqmFunctionRegistry()
 						.findFunctionDescriptor( "cast" );
@@ -49,12 +52,17 @@ public class OracleJsonObjectFunction extends JsonObjectFunction {
 			sqlAppender.appendSql( " format json" );
 		}
 		else {
-			value.accept( walker );
-			final JdbcMappingContainer expressionType = ( (Expression) value ).getExpressionType();
-			if ( expressionType != null && expressionType.getSingleJdbcMapping().getJdbcType().isJson()
-					&& !SqlTypes.isJsonType( expressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) ) {
-				sqlAppender.appendSql( " format json" );
-			}
+			final JdbcMapping jdbcMapping = ( (Expression) value ).getExpressionType().getSingleJdbcMapping();
+			((OracleAggregateSupport) OracleAggregateSupport.valueOf( sessionFactory.getJdbcServices().getDialect() )).appendJsonWriteExpression(
+					sqlAppender,
+					() -> value.accept( walker ),
+					jdbcMapping,
+					sessionFactory.getTypeConfiguration()
+			);
+				if ( jdbcMapping.getJdbcType().isJson()
+					&& !SqlTypes.isJsonType( jdbcMapping.getJdbcType().getDdlTypeCode() ) ) {
+					sqlAppender.appendSql( " format json" );
+				}
 		}
 	}
 }

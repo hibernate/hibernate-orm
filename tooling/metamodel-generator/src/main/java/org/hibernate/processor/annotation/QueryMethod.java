@@ -10,19 +10,10 @@ import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import java.util.List;
-import java.util.StringTokenizer;
 
-import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 import static org.hibernate.processor.util.Constants.BOOLEAN;
-import static org.hibernate.processor.util.Constants.HIB_JAKARTA_DATA_RESTRICTION;
-import static org.hibernate.processor.util.Constants.HIB_RESTRICTION;
-import static org.hibernate.processor.util.Constants.JD_ORDER;
-import static org.hibernate.processor.util.Constants.JD_RESTRICT;
-import static org.hibernate.processor.util.Constants.JD_SORT;
-import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
 import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.STATIC_STATEMENT_REFERENCE;
@@ -31,7 +22,6 @@ import static org.hibernate.processor.util.Constants.VOID;
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
-import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 
 /**
  * @author Gavin King
@@ -440,10 +430,10 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append( annotationMetaEntity.importType( "jakarta.persistence.criteria.Root" ) )
 				.append( "<" )
 				.append( annotationMetaEntity.importType( selectionEntity ) )
-				.append( ">) _query.getRoots().iterator().next();\n" )
-				.append( applyRestrictionParameters() )
-				.append( applyOrderingParameters() )
-				.append( "\t\t_query.select(" );
+				.append( ">) _query.getRoots().iterator().next();\n" );
+		applyCriteriaRestrictionParameters( declaration, paramTypes, "\t\t", false );
+		applyCriteriaOrdering( declaration, paramTypes, "\t\t", selectionEntity, false );
+		declaration.append( "\t\t_query.select(" );
 		if ( selection.recordProjection() ) {
 			declaration
 					.append( "_builder.construct(" )
@@ -462,169 +452,6 @@ public class QueryMethod extends AbstractQueryMethod {
 		declaration
 				.append( ";\n" )
 				.append( "\t});\n" );
-	}
-
-	private String applyRestrictionParameters() {
-		final StringBuilder declaration = new StringBuilder();
-		for ( int i = 0; i < paramNames.size(); i++ ) {
-			final String paramName = parameterName( paramNames.get( i ) );
-			final String paramType = paramTypes.get( i );
-			if ( isRestrictionParam( paramType ) ) {
-				final boolean multipleRestrictions =
-						paramType.startsWith( LIST ) || paramType.endsWith( "[]" );
-				declaration.append( "\t\t" );
-				if ( isJakartaDataRestrictionParam( paramType ) ) {
-					declaration
-							.append( annotationMetaEntity.staticImport(
-									HIB_JAKARTA_DATA_RESTRICTION, "adaptRestriction" ) )
-							.append( "(" );
-					if ( multipleRestrictions ) {
-						declaration
-								.append( annotationMetaEntity.importType( JD_RESTRICT ) )
-								.append( ".all(" )
-								.append( paramName )
-								.append( ")" );
-					}
-					else {
-						declaration.append( paramName );
-					}
-					declaration.append( ")" );
-				}
-				else if ( multipleRestrictions ) {
-					declaration
-							.append( annotationMetaEntity.importType( HIB_RESTRICTION ) )
-							.append( ".all(" )
-							.append( paramName )
-							.append( ")" );
-				}
-				else {
-					declaration.append( paramName );
-				}
-				declaration.append( ".apply(_query, _entity);\n" );
-			}
-		}
-		return declaration.toString();
-	}
-
-	private String applyOrderingParameters() {
-		if ( orderBys.isEmpty()
-				&& paramTypes.stream().noneMatch( QueryMethod::isJakartaDataOrderingParam ) ) {
-			return "";
-		}
-		final StringBuilder declaration = new StringBuilder();
-		declaration
-				.append( "\t\tvar _orders = new " )
-				.append( annotationMetaEntity.importType( "java.util.ArrayList" ) )
-				.append( "<" )
-				.append( annotationMetaEntity.importType( "jakarta.persistence.criteria.Order" ) )
-				.append( ">(_query.getOrderList());\n" );
-		for ( OrderBy orderBy : orderBys ) {
-			appendStaticOrderBy( declaration, orderBy );
-		}
-		for ( int i = 0; i < paramNames.size(); i++ ) {
-			final String paramName = parameterName( paramNames.get( i ) );
-			final String paramType = paramTypes.get( i );
-			if ( paramType.startsWith( JD_ORDER ) ) {
-				declaration
-						.append( "\t\tfor (var _sort : " )
-						.append( paramName )
-						.append( ".sorts()) {\n" );
-				appendJakartaDataSort( declaration, "_sort", "\t\t\t" );
-				declaration.append( "\t\t}\n" );
-			}
-			else if ( paramType.startsWith( JD_SORT ) && paramType.endsWith( "[]" ) ) {
-				declaration
-						.append( "\t\tfor (var _sort : " )
-						.append( paramName )
-						.append( ") {\n" );
-				appendJakartaDataSort( declaration, "_sort", "\t\t\t" );
-				declaration.append( "\t\t}\n" );
-			}
-			else if ( paramType.startsWith( JD_SORT ) ) {
-				declaration.append( "\t\t{\n" );
-				appendJakartaDataSort( declaration, paramName, "\t\t\t" );
-				declaration.append( "\t\t}\n" );
-			}
-		}
-		declaration.append( "\t\t_query.orderBy(_orders);\n" );
-		return declaration.toString();
-	}
-
-	private static boolean isJakartaDataOrderingParam(String paramType) {
-		return paramType.startsWith( JD_ORDER )
-			|| paramType.startsWith( JD_SORT );
-	}
-
-	private void appendStaticOrderBy(StringBuilder declaration, OrderBy orderBy) {
-		declaration
-				.append( "\t\t_orders.add(_builder." )
-				.append( orderBy.descending ? "desc(" : "asc(" );
-		if ( orderBy.ignoreCase ) {
-			declaration.append( "_builder.lower(" );
-		}
-		selectionExpression( declaration, orderBy.fieldName, castNonNull( selectionEntity ) );
-		if ( orderBy.ignoreCase ) {
-			declaration.append( ".as(String.class))" );
-		}
-		declaration.append( "));\n" );
-	}
-
-	private void appendJakartaDataSort(StringBuilder declaration, String sort, String indent) {
-		declaration
-				.append( indent )
-				.append( "var _sortExpression =\n" )
-				.append( indent )
-				.append( "\t\t" )
-				.append( sort )
-				.append( ".ignoreCase()\n" )
-				.append( indent )
-				.append( "\t\t\t\t? _builder.lower(_entity.get(" )
-				.append( sort )
-				.append( ".property()).as(String.class))\n" )
-				.append( indent )
-				.append( "\t\t\t\t: _entity.get(" )
-				.append( sort )
-				.append( ".property());\n" )
-				.append( indent )
-				.append( "_orders.add(" )
-				.append( sort )
-				.append( ".isDescending()\n" )
-				.append( indent )
-				.append( "\t\t? _builder.desc(_sortExpression)\n" )
-				.append( indent )
-				.append( "\t\t: _builder.asc(_sortExpression));\n" );
-	}
-
-	private void selectionExpression(StringBuilder declaration, String path, String entity) {
-		declaration.append( "_entity" );
-		path( declaration, path, entity );
-	}
-
-	private void path(StringBuilder declaration, String path, String entity) {
-		final StringTokenizer tokens = new StringTokenizer( path, "." );
-		String typeName = entity;
-		while ( typeName != null && tokens.hasMoreTokens() ) {
-			final TypeElement typeElement =
-					annotationMetaEntity.getContext().getElementUtils()
-							.getTypeElement( typeName );
-			final String memberName = tokens.nextToken();
-			declaration.append( ".get(" );
-			if ( ID_ROLE_NAME.equals( memberName ) ) {
-				declaration
-						.append( '"' )
-						.append( memberName )
-						.append( '"' );
-			}
-			else {
-				declaration
-						.append( annotationMetaEntity.importType(
-								getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
-						.append( '.' )
-						.append( memberName );
-			}
-			declaration.append( ')' );
-			typeName = annotationMetaEntity.getMemberType( typeName, memberName );
-		}
 	}
 
 	private List<String> queryParameterNames() {
@@ -757,35 +584,6 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append(paramName)
 				.append(")");
 	}
-
-//	private String returnType() {
-//		final StringBuilder type = new StringBuilder();
-//		if ( "[]".equals(containerType) ) {
-//			if ( returnTypeName == null ) {
-//				throw new AssertionFailure("array return type, but no type name");
-//			}
-//			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
-//		}
-//		else {
-//			final boolean returnsUni = isReactive() && isUnifiableReturnType(containerType);
-//			if ( returnsUni ) {
-//				type.append(annotationMetaEntity.importType(UNI)).append('<');
-//			}
-//			if ( containerType != null ) {
-//				type.append(annotationMetaEntity.importType(containerType));
-//				if ( returnTypeName != null ) {
-//					type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
-//				}
-//			}
-//			else if ( returnTypeName != null )  {
-//				type.append(annotationMetaEntity.importType(returnTypeName));
-//			}
-//			if ( returnsUni ) {
-//				type.append('>');
-//			}
-//		}
-//		return type.toString();
-//	}
 
 	private void comment(StringBuilder declaration) {
 		declaration

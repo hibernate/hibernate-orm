@@ -4,12 +4,20 @@
  */
 package org.hibernate.query;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Nulls;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.query.SortDirection.ASCENDING;
 import static org.hibernate.query.SortDirection.DESCENDING;
@@ -325,6 +333,52 @@ public interface Order<X> {
 	 */
 	default Order<X> ignoringCaseIf(boolean ignoreCase) {
 		return ignoreCase ? ignoringCase() : this;
+	}
+
+	/**
+	 * Apply this order to the given root entity of the given
+	 * {@linkplain CriteriaQuery criteria query}.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	default void apply(CriteriaQuery<?> query, Root<?> root, CriteriaBuilder builder) {
+		requireNonNull( query, "missing query" );
+		requireNonNull( root, "missing root" );
+		requireNonNull( builder, "missing builder" );
+		if ( entityClass() == null ) {
+			throw new IllegalArgumentException( "Cannot order by a select item in an entity query" );
+		}
+		var order = order( expression( root, builder ), builder );
+		final var orders = new ArrayList<>( query.getOrderList() );
+		orders.add( order );
+		query.orderBy( orders );
+	}
+
+	private jakarta.persistence.criteria.Order order(
+			Expression<?> expression,
+			CriteriaBuilder builder) {
+		return direction() == DESCENDING
+				? builder.desc( expression, nullPrecedence() )
+				: builder.asc( expression, nullPrecedence() );
+	}
+
+	private Expression<?> expression(Root<?> root, CriteriaBuilder builder) {
+		final var path = path( root, attributeName() );
+		return caseSensitive() ? path : builder.lower( path.as( String.class ) );
+	}
+
+	private static Path<?> path(Root<?> root, String path) {
+		requireNonNull( path, "missing path" );
+		final var tokens = new StringTokenizer( path, "." );
+		if ( !tokens.hasMoreTokens() ) {
+			throw new IllegalArgumentException( "Path may not be empty" );
+		}
+		Path<?> criteriaPath = root;
+		while ( tokens.hasMoreTokens() ) {
+			criteriaPath = criteriaPath.get( tokens.nextToken() );
+		}
+		return criteriaPath;
 	}
 
 	/**

@@ -54,9 +54,8 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 	void executeQuery(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append('\n');
-		createSpecification( declaration );
-		handleRestrictionParameters( declaration, paramTypes );
-		collectOrdering( declaration, paramTypes, containerType );
+		applyCriteriaRestrictionParameters( declaration, paramTypes, "\t" );
+		applyOrderingParameters( declaration, paramTypes, containerType );
 		inTry( declaration );
 		createQuery( declaration, true );
 		QueryOptionsSupport.setQueryOptions( this, declaration, false, false );
@@ -99,31 +98,8 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		return "createQuery";
 	}
 
-//	@Override
-//	String returnType() {
-//		final StringBuilder type = new StringBuilder();
-//		if ( "[]".equals(containerType) ) {
-//			if ( returnTypeName == null ) {
-//				throw new AssertionFailure("array return type, but no type name");
-//			}
-//			type.append(annotationMetaEntity.importType(returnTypeName)).append("[]");
-//		}
-//		else {
-//			final boolean returnsUni = isReactive() && isUnifiableReturnType(containerType);
-//			if ( returnsUni ) {
-//				type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
-//			}
-//			if ( containerType != null ) {
-//				type.append(annotationMetaEntity.importType(containerType)).append('<');
-//			}
-//			type.append(annotationMetaEntity.importType(entity));
-//			if ( containerType != null ) {
-//				type.append('>');
-//			}
-//			if ( returnsUni ) {
-//				type.append('>');
-//			}
-//		}
-//		return type.toString();
-//	}
+	@Override
+	boolean isUsingSpecification() {
+		return false;
+	}
 }

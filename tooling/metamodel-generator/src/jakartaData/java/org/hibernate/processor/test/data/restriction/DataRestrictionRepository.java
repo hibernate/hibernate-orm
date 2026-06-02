@@ -5,6 +5,7 @@
 package org.hibernate.processor.test.data.restriction;
 
 import jakarta.data.Order;
+import jakarta.data.Limit;
 import jakarta.data.repository.CrudRepository;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Find;
@@ -30,6 +31,12 @@ public interface DataRestrictionRepository extends CrudRepository<DataRestrictio
 
 	@Find
 	List<DataRestrictionBook> searchAny(Restriction<? super DataRestrictionBook>... restrictions);
+
+	@Find
+	List<DataRestrictionBook> search(
+			Restriction<? super DataRestrictionBook> restriction,
+			Order<? super DataRestrictionBook> order,
+			Limit limit);
 
 	@Query("from DataRestrictionBook")
 	List<DataRestrictionBook> query(Restriction<? super DataRestrictionBook> queryRestriction);

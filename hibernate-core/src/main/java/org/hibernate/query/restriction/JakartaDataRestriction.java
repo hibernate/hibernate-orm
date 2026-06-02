@@ -38,6 +38,7 @@ import jakarta.data.spi.expression.function.TextFunctionExpression;
 import jakarta.data.spi.expression.literal.Literal;
 import jakarta.data.spi.expression.path.Path;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -46,12 +47,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import static java.util.Objects.requireNonNull;
 
 /**
  * Converts {@linkplain jakarta.data.restrict.Restriction Jakarta Data
- * restrictions} to {@linkplain Restriction Hibernate query restrictions} and
+ * restrictions} to {@linkplain Restriction Hibernate query restrictions} or
+ * directly applies them to {@linkplain CriteriaQuery JPA criteria queries}, and
  * {@linkplain jakarta.data.constraint.Constraint Jakarta Data constraints} to
  * {@linkplain jakarta.persistence.criteria.Predicate JPA predicates}. The
  * operations of this class act as a bridge between the Jakarta Data APIs and
@@ -97,6 +100,82 @@ public final class JakartaDataRestriction {
 	 */
 	public static <T> Restriction<T> adaptRestriction(jakarta.data.restrict.Restriction<? super T> restriction) {
 		return new Adapter<>( restriction );
+	}
+
+	/**
+	 * Apply the given {@linkplain jakarta.data.restrict.Restriction Jakarta Data restriction}
+	 * to the given root entity of the given {@linkplain CriteriaQuery criteria query}.
+	 */
+	public static <T> void applyRestriction(
+			jakarta.data.restrict.Restriction<? super T> restriction,
+			CriteriaQuery<?> query,
+			Root<? extends T> root,
+			CriteriaBuilder builder) {
+		requireNonNull( restriction, "missing restriction" );
+		requireNonNull( query, "missing query" );
+		requireNonNull( root, "missing root" );
+		requireNonNull( builder, "missing builder" );
+		final var predicate = restriction( restriction, root, builder );
+		if ( query.getRestriction() == null ) {
+			query.where( predicate );
+		}
+		else {
+			query.where( query.getRestriction(), predicate );
+		}
+	}
+
+	/**
+	 * Apply the given {@linkplain jakarta.data.Order Jakarta Data order}
+	 * to the given root entity of the given {@linkplain CriteriaQuery criteria query}.
+	 */
+	public static void applyOrder(
+			jakarta.data.Order<?> order,
+			CriteriaQuery<?> query,
+			Root<?> root,
+			CriteriaBuilder builder) {
+		requireNonNull( order, "missing order" );
+		for ( var sort : order.sorts() ) {
+			applySort( sort, query, root, builder );
+		}
+	}
+
+	/**
+	 * Apply the given {@linkplain jakarta.data.Sort Jakarta Data sort}
+	 * to the given root entity of the given {@linkplain CriteriaQuery criteria query}.
+	 */
+	public static void applySort(
+			jakarta.data.Sort<?> sort,
+			CriteriaQuery<?> query,
+			Root<?> root,
+			CriteriaBuilder builder) {
+		requireNonNull( sort, "missing sort" );
+		requireNonNull( query, "missing query" );
+		requireNonNull( root, "missing root" );
+		requireNonNull( builder, "missing builder" );
+		final var expression =
+				sort.ignoreCase()
+						? builder.lower( path( root, sort.property() ).as( String.class ) )
+						: path( root, sort.property() );
+		appendOrder( query, sort.isDescending() ? builder.desc( expression ) : builder.asc( expression ) );
+	}
+
+	private static jakarta.persistence.criteria.Path<?> path(Root<?> root, String path) {
+		requireNonNull( path, "missing path" );
+		final var tokens = new StringTokenizer( path, "." );
+		if ( !tokens.hasMoreTokens() ) {
+			throw new IllegalArgumentException( "Path may not be empty" );
+		}
+		jakarta.persistence.criteria.Path<?> criteriaPath = root;
+		while ( tokens.hasMoreTokens() ) {
+			criteriaPath = criteriaPath.get( tokens.nextToken() );
+		}
+		return criteriaPath;
+	}
+
+	private static void appendOrder(CriteriaQuery<?> query, jakarta.persistence.criteria.Order order) {
+		final List<jakarta.persistence.criteria.Order> orders = new ArrayList<>( query.getOrderList() );
+		orders.add( order );
+		query.orderBy( orders );
 	}
 
 	/**

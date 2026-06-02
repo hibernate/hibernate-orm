@@ -8,7 +8,6 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -19,7 +18,6 @@ import static org.hibernate.processor.util.Constants.JD_PAGE_REQUEST;
 import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.OPTIONAL;
 import static org.hibernate.processor.util.Constants.STREAM;
-import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
@@ -70,7 +68,6 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		createBuilder(declaration);
 		createCriteriaQuery( declaration );
 		where( declaration, paramTypes );
-//		orderBy( paramTypes, declaration );
 		executeQuery( declaration, paramTypes );
 		convertExceptions( declaration );
 		chainSessionEnd( false, declaration );
@@ -104,8 +101,6 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	abstract void executeQuery(StringBuilder declaration, List<String> paramTypes);
 
 	abstract String createCriteriaMethod();
-
-//	abstract String returnType();
 
 	abstract String createQueryMethod();
 
@@ -263,22 +258,16 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			for ( String path : selection.paths() ) {
 				declaration
 						.append(", ");
-				selectionExpression( declaration, path );
+				selectionExpression( declaration, path, entity );
 			}
 			declaration
 					.append(")");
 		}
 		else {
-			selectionExpression( declaration, selection.paths().get( 0 ) );
+			selectionExpression( declaration, selection.paths().get( 0 ), entity );
 		}
 		declaration
 				.append(");\n");
-	}
-
-	private void selectionExpression(StringBuilder declaration, String path) {
-		declaration
-				.append("_entity");
-		path( declaration, path );
 	}
 
 	private void createBuilder(StringBuilder declaration) {
@@ -330,6 +319,18 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				.append("\n\t);");
 	}
 
+	void applyOrderingParameters(
+			StringBuilder declaration,
+			List<String> paramTypes,
+			@Nullable String containerType) {
+		if ( isJakartaCursoredPage( containerType ) ) {
+			collectOrdering( declaration, paramTypes, containerType );
+		}
+		else {
+			applyCriteriaOrdering( declaration, paramTypes, "\t", entity );
+		}
+	}
+
 	private boolean hasNonSpecialParams(List<String> paramTypes) {
 		for ( int i = 0; i < paramNames.size(); i++ ) {
 			if ( !isSpecialParam( paramTypes.get( i ) ) ) {
@@ -368,7 +369,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 					.append("==null")
 					.append("\n\t\t\t\t? ")
 					.append("_entity");
-			path( declaration, paramName );
+			path( declaration, paramName, entity );
 			declaration
 					.append(".isNull()")
 					.append("\n\t\t\t\t: ");
@@ -378,7 +379,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 					.append( annotationMetaEntity.staticImport(
 							HIB_JAKARTA_DATA_RESTRICTION, "applyConstraint" ) )
 					.append( "(_entity" );
-			path( declaration, paramName );
+			path( declaration, paramName, entity );
 			declaration
 					.append( ", " )
 					.append( parameterName )
@@ -391,7 +392,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			}
 			declaration
 					.append("_entity");
-			path( declaration, paramName );
+			path( declaration, paramName, entity );
 			declaration
 					.append(".in(");
 			if ( paramType.endsWith("[]") ) {
@@ -414,7 +415,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 					.append("_builder.")
 					.append(criteriaBuilderMethod( parameterConstraint ))
 					.append("(_entity");
-			path( declaration, paramName );
+			path( declaration, paramName, entity );
 			declaration
 					.append(", ")
 					//TODO: only safe if we are binding literals as parameters!!!
@@ -438,7 +439,8 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		};
 	}
 
-	private String parameterVariableName(int index) {
+	@Override
+	String parameterVariableName(int index) {
 		final String baseName = parameterName( paramNames.get(index) );
 		int collisions = 0;
 		for ( int i = 0; i < index; i++ ) {
@@ -652,45 +654,6 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				declaration.append( ")" );
 				typeName = annotationMetaEntity.getMemberType(typeName, memberName);
 			}
-		}
-	}
-
-	private void metamodelAttribute(StringBuilder declaration, String typeName, String memberName) {
-		final TypeElement typeElement =
-				annotationMetaEntity.getContext().getElementUtils()
-						.getTypeElement( typeName );
-		declaration
-				.append( annotationMetaEntity.importType(
-						getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
-				.append( '.' )
-				.append( memberName );
-	}
-
-	private void path(StringBuilder declaration, String paramName) {
-		final StringTokenizer tokens = new StringTokenizer(paramName, ".");
-		String typeName = entity;
-		while ( typeName != null && tokens.hasMoreTokens() ) {
-			final TypeElement typeElement =
-					annotationMetaEntity.getContext().getElementUtils()
-							.getTypeElement( typeName );
-			final String memberName = tokens.nextToken();
-			declaration
-					.append( ".get(" );
-			if ( ID_ROLE_NAME.equals(memberName) ) {
-				declaration
-						.append( '"' )
-						.append( memberName )
-						.append( '"' );
-			}
-			else {
-				declaration
-						.append( annotationMetaEntity.importType(
-								getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
-						.append( '.' )
-						.append( memberName );
-			}
-			declaration.append( ')' );
-			typeName = annotationMetaEntity.getMemberType(typeName, memberName);
 		}
 	}
 

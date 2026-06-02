@@ -44,8 +44,14 @@ class DataRestrictionTest {
 		assertTrue( repository.contains( "Restriction<? super DataRestrictionBook> restriction" ) );
 		assertTrue( repository.contains( "List<Restriction<? super DataRestrictionBook>> restrictions" ) );
 		assertTrue( repository.contains( "Restriction<? super DataRestrictionBook>[] restrictions" ) );
-		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(restriction));" ) );
-		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(Restrict.all(restrictions)));" ) );
+		assertTrue( repository.contains(
+				"List<DataRestrictionBook> search(@Nonnull Restriction<? super DataRestrictionBook> restriction,"
+						+ " @Nonnull Order<? super DataRestrictionBook> order, @Nonnull Limit limit)" ) );
+		assertTrue( repository.contains( "applyRestriction(restriction, _query, _entity, _builder);" ) );
+		assertTrue( repository.contains( "applyRestriction(Restrict.all(restrictions), _query, _entity, _builder);" ) );
+		assertTrue( repository.contains( "applyOrder(order, _query, _entity, _builder);" ) );
+		assertTrue( repository.contains( ".setFirstResult((int) limit.startAt() - 1)" ) );
+		assertTrue( repository.contains( ".setMaxResults(limit.maxResults())" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(queryRestriction));" ) );
 		assertTrue( repository.contains( "_spec.restrict(adaptRestriction(deleteRestriction));" ) );
 		assertFalse( repository.contains( "TypedQueryReference<" ) );
@@ -54,7 +60,6 @@ class DataRestrictionTest {
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
 		assertTrue( queryMetamodel.contains( "\"org.hibernate.processor.test.data.restriction"
 				+ ".DataRestrictionRepository#query(jakarta.data.restrict.Restriction)\"" ) );
-		assertTrue( repository.contains( "for (var _sort : order.sorts())" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.restriction" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.queryRestriction" ) );
 		assertFalse( repository.contains( "DataRestrictionBook_.deleteRestriction" ) );

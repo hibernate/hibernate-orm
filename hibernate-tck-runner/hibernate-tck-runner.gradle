@@ -27,7 +27,8 @@ repositories {
             includeGroup "jakarta.persistence"
         }
     }
-    mavenCentral()
+    // See MavenMirror and settings.gradle for more info on the mirror configuration
+    org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it)
 }
 
 configurations {

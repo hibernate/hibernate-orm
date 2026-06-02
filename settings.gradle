@@ -27,22 +27,7 @@ dependencyResolutionManagement {
         // See MAINTAINERS.md for documentation.
         // TODO Move to infra overrides instead;
         //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
-        if ( System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR'] ) {
-            maven {
-                url System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR']
-                if ( System.getProperty( 'MAVEN_MIRROR_USERNAME' ) || System.env['MAVEN_MIRROR_USERNAME'] ) {
-                    credentials {
-                        username = System.getProperty( 'MAVEN_MIRROR_USERNAME' ) ?: System.env['MAVEN_MIRROR_USERNAME']
-                        if ( System.getProperty( 'MAVEN_MIRROR_PASSWORD' ) || System.env['MAVEN_MIRROR_PASSWORD'] ) {
-                            password = System.getProperty( 'MAVEN_MIRROR_PASSWORD' ) ?: System.env['MAVEN_MIRROR_PASSWORD']
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            mavenCentral()
-
+        if ( !org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it) ) {
             // temporary for 4.0 snapshot testing
             maven {
                 url "https://central.sonatype.com/repository/maven-snapshots/"

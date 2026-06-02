@@ -9,7 +9,7 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
-import static org.hibernate.processor.util.NullnessUtil.castNonNull;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 
 public final class SqmTypeUtils {

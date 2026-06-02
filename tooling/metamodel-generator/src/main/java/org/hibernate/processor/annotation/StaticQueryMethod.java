@@ -25,7 +25,7 @@ import static org.hibernate.processor.util.Constants.STATIC_STATEMENT_REFERENCE;
 import static org.hibernate.processor.util.Constants.STATIC_TYPED_QUERY_REFERENCE;
 import static org.hibernate.processor.util.Constants.TIMEOUT;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY_REFERENCE;
-import static org.hibernate.processor.util.NullnessUtil.castNonNull;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 
 /**

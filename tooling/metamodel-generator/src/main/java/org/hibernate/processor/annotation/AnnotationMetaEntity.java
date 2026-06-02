@@ -87,7 +87,7 @@ import static org.hibernate.processor.annotation.AbstractQueryMethod.isSpecialPa
 import static org.hibernate.processor.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.processor.annotation.QueryMethod.isPageParam;
 import static org.hibernate.processor.util.Constants.*;
-import static org.hibernate.processor.util.NullnessUtil.castNonNull;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.removeDollar;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.determineAccessTypeForHierarchy;

@@ -37,7 +37,7 @@ import static org.hibernate.processor.util.Constants.ONE_TO_MANY;
 import static org.hibernate.processor.util.Constants.SINGULAR_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.TEMPORAL_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.TEXT_ATTRIBUTE;
-import static org.hibernate.processor.util.NullnessUtil.castNonNull;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.TypeUtils.DEFAULT_ANNOTATION_PARAMETER_NAME;
 import static org.hibernate.processor.util.TypeUtils.determineAnnotationSpecifiedAccessType;
 import static org.hibernate.processor.util.TypeUtils.extractClosestRealTypeAsString;

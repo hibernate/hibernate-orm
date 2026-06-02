@@ -19,7 +19,9 @@ import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiter
 import static org.hibernate.processor.util.Constants.BOOLEAN;
 import static org.hibernate.processor.util.Constants.HIB_JAKARTA_DATA_RESTRICTION;
 import static org.hibernate.processor.util.Constants.HIB_RESTRICTION;
+import static org.hibernate.processor.util.Constants.JD_ORDER;
 import static org.hibernate.processor.util.Constants.JD_RESTRICT;
+import static org.hibernate.processor.util.Constants.JD_SORT;
 import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
 import static org.hibernate.processor.util.Constants.QUERY;
@@ -440,6 +442,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append( annotationMetaEntity.importType( selectionEntity ) )
 				.append( ">) _query.getRoots().iterator().next();\n" )
 				.append( applyRestrictionParameters() )
+				.append( applyOrderingParameters() )
 				.append( "\t\t_query.select(" );
 		if ( selection.recordProjection() ) {
 			declaration
@@ -501,6 +504,96 @@ public class QueryMethod extends AbstractQueryMethod {
 			}
 		}
 		return declaration.toString();
+	}
+
+	private String applyOrderingParameters() {
+		if ( orderBys.isEmpty()
+				&& paramTypes.stream().noneMatch( QueryMethod::isJakartaDataOrderingParam ) ) {
+			return "";
+		}
+		final StringBuilder declaration = new StringBuilder();
+		declaration
+				.append( "\t\tvar _orders = new " )
+				.append( annotationMetaEntity.importType( "java.util.ArrayList" ) )
+				.append( "<" )
+				.append( annotationMetaEntity.importType( "jakarta.persistence.criteria.Order" ) )
+				.append( ">(_query.getOrderList());\n" );
+		for ( OrderBy orderBy : orderBys ) {
+			appendStaticOrderBy( declaration, orderBy );
+		}
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			final String paramName = parameterName( paramNames.get( i ) );
+			final String paramType = paramTypes.get( i );
+			if ( paramType.startsWith( JD_ORDER ) ) {
+				declaration
+						.append( "\t\tfor (var _sort : " )
+						.append( paramName )
+						.append( ".sorts()) {\n" );
+				appendJakartaDataSort( declaration, "_sort", "\t\t\t" );
+				declaration.append( "\t\t}\n" );
+			}
+			else if ( paramType.startsWith( JD_SORT ) && paramType.endsWith( "[]" ) ) {
+				declaration
+						.append( "\t\tfor (var _sort : " )
+						.append( paramName )
+						.append( ") {\n" );
+				appendJakartaDataSort( declaration, "_sort", "\t\t\t" );
+				declaration.append( "\t\t}\n" );
+			}
+			else if ( paramType.startsWith( JD_SORT ) ) {
+				declaration.append( "\t\t{\n" );
+				appendJakartaDataSort( declaration, paramName, "\t\t\t" );
+				declaration.append( "\t\t}\n" );
+			}
+		}
+		declaration.append( "\t\t_query.orderBy(_orders);\n" );
+		return declaration.toString();
+	}
+
+	private static boolean isJakartaDataOrderingParam(String paramType) {
+		return paramType.startsWith( JD_ORDER )
+			|| paramType.startsWith( JD_SORT );
+	}
+
+	private void appendStaticOrderBy(StringBuilder declaration, OrderBy orderBy) {
+		declaration
+				.append( "\t\t_orders.add(_builder." )
+				.append( orderBy.descending ? "desc(" : "asc(" );
+		if ( orderBy.ignoreCase ) {
+			declaration.append( "_builder.lower(" );
+		}
+		selectionExpression( declaration, orderBy.fieldName, castNonNull( selectionEntity ) );
+		if ( orderBy.ignoreCase ) {
+			declaration.append( ".as(String.class))" );
+		}
+		declaration.append( "));\n" );
+	}
+
+	private void appendJakartaDataSort(StringBuilder declaration, String sort, String indent) {
+		declaration
+				.append( indent )
+				.append( annotationMetaEntity.importType( "jakarta.persistence.criteria.Expression" ) )
+				.append( "<?> _sortExpression =\n" )
+				.append( indent )
+				.append( "\t\t" )
+				.append( sort )
+				.append( ".ignoreCase()\n" )
+				.append( indent )
+				.append( "\t\t\t\t? _builder.lower(_entity.get(" )
+				.append( sort )
+				.append( ".property()).as(String.class))\n" )
+				.append( indent )
+				.append( "\t\t\t\t: _entity.get(" )
+				.append( sort )
+				.append( ".property());\n" )
+				.append( indent )
+				.append( "_orders.add(" )
+				.append( sort )
+				.append( ".isDescending()\n" )
+				.append( indent )
+				.append( "\t\t? _builder.desc(_sortExpression)\n" )
+				.append( indent )
+				.append( "\t\t: _builder.asc(_sortExpression));\n" );
 	}
 
 	private void selectionExpression(StringBuilder declaration, String path, String entity) {

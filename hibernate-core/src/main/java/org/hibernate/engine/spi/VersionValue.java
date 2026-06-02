@@ -10,6 +10,7 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * A strategy for determining if a version value is a version of
@@ -34,7 +35,7 @@ public class VersionValue implements UnsavedValueStrategy {
 		}
 
 		@Override
-		public @Nullable Object getDefaultValue(Object currentValue) {
+		public @Nullable Object getDefaultValue(@Nullable Object currentValue) {
 			return null;
 		}
 
@@ -56,7 +57,7 @@ public class VersionValue implements UnsavedValueStrategy {
 		}
 
 		@Override
-		public Object getDefaultValue(Object currentValue) {
+		public @Nullable Object getDefaultValue(@Nullable Object currentValue) {
 			return currentValue;
 		}
 
@@ -85,8 +86,12 @@ public class VersionValue implements UnsavedValueStrategy {
 		}
 
 		@Override
-		public Object getDefaultValue(Object currentValue) {
-			return IdentifierGeneratorHelper.makeIntegralValue( -1L, currentValue.getClass() );
+		public Object getDefaultValue(@Nullable Object currentValue) {
+			// FIXME this does not handle null values, and it's unknown how they should be handled.
+			//   Probably worse, org.hibernate.mapping.SimpleValue.decodeNullValueSemantic is the only
+			//   place where we define null value semantics, and it can never select "negatic" semantics,
+			//   which means this implementation of VersionValue is likely not tested and even dead code.
+			return IdentifierGeneratorHelper.makeIntegralValue( -1L, castNonNull( currentValue ).getClass() );
 		}
 
 		@Override

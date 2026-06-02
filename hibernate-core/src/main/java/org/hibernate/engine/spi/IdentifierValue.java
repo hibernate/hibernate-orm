@@ -27,13 +27,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue ANY = new IdentifierValue() {
 		@Override
-		public Boolean isUnsaved(Object id) {
+		public Boolean isUnsaved(@Nullable Object id) {
 			CORE_LOGGER.idUnsavedValueStrategy( "ANY" );
 			return Boolean.TRUE;
 		}
 
 		@Override
-		public Object getDefaultValue(Object currentValue) {
+		public @Nullable Object getDefaultValue(@Nullable Object currentValue) {
 			return currentValue;
 		}
 
@@ -48,13 +48,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue NONE = new IdentifierValue() {
 		@Override
-		public Boolean isUnsaved(Object id) {
+		public Boolean isUnsaved(@Nullable Object id) {
 			CORE_LOGGER.idUnsavedValueStrategy( "NONE" );
 			return Boolean.FALSE;
 		}
 
 		@Override
-		public Object getDefaultValue(Object currentValue) {
+		public @Nullable Object getDefaultValue(@Nullable Object currentValue) {
 			return currentValue;
 		}
 
@@ -76,7 +76,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 		}
 
 		@Override
-		public @Nullable Serializable getDefaultValue(Object currentValue) {
+		public @Nullable Serializable getDefaultValue(@Nullable Object currentValue) {
 			return null;
 		}
 
@@ -91,13 +91,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
 		@Override
-		public @Nullable Boolean isUnsaved(Object id) {
+		public @Nullable Boolean isUnsaved(@Nullable Object id) {
 			CORE_LOGGER.idUnsavedValueStrategy( "UNDEFINED" );
 			return null;
 		}
 
 		@Override
-		public @Nullable Serializable getDefaultValue(Object currentValue) {
+		public @Nullable Serializable getDefaultValue(@Nullable Object currentValue) {
 			return null;
 		}
 

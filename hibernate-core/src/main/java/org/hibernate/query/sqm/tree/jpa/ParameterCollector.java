@@ -68,10 +68,10 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		this.consumer = consumer;
 	}
 
-	private Set<SqmParameter<?>> parameterExpressions;
+	private @Nullable Set<SqmParameter<?>> parameterExpressions;
 	private final Consumer<SqmParameter<?>> consumer;
 	private int criteriaParameterId;
-	private IdentityHashMap<JpaCriteriaParameter<?>, Integer> unnamedParameterIdMap;
+	private @Nullable IdentityHashMap<JpaCriteriaParameter<?>, Integer> unnamedParameterIdMap;
 
 	@Override
 	public Object visitPositionalParameterExpression(SqmPositionalParameter<?> expression) {

@@ -265,7 +265,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	protected static class RelativePathCollector {
 		private boolean matchedBase;
-		private StringBuilder buffer;
+		private @Nullable StringBuilder buffer;
 
 		public void collectPath(String path) {
 			if ( matchedBase ) {

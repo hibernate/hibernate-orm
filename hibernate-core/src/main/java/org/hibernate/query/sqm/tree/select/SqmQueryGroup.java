@@ -96,6 +96,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 
 	@Override
 	public boolean isSimpleQueryPart() {
+		// FIXME other parts of this class clearly imply setOperator cannot be null. What gives?
 		return setOperator == null
 			&& queryParts.size() == 1
 			&& queryParts.get( 0 ).isSimpleQueryPart();

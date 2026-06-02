@@ -292,8 +292,10 @@ public class BatchFetchQueue {
 	 * it to the queue.
 	 */
 	public void addBatchLoadableCollection(PersistentCollection<?> collection, CollectionEntry ce) {
-		final var persister = ce.getLoadedPersister();
-		assert persister != null : "@AssumeAssertion(nullness)";
+		// TODO we rely on loadedPersister being non-null, which is not always true for some reason.
+		//   We should either make sure it's always non-null,
+		//   or make sure this method is only called when it is non-null.
+		final var persister = castNonNull( ce.getLoadedPersister() );
 		if ( batchLoadableCollections == null ) {
 			batchLoadableCollections = mapOfSize( 12 );
 		}
@@ -307,8 +309,10 @@ public class BatchFetchQueue {
 	 * if necessary
 	 */
 	public void removeBatchLoadableCollection(CollectionEntry collectionEntry) {
-		final var persister = collectionEntry.getLoadedPersister();
-		assert persister != null : "@AssumeAssertion(nullness)";
+		// TODO we rely on loadedPersister being non-null, which is not always true for some reason.
+		//   We should either make sure it's always non-null,
+		//   or make sure this method is only called when it is non-null.
+		final var persister = castNonNull( collectionEntry.getLoadedPersister() );
 		if ( batchLoadableCollections != null ) {
 			final var map = batchLoadableCollections.get( persister.getRole() );
 			if ( map != null ) {

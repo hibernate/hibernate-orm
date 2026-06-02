@@ -30,7 +30,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 public class SqmSelectClause extends AbstractSqmNode
 		implements SqmAliasedExpressionContainer<SqmSelection<?>>, JpaSelection<Object> {
 	private boolean distinct;
-	private List<SqmSelection<?>> selections;
+	private @Nullable List<SqmSelection<?>> selections;
 
 	public SqmSelectClause(
 			boolean distinct,

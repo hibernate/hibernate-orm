@@ -4,10 +4,11 @@
  */
 package org.hibernate.query.criteria;
 
-import java.util.Collections;
 import java.util.List;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Selection;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * API extension to the JPA {@link Selection} contract
@@ -20,7 +21,7 @@ public interface JpaSelection<T> extends JpaTupleElement<T>, Selection<T> {
 	@Nonnull
 	@Override
 	default List<Selection<?>> getCompoundSelectionItems() {
-		return Collections.unmodifiableList( getSelectionItems() );
+		return unmodifiableList( getSelectionItems() );
 	}
 
 	@Nonnull

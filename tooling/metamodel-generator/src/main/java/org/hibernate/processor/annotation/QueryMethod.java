@@ -17,6 +17,10 @@ import java.util.StringTokenizer;
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 import static org.hibernate.processor.util.Constants.BOOLEAN;
+import static org.hibernate.processor.util.Constants.HIB_JAKARTA_DATA_RESTRICTION;
+import static org.hibernate.processor.util.Constants.HIB_RESTRICTION;
+import static org.hibernate.processor.util.Constants.JD_RESTRICT;
+import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
 import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.STATIC_STATEMENT_REFERENCE;
@@ -435,6 +439,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append( "<" )
 				.append( annotationMetaEntity.importType( selectionEntity ) )
 				.append( ">) _query.getRoots().iterator().next();\n" )
+				.append( applyRestrictionParameters() )
 				.append( "\t\t_query.select(" );
 		if ( selection.recordProjection() ) {
 			declaration
@@ -454,6 +459,48 @@ public class QueryMethod extends AbstractQueryMethod {
 		declaration
 				.append( ";\n" )
 				.append( "\t});\n" );
+	}
+
+	private String applyRestrictionParameters() {
+		final StringBuilder declaration = new StringBuilder();
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			final String paramName = parameterName( paramNames.get( i ) );
+			final String paramType = paramTypes.get( i );
+			if ( isRestrictionParam( paramType ) ) {
+				final boolean multipleRestrictions =
+						paramType.startsWith( LIST ) || paramType.endsWith( "[]" );
+				declaration.append( "\t\t" );
+				if ( isJakartaDataRestrictionParam( paramType ) ) {
+					declaration
+							.append( annotationMetaEntity.staticImport(
+									HIB_JAKARTA_DATA_RESTRICTION, "adaptRestriction" ) )
+							.append( "(" );
+					if ( multipleRestrictions ) {
+						declaration
+								.append( annotationMetaEntity.importType( JD_RESTRICT ) )
+								.append( ".all(" )
+								.append( paramName )
+								.append( ")" );
+					}
+					else {
+						declaration.append( paramName );
+					}
+					declaration.append( ")" );
+				}
+				else if ( multipleRestrictions ) {
+					declaration
+							.append( annotationMetaEntity.importType( HIB_RESTRICTION ) )
+							.append( ".all(" )
+							.append( paramName )
+							.append( ")" );
+				}
+				else {
+					declaration.append( paramName );
+				}
+				declaration.append( ".apply(_query, _entity);\n" );
+			}
+		}
+		return declaration.toString();
 	}
 
 	private void selectionExpression(StringBuilder declaration, String path, String entity) {

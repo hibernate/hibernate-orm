@@ -4149,16 +4149,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
 		}
 
-		// now check that the query has a parameter for every method parameter
-		checkParameters( method, returnType, paramNames, paramTypes, mirror, value, queryString, isNative );
-
-		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
-		final DeclaredType resultType = resultType( method, returnType, mirror, value );
-		final List<OrderBy> orderBys =
-				resultType == null
-						? emptyList()
-						: orderByList( method, (TypeElement) resultType.asElement() );
-
 		final ResultSelection querySelection =
 				!isNative && annotationTypeMatches( mirror, JD_QUERY )
 						? querySelection( method, returnType, mirror, queryString )
@@ -4167,6 +4157,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				querySelection == null || primaryEntity == null
 						? returnType
 						: primaryEntity.asType();
+		if ( querySelection != null && hasDynamicOrdering( method, paramTypes ) ) {
+			message( method, mirror,
+					"'@Query' projection methods may not declare Order or Sort parameters or '@OrderBy'; "
+							+ "declare ordering in the query string",
+					Diagnostic.Kind.ERROR );
+		}
+
+		// now check that the query has a parameter for every method parameter
+		checkParameters( method, validationReturnType, paramNames, paramTypes, mirror, value, queryString, isNative );
+
+		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
+		final DeclaredType resultType = resultType( method, returnType, mirror, value );
+		final List<OrderBy> orderBys =
+				resultType == null
+						? emptyList()
+						: orderByList( method, (TypeElement) resultType.asElement() );
+
 		final DeclaredType validationResultType =
 				resultType( method, validationReturnType, mirror, value );
 		final String processedQuery;
@@ -4255,6 +4262,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static boolean isOrderingParam(String paramType) {
 		return isOrderParam( paramType )
 			|| isOrderArrayParameter( paramType );
+	}
+
+	private static boolean hasDynamicOrdering(ExecutableElement method, List<String> paramTypes) {
+		return hasAnnotation( method, JD_ORDER_BY, JD_ORDER_BY_LIST )
+			|| paramTypes.stream().anyMatch( AnnotationMetaEntity::isOrderingParam );
 	}
 
 	private boolean generatedQueryReferenceMethod(

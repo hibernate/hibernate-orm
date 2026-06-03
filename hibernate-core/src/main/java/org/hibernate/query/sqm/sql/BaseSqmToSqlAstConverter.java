@@ -2072,26 +2072,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final boolean oldInNestedContext = inNestedContext;
 		inNestedContext = false;
 
-		final SqlAstQueryPartProcessingStateImpl processingState;
-		if ( trackAliasedNodePositions( sqmQuerySpec ) ) {
-			processingState = new SqlAstQueryPartProcessingStateImpl(
-					sqlQuerySpec,
-					getCurrentProcessingState(),
-					this,
-					resolver -> new SqmAliasedNodePositionTracker( resolver, sqmQuerySpec ),
-					currentClauseStack::getCurrent,
-					deduplicateSelectionItems
-			);
-		}
-		else {
-			processingState = new SqlAstQueryPartProcessingStateImpl(
-					sqlQuerySpec,
-					getCurrentProcessingState(),
-					this,
-					currentClauseStack::getCurrent,
-					deduplicateSelectionItems
-			);
-		}
+		final var processingState = createProcessingState( sqmQuerySpec, sqlQuerySpec );
 
 		final boolean originalDeduplicateSelectionItems = deduplicateSelectionItems;
 		sqmQueryPartStack.push( sqmQuerySpec );
@@ -2113,6 +2094,30 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			queryTransformers.pop();
 			sqmQueryPartStack.pop();
 			deduplicateSelectionItems = originalDeduplicateSelectionItems;
+		}
+	}
+
+	@Nonnull
+	private SqlAstQueryPartProcessingStateImpl createProcessingState(
+			SqmQuerySpec<?> sqmQuerySpec, QuerySpec sqlQuerySpec) {
+		if ( trackAliasedNodePositions( sqmQuerySpec ) ) {
+			return new SqlAstQueryPartProcessingStateImpl(
+					sqlQuerySpec,
+					getCurrentProcessingState(),
+					this,
+					resolver -> new SqmAliasedNodePositionTracker( resolver, sqmQuerySpec ),
+					currentClauseStack::getCurrent,
+					deduplicateSelectionItems
+			);
+		}
+		else {
+			return new SqlAstQueryPartProcessingStateImpl(
+					sqlQuerySpec,
+					getCurrentProcessingState(),
+					this,
+					currentClauseStack::getCurrent,
+					deduplicateSelectionItems
+			);
 		}
 	}
 
@@ -2329,7 +2334,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private static Set<SqmPath<?>> collectNonPluralPaths(SqmFromClause fromClause) {
 		final var nonPluralPaths = new HashSet<SqmPath<?>>();
-		for ( SqmRoot<?> root : fromClause.getRoots() ) {
+		for ( var root : fromClause.getRoots() ) {
 			collectPaths( root, nonPluralPaths, true );
 		}
 		return nonPluralPaths;
@@ -2357,7 +2362,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public static boolean ordersByPluralFetchBeforeOwner(SqmQuerySpec<?> sqmQuerySpec) {
 		final var allowedPaths = collectNonPluralPaths( sqmQuerySpec.getFromClause() );
 		final var referencedPaths = new ArrayList<SqmPath<?>>();
-		final SqmPathVisitor pathVisitor = new SqmPathVisitor( referencedPaths::add );
+		final var pathVisitor = new SqmPathVisitor( referencedPaths::add );
 		boolean referencesPluralFetch = false;
 		for ( var sortSpecification : sqmQuerySpec.getSortSpecifications() ) {
 			referencedPaths.clear();

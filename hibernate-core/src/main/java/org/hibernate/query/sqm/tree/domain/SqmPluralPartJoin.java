@@ -132,11 +132,13 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	@Override
 	@Nonnull
 	public <S extends T> SqmTreatedPluralPartJoin treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
-		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
+		final var treat = (SqmTreatedPluralPartJoin) findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -150,11 +152,13 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	@Override
 	@Nonnull
 	public <S extends T> SqmTreatedPluralPartJoin treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
-		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
+		final var treat = (SqmTreatedPluralPartJoin) findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 	@Nullable

@@ -34,7 +34,6 @@ import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -298,7 +297,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 			consumeExplicitJoins( sqmRoot );
 		}
 		else {
-			for ( SqmJoin<?, ?> join : sqmRoot.getOrderedJoins() ) {
+			for ( var join : sqmRoot.getOrderedJoins() ) {
 				consumeExplicitJoin( join, false );
 			}
 		}
@@ -306,9 +305,9 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	protected void consumeExplicitJoins(SqmFrom<?, ?> sqmFrom) {
 		sqmFrom.visitSqmJoins( sqmJoin -> consumeExplicitJoin( sqmJoin, true ) );
-		final List<SqmTreatedFrom<?,?,?>> sqmTreats = sqmFrom.getSqmTreats();
+		final var sqmTreats = sqmFrom.getSqmTreats();
 		if ( !sqmTreats.isEmpty() ) {
-			for ( SqmFrom<?, ?> sqmTreat : sqmTreats ) {
+			for ( var sqmTreat : sqmTreats ) {
 				consumeTreat( sqmTreat );
 			}
 		}

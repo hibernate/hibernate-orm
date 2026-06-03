@@ -79,6 +79,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedSingularJoin<O, T, S> copy(SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {

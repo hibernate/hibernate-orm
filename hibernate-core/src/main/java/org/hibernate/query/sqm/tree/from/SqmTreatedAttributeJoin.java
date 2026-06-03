@@ -46,5 +46,6 @@ public interface SqmTreatedAttributeJoin<L,R,R1 extends R> extends SqmAttributeJ
 	SqmTreatedAttributeJoin<L,R,R1> on(@Nullable JpaPredicate... restrictions);
 
 	@Override
+	@Nonnull
 	SqmTreatedAttributeJoin<L,R,R1> copy(SqmCopyContext context);
 }

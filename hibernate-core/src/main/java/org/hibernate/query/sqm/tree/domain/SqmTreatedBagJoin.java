@@ -76,6 +76,7 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedBagJoin<L, R, S> copy(SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {

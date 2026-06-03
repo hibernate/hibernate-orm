@@ -35,7 +35,9 @@ import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +47,6 @@ import java.util.function.Function;
 
 import static java.lang.Character.isAlphabetic;
 import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.acquireUniqueAlias;
 
 /**
@@ -250,15 +251,15 @@ public abstract class AbstractSqmSelectQuery<T>
 	@Nonnull
 	@Override
 	public Set<Root<?>> getRoots() {
-		return unmodifiableSet( getQuerySpec().getRoots() );
+		return new HashSet<>( getQuerySpec().getRoots() );
 	}
 
 	/**
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRootList()
 	 */
 	@Nonnull
-	public List<? extends JpaRoot<?>> getRootList() {
-		return getQuerySpec().getRootList();
+	public List<JpaRoot<?>> getRootList() {
+		return new ArrayList<>( getQuerySpec().getRootList() );
 	}
 
 	/**

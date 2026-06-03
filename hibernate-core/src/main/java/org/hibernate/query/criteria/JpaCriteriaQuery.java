@@ -82,7 +82,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 * Return the {@linkplain #getRoots() roots} as a list.
 	 */
 	@Nonnull
-	List<? extends JpaRoot<?>> getRootList();
+	List<JpaRoot<?>> getRootList();
 
 	/**
 	 * Get a {@linkplain Root query root} element at the given position

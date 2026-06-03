@@ -11,7 +11,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -26,6 +25,7 @@ import jakarta.persistence.criteria.JoinType;
 import java.util.Objects;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
 /**
  * @author Christian Beikov
@@ -41,7 +41,7 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularV
 			SqmRoot<T> sqmRoot) {
 		//noinspection unchecked
 		this(
-				SqmCreationHelper.buildRootNavigablePath( "<<cte>>", alias ),
+				buildRootNavigablePath( "<<cte>>", alias ),
 				cte,
 				(SqmPathSource<T>) cte.getCteTable().getTupleType(),
 				alias,

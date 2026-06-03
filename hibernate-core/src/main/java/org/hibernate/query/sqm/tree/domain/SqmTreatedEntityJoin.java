@@ -59,6 +59,7 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedEntityJoin<L,R,S> copy(SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {

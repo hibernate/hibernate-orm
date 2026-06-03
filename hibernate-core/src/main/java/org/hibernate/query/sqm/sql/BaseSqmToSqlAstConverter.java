@@ -2316,7 +2316,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private static void collectPaths(SqmFrom<?, ?> from, HashSet<SqmPath<?>> paths, boolean nonPluralFetchOnly) {
 		paths.add( from );
-		for ( SqmJoin<?, ?> sqmJoin : from.getSqmJoins() ) {
+		for ( var sqmJoin : from.getSqmJoins() ) {
 			if ( nonPluralFetchOnly
 					&& sqmJoin instanceof SqmAttributeJoin<?,?> attributeJoin
 					&& attributeJoin.isFetched() ) {
@@ -2328,7 +2328,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				collectPaths( sqmJoin, paths, false );
 			}
 		}
-		for ( SqmTreatedFrom<?, ?, ?> sqmTreat : from.getSqmTreats() ) {
+		for ( var sqmTreat : from.getSqmTreats() ) {
 			collectPaths( sqmTreat, paths, nonPluralFetchOnly );
 		}
 	}
@@ -3129,7 +3129,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void registerSqmFromTableGroup(SqmFrom<?, ?> sqmFrom, TableGroup tableGroup) {
 		getFromClauseIndex().register( sqmFrom, tableGroup );
 		// We also need to register the table group for the treats
-		for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
+		for ( var sqmTreat : sqmFrom.getSqmTreats() ) {
 			getFromClauseAccess().registerTableGroup( sqmTreat.getNavigablePath(), tableGroup );
 		}
 	}
@@ -3760,7 +3760,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			NavigablePath sqmJoinNavigablePath,
 			SqmPredicate joinPredicate,
 			SqmPredicate[] treatPredicates,
-			List<SqmTreatedFrom<?, ?, ?>> sqmTreats,
+			List<? extends SqmTreatedFrom<?, ?, ?>> sqmTreats,
 			boolean discriminatedAssociationTreatJoin,
 			TableGroup joinedTableGroup,
 			ModelPart modelPart,
@@ -3810,7 +3810,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private static boolean isDiscriminatedAssociationTreatJoin(
-			SqmAttributeJoin<?, ?> sqmJoin, List<SqmTreatedFrom<?, ?, ?>> sqmTreats, ModelPart modelPart) {
+			SqmAttributeJoin<?, ?> sqmJoin, List<? extends SqmTreatedFrom<?, ?, ?>> sqmTreats, ModelPart modelPart) {
 		return !sqmTreats.isEmpty()
 			&& ( modelPart instanceof DiscriminatedAssociationModelPart
 				|| modelPart instanceof PluralAttributeMapping pluralAttributeMapping
@@ -6028,8 +6028,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return entityTypeLiteral( literal, discriminatorMapping );
 			}
 			else if ( inferableExpressible instanceof BasicValuedMapping basicValuedMapping ) {
-				@SuppressWarnings("rawtypes")
-				final BasicValueConverter valueConverter = basicValuedMapping.getJdbcMapping().getValueConverter();
+				final var valueConverter = basicValuedMapping.getJdbcMapping().getValueConverter();
 				if ( valueConverter != null ) {
 					return queryLiteral( literal, basicValuedMapping, valueConverter );
 				}
@@ -6177,11 +6176,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private QueryLiteral<Object> queryLiteral(
-			SqmLiteral<?> literal, BasicValuedMapping basicValuedMapping, BasicValueConverter valueConverter) {
-		return new QueryLiteral<>( sqlLiteralValue( valueConverter, literal.getLiteralValue() ), basicValuedMapping );
+			SqmLiteral<?> literal, BasicValuedMapping basicValuedMapping, BasicValueConverter<?,?> converter) {
+		return new QueryLiteral<>( sqlLiteralValue( converter, literal.getLiteralValue() ), basicValuedMapping );
 	}
 
-	private <D> Object sqlLiteralValue(BasicValueConverter<D,?> valueConverter, D value) {
+	private <D> Object sqlLiteralValue(BasicValueConverter<?,?> converter, D value) {
+		final var valueConverter = (BasicValueConverter<D, ?>) converter;
 		// For converted query literals, we support both, the domain and relational java type
 		if ( value == null || valueConverter.getDomainJavaType().isInstance( value ) ) {
 			return valueConverter.toRelationalValue( value );
@@ -6274,7 +6274,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private <N extends Number> Expression convertedUnparsedNumericLiteral(
 			SqmHqlNumericLiteral<N> numericLiteral,
 			BasicValuedMapping expressible) {
-		final BasicValueConverter valueConverter = expressible.getJdbcMapping().getValueConverter();
+		final var valueConverter = expressible.getJdbcMapping().getValueConverter();
 		assert valueConverter != null;
 		final Number parsedValue =
 				numericLiteral.getTypeCategory()
@@ -6522,9 +6522,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 //			bindingTypeExplicit = false;
 		}
-		else {
+//		else {
 //			bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
-		}
+//		}
 		return determineValueMapping( sqmParameter, paramType, bindingTypeExplicit );
 	}
 
@@ -7772,20 +7772,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Object visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral) {
 		final var inferred = resolveInferredType();
-		final SqlExpressible inferredType;
-		if ( inferred instanceof PluralAttributeMapping pluralAttributeMapping ) {
-			final var elementDescriptor = pluralAttributeMapping.getElementDescriptor();
-			inferredType =
-					elementDescriptor instanceof BasicValuedCollectionPart basicValuedCollectionPart
-							? basicValuedCollectionPart
-							: null;
-		}
-		else if ( inferred instanceof BasicValuedMapping basicValuedMapping ) {
-			inferredType = basicValuedMapping;
-		}
-		else {
-			inferredType = null;
-		}
+		final var inferredType = inferredEnumType( inferred );
 		if ( inferredType != null ) {
 			return new QueryLiteral<>(
 					inferredType.getJdbcMapping()
@@ -7794,8 +7781,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 		else {
-			// This can only happen when selecting an enum literal, in which case we default to ordinal encoding
+			// This can only happen when selecting an enum literal,
+			// in which case we default to ordinal encoding
 			return queryLiteral( sqmEnumLiteral, getTypeConfiguration() );
+		}
+	}
+
+	@Nullable
+	private static SqlExpressible inferredEnumType(MappingModelExpressible<?> inferred) {
+		if ( inferred instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			return pluralAttributeMapping.getElementDescriptor()
+						instanceof BasicValuedCollectionPart basicValuedCollectionPart
+					? basicValuedCollectionPart
+					: null;
+		}
+		else if ( inferred instanceof BasicValuedMapping basicValuedMapping ) {
+			return basicValuedMapping;
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -7812,12 +7816,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
 	@Override
 	public Object visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral) {
 		final var valueMapping = (BasicValuedMapping) determineValueMapping( sqmFieldLiteral );
 		final Object value = sqmFieldLiteral.getValue();
-		final BasicValueConverter converter = valueMapping.getJdbcMapping().getValueConverter();
+		final var converter = valueMapping.getJdbcMapping().getValueConverter();
 		return new QueryLiteral<>( converter != null ? sqlLiteralValue( converter, value ) : value, valueMapping );
 	}
 

@@ -6,6 +6,7 @@ package org.hibernate;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FindOption;
+import jakarta.persistence.TypedQuery;
 
 /**
  * A {@link jakarta.persistence.FindOption} which requests that
@@ -21,7 +22,8 @@ import jakarta.persistence.FindOption;
  *
  * @author Gavin King
  */
-public enum ReadOnlyMode implements FindOption, EntityManager.Option {
+public enum ReadOnlyMode
+		implements FindOption, TypedQuery.Option, EntityManager.Option {
 	/**
 	 * Specifies that an entity should be loaded in read-only mode.
 	 * <p>

@@ -29,7 +29,6 @@ import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.graph.GraphSemantic;
@@ -657,9 +656,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * collections, which is controlled by {@link #getCacheMode()}.
 	 * <p>
 	 * The query being "eligible" for caching does not necessarily mean its
-	 * results will be cached. Second-level query caching still has to be
-	 * enabled on the {@link SessionFactory} for this to happen. Usually that
-	 * is controlled by the configuration setting
+	 * results will be cached; second-level query caching must also be
+	 * explicitly enabled by setting the configuration property
 	 * {@value org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE}.
 	 */
 	@Override

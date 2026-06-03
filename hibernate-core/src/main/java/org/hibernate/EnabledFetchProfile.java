@@ -5,12 +5,13 @@
 package org.hibernate;
 
 import jakarta.persistence.FindOption;
+import jakarta.persistence.TypedQuery;
 import org.hibernate.query.SelectionQuery;
 
 /// A [jakarta.persistence.FindOption] which represents a named
 /// [fetch profile][org.hibernate.annotations.FetchProfile].
 ///
-/// An instance of this class may be obtained in a type safe way
+/// An instance of this class may be obtained in a type-safe way
 /// from the static metamodel for the class annotated with the
 /// [@FetchProfile][org.hibernate.annotations.FetchProfile].
 ///
@@ -62,7 +63,7 @@ import org.hibernate.query.SelectionQuery;
 ///
 /// @author Gavin King
 public record EnabledFetchProfile(String profileName)
-		implements FindOption {
+		implements FindOption, TypedQuery.Option {
 
 	/**
 	 * Enable the fetch profile represented by this

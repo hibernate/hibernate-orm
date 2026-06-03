@@ -18,6 +18,7 @@ import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
+import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReadOnlyMode;
@@ -26,6 +27,8 @@ import org.hibernate.engine.creation.internal.options.StatefulOptions;
 import org.hibernate.engine.creation.internal.options.StatelessOptions;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
+import org.hibernate.query.QueryOption;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.spi.QueryOptions;
 
 import java.util.HashSet;
@@ -186,6 +189,7 @@ public final class OptionsHelper {
 
 	public static void applyOption(TypedQuery<?> query, TypedQuery.Option option) {
 		Objects.requireNonNull( option, "option" );
+		final var selectionQuery = (SelectionQuery<?>) query;
 		if ( option instanceof Timeout timeout ) {
 			query.setTimeout( timeout );
 		}
@@ -204,6 +208,22 @@ public final class OptionsHelper {
 		else if ( option instanceof PessimisticLockScope lockScope ) {
 			query.setLockScope( lockScope );
 		}
+		else if ( option instanceof CacheMode cacheMode ) {
+			selectionQuery.setCacheMode( cacheMode );
+		}
+		else if ( option instanceof ReadOnlyMode readOnlyMode ) {
+			selectionQuery.setReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
+		}
+		else if ( option instanceof QueryOption.ResultSetCache resultSetCache ) {
+			selectionQuery.setCacheable( true );
+			selectionQuery.setCacheRegion( resultSetCache.region() );
+		}
+		else if ( option instanceof QueryOption.Comment comment ) {
+			selectionQuery.setComment( comment.comment() );
+		}
+		else if ( option instanceof EnabledFetchProfile fetchProfile ) {
+			fetchProfile.enable( selectionQuery );
+		}
 	}
 
 	public static Set<TypedQuery.Option> getTypedQueryOptions(QueryOptions queryOptions) {
@@ -215,8 +235,33 @@ public final class OptionsHelper {
 		}
 		addIfNotNull( options, queryOptions.getCacheRetrieveMode() );
 		addIfNotNull( options, queryOptions.getCacheStoreMode() );
+		addCustomOptions( queryOptions, options );
 		addLockOptions( options, queryOptions.getLockOptions() );
 		return options;
+	}
+
+	private static void addCustomOptions(QueryOptions queryOptions, Set<TypedQuery.Option> options) {
+		final Boolean readOnly = queryOptions.isReadOnly();
+		if ( readOnly != null ) {
+			options.add( readOnly ? ReadOnlyMode.READ_ONLY : ReadOnlyMode.READ_WRITE );
+		}
+
+		final Boolean resultCachingEnabled = queryOptions.isResultCachingEnabled();
+		if ( resultCachingEnabled == Boolean.TRUE ) {
+			options.add( new QueryOption.ResultSetCache( queryOptions.getResultCacheRegionName() ) );
+		}
+
+		final String comment = queryOptions.getComment();
+		if ( comment != null ) {
+			options.add( new QueryOption.Comment( comment ) );
+		}
+
+		final var enabledFetchProfiles = queryOptions.getEnabledFetchProfiles();
+		if ( enabledFetchProfiles != null ) {
+			for ( String fetchProfile : enabledFetchProfiles ) {
+				options.add( new EnabledFetchProfile( fetchProfile ) );
+			}
+		}
 	}
 
 	public static void applyOption(Statement statement, Statement.Option option) {

@@ -72,6 +72,7 @@ import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
@@ -82,6 +83,7 @@ import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
@@ -109,6 +111,7 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmPathVisitor;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
@@ -252,6 +255,7 @@ import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -592,6 +596,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.domainModel = creationContext.getMappingMetamodel();
 	}
 
+	private SessionFactoryImplementor getSessionFactory() {
+		return loadQueryInfluencers.getSessionFactory();
+	}
+
+	private MappingMetamodelImplementor getMappingMetamodel() {
+		return creationContext.getMappingMetamodel();
+	}
+
+	private SqmFunctionRegistry getSqmFunctionRegistry() {
+		return creationContext.getSqmFunctionRegistry();
+	}
+
+	private JpaMetamodel getJpaMetamodel() {
+		return creationContext.getJpaMetamodel();
+	}
+
 	private static EntityGraphTraversalState entityGraphTraversalState
 			(SqlAstCreationContext creationContext, QueryOptions queryOptions) {
 		final var appliedGraph = queryOptions.getAppliedGraph();
@@ -693,7 +713,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private SessionFactoryOptions getSessionFactoryOptions() {
 		// TODO : FIX ME
-		return creationContext.getSessionFactory().getSessionFactoryOptions();
+		return getSessionFactory().getSessionFactoryOptions();
 	}
 
 	@Override
@@ -882,7 +902,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public void addVersionedAssignment(Consumer<Assignment> assignmentConsumer, SqmUpdateStatement<?> sqmStatement) {
 		if ( sqmStatement.isVersioned() ) {
 			final var persister =
-					creationContext.getMappingMetamodel()
+					getMappingMetamodel()
 							.findEntityDescriptor( sqmStatement.getTarget().getEntityName() );
 			if ( !persister.isVersioned() ) {
 				throw new SemanticException( "Increment option specified for update of non-versioned entity" );
@@ -1107,7 +1127,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var sqmTarget = statement.getTarget();
 		final String entityName = sqmTarget.getEntityName();
 		final var entityDescriptor =
-				creationContext.getMappingMetamodel()
+				getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
@@ -1164,7 +1184,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.currentSqmStatement = sqmStatement;
 		final String entityName = sqmStatement.getTarget().getEntityName();
 		final var entityDescriptor =
-				creationContext.getMappingMetamodel()
+				getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
@@ -1225,7 +1245,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		insertStatement.getSourceSelectStatement().visitQuerySpecs(
 				querySpec -> {
 					final boolean appliedRowNumber =
-							additionalInsertValues.applySelections( querySpec, creationContext.getSessionFactory() );
+							additionalInsertValues.applySelections( querySpec, getSessionFactory() );
 					// Just make sure that if we get here, a row number will never be applied
 					// If this requires the special row number handling, it should use the mutation strategy
 					assert !appliedRowNumber;
@@ -1273,7 +1293,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.currentSqmStatement = sqmStatement;
 		final String entityName = sqmStatement.getTarget().getEntityName();
 		final var entityDescriptor =
-				creationContext.getMappingMetamodel()
+				getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
@@ -1467,7 +1487,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					// If the dialect does not support window functions, we don't need the id column in the temporary table insert
 					// because we will make use of the special "rn_" column that is auto-incremented and serves as temporary identifier for a row,
 					// which is needed to control the generation of proper identifier values with the generator afterward
-					addIdColumn = creationContext.getDialect().supportsWindowFunctions();
+					addIdColumn = getDialect().supportsWindowFunctions();
 				}
 				else {
 					// If the generator supports bulk insertion and the optimizer uses an increment size of 1,
@@ -1647,19 +1667,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public SelectStatement visitSelectStatement(SqmSelectStatement<?> statement) {
-		final var oldCteContainer = this.cteContainer;
-		final var cteContainer = visitCteContainer( statement );
-		final var oldSqmStatement = this.currentSqmStatement;
-
-		this.currentSqmStatement = statement;
+		final var oldCteContainer = cteContainer;
+		final var newCteContainer = visitCteContainer( statement ); // sets the current cteContainer
+		final var oldSqmStatement = currentSqmStatement;
+		currentSqmStatement = statement;
 		final var queryPart = visitQueryPart( statement.getQueryPart() );
 		try {
-			return new SelectStatement( cteContainer, queryPart,
+			return new SelectStatement( newCteContainer, queryPart,
 					queryPart.isRoot() ? domainResults : emptyList() );
 		}
 		finally {
-			this.currentSqmStatement = oldSqmStatement;
-			this.cteContainer = oldCteContainer;
+			currentSqmStatement = oldSqmStatement;
+			cteContainer = oldCteContainer;
 			rootPathsForLockingCollector = null;
 		}
 	}
@@ -1700,7 +1719,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var noCycleLiteral = getLiteral( sqmCteStatement.getNoCycleLiteral() );
 		final var cycleMarkType = cycleLiteral == null ? null : cycleLiteral.getJdbcMapping();
 		final var stringType =
-				creationContext.getTypeConfiguration()
+				getTypeConfiguration()
 						.getBasicTypeForJavaType( String.class );
 		if ( queryPart instanceof SqmQueryGroup<?> queryGroup
 				&& queryPart.getSortSpecifications().isEmpty()
@@ -1792,17 +1811,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					break;
 			}
 		}
-		final SelectStatement statement;
-		if ( selectStatement instanceof SqmSubQuery<?> subquery ) {
-			statement = visitSubQueryExpression( subquery );
-		}
-		else if ( selectStatement instanceof SqmSelectStatement<?> select ) {
-			statement = visitSelectStatement( select );
-		}
-		else {
-			throw new AssertionFailure( "Unrecognized select statemengt type" );
-		}
-
+		final var statement = visitSelectStatement( selectStatement );
 		final var cteTable = new CteTable(
 				cteName,
 				sqmCteTable.resolveTableGroupProducer(
@@ -1827,6 +1836,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		cteContainer.addCteStatement( cteStatement );
 		return cteStatement;
+	}
+
+	private SelectStatement visitSelectStatement(SqmSelectQuery<?> selectStatement) {
+		if ( selectStatement instanceof SqmSubQuery<?> subquery ) {
+			return visitSubQueryExpression( subquery );
+		}
+		else if ( selectStatement instanceof SqmSelectStatement<?> select ) {
+			return visitSelectStatement( select );
+		}
+		else {
+			throw new AssertionFailure( "Unrecognized select statemengt type" );
+		}
 	}
 
 	private String getCteName(SqmCteTable<?> sqmCteTable) {
@@ -2865,7 +2886,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return;
 		}
 		final var currentQuerySpec = currentQuerySpec();
-		final var sessionFactory = creationContext.getSessionFactory();
+		final var sessionFactory = getSessionFactory();
 		final TableGroup tableGroup;
 		if ( sqmRoot.containsOnlyInnerJoins() ) {
 			// If we have just inner joins against a correlated root, we can render the joins as references
@@ -3075,7 +3096,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					tableGroupProducer.getCompatibleTableExpressions(),
 					false,
 					true,
-					creationContext.getSessionFactory()
+					getSessionFactory()
 			);
 		}
 		else if ( sqmRoot instanceof SqmFunctionRoot<?> functionRoot ) {
@@ -3230,7 +3251,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private EntityPersister resolveEntityPersister(EntityDomainType<?> entityDomainType) {
-		return creationContext.getMappingMetamodel()
+		return getMappingMetamodel()
 				.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 	}
 
@@ -3288,7 +3309,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// A treated attribute usage i.e. `treat(alias as Subtype).attribute = 1`
 				final var treatTarget = treatedPath.getTreatTarget();
 				if ( treatTarget.getPersistenceType() == ENTITY ) {
-					parentType = creationContext.getMappingMetamodel().getEntityDescriptor( treatTarget.getTypeName() );
+					parentType = getMappingMetamodel().getEntityDescriptor( treatTarget.getTypeName() );
 					// The following is an optimization to avoid rendering treat conditions into predicates.
 					// Imagine an HQL predicate like `treat(alias as Subtype).attribute is null or alias.name = '...'`.
 					// If the `attribute` is basic, we will render a case wrapper around the column expression
@@ -3375,7 +3396,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( tableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
 			persister = null;
 			final var embeddableDomainType =
-					creationContext.getJpaMetamodel()
+					getJpaMetamodel()
 							.findEmbeddableType( treatTargetTypeName );
 			if ( embeddableDomainType == null || !embeddableDomainType.isPolymorphic() ) {
 				return;
@@ -3383,7 +3404,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			persister =
-					creationContext.getMappingMetamodel()
+					getMappingMetamodel()
 							.findEntityDescriptor( treatTargetTypeName );
 			if ( persister == null || !persister.isPolymorphic() ) {
 				return;
@@ -3934,7 +3955,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroupProducer.getCompatibleTableExpressions(),
 				sqmJoin.isLateral(),
 				false,
-				creationContext.getSessionFactory()
+				getSessionFactory()
 		);
 		getFromClauseIndex().register( sqmJoin, queryPartTableGroup );
 
@@ -4659,7 +4680,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					&& treatedPath.getTreatTarget().getPersistenceType() == ENTITY ) {
 				final var treatTarget = treatedPath.getTreatTarget();
 				treatedMapping =
-						creationContext.getMappingMetamodel()
+						getMappingMetamodel()
 								.findEntityDescriptor( treatTarget.getTypeName() );
 			}
 			else {
@@ -4835,7 +4856,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private Expression extractEpoch(Expression intervalExpression) {
 		final var intType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
-		final var patternRenderer = new PatternRenderer( creationContext.getDialect().extractPattern( EPOCH ) );
+		final var patternRenderer = new PatternRenderer( getDialect().extractPattern( EPOCH ) );
 		return new SelfRenderingFunctionSqlAstExpression<>(
 				"extract",
 				(sqlAppender, sqlAstArguments, returnType, walker) ->
@@ -4966,7 +4987,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			boolean index,
 			String functionName) {
 		// Try to create a lateral sub-query join if possible which allows the re-use of the expression
-		return creationContext.getDialect().supportsLateral()
+		return getDialect().supportsLateral()
 				? createLateralJoinExpression( pluralPartPath, index, functionName )
 				: createCorrelatedAggregateSubQuery( pluralPartPath, index, functionName );
 	}
@@ -5083,7 +5104,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			final var functionDescriptor = resolveFunction( "count" );
 			final var integerType =
-					creationContext.getMappingMetamodel().getTypeConfiguration()
+					getMappingMetamodel().getTypeConfiguration()
 							.getBasicTypeForJavaType( Integer.class );
 			final var expression = new SelfRenderingAggregateFunctionSqlAstExpression<>(
 					functionDescriptor.getName(),
@@ -5301,7 +5322,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private AbstractSqmSelfRenderingFunctionDescriptor resolveFunction(String function) {
 		return (AbstractSqmSelfRenderingFunctionDescriptor)
-				creationContext.getSqmFunctionRegistry()
+				getSqmFunctionRegistry()
 						.findFunctionDescriptor( function );
 	}
 
@@ -5479,7 +5500,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						getCompatibleTableExpressions( modelPart ),
 						true,
 						false,
-						creationContext.getSessionFactory()
+						getSessionFactory()
 				);
 				if ( currentlyProcessingJoin == null ) {
 					parentTableGroup.addTableGroupJoin(
@@ -5789,7 +5810,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( entityNameUse.getValue() == EntityNameUse.TREAT ) {
 				final String entityName = entityNameUse.getKey();
 				final var entityDescriptor =
-						creationContext.getMappingMetamodel()
+						getMappingMetamodel()
 								.findEntityDescriptor( entityName );
 				if ( !entityDescriptor.isAbstract() ) {
 					entityNames.add( entityDescriptor.getEntityName() );
@@ -5875,7 +5896,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			EmbeddableMappingType embeddableMappingType,
 			Map<String, EntityNameUse> entityNameUses) {
 		final var embeddableDomainType =
-				creationContext.getJpaMetamodel()
+				getJpaMetamodel()
 						.embeddable( embeddableMappingType.getJavaType().getJavaTypeClass() );
 		final Set<String> entityNameUsesSet = new HashSet<>( entityNameUses.keySet() );
 		ManagedDomainType<?> superType = embeddableDomainType;
@@ -5974,7 +5995,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			return new EmbeddableTypeLiteral(
-					creationContext.getJpaMetamodel().embeddable( typeName ),
+					getJpaMetamodel().embeddable( typeName ),
 					(BasicType<?>)
 							typeExpression.getExpressionType()
 									.getSingleJdbcMapping()
@@ -6057,7 +6078,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final var nodeType = (BasicSqmPathSource<?>) literal.getNodeType();
 				return new QueryLiteral<>(
 						literal.getLiteralValue(),
-						creationContext.getTypeConfiguration().getBasicTypeRegistry()
+						getTypeConfiguration().getBasicTypeRegistry()
 								.getRegisteredType( nodeType.getPathType().getTypeName() )
 				);
 			}
@@ -6068,7 +6089,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			(SqmLiteral<?> literal, MappingModelExpressible<?> inferableExpressible) {
 		final var localExpressible =
 				resolveMappingModelExpressible( literal,
-						creationContext.getMappingMetamodel(),
+						getMappingMetamodel(),
 						getFromClauseAccess() == null ? null : getFromClauseAccess()::findTableGroup );
 		if ( localExpressible == null ) {
 			return getElementExpressible( inferableExpressible );
@@ -6216,7 +6237,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final E literalValue = literal.getLiteralValue();
 		final EntityPersister entityDescriptor;
 		if ( literalValue instanceof Class<?> clazz ) {
-			entityDescriptor = creationContext.getMappingMetamodel().findEntityDescriptor( clazz );
+			entityDescriptor = getMappingMetamodel().findEntityDescriptor( clazz );
 		}
 		else {
 			@SuppressWarnings("unchecked")
@@ -7007,8 +7028,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitCoalesce(SqmCoalesce<?> sqmCoalesce) {
-		final var queryEngine = creationContext.getSessionFactory().getQueryEngine();
-		return creationContext.getSqmFunctionRegistry()
+		final var queryEngine = getSessionFactory().getQueryEngine();
+		return getSqmFunctionRegistry()
 				.findFunctionDescriptor( "coalesce" )
 				.generateSqmExpression( sqmCoalesce.getArguments(), null, queryEngine )
 				.accept( this );
@@ -7331,7 +7352,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private <J> BasicType<J> basicType(Class<J> javaType) {
-		return creationContext.getMappingMetamodel().getTypeConfiguration().getBasicTypeForJavaType( javaType );
+		return getMappingMetamodel().getTypeConfiguration().getBasicTypeForJavaType( javaType );
 	}
 
 	private TimestampaddFunction timestampadd() {
@@ -7673,7 +7694,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private MappingModelExpressible<?> determineCurrentExpressible(SqmTypedNode<?> expression) {
-		return creationContext.getMappingMetamodel()
+		return getMappingMetamodel()
 				.resolveMappingExpressible( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
 	}
 
@@ -7741,7 +7762,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Expression visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> sqmExpression) {
 		final var mappingDescriptor =
-				creationContext.getMappingMetamodel()
+				getMappingMetamodel()
 						.getEntityDescriptor( sqmExpression.getNodeType().getHibernateEntityName() );
 		return new EntityTypeLiteral( mappingDescriptor );
 	}
@@ -8429,7 +8450,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() ),
 					subQuerySpec,
 					subQuerySpec::applyPredicate,
-					creationContext.getSessionFactory()
+					getSessionFactory()
 			);
 			subQueryState.getSqlAstCreationState().getFromClauseAccess()
 					.registerTableGroup( parentNavPath, tableGroup );

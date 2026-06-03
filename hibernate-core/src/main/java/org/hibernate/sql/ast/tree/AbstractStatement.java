@@ -18,15 +18,18 @@ public abstract class AbstractStatement implements Statement, CteContainer {
 
 	private final Map<String, CteStatement> cteStatements;
 	private final Map<String, CteObject> cteObjects;
+	private final CteContainer parentCteContainer;
 
 	public AbstractStatement(CteContainer cteContainer) {
 		if ( cteContainer == null ) {
-			this.cteStatements = new LinkedHashMap<>();
-			this.cteObjects = new LinkedHashMap<>();
+			parentCteContainer = null;
+			cteStatements = new LinkedHashMap<>();
+			cteObjects = new LinkedHashMap<>();
 		}
 		else {
-			this.cteStatements = cteContainer.getCteStatements();
-			this.cteObjects = cteContainer.getCteObjects();
+			parentCteContainer = cteContainer;
+			cteStatements = cteContainer.getCteStatements();
+			cteObjects = cteContainer.getCteObjects();
 		}
 	}
 
@@ -37,13 +40,17 @@ public abstract class AbstractStatement implements Statement, CteContainer {
 
 	@Override
 	public CteStatement getCteStatement(String cteLabel) {
-		return cteStatements.get( cteLabel );
+		final var cteStatement = cteStatements.get( cteLabel );
+		return cteStatement == null && parentCteContainer != null
+				? parentCteContainer.getCteStatement( cteLabel )
+				: cteStatement;
 	}
 
 	@Override
 	public void addCteStatement(CteStatement cteStatement) {
-		if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getTableExpression(), cteStatement ) != null ) {
-			throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getTableExpression() + " already exists" );
+		final String tableExpression = cteStatement.getCteTable().getTableExpression();
+		if ( cteStatements.putIfAbsent( tableExpression, cteStatement ) != null ) {
+			throw new IllegalArgumentException( "A CTE with the label " + tableExpression + " already exists" );
 		}
 	}
 
@@ -54,13 +61,18 @@ public abstract class AbstractStatement implements Statement, CteContainer {
 
 	@Override
 	public CteObject getCteObject(String cteObjectName) {
-		return cteObjects.get( cteObjectName );
+		final var cteObject = cteObjects.get( cteObjectName );
+		return cteObject == null
+			&& parentCteContainer != null
+				? parentCteContainer.getCteObject( cteObjectName )
+				: cteObject;
 	}
 
 	@Override
 	public void addCteObject(CteObject cteObject) {
-		if ( cteObjects.putIfAbsent( cteObject.getName(), cteObject ) != null ) {
-			throw new IllegalArgumentException( "A CTE object with the name " + cteObject.getName() + " already exists" );
+		final String name = cteObject.getName();
+		if ( cteObjects.putIfAbsent( name, cteObject ) != null ) {
+			throw new IllegalArgumentException( "A CTE object with the name " + name + " already exists" );
 		}
 	}
 }

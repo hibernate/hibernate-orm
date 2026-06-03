@@ -66,8 +66,6 @@ import org.hibernate.query.sqm.tree.expression.SqmNumericExpressionWrapper;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -83,6 +81,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static java.util.Collections.emptySet;
+import static java.util.Collections.newSetFromMap;
 
 /**
  * @author Steve Ebersole
@@ -614,12 +613,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	@Nonnull
 	@Override
 	public Set<Join<?, ?>> getCorrelatedJoins() {
-		final Set<Join<?, ?>> correlatedJoins = Collections.newSetFromMap( new IdentityHashMap<>() );
-		final SqmFromClause fromClause = getQuerySpec().getFromClause();
+		final Set<Join<?, ?>> correlatedJoins = newSetFromMap( new IdentityHashMap<>() );
+		final var fromClause = getQuerySpec().getFromClause();
 		if ( fromClause != null ) {
-			for ( SqmRoot<?> root : fromClause.getRoots() ) {
+			for ( var root : fromClause.getRoots() ) {
 				if ( root instanceof SqmCorrelation<?, ?> ) {
-					for ( SqmJoin<?, ?> sqmJoin : root.getSqmJoins() ) {
+					for ( var sqmJoin : root.getSqmJoins() ) {
 						if ( sqmJoin instanceof SqmCorrelation<?, ?> ) {
 							correlatedJoins.add( sqmJoin );
 						}

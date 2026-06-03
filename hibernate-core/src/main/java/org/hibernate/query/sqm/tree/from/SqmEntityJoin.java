@@ -14,7 +14,6 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
@@ -29,6 +28,8 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.metamodel.EntityType;
 
 import java.util.List;
+
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
 
 /**
@@ -45,7 +46,7 @@ public class SqmEntityJoin<L,R>
 			SqmJoinType joinType,
 			SqmRoot<L> sqmRoot) {
 		this(
-				SqmCreationHelper.buildRootNavigablePath( joinedEntityDescriptor.getHibernateEntityName(), alias ),
+				buildRootNavigablePath( joinedEntityDescriptor.getHibernateEntityName(), alias ),
 				joinedEntityDescriptor,
 				alias,
 				joinType,
@@ -59,7 +60,9 @@ public class SqmEntityJoin<L,R>
 			@Nullable String alias,
 			SqmJoinType joinType,
 			SqmRoot<L> sqmRoot) {
-		super( navigablePath, (SqmEntityDomainType<R>) joinedEntityDescriptor, sqmRoot, alias, joinType, sqmRoot.nodeBuilder() );
+		super( navigablePath,
+				(SqmEntityDomainType<R>) joinedEntityDescriptor,
+				sqmRoot, alias, joinType, sqmRoot.nodeBuilder() );
 		this.sqmRoot = sqmRoot;
 	}
 
@@ -188,7 +191,7 @@ public class SqmEntityJoin<L,R>
 	@Nonnull
 	@Override
 	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(@Nonnull EntityDomainType<S> treatAsType) {
-		final SqmTreatedEntityJoin<L,R,S> treat = findTreat( treatAsType, null );
+		final var treat = (SqmTreatedEntityJoin<L, R, S>) findTreat( treatAsType, null );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedEntityJoin<>( this, (SqmEntityDomainType<S>) treatAsType, null ) );
 		}

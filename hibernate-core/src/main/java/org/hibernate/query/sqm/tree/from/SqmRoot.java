@@ -201,7 +201,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	public boolean containsOnlyInnerJoins() {
-		for ( SqmJoin<E, ?> sqmJoin : getSqmJoins() ) {
+		for ( var sqmJoin : getSqmJoins() ) {
 			if ( sqmJoin.getSqmJoinType() != SqmJoinType.INNER ) {
 				return false;
 			}

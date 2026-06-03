@@ -127,7 +127,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public ManagedDomainType<?> managedType(String typeName) {
+	@Nonnull
+	public ManagedDomainType<?> managedType(@Nullable String typeName) {
 		final var managedType = findManagedType( typeName );
 		if ( managedType == null ) {
 			throw new IllegalArgumentException( "Not a managed type: " + typeName );
@@ -166,7 +167,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	@Override
 	@Nonnull
-	public EntityDomainType<?> entity(String entityName) {
+	public EntityDomainType<?> entity(@Nullable String entityName) {
 		final EntityDomainType<?> entityType = findEntityType( entityName );
 		if ( entityType == null ) {
 			// per JPA, this is an exception
@@ -190,7 +191,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public EmbeddableDomainType<?> embeddable(String embeddableName) {
+	@Nonnull
+	public EmbeddableDomainType<?> embeddable(@Nullable String embeddableName) {
 		final var embeddableType = findEmbeddableType( embeddableName );
 		if ( embeddableType == null ) {
 			throw new IllegalArgumentException( "Not an embeddable: " + embeddableName );
@@ -199,7 +201,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public EntityDomainType<?> getHqlEntityReference(String entityName) {
+	@Nullable
+	public EntityDomainType<?> getHqlEntityReference(@Nonnull String entityName) {
 		Class<?> loadedClass = null;
 		final var importInfo = resolveImport( entityName );
 		if ( importInfo != null ) {
@@ -224,7 +227,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public EntityDomainType<?> resolveHqlEntityReference(String entityName) {
+	@Nonnull
+	public EntityDomainType<?> resolveHqlEntityReference(@Nonnull String entityName) {
 		final var hqlEntityReference = getHqlEntityReference( entityName );
 		if ( hqlEntityReference == null ) {
 			throw new EntityTypeException( "Could not resolve entity name '" + entityName + "'", entityName );
@@ -232,7 +236,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return hqlEntityReference;
 	}
 
-	private static <X> ManagedDomainType<X> checkDomainType(Class<X> cls, ManagedDomainType<?> domainType) {
+	private static <X> ManagedDomainType<X> checkDomainType(Class<X> cls, @Nullable ManagedDomainType<?> domainType) {
 		if ( domainType != null && !Objects.equals( domainType.getJavaType(), cls ) ) {
 			throw new IllegalStateException( "Managed type " + domainType
 						+ " has a different Java type than requested" );
@@ -252,7 +256,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	@Override
 	@Nonnull
-	public <X> ManagedDomainType<X> managedType(Class<X> cls) {
+	public <X> ManagedDomainType<X> managedType(@Nonnull Class<X> cls) {
 		final var type = findManagedType( cls );
 		if ( type == null ) {
 			// per JPA
@@ -272,7 +276,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	@Override
 	@Nonnull
-	public <X> EntityDomainType<X> entity(Class<X> cls) {
+	public <X> EntityDomainType<X> entity(@Nonnull Class<X> cls) {
 		final var entityType = findEntityType( cls );
 		if ( entityType == null ) {
 			throw new IllegalArgumentException( "Not an entity: " + cls.getName() );
@@ -290,7 +294,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	@Override
 	@Nonnull
-	public <X> EmbeddableDomainType<X> embeddable(Class<X> cls) {
+	public <X> EmbeddableDomainType<X> embeddable(@Nonnull Class<X> cls) {
 		final var embeddableType = findEmbeddableType( cls );
 		if ( embeddableType == null ) {
 			throw new IllegalArgumentException( "Not an embeddable: " + cls.getName() );
@@ -537,7 +541,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	private EntityDomainType<?> resolveEntityReference(Class<?> javaType) {
+	@Nonnull
+	private EntityDomainType<?> resolveEntityReference(@Nonnull Class<?> javaType) {
 		// try the incoming Java type as a "strict" entity reference
 		final var managedType = managedTypeByClass.get( javaType );
 		if ( managedType instanceof EntityDomainType<?> entityDomainType ) {

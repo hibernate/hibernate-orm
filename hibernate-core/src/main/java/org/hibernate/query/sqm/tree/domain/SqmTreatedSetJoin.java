@@ -76,6 +76,7 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedSetJoin<O, T, S> copy(SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {

@@ -1954,11 +1954,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	public String getEntityName(HqlParser.EntityNameContext parserEntityName) {
 		final var entityName = new StringBuilder();
-		final int end = parserEntityName.getChildCount();
-		entityName.append( visitIdentifier( (HqlParser.IdentifierContext) parserEntityName.getChild( 0 ) ) );
-		for ( int i = 2; i < end; i += 2 ) {
-			entityName.append( '.' );
-			entityName.append( visitIdentifier( (HqlParser.IdentifierContext) parserEntityName.getChild( i ) ) );
+		final var identifierList = parserEntityName.identifier();
+		final int size = identifierList.size();
+		for ( int i = 0; i < size; i++ ) {
+			final var id = identifierList.get( i );
+			if ( i > 0) {
+				entityName.append( '.' );
+			}
+			entityName.append( visitIdentifier( id ) );
 		}
 		return entityName.toString();
 	}

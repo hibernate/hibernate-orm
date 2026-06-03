@@ -79,7 +79,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	private @Nullable String alias;
 
 	private @Nullable List<SqmJoin<T, ?>> joins;
-	private @Nullable List<SqmTreatedFrom<?,?,?>> treats;
+	private @Nullable List<SqmTreatedFrom<O,T,?>> treats;
 
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
@@ -145,11 +145,11 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 	}
 
-	private static ArrayList<SqmTreatedFrom<?, ?, ?>> copyTreats(
-			SqmCopyContext context, List<SqmTreatedFrom<?, ?, ?>> treats) {
-		final ArrayList<SqmTreatedFrom<?, ?, ?>> newTreats =
+	private ArrayList<SqmTreatedFrom<O, T, ?>> copyTreats(
+			SqmCopyContext context, List<SqmTreatedFrom<O, T, ?>> treats) {
+		final ArrayList<SqmTreatedFrom<O, T, ?>> newTreats =
 				new ArrayList<>( treats.size() );
-		for ( SqmTreatedFrom<?,?,?> treat : treats ) {
+		for ( var treat : treats ) {
 			newTreats.add( treat.copy( context ) );
 		}
 		return newTreats;
@@ -226,6 +226,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
+	@Nonnull
 	public List<SqmJoin<T, ?>> getSqmJoins() {
 		return joins == null ? emptyList() : unmodifiableList( joins );
 	}
@@ -274,19 +275,20 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public List<SqmTreatedFrom<?,?,?>> getSqmTreats() {
+	@Nonnull
+	public List<SqmTreatedFrom<O, T, ?>> getSqmTreats() {
 		return treats == null ? emptyList() : treats;
 	}
 
-	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> @Nullable X findTreat(
+	protected <S extends T> @Nullable SqmTreatedFrom<O,T,S> findTreat(
 			ManagedDomainType<S> targetType, @Nullable String alias) {
 		if ( treats != null ) {
 			for ( var treat : treats ) {
-				if ( treat.getTreatTarget() == targetType ) {
-					if ( Objects.equals( treat.getExplicitAlias(), alias ) ) {
-						//noinspection unchecked
-						return (X) treat;
-					}
+				if ( treat.getTreatTarget() == targetType
+						&& Objects.equals( treat.getExplicitAlias(), alias ) ) {
+					@SuppressWarnings("unchecked") // Safe, we checked target type
+					final var castTreat = (SqmTreatedFrom<O, T, S>) treat;
+					return castTreat;
 				}
 			}
 		}
@@ -297,8 +299,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		if ( treats == null ) {
 			treats = new ArrayList<>();
 		}
-		// Cast needed for static nullness analysis.
-		treats.add( (SqmTreatedFrom<?, ?, ?>) treat );
+		treats.add( treat );
 		return treat;
 	}
 

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.AssertionFailure;
 import org.hibernate.query.sqm.tree.SqmCacheable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -17,9 +18,7 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -61,7 +60,9 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 	 * mutate the roots
 	 */
 	public List<SqmRoot<?>> getRoots() {
-		return domainRoots == null ? emptyList() : unmodifiableList( domainRoots );
+		return domainRoots == null
+				? emptyList()
+				: unmodifiableList( domainRoots );
 	}
 
 	/**
@@ -96,7 +97,7 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 
 	public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 		String separator = " ";
-		for ( SqmRoot<?> root : getRoots() ) {
+		for ( var root : getRoots() ) {
 			sb.append( separator );
 			if ( root.isCorrelated() ) {
 				if ( root.containsOnlyInnerJoins() ) {
@@ -141,10 +142,10 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 	}
 
 	private static void appendJoins(SqmFrom<?, ?> sqmFrom, List<? extends SqmJoin<?, ?>> joins, StringBuilder sb, boolean transitive, SqmRenderContext context) {
-		for ( SqmJoin<?, ?> sqmJoin : joins ) {
+		for ( var sqmJoin : joins ) {
 			appendJoinType( sb, sqmJoin.getSqmJoinType() );
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
-				final List<SqmTreatedFrom<?, ?, ?>> sqmTreats = attributeJoin.getSqmTreats();
+				final var sqmTreats = attributeJoin.getSqmTreats();
 				if ( attributeJoin.isImplicitJoin() && !sqmTreats.isEmpty() ) {
 					for ( int i = 0; i < sqmTreats.size(); i++ ) {
 						final var treatJoin = (SqmTreatedAttributeJoin<?, ?, ?>) sqmTreats.get( i );
@@ -206,28 +207,39 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 
 	private static void appendJoinAliasAndOnClause(StringBuilder sb, SqmRenderContext context, SqmJoin<?, ?> join) {
 		sb.append( ' ' ).append( join.resolveAlias( context ) );
-		final SqmPredicate joinPredicate = join.getJoinPredicate();
+		final var joinPredicate = join.getJoinPredicate();
 		if ( joinPredicate != null ) {
 			sb.append( " on " );
 			joinPredicate.appendHqlString( sb, context );
 		}
 	}
 
-	private static void appendAttributeJoin(SqmFrom<?, ?> sqmFrom, StringBuilder sb, SqmRenderContext context, SqmAttributeJoin<?, ?> attributeJoin) {
+	private static void appendAttributeJoin(
+			SqmFrom<?, ?> sqmFrom,
+			StringBuilder hqlString,
+			SqmRenderContext context,
+			SqmAttributeJoin<?, ?> attributeJoin) {
 		if ( sqmFrom instanceof SqmTreatedPath<?, ?> treatedPath ) {
-			sb.append( "treat(" );
-			treatedPath.getWrappedPath().appendHqlString( sb, context );
-//					sb.append( treatedPath.getWrappedPath().resolveAlias( context ) );
-			sb.append( " as " ).append( treatedPath.getTreatTarget().getTypeName() ).append( ')' );
+			hqlString.append( "treat(" );
+			treatedPath.getWrappedPath()
+					.appendHqlString( hqlString, context );
+//					hqlString.append( treatedPath.getWrappedPath().resolveAlias( context ) );
+			hqlString.append( " as " )
+					.append( treatedPath.getTreatTarget().getTypeName() )
+					.append( ')' );
 		}
 		else {
-			sb.append( sqmFrom.resolveAlias( context ) );
+			hqlString.append( sqmFrom.resolveAlias( context ) );
 		}
-		sb.append( '.' ).append( attributeJoin.getAttribute().getName() );
+		hqlString.append( '.' )
+				.append( attributeJoin.getAttribute().getName() );
 	}
 
-	private static void appendJoinType(StringBuilder sb, SqmJoinType sqmJoinType) {
-		sb.append( switch ( sqmJoinType ) {
+	private static void appendJoinType(StringBuilder hqlString, SqmJoinType sqmJoinType) {
+//		hqlString.append(' ')
+//				.append( sqmJoinType.getText() )
+//				.append( " join " );
+		hqlString.append( switch ( sqmJoinType ) {
 			case LEFT -> " left join ";
 			case RIGHT -> " right join ";
 			case INNER -> " join ";
@@ -236,21 +248,29 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 		} );
 	}
 
-	private void appendJoins(SqmFrom<?, ?> sqmFrom, String correlationPrefix, StringBuilder sb, SqmRenderContext context) {
+	private void appendJoins(
+			SqmFrom<?, ?> sqmFrom,
+			String correlationPrefix,
+			StringBuilder hqlString,
+			SqmRenderContext context) {
 		String separator = "";
-		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
-			assert sqmJoin instanceof SqmAttributeJoin<?, ?>;
-			sb.append( separator );
-			sb.append( correlationPrefix ).append( '.' );
-			sb.append( ( (SqmAttributeJoin<?, ?>) sqmJoin ).getAttribute().getName() );
-			sb.append( ' ' ).append( sqmJoin.resolveAlias( context ) );
-			appendJoins( sqmJoin, sb, context );
-			separator = ", ";
+		for ( var sqmJoin : sqmFrom.getSqmJoins() ) {
+			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
+				hqlString.append( separator )
+						.append( correlationPrefix ).append( '.' )
+						.append( attributeJoin.getAttribute().getName() )
+						.append( ' ' ).append( sqmJoin.resolveAlias( context ) );
+				appendJoins( sqmJoin, hqlString, context );
+				separator = ", ";
+			}
+			else {
+				throw new AssertionFailure( "Not an attribute join" );
+			}
 		}
 	}
 
 	public static void appendTreatJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb, SqmRenderContext context) {
-		for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
+		for ( var sqmTreat : sqmFrom.getSqmTreats() ) {
 			appendJoins( sqmTreat, sb, context );
 		}
 	}

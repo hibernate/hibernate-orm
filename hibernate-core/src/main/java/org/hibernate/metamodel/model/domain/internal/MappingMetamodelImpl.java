@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -320,11 +321,13 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	public TypeConfiguration getTypeConfiguration() {
 		return jpaMetamodel.getTypeConfiguration();
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
 	public MappingMetamodel getMappingMetamodel() {
 		return this;
 	}
@@ -401,31 +404,37 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public <X> EntityDomainType<X> entity(Class<X> cls) {
+	@Nonnull
+	public <X> EntityDomainType<X> entity(@Nonnull Class<X> cls) {
 		return jpaMetamodel.entity( cls );
 	}
 
 	@Override
-	public <X> ManagedDomainType<X> managedType(Class<X> cls) {
+	@Nonnull
+	public <X> ManagedDomainType<X> managedType(@Nonnull Class<X> cls) {
 		return jpaMetamodel.managedType( cls );
 	}
 
 	@Override
-	public <X> EmbeddableDomainType<X> embeddable(Class<X> cls) {
+	@Nonnull
+	public <X> EmbeddableDomainType<X> embeddable(@Nonnull Class<X> cls) {
 		return jpaMetamodel.embeddable( cls );
 	}
 
 	@Override
+	@Nonnull
 	public Set<ManagedType<?>> getManagedTypes() {
 		return jpaMetamodel.getManagedTypes();
 	}
 
 	@Override
+	@Nonnull
 	public Set<EntityType<?>> getEntities() {
 		return jpaMetamodel.getEntities();
 	}
 
 	@Override
+	@Nonnull
 	public Set<EmbeddableType<?>> getEmbeddables() {
 		return jpaMetamodel.getEmbeddables();
 	}
@@ -436,7 +445,8 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public ManagedDomainType<?> managedType(String typeName) {
+	@Nonnull
+	public ManagedDomainType<?> managedType(@Nullable String typeName) {
 		return jpaMetamodel.managedType( typeName );
 	}
 
@@ -446,7 +456,8 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public EntityDomainType<?> entity(String entityName) {
+	@Nonnull
+	public EntityDomainType<?> entity(@Nullable String entityName) {
 		return jpaMetamodel.entity( entityName );
 	}
 
@@ -456,17 +467,20 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public EmbeddableDomainType<?> embeddable(String embeddableName) {
+	@Nonnull
+	public EmbeddableDomainType<?> embeddable(@Nullable String embeddableName) {
 		return jpaMetamodel.embeddable( embeddableName );
 	}
 
 	@Override
-	public EntityDomainType<?> getHqlEntityReference(String entityName) {
+	@Nullable
+	public EntityDomainType<?> getHqlEntityReference(@Nonnull String entityName) {
 		return jpaMetamodel.getHqlEntityReference( entityName );
 	}
 
 	@Override
-	public EntityDomainType<?> resolveHqlEntityReference(String entityName) {
+	@Nonnull
+	public EntityDomainType<?> resolveHqlEntityReference(@Nonnull String entityName) {
 		return jpaMetamodel.resolveHqlEntityReference( entityName );
 	}
 

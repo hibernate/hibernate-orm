@@ -19,7 +19,7 @@ public interface AdjustableBasicType<J> extends BasicType<J> {
 	 * Perform the adjustment
 	 */
 	default <X> BasicType<X> resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<X> domainJtd) {
-		final JdbcType jdbcType = getJdbcType();
+		final var jdbcType = getJdbcType();
 		if ( jdbcType instanceof AdjustableJdbcType adjustableJdbcType ) {
 			final JdbcType resolvedJdbcType = adjustableJdbcType.resolveIndicatedType(
 					indicators,

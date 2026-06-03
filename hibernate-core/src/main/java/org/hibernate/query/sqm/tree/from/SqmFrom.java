@@ -65,6 +65,7 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	/**
 	 * The joins associated with this SqmFrom
 	 */
+	@Nonnull
 	List<SqmJoin<R,?>> getSqmJoins();
 
 	/**
@@ -80,7 +81,8 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	/**
 	 * The treats associated with this SqmFrom
 	 */
-	List<SqmTreatedFrom<?,?,?>> getSqmTreats();
+	@Nonnull
+	List<SqmTreatedFrom<L,R,?>> getSqmTreats();
 
 	default boolean hasTreats() {
 		return !isEmpty( getSqmTreats() );

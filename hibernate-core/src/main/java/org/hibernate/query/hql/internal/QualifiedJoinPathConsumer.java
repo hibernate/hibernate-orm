@@ -8,10 +8,8 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmJoinable;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -21,7 +19,6 @@ import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
@@ -122,7 +119,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	}
 
 	private ConsumerDelegate resolveBase(String identifier, boolean isTerminal) {
-		final SqmCreationProcessingState processingState = creationState.getCurrentProcessingState();
+		final var processingState = creationState.getCurrentProcessingState();
 		final var pathRegistry = processingState.getPathRegistry();
 		final SqmFrom<?, Object> pathRootByAlias = pathRegistry.findFromByAlias( identifier, true );
 		if ( pathRootByAlias != null ) {
@@ -197,10 +194,10 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			boolean isTerminal,
 			boolean allowReuse,
 			SqmCreationState creationState) {
-		final SqmPathSource<?> subPathSource = lhs.getResolvedModel().getSubPathSource( name, true );
+		final var subPathSource = lhs.getResolvedModel().getSubPathSource( name, true );
 		if ( allowReuse ) {
 			if ( !isTerminal ) {
-				for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
+				for ( var sqmJoin : lhs.getSqmJoins() ) {
 					// In order for an HQL join to be reusable, it must have the same path source,
 					if ( sqmJoin.getModel() == subPathSource
 						// and must not have a join condition.
@@ -211,7 +208,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				}
 			}
 			else if ( fetch ) {
-				final SqmAttributeJoin<U, ?> compatibleFetchJoin = findCompatibleFetchJoin( lhs, subPathSource, joinType );
+				final var compatibleFetchJoin = findCompatibleFetchJoin( lhs, subPathSource, joinType );
 				if ( compatibleFetchJoin != null ) {
 					if ( alias != null ) {
 						throw new IllegalStateException( "Cannot fetch the same association twice with a different alias" );
@@ -225,7 +222,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 					((SemanticQueryBuilder<?>) creationState).getQuery() );
 		}
 		@SuppressWarnings("unchecked")
-		final SqmJoinable<U, ?> joinSource = (SqmJoinable<U, ?>) subPathSource;
+		final var joinSource = (SqmJoinable<U, ?>) subPathSource;
 		return createJoin( lhs, joinType, alias, fetch, isTerminal, allowReuse, creationState, joinSource );
 	}
 

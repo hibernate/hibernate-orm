@@ -17,7 +17,6 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
@@ -31,6 +30,7 @@ import org.hibernate.spi.NavigablePath;
 import java.util.List;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
 
 /**
@@ -48,7 +48,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 			boolean lateral,
 			SqmRoot<T> sqmRoot) {
 		this(
-				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
+				buildRootNavigablePath( "<<derived>>", alias ),
 				subQuery,
 				lateral,
 				new AnonymousTupleType<>( subQuery ),

@@ -149,11 +149,11 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	public SqmCrossJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		final var pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCrossJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),
-				pathRegistry.resolveFromByPath( getRoot().getNavigablePath() )
+				creationProcessingState.getPathRegistry()
+						.resolveFromByPath( getRoot().getNavigablePath() )
 		);
 	}
 
@@ -221,11 +221,13 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 		if ( fetch ) {
 			throw new IllegalArgumentException( "Cross join treats can not be fetched" );
 		}
-		final SqmTreatedCrossJoin treat = findTreat( treatTarget, null );
+		final var treat = (SqmTreatedCrossJoin) findTreat( treatTarget, null );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedCrossJoin( this, (SqmEntityDomainType<?>) treatTarget ) );
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 	@Nonnull

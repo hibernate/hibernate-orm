@@ -9,7 +9,6 @@ import jakarta.annotation.Nonnull;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.spi.NavigablePath;
@@ -124,8 +123,8 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	@Nonnull
 	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
-		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
-		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
+		final var treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
+		final var treat = (SqmTreatedSingularJoin<O, T, S>) findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			if ( treatTarget instanceof SqmTreatableDomainType<S> treatableDomainType ) {
 				return addTreat( new SqmTreatedSingularJoin<>( this, treatableDomainType, alias, fetch ) );
@@ -134,17 +133,21 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
 			}
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 	@Override
 	@Nonnull
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
-		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
+		final var treat = (SqmTreatedSingularJoin<O, T, S>) findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedSingularJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 	@Override

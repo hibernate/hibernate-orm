@@ -76,6 +76,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedListJoin<O, T, S> copy(SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {

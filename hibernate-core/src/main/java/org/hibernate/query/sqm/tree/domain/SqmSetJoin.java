@@ -9,7 +9,6 @@ import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -161,8 +160,8 @@ public class SqmSetJoin<O, E>
 	@Override
 	@Nonnull
 	public <S extends E> SqmTreatedSetJoin<O, E, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
-		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
-		final SqmTreatedSetJoin<O, E, S> treat = findTreat( treatTarget, alias );
+		final var treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
+		final var treat = (SqmTreatedSetJoin<O, E, S>) findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			if ( treatTarget instanceof TreatableDomainType<?> ) {
 				return addTreat( new SqmTreatedSetJoin<>( this, (SqmTreatableDomainType<S>) treatTarget, alias, fetch ) );
@@ -171,16 +170,20 @@ public class SqmSetJoin<O, E>
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
 			}
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 	@Override
 	@Nonnull
 	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
-		final SqmTreatedSetJoin<O, E, S> treat = findTreat( treatTarget, alias );
+		final var treat = (SqmTreatedSetJoin<O, E, S>) findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedSetJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 }

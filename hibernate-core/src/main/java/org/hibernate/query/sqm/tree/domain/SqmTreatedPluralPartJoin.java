@@ -58,6 +58,7 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedPluralPartJoin copy(SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {

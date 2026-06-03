@@ -75,6 +75,7 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedMapJoin<L, K, V, S> copy(SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {

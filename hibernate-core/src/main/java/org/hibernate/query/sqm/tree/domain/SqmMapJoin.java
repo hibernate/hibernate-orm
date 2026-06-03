@@ -9,7 +9,6 @@ import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
@@ -105,8 +104,8 @@ public class SqmMapJoin<L, K, V>
 	@Nonnull
 	@Override
 	public SqmPath<V> value() {
-		final PathSource<V> elementPathSource = getAttribute().getElementPathSource();
-		return resolvePath( elementPathSource.getPathName(), (SqmPathSource<V>) elementPathSource );
+		final var elementPathSource = getAttribute().getElementPathSource();
+		return resolvePath( elementPathSource.getPathName(), elementPathSource );
 	}
 
 	@Nonnull
@@ -172,8 +171,8 @@ public class SqmMapJoin<L, K, V>
 	@Override
 	@Nonnull
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
-		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
-		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
+		final var treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
+		final var treat = (SqmTreatedMapJoin<L, K, V, S>) findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			if ( treatTarget instanceof TreatableDomainType<S> ) {
 				return addTreat( new SqmTreatedMapJoin<>( this, (SqmTreatableDomainType<S>) treatTarget, alias, fetch ) );
@@ -182,7 +181,9 @@ public class SqmMapJoin<L, K, V>
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
 			}
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 	@Nonnull
@@ -194,21 +195,25 @@ public class SqmMapJoin<L, K, V>
 	@Override
 	@Nonnull
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
-		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
+		final var treat = (SqmTreatedMapJoin<L, K, V, S>) findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedMapJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 	@Override
 	@Nonnull
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
-		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
+		final var treat = (SqmTreatedMapJoin<L, K, V, S>) findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedMapJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias ) );
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 }

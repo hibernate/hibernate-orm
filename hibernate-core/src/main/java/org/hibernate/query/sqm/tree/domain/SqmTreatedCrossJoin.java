@@ -58,6 +58,7 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 	}
 
 	@Override
+	@Nonnull
 	public SqmTreatedCrossJoin copy(SqmCopyContext context) {
 		final SqmTreatedCrossJoin existing = context.getCopy( this );
 		if ( existing != null ) {

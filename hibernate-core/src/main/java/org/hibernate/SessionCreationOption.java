@@ -9,11 +9,11 @@ import jakarta.persistence.EntityAgent;
 
 import java.time.Instant;
 
-/// Centralized point for [session][EntityManager.CreationOption] and
+/// Declares various for [session][EntityManager.CreationOption] and
 /// [stateless session][EntityAgent.CreationOption] creation options.
 ///
-/// @apiNote Serves no functional purpose - place to consolidate the actual options
-/// for easier discovery / documentation.
+/// @apiNote Serves no functional purpose - a place to consolidate
+///          the actual options for easier discovery / documentation.
 ///
 /// @see ReadOnlyMode
 /// @see FlushMode

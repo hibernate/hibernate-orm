@@ -10,6 +10,7 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FindOption;
+import jakarta.persistence.TypedQuery;
 
 /**
  * Controls how the session interacts with the {@linkplain Cache second-level cache}
@@ -39,7 +40,9 @@ import jakarta.persistence.FindOption;
  * @see CacheStoreMode
  * @see CacheRetrieveMode
  */
-public enum CacheMode implements FindOption, EntityManager.Option, EntityAgent.Option {
+public enum CacheMode
+		implements FindOption, TypedQuery.Option,
+				EntityManager.Option, EntityAgent.Option {
 
 	/**
 	 * The session may read items from the cache, and add items to the cache

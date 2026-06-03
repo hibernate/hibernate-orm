@@ -3564,7 +3564,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
 			return consumeAttributeJoin( attributeJoin, lhsTableGroup, ownerTableGroup, transitive );
 		}
-		else if ( sqmJoin instanceof SqmCrossJoin<?> crossJoin ) {
+		else if ( sqmJoin instanceof SqmCrossJoin<?, ?> crossJoin ) {
 			return consumeCrossJoin( crossJoin, lhsTableGroup, transitive );
 		}
 		else if ( sqmJoin instanceof SqmEntityJoin<?,?> entityJoin ) {
@@ -3818,7 +3818,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				|| sqmJoin.getNodeType() instanceof AnyMappingDomainType<?> );
 	}
 
-	private TableGroup consumeCrossJoin(SqmCrossJoin<?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
+	private TableGroup consumeCrossJoin(SqmCrossJoin<?, ?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
 		final var tableGroup =
 				resolveEntityPersister( sqmJoin.getReferencedPathSource() )
 						.createRootTableGroup(
@@ -4466,7 +4466,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Expression visitCrossJoin(SqmCrossJoin<?> sqmJoin) {
+	public Expression visitCrossJoin(SqmCrossJoin<?, ?> sqmJoin) {
 		final var existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 //			LOG.tracef( "SqmCrossJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );

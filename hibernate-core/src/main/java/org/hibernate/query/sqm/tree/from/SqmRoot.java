@@ -248,9 +248,12 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		if ( fetch ) {
 			throw new TreatException( "Root path treats can not be fetched - " + getNavigablePath().getFullPath() );
 		}
-		final SqmTreatedFrom<E,E,S> treat = findTreat( treatTarget, null );
+		final var treat = findTreat( treatTarget, null );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedRoot( this, (SqmEntityDomainType<S>) treatTarget ) );
+			final var treatedRoot = new SqmTreatedRoot<>( this, (SqmEntityDomainType<S>) treatTarget );
+			@SuppressWarnings("unchecked")
+			final var typedTreat = (SqmTreatedFrom<E, E, S>) treatedRoot;
+			return addTreat( typedTreat );
 		}
 		return treat;
 	}

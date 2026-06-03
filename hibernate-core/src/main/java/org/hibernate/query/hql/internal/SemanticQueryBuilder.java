@@ -2198,7 +2198,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public final SqmCrossJoin<?> visitCrossJoin(HqlParser.CrossJoinContext ctx) {
+	public final SqmCrossJoin<?, ?> visitCrossJoin(HqlParser.CrossJoinContext ctx) {
 		throw new UnsupportedOperationException( "Unexpected call to #visitCrossJoin, see #consumeCrossJoin" );
 	}
 

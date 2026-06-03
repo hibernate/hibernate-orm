@@ -10,5 +10,5 @@ import org.hibernate.Incubating;
  * @author Marco Belladelli
  */
 @Incubating
-public interface JpaCrossJoin<T> extends JpaFrom<T,T> {
+public interface JpaCrossJoin<L, T> extends JpaFrom<L, T> {
 }

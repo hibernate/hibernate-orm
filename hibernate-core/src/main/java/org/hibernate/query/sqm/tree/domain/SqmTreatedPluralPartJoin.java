@@ -16,21 +16,21 @@ import org.hibernate.spi.NavigablePath;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("rawtypes")
-public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTreatedJoin {
-	private final SqmPluralPartJoin<?,?> wrappedPath;
-	private final SqmEntityDomainType<?> treatTarget;
+public class SqmTreatedPluralPartJoin<O, T, S extends T>
+		extends SqmPluralPartJoin<O, S>
+		implements SqmTreatedJoin<O, T, S> {
+	private final SqmPluralPartJoin<O, T> wrappedPath;
+	private final SqmEntityDomainType<S> treatTarget;
 
 	public SqmTreatedPluralPartJoin(
-			SqmPluralPartJoin<?,?> wrappedPath,
-			SqmEntityDomainType<?> treatTarget,
+			SqmPluralPartJoin<O, T> wrappedPath,
+			SqmEntityDomainType<S> treatTarget,
 			@Nullable String alias) {
-		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
 				wrappedPath.getNavigablePath()
 						.treatAs( treatTarget.getHibernateEntityName(), alias ),
-				wrappedPath.getReferencedPathSource(),
+				treatTarget,
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.nodeBuilder()
@@ -41,14 +41,13 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 
 	private SqmTreatedPluralPartJoin(
 			NavigablePath navigablePath,
-			SqmPluralPartJoin<?,?> wrappedPath,
-			SqmEntityDomainType<?> treatTarget,
+			SqmPluralPartJoin<O, T> wrappedPath,
+			SqmEntityDomainType<S> treatTarget,
 			@Nullable String alias) {
-		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
 				navigablePath,
-				wrappedPath.getReferencedPathSource(),
+				treatTarget,
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.nodeBuilder()
@@ -59,14 +58,14 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 
 	@Override
 	@Nonnull
-	public SqmTreatedPluralPartJoin copy(SqmCopyContext context) {
+	public SqmTreatedPluralPartJoin<O, T, S> copy(SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		final var path = context.registerCopy(
 				this,
-				new SqmTreatedPluralPartJoin(
+				new SqmTreatedPluralPartJoin<>(
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
@@ -78,43 +77,53 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 	}
 
 	@Override
-	public SqmPluralPartJoin<?,?> getWrappedPath() {
+	public SqmPluralPartJoin<O, T> getWrappedPath() {
 		return wrappedPath;
 	}
 
 	@Nonnull
 	@Override
-	public EntityDomainType<?> getTreatTarget() {
+	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	public @Nonnull SqmBindableType<?> getNodeType() {
+	public @Nonnull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmPathSource<?> getReferencedPathSource() {
+	public SqmPathSource<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
 	@Override
 	@Nonnull
-	public SqmTreatedPluralPartJoin treatAs(@Nonnull Class treatJavaType, @Nullable String alias, boolean fetch) {
-		//noinspection unchecked
-		return wrappedPath.treatAs( treatJavaType, alias, fetch );
+	public <S1 extends S> SqmTreatedPluralPartJoin<O, S, S1> treatAs(
+			@Nonnull Class<S1> treatJavaType,
+			@Nullable String alias,
+			boolean fetch) {
+		@SuppressWarnings("unchecked")
+		final var treat = (SqmTreatedPluralPartJoin<O, S, S1>)
+				wrappedPath.treatAs( treatJavaType, alias, fetch );
+		return treat;
 	}
 
 	@Override
 	@Nonnull
-	public SqmTreatedPluralPartJoin treatAs(@Nonnull EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
-		//noinspection unchecked
-		return wrappedPath.treatAs( treatTarget, alias, fetch );
+	public <S1 extends S> SqmTreatedPluralPartJoin<O, S, S1> treatAs(
+			@Nonnull EntityDomainType<S1> treatTarget,
+			@Nullable String alias,
+			boolean fetch) {
+		@SuppressWarnings("unchecked")
+		final var treat = (SqmTreatedPluralPartJoin<O, S, S1>)
+				wrappedPath.treatAs( treatTarget, alias, fetch );
+		return treat;
 	}
 
 	@Override

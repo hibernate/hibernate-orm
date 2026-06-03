@@ -22,19 +22,19 @@ import org.hibernate.spi.NavigablePath;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("rawtypes")
-public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin {
-	private final SqmCrossJoin wrappedPath;
-	private final SqmEntityDomainType treatTarget;
+public class SqmTreatedCrossJoin<L, T, S extends T>
+		extends SqmCrossJoin<L, S>
+		implements SqmTreatedJoin<L, T, S> {
+	private final SqmCrossJoin<L, T> wrappedPath;
+	private final SqmEntityDomainType<S> treatTarget;
 
 	public SqmTreatedCrossJoin(
-			SqmCrossJoin<?> wrappedPath,
-			SqmEntityDomainType<?> treatTarget) {
-		//noinspection unchecked
+			SqmCrossJoin<L, T> wrappedPath,
+			SqmEntityDomainType<S> treatTarget) {
 		super(
 				wrappedPath.getNavigablePath()
 						.treatAs( treatTarget.getHibernateEntityName(), null ),
-				(SqmEntityDomainType) wrappedPath.getReferencedPathSource().getPathType(),
+				treatTarget,
 				null,
 				wrappedPath.getRoot()
 		);
@@ -44,12 +44,11 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 
 	private SqmTreatedCrossJoin(
 			NavigablePath navigablePath,
-			SqmCrossJoin<?> wrappedPath,
-			SqmEntityDomainType<?> treatTarget) {
-		//noinspection unchecked
+			SqmCrossJoin<L, T> wrappedPath,
+			SqmEntityDomainType<S> treatTarget) {
 		super(
 				navigablePath,
-				(SqmEntityDomainType) wrappedPath.getReferencedPathSource().getPathType(),
+				treatTarget,
 				null,
 				wrappedPath.getRoot()
 		);
@@ -59,20 +58,19 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 
 	@Override
 	@Nonnull
-	public SqmTreatedCrossJoin copy(SqmCopyContext context) {
-		final SqmTreatedCrossJoin existing = context.getCopy( this );
+	public SqmTreatedCrossJoin<L, T, S> copy(SqmCopyContext context) {
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedCrossJoin path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
-				new SqmTreatedCrossJoin(
+				new SqmTreatedCrossJoin<>(
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget
 				)
 		);
-		//noinspection unchecked
 		copyTo( path, context );
 		return path;
 	}
@@ -84,36 +82,33 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 
 	@Nonnull
 	@Override
-	public SqmEntityDomainType getTreatTarget() {
+	public SqmEntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Nonnull
 	@Override
-	public SqmEntityDomainType getModel() {
+	public SqmEntityDomainType<S> getModel() {
 		return treatTarget;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public SqmPath getWrappedPath() {
+	public SqmCrossJoin<L, T> getWrappedPath() {
 		return wrappedPath;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public @Nonnull SqmBindableType getNodeType() {
-		return treatTarget;
-	}
-
-	@SuppressWarnings({ "rawtypes" })
-	@Override
-	public SqmEntityDomainType getReferencedPathSource() {
+	public @Nonnull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmEntityDomainType<S> getReferencedPathSource() {
+		return treatTarget;
+	}
+
+	@Override
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
@@ -128,28 +123,31 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 
 	@Override
 	@Nonnull
-	public SqmTreatedCrossJoin on(@Nullable JpaPredicate ... restrictions) {
-		return (SqmTreatedCrossJoin) super.on( restrictions );
+	public SqmTreatedCrossJoin<L, T, S> on(@Nullable JpaPredicate ... restrictions) {
+		return (SqmTreatedCrossJoin<L, T, S>) super.on( restrictions );
 	}
 
 	@Nonnull
 	@Override
-	public SqmTreatedCrossJoin on(@Nonnull Expression restriction) {
-		//noinspection unchecked
-		return (SqmTreatedCrossJoin) super.on( restriction );
+	public SqmTreatedCrossJoin<L, T, S> on(@Nonnull Expression<Boolean> restriction) {
+		return (SqmTreatedCrossJoin<L, T, S>) super.on( restriction );
 	}
 
 	@Override
 	@Nonnull
-	public SqmTreatedCrossJoin on(@Nullable JpaExpression restriction) {
-		//noinspection unchecked
-		return (SqmTreatedCrossJoin) super.on( restriction );
+	public SqmTreatedCrossJoin<L, T, S> on(@Nullable JpaExpression<Boolean> restriction) {
+		return (SqmTreatedCrossJoin<L, T, S>) super.on( restriction );
 	}
 
 	@Override
 	@Nonnull
-	public SqmTreatedCrossJoin treatAs(@Nonnull EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
-		//noinspection unchecked
-		return wrappedPath.treatAs( treatTarget, alias, fetch );
+	public <S1 extends S> SqmTreatedCrossJoin<L, S, S1> treatAs(
+			@Nonnull EntityDomainType<S1> treatTarget,
+			@Nullable String alias,
+			boolean fetch) {
+		@SuppressWarnings("unchecked")
+		final var treat = (SqmTreatedCrossJoin<L, S, S1>)
+				wrappedPath.treatAs( treatTarget, alias, fetch );
+		return treat;
 	}
 }

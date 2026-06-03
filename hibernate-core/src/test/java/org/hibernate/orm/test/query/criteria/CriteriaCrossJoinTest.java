@@ -99,7 +99,7 @@ public class CriteriaCrossJoinTest {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			JpaRoot<EntityOfBasics> from = (JpaRoot<EntityOfBasics>) query.from( EntityOfBasics.class );
-			JpaCrossJoin<EntityOfBasics> crossJoin = from.crossJoin( EntityOfBasics.class );
+			JpaCrossJoin<EntityOfBasics, EntityOfBasics> crossJoin = from.crossJoin( EntityOfBasics.class );
 			query.multiselect( from.get( "id" ), crossJoin.get( "id" ) ).where( cb.gt( crossJoin.get( "theInt" ), 5 ) );
 			List<Tuple> resultList = session.createQuery( query ).getResultList();
 			assertEquals( 15, resultList.size() );

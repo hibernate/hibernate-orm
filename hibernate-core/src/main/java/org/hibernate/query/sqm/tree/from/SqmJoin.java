@@ -162,11 +162,11 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 
 	@Nonnull
 	@Override
-	<X> JpaCrossJoin<X> crossJoin(@Nonnull Class<X> entityJavaType);
+	<X> JpaCrossJoin<R, X> crossJoin(@Nonnull Class<X> entityJavaType);
 
 	@Nonnull
 	@Override
-	<X> JpaCrossJoin<X> crossJoin(@Nonnull EntityDomainType<X> entity);
+	<X> JpaCrossJoin<R, X> crossJoin(@Nonnull EntityDomainType<X> entity);
 
 	@Nonnull
 	@Override

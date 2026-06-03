@@ -30,7 +30,7 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 
 	JpaSubQuery<T> multiselect(List<Selection<?>> selectionList);
 
-	<X> JpaCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin);
+	<X, Y> JpaCrossJoin<X, Y> correlate(JpaCrossJoin<X, Y> parentCrossJoin);
 
 	<X> JpaEntityJoin<T,X> correlate(JpaEntityJoin<T,X> parentEntityJoin);
 

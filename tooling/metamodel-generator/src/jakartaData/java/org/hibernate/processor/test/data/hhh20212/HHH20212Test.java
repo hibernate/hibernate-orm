@@ -4,7 +4,7 @@
  */
 package org.hibernate.processor.test.data.hhh20212;
 
-import org.hibernate.StatelessSession;
+import jakarta.persistence.EntityAgent;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
@@ -21,6 +21,6 @@ class HHH20212Test {
 	void test() throws Exception {
 		System.out.println( getMetaModelSourceAsString( HHH20212Repository.class, true ) );
 		assertMetamodelClassGeneratedFor( HHH20212Repository.class, true );
-		assertNotNull( getMetamodelClassFor( HHH20212Repository.class, true ).getDeclaredConstructor( StatelessSession.class ) );
+		assertNotNull( getMetamodelClassFor( HHH20212Repository.class, true ).getDeclaredConstructor( EntityAgent.class ) );
 	}
 }

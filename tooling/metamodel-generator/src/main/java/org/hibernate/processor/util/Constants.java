@@ -148,6 +148,7 @@ public final class Constants {
 	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
 
 	public static final String ENTITY_MANAGER = "jakarta.persistence.EntityManager";
+	public static final String ENTITY_AGENT = "jakarta.persistence.EntityAgent";
 	public static final String ENTITY_MANAGER_FACTORY = "jakarta.persistence.EntityManagerFactory";
 	public static final String QUERY = "jakarta.persistence.Query";
 	public static final String TYPED_QUERY = "jakarta.persistence.TypedQuery";
@@ -217,6 +218,8 @@ public final class Constants {
 	public static final String PANACHE_REACTIVE_ENTITY_BASE = "io.quarkus.hibernate.reactive.panache.PanacheEntityBase";
 
 	public static final String SPRING_OBJECT_PROVIDER = "org.springframework.beans.factory.ObjectProvider";
+	public static final String SPRING_ENTITY_MANAGER_PROVIDER = SPRING_OBJECT_PROVIDER + "<" + ENTITY_MANAGER + ">";
+	public static final String SPRING_ENTITY_AGENT_PROVIDER = SPRING_OBJECT_PROVIDER + "<" + ENTITY_AGENT + ">";
 	public static final String SPRING_SESSION_PROVIDER = SPRING_OBJECT_PROVIDER + "<" + HIB_SESSION + ">";
 	public static final String SPRING_STATELESS_SESSION_PROVIDER = SPRING_OBJECT_PROVIDER + "<" + HIB_STATELESS_SESSION + ">";
 	public static final String SPRING_COMPONENT = "org.springframework.stereotype.Component";
@@ -240,12 +243,15 @@ public final class Constants {
 	public static final Set<String> SESSION_TYPES =
 			Set.of(
 					ENTITY_MANAGER,
+					ENTITY_AGENT,
 					HIB_SESSION,
 					HIB_STATELESS_SESSION,
 					MUTINY_SESSION,
 					MUTINY_STATELESS_SESSION,
 					UNI_MUTINY_SESSION,
 					UNI_MUTINY_STATELESS_SESSION,
+					SPRING_ENTITY_MANAGER_PROVIDER,
+					SPRING_ENTITY_AGENT_PROVIDER,
 					SPRING_SESSION_PROVIDER,
 					SPRING_STATELESS_SESSION_PROVIDER
 			);

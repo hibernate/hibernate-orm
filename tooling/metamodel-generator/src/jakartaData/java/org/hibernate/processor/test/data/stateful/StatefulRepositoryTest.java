@@ -41,23 +41,23 @@ class StatefulRepositoryTest {
 		assertMetamodelClassGeneratedFor( StatefulBook.class );
 		assertMetamodelClassGeneratedFor( StatefulBookRepository.class, true );
 
-		assertTrue( repository.contains( "protected @Nonnull Session session;" ) );
-		assertTrue( repository.contains( "public @Nonnull Session session()" ) );
+		assertTrue( repository.contains( "protected @Nonnull EntityManager entityManager;" ) );
+		assertTrue( repository.contains( "public @Nonnull EntityManager entityManager()" ) );
 		assertFalse( repository.contains( "openStatelessSession()" ) );
 
-		assertTrue( repository.contains( "session.createSelectionQuery(_query)" ) );
-		assertTrue( repository.contains( "session.persist(book);" ) );
+		assertTrue( repository.contains( "entityManager.createQuery(_query)" ) );
+		assertTrue( repository.contains( "entityManager.persist(book);" ) );
 		assertTrue( repository.contains( "for (var _entity : books)" ) );
-		assertTrue( repository.contains( "session.persist(_entity);" ) );
-		assertTrue( repository.contains( "book = session.merge(book);" ) );
+		assertTrue( repository.contains( "entityManager.persist(_entity);" ) );
+		assertTrue( repository.contains( "book = entityManager.merge(book);" ) );
 		assertTrue( repository.contains( "List<StatefulBook> _result;" ) );
 		assertTrue( repository.contains( "_result = new ArrayList<>();" ) );
-		assertTrue( repository.contains( "_result.add(session.merge(_entity));" ) );
+		assertTrue( repository.contains( "_result.add(entityManager.merge(_entity));" ) );
 		assertTrue( repository.contains( "_result = books.clone();" ) );
-		assertTrue( repository.contains( "_result[_index] = session.merge(books[_index]);" ) );
-		assertTrue( repository.contains( "session.refresh(book);" ) );
-		assertTrue( repository.contains( "session.remove(book);" ) );
-		assertTrue( repository.contains( "session.detach(book);" ) );
+		assertTrue( repository.contains( "_result[_index] = entityManager.merge(books[_index]);" ) );
+		assertTrue( repository.contains( "entityManager.refresh(book);" ) );
+		assertTrue( repository.contains( "entityManager.remove(book);" ) );
+		assertTrue( repository.contains( "entityManager.detach(book);" ) );
 	}
 
 	@Test
@@ -80,7 +80,7 @@ class StatefulRepositoryTest {
 	}
 
 	@Test
-	void defaultConstructorPathOpensStatefulAndStatelessHibernateSessions() throws IOException {
+	void defaultConstructorPathOpensEntityManagerAndEntityAgent() throws IOException {
 		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 		final var compiler = ToolProvider.getSystemJavaCompiler();
 		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
@@ -109,16 +109,16 @@ class StatefulRepositoryTest {
 		}
 
 		final String statefulRepository = getMetaModelSourceAsString( StatefulBookRepository.class, true );
-		assertTrue( statefulRepository.contains( "private EntityManagerFactory sessionFactory;" ) );
-		assertTrue( statefulRepository.contains( "sessionFactory.unwrap(SessionFactory.class).openSession();" ) );
-		assertTrue( statefulRepository.contains( "session.close();" ) );
+		assertTrue( statefulRepository.contains( "private EntityManagerFactory entityManagerFactory;" ) );
+		assertTrue( statefulRepository.contains( "entityManagerFactory.createEntityManager();" ) );
+		assertTrue( statefulRepository.contains( "entityManager.close();" ) );
 		assertTrue( statefulRepository.contains( "@Inject" + System.lineSeparator() + "\t_StatefulBookRepository()" ) );
 		assertFalse( statefulRepository.contains( ".openStatelessSession();" ) );
 
 		final String statelessRepository = getMetaModelSourceAsString( StatelessBookRepository.class, true );
-		assertTrue( statelessRepository.contains( "private EntityManagerFactory sessionFactory;" ) );
-		assertTrue( statelessRepository.contains( "sessionFactory.unwrap(SessionFactory.class).openStatelessSession();" ) );
-		assertTrue( statelessRepository.contains( "session.close();" ) );
+		assertTrue( statelessRepository.contains( "private EntityManagerFactory entityAgentFactory;" ) );
+		assertTrue( statelessRepository.contains( "entityAgentFactory.createEntityAgent();" ) );
+		assertTrue( statelessRepository.contains( "entityAgent.close();" ) );
 		assertTrue( statelessRepository.contains( "@Inject" + System.lineSeparator() + "\t_StatelessBookRepository()" ) );
 		assertFalse( statelessRepository.contains( "SessionFactory.class).openSession();" ) );
 	}

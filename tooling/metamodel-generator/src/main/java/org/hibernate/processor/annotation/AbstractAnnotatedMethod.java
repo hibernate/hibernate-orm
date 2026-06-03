@@ -14,7 +14,10 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
+import static org.hibernate.processor.util.Constants.ENTITY_AGENT;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER;
+import static org.hibernate.processor.util.Constants.SPRING_ENTITY_AGENT_PROVIDER;
+import static org.hibernate.processor.util.Constants.SPRING_ENTITY_MANAGER_PROVIDER;
 import static org.hibernate.processor.util.Constants.OBJECTS;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 
@@ -44,7 +47,18 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 	}
 
 	boolean isUsingEntityManager() {
-		return ENTITY_MANAGER.equals(sessionType);
+		return ENTITY_MANAGER.equals(sessionType)
+			|| SPRING_ENTITY_MANAGER_PROVIDER.equals(sessionType);
+	}
+
+	boolean isUsingEntityAgent() {
+		return ENTITY_AGENT.equals(sessionType)
+			|| SPRING_ENTITY_AGENT_PROVIDER.equals(sessionType);
+	}
+
+	boolean isUsingEntityHandler() {
+		return isUsingEntityManager()
+			|| isUsingEntityAgent();
 	}
 
 	boolean isUsingStatelessSession() {

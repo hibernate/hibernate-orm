@@ -204,7 +204,9 @@ public class QueryMethod extends AbstractQueryMethod {
 		else if ( isUsingSpecification() ) {
 			localSession( declaration );
 			declaration
-					.append(".createQuery(_spec.buildCriteria(");
+					.append(isUpdate && isUsingEntityAgent()
+							? ".createStatement(_spec.buildCriteria("
+							: ".createQuery(_spec.buildCriteria(");
 			localSession( declaration );
 			if ( isReactive() ) {
 				declaration
@@ -466,7 +468,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		if ( isNative ) {
 			return "createNativeQuery";
 		}
-		else if ( isUsingEntityManager() || isReactive() || isUnspecializedQueryType(containerType) ) {
+		else if ( isUsingEntityHandler() || isReactive() || isUnspecializedQueryType(containerType) ) {
 			return "createQuery";
 		}
 		else {
@@ -476,7 +478,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private String createNamedQueryMethod() {
 		return isUpdate
-			&& !isUsingEntityManager()
+			&& !isUsingEntityHandler()
 			&& !isReactive()
 				? "createNamedMutationQuery"
 				: "createNamedQuery";
@@ -484,7 +486,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private void castResult(StringBuilder declaration) {
 		if ( isNative && returnTypeName != null && containerType == null
-				&& isUsingEntityManager() ) {
+				&& isUsingEntityHandler() ) {
 			// EntityManager.createNativeQuery() does not return TypedQuery,
 			// so we need to cast to the entity type
 			declaration

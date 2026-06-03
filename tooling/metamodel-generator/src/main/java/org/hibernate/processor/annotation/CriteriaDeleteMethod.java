@@ -69,9 +69,15 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	@Override
 	String createQueryMethod() {
-		return isUsingEntityManager()
-				? "createQuery"
-				: "createMutationQuery";
+		if ( isUsingEntityManager() ) {
+			return "createQuery";
+		}
+		else if ( isUsingEntityAgent() ) {
+			return "createStatement";
+		}
+		else {
+			return "createMutationQuery";
+		}
 	}
 
 	@Override

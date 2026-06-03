@@ -4,13 +4,13 @@
  */
 package org.hibernate.processor.test.data.quarkus;
 
-import org.hibernate.StatelessSession;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
+import jakarta.persistence.EntityAgent;
 import jakarta.inject.Inject;
 
 import static org.hibernate.processor.test.util.TestUtil.getMetamodelClassFor;
@@ -53,7 +53,7 @@ class QuarkusOrmPanacheTest {
 		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
 
 		// Make sure we have the proper constructor
-		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( StatelessSession.class );
+		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( EntityAgent.class );
 		Assertions.assertNotNull( constructor );
 		Assertions.assertTrue( constructor.isAnnotationPresent( Inject.class ) );
 	}

@@ -9,7 +9,7 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
-import static org.hibernate.processor.util.Constants.HIB_STATELESS_SESSION;
+import static org.hibernate.processor.util.Constants.ENTITY_AGENT;
 import static org.hibernate.processor.util.Constants.INJECT;
 import static org.hibernate.processor.util.Constants.NONNULL;
 
@@ -154,7 +154,7 @@ public class RepositoryConstructor implements MetaAttribute {
 			final int end = sessionTypeName.lastIndexOf( '>' );
 			return start > 0 && end > start
 					? sessionTypeName.substring( start + 1, end )
-					: HIB_STATELESS_SESSION;
+					: ENTITY_AGENT;
 		}
 		return sessionTypeName;
 	}

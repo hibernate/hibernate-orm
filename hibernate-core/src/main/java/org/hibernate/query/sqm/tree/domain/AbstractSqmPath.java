@@ -43,6 +43,7 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.jetbrains.annotations.Contract;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
@@ -471,6 +472,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	// contains all the important information. Deep equality for SqmFrom is determined through SqmFromClause
 
 	@Override
+	@Contract("null -> false") // Removes the need for null-checks in overrides calling super
 	public boolean equals(@Nullable Object object) {
 		return object instanceof AbstractSqmPath<?> that
 			&& this.getClass() == that.getClass()

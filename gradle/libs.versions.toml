@@ -109,6 +109,9 @@ hibernate-asciidoctor-theme = "6.1.2.Final"
 hibernate-extensions = "3.2.1.Final"
 asciidoctorj = "3.0.0"
 
+# Compilation (static checks)
+jetbrainsAnnotations = "26.1.0"
+
 # Plugins
 develocity = "4.4.1"
 customUserData = "2.6.0"
@@ -155,6 +158,9 @@ commonsCollections = { group = "org.apache.commons", name = "commons-collections
 eclipseJdtCore = { group = "org.eclipse.jdt", name = "org.eclipse.jdt.core", version.ref = "eclipseJdtCore" }
 freemarker = { group = "org.freemarker", name = "freemarker", version.ref = "freemarker" }
 oracleucp = { group = "com.oracle.database.jdbc", name = "ucp17", version.ref = "oracle" }
+
+# Compilation (static checks)
+jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrainsAnnotations" }
 
 # Jakarta
 jakarta-jpa = { group = "jakarta.persistence", name = "jakarta.persistence-api", version.ref = "jpa" }

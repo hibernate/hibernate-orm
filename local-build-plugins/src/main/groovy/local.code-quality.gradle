@@ -109,6 +109,7 @@ tasks.compileJava.dependsOn tasks.spotlessJavaApply
 
 dependencies {
     compileOnly libs.jakarta.annotation
+    compileOnly libs.compilation.jetbrainsAnnotations
     testCompileOnly libs.jakarta.annotation
 }
 

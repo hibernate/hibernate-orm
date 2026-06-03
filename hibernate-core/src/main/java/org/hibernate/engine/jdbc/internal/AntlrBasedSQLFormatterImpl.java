@@ -269,13 +269,12 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 				newLine(false);
 				currentContext().firstClauseElement = false;
 			}
-			else if (prevToken != null && prevToken.getType() == SqlFormatterLexer.RPAREN && currentContext().type == ContextType.MAIN) {
-				// CTE list: ) , next_cte ...
-				// But NOT in UPDATE SET: VALUES(col), col = ...
-				// Check if we're in UPDATE SET by looking for SET keyword before this
-				if (!isAfterKeyword(SqlFormatterLexer.SET, 10) && !isAfterKeyword(SqlFormatterLexer.UPDATE, 15)) {
-					newLine(false);
-				}
+			// CTE list: ) , next_cte ...
+			// But NOT in UPDATE SET: VALUES(col), col = ...
+			// Check if we're in UPDATE SET by looking for SET keyword before this
+			else if (prevToken != null && prevToken.getType() == SqlFormatterLexer.RPAREN && currentContext().type == ContextType.MAIN &&
+					!isAfterKeyword(SqlFormatterLexer.SET, 10) && !isAfterKeyword(SqlFormatterLexer.UPDATE, 15)) {
+				newLine(false);
 			}
 		}
 
@@ -854,7 +853,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 		}
 
 		private boolean isKeyword(int type) {
-			return type >= SqlFormatterLexer.SELECT && type <= SqlFormatterLexer.CONTINUE;
+			return type >= SqlFormatterLexer.SELECT && type <= SqlFormatterLexer.TEMPORARY;
 		}
 
 		private boolean isAfterKeyword(int keywordType, int lookback) {

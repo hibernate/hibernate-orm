@@ -9,6 +9,7 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
+import static org.hibernate.processor.util.Constants.ENTITY_AGENT;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER_FACTORY;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER;
 import static org.hibernate.processor.util.Constants.HIB_SESSION;
@@ -106,6 +107,10 @@ public class DefaultConstructor implements MetaAttribute {
 			if ( ENTITY_MANAGER.equals( sessionTypeName ) ) {
 				declaration
 						.append(".createEntityManager()");
+			}
+			else if ( ENTITY_AGENT.equals( sessionTypeName ) ) {
+				declaration
+						.append(".createEntityAgent()");
 			}
 			else {
 				declaration

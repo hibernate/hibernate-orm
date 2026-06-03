@@ -72,7 +72,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 
 	private void castResult(StringBuilder declaration) {
 		if ( containerType == null && !fetchProfiles.isEmpty()
-				&& isUsingEntityManager() ) {
+				&& isUsingEntityHandler() ) {
 			declaration
 					.append("(")
 					.append(annotationMetaEntity.importType(entity))
@@ -86,7 +86,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 
 	@Override
 	String createQueryMethod() {
-		return isUsingEntityManager()
+		return isUsingEntityHandler()
 			|| isReactive()
 			|| isUnspecializedQueryType(containerType)
 				? "createQuery"

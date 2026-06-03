@@ -110,11 +110,12 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	boolean useSpecificationCreateQuery() {
 		return isUsingSpecification()
 			&& !isReactive()
+			&& !isUsingEntityAgent()
 			&& !isUnspecializedQueryType( containerType() );
 	}
 
 	boolean initiallyUnwrapped() {
-		return !isUsingEntityManager() // a TypedQuery from EntityManager is not a SelectionQuery
+		return !isUsingEntityHandler() // a TypedQuery from EntityHandler is not a SelectionQuery
 			|| useSpecificationCreateQuery(); // SelectionSpecification.createQuery() returns SelectionQuery
 	}
 
@@ -284,7 +285,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		final boolean jakartaLimit = JD_LIMIT.equals(paramType);
 		final boolean jakartaPageRequest = JD_PAGE_REQUEST.equals(paramType);
 		if ( jakartaLimit || jakartaPageRequest
-				|| isUsingEntityManager() ) {
+				|| isUsingEntityHandler() ) {
 			final String firstResult;
 			final String maxResults;
 			if ( jakartaLimit ) {
@@ -530,7 +531,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
-		if ( !unwrapped && isUsingEntityManager() ) {
+		if ( !unwrapped && isUsingEntityHandler() ) {
 			declaration
 					.append("\t\t\t.unwrap(")
 					.append(annotationMetaEntity.importType(HIB_SELECTION_QUERY))
@@ -665,7 +666,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				.append('\t');
 		if ( isJakartaCursoredPage(containerType)
 				|| isJakartaPage(containerType) && !isReactive() ) {
-			if ( returnTypeName != null && isUsingEntityManager() ) {
+			if ( isJakartaCursoredPage(containerType) && returnTypeName != null && isUsingEntityHandler() ) {
 				// this is necessary to avoid losing the type
 				// after unwrapping the Query object
 				declaration
@@ -716,11 +717,11 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 					.append(".requestTotal()\n\t\t\t\t\t\t? ");
 			select( declaration );
-			if ( isUsingEntityManager() ) {
+			if ( isUsingEntityHandler() ) {
 				declaration
 						.append("\t\t\t\t\t");
 			}
-			unwrapQuery( declaration, !isUsingEntityManager() );
+			unwrapQuery( declaration, !isUsingEntityHandler() );
 			declaration
 					.append("\t\t\t\t\t\t\t\t.getResultCount()\n\t\t\t\t\t\t: -1;\n");
 		}
@@ -1193,7 +1194,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					}
 					break;
 				default:
-					if ( isUsingEntityManager() && !unwrapped && mustUnwrap ) {
+					if ( isUsingEntityHandler() && !unwrapped && mustUnwrap ) {
 						declaration
 								.append("\t\t\t.unwrap(")
 								.append(annotationMetaEntity.importType(containerType))

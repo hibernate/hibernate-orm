@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.type.TypeKind.VOID;
 import static org.hibernate.processor.util.Constants.EVENT;
+import static org.hibernate.processor.util.Constants.HIB_STATELESS_SESSION;
 import static org.hibernate.processor.util.Constants.INJECT;
 import static org.hibernate.processor.util.Constants.JD_LIFECYCLE_EVENT;
 import static org.hibernate.processor.util.Constants.LIST;
@@ -257,8 +258,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			if ( isGeneratedIdUpsert() ) {
 				declaration
 						.append("\t\tif (")
-						.append(sessionName)
-						.append(getObjectCall())
+						.append(sessionWithGetIdentifier())
 						.append(".getIdentifier(")
 						.append(parameterName)
 						.append(") == null)\n")
@@ -282,6 +282,13 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append(";\n");
 		}
+	}
+
+	private String sessionWithGetIdentifier() {
+		final String session = sessionName + getObjectCall();
+		return isUsingEntityAgent()
+				? session + ".unwrap(" + annotationMetaEntity.importType( HIB_STATELESS_SESSION ) + ".class)"
+				: session;
 	}
 
 	private void delegateStatefulManyBlockingly(StringBuilder declaration) {

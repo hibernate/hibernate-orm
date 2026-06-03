@@ -974,7 +974,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		else if ( stateless && !isStatelessSession() ) {
 			message( element,
-					"repository must be backed by a 'StatelessSession'",
+					"repository must be backed by an 'EntityAgent' or 'StatelessSession'",
 					Diagnostic.Kind.ERROR );
 		}
 	}
@@ -1128,9 +1128,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			if ( !repository && jakartaDataRepository ) {
 				repository = true;
-				// Jakarta Data defaults to StatelessSession, unless the repository
+				// Jakarta Data defaults to EntityAgent, unless the repository
 				// uses the dedicated stateful lifecycle model.
-				sessionType = statefulDataRepository ? HIB_SESSION : HIB_STATELESS_SESSION;
+				sessionType = statefulDataRepository ? ENTITY_MANAGER : ENTITY_AGENT;
 				// If it's Spring, we wrap the session in ObjectProvider
 				sessionType = addRepositoryConstructor( null );
 			}
@@ -1442,6 +1442,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						|| name.contentEquals( HIB_STATELESS_SESSION )
 						|| name.contentEquals( MUTINY_SESSION )
 						|| name.contentEquals( MUTINY_STATELESS_SESSION )
+						|| name.contentEquals( ENTITY_AGENT )
 						|| name.contentEquals( ENTITY_MANAGER );
 				}
 			}
@@ -3399,13 +3400,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private String getSessionVariableName(String sessionType) {
 		if ( isProvidedSessionAccess( sessionType) ) {
-			return sessionGetter;
+			return switch ( sessionType ) {
+				case SPRING_ENTITY_MANAGER_PROVIDER -> "entityManager";
+				case SPRING_SESSION_PROVIDER, SPRING_STATELESS_SESSION_PROVIDER -> "session";
+				case SPRING_ENTITY_AGENT_PROVIDER -> "entityAgent";
+				default -> sessionGetter;
+			};
 		}
 		else {
 			return switch ( sessionType ) {
 				case HIB_SESSION, HIB_STATELESS_SESSION,
 					MUTINY_SESSION, MUTINY_STATELESS_SESSION,
-					SPRING_STATELESS_SESSION_PROVIDER -> "session";
+					SPRING_SESSION_PROVIDER, SPRING_STATELESS_SESSION_PROVIDER -> "session";
+				case ENTITY_AGENT, SPRING_ENTITY_AGENT_PROVIDER -> "entityAgent";
 //				case UNI_MUTINY_SESSION, UNI_MUTINY_STATELESS_SESSION -> "session";
 				default -> sessionGetter;
 			};
@@ -5515,15 +5522,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean usingStatelessSession(String sessionType) {
-		return HIB_STATELESS_SESSION.equals( sessionType )
+		return ENTITY_AGENT.equals( sessionType )
+			|| HIB_STATELESS_SESSION.equals( sessionType )
 			|| MUTINY_STATELESS_SESSION.equals( sessionType )
 			|| UNI_MUTINY_STATELESS_SESSION.equals( sessionType )
+			|| SPRING_ENTITY_AGENT_PROVIDER.equals( sessionType )
 			|| SPRING_STATELESS_SESSION_PROVIDER.equals( sessionType );
 	}
 
 	private static boolean usingStatefulSession(String sessionType) {
 		return HIB_SESSION.equals( sessionType )
 			|| ENTITY_MANAGER.equals( sessionType )
+			|| SPRING_ENTITY_MANAGER_PROVIDER.equals( sessionType )
 			|| SPRING_SESSION_PROVIDER.equals( sessionType );
 	}
 

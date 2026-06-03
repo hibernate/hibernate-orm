@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Nulls;
 import org.antlr.v4.runtime.Token;
 import org.hibernate.AssertionFailure;
@@ -51,7 +52,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
@@ -3539,22 +3540,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPath<?> visitEntityVersionReference(HqlParser.EntityVersionReferenceContext ctx) {
-		final var sqmPath = consumeDomainPath( ctx.path() );
-		final var sqmPathType = sqmPath.getReferencedPathSource().getPathType();
-		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
+		return handleVersionPath( consumeDomainPath( ctx.path() ) );
+	}
+
+	@Nonnull
+	private static <U> SqmPath<?> handleVersionPath(SqmPath<U> sqmPath) {
+		if ( sqmPath.getReferencedPathSource().getPathType()
+				instanceof AbstractIdentifiableType<U> identifiableType ) {
 			if ( !identifiableType.hasVersionAttribute() ) {
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
-						+ "' of 'version()' is a '" + identifiableType.getTypeName()
-						+ "' and does not have a '@Version' attribute" );
+							+ "' of 'version()' is a '" + identifiableType.getTypeName()
+							+ "' and does not have a '@Version' attribute" );
 			}
-			@SuppressWarnings("unchecked")
-			final var versionAttribute =
-					(SingularPersistentAttribute<Object, ?>) identifiableType.findVersionAttribute();
+			final var versionAttribute = identifiableType.findVersionAttribute();
+			assert versionAttribute != null; // Safe, we just checked hasVersionAttribute()
 			return sqmPath.get( versionAttribute );
 		}
 		else {
 			throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
-					+ "' of 'version()' does not resolve to an entity type" );
+						+ "' of 'version()' does not resolve to an entity type" );
 		}
 	}
 

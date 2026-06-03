@@ -49,7 +49,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 *
 	 * @see SqmPathSource#createSqmPath
 	 */
-	SqmPathSource<?> getReferencedPathSource();
+	SqmPathSource<T> getReferencedPathSource();
 
 	/**
 	 * Retrieve the explicit alias, if one.  May return null

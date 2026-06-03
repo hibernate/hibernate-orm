@@ -15,6 +15,7 @@ import java.util.List;
 
 import static org.hibernate.ReadOnlyMode.READ_ONLY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -46,6 +47,21 @@ public class FindMutipleTest {
 			assertSame(record, all.get(0));
 		});
 	}
+
+	@Test void testNonTransactional(SessionFactoryScope scope) {
+		scope.inTransaction(s-> {
+			s.persist(new Record(789L,"hello earth"));
+			s.persist(new Record(101L,"hello mars"));
+		});
+		scope.inSession(s-> {
+			List<Record> all = s.findMultiple(Record.class, List.of(101L, 789L, 2L));
+			assertEquals("hello mars",all.get(0).message);
+			assertEquals("hello earth",all.get(1).message);
+			assertNull(all.get(2));
+			assertFalse(s.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected());
+		});
+	}
+
 	@Entity(name = "Record")
 	static class Record {
 		@Id Long id;

@@ -15,36 +15,65 @@ import java.util.List;
 
 import static org.hibernate.LockMode.PESSIMISTIC_READ;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SessionFactory
 @DomainModel(annotatedClasses = GetMultipleTest.Record.class)
 public class GetMultipleTest {
 	@Test void test(SessionFactoryScope scope) {
-		scope.inStatelessTransaction(s-> {
-			s.insert(new Record(123L,"hello earth"));
-			s.insert(new Record(456L,"hello mars"));
-		});
-		scope.inStatelessTransaction(s-> {
-			List<Record> all = s.getMultiple(Record.class, List.of(456L, 123L, 2L));
-			assertEquals("hello mars",all.get(0).message);
-			assertEquals("hello earth",all.get(1).message);
-			assertNull(all.get(2));
-		});
-		scope.inStatelessTransaction(s-> {
-			List<Record> all = s.getMultiple(Record.class, List.of(123L, 2L, 456L));
-			assertEquals("hello earth",all.get(0).message);
-			assertEquals("hello mars",all.get(2).message);
-			assertNull(all.get(1));
-		});
-		scope.inStatelessTransaction(s-> {
-			List<Record> all = s.getMultiple(Record.class, List.of(456L, 123L, 2L), PESSIMISTIC_READ);
-			assertEquals("hello mars",all.get(0).message);
-			assertEquals("hello earth",all.get(1).message);
-			assertNull(all.get(2));
-		});
+		scope.inStatelessTransaction( s -> {
+			s.insert( new Record( 123L, "hello earth" ) );
+			s.insert( new Record( 456L, "hello mars" ) );
+		} );
+		scope.inStatelessTransaction( s -> {
+			List<Record> all = s.getMultiple( Record.class, List.of( 456L, 123L, 2L ) );
+			assertEquals( "hello mars", all.get( 0 ).message );
+			assertEquals( "hello earth", all.get( 1 ).message );
+			assertNull( all.get( 2 ) );
+		} );
+		scope.inStatelessTransaction( s -> {
+			List<Record> all = s.getMultiple( Record.class, List.of( 123L, 2L, 456L ) );
+			assertEquals( "hello earth", all.get( 0 ).message );
+			assertEquals( "hello mars", all.get( 2 ).message );
+			assertNull( all.get( 1 ) );
+		} );
+		scope.inStatelessTransaction( s -> {
+			List<Record> all = s.getMultiple( Record.class, List.of( 456L, 123L, 2L ), PESSIMISTIC_READ );
+			assertEquals( "hello mars", all.get( 0 ).message );
+			assertEquals( "hello earth", all.get( 1 ).message );
+			assertNull( all.get( 2 ) );
+		} );
 
 	}
+
+	@Test void testNonTransactional(SessionFactoryScope scope) {
+		scope.inStatelessTransaction(s-> {
+			s.insert(new Record(789L,"hello earth"));
+			s.insert(new Record(101L,"hello mars"));
+		});
+		scope.inStatelessSession(s-> {
+			List<Record> all = s.getMultiple(Record.class, List.of(101L, 789L, 2L));
+			assertEquals("hello mars",all.get(0).message);
+			assertEquals("hello earth",all.get(1).message);
+			assertNull(all.get(2));
+			assertFalse(s.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected());
+		});
+	}
+
+	@Test void testRefreshNonTransactional(SessionFactoryScope scope) {
+		scope.inStatelessTransaction(s-> {
+			s.insert(new Record(999L,"hello world"));
+		});
+		scope.inStatelessSession(s-> {
+			Record record = s.get(Record.class, 999L);
+			record.message = "changed";
+			s.refresh(record);
+			assertEquals("hello world", record.message);
+			assertFalse(s.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected());
+		});
+	}
+
 	@Entity(name = "Record")
 	static class Record {
 		@Id Long id;

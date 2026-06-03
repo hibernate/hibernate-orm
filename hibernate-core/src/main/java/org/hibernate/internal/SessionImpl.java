@@ -955,15 +955,20 @@ public class SessionImpl
 			RootGraphImplementor<E> rootGraph,
 			List<Object> keys,
 			FindOption... options) {
-		final var operation = new FindMultipleByKeyOperation<E>(
-				entityDescriptor,
-				lockOptions,
-				getCacheMode(),
-				isDefaultReadOnly(),
-				getFactory(),
-				options
-		);
-		return operation.performFind( keys, graphSemantic, rootGraph, this );
+		try {
+			final var operation = new FindMultipleByKeyOperation<E>(
+					entityDescriptor,
+					lockOptions,
+					getCacheMode(),
+					isDefaultReadOnly(),
+					getFactory(),
+					options
+			);
+			return operation.performFind( keys, graphSemantic, rootGraph, this );
+		}
+		finally {
+			afterOperation( true ); // success value doesn't matter
+		}
 	}
 
 	@Override

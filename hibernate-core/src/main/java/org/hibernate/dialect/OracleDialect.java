@@ -129,6 +129,7 @@ import static java.lang.String.join;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_VALUE_LOB_ENABLED;
 import static org.hibernate.dialect.DialectLogging.DIALECT_LOGGER;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
@@ -231,6 +232,7 @@ public class OracleDialect extends Dialect {
 	protected final int driverMajorVersion;
 	protected final int driverMinorVersion;
 	private boolean useBinaryFloat;
+	private boolean useValueLOB; //TODO: if removed or issue fixed update SkipLockedWithLobTest
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -1010,6 +1012,7 @@ public class OracleDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		useBinaryFloat = configurationService.getSetting( ORACLE_USE_BINARY_FLOATS, StandardConverters.BOOLEAN, true );
+		useValueLOB = configurationService.getSetting( ORACLE_VALUE_LOB_ENABLED, StandardConverters.BOOLEAN, true );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry, this ) == BIT ) {
@@ -1139,7 +1142,9 @@ public class OracleDialect extends Dialect {
 	 * @return {@code true} if LOBs access can be VALUE based.
 	 */
 	@Override
-	public boolean supportsValueLOBAccess() { return getVersion().isSameOrAfter( 23 ); }
+	public boolean supportsValueLOBAccess() {
+		return useValueLOB && getVersion().isSameOrAfter( 23 );
+	}
 
 	@Override
 	public String getValueLOBFragmentForExtraCreateTableInfo(String columnName) {

@@ -589,7 +589,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitCrossJoin(SqmCrossJoin<?> joinedFromElement) {
+	public Object visitCrossJoin(SqmCrossJoin<?, ?> joinedFromElement) {
 		processStanza(
 				"cross",
 				"'" + joinedFromElement.getNavigablePath() + "'",

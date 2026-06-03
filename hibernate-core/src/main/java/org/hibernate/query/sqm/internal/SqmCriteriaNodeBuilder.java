@@ -118,7 +118,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.expression.*;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
@@ -849,8 +848,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Nonnull
 	@Override
 	public <X, T extends X> SqmRoot<T> treat(@Nonnull Root<X> root, @Nonnull Class<T> type) {
-		//noinspection unchecked
-		return (SqmTreatedRoot) ( (SqmRoot<X>) root ).treatAs( type );
+		final var treatedRoot = ((SqmRoot<X>) root).treatAs( type );
+		@SuppressWarnings("unchecked") // there is a real inconsistency in the supertypes of SqmTreatedRoot
+		final var castRoot = (SqmRoot<T>) treatedRoot;
+		return castRoot;
 	}
 
 	@Nonnull
@@ -1982,7 +1983,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Nonnull
 	@Override
-	public <T> JpaCriteriaParameter<T> parameter(@Nonnull Class<T> paramClass, @Nonnull String name) {
+	public <T> JpaCriteriaParameter<T> parameter(@Nonnull Class<T> paramClass, @Nullable String name) {
 		final var basicType = getTypeConfiguration().getBasicTypeForJavaType( paramClass );
 		final boolean notBasic = basicType == null;
 		final var parameterType =

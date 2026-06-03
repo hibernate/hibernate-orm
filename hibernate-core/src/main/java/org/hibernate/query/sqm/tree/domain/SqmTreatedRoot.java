@@ -15,25 +15,23 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("rawtypes")
-public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
-	private final SqmRoot wrappedPath;
-	private final SqmEntityDomainType treatTarget;
+public class SqmTreatedRoot<E, S extends E>
+		extends SqmRoot<S>
+		implements SqmTreatedFrom<S, E, S> {
+	private final SqmRoot<E> wrappedPath;
+	private final SqmEntityDomainType<S> treatTarget;
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SqmTreatedRoot(
-			SqmRoot wrappedPath,
-			SqmEntityDomainType treatTarget) {
+			SqmRoot<E> wrappedPath,
+			SqmEntityDomainType<S> treatTarget) {
 		super(
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
 				),
-				(EntityDomainType) wrappedPath.getReferencedPathSource(),
+				treatTarget,
 				null,
 				wrappedPath.nodeBuilder()
 		);
@@ -41,14 +39,13 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 		this.treatTarget = treatTarget;
 	}
 
-	@SuppressWarnings("unchecked")
 	private SqmTreatedRoot(
 			NavigablePath navigablePath,
-			SqmRoot wrappedPath,
-			SqmEntityDomainType treatTarget) {
+			SqmRoot<E> wrappedPath,
+			SqmEntityDomainType<S> treatTarget) {
 		super(
 				navigablePath,
-				(EntityDomainType) wrappedPath.getReferencedPathSource(),
+				treatTarget,
 				null,
 				wrappedPath.nodeBuilder()
 		);
@@ -58,14 +55,14 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 
 	@Override
 	@Nonnull
-	public SqmTreatedRoot copy(SqmCopyContext context) {
-		final SqmTreatedRoot existing = context.getCopy( this );
+	public SqmTreatedRoot<E, S> copy(SqmCopyContext context) {
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedRoot path = context.registerCopy(
+		final var path = context.registerCopy(
 				this,
-				new SqmTreatedRoot(
+				new SqmTreatedRoot<>(
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget
@@ -77,27 +74,27 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 
 	@Nonnull
 	@Override
-	public EntityDomainType getTreatTarget() {
+	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	public EntityDomainType getManagedType() {
+	public EntityDomainType<S> getManagedType() {
 		return getTreatTarget();
 	}
 
 	@Override
-	public SqmPath getWrappedPath() {
+	public SqmRoot<E> getWrappedPath() {
 		return wrappedPath;
 	}
 
 	@Override
-	public @Nonnull SqmBindableType getNodeType() {
+	public @Nonnull SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmEntityDomainType getReferencedPathSource() {
+	public SqmEntityDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
@@ -107,11 +104,9 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 		return wrappedPath.getLhs();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public Object accept(SemanticQueryWalker walker) {
-		// Cast needed for static nullness analysis because the class uses raw types.
-		return castNonNull( walker.visitTreatedPath( this ) );
+	public <X> X accept(SemanticQueryWalker<X> walker) {
+		return walker.visitTreatedPath( this );
 	}
 
 	@Override
@@ -135,8 +130,13 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 
 	@Override
 	@Nonnull
-	public SqmTreatedFrom treatAs(@Nonnull EntityDomainType treatTarget, @Nullable String alias, boolean fetch) {
-		//noinspection unchecked
-		return wrappedPath.treatAs( treatTarget, alias, fetch );
+	public <S1 extends S> SqmTreatedFrom<S, S, S1> treatAs(
+			@Nonnull EntityDomainType<S1> treatTarget,
+			@Nullable String alias,
+			boolean fetch) {
+		@SuppressWarnings("unchecked")
+		final var treat = (SqmTreatedFrom<S, S, S1>)
+				wrappedPath.treatAs( treatTarget, alias, fetch );
+		return treat;
 	}
 }

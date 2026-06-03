@@ -172,7 +172,7 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 					}
 				}
 			}
-			else if ( sqmJoin instanceof SqmCrossJoin<?> sqmCrossJoin ) {
+			else if ( sqmJoin instanceof SqmCrossJoin<?, ?> sqmCrossJoin ) {
 				sb.append( sqmCrossJoin.getEntityName() );
 				sb.append( ' ' ).append( sqmCrossJoin.resolveAlias( context ) );
 				if ( transitive ) {

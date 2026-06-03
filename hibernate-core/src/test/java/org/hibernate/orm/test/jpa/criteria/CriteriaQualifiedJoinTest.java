@@ -110,7 +110,7 @@ public class CriteriaQualifiedJoinTest {
 			final HibernateCriteriaBuilder cb = entityManager.unwrap( Session.class ).getCriteriaBuilder();
 			final JpaCriteriaQuery<Tuple> query = cb.createTupleQuery();
 			final JpaRoot<Primary> root = query.from( Primary.class );
-			final JpaCrossJoin<Secondary> crossJoin = root.crossJoin( Secondary.class );
+			final JpaCrossJoin<Primary, Secondary> crossJoin = root.crossJoin( Secondary.class );
 			final JpaPath<Integer> id = root.get( "id" );
 			final JpaPath<String> name = crossJoin.get( "name" );
 			query.multiselect( id, name ).orderBy( cb.asc( id ), cb.asc( name ) );

@@ -108,53 +108,56 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	}
 
 	@Nonnull
-	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(@Nonnull Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedPluralPartJoin<O, T, S> treatAs(@Nonnull Class<S> treatJavaType) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Nonnull
-	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(@Nonnull EntityDomainType<S> treatTarget) {
+	public <S extends T> SqmTreatedPluralPartJoin<O, T, S> treatAs(@Nonnull EntityDomainType<S> treatTarget) {
 		return treatAs( treatTarget, null );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	@Nonnull
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
+	public <S extends T> SqmTreatedPluralPartJoin<O, T, S> treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	@Nonnull
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias) {
-		final var treat = (SqmTreatedPluralPartJoin) findTreat( treatTarget, alias );
+	public <S extends T> SqmTreatedPluralPartJoin<O, T, S> treatAs(
+			@Nonnull EntityDomainType<S> treatTarget,
+			@Nullable String alias) {
+		final var treat = (SqmTreatedPluralPartJoin<O, T, S>) findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
+			return addTreat( new SqmTreatedPluralPartJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias ) );
 		}
 		else {
 			return treat;
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	@Nonnull
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(@Nonnull Class<S> treatJavaType, @Nullable String alias, boolean fetch) {
+	public <S extends T> SqmTreatedPluralPartJoin<O, T, S> treatAs(
+			@Nonnull Class<S> treatJavaType,
+			@Nullable String alias,
+			boolean fetch) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	@Nonnull
-	public <S extends T> SqmTreatedPluralPartJoin treatAs(@Nonnull EntityDomainType<S> treatTarget, @Nullable String alias, boolean fetch) {
-		final var treat = (SqmTreatedPluralPartJoin) findTreat( treatTarget, alias );
+	public <S extends T> SqmTreatedPluralPartJoin<O, T, S> treatAs(
+			@Nonnull EntityDomainType<S> treatTarget,
+			@Nullable String alias,
+			boolean fetch) {
+		final var treat = (SqmTreatedPluralPartJoin<O, T, S>) findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
+			return addTreat( new SqmTreatedPluralPartJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias ) );
 		}
 		else {
 			return treat;

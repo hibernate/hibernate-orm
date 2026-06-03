@@ -832,17 +832,18 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Nonnull
 	@Override
-	public <X> JpaCrossJoin<X> crossJoin(@Nonnull Class<X> entityJavaType) {
+	public <X> JpaCrossJoin<T, X> crossJoin(@Nonnull Class<X> entityJavaType) {
 		return crossJoin( nodeBuilder().getDomainModel().entity( entityJavaType ) );
 	}
 
 	@Nonnull
 	@Override
-	public <X> JpaCrossJoin<X> crossJoin(@Nonnull EntityDomainType<X> entity) {
-		final var crossJoin =
-				new SqmCrossJoin<>( (SqmEntityDomainType<X>) entity, generateAlias(), findRoot() );
-		// noinspection unchecked
-		addSqmJoin( (SqmJoin<T, ?>) crossJoin );
+	public <X> JpaCrossJoin<T, X> crossJoin(@Nonnull EntityDomainType<X> entity) {
+		@SuppressWarnings("unchecked")
+		final var root = (SqmRoot<T>) findRoot();
+		final SqmCrossJoin<T, X> crossJoin =
+				new SqmCrossJoin<>( (SqmEntityDomainType<X>) entity, generateAlias(), root );
+		addSqmJoin( crossJoin );
 		return crossJoin;
 	}
 

@@ -142,7 +142,7 @@ final class SqmCriteriaRootValidator extends BaseSemanticQueryWalker {
 	}
 
 	@Override
-	public Object visitCrossJoin(SqmCrossJoin<?> joinedFromElement) {
+	public Object visitCrossJoin(SqmCrossJoin<?, ?> joinedFromElement) {
 		validatePath( joinedFromElement );
 		return super.visitCrossJoin( joinedFromElement );
 	}

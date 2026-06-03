@@ -530,8 +530,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		else if ( parentFrom instanceof Join<?, ?> ) {
 			return correlate( (Join<X, Y>) parentFrom );
 		}
-		else if ( parentFrom instanceof JpaCrossJoin<?> ) {
-			return (SqmFrom<X, Y>) correlate( (JpaCrossJoin<Y>) parentFrom );
+		else if ( parentFrom instanceof JpaCrossJoin<?, ?> ) {
+			return (SqmFrom<X, Y>) correlate( (JpaCrossJoin<X, Y>) parentFrom );
 		}
 		else if ( parentFrom instanceof JpaEntityJoin<?, ?> ) {
 			return (SqmFrom<X, Y>) correlate( (JpaEntityJoin<T, Y>) parentFrom );
@@ -595,9 +595,9 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public <X> SqmCorrelatedCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin) {
-		final SqmCorrelatedCrossJoin<X> correlated =
-				((SqmCrossJoin<X>) parentCrossJoin).createCorrelation();
+	public <X, Y> SqmCorrelatedCrossJoin<X, Y> correlate(JpaCrossJoin<X, Y> parentCrossJoin) {
+		final SqmCorrelatedCrossJoin<X, Y> correlated =
+				((SqmCrossJoin<X, Y>) parentCrossJoin).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}

@@ -323,7 +323,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		if ( sqmJoin instanceof SqmAttributeJoin<?, ?> join ) {
 			consumeAttributeJoin( join, transitive );
 		}
-		else if ( sqmJoin instanceof SqmCrossJoin<?> crossJoin ) {
+		else if ( sqmJoin instanceof SqmCrossJoin<?, ?> crossJoin ) {
 			consumeCrossJoin( crossJoin, transitive );
 		}
 		else if ( sqmJoin instanceof SqmEntityJoin<?,?> entityJoin ) {
@@ -355,7 +355,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		}
 	}
 
-	protected void consumeCrossJoin(SqmCrossJoin<?> sqmJoin, boolean transitive) {
+	protected void consumeCrossJoin(SqmCrossJoin<?, ?> sqmJoin, boolean transitive) {
 		if ( transitive ) {
 			consumeExplicitJoins( sqmJoin );
 		}
@@ -429,7 +429,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitCrossJoin(SqmCrossJoin<?> joinedFromElement) {
+	public Object visitCrossJoin(SqmCrossJoin<?, ?> joinedFromElement) {
 		return joinedFromElement;
 	}
 

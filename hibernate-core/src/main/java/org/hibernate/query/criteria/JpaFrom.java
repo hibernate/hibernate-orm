@@ -219,11 +219,11 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 
 	@Incubating
 	@Nonnull
-	<X> JpaCrossJoin<X> crossJoin(@Nonnull Class<X> entityJavaType);
+	<X> JpaCrossJoin<T, X> crossJoin(@Nonnull Class<X> entityJavaType);
 
 	@Incubating
 	@Nonnull
-	<X> JpaCrossJoin<X> crossJoin(@Nonnull EntityDomainType<X> entity);
+	<X> JpaCrossJoin<T, X> crossJoin(@Nonnull EntityDomainType<X> entity);
 
 	// Covariant overrides
 

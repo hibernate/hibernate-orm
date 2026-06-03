@@ -321,7 +321,7 @@ public class CriteriaOrderedSetAggregateTest {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> cr = cb.createQuery( Tuple.class );
 			JpaRoot<EntityOfBasics> e1 = (JpaRoot<EntityOfBasics>) cr.from( EntityOfBasics.class );
-			JpaCrossJoin<EntityOfBasics> e2 = e1.crossJoin( EntityOfBasics.class );
+			JpaCrossJoin<EntityOfBasics, EntityOfBasics> e2 = e1.crossJoin( EntityOfBasics.class );
 
 			JpaExpression<Long> function = cb.rank( cb.asc( e1.get( "theInt" ) ), cb.literal( 5 ) );
 

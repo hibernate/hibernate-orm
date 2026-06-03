@@ -128,6 +128,9 @@ MATCHED     : [mM][aA][tT][cC][hH][eE][dD];
 RESTART     : [rR][eE][sS][tT][aA][rR][tT];
 CASCADE     : [cC][aA][sS][cC][aA][dD][eE];
 CONTINUE    : [cC][oO][nN][tT][iI][nN][uU][eE];
+TRANSACTIONAL: [tT][rR][aA][nN][sS][aA][cC][tT][iI][oO][nN][aA][lL];
+GLOBAL      : [gG][lL][oO][bB][aA][lL];
+TEMPORARY   : [tT][eE][mM][pP][oO][rR][aA][rR][yY];
 
 // Quoted identifiers - preserve exact quoting style
 DOUBLE_QUOTED_IDENTIFIER

@@ -52,6 +52,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.ParameterLabelException;
@@ -199,7 +200,6 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.Bindable;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -390,7 +390,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		this.integerDomainType = typeConfiguration.standardBasicTypeForJavaType( Integer.class );
+		//noinspection deprecation
 		this.listJavaType = javaTypeRegistry.getDescriptor( List.class );
+		//noinspection deprecation
 		this.mapJavaType = javaTypeRegistry.getDescriptor( Map.class );
 	}
 
@@ -3572,27 +3574,31 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( ctx.pathContinuation() != null ) {
 			throw new UnsupportedOperationException( "Path continuation from 'naturalid()' reference not yet implemented" );
 		}
+		return handleNaturalIdPath( consumeDomainPath( ctx.path() ) );
+	}
 
-		final var sqmPath = consumeDomainPath( ctx.path() );
-		if ( sqmPath.getReferencedPathSource().getPathType() instanceof IdentifiableDomainType<?> identifiableType ) {
+	private static <U> SqmPath<?> handleNaturalIdPath(SqmPath<U> sqmPath) {
+		if ( sqmPath.getReferencedPathSource().getPathType()
+				instanceof AbstractIdentifiableType<U> identifiableType ) {
 			final var attributes = identifiableType.findNaturalIdAttributes();
 			if ( attributes == null ) {
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
-						+ "' of 'naturalid()' is a '" + identifiableType.getTypeName()
-						+ "' and does not have a natural id"
+							+ "' of 'naturalid()' is a '" + identifiableType.getTypeName()
+							+ "' and does not have a natural id"
 				);
 			}
-			else if ( attributes.size() >1 ) {
+			else if ( attributes.size() > 1 ) {
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
-						+ "' of 'naturalid()' is a '" + identifiableType.getTypeName()
-						+ "' and has a composite natural id"
+							+ "' of 'naturalid()' is a '" + identifiableType.getTypeName()
+							+ "' and has a composite natural id"
 				);
 			}
 
-			final var naturalIdAttribute = (SingularAttribute<?, ?>) attributes.get(0);
-			return sqmPath.get( (SingularAttribute) naturalIdAttribute );
+			final var naturalIdAttribute =
+					(SingularPersistentAttribute<? super U, ?>)
+							attributes.get( 0 );
+			return sqmPath.get( naturalIdAttribute );
 		}
-
 		throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
 				+ "' of 'naturalid()' does not resolve to an entity type" );
 	}
@@ -4815,27 +4821,38 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			else {
 				// ON OVERFLOW TRUNCATE
-				final SqmExpression<?> fillerExpression;
-				if ( overflowCtx.expression() != null ) {
-					fillerExpression = (SqmExpression<?>) overflowCtx.expression().accept( this );
-				}
-				else {
-					// The SQL standard says the default is three periods `...`
-					fillerExpression = new SqmLiteral<>(
-							"...",
-							nodeBuilder().getStringType(),
-							secondArgument.nodeBuilder()
-					);
-				}
+				final var fillerExpression = fillerExpression( overflowCtx, secondArgument );
 				final boolean withCount = overflowCtx.WITH() != null;
-				//noinspection unchecked,rawtypes
-				functionArguments.add( new SqmOverflow( secondArgument, fillerExpression, withCount ) );
+				functionArguments.add( overflow( secondArgument, fillerExpression, withCount ) );
 			}
 		}
 		else {
 			functionArguments.add( secondArgument );
 		}
 		return functionArguments;
+	}
+
+	private SqmExpression<?> fillerExpression(HqlParser.OnOverflowClauseContext overflowCtx, SqmExpression<?> secondArgument) {
+		if ( overflowCtx.expression() != null ) {
+			return (SqmExpression<?>) overflowCtx.expression().accept( this );
+		}
+		else {
+			// The SQL standard says the default is three periods `...`
+			return new SqmLiteral<>(
+					"...",
+					nodeBuilder().getStringType(),
+					secondArgument.nodeBuilder()
+			);
+		}
+	}
+
+	private static <T> SqmOverflow<T> overflow(
+			SqmExpression<T> separatorExpression,
+			SqmExpression<?> fillerExpression,
+			boolean withCount) {
+		@SuppressWarnings("unchecked")
+		final var typedFillerExpression = (SqmExpression<T>) fillerExpression;
+		return new SqmOverflow<>( separatorExpression, typedFillerExpression, withCount );
 	}
 
 	@Override
@@ -4861,9 +4878,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				arguments.set( 0, new SqmDistinct<>( (SqmExpression<?>) arguments.get( 0 ), nodeBuilder ) );
 			}
 			else {
+				final List<SqmExpression<?>> expressions = new ArrayList<>( arguments.size() );
+				for ( var argument : arguments ) {
+					expressions.add( (SqmExpression<?>) argument );
+				}
 				final List<SqmTypedNode<?>> newArguments = new ArrayList<>( 1 );
-				@SuppressWarnings("unchecked")
-				final List<SqmExpression<?>> expressions = (List<SqmExpression<?>>) (List<?>) arguments;
 				newArguments.add( new SqmDistinct<>( new SqmTuple<>( expressions, nodeBuilder ), nodeBuilder ) );
 				return newArguments;
 			}
@@ -5244,7 +5263,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new SemanticException( "Path is not a plural path '" + pluralAttributePath.getNavigablePath() + "'",
 					query );
 		}
-		final var subQuery = new SqmSubQuery<>(
+		final SqmSubQuery<X> subQuery = new SqmSubQuery<>(
 				processingStateStack.getCurrent().getProcessingQuery(),
 				nodeBuilder()
 		);
@@ -5286,8 +5305,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final var querySpec = subQuery.getQuerySpec();
 		querySpec.setFromClause( fromClause );
 		querySpec.setSelectClause( selectClause );
-		//noinspection unchecked
-		return (SqmSubQuery<X>) subQuery;
+		return subQuery;
 	}
 
 	private SqmPredicate getFilterExpression(ParseTree functionCtx) {
@@ -5309,11 +5327,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final List<SqmExpression<?>> partitions;
 		final var partitionClauseContext = ctx.partitionClause();
 		if ( partitionClauseContext != null ) {
-			final var partitionClause = partitionClauseContext;
-			final int childCount = partitionClause.getChildCount();
+			final int childCount = partitionClauseContext.getChildCount();
 			partitions = new ArrayList<>( (childCount >> 1 ) - 1 );
 			for ( int i = 2; i < childCount; i += 2 ) {
-				partitions.add( (SqmExpression<?>) partitionClause.getChild( i ).accept( this ) );
+				partitions.add( (SqmExpression<?>) partitionClauseContext.getChild( i ).accept( this ) );
 			}
 		}
 		else {

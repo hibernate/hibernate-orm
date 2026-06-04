@@ -69,7 +69,7 @@ xerces = "2.12.2"
 dom4j = "2.2.0"
 javaxMoney = "1.1"
 moneta = "1.4.5"
-persistenceTck="4.0.0-SNAPSHOT"
+persistenceTck="4.0.0-M4"
 
 # JDBC Libs
 h2 = "2.4.240"

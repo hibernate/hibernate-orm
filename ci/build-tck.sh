@@ -4,4 +4,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 source "$DIR/db-params.sh"
 
-logAndExec ./gradlew :hibernate-tck-runner:test ${goal} -Pruntck=true "${@}" -Plog-test-progress=true --stacktrace
+logAndExec ./gradlew :hibernate-tck-runner:test ${goal} -Pruntck=true "${@}" -Plog-test-progress=true --stacktrace -Pgradle.libs.versions.persistenceTck=4.0.0-SNAPSHOT

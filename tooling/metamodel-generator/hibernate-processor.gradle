@@ -256,24 +256,3 @@ publishingExtension.publications.register("renameRelocation", MavenPublication) 
 		}
 	}
 }
-
-
-tasks.forbiddenApisJakartaData {
-	enabled = false
-}
-
-tasks.forbiddenApisQuarkusOrmPanache {
-	enabled = false
-}
-
-tasks.forbiddenApisQuarkusHrPanache {
-	enabled = false
-}
-
-tasks.forbiddenApisIntegrationTest {
-	enabled = false
-}
-
-tasks.forbiddenApisDataIntegrationTest {
-	enabled = false
-}

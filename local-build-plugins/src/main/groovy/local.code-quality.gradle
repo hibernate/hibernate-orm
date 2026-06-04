@@ -112,7 +112,13 @@ dependencies {
     testCompileOnly libs.jakarta.annotation
 }
 
+tasks.withType(de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis) {
+    enabled = (name == 'forbiddenApisMain') // Only enabled for the 'main' sourceSet
+}
+
 tasks.forbiddenApisMain {
+    enabled = true
+
     // unfortunately we currently have many uses of default Locale implicitly (~370)
     // which need to be fixed before we can enable the "unsafe" check
     //bundledSignatures += ["jdk-system-out", "jdk-non-portable", "jdk-unsafe-${jdkVersions.baseline}"]
@@ -127,8 +133,4 @@ tasks.forbiddenApisMain {
             "org.hibernate.internal.build.AllowNonPortable",
             "org.hibernate.internal.build.AllowReflection"
     ]
-}
-
-tasks.forbiddenApisTest {
-    enabled = false
 }

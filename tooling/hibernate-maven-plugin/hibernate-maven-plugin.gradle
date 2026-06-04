@@ -59,10 +59,6 @@ tasks.register('integrationTest', Test) {
     useJUnitPlatform()
 }
 
-tasks.forbiddenApisIntTest {
-    enabled = false
-}
-
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
 publishingExtension.publications.named("publishedArtifacts") {
     // Adjust the pom for 3 things:

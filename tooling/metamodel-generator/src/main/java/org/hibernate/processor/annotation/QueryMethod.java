@@ -124,11 +124,11 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final List<String> paramTypes = parameterTypes();
+		final var paramTypes = parameterTypes();
 		if ( usesAugmentedQueryReference() ) {
 			return getAugmentedQueryReferenceAttributeDeclarationString( paramTypes );
 		}
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration, paramTypes );
 		preamble( declaration, paramTypes );
@@ -159,7 +159,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private String getAugmentedQueryReferenceAttributeDeclarationString(List<String> paramTypes) {
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration, paramTypes );
 		preamble( declaration, paramTypes );
@@ -271,7 +271,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	void createSpecification(StringBuilder declaration) {
-		final String targetType = specificationTargetType();
+		final var targetType = specificationTargetType();
 		if ( targetType != null && isUsingSpecification() ) {
 			declaration
 					.append( "\tvar _spec = " )
@@ -331,7 +331,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private @Nullable String specificationTargetType() {
 		if ( isUpdate ) {
-			final String restrictionTargetType = restrictionTargetType();
+			final var restrictionTargetType = restrictionTargetType();
 			return restrictionTargetType == null ? returnTypeClass : restrictionTargetType;
 		}
 		else {
@@ -340,9 +340,9 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private @Nullable String restrictionTargetType() {
-		for ( String paramType : paramTypes ) {
+		for ( var paramType : paramTypes ) {
 			if ( isRestrictionParam( paramType ) ) {
-				final String targetType = restrictionTargetType( paramType );
+				final var targetType = restrictionTargetType( paramType );
 				if ( targetType != null ) {
 					return targetType;
 				}
@@ -352,16 +352,16 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private static @Nullable String restrictionTargetType(String paramType) {
-		final int restrictionIndex = paramType.indexOf( "Restriction<" );
+		final var restrictionIndex = paramType.indexOf( "Restriction<" );
 		if ( restrictionIndex < 0 ) {
 			return null;
 		}
-		final String superBound = "? super ";
-		int start = restrictionIndex + "Restriction<".length();
+		final var superBound = "? super ";
+		var start = restrictionIndex + "Restriction<".length();
 		if ( paramType.startsWith( superBound, start ) ) {
 			start += superBound.length();
 		}
-		final int end = paramType.indexOf( '>', start );
+		final var end = paramType.indexOf( '>', start );
 		return end > start ? paramType.substring( start, end ) : null;
 	}
 
@@ -386,7 +386,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private void appendQueryReferenceArguments(StringBuilder declaration) {
-		final List<String> names = queryParameterNames();
+		final var names = queryParameterNames();
 		for ( int i = 0; i < names.size(); i++ ) {
 			if ( i > 0 ) {
 				declaration.append( ", " );
@@ -425,8 +425,8 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private void createAugmentedQueryReference(StringBuilder declaration) {
-		final ResultSelection selection = castNonNull( this.selection );
-		final String selectionEntity = castNonNull( this.selectionEntity );
+		final var selection = castNonNull( this.selection );
+		final var selectionEntity = castNonNull( this.selectionEntity );
 		declaration
 				.append( "\tvar _builder = " );
 		localSession( declaration );
@@ -449,7 +449,7 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append( "_builder.construct(" )
 					.append( annotationMetaEntity.importType( selection.resultTypeName() ) )
 					.append( ".class" );
-			for ( String path : selection.paths() ) {
+			for ( var path : selection.paths() ) {
 				declaration.append( ",\n\t\t\t\t\t\t" );
 				selectionExpression( declaration, path, selectionEntity );
 			}
@@ -532,7 +532,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			}
 		}
 		else {
-			final boolean mustUnwrap =
+			final var mustUnwrap =
 					isHibernateQueryType(containerType)
 							|| isNative && returnTypeName != null;
 			executeSelect( declaration, paramTypes, containerType, unwrapped, mustUnwrap );
@@ -548,8 +548,8 @@ public class QueryMethod extends AbstractQueryMethod {
 	void setParameters(StringBuilder declaration, List<String> paramTypes) {
 		for ( int i = 0; i < paramNames.size(); i++ ) {
 			if ( !isSpecialParam( paramTypes.get(i) ) ) {
-				final String paramName = paramNames.get(i);
-				final int ordinal = i+1;
+				final var paramName = paramNames.get(i);
+				final var ordinal = i+1;
 				if ( queryString.contains(":" + paramName) ) {
 					setNamedParameter( declaration, paramName );
 				}
@@ -583,7 +583,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			public void other(char character) {
 			}
 		}
-		final OrdinalParameterRecognizer recognizer = new OrdinalParameterRecognizer();
+		final var recognizer = new OrdinalParameterRecognizer();
 		ParameterParser.parse( queryString, recognizer );
 		return recognizer.found;
 	}
@@ -619,7 +619,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private void modifiers(StringBuilder declaration, List<String> paramTypes) {
-		final boolean hasVarargs =
+		final var hasVarargs =
 				paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
 		if ( hasVarargs ) {
 			declaration
@@ -641,7 +641,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	void nullChecks(StringBuilder declaration, List<String> paramTypes) {
 		for ( int i = 0; i<paramNames.size(); i++ ) {
-			final String paramType = paramTypes.get( i );
+			final var paramType = paramTypes.get( i );
 			// we don't do null checks on query parameters
 			if ( isSpecialParam(paramType) ) {
 				nullCheck( declaration, paramNames.get(i) );
@@ -651,7 +651,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	public String getAttributeNameDeclarationString() {
-		final StringBuilder declaration =
+		final var declaration =
 				new StringBuilder( queryString.length() + 200 );
 		declaration
 				.append("\n/**\n * @see ")
@@ -663,7 +663,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append( getConstantName() )
 				.append( " = \"" );
 		for ( int i = 0; i < queryString.length(); i++ ) {
-			final char c = queryString.charAt( i );
+			final var c = queryString.charAt( i );
 			declaration.append(switch ( c ) {
 				case '\r' -> "\\r";
 				case '\n' -> "\\n";
@@ -678,7 +678,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private String getConstantName() {
-		final String stem = getUpperUnderscoreCaseFromLowerCamelCase(methodName);
+		final var stem = getUpperUnderscoreCaseFromLowerCamelCase(methodName);
 		return paramTypes.isEmpty()
 			|| paramTypes.stream().allMatch(AbstractQueryMethod::isSpecialParam)
 				? stem

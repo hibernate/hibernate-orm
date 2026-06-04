@@ -6,7 +6,9 @@ package org.hibernate.processor.xml;
 
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
-import org.hibernate.processor.util.StringUtil;
+
+import static org.hibernate.processor.util.Constants.STRING;
+import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
  * @author Hardy Ferentschik
@@ -44,9 +46,9 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 	@Override
 	public String getAttributeNameDeclarationString(){
 		return new StringBuilder().append("public static final ")
-				.append(hostingEntity.importType(String.class.getName()))
+				.append(hostingEntity.importType(STRING))
 				.append(" ")
-				.append(StringUtil.getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
+				.append( getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
 				.append(" = ")
 				.append("\"")
 				.append(getPropertyName())
@@ -75,7 +77,7 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
+		final var sb = new StringBuilder();
 		sb.append( "XmlMetaAttribute" );
 		sb.append( "{propertyName='" ).append( propertyName ).append( '\'' );
 		sb.append( ", type='" ).append( type ).append( '\'' );

@@ -64,24 +64,24 @@ public class ImportContextImpl implements ImportContext {
 	 * @return import string
 	 */
 	public String importType(String typeExpression) {
-		String result = typeExpression;
+		var result = typeExpression;
 
 		// strip off type annotations and '? super' or '? extends'
-		String preamble = "";
+		var preamble = "";
 		if ( result.startsWith( "@" ) ) {
-			int index = result.lastIndexOf(' ');
+			var index = result.lastIndexOf(' ');
 			if ( index > 0 ) {
 				preamble = result.substring( 0, index+1 );
 				result = result.substring( index+1 );
 			}
 		}
 		else if ( result.startsWith( "?" ) ) {
-			int index = 1;
+			var index = 1;
 			while ( index < result.length() && isWhitespace( result.charAt( index ) ) ) {
 				index++;
 			}
 			if ( index < result.length() ) {
-				int nextIndex = -1;
+				var nextIndex = -1;
 				if ( result.substring( index ).startsWith( "extends" ) ) {
 					nextIndex = index + 7;
 				}
@@ -99,22 +99,22 @@ public class ImportContextImpl implements ImportContext {
 			}
 		}
 
-		String appendices = "";
+		var appendices = "";
 		if ( result.indexOf( '<' ) >= 0 ) {
-			int startIndex = result.indexOf('<');
-			int endIndex = result.lastIndexOf('>');
+			var startIndex = result.indexOf('<');
+			var endIndex = result.lastIndexOf('>');
 			appendices = '<' + importTypes( result.substring( startIndex + 1, endIndex ) ) + '>'
 					+ result.substring( endIndex + 1 );
 			result = result.substring( 0, startIndex );
 		}
 		else if ( result.indexOf( '[' ) >= 0 ) {
-			int index = result.indexOf('[');
+			var index = result.indexOf('[');
 			appendices = result.substring( index );
 			result = result.substring( 0, index );
 		}
 		else if ( result.endsWith( "..." ) ) {
 			appendices = "...";
-			int index = result.indexOf("...");
+			var index = result.indexOf("...");
 			result = result.substring( 0, index );
 		}
 
@@ -125,11 +125,11 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	private String unqualifyName(String qualifiedName) {
-		final String sourceQualifiedName = qualifiedName;
-		final String simpleName = unqualify( qualifiedName );
+		final var sourceQualifiedName = qualifiedName;
+		final var simpleName = unqualify( qualifiedName );
 		final boolean canBeSimple;
 		if ( simpleNames.containsKey( simpleName ) ) {
-			final String existing = simpleNames.get( simpleName );
+			final var existing = simpleNames.get( simpleName );
 			canBeSimple = existing.equals( sourceQualifiedName );
 		}
 		else {
@@ -150,15 +150,15 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	private String importTypes(String originalArgList) {
-		StringBuilder argList = new StringBuilder();
-		StringBuilder acc = new StringBuilder();
-		StringTokenizer args = new StringTokenizer( originalArgList, "," );
+		var argList = new StringBuilder();
+		var acc = new StringBuilder();
+		var args = new StringTokenizer( originalArgList, "," );
 		while ( args.hasMoreTokens() ) {
 			if ( !acc.isEmpty() ) {
 				acc.append( ',' );
 			}
 			acc.append( args.nextToken() );
-			int nesting = 0;
+			var nesting = 0;
 			for ( int i = 0; i<acc.length(); i++ ) {
 				switch ( acc.charAt(i) ) {
 					case '<':
@@ -181,7 +181,7 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	public String staticImport(String fqcn, String member) {
-		final String local = fqcn + "." + member;
+		final var local = fqcn + "." + member;
 		imports.add( local );
 		staticImports.add( local );
 		return "*".equals(member) ? "" : member;
@@ -204,8 +204,8 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	public String generateImports() {
-		final StringBuilder builder = new StringBuilder();
-		for ( String next : imports ) {
+		final var builder = new StringBuilder();
+		for ( var next : imports ) {
 			// don't add automatically "imported" stuff
 			if ( !isAutoImported( next ) ) {
 				if ( staticImports.contains( next ) ) {
@@ -227,12 +227,12 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	public static String unqualify(String qualifiedName) {
-		final int loc = qualifiedName.lastIndexOf( '.' );
+		final var loc = qualifiedName.lastIndexOf( '.' );
 		return loc < 0 ? qualifiedName : qualifiedName.substring( loc + 1 );
 	}
 
 	public static String qualifier(String qualifiedName) {
-		final int loc = qualifiedName.lastIndexOf( '.' );
+		final var loc = qualifiedName.lastIndexOf( '.' );
 		return loc < 0 ? "" : qualifiedName.substring( 0, loc );
 	}
 }

@@ -6,7 +6,6 @@ package org.hibernate.processor.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
-import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
 import org.hibernate.boot.ResourceStreamLocator;
@@ -36,11 +35,11 @@ public class ResourceStreamLocatorImpl implements ResourceStreamLocator {
 			resourceName = RESOURCE_PATH_SEPARATOR + resourceName;
 		}
 
-		String pkg = getPackage( resourceName );
-		String name = getRelativeName( resourceName );
+		var pkg = getPackage( resourceName );
+		var name = getRelativeName( resourceName );
 		InputStream ormStream;
 		try {
-			FileObject fileObject = context.getProcessingEnvironment()
+			var fileObject = context.getProcessingEnvironment()
 					.getFiler()
 					.getResource( StandardLocation.CLASS_OUTPUT, pkg, name );
 			ormStream = fileObject.openInputStream();

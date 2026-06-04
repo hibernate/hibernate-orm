@@ -84,7 +84,7 @@ class StaticQueryMethod implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
 		returnType( declaration );
@@ -122,7 +122,7 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	static String queryName(String typeName, String methodName, List<String> paramTypes) {
-		final StringBuilder name =
+		final var name =
 				new StringBuilder( javadocTypeName( typeName ) )
 						.append( '#' )
 						.append( methodName )
@@ -161,11 +161,15 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private String parameterList() {
-		return queryParamTypes.stream()
-				.map(StaticQueryMethod::erasedType)
-				.map(annotationMetaEntity::importType)
-				.reduce((x, y) -> x + ',' + y)
-				.orElse("");
+		final var parameters = new StringBuilder();
+		for ( int i = 0; i < queryParamTypes.size(); i++ ) {
+			if ( i > 0 ) {
+				parameters.append( ',' );
+			}
+			final var erasedType = erasedType( queryParamTypes.get( i ) );
+			parameters.append( annotationMetaEntity.importType( erasedType ) );
+		}
+		return parameters.toString();
 	}
 
 	private void parameters(StringBuilder declaration) {
@@ -183,7 +187,7 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private String parameterType(int index) {
-		final String paramType = paramTypes.get( index );
+		final var paramType = paramTypes.get( index );
 		if ( method.isVarArgs() && index == paramTypes.size() - 1 && paramType.endsWith("[]") ) {
 			return paramType.substring( 0, paramType.length() - 2 ) + "...";
 		}
@@ -242,9 +246,10 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private static String classList(AnnotationMetaEntity annotationMetaEntity, List<String> paramTypes) {
-		final StringBuilder list = new StringBuilder()
-				.append(annotationMetaEntity.importType(LIST))
-				.append(".of(");
+		final var list =
+				new StringBuilder()
+						.append(annotationMetaEntity.importType(LIST))
+						.append(".of(");
 		for ( int i = 0; i < paramTypes.size(); i++ ) {
 			if ( i > 0 ) {
 				list.append(", ");
@@ -257,7 +262,7 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private static String nameList(AnnotationMetaEntity annotationMetaEntity, List<String> paramNames) {
-		final StringBuilder list = new StringBuilder()
+		final var list = new StringBuilder()
 				.append(annotationMetaEntity.importType(LIST))
 				.append(".of(");
 		for ( int i = 0; i < paramNames.size(); i++ ) {
@@ -270,7 +275,7 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private static String argumentList(AnnotationMetaEntity annotationMetaEntity, List<String> paramNames) {
-		final StringBuilder list = new StringBuilder()
+		final var list = new StringBuilder()
 				.append(annotationMetaEntity.importType(LIST))
 				.append(".of(");
 		for ( int i = 0; i < paramNames.size(); i++ ) {
@@ -291,9 +296,9 @@ class StaticQueryMethod implements MetaAttribute {
 			boolean nativeQuery,
 			@Nullable AnnotationMirror optionsAnnotation) {
 		if ( optionsAnnotation != null ) {
-			final String entityGraph = statement || nativeQuery ? null : entityGraph( optionsAnnotation );
-			final String hints = hints( annotationMetaEntity, optionsAnnotation );
-			final List<String> options = options( annotationMetaEntity, statement, optionsAnnotation );
+			final var entityGraph = statement || nativeQuery ? null : entityGraph( optionsAnnotation );
+			final var hints = hints( annotationMetaEntity, optionsAnnotation );
+			final var options = options( annotationMetaEntity, statement, optionsAnnotation );
 			if ( entityGraph != null || hints != null || !options.isEmpty() ) {
 				if ( statement ) {
 					declaration
@@ -307,7 +312,7 @@ class StaticQueryMethod implements MetaAttribute {
 							.append(",\n\t\t\t")
 							.append(hints == null ? emptyMap( annotationMetaEntity ) : hints);
 				}
-				for ( String option : options ) {
+				for ( var option : options ) {
 					declaration
 							.append(",\n\t\t\t")
 							.append(option);
@@ -317,9 +322,9 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private static @Nullable String entityGraph(AnnotationMirror queryOptions) {
-		final AnnotationValue entityGraph = getAnnotationValue( queryOptions, "entityGraph" );
+		final var entityGraph = getAnnotationValue( queryOptions, "entityGraph" );
 		if ( entityGraph != null ) {
-			final String value = entityGraph.getValue().toString();
+			final var value = entityGraph.getValue().toString();
 			if ( !value.isEmpty() ) {
 				return stringLiteral( value );
 			}
@@ -332,20 +337,22 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private static @Nullable String hints(AnnotationMetaEntity annotationMetaEntity, AnnotationMirror queryOptions) {
-		final AnnotationValue hints = getAnnotationValue( queryOptions, "hints" );
+		final var hints = getAnnotationValue( queryOptions, "hints" );
 		if ( hints != null ) {
 			@SuppressWarnings("unchecked")
-			final List<? extends AnnotationValue> values =
-					(List<? extends AnnotationValue>) hints.getValue();
+			final var values =
+					(List<? extends AnnotationValue>)
+							hints.getValue();
 			if ( !values.isEmpty() ) {
-				final StringBuilder builder = new StringBuilder()
-						.append(annotationMetaEntity.importType(MAP))
-						.append(".ofEntries(");
+				final var builder =
+						new StringBuilder()
+								.append(annotationMetaEntity.importType(MAP))
+								.append(".ofEntries(");
 				for ( int i = 0; i < values.size(); i++ ) {
 					if ( i > 0 ) {
 						builder.append(", ");
 					}
-					final AnnotationMirror hint = (AnnotationMirror) values.get( i ).getValue();
+					final var hint = (AnnotationMirror) values.get( i ).getValue();
 					builder
 							.append(annotationMetaEntity.importType(MAP))
 							.append(".entry(")
@@ -361,7 +368,7 @@ class StaticQueryMethod implements MetaAttribute {
 	}
 
 	private static String annotationString(AnnotationMirror annotation, String member) {
-		final AnnotationValue value = getAnnotationValue( annotation, member );
+		final var value = getAnnotationValue( annotation, member );
 		return value == null ? "" : value.getValue().toString();
 	}
 
@@ -369,7 +376,7 @@ class StaticQueryMethod implements MetaAttribute {
 			AnnotationMetaEntity annotationMetaEntity,
 			boolean statement,
 			AnnotationMirror queryOptions) {
-		final List<String> options = new ArrayList<>();
+		final var options = new ArrayList<String>();
 		addEnumOption( annotationMetaEntity, options, queryOptions, "flush" );
 		addTimeoutOption( annotationMetaEntity, options, queryOptions );
 		if ( !statement ) {
@@ -385,7 +392,7 @@ class StaticQueryMethod implements MetaAttribute {
 			AnnotationMetaEntity annotationMetaEntity,
 			List<String> options,
 			AnnotationMirror queryOptions) {
-		final AnnotationValue timeout = getAnnotationValue( queryOptions, "timeout" );
+		final var timeout = getAnnotationValue( queryOptions, "timeout" );
 		if ( timeout != null ) {
 			options.add(annotationMetaEntity.importType(TIMEOUT)
 					+ ".milliseconds(" + timeout.getValue() + ")");
@@ -397,18 +404,18 @@ class StaticQueryMethod implements MetaAttribute {
 			List<String> options,
 			AnnotationMirror queryOptions,
 			String member) {
-		final AnnotationValue option = getAnnotationValue( queryOptions, member );
+		final var option = getAnnotationValue( queryOptions, member );
 		if ( option != null && option.getValue() instanceof VariableElement variable ) {
-			final TypeElement type = (TypeElement) variable.getEnclosingElement();
+			final var type = (TypeElement) variable.getEnclosingElement();
 			options.add(annotationMetaEntity.importType(type.getQualifiedName().toString())
 					+ "." + variable.getSimpleName());
 		}
 	}
 
 	static String erasedType(String type) {
-		String result = type;
+		var result = type;
 		while ( result.startsWith( "@" ) ) {
-			final int index = result.lastIndexOf( ' ' );
+			final var index = result.lastIndexOf( ' ' );
 			if ( index > 0 ) {
 				result = result.substring( index + 1 );
 			}
@@ -416,7 +423,7 @@ class StaticQueryMethod implements MetaAttribute {
 				break;
 			}
 		}
-		final int typeArgumentIndex = result.indexOf( '<' );
+		final var typeArgumentIndex = result.indexOf( '<' );
 		if ( typeArgumentIndex >= 0 ) {
 			result = result.substring( 0, typeArgumentIndex );
 		}

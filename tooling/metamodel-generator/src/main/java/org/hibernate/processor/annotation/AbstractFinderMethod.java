@@ -96,15 +96,15 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod {
 				.append(" {@link ")
 				.append(annotationMetaEntity.importType(entity))
 				.append("}");
-		long paramCount = paramTypes.stream()
+		var paramCount = paramTypes.stream()
 				.filter(type -> !isSpecialParam(type))
 				.count();
 		if ( paramCount> 0 ) {
 			declaration
 					.append(" by ");
-			int count = 0;
+			var count = 0;
 			for (int i = 0; i < paramTypes.size(); i++) {
-				final String type = paramTypes.get(i);
+				final var type = paramTypes.get(i);
 				if ( !isSpecialParam(type) ) {
 					if ( count>0 ) {
 						if ( count + 1 == paramCount) {
@@ -117,7 +117,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod {
 						}
 					}
 					count++;
-					final String path = paramNames.get(i);
+					final var path = paramNames.get(i);
 					if ( ID_ROLE_NAME.equals(path) ) {
 						declaration
 								.append("identifier");
@@ -144,7 +144,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod {
 	}
 
 	String qualifier(String name) {
-		final int index = name.indexOf('.');
+		final var index = name.indexOf('.');
 		return index > 0 ? name.substring(0, index) : name;
 	}
 
@@ -162,7 +162,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod {
 			unwrapQuery( declaration, unwrapped );
 			unwrapped = true;
 		}
-		for ( String profile : fetchProfiles ) {
+		for ( var profile : fetchProfiles ) {
 			declaration
 					.append("\t\t\t.enableFetchProfile(")
 					.append(profile)

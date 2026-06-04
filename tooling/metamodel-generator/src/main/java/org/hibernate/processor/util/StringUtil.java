@@ -98,12 +98,12 @@ public final class StringUtil {
 	}
 
 	public static String getUpperUnderscoreCaseFromLowerCamelCase(String lowerCamelCaseString) {
-		final StringBuilder result = new StringBuilder();
-		int position = 0;
-		boolean wasLowerCase = false;
+		final var result = new StringBuilder();
+		var position = 0;
+		var wasLowerCase = false;
 		while ( position < lowerCamelCaseString.length() ) {
-			final int codePoint = lowerCamelCaseString.codePointAt( position );
-			final boolean isUpperCase = isUpperCase( codePoint );
+			final var codePoint = lowerCamelCaseString.codePointAt( position );
+			final var isUpperCase = isUpperCase( codePoint );
 			if ( wasLowerCase && isUpperCase ) {
 				result.append('_');
 			}

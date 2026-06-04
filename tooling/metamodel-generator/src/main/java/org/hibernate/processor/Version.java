@@ -15,7 +15,7 @@ public final class Version {
 	private static final String VERSION = initVersion();
 
 	private static String initVersion() {
-		final String version = NullnessUtil.castNonNull( Version.class.getPackage() ).getImplementationVersion();
+		final var version = NullnessUtil.castNonNull( Version.class.getPackage() ).getImplementationVersion();
 		return version != null ? version : "[WORKING]";
 	}
 

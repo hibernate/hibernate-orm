@@ -55,11 +55,11 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final List<String> paramTypes = parameterTypes();
+		final var paramTypes = parameterTypes();
 		if ( usesProjectionSpecification() ) {
 			return getProjectionSpecificationAttributeDeclarationString( paramTypes );
 		}
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
 		preamble( declaration, paramTypes );
@@ -76,7 +76,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	}
 
 	private String getProjectionSpecificationAttributeDeclarationString(List<String> paramTypes) {
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
 		preamble( declaration, paramTypes );
@@ -202,7 +202,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	}
 
 	private static boolean hasFinderParameters(List<String> paramTypes) {
-		for ( String paramType : paramTypes ) {
+		for ( var paramType : paramTypes ) {
 			if ( !isSpecialParam( paramType ) ) {
 				return true;
 			}
@@ -230,21 +230,22 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	}
 
 	void createCriteriaQuery(StringBuilder declaration) {
-		final String entityClass = annotationMetaEntity.importType(entity);
-		final String resultClass =
-				annotationMetaEntity.importType(selection == null ? entity : selection.resultTypeName());
 		declaration
 				.append("\tvar _query = _builder.")
 				.append(createCriteriaMethod())
 				.append('(')
-				.append(resultClass)
+				.append( annotationMetaEntity.importType(resultType()) )
 				.append(".class);\n")
 				.append("\tvar _entity = _query.from(")
-				.append(entityClass)
+				.append(annotationMetaEntity.importType(entity))
 				.append(".class);\n");
 		if ( selection != null ) {
 			select( declaration, selection );
 		}
+	}
+
+	private String resultType() {
+		return selection == null ? entity : selection.resultTypeName();
 	}
 
 	private void select(StringBuilder declaration, ResultSelection selection) {
@@ -255,7 +256,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 					.append("_builder.construct(")
 					.append(annotationMetaEntity.importType(selection.resultTypeName()))
 					.append(".class");
-			for ( String path : selection.paths() ) {
+			for ( var path : selection.paths() ) {
 				declaration
 						.append(", ");
 				selectionExpression( declaration, path, entity );
@@ -341,10 +342,10 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	}
 
 	private void wherePredicates(StringBuilder declaration, List<String> paramTypes) {
-		boolean first = true;
+		var first = true;
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
+			final var paramName = paramNames.get(i);
+			final var paramType = paramTypes.get(i);
 			if ( !isSpecialParam(paramType) ) {
 				if ( first ) {
 					first = false;
@@ -361,8 +362,8 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	private void condition(StringBuilder declaration, int i, String paramName, String paramType) {
 		declaration
 				.append("\n\t\t\t");
-		final String parameterName = parameterVariableName(i);
-		final ParameterConstraint parameterConstraint = parameterConstraints.get(i);
+		final var parameterName = parameterVariableName(i);
+		final var parameterConstraint = parameterConstraints.get(i);
 		if ( isNullable(i) && !isPrimitive(paramType) ) {
 			declaration
 					.append(parameterName)
@@ -441,8 +442,8 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	@Override
 	String parameterVariableName(int index) {
-		final String baseName = parameterName( paramNames.get(index) );
-		int collisions = 0;
+		final var baseName = parameterName( paramNames.get(index) );
+		var collisions = 0;
 		for ( int i = 0; i < index; i++ ) {
 			if ( parameterName( paramNames.get(i) ).equals( baseName ) ) {
 				collisions++;
@@ -452,7 +453,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	}
 
 	private void executeProjectionQuery(StringBuilder declaration, List<String> paramTypes) {
-		final String indent = dataRepository && !isReactive() ? "\t\t" : "\t";
+		final var indent = dataRepository && !isReactive() ? "\t\t" : "\t";
 		if ( JD_PAGE.equals( containerType ) ) {
 			projectionTotalResults( declaration, indent, paramTypes );
 			declaration
@@ -514,7 +515,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	}
 
 	private void selectProjectionResult(StringBuilder declaration, List<String> paramTypes) {
-		final String containerType = this.containerType;
+		final var containerType = this.containerType;
 		if ( containerType == null ) {
 			throw new AssertionFailure( "missing container type" );
 		}
@@ -631,7 +632,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	}
 
 	private void projectionSelection(StringBuilder declaration, String path) {
-		final StringTokenizer tokens = new StringTokenizer(path, ".");
+		final var tokens = new StringTokenizer(path, ".");
 		if ( tokens.countTokens() == 1 && !ID_ROLE_NAME.equals( path ) ) {
 			metamodelAttribute( declaration, entity, path );
 		}
@@ -641,9 +642,9 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 					.append( ".from(" )
 					.append( annotationMetaEntity.importType( entity ) )
 					.append( ".class)" );
-			String typeName = entity;
+			var typeName = entity;
 			while ( typeName != null && tokens.hasMoreTokens() ) {
-				final String memberName = tokens.nextToken();
+				final var memberName = tokens.nextToken();
 				declaration.append( ".to(" );
 				if ( ID_ROLE_NAME.equals( memberName ) ) {
 					declaration

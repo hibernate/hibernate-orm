@@ -7,7 +7,6 @@ package org.hibernate.processor.annotation;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.IntersectionType;
@@ -16,8 +15,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import java.util.Collection;
+import java.util.StringJoiner;
 
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.type.TypeKind.VOID;
 import static org.hibernate.processor.util.Constants.HIB_STATELESS_SESSION;
@@ -86,7 +85,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		StringBuilder declaration = new StringBuilder();
+		var declaration = new StringBuilder();
 		preamble(declaration);
 		nullCheck(declaration, parameterName);
 		declareReturnArgument( declaration );
@@ -130,7 +129,9 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private void returnNullCompletionStage(StringBuilder declaration) {
-		if ( !returnArgument && !isReactive() && isAsynchronousCompletionStageWithVoidResult() ) {
+		if ( !returnArgument
+				&& !isReactive()
+				&& isAsynchronousCompletionStageWithVoidResult() ) {
 			declaration.append( "\t" );
 			returnNullResult( declaration );
 			declaration.append( ";\n" );
@@ -138,17 +139,18 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private String returnedArgumentName() {
-		return isMerge() && parameterKind != ParameterKind.NORMAL ? "_result" : parameterName;
+		return isMerge()
+			&& parameterKind != ParameterKind.NORMAL
+				? "_result"
+				: parameterName;
 	}
 
 	private void returnArgumentReactively(StringBuilder declaration) {
-		if ( isReactive() ) {
-			if ( returnArgument ) {
-				declaration
-						.append( "\n\t\t\t.replaceWith(")
-						.append(parameterName)
-						.append(")");
-			}
+		if ( returnArgument && isReactive() ) {
+			declaration
+					.append( "\n\t\t\t.replaceWith(" )
+					.append( parameterName )
+					.append( ")" );
 		}
 	}
 
@@ -217,7 +219,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private String sessionWithGetIdentifier() {
-		final String session = sessionName + getObjectCall();
+		final var session = sessionName + getObjectCall();
 		return isUsingEntityAgent()
 				? session + ".unwrap(" + annotationMetaEntity.importType( HIB_STATELESS_SESSION ) + ".class)"
 				: session;
@@ -395,7 +397,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		notNull(declaration);
 		final var parameters = method.getParameters();
 		assert parameters.size() == 1;
-		final VariableElement element = parameters.get(0);
+		final var element = parameters.get(0);
 		declaration
 				.append(resolveAsString(element.asType()))
 				.append(' ')
@@ -408,9 +410,13 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		if ( method.getTypeParameters().isEmpty() ) {
 			return "";
 		}
-		return method.getTypeParameters().stream()
-				.map( this::resolveTypeParameter )
-				.collect( joining( ", ", " <", "> " ) );
+		else {
+			final var typeParams = new StringJoiner( ", ", " <", "> " );
+			for ( var typeParameterElement : method.getTypeParameters() ) {
+				typeParams.add( resolveTypeParameter( typeParameterElement ) );
+			}
+			return typeParams.toString();
+		}
 	}
 
 	private String resolveAsString(TypeMirror type) {
@@ -418,21 +424,26 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			return type.toString();
 		}
 		else if ( type instanceof DeclaredType declaredType ) {
-			final var element = annotationMetaEntity.importType(
-					((TypeElement) declaredType.asElement()).getQualifiedName().toString()
-			);
+			final var typeElement = (TypeElement) declaredType.asElement();
+			final var element =
+					annotationMetaEntity.importType( typeElement.getQualifiedName().toString() );
 			if ( declaredType.getTypeArguments().isEmpty() ) {
 				return element;
 			}
-			return element + declaredType.getTypeArguments().stream().map( this::resolveAsString )
-					.collect( joining( ",", "<", ">" ) );
+			else {
+				final var typeArgs = new StringJoiner( ",", "<", ">" );
+				for ( var typeMirror : declaredType.getTypeArguments() ) {
+					typeArgs.add( resolveAsString( typeMirror ) );
+				}
+				return element + typeArgs;
+			}
 		}
 		else if ( type instanceof TypeVariable typeVariable ) {
 			final var value = typeVariable.toString();
-			if ( methodTypeParameters.contains( value ) ) {
-				return value;
-			}
-			return annotationMetaEntity.importType( resolveTypeName( element, method.getEnclosingElement(), value ) );
+			return methodTypeParameters.contains( value )
+					? value
+					: annotationMetaEntity.importType(
+							resolveTypeName( element, method.getEnclosingElement(), value ) );
 		}
 		else if ( type instanceof WildcardType wildcardType ) {
 			return "?"
@@ -445,7 +456,11 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			return resolveAsString( arrayType.getComponentType() ) + "[]";
 		}
 		else if ( type instanceof IntersectionType intersectionType ) {
-			return intersectionType.getBounds().stream().map( this::resolveAsString ).collect( joining( "&" ) );
+			final var intersection = new StringJoiner( "&" );
+			for ( var typeMirror : intersectionType.getBounds() ) {
+				intersection.add( resolveAsString( typeMirror ) );
+			}
+			return intersection.toString();
 		}
 		else {
 			return type.toString();
@@ -471,7 +486,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private TypeMirror returnArgumentType() {
-		final TypeMirror typeArgument = completionStageResultType();
+		final var typeArgument = completionStageResultType();
 		return typeArgument == null ? method.getReturnType() : typeArgument;
 	}
 

@@ -68,7 +68,7 @@ public class AccessTypeInformation {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
+		final var sb = new StringBuilder();
 		sb.append( "AccessTypeInformation" );
 		sb.append( "{fqcn='" ).append(fullyQualifiedName).append( '\'' );
 		sb.append( ", explicitAccessType=" ).append( explicitAccessType );

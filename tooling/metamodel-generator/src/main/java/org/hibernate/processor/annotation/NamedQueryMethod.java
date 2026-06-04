@@ -8,7 +8,6 @@ import jakarta.annotation.Nullable;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
@@ -61,9 +60,9 @@ class NamedQueryMethod implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final TreeSet<SqmParameter<?>> sortedParameters = new TreeSet<>( SqmParameter.COMPARATOR );
+		final var sortedParameters = new TreeSet<>( SqmParameter.COMPARATOR );
 		sortedParameters.addAll( select.getSqmParameters() );
-		StringBuilder declaration = new StringBuilder();
+		var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
 		returnType( declaration );
@@ -77,7 +76,7 @@ class NamedQueryMethod implements MetaAttribute {
 				.append(", ")
 				.append( annotationMeta.importType( resultClass ) )
 				.append( ".class)");
-		for ( SqmParameter<?> param : sortedParameters ) {
+		for ( var param : sortedParameters ) {
 			declaration
 					.append("\n\t\t\t.setParameter(")
 					.append(param.getName() == null ? param.getPosition() : '"' + param.getName() + '"')
@@ -145,8 +144,8 @@ class NamedQueryMethod implements MetaAttribute {
 					.append(" ")
 					.append(sessionVariableName);
 		}
-		int i = 0;
-		for ( SqmParameter<?> param : sortedParameters) {
+		var i = 0;
+		for ( var param : sortedParameters) {
 			if ( 0 < i++ || !belongsToRepository) {
 				declaration
 						.append(", ");
@@ -171,13 +170,13 @@ class NamedQueryMethod implements MetaAttribute {
 	}
 
 	private static String parameterName(SqmParameter<?> param) {
-		final String name = param.getName();
+		final var name = param.getName();
 		return name == null ? "parameter" + param.getPosition() : name;
 	}
 
 	private String parameterType(SqmParameter<?> param) {
-		final SqmExpressible<?> expressible = param.getExpressible();
-		final String paramType = expressible == null ? "unknown" : expressible.getTypeName(); //getTypeName() can return "unknown"
+		final var expressible = param.getExpressible();
+		final var paramType = expressible == null ? "unknown" : expressible.getTypeName(); //getTypeName() can return "unknown"
 		return "unknown".equals(paramType) ? "Object" : annotationMeta.importType(paramType);
 	}
 

@@ -46,8 +46,8 @@ public class LifecycleEventCallback implements MetaAttribute {
 	public String getAttributeDeclarationString() {
 		annotationMetaEntity.importType( JD_LIFECYCLE_EVENT );
 		annotationMetaEntity.importType( TYPE_LITERAL );
-		final String entityType = annotationMetaEntity.importType( entity );
-		final String eventClass = annotationMetaEntity.importType( "jakarta.data.event." + eventType );
+		final var entityType = annotationMetaEntity.importType( entity );
+		final var eventClass = annotationMetaEntity.importType( "jakarta.data.event." + eventType );
 		return new StringBuilder()
 				.append( "\n@" )
 				.append( annotationMetaEntity.importType( callbackAnnotation ) )

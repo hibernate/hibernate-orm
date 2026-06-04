@@ -79,7 +79,7 @@ public final class JpaDescriptorParser {
 			}
 
 			for ( var mappings : entityMappings ) {
-				final String defaultPackageName = mappings.getPackage();
+				final var defaultPackageName = mappings.getPackage();
 				parseEntities( mappings.getEntities(), defaultPackageName );
 				parseEmbeddable( mappings.getEmbeddables(), defaultPackageName );
 				parseMappedSuperClass( mappings.getMappedSuperclasses(), defaultPackageName );
@@ -88,7 +88,7 @@ public final class JpaDescriptorParser {
 	}
 
 	private Collection<String> determineMappingFileNames() {
-		final Collection<String> mappingFileNames = new ArrayList<>();
+		final var mappingFileNames = new ArrayList<String>();
 		final var persistence = getPersistence();
 		if ( persistence != null ) {
 			// get mapping file names from persistence.xml
@@ -105,7 +105,7 @@ public final class JpaDescriptorParser {
 	}
 
 	private @Nullable JaxbPersistenceImpl getPersistence() {
-		final String persistenceXmlLocation = context.getPersistenceXmlLocation();
+		final var persistenceXmlLocation = context.getPersistenceXmlLocation();
 		final var stream = xmlParserHelper.getInputStreamForResource( persistenceXmlLocation );
 		if ( stream == null ) {
 			return null;
@@ -129,7 +129,7 @@ public final class JpaDescriptorParser {
 	}
 
 	private void loadEntityMappings(Collection<String> mappingFileNames) {
-		for ( String mappingFile : mappingFileNames ) {
+		for ( var mappingFile : mappingFileNames ) {
 			final var inputStream = resourceStreamLocator.locateResourceStream( mappingFile );
 			if ( inputStream != null ) {
 				try ( inputStream ) {
@@ -153,7 +153,7 @@ public final class JpaDescriptorParser {
 
 	private boolean mappingFilesUnchanged(Collection<String> mappingFileNames) {
 		final var fileStampCheck = new FileTimeStampChecker();
-		for ( String mappingFile : mappingFileNames ) {
+		for ( var mappingFile : mappingFileNames ) {
 			try {
 				final var url = JpaDescriptorParser.class.getResource( mappingFile );
 				if ( url != null ) {
@@ -216,7 +216,7 @@ public final class JpaDescriptorParser {
 
 	private void parseEntities(List<JaxbEntityImpl> entities, String defaultPackageName) {
 		for ( var entity : entities ) {
-			final String entityClassName =
+			final var entityClassName =
 					determineFullyQualifiedClassName( defaultPackageName, entity.getClazz() );
 			if ( !xmlMappedTypeExists( entityClassName ) ) {
 				context.logMessage( Diagnostic.Kind.WARNING,
@@ -240,7 +240,7 @@ public final class JpaDescriptorParser {
 			List<JaxbEmbeddableImpl> embeddables,
 			String defaultPackageName) {
 		for ( var embeddable : embeddables ) {
-			final String embeddableClassName =
+			final var embeddableClassName =
 					determineFullyQualifiedClassName( defaultPackageName, embeddable.getClazz() );
 			// We have to extract the package name from the FQCN
 			// Maybe the entity was setting a FQCN directly
@@ -250,7 +250,7 @@ public final class JpaDescriptorParser {
 						+ " is mapped in XML, but class does not exist. Skipping meta model generation." );
 			}
 			else {
-				final String pkg = packageNameFromFullyQualifiedName( embeddableClassName );
+				final var pkg = packageNameFromFullyQualifiedName( embeddableClassName );
 				final var metaEntity =
 						new XmlMetaEntity( embeddable, pkg, getXmlMappedType( embeddableClassName ), context );
 				if ( context.containsMetaEmbeddable( embeddableClassName ) ) {
@@ -267,7 +267,7 @@ public final class JpaDescriptorParser {
 			List<JaxbMappedSuperclassImpl> mappedSuperClasses,
 			String defaultPackageName) {
 		for ( var mappedSuperClass : mappedSuperClasses ) {
-			final String mappedSuperClassName =
+			final var mappedSuperClassName =
 					determineFullyQualifiedClassName( defaultPackageName, mappedSuperClass.getClazz() );
 			// We have to extract the package name from the FQCN
 			// Maybe the entity was setting a FQCN directly
@@ -277,7 +277,7 @@ public final class JpaDescriptorParser {
 						+ " is mapped in XML, but class does not exist. Skipping meta model generation." );
 			}
 			else {
-				final String pkg = packageNameFromFullyQualifiedName( mappedSuperClassName );
+				final var pkg = packageNameFromFullyQualifiedName( mappedSuperClassName );
 				final var metaEntity =
 						new XmlMetaEntity( mappedSuperClass, pkg, getXmlMappedType( mappedSuperClassName ), context );
 				if ( context.containsMetaEntity( mappedSuperClassName ) ) {
@@ -305,7 +305,7 @@ public final class JpaDescriptorParser {
 
 	private void determineXmlAccessTypes() {
 		for ( var mappings : entityMappings ) {
-			final String packageName = mappings.getPackage();
+			final var packageName = mappings.getPackage();
 			final var defaultAccessType = determineEntityAccessType( mappings );
 			for ( var entity : mappings.getEntities() ) {
 				addAccessTypeInfo( packageName, entity.getClazz(), entity.getAccess(), defaultAccessType );
@@ -322,14 +322,14 @@ public final class JpaDescriptorParser {
 	private void addAccessTypeInfo(
 			String packageName, String simpleName,
 			AccessType accessType, AccessType defaultAccessType) {
-		final String className = determineFullyQualifiedClassName( packageName, simpleName );
+		final var className = determineFullyQualifiedClassName( packageName, simpleName );
 		context.addAccessTypeInformation( className,
 				new AccessTypeInformation( className, accessType, defaultAccessType ) );
 	}
 
 	private void determineAnnotationAccessTypes() {
 		for ( var mappings : entityMappings ) {
-			final String packageName = mappings.getPackage();
+			final var packageName = mappings.getPackage();
 			for ( var entity : mappings.getEntities() ) {
 				determineHierarchyAccessType( packageName, entity.getClazz() );
 			}

@@ -19,7 +19,7 @@ public class NonManagedMetamodel extends AnnotationMetaEntity {
 			TypeElement element, Context context,
 			boolean jakartaDataStaticMetamodel,
 			@Nullable AnnotationMetaEntity parent) {
-		final NonManagedMetamodel metamodel =
+		final var metamodel =
 				new NonManagedMetamodel( element, context, jakartaDataStaticMetamodel, parent );
 		if ( parent != null ) {
 			parent.addInnerClass( metamodel );

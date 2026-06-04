@@ -4,7 +4,6 @@
  */
 package org.hibernate.processor.xml;
 
-import org.hibernate.processor.model.Metamodel;
 
 /**
  * @author Hardy Ferentschik
@@ -20,7 +19,7 @@ public class XmlMetaMap extends XmlMetaCollection {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final Metamodel hostingEntity = getHostingEntity();
+		final var hostingEntity = getHostingEntity();
 		return new StringBuilder().append( "public static volatile " )
 				.append( hostingEntity.importType( getMetaType() ) )
 				.append( "<" )

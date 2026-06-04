@@ -53,7 +53,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
 		preamble( declaration, paramTypes );
@@ -78,7 +78,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		enableFetchProfile( declaration, true );
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			if ( !isSessionParameter( paramTypes.get(i) ) ) {
-				final String paramName = paramNames.get(i);
+				final var paramName = paramNames.get(i);
 				declaration
 						.append("\t\t\t.using(")
 						.append(annotationMetaEntity.importType(entity + '_'))
@@ -102,7 +102,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 	}
 
 	private void findReactively(StringBuilder declaration) {
-		boolean composite = isComposite();
+		final var composite = isComposite();
 		declaration
 				.append(".find(");
 		if (composite) {
@@ -117,7 +117,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 					.append(annotationMetaEntity.importType(IDENTIFIER))
 					.append(".composite(");
 		}
-		boolean first = true;
+		var first = true;
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			if ( !isSessionParameter( paramTypes.get(i) ) ) {
 				if ( first ) {
@@ -131,7 +131,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 					declaration
 							.append("\n\t\t\t\t");
 				}
-				final String paramName = paramNames.get(i);
+				final var paramName = paramNames.get(i);
 				declaration
 						.append(annotationMetaEntity.importType(IDENTIFIER))
 						.append(".id(")
@@ -150,7 +150,11 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 	}
 
 	private boolean isComposite() {
-		return paramTypes.stream()
-				.filter(type -> !isSessionParameter(type)).count() > 1;
+		for ( String type : paramTypes ) {
+			if ( !isSessionParameter( type ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

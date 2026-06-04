@@ -13,7 +13,6 @@ import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -59,7 +58,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	void checkNamedQueries() {
-		boolean checkHql = containsAnnotation( getElement(), Constants.CHECK_HQL )
+		var checkHql = containsAnnotation( getElement(), Constants.CHECK_HQL )
 						|| containsAnnotation( getElement().getEnclosingElement(), Constants.CHECK_HQL );
 		handleNamedQueryAnnotation( NAMED_QUERY, checkHql );
 		handleNamedQueryRepeatableAnnotation( Constants.NAMED_QUERIES, checkHql );
@@ -68,21 +67,21 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private void handleNamedQueryAnnotation(String annotationName, boolean checkHql) {
-		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
+		final var mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
 			handleNamedQuery( mirror, checkHql );
 		}
 	}
 
 	private void handleNamedQueryRepeatableAnnotation(String annotationName, boolean checkHql) {
-		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
+		final var mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			final AnnotationValue value = getAnnotationValue( mirror );
+			final var value = getAnnotationValue( mirror );
 			if ( value != null ) {
 				@SuppressWarnings("unchecked")
-				final List<? extends AnnotationValue> annotationValues =
+				final var annotationValues =
 						(List<? extends AnnotationValue>) value.getValue();
-				for ( AnnotationValue annotationValue : annotationValues ) {
+				for ( var annotationValue : annotationValues ) {
 					handleNamedQuery( (AnnotationMirror) annotationValue.getValue(), checkHql );
 				}
 			}
@@ -90,15 +89,15 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private void handleNamedQuery(AnnotationMirror mirror, boolean checkHql) {
-		final AnnotationValue nameValue = getAnnotationValue( mirror, "name" );
+		final var nameValue = getAnnotationValue( mirror, "name" );
 		if ( nameValue != null ) {
-			final String name = nameValue.getValue().toString();
-			final Context context = getContext();
-			final boolean reportErrors = context.checkNamedQuery( name );
-			final AnnotationValue value = getAnnotationValue( mirror, "query" );
+			final var name = nameValue.getValue().toString();
+			final var context = getContext();
+			final var reportErrors = context.checkNamedQuery( name );
+			final var value = getAnnotationValue( mirror, "query" );
 			if ( value != null && value.getValue() instanceof String hql ) {
-				final SqmStatement<?> statement =
-						Validation.validate(
+			final var statement =
+					Validation.validate(
 								hql,
 								null,
 								true,
@@ -114,8 +113,8 @@ public abstract class AnnotationMeta implements Metamodel {
 				if ( !isJakartaDataStyle()
 					&& statement instanceof SqmSelectStatement<?> selectStatement ) {
 					if ( isQueryMethodName( name ) ) {
-						final AnnotationValue annotationValue = getAnnotationValue( mirror, "resultClass" );
-						final String resultType = annotationValue != null
+						final var annotationValue = getAnnotationValue( mirror, "resultClass" );
+						final var resultType = annotationValue != null
 								? annotationValue.getValue().toString()
 								: resultType( selectStatement );
 						putMember( name,
@@ -132,7 +131,7 @@ public abstract class AnnotationMeta implements Metamodel {
 						);
 					}
 					if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
-						final String resultType = resultType( selectStatement );
+						final var resultType = resultType( selectStatement );
 						if ( resultType != null ) {
 							putMember( "QUERY_" + name,
 									new TypedMetaAttribute( this, name, "QUERY_", resultType,
@@ -152,14 +151,14 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private void addAuxiliaryMembersForRepeatableAnnotation(String annotationName, String prefix) {
-		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
+		final var mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			final AnnotationValue value = getAnnotationValue( mirror );
+			final var value = getAnnotationValue( mirror );
 			if ( value != null ) {
 				@SuppressWarnings("unchecked")
-				final List<? extends AnnotationValue> annotationValues =
+				final var annotationValues =
 						(List<? extends AnnotationValue>) value.getValue();
-				for ( AnnotationValue annotationValue : annotationValues ) {
+				for ( var annotationValue : annotationValues ) {
 					addAuxiliaryMembersForMirror( (AnnotationMirror) annotationValue.getValue(), prefix, annotationName );
 				}
 			}
@@ -167,7 +166,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private void addAuxiliaryMembersForAnnotation(String annotationName, String prefix) {
-		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
+		final var mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
 			addAuxiliaryMembersForMirror( mirror, prefix, annotationName );
 		}
@@ -175,7 +174,7 @@ public abstract class AnnotationMeta implements Metamodel {
 
 	private void addAuxiliaryMembersForMirror(AnnotationMirror mirror, String prefix, String annotationName) {
 		if ( !isJakartaDataStyle() ) {
-			final String name = defaultImplicitName( annotationName, explicitName( mirror ) );
+			final var name = defaultImplicitName( annotationName, explicitName( mirror ) );
 			putMember( prefix + name, auxiliaryMember( mirror, prefix, name ) );
 		}
 	}
@@ -200,11 +199,11 @@ public abstract class AnnotationMeta implements Metamodel {
 	private NameMetaAttribute auxiliaryMember(AnnotationMirror mirror, String prefix, String name) {
 		return switch (prefix) {
 			case "QUERY_" -> {
-				final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
+				final var resultClass = getAnnotationValue( mirror, "resultClass" );
 				// if there is no explicit result class, we will infer it later by
 				// type checking the query (this is allowed but not required by JPA)
 				// and then we will replace this TypedMetaAttribute
-				final String resultTypeName =
+				final var resultTypeName =
 						resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString();
 				yield new TypedMetaAttribute( this, name, prefix, resultTypeName,
 						TYPED_QUERY_REFERENCE, null );
@@ -225,7 +224,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private static @Nullable String statementString(AnnotationMirror mirror) {
-		final AnnotationValue statement = getAnnotationValue( mirror, "statement" );
+		final var statement = getAnnotationValue( mirror, "statement" );
 		return statement == null ? null : statement.getValue().toString();
 	}
 

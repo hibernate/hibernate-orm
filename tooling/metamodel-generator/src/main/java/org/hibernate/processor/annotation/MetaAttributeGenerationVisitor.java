@@ -4,13 +4,11 @@
  */
 package org.hibernate.processor.annotation;
 
-import jakarta.persistence.AccessType;
 import jakarta.annotation.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
 
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
@@ -23,7 +21,6 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import java.util.List;
 
 import static org.hibernate.processor.util.Constants.BOOLEAN_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.COMPARABLE_ATTRIBUTE;
@@ -91,21 +88,21 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 	@Override
 	public @Nullable AnnotationMetaAttribute visitTypeVariable(TypeVariable typeVariable, Element element) {
 		// METAGEN-29 - for a type variable we use the upper bound
-		final TypeMirror upperBound = typeUtils().erasure( typeVariable.getUpperBound() );
+		final var upperBound = typeUtils().erasure( typeVariable.getUpperBound() );
 		return new AnnotationMetaSingleAttribute( entity, element, upperBound.toString() );
 	}
 
 	@Override
 	public @Nullable AnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
-		final TypeElement returnedElement = (TypeElement) typeUtils().asElement( declaredType );
+		final var returnedElement = (TypeElement) typeUtils().asElement( declaredType );
 		if ( returnedElement == null ) {
 			return null;
 		}
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
-		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
+		final var targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 		if ( isPluralAttribute( element ) ) {
-			final String returnTypeName = returnedElement.getQualifiedName().toString();
-			final String collection = Constants.COLLECTIONS.get( returnTypeName );
+			final var returnTypeName = returnedElement.getQualifiedName().toString();
+			final var collection = Constants.COLLECTIONS.get( returnTypeName );
 			if ( collection != null ) {
 				return createMetaCollectionAttribute( declaredType, element, returnTypeName, collection, targetEntity );
 			}
@@ -114,7 +111,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 			}
 		}
 		else {
-			final String type = targetEntity != null ? targetEntity
+			final var type = targetEntity != null ? targetEntity
 					: extractClosestRealTypeAsString( declaredType, context );
 			return targetEntity != null || isManagedType( returnedElement )
 					? new AnnotationMetaSingleAttribute( entity, element, type )
@@ -126,11 +123,11 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 			DeclaredType declaredType, Element element, String returnTypeName, String collection,
 			@Nullable String targetEntity) {
 		if ( hasAnnotation( element, ELEMENT_COLLECTION ) ) {
-			final String explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
-			final TypeMirror collectionElementType =
+			final var explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
+			final var collectionElementType =
 					getCollectionElementType( declaredType, returnTypeName, explicitTargetEntity, context );
 			if ( collectionElementType.getKind() == TypeKind.DECLARED ) {
-				final TypeElement collectionElement = (TypeElement) typeUtils().asElement( collectionElementType );
+				final var collectionElement = (TypeElement) typeUtils().asElement( collectionElementType );
 				setAccessType( collectionElementType, castNonNull( collectionElement ) );
 			}
 		}
@@ -140,9 +137,9 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 	private AnnotationMetaAttribute createMetaAttribute(
 			DeclaredType declaredType, Element element, String collection, @Nullable String targetEntity) {
 		if ( hasAnnotation( element, ONE_TO_MANY, MANY_TO_MANY, MANY_TO_ANY, ELEMENT_COLLECTION ) ) {
-			final String elementType = getElementType( declaredType, targetEntity );
+			final var elementType = getElementType( declaredType, targetEntity );
 			if ( collection.equals( Constants.MAP_ATTRIBUTE ) ) { //TODO: pretty fragile!
-				final String keyType = getMapKeyType( declaredType, element );
+				final var keyType = getMapKeyType( declaredType, element );
 				return new AnnotationMetaMap( entity, element, collection, keyType, elementType );
 			}
 			else {
@@ -163,7 +160,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 	}
 
 	private String getMetaType(TypeMirror type) {
-		final TypeMirror boxedType =
+		final var boxedType =
 				type.getKind().isPrimitive()
 						? typeUtils().boxedClass( (PrimitiveType) type ).asType()
 						: typeUtils().erasure( type );
@@ -194,19 +191,19 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 	}
 
 	private boolean isSameType(TypeMirror type, String typeName) {
-		final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( typeName );
+		final var typeElement = context.getTypeElementForFullyQualifiedName( typeName );
 		return typeElement != null
 				&& typeUtils().isSameType( typeUtils().erasure( type ), typeUtils().erasure( typeElement.asType() ) );
 	}
 
 	private boolean isAssignableTo(TypeMirror type, String typeName) {
-		final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( typeName );
+		final var typeElement = context.getTypeElementForFullyQualifiedName( typeName );
 		return typeElement != null
 				&& typeUtils().isAssignable( typeUtils().erasure( type ), typeUtils().erasure( typeElement.asType() ) );
 	}
 
 	private boolean isAssignableToComparable(TypeMirror type, TypeMirror comparableArgument) {
-		final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( Comparable.class.getName() );
+		final var typeElement = context.getTypeElementForFullyQualifiedName( Comparable.class.getName() );
 		return typeElement != null
 				&& typeUtils().isAssignable(
 						type,
@@ -215,9 +212,9 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 	}
 
 	private void setAccessType(TypeMirror collectionElementType, TypeElement collectionElement) {
-		final String elementTypeName = collectionElementType.toString();
-		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( elementTypeName );
-		final AccessType entityAccessType = entity.getEntityAccessTypeInfo().getAccessType();
+		final var elementTypeName = collectionElementType.toString();
+		final var accessTypeInfo = context.getAccessTypeInfo( elementTypeName );
+		final var entityAccessType = entity.getEntityAccessTypeInfo().getAccessType();
 		if ( accessTypeInfo == null ) {
 			context.addAccessTypeInformation(
 					elementTypeName,
@@ -242,7 +239,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 	}
 
 	private String getMapKeyType(DeclaredType declaredType, Element element) {
-		final AnnotationMirror annotationMirror = getAnnotationMirror(element, MAP_KEY_CLASS );
+		final var annotationMirror = getAnnotationMirror(element, MAP_KEY_CLASS );
 		return annotationMirror == null
 				? getKeyType( declaredType, context )
 				: castNonNull( getAnnotationValue( annotationMirror, DEFAULT_ANNOTATION_PARAMETER_NAME ) )
@@ -254,7 +251,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 			return targetEntity;
 		}
 		else {
-			final List<? extends TypeMirror> mirrors = declaredType.getTypeArguments();
+			final var mirrors = declaredType.getTypeArguments();
 			switch ( mirrors.size() ) {
 				case 0:
 					return "?";

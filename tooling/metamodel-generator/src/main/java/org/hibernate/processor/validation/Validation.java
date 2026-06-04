@@ -20,7 +20,6 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.sqm.TerminalPathException;
-import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 
@@ -64,7 +63,7 @@ public class Validation {
 			SessionFactoryImplementor factory,
 			int errorOffset) {
 		try {
-			final HqlParser.StatementContext statementContext = parseAndCheckSyntax( hql, handler );
+			final var statementContext = parseAndCheckSyntax( hql, handler );
 			if ( checkTyping && handler.getErrorCount() == 0 ) {
 				return checkTyping( hql, returnType, handler, factory, errorOffset, statementContext );
 			}
@@ -90,7 +89,7 @@ public class Validation {
 		}
 		catch ( QueryException | PathElementException | TerminalPathException | EntityTypeException
 				| PropertyNotFoundException se ) { //TODO is this one really thrown by core? It should not be!
-			final String message = se.getMessage();
+			final var message = se.getMessage();
 			if ( message != null ) {
 				handler.error( -errorOffset +1, -errorOffset + hql.length(), message );
 			}
@@ -103,12 +102,12 @@ public class Validation {
 
 	private static SemanticQueryBuilder<?> createSemanticQueryBuilder(
 			@Nullable TypeMirror returnType, String hql, SessionFactoryImplementor factory) {
-		final SqmCreationContext context = factory.getQueryEngine().getCriteriaBuilder();
+		final var context = factory.getQueryEngine().getCriteriaBuilder();
 		if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) returnType;
-			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			final String typeName = typeElement.getQualifiedName().toString();
-			final String shortName = typeElement.getSimpleName().toString();
+			final var declaredType = (DeclaredType) returnType;
+			final var typeElement = (TypeElement) declaredType.asElement();
+			final var typeName = typeElement.getQualifiedName().toString();
+			final var shortName = typeElement.getSimpleName().toString();
 			return isEntity( typeElement )
 					? new SemanticQueryBuilder<>( typeName, shortName, getHibernateEntityName(typeElement), CREATION_OPTIONS, context, hql )
 					: new SemanticQueryBuilder<>( typeName, shortName, Object[].class, CREATION_OPTIONS, context, hql );

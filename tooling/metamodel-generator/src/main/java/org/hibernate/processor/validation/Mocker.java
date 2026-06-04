@@ -6,7 +6,6 @@ package org.hibernate.processor.validation;
 
 import net.bytebuddy.ByteBuddy;
 
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -27,7 +26,7 @@ public interface Mocker<T> {
 
 	static <T> Supplier<T> nullary(Class<T> clazz) {
 		try {
-			Class<? extends T> mock = load(clazz);
+			var mock = load(clazz);
 			return () -> {
 				try {
 					return mock.newInstance();
@@ -44,11 +43,11 @@ public interface Mocker<T> {
 
 	@SuppressWarnings("unchecked")
 	static <T> Mocker<T> variadic(Class<T> clazz) {
-		Constructor<?>[] constructors = load(clazz).getDeclaredConstructors();
+		var constructors = load(clazz).getDeclaredConstructors();
 		if (constructors.length>1) {
 			throw new RuntimeException("more than one constructor for " + clazz);
 		}
-		Constructor<?> constructor = constructors[0];
+		var constructor = constructors[0];
 		return (args) -> {
 			try {
 				return (T) constructor.newInstance(args);
@@ -64,7 +63,7 @@ public interface Mocker<T> {
 		if (mocks.containsKey(clazz)) {
 			return (Class<? extends T>) mocks.get(clazz);
 		}
-		Class<? extends T> mock =
+		var mock =
 				new ByteBuddy()
 						.subclass(clazz)
 						.method(returns(String.class).and(isAbstract()))

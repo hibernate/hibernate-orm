@@ -92,9 +92,9 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 
 	@Override
 	public final Type getPropertyType(String propertyPath) {
-		final Type cached = propertyTypesByName.get(propertyPath);
+		final var cached = propertyTypesByName.get(propertyPath);
 		if ( cached == null ) {
-			final Type type = propertyType( propertyPath );
+			final var type = propertyType( propertyPath );
 			if ( type != null ) {
 				propertyTypesByName.put( propertyPath, type );
 			}
@@ -106,13 +106,13 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 	}
 
 	private Type propertyType(String propertyPath) {
-		final Type type = createPropertyType( propertyPath );
+		final var type = createPropertyType( propertyPath );
 		if ( type != null ) {
 			return type;
 		}
 
 		//check subclasses, needed for treat()
-		final Type typeFromSubclass = getSubclassPropertyType( propertyPath );
+		final var typeFromSubclass = getSubclassPropertyType( propertyPath );
 		if ( typeFromSubclass != null ) {
 			return typeFromSubclass;
 		}
@@ -165,7 +165,7 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 
 	@Override
 	public Set<String> getSubclassEntityNames() {
-		final Set<String> names = new HashSet<>();
+		final var names = new HashSet<String>();
 		names.add( entityName );
 		for (MockEntityPersister persister : factory.getMockEntityPersisters()) {
 			if (persister.isSubclassPersister(this)) {

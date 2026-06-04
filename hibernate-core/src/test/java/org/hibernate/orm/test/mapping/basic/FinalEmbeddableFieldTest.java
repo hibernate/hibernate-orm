@@ -14,6 +14,8 @@ import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.util.ReflectionUtil;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,6 +27,14 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 @SessionFactory(useCollectingStatementInspector = true)
 @BytecodeEnhanced(runNotEnhancedAsWell = true)
 public class FinalEmbeddableFieldTest {
+
+	@BeforeAll
+	static void assumeEnhancedOrNoIllegalFinalFieldMutation() {
+		boolean enhanced = Managed.class.isAssignableFrom( EntityWithFinalField.class );
+
+		assumeFalse( ReflectionUtil.isFinalFieldMutationDenied() && !enhanced,
+				"Skipping non-enhanced variant when JVM denies final field mutation" );
+	}
 
 	@Test
 	public void finalFieldNotUpdatable(SessionFactoryScope scope) {

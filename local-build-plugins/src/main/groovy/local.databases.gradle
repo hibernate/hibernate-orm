@@ -255,7 +255,9 @@ ext {
                     'jdbc.driver': 'oracle.jdbc.OracleDriver',
                     'jdbc.user'  : 'hibernate_orm_test_$worker_' + runID,
                     'jdbc.pass'  : dbPassword,
-                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbConnectionStringSuffix + '?oracle.jdbc.enableQueryResultCache=false',
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbConnectionStringSuffix +
+                            (dbConnectionStringSuffix.contains('?') ? '&' : '?') +
+                            'oracle.jdbc.enableQueryResultCache=false',
                     'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
                     'connection.init_sql' : ''
             ],

@@ -80,71 +80,104 @@ public class DefaultConstructor implements MetaAttribute {
 		declaration
 				.append('\n');
 		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
+			injectedField( declaration );
+			postConstruct( declaration );
+			preDestroy( declaration );
+		}
+		defaultConstructor( declaration );
+		return declaration.toString();
+	}
+
+	private void injectedField(StringBuilder declaration) {
+		declaration
+				.append("@")
+				.append(annotationMetaEntity.importType(PERSISTENCE_UNIT));
+		if ( dataStore != null ) {
 			declaration
-					.append("@")
-					.append(annotationMetaEntity.importType(PERSISTENCE_UNIT));
-			if ( dataStore != null ) {
-				declaration
-						.append("(unitName=\"")
-						.append(dataStore)
-						.append("\")");
-			}
-			declaration
-					.append("\nprivate ")
-					.append(annotationMetaEntity.importType(ENTITY_MANAGER_FACTORY))
-					.append(" ")
-					.append(sessionVariableName)
-					.append("Factory;\n\n");
-			final String sessionFactoryType = isReactive() ? MUTINY_SESSION_FACTORY : HIB_SESSION_FACTORY;
-			declaration.append('@')
-					.append(annotationMetaEntity.importType(POST_CONSTRUCT))
-					.append("\nprivate void openSession() {")
-					.append("\n\t")
-					.append(sessionVariableName)
-					.append(" = ")
-					.append(sessionVariableName)
-					.append("Factory");
-			if ( ENTITY_MANAGER.equals( sessionTypeName ) ) {
+					.append("(unitName=\"")
+					.append(dataStore)
+					.append("\")");
+		}
+		declaration
+				.append("\nprivate ")
+				.append(annotationMetaEntity.importType(ENTITY_MANAGER_FACTORY))
+				.append(" ")
+				.append(sessionVariableName)
+				.append("Factory;\n\n");
+	}
+
+	private void postConstruct(StringBuilder declaration) {
+		declaration
+				.append('@')
+				.append(annotationMetaEntity.importType(POST_CONSTRUCT))
+				.append("\nprivate void openSession() {")
+				.append("\n\t")
+				.append(sessionVariableName)
+				.append(" = ")
+				.append(sessionVariableName)
+				.append("Factory");
+		switch ( sessionTypeName ) {
+			case ENTITY_MANAGER:
 				declaration
 						.append(".createEntityManager()");
-			}
-			else if ( ENTITY_AGENT.equals( sessionTypeName ) ) {
+				break;
+			case ENTITY_AGENT:
 				declaration
 						.append(".createEntityAgent()");
-			}
-			else {
+				break;
+			default:
+				unwrapSession( declaration );
 				declaration
-						.append(".unwrap(")
-						.append(annotationMetaEntity.importType( sessionFactoryType ))
-						.append(".class).")
-						.append(HIB_SESSION.equals( sessionTypeName ) ? "openSession()" : "openStatelessSession()");
-			}
-			if ( MUTINY_SESSION.equals(sessionTypeName)
-					|| MUTINY_STATELESS_SESSION.equals(sessionTypeName) ) {
-				// this is crap
-				declaration
-						.append(".await().indefinitely()");
-			}
-			declaration
-					.append(";\n}\n\n");
-			// TODO: is it a problem that we never close the session?
-			if ( !isReactive() ) {
-				declaration.append('@')
-						.append(annotationMetaEntity.importType(PRE_DESTROY))
-						.append("\nprivate void closeSession() {")
-						.append("\n\t")
-						.append(sessionVariableName)
-						.append(".close();")
-						.append("\n}\n\n");
-			}
+						.append( '.' )
+						.append(HIB_SESSION.equals( sessionTypeName )
+								? "openSession()"
+								: "openStatelessSession()");
+				waitForMutinySession( declaration );
 		}
+		declaration
+				.append(";\n}\n\n");
+	}
+
+	private void preDestroy(StringBuilder declaration) {
+		// TODO: is it a problem that we never close the session?
+		if ( !isReactive() ) {
+			declaration.append('@')
+					.append(annotationMetaEntity.importType(PRE_DESTROY))
+					.append("\nprivate void closeSession() {")
+					.append("\n\t")
+					.append(sessionVariableName)
+					.append(".close();")
+					.append("\n}\n\n");
+		}
+	}
+
+	private void defaultConstructor(StringBuilder declaration) {
 		inject( declaration );
 		declaration
 				.append(constructorName)
 				.append("(")
 				.append(") {")
 				.append("\n}");
-		return declaration.toString();
+	}
+
+	private void waitForMutinySession(StringBuilder declaration) {
+		if ( MUTINY_SESSION.equals(sessionTypeName)
+				|| MUTINY_STATELESS_SESSION.equals(sessionTypeName) ) {
+			// this is crap
+			declaration
+					.append(".await().indefinitely()");
+		}
+	}
+
+	private void unwrapSession(StringBuilder declaration) {
+		final String sessionFactoryType =
+				isReactive()
+						? MUTINY_SESSION_FACTORY
+						: HIB_SESSION_FACTORY;
+		declaration
+				.append(".unwrap(")
+				.append(annotationMetaEntity.importType(sessionFactoryType))
+				.append(".class)");
 	}
 
 	private void inject(StringBuilder declaration) {

@@ -243,13 +243,15 @@ public final class ClassWriter {
 		if ( !entity.isImplementation() && !entity.isJakartaDataStyle() ) {
 			pw.print( "abstract " );
 		}
-		pw.print( entity.isJakartaDataStyle() ? "interface " : "class " );
+		pw.print( "class " );
 		pw.print( getGeneratedClassName(entity) );
 
 		final Element superTypeElement = entity.getSuperTypeElement();
 		if ( superTypeElement != null ) {
-			pw.print( " extends " +
-					entity.importType(getGeneratedSuperclassName( superTypeElement, entity.isJakartaDataStyle() )) );
+			final String generatedSuperclassName =
+					getGeneratedSuperclassName( superTypeElement, entity.isJakartaDataStyle() );
+			pw.print( " " + inheritanceKeyword( entity, generatedSuperclassName ) + " "
+					+ entity.importType( generatedSuperclassName ) );
 		}
 		if ( entity.isImplementation() ) {
 			pw.print( entity.getElement().getKind() == ElementKind.CLASS ? " extends " : " implements " );
@@ -257,6 +259,16 @@ public final class ClassWriter {
 		}
 
 		pw.println( " {" );
+	}
+
+	private static String inheritanceKeyword(Metamodel entity, String generatedSuperclassName) {
+		final TypeElement generatedSuperclass =
+				entity.getContext().getTypeElementForFullyQualifiedName( generatedSuperclassName );
+		return entity.isJakartaDataStyle()
+				&& generatedSuperclass != null
+				&& generatedSuperclass.getKind().isInterface()
+				? "implements"
+				: "extends";
 	}
 
 	public static String getFullyQualifiedClassName(Metamodel entity) {

@@ -27,6 +27,7 @@ class DataTest {
 		System.out.println( getMetaModelSourceAsString( Author.class, true ) );
 		System.out.println( getMetaModelSourceAsString( Book.class, true ) );
 		final String repository = getMetaModelSourceAsString( BookAuthorRepository.class, true );
+		final String bookMetamodel = getMetaModelSourceAsString( Book.class, true );
 		final String queryMetamodel = getMetaModelSourceAsString( BookAuthorRepository.class );
 		System.out.println( repository );
 		System.out.println( queryMetamodel );
@@ -63,15 +64,20 @@ class DataTest {
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
 		assertTrue( queryMetamodel.contains( "\"org.hibernate.processor.test.data.basic.BookAuthorRepository"
 				+ "#booksWithJakartaQueryOrder(java.lang.String,jakarta.data.Order)\"" ) );
-		assertTrue( repository.contains( "private Event<LifecycleEvent<?>> event;" ) );
-		assertTrue( repository.contains( "PreInsertEvent<Book>" ) );
-		assertTrue( repository.contains( "PostInsertEvent<Book>" ) );
-		assertTrue( repository.contains( "PreUpdateEvent<Book>" ) );
-		assertTrue( repository.contains( "PostUpdateEvent<Book>" ) );
-		assertTrue( repository.contains( "PreDeleteEvent<Book>" ) );
-		assertTrue( repository.contains( "PostDeleteEvent<Book>" ) );
-		assertTrue( repository.contains( "PreUpsertEvent<Book>" ) );
-		assertTrue( repository.contains( "PostUpsertEvent<Book>" ) );
+		assertFalse( repository.contains( "private Event<LifecycleEvent<?>> event;" ) );
+		assertFalse( repository.contains( "PreInsertEvent<Book>" ) );
+		assertFalse( repository.contains( "PostUpsertEvent<Book>" ) );
+		assertTrue( bookMetamodel.contains( "@EntityListener" ) );
+		assertTrue( bookMetamodel.contains( "public class _Book" ) );
+		assertTrue( bookMetamodel.contains( "private Event<LifecycleEvent<?>> event;" ) );
+		assertTrue( bookMetamodel.contains( "PreInsertEvent<Book>" ) );
+		assertTrue( bookMetamodel.contains( "PostInsertEvent<Book>" ) );
+		assertTrue( bookMetamodel.contains( "PreUpdateEvent<Book>" ) );
+		assertTrue( bookMetamodel.contains( "PostUpdateEvent<Book>" ) );
+		assertTrue( bookMetamodel.contains( "PreDeleteEvent<Book>" ) );
+		assertTrue( bookMetamodel.contains( "PostDeleteEvent<Book>" ) );
+		assertTrue( bookMetamodel.contains( "PreUpsertEvent<Book>" ) );
+		assertTrue( bookMetamodel.contains( "PostUpsertEvent<Book>" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.bookWithTitle(title))" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.booksWithOptions(title))" ) );
 		assertTrue( repository.contains( "createNamedQuery(\"org.hibernate.processor.test.data.basic"

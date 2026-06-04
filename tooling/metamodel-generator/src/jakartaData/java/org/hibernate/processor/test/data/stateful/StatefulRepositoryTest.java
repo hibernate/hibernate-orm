@@ -37,15 +37,17 @@ class StatefulRepositoryTest {
 	@WithClasses({ StatefulBook.class, StatefulBookRepository.class })
 	void statefulRepositoryUsesStatefulSessionAndLifecycleOperations() {
 		final String repository = getMetaModelSourceAsString( StatefulBookRepository.class, true );
+		final String entityMetamodel = getMetaModelSourceAsString( StatefulBook.class, true );
 		System.out.println( repository );
 		assertMetamodelClassGeneratedFor( StatefulBook.class );
+		assertMetamodelClassGeneratedFor( StatefulBook.class, true );
 		assertMetamodelClassGeneratedFor( StatefulBookRepository.class, true );
 
 		assertTrue( repository.contains( "protected @Nonnull EntityManager entityManager;" ) );
 		assertTrue( repository.contains( "public @Nonnull EntityManager entityManager()" ) );
 		assertFalse( repository.contains( "openStatelessSession()" ) );
-		assertTrue( repository.contains( "@EntityListener" ) );
-		assertTrue( repository.contains( "private Event<LifecycleEvent<?>> event;" ) );
+		assertFalse( repository.contains( "@EntityListener" ) );
+		assertFalse( repository.contains( "private Event<LifecycleEvent<?>> event;" ) );
 
 		assertTrue( repository.contains( "entityManager.createQuery(_query)" ) );
 		assertTrue( repository.contains( "entityManager.persist(book);" ) );
@@ -61,24 +63,33 @@ class StatefulRepositoryTest {
 		assertTrue( repository.contains( "entityManager.remove(book);" ) );
 		assertTrue( repository.contains( "entityManager.detach(book);" ) );
 
-		assertTrue( repository.contains( "@PreInsert" ) );
-		assertTrue( repository.contains( "void _onPreInsert(StatefulBook entity)" ) );
-		assertTrue( repository.contains( ".fire(new PreInsertEvent<>(entity));" ) );
-		assertTrue( repository.contains( "@PostInsert" ) );
-		assertTrue( repository.contains( "void _onPostInsert(StatefulBook entity)" ) );
-		assertTrue( repository.contains( ".fire(new PostInsertEvent<>(entity));" ) );
-		assertTrue( repository.contains( "@PreUpdate" ) );
-		assertTrue( repository.contains( "void _onPreUpdate(StatefulBook entity)" ) );
-		assertTrue( repository.contains( ".fire(new PreUpdateEvent<>(entity));" ) );
-		assertTrue( repository.contains( "@PostUpdate" ) );
-		assertTrue( repository.contains( "void _onPostUpdate(StatefulBook entity)" ) );
-		assertTrue( repository.contains( ".fire(new PostUpdateEvent<>(entity));" ) );
-		assertTrue( repository.contains( "@PreDelete" ) );
-		assertTrue( repository.contains( "void _onPreDelete(StatefulBook entity)" ) );
-		assertTrue( repository.contains( ".fire(new PreDeleteEvent<>(entity));" ) );
-		assertTrue( repository.contains( "@PostDelete" ) );
-		assertTrue( repository.contains( "void _onPostDelete(StatefulBook entity)" ) );
-		assertTrue( repository.contains( ".fire(new PostDeleteEvent<>(entity));" ) );
+		assertTrue( entityMetamodel.contains( "@EntityListener" ) );
+		assertTrue( entityMetamodel.contains( "public class _StatefulBook" ) );
+		assertTrue( entityMetamodel.contains( "private Event<LifecycleEvent<?>> event;" ) );
+		assertTrue( entityMetamodel.contains( "@PreInsert" ) );
+		assertTrue( entityMetamodel.contains( "void _onPreInsert(StatefulBook entity)" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PreInsertEvent<>(entity));" ) );
+		assertTrue( entityMetamodel.contains( "@PostInsert" ) );
+		assertTrue( entityMetamodel.contains( "void _onPostInsert(StatefulBook entity)" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PostInsertEvent<>(entity));" ) );
+		assertTrue( entityMetamodel.contains( "@PreUpdate" ) );
+		assertTrue( entityMetamodel.contains( "void _onPreUpdate(StatefulBook entity)" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PreUpdateEvent<>(entity));" ) );
+		assertTrue( entityMetamodel.contains( "@PostUpdate" ) );
+		assertTrue( entityMetamodel.contains( "void _onPostUpdate(StatefulBook entity)" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PostUpdateEvent<>(entity));" ) );
+		assertTrue( entityMetamodel.contains( "@PreDelete" ) );
+		assertTrue( entityMetamodel.contains( "void _onPreDelete(StatefulBook entity)" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PreDeleteEvent<>(entity));" ) );
+		assertTrue( entityMetamodel.contains( "@PostDelete" ) );
+		assertTrue( entityMetamodel.contains( "void _onPostDelete(StatefulBook entity)" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PostDeleteEvent<>(entity));" ) );
+		assertTrue( entityMetamodel.contains( "@PreUpsert" ) );
+		assertTrue( entityMetamodel.contains( "void _onPreUpsert(StatefulBook entity)" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PreUpsertEvent<>(entity));" ) );
+		assertTrue( entityMetamodel.contains( "@PostUpsert" ) );
+		assertTrue( entityMetamodel.contains( "void _onPostUpsert(StatefulBook entity)" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PostUpsertEvent<>(entity));" ) );
 		assertFalse( repository.contains( "_hibernate_data_" ) );
 	}
 
@@ -92,7 +103,7 @@ class StatefulRepositoryTest {
 		assertTrue( repository.contains( "public @Nonnull EntityManager entityManager()" ) );
 		assertFalse( repository.contains( "StatelessSession" ) );
 		assertFalse( repository.contains( "createSelectionQuery(_query)" ) );
-		assertTrue( repository.contains( "@EntityListener" ) );
+		assertFalse( repository.contains( "@EntityListener" ) );
 
 		assertTrue( repository.contains( "entityManager.createQuery(_query)" ) );
 		assertTrue( repository.contains( "entityManager.persist(book);" ) );
@@ -141,9 +152,14 @@ class StatefulRepositoryTest {
 		assertFalse( statefulRepository.contains( "@PostConstruct" ) );
 		assertFalse( statefulRepository.contains( "@PreDestroy" ) );
 		assertFalse( statefulRepository.contains( ".openStatelessSession();" ) );
-		assertTrue( statefulRepository.contains( "@EntityListener" ) );
-		assertTrue( statefulRepository.contains( ".fire(new PreInsertEvent<>(entity));" ) );
-		assertTrue( statefulRepository.contains( ".fire(new PostDeleteEvent<>(entity));" ) );
+		assertFalse( statefulRepository.contains( "@EntityListener" ) );
+		assertFalse( statefulRepository.contains( ".fire(new PreInsertEvent<>(entity));" ) );
+		assertFalse( statefulRepository.contains( ".fire(new PostDeleteEvent<>(entity));" ) );
+
+		final String entityMetamodel = getMetaModelSourceAsString( StatefulBook.class, true );
+		assertTrue( entityMetamodel.contains( "@EntityListener" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PreInsertEvent<>(entity));" ) );
+		assertTrue( entityMetamodel.contains( ".fire(new PostDeleteEvent<>(entity));" ) );
 
 		final String statelessRepository = getMetaModelSourceAsString( StatelessBookRepository.class, true );
 		assertTrue( statelessRepository.contains( "@PersistenceAgent" ) );

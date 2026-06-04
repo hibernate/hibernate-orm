@@ -16,25 +16,18 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import java.util.Collection;
-import java.util.Set;
 
-import static java.lang.Character.toUpperCase;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.type.TypeKind.VOID;
-import static org.hibernate.processor.util.Constants.EVENT;
 import static org.hibernate.processor.util.Constants.HIB_STATELESS_SESSION;
-import static org.hibernate.processor.util.Constants.INJECT;
-import static org.hibernate.processor.util.Constants.JD_LIFECYCLE_EVENT;
 import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.NONNULL;
-import static org.hibernate.processor.util.Constants.TYPE_LITERAL;
 import static org.hibernate.processor.util.Constants.UNI;
 import static org.hibernate.processor.util.TypeUtils.resolveTypeName;
 
 public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private final String entity;
-	private final String actualEntity;
 	private final String methodName;
 	private final String parameterName;
 	private final String operationName;
@@ -55,7 +48,6 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			AnnotationMetaEntity annotationMetaEntity,
 			ExecutableElement method,
 			String entity,
-			String actualEntity,
 			String methodName,
 			String parameterName,
 			String sessionName,
@@ -68,7 +60,6 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			TypeElement element) {
 		super(annotationMetaEntity, method, sessionName, sessionType);
 		this.entity = entity;
-		this.actualEntity = actualEntity;
 		this.methodName = methodName;
 		this.parameterName = parameterName;
 		this.operationName = operationName;
@@ -93,18 +84,11 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		return false;
 	}
 
-	private String capitalize(String string) {
-		return toUpperCase(string.charAt(0)) + string.substring(1);
-	}
-
-	static final Set<String> eventTypes = Set.of("insert", "update", "delete", "upsert");
-
 	@Override
 	public String getAttributeDeclarationString() {
 		StringBuilder declaration = new StringBuilder();
 		preamble(declaration);
 		nullCheck(declaration, parameterName);
-		fireEvents(declaration, "Pre");
 		declareReturnArgument( declaration );
 		if ( !isReactive() ) {
 			declaration.append( "\ttry {\n" );
@@ -119,7 +103,6 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append( ";\n" );
 		}
-		fireEvents(declaration, "Post");
 		returnArgument(declaration);
 		declaration.append("}");
 		return declaration.toString();
@@ -131,68 +114,6 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 					.append("\t")
 					.append(resolveAsString( method.getReturnType() ))
 					.append(" _result;\n");
-		}
-	}
-
-	private void fireEvents(StringBuilder declaration, String prefix) {
-		if ( annotationMetaEntity.getContext().isDataEventPackageAvailable()
-				&& annotationMetaEntity.getContext().addDependentAnnotation()
-				&& eventTypes.contains( operationName )
-				&& !isReactive()) {
-			final String entityName = iterateEvents( declaration );
-			fireEvent( declaration, entityName, prefix + capitalize( operationName ) + "Event" );
-			endIterateEvents( declaration );
-		}
-	}
-
-	private void fireEvent(StringBuilder declaration, String entityName, String eventType) {
-		annotationMetaEntity.importType( JD_LIFECYCLE_EVENT );
-		annotationMetaEntity.importType( TYPE_LITERAL );
-		annotationMetaEntity.importType( EVENT );
-		annotationMetaEntity.importType( INJECT );
-		annotationMetaEntity.importType( "jakarta.data.event." + eventType );
-		if (parameterKind != ParameterKind.NORMAL) {
-			declaration.append( "\t" );
-		}
-		declaration
-				.append( "\tif (event != null) {\n" );
-		if (parameterKind != ParameterKind.NORMAL) {
-			declaration.append( "\t" );
-		}
-		declaration
-				.append( "\t\tevent.select(new TypeLiteral<" )
-				.append( eventType )
-				.append( "<" )
-				.append( annotationMetaEntity.importType( actualEntity ) )
-				.append( ">>(){})\n\t\t\t\t.fire(new " )
-				.append( eventType )
-				.append( "<>(" )
-				.append( entityName )
-				.append( "));\n");
-		if (parameterKind != ParameterKind.NORMAL) {
-			declaration.append( "\t" );
-		}
-		declaration
-				.append("\t}\n" );
-	}
-
-	private void endIterateEvents(StringBuilder declaration) {
-		if (parameterKind != ParameterKind.NORMAL) {
-			declaration
-					.append( "\t}\n");
-		}
-	}
-
-	private String iterateEvents(StringBuilder declaration) {
-		if (parameterKind != ParameterKind.NORMAL) {
-			declaration
-					.append( "\tfor (var _entity : ")
-					.append( parameterName )
-					.append(") {\n" );
-			return "_entity";
-		}
-		else {
-			return parameterName;
 		}
 	}
 

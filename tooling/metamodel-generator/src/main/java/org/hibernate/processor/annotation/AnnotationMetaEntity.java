@@ -569,6 +569,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 			addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 
+			if ( needsLifecycleEventListener() ) {
+				addLifecycleEventListener();
+			}
+
 			addIdClassIfNeeded( fieldsOfClass, gettersAndSettersOfClass );
 
 			if ( hasAnnotation( element, ENTITY ) && isPanache2Type( element ) && !jakartaDataStaticModel ) {
@@ -1145,9 +1149,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( needsDefaultConstructor() ) {
 				addDefaultConstructor();
 			}
-			if ( needsEventBus() ) {
-				addEventBus();
-			}
 		}
 	}
 
@@ -1175,16 +1176,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return false;
 	}
 
-	private boolean needsEventBus() {
-		return jakartaDataRepository
-			&& !isReactive() // non-reactive
+	private boolean needsLifecycleEventListener() {
+		return jakartaDataStaticModel
+			&& hasAnnotation( element, ENTITY )
 			&& context.isDataEventPackageAvailable() // events
-			&& context.addInjectAnnotation() // @nject
+			&& context.addInjectAnnotation() // @Inject
 			&& context.addDependentAnnotation(); // CDI
 	}
 
 	void addEventBus() {
-		putMember( "_event", new EventField( this ) );
+		putMember( "<event>", new EventField( this ) );
+	}
+
+	private void addLifecycleEventListener() {
+		lifecycleEventListener = true;
+		addEventBus();
+		addLifecycleEventCallbacks( getQualifiedName() );
 	}
 
 	/**
@@ -2391,14 +2398,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			else if ( validateLifecycleReturnType( method, operation, parameter, returnType,
 					declaredParameterType, parameterType, returnArgument ) ) {
 				final String entity = typeAsString( parameterType );
-				final String actualEntity = typeAsString( lifecycleParameterArgument( parameterType ) );
 				final String methodName = method.getSimpleName().toString();
 				putMember(
 						methodName + '.' + entity,
 						new LifecycleMethod(
 								this, method,
 								entity,
-								actualEntity,
 								methodName,
 								parameter.getSimpleName().toString(),
 								getSessionVariableName(),
@@ -2411,26 +2416,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								element
 						)
 				);
-				addLifecycleEventCallbacks( actualEntity, operation );
 			}
 		}
 	}
 
-	private void addLifecycleEventCallbacks(String entity, String operation) {
-		if ( needsEventBus() ) {
-			switch ( operation ) {
-				case "persist":
-					addLifecycleEventCallbacks( entity, PRE_INSERT, "PreInsertEvent", POST_INSERT, "PostInsertEvent" );
-					break;
-				case "merge":
-					addLifecycleEventCallbacks( entity, PRE_INSERT, "PreInsertEvent", POST_INSERT, "PostInsertEvent" );
-					addLifecycleEventCallbacks( entity, PRE_UPDATE, "PreUpdateEvent", POST_UPDATE, "PostUpdateEvent" );
-					break;
-				case "remove":
-					addLifecycleEventCallbacks( entity, PRE_DELETE, "PreDeleteEvent", POST_DELETE, "PostDeleteEvent" );
-					break;
-			}
-		}
+	private void addLifecycleEventCallbacks(String entity) {
+		addLifecycleEventCallbacks( entity, PRE_INSERT, "PreInsertEvent", POST_INSERT, "PostInsertEvent" );
+		addLifecycleEventCallbacks( entity, PRE_UPDATE, "PreUpdateEvent", POST_UPDATE, "PostUpdateEvent" );
+		addLifecycleEventCallbacks( entity, PRE_DELETE, "PreDeleteEvent", POST_DELETE, "PostDeleteEvent" );
+		addLifecycleEventCallbacks( entity, PRE_UPSERT, "PreUpsertEvent", POST_UPSERT, "PostUpsertEvent" );
 	}
 
 	private void addLifecycleEventCallbacks(

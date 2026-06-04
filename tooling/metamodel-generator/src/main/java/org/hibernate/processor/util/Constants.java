@@ -45,6 +45,8 @@ public final class Constants {
 	public static final String POST_UPDATE = "jakarta.persistence.PostUpdate";
 	public static final String PRE_DELETE = "jakarta.persistence.PreDelete";
 	public static final String POST_DELETE = "jakarta.persistence.PostDelete";
+	public static final String PRE_UPSERT = "jakarta.persistence.PreUpsert";
+	public static final String POST_UPSERT = "jakarta.persistence.PostUpsert";
 
 	public static final String NAMED_QUERY = "jakarta.persistence.NamedQuery";
 	public static final String NAMED_QUERIES = "jakarta.persistence.NamedQueries";

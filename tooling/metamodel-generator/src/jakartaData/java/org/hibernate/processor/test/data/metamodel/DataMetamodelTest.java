@@ -58,6 +58,11 @@ class DataMetamodelTest {
 		assertEquals( DataMetamodelEntity.class, pages.declaringType() );
 
 		final String source = getMetaModelSourceAsString( DataMetamodelEntity.class, true );
+		assertTrue( source.contains( "@EntityListener" ) );
+		assertTrue( source.contains( "public class _DataMetamodelEntity" ) );
+		assertTrue( source.contains( "private Event<LifecycleEvent<?>> event;" ) );
+		assertTrue( source.contains( "void _onPreInsert(DataMetamodelEntity entity)" ) );
+		assertTrue( source.contains( "void _onPostUpsert(DataMetamodelEntity entity)" ) );
 		assertFalse( source.contains( "jakarta.data.metamodel.impl" ) );
 		assertTrue( source.contains( "TextAttribute.of(DataMetamodelEntity.class, TITLE)" ) );
 		assertTrue( source.contains( "NumericAttribute.of(DataMetamodelEntity.class, PAGES, int.class)" ) );

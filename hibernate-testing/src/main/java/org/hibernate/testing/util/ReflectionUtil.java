@@ -15,6 +15,37 @@ import java.util.function.Supplier;
  */
 public class ReflectionUtil {
 
+	private static final boolean FINAL_FIELD_MUTATION_DENIED;
+
+	static {
+		// Test if the JVM denies final field mutation by actually trying it
+		class TestClass {
+			final String finalField = "original";
+		}
+		boolean denied;
+		try {
+			var testInstance = new TestClass();
+			var field = TestClass.class.getDeclaredField( "finalField" );
+			field.setAccessible( true );
+			field.set( testInstance, "modified" );
+			denied = false; // Mutation succeeded, not denied
+		}
+		catch (Exception e) {
+			denied = true; // Mutation failed, it's denied
+		}
+		FINAL_FIELD_MUTATION_DENIED = denied;
+	}
+
+	/**
+	 * Check if the JVM denies final field mutation (e.g., JDK 26+ with --illegal-final-field-mutation flag).
+	 * This is detected at class initialization by attempting to mutate a final field via reflection.
+	 *
+	 * @return true if final field mutation is denied, false otherwise
+	 */
+	public static boolean isFinalFieldMutationDenied() {
+		return FINAL_FIELD_MUTATION_DENIED;
+	}
+
 	/**
 	 * Get a field from a given class
 	 *

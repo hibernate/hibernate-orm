@@ -35,9 +35,5 @@ tasks.register('legacyTest', Test) {
     useJUnitPlatform()
 }
 
-tasks.forbiddenApisLegacyTest {
-    enabled = false
-}
-
 test.dependsOn legacyTest
 

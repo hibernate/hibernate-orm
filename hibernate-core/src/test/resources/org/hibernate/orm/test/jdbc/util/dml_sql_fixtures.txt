@@ -6,18 +6,18 @@ complexselect
 
 === SQL ===
 -- Non-indented single line comment
-with recent_customer_activity as (select "o".`customer_id`,COUNT(*) AS order_count,MAX(o.created_at)
-AS last_order_date,SUM(o.total_amount) AS total_spent FROM orders o WHERE o.created_at >=
-CURRENT_DATE - INTERVAL '12 months' GROUP BY o.customer_id HAVING SUM(o.total_amount) > 1000),/* Non-indented multi-line
+with recent_customer_activity as (select "O".`CUSTOMER_ID`,COUNT(*) AS order_count,MAX(o.created_at)
+as last_order_date,SUM(o.total_amount) as total_spent FROM orders o WHERE o.created_at >=
+CURRENT_DATE - INTERVAL '12 months' GROUP BY o.customer_id HAVING sum(o.total_amount) > 1000),/* Non-indented multi-line
 comment */
-product_performance AS (SELECT oi.product_id,/* Indented multi-line
+product_performance as (select oi.product_id,/* Indented multi-line
 comment */
-trim(both '' from [oi].description),AVG(oi.unit_price)
-AS avg_price,SUM(oi.quantity) AS total_units_sold FROM order_items oi GROUP BY oi.product_id
+trim(both '' from [OI].description),AVG(oi.unit_price)
+as avg_price,sum(oi.quantity) as total_units_sold from order_items oi group by oi.product_id
 having sum(oi.quantity) > 10) select c.customer_id,upper(c.full_name) as customer_name, c.region,
 case when rca.total_spent >= 10000 then 'PLATINUM' when rca.total_spent >= 5000 then 'GOLD'
 when rca.total_spent >= 2500 then 'SILVER' else 'STANDARD' end as customer_tier,
-rca.order_count,rca.total_spent,latest_order.order_id,latest_order.created_at AS latest_order_date,
+rca.order_count,rca.total_spent,latest_order.order_id,latest_order.created_at as latest_order_date,
 pp.avg_price,pp.total_units_sold,promo_data.source_type,promo_data.reference_code,
 round(rca.total_spent / nullif(rca.order_count, 0),2) as avg_order_value,
 count(distinct s.shipment_id) as shipment_count from customers c join recent_customer_activity rca on
@@ -38,92 +38,92 @@ first 5 rows with ties;
 
 === EXPECTED ===
 -- Non-indented single line comment
-WITH recent_customer_activity AS (
-    SELECT
-        "o".`customer_id`,
-        COUNT(*) AS order_count,
-        MAX(o.created_at) AS last_order_date,
-        SUM(o.total_amount) AS total_spent
-    FROM orders o
-    WHERE o.created_at >= CURRENT_DATE - INTERVAL '12 months'
-    GROUP BY o.customer_id
-    HAVING SUM(o.total_amount) > 1000
+with recent_customer_activity as (
+    select
+        "O".`CUSTOMER_ID`,
+        count(*) as order_count,
+        max(o.created_at) as last_order_date,
+        sum(o.total_amount) as total_spent
+    from orders o
+    where o.created_at >= current_date - interval '12 months'
+    group by o.customer_id
+    having sum(o.total_amount) > 1000
 ),
 /* Non-indented multi-line
 comment */
-product_performance AS (
-    SELECT
+product_performance as (
+    select
         oi.product_id,
         /* Indented multi-line
         comment */
-        TRIM(BOTH '' FROM [oi].description),
-        AVG(oi.unit_price) AS avg_price,
-        SUM(oi.quantity) AS total_units_sold
-    FROM order_items oi
-    GROUP BY oi.product_id
-    HAVING SUM(oi.quantity) > 10
+        trim(both '' from [OI].description),
+        avg(oi.unit_price) as avg_price,
+        sum(oi.quantity) as total_units_sold
+    from order_items oi
+    group by oi.product_id
+    having sum(oi.quantity) > 10
 )
-SELECT
+select
     c.customer_id,
-    UPPER(c.full_name) AS customer_name,
+    upper(c.full_name) as customer_name,
     c.region,
-    CASE
-        WHEN rca.total_spent >= 10000 THEN 'PLATINUM'
-        WHEN rca.total_spent >= 5000 THEN 'GOLD'
-        WHEN rca.total_spent >= 2500 THEN 'SILVER'
-        ELSE 'STANDARD'
-    END AS customer_tier,
+    case
+        when rca.total_spent >= 10000 then 'PLATINUM'
+        when rca.total_spent >= 5000 then 'GOLD'
+        when rca.total_spent >= 2500 then 'SILVER'
+        else 'STANDARD'
+    end as customer_tier,
     rca.order_count,
     rca.total_spent,
     latest_order.order_id,
-    latest_order.created_at AS latest_order_date,
+    latest_order.created_at as latest_order_date,
     pp.avg_price,
     pp.total_units_sold,
     promo_data.source_type,
     promo_data.reference_code,
-    ROUND(rca.total_spent / NULLIF(rca.order_count, 0), 2) AS avg_order_value,
-    COUNT(DISTINCT s.shipment_id) AS shipment_count
-FROM customers c
-JOIN recent_customer_activity rca
-    ON rca.customer_id = c.customer_id
-LEFT JOIN orders o
-    ON o.customer_id = c.customer_id
-    AND o.status = 'COMPLETED'
-LEFT JOIN shipments s
-    ON s.order_id = o.order_id
-    AND s.shipped_at IS NOT NULL
-LEFT JOIN LATERAL (
-    SELECT o2.order_id, o2.created_at
-    FROM orders o2
-    WHERE o2.customer_id = c.customer_id
-        AND o2.status IN ('COMPLETED', 'SHIPPED')
-    ORDER BY o2.created_at DESC
-    FETCH FIRST 1 ROW ONLY
+    round(rca.total_spent / nullif(rca.order_count, 0), 2) as avg_order_value,
+    count(distinct s.shipment_id) as shipment_count
+from customers c
+join recent_customer_activity rca
+    on rca.customer_id = c.customer_id
+left join orders o
+    on o.customer_id = c.customer_id
+    and o.status = 'COMPLETED'
+left join shipments s
+    on s.order_id = o.order_id
+    and s.shipped_at is not null
+left join lateral (
+    select o2.order_id, o2.created_at
+    from orders o2
+    where o2.customer_id = c.customer_id
+        and o2.status in ('COMPLETED', 'SHIPPED')
+    order by o2.created_at desc
+    fetch first 1 row only
 ) latest_order
-    ON TRUE
-JOIN order_items oi
-    ON oi.order_id = o.order_id
-JOIN product_performance pp
-    ON pp.product_id = oi.product_id
-    AND pp.avg_price > 20
-LEFT JOIN (
-    SELECT cp.customer_id, cp.promo_code AS reference_code, 'PROMOTION' AS source_type
-    FROM customer_promotions cp
-    UNION ALL
-    SELECT rv.customer_id, rv.referral_code AS reference_code, 'REFERRAL' AS source_type
-    FROM customer_referrals rv
+    on true
+join order_items oi
+    on oi.order_id = o.order_id
+join product_performance pp
+    on pp.product_id = oi.product_id
+    and pp.avg_price > 20
+left join (
+    select cp.customer_id, cp.promo_code as reference_code, 'PROMOTION' as source_type
+    from customer_promotions cp
+    union all
+    select rv.customer_id, rv.referral_code as reference_code, 'REFERRAL' as source_type
+    from customer_referrals rv
 ) promo_data
-    ON promo_data.customer_id = c.customer_id
-    AND promo_data.reference_code IS NOT NULL
-WHERE c.is_active = TRUE
+    on promo_data.customer_id = c.customer_id
+    and promo_data.reference_code is not null
+where c.is_active = true
     -- Indented single line comment
-    AND EXISTS (
-        SELECT 1
-        FROM customer_tags ct
-        WHERE ct.customer_id = c.customer_id
-            AND ct.tag_name = 'VIP'
+    and exists (
+        select 1
+        from customer_tags ct
+        where ct.customer_id = c.customer_id
+            and ct.tag_name = 'VIP'
     )
-GROUP BY
+group by
     c.customer_id,
     c.full_name,
     c.region,
@@ -133,11 +133,11 @@ GROUP BY
     latest_order.created_at,
     pp.avg_price,
     pp.total_units_sold
-HAVING COUNT(DISTINCT s.shipment_id) >= 2
-ORDER BY rca.total_spent DESC, latest_order.created_at DESC
-OFFSET 10 ROWS
-FETCH FIRST 5 ROWS
-WITH TIES;
+having count(distinct s.shipment_id) >= 2
+order by rca.total_spent desc, latest_order.created_at desc
+offset 10 rows
+fetch first 5 rows
+with ties;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -148,24 +148,24 @@ select id,name,dept,salary from (select e.id,e.name,d.dept,es.salary from empl e
 left join empl_salary es on e.id=es.empl_id) where salary >= 50000;
 
 === EXPECTED ===
-SELECT
+select
     id,
     name,
     dept,
     salary
-FROM (
-    SELECT
+from (
+    select
         e.id,
         e.name,
         d.dept,
         es.salary
-    FROM empl e
-    JOIN depts d
-        ON e.id = d.empl_id
-    LEFT JOIN empl_salary es
-        ON e.id = es.empl_id
+    from empl e
+    join depts d
+        on e.id = d.empl_id
+    left join empl_salary es
+        on e.id = es.empl_id
 )
-WHERE salary >= 50000;
+where salary >= 50000;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -175,9 +175,9 @@ insert_basic
 insert into empl (id,name,email,salary) values (1,'alice','alice@ibm.com',75);
 
 === EXPECTED ===
-INSERT INTO empl
+insert into empl
     (id, name, email, salary)
-VALUES
+values
     (1, 'alice', 'alice@ibm.com', 75);
 
 @@@@ FIXTURE @@@@
@@ -188,8 +188,8 @@ insert_basic_no_columns
 insert into empl values (1,'alice','alice@ibm.com',75);
 
 === EXPECTED ===
-INSERT INTO empl
-VALUES
+insert into empl
+values
     (1, 'alice', 'alice@ibm.com', 75);
 
 @@@@ FIXTURE @@@@
@@ -201,13 +201,13 @@ insert into empl (id,name,email,salary) values (1,'alice','alice@ibm.com',75),(2
 on conflict (email) do nothing;
 
 === EXPECTED ===
-INSERT INTO empl
+insert into empl
     (id, name, email, salary)
-VALUES
+values
     (1, 'alice', 'alice@ibm.com', 75),
     (2, 'lewis', 'lewis@ibm.com', 100)
-ON CONFLICT (email)
-DO NOTHING;
+on conflict (email)
+do nothing;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -218,12 +218,12 @@ insert into empl (id,name,email,salary) values (1,'alice', 'alice@ibm.com', 75)
 on conflict on constraint user_pk do nothing;
 
 === EXPECTED ===
-INSERT INTO empl
+insert into empl
     (id, name, email, salary)
-VALUES
+values
     (1, 'alice', 'alice@ibm.com', 75)
-ON CONFLICT ON CONSTRAINT user_pk
-DO NOTHING;
+on conflict on constraint user_pk
+do nothing;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -233,11 +233,11 @@ insert_from_select
 insert into empl_arch (id,name,salary) select (id,name,salary) from empl where active = 'true';
 
 === EXPECTED ===
-INSERT INTO empl_arch
+insert into empl_arch
     (id, name, salary)
-SELECT (id, name, salary)
-FROM empl
-WHERE active = 'true';
+select (id, name, salary)
+from empl
+where active = 'true';
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -248,14 +248,14 @@ insert into empl (id,name,email,salary) values (1,'alice', 'alice@ibm.com', 75)
 on conflict (email) do update set name = excluded.name returning *;
 
 === EXPECTED ===
-INSERT INTO empl
+insert into empl
     (id, name, email, salary)
-VALUES
+values
     (1, 'alice', 'alice@ibm.com', 75)
-ON CONFLICT (email)
-DO UPDATE
-SET name = excluded.name
-RETURNING *;
+on conflict (email)
+do update
+set name = excluded.name
+returning *;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -266,12 +266,12 @@ insert into empl (id,name,email,salary) values (1,'alice', 'alice@ibm.com', 75)
 on duplicate key update name = values(name),salary=values(salary);
 
 === EXPECTED ===
-INSERT INTO empl
+insert into empl
     (id, name, email, salary)
-VALUES
+values
     (1, 'alice', 'alice@ibm.com', 75)
-ON DUPLICATE KEY
-UPDATE name = VALUES(name), salary = VALUES(salary);
+on duplicate key
+update name = values(name), salary = values(salary);
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -281,13 +281,13 @@ update
 update empl set salary=salary * 1.10, updated_at='2026-01-01',valid_until='2026-12-31',bonus_perc=bonus_perc*1.10 where dept_id=3;
 
 === EXPECTED ===
-UPDATE empl
-SET
+update empl
+set
     salary = salary * 1.10,
     updated_at = '2026-01-01',
     valid_until = '2026-12-31',
     bonus_perc = bonus_perc * 1.10
-WHERE dept_id = 3;
+where dept_id = 3;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -297,10 +297,10 @@ update_from
 update empl e set salary=su.salary from salary_updates su where e.id=su.emp_id;
 
 === EXPECTED ===
-UPDATE empl e
-SET salary = su.salary
-FROM salary_updates su
-WHERE e.id = su.emp_id;
+update empl e
+set salary = su.salary
+from salary_updates su
+where e.id = su.emp_id;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -310,13 +310,13 @@ update_subquery
 update empl set dept_id = (select id from dept where name='engineering') where role='developer';
 
 === EXPECTED ===
-UPDATE empl
-SET dept_id = (
-    SELECT id
-    FROM dept
-    WHERE name = 'engineering'
+update empl
+set dept_id = (
+    select id
+    from dept
+    where name = 'engineering'
 )
-WHERE role = 'developer';
+where role = 'developer';
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -326,12 +326,12 @@ update_case
 update orders set status = case when shipped_at is not null then 'SHIPPED' else 'PENDING' end;
 
 === EXPECTED ===
-UPDATE orders
-SET status =
-    CASE
-        WHEN shipped_at IS NOT NULL THEN 'SHIPPED'
-        ELSE 'PENDING'
-    END;
+update orders
+set status =
+    case
+        when shipped_at is not null then 'SHIPPED'
+        else 'PENDING'
+    end;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -342,16 +342,16 @@ merge into customers c using customer_updates cu on (c.id = cu.id) when matched 
 when not matched then insert (id, email) values (cu.id, cu.email);
 
 === EXPECTED ===
-MERGE INTO customers c
-USING customer_updates cu
-ON
+merge into customers c
+using customer_updates cu
+on
     (c.id = cu.id)
-WHEN MATCHED THEN
-    UPDATE
-    SET c.email = cu.email
-WHEN NOT MATCHED THEN
-    INSERT (id, email)
-    VALUES
+when matched then
+    update
+    set c.email = cu.email
+when not matched then
+    insert (id, email)
+    values
         (cu.id, cu.email);
 
 @@@@ FIXTURE @@@@
@@ -362,7 +362,7 @@ simple_delete
 delete from eml;
 
 === EXPECTED ===
-DELETE FROM eml;
+delete from eml;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -372,11 +372,11 @@ delete_where_in
 delete from empl where dept_id in (select id from depts where closed = true);
 
 === EXPECTED ===
-DELETE FROM empl
-WHERE dept_id IN (
-    SELECT id
-    FROM depts
-    WHERE closed = TRUE
+delete from empl
+where dept_id in (
+    select id
+    from depts
+    where closed = true
 );
 
 @@@@ FIXTURE @@@@
@@ -387,10 +387,10 @@ delete_with_using
 delete from employees e using departments d where e.department_id = d.id and d.closed = true;
 
 === EXPECTED ===
-DELETE FROM employees e
-USING departments d
-WHERE e.department_id = d.id
-    AND d.closed = TRUE;
+delete from employees e
+using departments d
+where e.department_id = d.id
+    and d.closed = true;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -400,7 +400,7 @@ truncate
 truncate table empl;
 
 === EXPECTED ===
-TRUNCATE TABLE empl;
+truncate table empl;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -410,7 +410,7 @@ truncate_restart_cascade
 truncate table empl restart identity cascade;
 
 === EXPECTED ===
-TRUNCATE TABLE empl RESTART IDENTITY CASCADE;
+truncate table empl restart identity cascade;
 
 @@@@ FIXTURE @@@@
 === ID ===
@@ -420,4 +420,4 @@ truncate_continue_cascade
 truncate table empl continue identity cascade;
 
 === EXPECTED ===
-TRUNCATE TABLE empl CONTINUE IDENTITY CASCADE;
+truncate table empl continue identity cascade;

@@ -236,7 +236,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
       - id: create_database
-        uses: oracle-actions/setup-testpilot@f620f11f9f26dacfe80ba1823342e3e92604c55f # v1.0.23
+        uses: oracle-actions/setup-testpilot@aec84678697e1648ddb8e8a480cf3ceda746ce5c # v1.0.24
         with:
           oci-service: ${{ matrix.rdbms }}
           action: create
@@ -267,7 +267,7 @@ jobs:
         run: ./ci/build-github.sh
         shell: bash
 
-      - uses: oracle-actions/setup-testpilot@f620f11f9f26dacfe80ba1823342e3e92604c55f # v1.0.23
+      - uses: oracle-actions/setup-testpilot@aec84678697e1648ddb8e8a480cf3ceda746ce5c # v1.0.24
         if: always()
         with:
           oci-service: ${{ matrix.rdbms }}

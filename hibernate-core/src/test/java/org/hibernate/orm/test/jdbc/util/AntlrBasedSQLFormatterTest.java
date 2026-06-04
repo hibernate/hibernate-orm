@@ -42,7 +42,6 @@ public class AntlrBasedSQLFormatterTest {
 	@Test
 	public void testFixtures() {
 		testDMLFixtures();
-		testDDLFixtures();
 	}
 
 	// Utility method to be able to debug a single fixture (uncomment '@Test')
@@ -58,10 +57,6 @@ public class AntlrBasedSQLFormatterTest {
 		for ( SqlFixture fixture : dmlFixtures.values() ) {
 			fixture.verify();
 		}
-	}
-
-	private void testDDLFixtures() {
-		// todo
 	}
 
 	@Test
@@ -118,12 +113,6 @@ public class AntlrBasedSQLFormatterTest {
 	private record SqlFixture(String id, String sql, String expected) {
 		public void verify() {
 				String actual = formatter.format( sql );
-				System.out.println("=== Testing: " + id + " ===");
-				System.out.println("Expected:");
-				System.out.println(expected);
-				System.out.println("\nActual:");
-				System.out.println(actual);
-				System.out.println("===");
 				assertEquals( expected, actual, "Sql formatting of \"%s\" failed".formatted(id) );
 			}
 		}

@@ -8,18 +8,18 @@
 
 == 1. Casing Rules
 
-=== 1.1 SQL Keywords → UPPERCASE
+=== 1.1 SQL Keywords → LOWERCASE
 
-* Examples: `SELECT`, `FROM`, `WHERE`, `JOIN`, `LEFT JOIN`, `INNER JOIN`, `ON`, `AND`, `OR`, `AS`, `WITH`, `GROUP BY`, `HAVING`, `ORDER BY`, `OFFSET`, `FETCH`, `FIRST`, `ROWS`, `EXISTS`, `IN`, `ALL`, `ANY`, `DESC`, `ASC`, `DISTINCT`, `INTERVAL`, `LATERAL`, `UNION`, `EXCEPT`, etc.
+* Examples: `select`, `from`, `where`, `join`, `left join`, `inner join`, `on`, `and`, `or`, `as`, `with`, `group by`, `having`, `order by`, `offset`, `fetch`, `first`, `rows`, `exists`, `in`, `all`, `any`, `desc`, `asc`, `distinct`, `interval`, `lateral`, `union`, `except`, etc.
 
-=== 1.2 SQL Functions → UPPERCASE
+=== 1.2 SQL Functions → LOWERCASE
 
-* Examples: `COUNT`, `MAX`, `MIN`, `SUM`, `AVG`, `UPPER`, `LOWER`, `TRIM`, `ROUND`, `NULLIF`, `COALESCE`, `CAST`, `SUBSTRING`, etc.
-* Includes function-specific keywords: `BOTH`, `LEADING`, `TRAILING` (in TRIM)
+* Examples: `count`, `max`, `min`, `sum`, `avg`, `upper`, `lower`, `trim`, `round`, `nullif`, `coalesce`, `cast`, `substring`, etc.
+* Includes function-specific keywords: `both`, `leading`, `trailing` (in trim)
 
-=== 1.3 Boolean Literals → UPPERCASE
+=== 1.3 Boolean Literals → LOWERCASE
 
-* `TRUE`, `FALSE`, `NULL`
+* `true`, `false`, `null`
 
 === 1.4 Identifiers (tables, columns, aliases) → PRESERVE ORIGINAL CASE
 

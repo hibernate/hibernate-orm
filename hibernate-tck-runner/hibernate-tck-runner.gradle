@@ -28,7 +28,8 @@ repositories {
 dependencies {
     testImplementation libs.test.junitJupiterApi
     testImplementation libs.test.junitJupiterSuiteEngine
-    testImplementation libs.test.jakartaPersistenceTckTests
+
+    testRuntimeOnly libs.test.jakartaPersistenceTckTests
 
     testRuntimeOnly project(':hibernate-core')
     testRuntimeOnly project(':hibernate-testing')

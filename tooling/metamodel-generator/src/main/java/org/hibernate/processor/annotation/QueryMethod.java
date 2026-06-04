@@ -474,7 +474,12 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private String createQueryMethod() {
 		if ( isNative ) {
-			return "createNativeQuery";
+			return isUpdate && !isReactive()
+					? "createNativeStatement"
+					: "createNativeQuery";
+		}
+		else if ( isUpdate && isUsingEntityHandler() ) {
+			return "createStatement";
 		}
 		else if ( isUsingEntityHandler() || isReactive() || isUnspecializedQueryType(containerType) ) {
 			return "createQuery";
@@ -485,11 +490,14 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private String createNamedQueryMethod() {
-		return isUpdate
-			&& !isUsingEntityHandler()
-			&& !isReactive()
-				? "createNamedMutationQuery"
-				: "createNamedQuery";
+		if ( isUpdate && !isReactive() ) {
+			return isUsingEntityHandler()
+					? "createNamedStatement"
+					: "createNamedMutationQuery";
+		}
+		else {
+			return "createNamedQuery";
+		}
 	}
 
 	private void castResult(StringBuilder declaration) {
@@ -507,7 +515,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void execute(StringBuilder declaration, boolean unwrapped) {
 		if ( isUpdate ) {
 			declaration
-					.append("\t\t\t.executeUpdate()");
+					.append( isReactive() ? "\t\t\t.executeUpdate()" : "\t\t\t.execute()" );
 			if ( isAsynchronousCompletionStageWithVoidResult() ) {
 				declaration
 						.append( ";\n\t\t" );

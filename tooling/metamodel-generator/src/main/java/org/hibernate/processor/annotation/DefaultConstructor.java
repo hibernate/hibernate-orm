@@ -29,8 +29,8 @@ import static org.hibernate.processor.util.Constants.PRE_DESTROY;
  * dependencies. By contrast, a {@link RepositoryConstructor} has
  * a parameter which accepts the session as an argument, allowing
  * direct instantiation or constructor injection. This class is
- * only needed because {@code @PersistenceUnit} is incompatible
- * with CDI-style constructor injection.
+ * needed because Jakarta Persistence resource injection is
+ * incompatible with CDI-style constructor injection.
  *
  * @author Gavin King
  */
@@ -80,12 +80,19 @@ public class DefaultConstructor implements MetaAttribute {
 		declaration
 				.append('\n');
 		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
-			injectedField( declaration );
-			postConstruct( declaration );
-			preDestroy( declaration );
+			if ( !isDirectlyInjected() ) {
+				injectedField( declaration );
+				postConstruct( declaration );
+				preDestroy( declaration );
+			}
 		}
 		defaultConstructor( declaration );
 		return declaration.toString();
+	}
+
+	private boolean isDirectlyInjected() {
+		return ENTITY_MANAGER.equals( sessionTypeName )
+			|| ENTITY_AGENT.equals( sessionTypeName );
 	}
 
 	private void injectedField(StringBuilder declaration) {

@@ -8,6 +8,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Locale;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
@@ -108,6 +109,13 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 					break;
 				case SqlFormatterLexer.BLOCK_COMMENT:
 					processBlockComment( token );
+					break;
+				case SqlFormatterLexer.DOUBLE_QUOTED_IDENTIFIER,
+					SqlFormatterLexer.BACKTICK_QUOTED_IDENTIFIER,
+					SqlFormatterLexer.BRACKET_QUOTED_IDENTIFIER,
+					SqlFormatterLexer.STRING_LITERAL:
+					// Preserve quoted literals as-is
+					writeToken( token, false );
 					break;
 				case SqlFormatterLexer.WITH,
 					SqlFormatterLexer.ORDER,
@@ -752,6 +760,10 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 		}
 
 		private void writeToken(Token token) {
+			writeToken( token, true );
+		}
+
+		private void writeToken(Token token, boolean toLowerCase) {
 			final String text = token.getText();
 			final int type = token.getType();
 
@@ -765,38 +777,7 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 				space();
 			}
 
-			// Write token with proper casing
-			if (isKeyword(type)) {
-				output.append(text.toUpperCase());
-			}
-			else if (type == SqlFormatterLexer.IDENTIFIER) {
-				// Check if it's a function (followed by LPAREN) or a table/column name
-				Token next = peekAhead(1);
-				Token prev = peekBack(1);
-
-				// Don't uppercase table names after INTO, UPDATE, DELETE, MERGE, FROM, JOIN
-				if (prev != null && (prev.getType() == SqlFormatterLexer.INTO ||
-						prev.getType() == SqlFormatterLexer.UPDATE ||
-						prev.getType() == SqlFormatterLexer.DELETE ||
-						prev.getType() == SqlFormatterLexer.MERGE ||
-						prev.getType() == SqlFormatterLexer.FROM ||
-						prev.getType() == SqlFormatterLexer.JOIN ||
-						prev.getType() == SqlFormatterLexer.USING)) {
-					output.append(text);
-				}
-				// Check if it's a function (followed by LPAREN and not after INTO/VALUES)
-				else if (next != null && next.getType() == SqlFormatterLexer.LPAREN &&
-						(prev == null || (prev.getType() != SqlFormatterLexer.INTO &&
-								prev.getType() != SqlFormatterLexer.VALUES))) {
-					output.append(text.toUpperCase());
-				}
-				else {
-					output.append(text);
-				}
-			}
-			else {
-				output.append(text);
-			}
+			output.append(toLowerCase ? text.toLowerCase(Locale.ROOT) : text);
 
 			// Reset first element flag
 			if (currentContext().firstClauseElement && !isLogical(type) && type != SqlFormatterLexer.COMMA) {

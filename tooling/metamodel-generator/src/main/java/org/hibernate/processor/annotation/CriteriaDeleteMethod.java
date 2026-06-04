@@ -71,10 +71,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	@Override
 	String createQueryMethod() {
-		if ( isUsingEntityManager() ) {
-			return "createQuery";
-		}
-		else if ( isUsingEntityAgent() ) {
+		if ( isUsingEntityHandler() ) {
 			return "createStatement";
 		}
 		else {
@@ -99,7 +96,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	private void execute(StringBuilder declaration) {
 		declaration
-				.append(".executeUpdate()");
+				.append( isReactive() ? ".executeUpdate()" : ".execute()" );
 		if ( isAsynchronousCompletionStageWithVoidResult() ) {
 			declaration
 					.append( ";\n\t\t" );

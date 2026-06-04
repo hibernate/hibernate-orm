@@ -80,7 +80,7 @@ class StatefulRepositoryTest {
 	}
 
 	@Test
-	void defaultConstructorPathOpensEntityManagerAndEntityAgent() throws IOException {
+	void defaultConstructorPathInjectsEntityManagerAndEntityAgent() throws IOException {
 		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 		final var compiler = ToolProvider.getSystemJavaCompiler();
 		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
@@ -109,17 +109,25 @@ class StatefulRepositoryTest {
 		}
 
 		final String statefulRepository = getMetaModelSourceAsString( StatefulBookRepository.class, true );
-		assertTrue( statefulRepository.contains( "private EntityManagerFactory entityManagerFactory;" ) );
-		assertTrue( statefulRepository.contains( "entityManagerFactory.createEntityManager();" ) );
-		assertTrue( statefulRepository.contains( "entityManager.close();" ) );
+		assertTrue( statefulRepository.contains( "@PersistenceContext" ) );
+		assertTrue( statefulRepository.contains( "protected @Nonnull EntityManager entityManager;" ) );
 		assertTrue( statefulRepository.contains( "@Inject" + System.lineSeparator() + "\t_StatefulBookRepository()" ) );
+		assertFalse( statefulRepository.contains( "EntityManagerFactory" ) );
+		assertFalse( statefulRepository.contains( "createEntityManager()" ) );
+		assertFalse( statefulRepository.contains( "entityManager.close();" ) );
+		assertFalse( statefulRepository.contains( "@PostConstruct" ) );
+		assertFalse( statefulRepository.contains( "@PreDestroy" ) );
 		assertFalse( statefulRepository.contains( ".openStatelessSession();" ) );
 
 		final String statelessRepository = getMetaModelSourceAsString( StatelessBookRepository.class, true );
-		assertTrue( statelessRepository.contains( "private EntityManagerFactory entityAgentFactory;" ) );
-		assertTrue( statelessRepository.contains( "entityAgentFactory.createEntityAgent();" ) );
-		assertTrue( statelessRepository.contains( "entityAgent.close();" ) );
+		assertTrue( statelessRepository.contains( "@PersistenceAgent" ) );
+		assertTrue( statelessRepository.contains( "protected @Nonnull EntityAgent entityAgent;" ) );
 		assertTrue( statelessRepository.contains( "@Inject" + System.lineSeparator() + "\t_StatelessBookRepository()" ) );
+		assertFalse( statelessRepository.contains( "EntityManagerFactory" ) );
+		assertFalse( statelessRepository.contains( "createEntityAgent()" ) );
+		assertFalse( statelessRepository.contains( "entityAgent.close();" ) );
+		assertFalse( statelessRepository.contains( "@PostConstruct" ) );
+		assertFalse( statelessRepository.contains( "@PreDestroy" ) );
 		assertFalse( statelessRepository.contains( "SessionFactory.class).openSession();" ) );
 	}
 

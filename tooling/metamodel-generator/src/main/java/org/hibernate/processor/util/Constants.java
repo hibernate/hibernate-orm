@@ -191,6 +191,8 @@ public final class Constants {
 	public static final String MAP_ATTRIBUTE = "jakarta.persistence.metamodel.MapAttribute";
 
 	public static final String PERSISTENCE_UNIT = "jakarta.persistence.PersistenceUnit";
+	public static final String PERSISTENCE_CONTEXT = "jakarta.persistence.PersistenceContext";
+	public static final String PERSISTENCE_AGENT = "jakarta.persistence.PersistenceAgent";
 	public static final String POST_CONSTRUCT = "jakarta.annotation.PostConstruct";
 	public static final String PRE_DESTROY = "jakarta.annotation.PreDestroy";
 

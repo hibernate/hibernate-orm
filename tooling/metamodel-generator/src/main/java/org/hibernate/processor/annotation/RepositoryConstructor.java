@@ -10,8 +10,11 @@ import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
 import static org.hibernate.processor.util.Constants.ENTITY_AGENT;
+import static org.hibernate.processor.util.Constants.ENTITY_MANAGER;
 import static org.hibernate.processor.util.Constants.INJECT;
 import static org.hibernate.processor.util.Constants.NONNULL;
+import static org.hibernate.processor.util.Constants.PERSISTENCE_AGENT;
+import static org.hibernate.processor.util.Constants.PERSISTENCE_CONTEXT;
 
 /**
  * A general purpose constructor which accepts the session as an
@@ -143,6 +146,7 @@ public class RepositoryConstructor implements MetaAttribute {
 	}
 
 	private void backingField(StringBuilder declaration) {
+		directInjection( declaration );
 		declaration
 				.append("protected ");
 		if ( !dataRepository ) {
@@ -158,6 +162,37 @@ public class RepositoryConstructor implements MetaAttribute {
 				.append(" ")
 				.append(sessionVariableName)
 				.append(";\n\n");
+	}
+
+	private void directInjection(StringBuilder declaration) {
+		if ( dataRepository
+				&& annotationMetaEntity.needsDefaultConstructor()
+				&& isDirectlyInjected() ) {
+			declaration
+					.append('@')
+					.append(annotationMetaEntity.importType(directInjectionAnnotation()));
+			if ( dataStore != null ) {
+				declaration
+						.append("(unitName=\"")
+						.append(dataStore)
+						.append("\")");
+			}
+			declaration
+					.append('\n');
+		}
+	}
+
+	private boolean isDirectlyInjected() {
+		return ENTITY_MANAGER.equals( sessionTypeName )
+			|| ENTITY_AGENT.equals( sessionTypeName );
+	}
+
+	private String directInjectionAnnotation() {
+		return switch ( sessionTypeName ) {
+			case ENTITY_MANAGER -> PERSISTENCE_CONTEXT;
+			case ENTITY_AGENT -> PERSISTENCE_AGENT;
+			default -> throw new IllegalStateException( "Unexpected value: " + sessionTypeName );
+		};
 	}
 
 	private String providedSessionType() {
@@ -190,11 +225,9 @@ public class RepositoryConstructor implements MetaAttribute {
 	/**
 	 * In Quarkus we inject the {@code StatelessSession}
 	 * directly via the constructor. But this doesn't work
-	 * in other CDI implementations, where we need to use
-	 * the JPA {@code @PersistenceUnit} annotation for
-	 * field injection of an {@code EntityManager}. In
-	 * that case, CDI will instantiate the repository via
-	 * a {@link DefaultConstructor default constructor},
+	 * in other CDI implementations, where Jakarta Data
+	 * repositories are instantiated via a
+	 * {@link DefaultConstructor default constructor},
 	 * so we don't need to mark this one {@code @Inject}.
 	 */
 	private void inject(StringBuilder declaration) {

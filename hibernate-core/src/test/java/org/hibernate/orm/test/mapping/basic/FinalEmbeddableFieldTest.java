@@ -9,6 +9,8 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import org.hibernate.engine.spi.Managed;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -17,9 +19,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 @DomainModel(annotatedClasses = FinalEmbeddableFieldTest.EntityWithFinalField.class)
 @SessionFactory(useCollectingStatementInspector = true)
+@BytecodeEnhanced(runNotEnhancedAsWell = true)
 public class FinalEmbeddableFieldTest {
 
 	@Test
@@ -49,7 +53,7 @@ public class FinalEmbeddableFieldTest {
 	}
 
 	@Test
-	public void finalFieldNotDirtyChecked(SessionFactoryScope scope) {
+	public void finalImmutableFieldNotDirtyChecked(SessionFactoryScope scope) {
 		var statementInspector = scope.getCollectingStatementInspector();
 
 		var persistedEntity = new EntityWithFinalField( new EmbeddableWithFinalField( "foo", "foo".toCharArray() ) );
@@ -75,6 +79,20 @@ public class FinalEmbeddableFieldTest {
 
 		assertEquals( 1, statementInspector.getSqlQueries().size() );
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).startsWith( "select" ) );
+	}
+
+	@Test
+	public void finalMutableFieldDirtyChecked(SessionFactoryScope scope) {
+		assumeFalse( Managed.class.isAssignableFrom( EntityWithFinalField.class ),
+				"https://hibernate.atlassian.net/browse/HHH-20541" );
+
+		var statementInspector = scope.getCollectingStatementInspector();
+
+		var persistedEntity = new EntityWithFinalField( new EmbeddableWithFinalField( "foo", "foo".toCharArray() ) );
+		persistedEntity.setName( "Some name" );
+		scope.inTransaction( s -> {
+			s.persist( persistedEntity );
+		} );
 
 		statementInspector.clear();
 

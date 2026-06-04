@@ -76,7 +76,7 @@ public class RepositoryConstructor implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		declaration
 				.append('\n');
 		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
@@ -197,8 +197,8 @@ public class RepositoryConstructor implements MetaAttribute {
 
 	private String providedSessionType() {
 		if ( annotationMetaEntity.isProvidedSessionAccess() ) {
-			final int start = sessionTypeName.indexOf( '<' );
-			final int end = sessionTypeName.lastIndexOf( '>' );
+			final var start = sessionTypeName.indexOf( '<' );
+			final var end = sessionTypeName.lastIndexOf( '>' );
 			return start > 0 && end > start
 					? sessionTypeName.substring( start + 1, end )
 					: ENTITY_AGENT;

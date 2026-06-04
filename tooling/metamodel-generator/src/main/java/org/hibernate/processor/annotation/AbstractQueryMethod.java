@@ -7,10 +7,7 @@ package org.hibernate.processor.annotation;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -160,16 +157,16 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	String strip(final String fullType) {
-		String type = fullType;
+		var type = fullType;
 		// strip off type annotations
 		while ( type.charAt(0) == '@' ) {
-			int startIndex = type.lastIndexOf( ' ' );
+			var startIndex = type.lastIndexOf( ' ' );
 			if ( startIndex > 0 ) {
 				type = type.substring(startIndex+1);
 			}
 		}
 		// strip off type arguments
-		int endIndex = type.indexOf("<");
+		final var endIndex = type.indexOf("<");
 		if ( endIndex > 0 ) {
 			type = type.substring(0, endIndex);
 		}
@@ -208,7 +205,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	boolean isNonNull(int i, List<String> paramTypes) {
-		final String paramType = paramTypes.get(i);
+		final var paramType = paramTypes.get(i);
 		return !isNullable(i) && !isPrimitive(paramType)
 			|| isSpecialParam(paramType);
 	}
@@ -283,8 +280,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void setPage(StringBuilder declaration, String paramName, String paramType) {
-		final boolean jakartaLimit = JD_LIMIT.equals(paramType);
-		final boolean jakartaPageRequest = JD_PAGE_REQUEST.equals(paramType);
+		final var jakartaLimit = JD_LIMIT.equals(paramType);
+		final var jakartaPageRequest = JD_PAGE_REQUEST.equals(paramType);
 		if ( jakartaLimit || jakartaPageRequest
 				|| isUsingEntityHandler() ) {
 			final String firstResult;
@@ -322,8 +319,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			@Nullable String containerType) {
 		if ( !isJakartaCursoredPage(containerType) ) {
 			for ( int i = 0; i < paramNames.size(); i ++ ) {
-				final String paramName = paramNames.get(i);
-				final String paramType = paramTypes.get(i);
+				final var paramName = paramNames.get(i);
+				final var paramType = paramTypes.get(i);
 				if ( isPageParam(paramType) ) {
 					setPage( declaration, paramName, paramType );
 				}
@@ -334,8 +331,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	void handleRestrictionParameters(
 			StringBuilder declaration, List<String> paramTypes) {
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
+			final var paramName = paramNames.get(i);
+			final var paramType = paramTypes.get(i);
 			if ( isRestrictionParam(paramType) ) {
 				if ( isJakartaDataRestrictionParam( paramType ) ) {
 					declaration
@@ -354,9 +351,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				}
 			}
 			else if ( isRangeParam(paramType) ) {
-				final String restrictionTypeName = restrictionTypeName();
+				final var restrictionTypeName = restrictionTypeName();
 				if ( restrictionTypeName != null ) {
-					final TypeElement entityElement =
+					final var entityElement =
 							annotationMetaEntity.getContext().getElementUtils()
 									.getTypeElement( restrictionTypeName );
 					declaration
@@ -388,8 +385,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			String indent,
 			boolean includeRanges) {
 		for ( int i = 0; i < paramNames.size(); i++ ) {
-			final String paramName = parameterVariableName( i );
-			final String paramType = paramTypes.get( i );
+			final var paramName = parameterVariableName( i );
+			final var paramType = paramTypes.get( i );
 			if ( isRestrictionParam( paramType ) ) {
 				applyCriteriaRestrictionParameter( declaration, paramType, paramName, indent );
 			}
@@ -424,9 +421,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			int index,
 			String paramName,
 			String indent) {
-		final String restrictionTypeName = restrictionTypeName();
+		final var restrictionTypeName = restrictionTypeName();
 		if ( restrictionTypeName != null ) {
-			final TypeElement entityElement =
+			final var entityElement =
 					annotationMetaEntity.getContext().getElementUtils()
 							.getTypeElement( restrictionTypeName );
 			declaration
@@ -470,9 +467,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void path(StringBuilder declaration, String path, String typeName) {
-		final StringTokenizer tokens = new StringTokenizer( path, "." );
+		final var tokens = new StringTokenizer( path, "." );
 		while ( typeName != null && tokens.hasMoreTokens() ) {
-			final String memberName = tokens.nextToken();
+			final var memberName = tokens.nextToken();
 			declaration.append( ".get(" );
 			if ( ID_ROLE_NAME.equals( memberName ) ) {
 				declaration
@@ -489,7 +486,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void metamodelAttribute(StringBuilder declaration, String typeName, String memberName) {
-		final TypeElement typeElement =
+		final var typeElement =
 				annotationMetaEntity.getContext().getElementUtils()
 						.getTypeElement( typeName );
 		declaration
@@ -701,9 +698,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void setFirstResultLimit(StringBuilder declaration) {
-		final AnnotationMirror first = getAnnotationMirror( method, JD_FIRST );
+		final var first = getAnnotationMirror( method, JD_FIRST );
 		if ( first != null ) {
-			final AnnotationValue value = getAnnotationValue( first );
+			final var value = getAnnotationValue( first );
 			declaration
 					.append("\t\t\t.setMaxResults(")
 					.append(value == null ? 1 : value.getValue())
@@ -736,11 +733,11 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		if ( !hasOrder() ) {
 			return;
 		}
-		final String orderingTypeName = orderingTypeName();
+		final var orderingTypeName = orderingTypeName();
 		if ( orderingTypeName == null ) {
 			return;
 		}
-		final boolean cursoredPage = isJakartaCursoredPage( containerType );
+		final var cursoredPage = isJakartaCursoredPage( containerType );
 		final String add;
 		if ( cursoredPage ) {
 			// we need to collect them together in a List
@@ -759,7 +756,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 
 		// static orders declared using @OrderBy must come first
-		for ( OrderBy orderBy : orderBys ) {
+		for ( var orderBy : orderBys ) {
 			annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 			collectStaticOrder( declaration, add, orderBy, orderingTypeName );
 		}
@@ -909,7 +906,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		if ( !hasCriteriaOrdering( paramTypes, includeHibernateOrders ) ) {
 			return;
 		}
-		for ( OrderBy orderBy : orderBys ) {
+		for ( var orderBy : orderBys ) {
 			applyStaticCriteriaOrder( declaration, orderBy, indent, orderingTypeName );
 		}
 		for ( int i = 0; i < paramNames.size(); i++ ) {
@@ -1017,7 +1014,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			StringBuilder declaration,
 			OrderBy orderBy,
 			String orderingTypeName) {
-		final TypeElement typeElement =
+		final var typeElement =
 				annotationMetaEntity.getContext().getElementUtils()
 						.getTypeElement( orderingTypeName );
 		declaration
@@ -1197,7 +1194,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						annotationMetaEntity.importType("jakarta.data.page.impl.CursoredPageRecord");
 						annotationMetaEntity.staticImport(JD_PAGE_REQUEST, "beforeCursor");
 						annotationMetaEntity.staticImport(JD_PAGE_REQUEST, "afterCursor");
-						String fragment = MAKE_KEYED_SLICE
+						var fragment = MAKE_KEYED_SLICE
 								.replace("pageRequest",
 										parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 								.replace("Entity",
@@ -1221,7 +1218,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 					}
 					else {
-						final int lastIndex = declaration.length() - 1;
+						final var lastIndex = declaration.length() - 1;
 						if ( declaration.charAt(lastIndex) == '\n' )  {
 							declaration.setLength(lastIndex);
 						}

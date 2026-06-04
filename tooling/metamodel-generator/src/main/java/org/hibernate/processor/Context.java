@@ -121,9 +121,9 @@ public final class Context {
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
 
-		final Map<String, String> options = processingEnvironment.getOptions();
+		final var options = processingEnvironment.getOptions();
 
-		String persistenceXmlOption = options.get( HibernateProcessor.PERSISTENCE_XML_OPTION );
+		var persistenceXmlOption = options.get( HibernateProcessor.PERSISTENCE_XML_OPTION );
 		if ( persistenceXmlOption != null ) {
 			if ( !persistenceXmlOption.startsWith("/") ) {
 				persistenceXmlOption = "/" + persistenceXmlOption;
@@ -134,10 +134,10 @@ public final class Context {
 			persistenceXmlLocation = DEFAULT_PERSISTENCE_XML_LOCATION;
 		}
 
-		String ormXmlOption = options.get( HibernateProcessor.ORM_XML_OPTION );
+		var ormXmlOption = options.get( HibernateProcessor.ORM_XML_OPTION );
 		if ( ormXmlOption != null ) {
 			ormXmlFiles = new ArrayList<>();
-			for ( String ormFile : ormXmlOption.split( ",\\s*" ) ) {
+			for ( var ormFile : ormXmlOption.split( ",\\s*" ) ) {
 				if ( !ormFile.startsWith("/") ) {
 					ormFile = "/" + ormFile;
 				}
@@ -443,7 +443,7 @@ public final class Context {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
+		final var sb = new StringBuilder();
 		sb.append( "Context" );
 		sb.append( "{accessTypeInformation=" ).append( accessTypeInformation );
 		sb.append( ", logDebug=" ).append( logDebug );
@@ -524,22 +524,22 @@ public final class Context {
 	}
 
 	public List<Element> getAllMembers(TypeElement type) {
-		final List<? extends Element> elements = type.getEnclosedElements();
-		final List<Element> list = new ArrayList<>(elements);
-		final TypeMirror superclass = type.getSuperclass();
+		final var elements = type.getEnclosedElements();
+		final var list = new ArrayList<Element>(elements);
+		final var superclass = type.getSuperclass();
 		if ( superclass.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) superclass;
-			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			for ( Element inherited : getAllMembers(typeElement) ) {
+			final var declaredType = (DeclaredType) superclass;
+			final var typeElement = (TypeElement) declaredType.asElement();
+			for ( var inherited : getAllMembers(typeElement) ) {
 				if ( notOverridden(type, inherited, elements) ) {
 					list.add( inherited );
 				}
 			}
 		}
 		for (TypeMirror supertype : type.getInterfaces()) {
-			final DeclaredType declaredType = (DeclaredType) supertype;
-			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			for ( Element inherited : getAllMembers(typeElement) ) {
+			final var declaredType = (DeclaredType) supertype;
+			final var typeElement = (TypeElement) declaredType.asElement();
+			for ( var inherited : getAllMembers(typeElement) ) {
 				if ( notOverridden(type, inherited, elements) ) {
 					list.add( inherited );
 				}

@@ -32,13 +32,13 @@ public class IdClassMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final StringBuilder decl = new StringBuilder()
+		final var decl = new StringBuilder()
 				.append("\n/**\n * Static ID class for {@link ")
 				.append( parent.getQualifiedName() )
 				.append( "}\n **/\n" )
 				.append( "public record Id" );
-		String delimiter = "(";
-		for ( MetaAttribute component : components ) {
+		var delimiter = "(";
+		for ( var component : components ) {
 			decl.append( delimiter ).append( parent.importType( component.getTypeDeclaration() ) )
 					.append( ' ' ).append( component.getPropertyName() );
 			delimiter = ", ";

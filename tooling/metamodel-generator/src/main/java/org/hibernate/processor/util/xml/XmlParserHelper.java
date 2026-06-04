@@ -6,10 +6,8 @@ package org.hibernate.processor.util.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -72,11 +70,11 @@ public class XmlParserHelper {
 			resource = RESOURCE_PATH_SEPARATOR + resource;
 		}
 
-		String pkg = getPackage( resource );
-		String name = getRelativeName( resource );
+		var pkg = getPackage( resource );
+		var name = getRelativeName( resource );
 		InputStream ormStream;
 		try {
-			FileObject fileObject = context.getProcessingEnvironment()
+			var fileObject = context.getProcessingEnvironment()
 					.getFiler()
 					.getResource( StandardLocation.CLASS_OUTPUT, pkg, name );
 			ormStream = fileObject.openInputStream();
@@ -93,14 +91,14 @@ public class XmlParserHelper {
 	}
 
 	public Schema getSchema(String schemaResource) throws XmlParsingException {
-		Schema schema = SCHEMA_CACHE.get( schemaResource );
+		var schema = SCHEMA_CACHE.get( schemaResource );
 
 		if ( schema != null ) {
 			return schema;
 		}
 
 		schema = loadSchema( schemaResource );
-		Schema previous = SCHEMA_CACHE.putIfAbsent( schemaResource, schema );
+		var previous = SCHEMA_CACHE.putIfAbsent( schemaResource, schema );
 
 		return previous != null ? previous : schema;
 	}
@@ -116,7 +114,7 @@ public class XmlParserHelper {
 			throw new XmlParsingException( "Unable to create stax reader", e );
 		}
 
-		ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
+		var handler = new ContextProvidingValidationEventHandler();
 		try {
 			staxEventReader = new JpaNamespaceTransformingEventReader( staxEventReader );
 
@@ -133,7 +131,7 @@ public class XmlParserHelper {
 			return clazz.cast( unmarshaller.unmarshal( staxEventReader ) );
 		}
 		catch ( JAXBException e ) {
-			StringBuilder builder = new StringBuilder();
+			var builder = new StringBuilder();
 			builder.append( "Unable to perform unmarshalling at line number " );
 			builder.append( handler.getLineNumber() );
 			builder.append( " and column " );
@@ -167,12 +165,12 @@ public class XmlParserHelper {
 	}
 
 	private Schema loadSchema(String schemaName) throws XmlParsingException {
-		URL schemaUrl = NullnessUtil.castNonNull( this.getClass().getClassLoader() ).getResource( schemaName );
+		var schemaUrl = NullnessUtil.castNonNull( this.getClass().getClassLoader() ).getResource( schemaName );
 		if ( schemaUrl == null ) {
 			throw new IllegalArgumentException( "Couldn't find schema on classpath: " + schemaName );
 		}
 
-		SchemaFactory sf = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI );
+		var sf = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI );
 		try {
 			return sf.newSchema( schemaUrl );
 		}

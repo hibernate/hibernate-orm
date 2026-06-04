@@ -72,7 +72,7 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<DataA
 
 	@Override
 	public @Nullable DataAnnotationMetaAttribute visitArray(ArrayType arrayType, Element element) {
-		final String type = toArrayTypeString( arrayType, context );
+		final var type = toArrayTypeString( arrayType, context );
 		return new DataAnnotationMetaAttribute(
 				entity,
 				element,
@@ -86,25 +86,25 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<DataA
 	@Override
 	public @Nullable DataAnnotationMetaAttribute visitTypeVariable(TypeVariable typeVariable, Element element) {
 		// METAGEN-29 - for a type variable we use the upper bound
-		final TypeMirror upperBound = typeUtils().erasure( typeVariable.getUpperBound() );
+		final var upperBound = typeUtils().erasure( typeVariable.getUpperBound() );
 		return dataAttribute( element, upperBound, upperBound.toString(), upperBound.toString() );
 	}
 
 	@Override
 	public @Nullable DataAnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
-		final TypeElement returnedElement = (TypeElement) typeUtils().asElement( declaredType );
+		final var returnedElement = (TypeElement) typeUtils().asElement( declaredType );
 		if ( returnedElement == null ) {
 			return null;
 		}
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
-		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
+		final var targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 		if ( isPluralAttribute( element ) ) {
 //			final String returnTypeName = returnedElement.getQualifiedName().toString();
 //			final String collection = Constants.COLLECTIONS.get( returnTypeName );
 			return null;
 		}
 		else {
-			final String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
+			final var type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
 			return targetEntity != null || isManagedType( returnedElement )
 					? new DataAnnotationMetaAttribute(
 							entity,
@@ -130,7 +130,7 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<DataA
 			TypeMirror type,
 			String typeDeclaration,
 			String classLiteralType) {
-		final String metaType = getMetaType( type );
+		final var metaType = getMetaType( type );
 		return new DataAnnotationMetaAttribute(
 				entity,
 				element,
@@ -146,7 +146,7 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<DataA
 	}
 
 	private String getMetaType(TypeMirror type) {
-		final TypeMirror boxedType =
+		final var boxedType =
 				type.getKind().isPrimitive()
 						? typeUtils().boxedClass( (PrimitiveType) type ).asType()
 						: typeUtils().erasure( type );
@@ -177,19 +177,19 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<DataA
 	}
 
 	private boolean isSameType(TypeMirror type, String typeName) {
-		final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( typeName );
+		final var typeElement = context.getTypeElementForFullyQualifiedName( typeName );
 		return typeElement != null
 				&& typeUtils().isSameType( typeUtils().erasure( type ), typeUtils().erasure( typeElement.asType() ) );
 	}
 
 	private boolean isAssignableTo(TypeMirror type, String typeName) {
-		final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( typeName );
+		final var typeElement = context.getTypeElementForFullyQualifiedName( typeName );
 		return typeElement != null
 				&& typeUtils().isAssignable( typeUtils().erasure( type ), typeUtils().erasure( typeElement.asType() ) );
 	}
 
 	private boolean isAssignableToComparable(TypeMirror type, TypeMirror comparableArgument) {
-		final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( Comparable.class.getName() );
+		final var typeElement = context.getTypeElementForFullyQualifiedName( Comparable.class.getName() );
 		return typeElement != null
 				&& typeUtils().isAssignable(
 						type,

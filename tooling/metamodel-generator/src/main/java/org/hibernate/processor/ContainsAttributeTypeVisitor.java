@@ -9,7 +9,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
 import org.hibernate.processor.util.NullnessUtil;
@@ -31,13 +30,13 @@ class ContainsAttributeTypeVisitor extends SimpleTypeVisitor8<Boolean, Element> 
 
 	@Override
 	public Boolean visitDeclared(DeclaredType declaredType, Element element) {
-		TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement(declaredType);
-		final String returnTypeName = NullnessUtil.castNonNull( returnedElement ).getQualifiedName().toString();
-		final String collection = COLLECTIONS.get(returnTypeName);
+		var returnedElement = (TypeElement) context.getTypeUtils().asElement(declaredType);
+		final var returnTypeName = NullnessUtil.castNonNull( returnedElement ).getQualifiedName().toString();
+		final var collection = COLLECTIONS.get(returnTypeName);
 		if (collection != null) {
-			final TypeMirror collectionElementType =
+			final var collectionElementType =
 					getCollectionElementType( declaredType, returnTypeName, null, context );
-			final Element collectionElement = context.getTypeUtils().asElement(collectionElementType);
+			final var collectionElement = context.getTypeUtils().asElement(collectionElementType);
 			if ( ElementKind.TYPE_PARAMETER == NullnessUtil.castNonNull( collectionElement ).getKind() ) {
 				return false;
 			}

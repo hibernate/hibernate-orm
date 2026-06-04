@@ -58,10 +58,10 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final String className = parent.importType( parent.getQualifiedName() );
-		final String elementName = element.getSimpleName().toString();
-		final String memberName = path == null ? elementName : path + '.' + elementName;
-		final String importedMetaType = parent.importType( metaType );
+		final var className = parent.importType( parent.getQualifiedName() );
+		final var elementName = element.getSimpleName().toString();
+		final var memberName = path == null ? elementName : path + '.' + elementName;
+		final var importedMetaType = parent.importType( metaType );
 		return new StringBuilder()
 				.append("\n/**\n * Static metamodel for attribute {@link ")
 				.append(className)
@@ -127,7 +127,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getPropertyName() {
-		final String propertyName = propertyName(element);
+		final var propertyName = propertyName(element);
 		return path == null ? propertyName : path + '.' + propertyName;
 	}
 

@@ -300,7 +300,7 @@ public final class NullnessUtil {
 		assert ref != null
 				: "Misuse of checkIfArray: called with a null argument"
 				+ ( ( message == null ) ? "" : ( ": " + message ) );
-		Class<?> comp = ref.getClass().getComponentType();
+		var comp = ref.getClass().getComponentType();
 		if ( comp != null ) {
 			// comp is non-null for arrays, otherwise null.
 			if ( comp.isPrimitive() ) {

@@ -76,15 +76,14 @@ public class DefaultConstructor implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		declaration
 				.append('\n');
-		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
-			if ( !isDirectlyInjected() ) {
-				injectedField( declaration );
-				postConstruct( declaration );
-				preDestroy( declaration );
-			}
+		if ( annotationMetaEntity.getSuperTypeElement() == null
+				&& !isDirectlyInjected() ) {
+			injectedField( declaration );
+			postConstruct( declaration );
+			preDestroy( declaration );
 		}
 		defaultConstructor( declaration );
 		return declaration.toString();
@@ -177,7 +176,7 @@ public class DefaultConstructor implements MetaAttribute {
 	}
 
 	private void unwrapSession(StringBuilder declaration) {
-		final String sessionFactoryType =
+		final var sessionFactoryType =
 				isReactive()
 						? MUTINY_SESSION_FACTORY
 						: HIB_SESSION_FACTORY;

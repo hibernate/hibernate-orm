@@ -6,7 +6,6 @@ package org.hibernate.processor.util;
 
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
@@ -19,7 +18,7 @@ public final class SqmTypeUtils {
 
 	public static String resultType(SqmSelectStatement<?> selectStatement) {
 		// HQL based queries are ensured to have a select clause by SemanticQueryBuilder
-		final JpaSelection<?> selection = castNonNull( selectStatement.getSelection() );
+		final var selection = castNonNull( selectStatement.getSelection() );
 		if (selection instanceof SqmSelectClause from) {
 			return from.getSelectionItems().size() > 1
 					? "Object[]"

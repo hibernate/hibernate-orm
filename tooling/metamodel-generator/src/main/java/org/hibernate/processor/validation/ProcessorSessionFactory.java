@@ -116,24 +116,24 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	MockEntityPersister createMockEntityPersister(String entityName) {
-		final TypeElement type = findEntityClass(entityName);
+		final var type = findEntityClass(entityName);
 		return type == null ? null : entityPersister.make(entityName, type, this);
 	}
 
 	@Override
 	MockCollectionPersister createMockCollectionPersister(String role) {
-		final String entityName = extractEntityNameFromRole( role );
-		final String propertyPath = role.substring( entityName.length() + 1 );
-		final TypeElement entityClass = findEntityClass(entityName);
-		final AccessType defaultAccessType = getDefaultAccessType(entityClass);
-		final Element property = findPropertyByPath(entityClass, propertyPath, defaultAccessType);
-		final CollectionType collectionType = collectionType(memberType(property), role);
+		final var entityName = extractEntityNameFromRole( role );
+		final var propertyPath = role.substring( entityName.length() + 1 );
+		final var entityClass = findEntityClass(entityName);
+		final var defaultAccessType = getDefaultAccessType(entityClass);
+		final var property = findPropertyByPath(entityClass, propertyPath, defaultAccessType);
+		final var collectionType = collectionType(memberType(property), role);
 		if (isToManyAssociation(property)) {
 			return toManyPersister.make(role, collectionType,
 					getToManyTargetEntityName(property), this);
 		}
 		else if (isElementCollectionProperty(property)) {
-			final Element elementType = asElement(getElementCollectionElementType(property));
+			final var elementType = asElement(getElementCollectionElementType(property));
 			return collectionPersister.make(role, collectionType,
 					elementType, propertyPath, defaultAccessType, this);
 		}
@@ -143,7 +143,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private String extractEntityNameFromRole(String role) {
-		for ( String entityName : entityNameMappings.values() ) {
+		for ( var entityName : entityNameMappings.values() ) {
 			if ( role.startsWith( entityName ) ) {
 				return entityName;
 			}
@@ -154,9 +154,9 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	Type propertyType(String typeName, String propertyPath) {
-		final TypeElement type = findClassByQualifiedName(typeName);
-		final AccessType accessType = getAccessType(type, AccessType.FIELD);
-		final Element propertyByPath = findPropertyByPath(type, propertyPath, accessType);
+		final var type = findClassByQualifiedName(typeName);
+		final var accessType = getAccessType(type, AccessType.FIELD);
+		final var propertyByPath = findPropertyByPath(type, propertyPath, accessType);
 		return propertyByPath == null ? null
 				: propertyType(propertyByPath, typeName, propertyPath, accessType);
 	}
@@ -182,7 +182,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private Type propertyType(Element member, String entityName, String path, AccessType defaultAccessType) {
-		final TypeMirror memberType = memberType(member);
+		final var memberType = memberType(member);
 		if (isEmbeddedProperty(member)) {
 			return componentType( entityName, path, defaultAccessType, memberType );
 		}
@@ -210,12 +210,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private static BasicType<?> enumType(Element member, TypeMirror memberType) {
-		final Class<Enum> enumClass = Enum.class; // because we can't load the real enum class!
+		final var enumClass = Enum.class; // because we can't load the real enum class!
 		return enumType( member, qualifiedName( memberType ), enumClass );
 	}
 
 	private static <T extends Enum<T>> BasicType<T> enumType(Element member, String typeName, Class<T> enumClass) {
-		final EnumJavaType<T> javaType = new EnumJavaType<>( enumClass ) {
+		final var javaType = new EnumJavaType<T>( enumClass ) {
 			@Override
 			public String getTypeName() {
 				return typeName;
@@ -230,7 +230,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static JdbcType enumJdbcType(Element member) {
-		final VariableElement mapping = (VariableElement)
+		final var mapping = (VariableElement)
 				getAnnotationMember(getAnnotation(member,"Enumerated"), "value");
 		return mapping != null && mapping.getSimpleName().contentEquals("STRING")
 				? VarcharJdbcType.INSTANCE
@@ -242,12 +242,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override @Nullable
 	Set<String> getEnumTypesForValue(String value) {
-		final Set<String> result = enumTypesByValue.get(value);
+		final var result = enumTypesByValue.get(value);
 		if ( result != null ) {
 			return result;
 		}
 		if ( indexing ) {
-			final Set<String> indexed = getIndexedEnumTypesByValue(value);
+			final var indexed = getIndexedEnumTypesByValue(value);
 			if ( indexed != null ) {
 				enumTypesByValue.put(value, indexed);
 				return indexed;
@@ -302,16 +302,16 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				ProcessorSessionFactory factory) {
 			this.type = type;
 
-			final List<String> names = new ArrayList<>();
-			final List<Type> types = new ArrayList<>();
+			final var names = new ArrayList<String>();
+			final var types = new ArrayList<Type>();
 
 			while (type!=null) {
 				if (isMappedClass(type)) { //ignore unmapped intervening classes
-					final AccessType accessType = getAccessType(type, defaultAccessType);
+					final var accessType = getAccessType(type, defaultAccessType);
 					for (Element member: type.getEnclosedElements()) {
 						if (isPersistable(member, accessType)) {
-							final String name = propertyName(member);
-							final Type propertyType =
+							final var name = propertyName(member);
+							final var propertyType =
 									factory.propertyType(member, entityName,
 											qualify(path, name), defaultAccessType);
 							if (propertyType != null) {
@@ -330,7 +330,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		@Override
 		public int getPropertyIndex(String name) {
-			final String[] names = getPropertyNames();
+			final var names = getPropertyNames();
 			for ( int i = 0, max = names.length; i < max; i++ ) {
 				if ( names[i].equals( name ) ) {
 					return i;
@@ -392,11 +392,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		@Override
 		public String getRootEntityName() {
-			TypeElement result = type;
-			TypeMirror superclass = type.getSuperclass();
+			var result = type;
+			var superclass = type.getSuperclass();
 			while ( superclass.getKind() == TypeKind.DECLARED ) {
-				final DeclaredType declaredType = (DeclaredType) superclass;
-				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				final var declaredType = (DeclaredType) superclass;
+				final var typeElement = (TypeElement) declaredType.asElement();
 				if ( hasAnnotation(typeElement, "Entity") ) {
 					result = typeElement;
 				}
@@ -407,19 +407,19 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		@Override
 		boolean isSamePersister(MockEntityPersister entityPersister) {
-			final EntityPersister persister = (EntityPersister) entityPersister;
+			final var persister = (EntityPersister) entityPersister;
 			return typeUtil.isSameType( persister.type.asType(), type.asType() );
 		}
 
 		@Override
 		boolean isSubclassPersister(MockEntityPersister entityPersister) {
-			final EntityPersister persister = (EntityPersister) entityPersister;
+			final var persister = (EntityPersister) entityPersister;
 			return typeUtil.isSubtype( persister.type.asType(), type.asType() );
 		}
 
 		@Override
 		Type createPropertyType(String propertyPath) {
-			final Element symbol = findPropertyByPath(type, propertyPath, defaultAccessType);
+			final var symbol = findPropertyByPath(type, propertyPath, defaultAccessType);
 			return symbol == null ? null :
 					factory.propertyType(symbol, getEntityName(), propertyPath, defaultAccessType);
 		}
@@ -437,7 +437,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		@Override
 		public Type identifierType() {
 			if (hasAnnotation( type, "IdClass" )) {
-				final TypeMirror annotationMember = (TypeMirror)getAnnotationMember( getAnnotation( type, "IdClass" ), "value" );
+				final var annotationMember = (TypeMirror)getAnnotationMember( getAnnotation( type, "IdClass" ), "value" );
 				if (annotationMember != null) {
 					return factory.componentType( getEntityName(), EntityIdentifierMapping.ID_ROLE_NAME, defaultAccessType, annotationMember );
 				}
@@ -498,7 +498,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		@Override
 		Type getElementPropertyType(String propertyPath) {
-			final Element symbol = findPropertyByPath(elementType, propertyPath, defaultAccessType);
+			final var symbol = findPropertyByPath(elementType, propertyPath, defaultAccessType);
 			return symbol == null ? null :
 					factory.propertyType(symbol, getOwnerEntityName(), propertyPath, defaultAccessType);
 		}
@@ -511,13 +511,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	String qualifyName(String jpaEntityName) {
-		final TypeElement entityClass = findEntityByUnqualifiedName(jpaEntityName);
+		final var entityClass = findEntityByUnqualifiedName(jpaEntityName);
 		return entityClass == null ? null : entityClass.getQualifiedName().toString();
 	}
 
 	@Override
 	boolean isAttributeDefined(String entityName, String fieldName) {
-		final TypeElement entityClass = findEntityClass(entityName);
+		final var entityClass = findEntityClass(entityName);
 		return entityClass != null
 			&& (findPropertyByPath(entityClass, fieldName, getDefaultAccessType(entityClass)) != null
 				|| "id".equals( fieldName ) && hasAnnotation( entityClass, "IdClass" ));
@@ -528,7 +528,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private TypeElement findEntityByQualifiedName(String entityName) {
-		final TypeElement type = findClassByQualifiedName(entityName);
+		final var type = findClassByQualifiedName(entityName);
 		return type != null && isEntity(type) ? type : null;
 	}
 
@@ -536,20 +536,20 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final Map<String,TypeElement> entityCache = new HashMap<>();
 
 	private TypeElement findEntityByUnqualifiedName(String entityName) {
-		final TypeElement cached = entityCache.get(entityName);
+		final var cached = entityCache.get(entityName);
 		if ( cached != null ) {
 			return cached;
 		}
 
 		if ( indexing ) {
-			final TypeElement indexedEntity = findIndexedEntityByUnqualifiedName( entityName );
+			final var indexedEntity = findIndexedEntityByUnqualifiedName( entityName );
 			if ( indexedEntity != null ) {
 				entityCache.put(entityName, indexedEntity);
 				return indexedEntity;
 			}
 		}
 
-		TypeElement symbol =
+		var symbol =
 				findEntityByUnqualifiedName(entityName,
 						elementUtil.getModuleElement(""));
 		if (symbol!=null) {
@@ -567,9 +567,9 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private @Nullable TypeElement findIndexedEntityByUnqualifiedName(String entityName) {
-		final String qualifiedName = entityNameMappings.get(entityName);
+		final var qualifiedName = entityNameMappings.get(entityName);
 		if ( qualifiedName != null ) {
-			final TypeElement entity = elementUtil.getTypeElement( qualifiedName );
+			final var entity = elementUtil.getTypeElement( qualifiedName );
 			if ( entity != null && isVisibleFromQueryPackage(entity) ) {
 				return entity;
 			}
@@ -600,7 +600,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			ModuleElement module) {
 		for (Element element: module.getEnclosedElements()) {
 			if (element.getKind() == ElementKind.PACKAGE) {
-				final PackageElement pack = (PackageElement) element;
+				final var pack = (PackageElement) element;
 				try {
 					for (Element member : pack.getEnclosedElements()) {
 						if (isMatchingEntity(member, entityName)
@@ -625,7 +625,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private static boolean isMatchingEntity(Element symbol, String entityName) {
 		if (symbol.getKind() == ElementKind.CLASS) {
-			final TypeElement type = (TypeElement) symbol;
+			final var type = (TypeElement) symbol;
 			return isEntity(type)
 				&& ( getJpaEntityName(type).equals(entityName)
 					|| type.getQualifiedName().contentEquals(entityName) );
@@ -639,7 +639,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		//iterate up the superclass hierarchy
 		while (type!=null) {
 			if (isMappedClass(type)) { //ignore unmapped intervening classes
-				final AccessType accessType = getAccessType(type, defaultAccessType);
+				final var accessType = getAccessType(type, defaultAccessType);
 				for (Element member: type.getEnclosedElements()) {
 					if (isMatchingProperty(member, propertyName, accessType)) {
 						return member;
@@ -661,8 +661,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return false;
 		}
 		else {
-			Name methodName = method.getSimpleName();
-			TypeMirror returnType = method.getReturnType();
+			var methodName = method.getSimpleName();
+			var returnType = method.getReturnType();
 			return methodName.subSequence(0,3).toString().equals("get") && returnType.getKind() != TypeKind.VOID
 				|| methodName.subSequence(0,2).toString().equals("is") && returnType.getKind() == TypeKind.BOOLEAN;
 		}
@@ -679,11 +679,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private static AnnotationMirror getAnnotation(Element member, String annotationName) {
 		for (AnnotationMirror mirror : member.getAnnotationMirrors()) {
-			final TypeElement annotationType = (TypeElement) mirror.getAnnotationType().asElement();
+			final var annotationType = (TypeElement) mirror.getAnnotationType().asElement();
 			if ( annotationType.getSimpleName().contentEquals(annotationName)
 					&& annotationType.getNestingKind() == NestingKind.TOP_LEVEL ) {
-				final PackageElement pack = (PackageElement) annotationType.getEnclosingElement();
-				final Name packageName = pack.getQualifiedName();
+				final var pack = (PackageElement) annotationType.getEnclosingElement();
+				final var packageName = pack.getQualifiedName();
 				if (packageName.contentEquals(jakartaPersistence)
 						|| packageName.contentEquals(javaxPersistence)) {
 					return mirror;
@@ -741,10 +741,10 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return true;
 		}
 		else {
-			final TypeMirror type = member.asType();
+			final var type = member.asType();
 			if (type.getKind() == TypeKind.DECLARED) {
-				final DeclaredType declaredType = (DeclaredType) type;
-				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				final var declaredType = (DeclaredType) type;
+				final var typeElement = (TypeElement) declaredType.asElement();
 				return typeElement.getKind() == ElementKind.ENUM;
 			}
 			else {
@@ -755,13 +755,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	boolean isEnum(String className) {
-		final TypeElement typeElement = elementUtil.getTypeElement( className );
+		final var typeElement = elementUtil.getTypeElement( className );
 		return typeElement != null && typeElement.getKind() == ElementKind.ENUM;
 	}
 
 	@Override
 	boolean isEnumConstant(String className, String terminal) {
-		final TypeElement typeElement = elementUtil.getTypeElement(className);
+		final var typeElement = elementUtil.getTypeElement(className);
 		if (typeElement == null || typeElement.getKind() != ElementKind.ENUM) {
 			return false;
 		}
@@ -773,11 +773,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	Class<?> javaConstantType(String className, String fieldName) {
-		final TypeElement typeElement = elementUtil.getTypeElement( className );
+		final var typeElement = elementUtil.getTypeElement( className );
 		if ( typeElement == null ) {
 			return null;
 		}
-		final TypeMirror typeMirror =
+		final var typeMirror =
 				typeElement.getEnclosedElements()
 						.stream()
 						.filter( e -> fieldName.equals( e.getSimpleName().toString() ) )
@@ -820,7 +820,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return true;
 		}
 		else {
-			final TypeMirror type = member.asType();
+			final var type = member.asType();
 			return type.getKind() == TypeKind.DECLARED
 				&& hasAnnotation(type, "Embeddable");
 		}
@@ -841,12 +841,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static AnnotationMirror toOneAnnotation(Element member) {
-		final AnnotationMirror manyToOne =
+		final var manyToOne =
 				getAnnotation(member, "ManyToOne");
 		if (manyToOne!=null) {
 			return manyToOne;
 		}
-		final AnnotationMirror oneToOne =
+		final var oneToOne =
 				getAnnotation(member, "OneToOne");
 		if (oneToOne!=null) {
 			return oneToOne;
@@ -855,12 +855,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static AnnotationMirror toManyAnnotation(Element member) {
-		final AnnotationMirror manyToMany =
+		final var manyToMany =
 				getAnnotation(member, "ManyToMany");
 		if (manyToMany!=null) {
 			return manyToMany;
 		}
-		final AnnotationMirror oneToMany =
+		final var oneToMany =
 				getAnnotation(member, "OneToMany");
 		if (oneToMany!=null) {
 			return oneToMany;
@@ -892,7 +892,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return typeElement.getQualifiedName().toString();
 		}
 		else {
-			final Element enclosingElement = type.getEnclosingElement();
+			final var enclosingElement = type.getEnclosingElement();
 			return enclosingElement != null
 					? qualifiedName(enclosingElement) + '.' + simpleName(type)
 					: simpleName(type);
@@ -900,13 +900,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static AccessType getAccessType(TypeElement type, AccessType defaultAccessType) {
-		final AnnotationMirror annotation =
+		final var annotation =
 				getAnnotation(type, "Access");
 		if (annotation==null) {
 			return defaultAccessType;
 		}
 		else {
-			final VariableElement member = (VariableElement)
+			final var member = (VariableElement)
 					getAnnotationMember(annotation, "value");
 			if (member==null) {
 				return defaultAccessType; //does not occur
@@ -928,14 +928,14 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if ( type == null ) {
 			return null;
 		}
-		final AnnotationMirror entityAnnotation =
+		final var entityAnnotation =
 				getAnnotation(type, "Entity");
 		if (entityAnnotation==null) {
 			//not an entity!
 			return null;
 		}
 		else {
-			final String name = (String)
+			final var name = (String)
 					getAnnotationMember(entityAnnotation, "name");
 			//JPA entity names are unqualified class names
 			return name==null ? simpleName(type) : name;
@@ -946,7 +946,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if ( type == null ) {
 			return null;
 		}
-		final AnnotationMirror entityAnnotation =
+		final var entityAnnotation =
 				getAnnotation(type, "Entity");
 		if (entityAnnotation==null) {
 			//not an entity!
@@ -959,23 +959,23 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private TypeMirror getCollectionElementType(Element property) {
-		final DeclaredType declaredType = (DeclaredType) memberType(property);
-		final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-		final TypeMirror elementType = typeArguments.get(typeArguments.size()-1);
+		final var declaredType = (DeclaredType) memberType(property);
+		final var typeArguments = declaredType.getTypeArguments();
+		final var elementType = typeArguments.get(typeArguments.size()-1);
 		return elementType==null
 				? elementUtil.getTypeElement(JAVA_OBJECT).asType()
 				: elementType;
 	}
 
 	private static String getToOneTargetEntity(Element property) {
-		final AnnotationMirror annotation = toOneAnnotation(property);
-		final TypeMirror classType = (TypeMirror)
+		final var annotation = toOneAnnotation(property);
+		final var classType = (TypeMirror)
 				getAnnotationMember(annotation, "targetEntity");
-		final TypeMirror targetType =
+		final var targetType =
 				classType == null || classType.getKind() == TypeKind.VOID
 						? memberType(property)
 						: classType;
-		final Element element = asElement(targetType);
+		final var element = asElement(targetType);
 		return element != null && element.getKind() == ElementKind.CLASS
 				//entity names are qualified class names
 				? getHibernateEntityName((TypeElement) element)
@@ -983,14 +983,14 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private String getToManyTargetEntityName(Element property) {
-		final AnnotationMirror annotation = toManyAnnotation(property);
-		final TypeMirror classType = (TypeMirror)
+		final var annotation = toManyAnnotation(property);
+		final var classType = (TypeMirror)
 				getAnnotationMember(annotation, "targetEntity");
-		final TypeMirror targetType =
+		final var targetType =
 				classType == null || classType.getKind() == TypeKind.VOID
 						? getCollectionElementType(property)
 						: classType;
-		final Element element = asElement(targetType);
+		final var element = asElement(targetType);
 		return element != null && element.getKind() == ElementKind.CLASS
 				//entity names are qualified class names
 				? getHibernateEntityName((TypeElement) element)
@@ -998,8 +998,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private TypeMirror getElementCollectionElementType(Element property) {
-		final AnnotationMirror annotation = getAnnotation(property, "ElementCollection");
-		final TypeMirror classType = (TypeMirror)
+		final var annotation = getAnnotation(property, "ElementCollection");
+		final var classType = (TypeMirror)
 				getAnnotationMember(annotation, "getElementCollectionClass");
 		return classType == null
 			|| classType.getKind() == TypeKind.VOID
@@ -1026,7 +1026,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	boolean isFieldDefined(String qualifiedClassName, String fieldName) {
-		final TypeElement type = findClassByQualifiedName(qualifiedClassName);
+		final var type = findClassByQualifiedName(qualifiedClassName);
 		return type != null
 			&& type.getEnclosedElements().stream()
 				.anyMatch(element -> element.getKind() == ElementKind.FIELD
@@ -1035,19 +1035,19 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	boolean isConstructorDefined(String qualifiedClassName, List<Type> argumentTypes) {
-		final TypeElement symbol = findClassByQualifiedName(qualifiedClassName);
+		final var symbol = findClassByQualifiedName(qualifiedClassName);
 		if (symbol==null) {
 			return false;
 		}
 		for (Element cons: symbol.getEnclosedElements()) {
 			if ( cons.getKind() == ElementKind.CONSTRUCTOR ) {
-				final ExecutableElement constructor = (ExecutableElement) cons;
-				final List<? extends VariableElement> parameters = constructor.getParameters();
+				final var constructor = (ExecutableElement) cons;
+				final var parameters = constructor.getParameters();
 				if (parameters.size()==argumentTypes.size()) {
-					boolean argumentsCheckOut = true;
+					var argumentsCheckOut = true;
 					for (int i=0; i<argumentTypes.size(); i++) {
-						final Type type = argumentTypes.get(i);
-						final VariableElement param = parameters.get(i);
+						final var type = argumentTypes.get(i);
+						final var param = parameters.get(i);
 						if (param.asType().getKind().isPrimitive()) {
 							final Class<?> primitive;
 							try {
@@ -1137,7 +1137,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static String propertyName(Element symbol) {
-		String name = symbol.getSimpleName().toString();
+		var name = symbol.getSimpleName().toString();
 		if (symbol.getKind() == ElementKind.METHOD) {
 			if (name.startsWith("get")) {
 				name = name.substring(3);

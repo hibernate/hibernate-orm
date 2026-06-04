@@ -129,7 +129,7 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 	}
 
 	boolean isAsynchronousCompletionStageWithVoidResult() {
-		final TypeMirror resultType = completionStageResultType();
+		final var resultType = completionStageResultType();
 		return resultType != null && isVoid( resultType );
 	}
 
@@ -164,23 +164,24 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 
 	private static TypeMirror completionStageResultType(TypeMirror returnType) {
 		if ( returnType.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) returnType;
-			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			final var declaredType = (DeclaredType) returnType;
+			final var typeElement = (TypeElement) declaredType.asElement();
 			return typeElement.getQualifiedName().contentEquals( COMPLETION_STAGE )
-					&& declaredType.getTypeArguments().size() == 1
-							? declaredType.getTypeArguments().get( 0 )
-							: null;
+				&& declaredType.getTypeArguments().size() == 1
+					? declaredType.getTypeArguments().get( 0 )
+					: null;
 		}
 		return null;
 	}
 
 	private static boolean isVoid(TypeMirror returnType) {
-		if ( returnType.getKind() == TypeKind.VOID ) {
+		final var returnTypeKind = returnType.getKind();
+		if ( returnTypeKind == TypeKind.VOID ) {
 			return true;
 		}
-		else if ( returnType.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) returnType;
-			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+		else if ( returnTypeKind == TypeKind.DECLARED ) {
+			final var declaredType = (DeclaredType) returnType;
+			final var typeElement = (TypeElement) declaredType.asElement();
 			return typeElement.getQualifiedName().contentEquals( VOID );
 		}
 		else {
@@ -196,7 +197,8 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 
 	protected void handle(StringBuilder declaration, String handled, String rethrown) {
 		if ( isReactive() ) {
-			declaration.append( "\n\t\t\t.onFailure(" )
+			declaration
+					.append( "\n\t\t\t.onFailure(" )
 					.append( annotationMetaEntity.importType( handled ) )
 					.append( ".class)\n" )
 					.append( "\t\t\t\t\t.transform(_ex -> new " )

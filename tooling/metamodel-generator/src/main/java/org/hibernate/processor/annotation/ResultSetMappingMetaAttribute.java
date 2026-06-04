@@ -44,7 +44,7 @@ class ResultSetMappingMetaAttribute extends NameMetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final Metamodel entity = getHostingEntity();
+		final var entity = getHostingEntity();
 		return new StringBuilder()
 				.append( "\n/**" )
 				.append( "\n * The SQL result set mapping named {@value " )
@@ -66,7 +66,7 @@ class ResultSetMappingMetaAttribute extends NameMetaAttribute {
 	}
 
 	private static String resultType(AnnotationMirror mapping) {
-		final List<String> resultTypes = new ArrayList<>();
+		final var resultTypes = new ArrayList<String>();
 		annotationArray( mapping, "entities" )
 				.forEach( entity -> resultTypes.add( annotationClassName( entity, "entityClass" ) ) );
 		annotationArray( mapping, "classes" )
@@ -81,7 +81,7 @@ class ResultSetMappingMetaAttribute extends NameMetaAttribute {
 	}
 
 	private static String columnType(AnnotationMirror column) {
-		final String type = annotationClassNameOrNull( column, "type" );
+		final var type = annotationClassNameOrNull( column, "type" );
 		return type == null || isVoid( type ) ? JAVA_OBJECT : type;
 	}
 
@@ -90,16 +90,16 @@ class ResultSetMappingMetaAttribute extends NameMetaAttribute {
 	}
 
 	private static String annotationClassName(AnnotationMirror annotation, String member) {
-		final String className = annotationClassNameOrNull( annotation, member );
+		final var className = annotationClassNameOrNull( annotation, member );
 		return className == null ? JAVA_OBJECT : className;
 	}
 
 	private static String annotationClassNameOrNull(AnnotationMirror annotation, String member) {
-		final AnnotationValue value = getAnnotationValue( annotation, member );
+		final var value = getAnnotationValue( annotation, member );
 		if ( value == null ) {
 			return null;
 		}
-		final Object annotationValue = value.getValue();
+		final var annotationValue = value.getValue();
 		if ( annotationValue instanceof TypeMirror type ) {
 			return type.getKind() == TypeKind.VOID ? "void" : toTypeString( type );
 		}
@@ -107,22 +107,22 @@ class ResultSetMappingMetaAttribute extends NameMetaAttribute {
 	}
 
 	private static List<AnnotationMirror> annotationArray(AnnotationMirror annotation, String member) {
-		final AnnotationValue value = getAnnotationValue( annotation, member );
+		final var value = getAnnotationValue( annotation, member );
 		if ( value == null ) {
 			return emptyList();
 		}
 		@SuppressWarnings("unchecked")
-		final List<? extends AnnotationValue> annotationValues =
+		final var annotationValues =
 				(List<? extends AnnotationValue>) value.getValue();
-		final List<AnnotationMirror> result = new ArrayList<>();
-		for ( AnnotationValue annotationValue : annotationValues ) {
+		final var result = new ArrayList<AnnotationMirror>();
+		for ( var annotationValue : annotationValues ) {
 			result.add( (AnnotationMirror) annotationValue.getValue() );
 		}
 		return result;
 	}
 
 	private static String resultSetMappingFieldName(String name) {
-		final StringBuilder fieldName = new StringBuilder( "_" );
+		final var fieldName = new StringBuilder( "_" );
 		name.codePoints()
 				.forEach( codePoint -> fieldName.appendCodePoint(
 						Character.isJavaIdentifierPart( codePoint ) ? codePoint : '_' ) );

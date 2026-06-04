@@ -32,7 +32,7 @@ public class CDIAccessorMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		modifiers( declaration );
 		preamble( declaration );
 		returnCDI( declaration );

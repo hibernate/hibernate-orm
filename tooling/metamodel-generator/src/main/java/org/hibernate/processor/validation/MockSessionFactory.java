@@ -239,7 +239,7 @@ public abstract class MockSessionFactory
 		typeConfiguration = new TypeConfiguration();
 		typeConfiguration.scope((MetadataBuildingContext) this);
 		MockJdbcServicesInitiator.genericDialect.initializeFunctionRegistry(this);
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(this);
+		var functionFactory = new CommonFunctionFactory(this);
 		functionFactory.listagg(null);
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates();
@@ -341,7 +341,7 @@ public abstract class MockSessionFactory
 	protected abstract String getSupertype(String entityName);
 
 	private EntityPersister createEntityPersister(String entityName) {
-		MockEntityPersister result = entityPersistersByName.get(entityName);
+		var result = entityPersistersByName.get(entityName);
 		if (result!=null) {
 			return result;
 		}
@@ -351,7 +351,7 @@ public abstract class MockSessionFactory
 	}
 
 	private CollectionPersister createCollectionPersister(String role) {
-		MockCollectionPersister result = collectionPersistersByName.get(role);
+		var result = collectionPersistersByName.get(role);
 		if (result!=null) {
 			return result;
 		}
@@ -865,7 +865,7 @@ public abstract class MockSessionFactory
 
 		@Override
 		public @Nullable EntityDomainType<?> findEntityType(@Nullable String jpaEntityName) {
-			final String entityTypeName = qualifyName(jpaEntityName);
+			final var entityTypeName = qualifyName(jpaEntityName);
 			if ( entityTypeName != null ) {
 				return new MockEntityDomainType<>(new MockJavaType<>(entityTypeName), jpaEntityName);
 			}
@@ -957,7 +957,7 @@ public abstract class MockSessionFactory
 
 		@Override
 		public @Nullable SqmPersistentAttribute<X,?> findDeclaredAttribute(@Nonnull String name) {
-			final String typeName = getTypeName();
+			final var typeName = getTypeName();
 			return isFieldDefined(typeName, name)
 					? createAttribute(name, typeName, propertyType(typeName, name), this)
 					: null;
@@ -978,7 +978,7 @@ public abstract class MockSessionFactory
 
 		@Override
 		public @Nullable SqmSingularPersistentAttribute<? super X, ?> findVersionAttribute() {
-			final BasicType<?> type = getVersionType(getHibernateEntityName());
+			final var type = getVersionType(getHibernateEntityName());
 			if (type == null) {
 				return null;
 			}
@@ -1005,7 +1005,7 @@ public abstract class MockSessionFactory
 
 		@Override
 		public @Nullable SqmPathSource<?> getIdentifierDescriptor() {
-			final Type type = getIdentifierType(getHibernateEntityName());
+			final var type = getIdentifierType(getHibernateEntityName());
 			if (type instanceof BasicDomainType<?> basicDomainType) {
 				return new BasicSqmPathSource<>(
 						EntityIdentifierMapping.ID_ROLE_NAME,
@@ -1038,24 +1038,24 @@ public abstract class MockSessionFactory
 				case EntityVersionMapping.VERSION_ROLE_NAME:
 					return findVersionAttribute();
 			}
-			final SqmPathSource<?> source = super.findSubPathSource(name, includeSubtypes);
+			final var source = super.findSubPathSource(name, includeSubtypes);
 			if ( source != null ) {
 				return source;
 			}
-			final String supertype = MockSessionFactory.this.getSupertype(getHibernateEntityName());
+			final var supertype = MockSessionFactory.this.getSupertype(getHibernateEntityName());
 			final PersistentAttribute<? super Object, ?> superattribute
 					= new MockMappedDomainType<>(supertype).findAttribute(name);
 			if (superattribute != null) {
 				return (SqmPathSource<?>) superattribute;
 			}
 			for (Map.Entry<String, MockEntityPersister> entry : entityPersistersByName.entrySet()) {
-				final MockEntityPersister entityPersister = entry.getValue();
+				final var entityPersister = entry.getValue();
 				if (!entityPersister.getEntityName().equals(getHibernateEntityName())
 						&& isSubtype(entityPersister.getEntityName(), getHibernateEntityName())) {
-					final MockEntityDomainType<Object> entityDomainType =
-							new MockEntityDomainType<>(new MockJavaType<>(entityPersister.getEntityName()),
+					final var entityDomainType =
+							new MockEntityDomainType<Object>(new MockJavaType<>(entityPersister.getEntityName()),
 									entityPersister.getJpaEntityName());
-					final PersistentAttribute<? super Object, ?> subattribute =
+					final var subattribute =
 							entityDomainType.findAttribute(name);
 					if (subattribute != null) {
 						return (SqmPathSource<?>) subattribute;
@@ -1072,14 +1072,14 @@ public abstract class MockSessionFactory
 				return attribute;
 			}
 			else {
-				final String supertype = MockSessionFactory.this.getSupertype( getHibernateEntityName() );
+				final var supertype = MockSessionFactory.this.getSupertype( getHibernateEntityName() );
 				return new MockMappedDomainType<>( supertype ).findAttribute( name );
 			}
 		}
 
 		@Override
 		public @Nullable SqmPersistentAttribute<X,?> findDeclaredAttribute(@Nonnull String name) {
-			final String entityName = getHibernateEntityName();
+			final var entityName = getHibernateEntityName();
 			return isAttributeDefined(entityName, name)
 					? createAttribute(name, entityName, getReferencedPropertyType(entityName, name), this)
 					: null;
@@ -1093,7 +1093,7 @@ public abstract class MockSessionFactory
 			throw new UnsupportedOperationException(entityName + "." + name);
 		}
 		else if ( type.isCollectionType() ) {
-			final CollectionType collectionType = (CollectionType) type;
+			final var collectionType = (CollectionType) type;
 			return createPluralAttribute(collectionType, entityName, name, owner);
 		}
 		else if ( type.isEntityType() ) {
@@ -1111,7 +1111,7 @@ public abstract class MockSessionFactory
 			);
 		}
 		else if ( type.isComponentType() ) {
-			final CompositeType compositeType = (CompositeType) type;
+			final var compositeType = (CompositeType) type;
 			return new SingularAttributeImpl<>(
 					owner,
 					name,
@@ -1144,23 +1144,23 @@ public abstract class MockSessionFactory
 	}
 
 	private SqmDomainType<?> getElementDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner) {
-		final Type elementType = collectionType.getElementType(MockSessionFactory.this);
+		final var elementType = collectionType.getElementType(MockSessionFactory.this);
 		return getDomainType(entityName, collectionType, owner, elementType);
 	}
 
 	private DomainType<?> getMapKeyDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner) {
-		final Type keyType = getMappingMetamodel().getCollectionDescriptor( collectionType.getRole() ).getIndexType();
+		final var keyType = getMappingMetamodel().getCollectionDescriptor( collectionType.getRole() ).getIndexType();
 		return getDomainType(entityName, collectionType, owner, keyType);
 	}
 
 	private SqmDomainType<?> getDomainType(
 			String entityName, CollectionType collectionType, ManagedDomainType<?> owner, Type elementType) {
 		if ( elementType.isEntityType() ) {
-			final String associatedEntityName = collectionType.getAssociatedEntityName(this);
+			final var associatedEntityName = collectionType.getAssociatedEntityName(this);
 			return new MockEntityDomainType<>(new MockJavaType<>(associatedEntityName));
 		}
 		else if ( elementType.isComponentType() ) {
-			final CompositeType compositeType = (CompositeType) elementType;
+			final var compositeType = (CompositeType) elementType;
 			return createEmbeddableDomainType(entityName, compositeType, owner);
 		}
 		else if ( elementType instanceof SqmDomainType<?> domainType ) {
@@ -1176,13 +1176,13 @@ public abstract class MockSessionFactory
 			String entityName,
 			String name,
 			ManagedDomainType<T> owner) {
-		final Property property = new Property();
+		final var property = new Property();
 		property.setName(name);
-		final JavaType<?> collectionJavaType =
+		final var collectionJavaType =
 				typeConfiguration.getJavaTypeRegistry()
 						.resolveDescriptor(collectionType.getReturnedClass());
-		final SqmDomainType<?> elementDomainType = getElementDomainType(entityName, collectionType, owner);
-		final CollectionClassification classification = collectionType.getCollectionClassification();
+		final var elementDomainType = getElementDomainType(entityName, collectionType, owner);
+		final var classification = collectionType.getCollectionClassification();
 		return switch ( classification ) {
 			case LIST -> new ListAttributeImpl(
 					new PluralAttributeBuilder<>(
@@ -1242,7 +1242,7 @@ public abstract class MockSessionFactory
 	}
 
 	private <T> EmbeddableTypeImpl<T> createEmbeddableDomainType(String entityName, CompositeType compositeType, ManagedDomainType<T> owner) {
-		final JavaType<T> javaType = new UnknownBasicJavaType<>(null, compositeType.getReturnedClassName());
+		final var javaType = new UnknownBasicJavaType<T>(null, compositeType.getReturnedClassName());
 		return new EmbeddableTypeImpl<>( javaType, null, null, true, metamodel.getJpaMetamodel() ) {
 			@Override
 			public @Nullable SqmPersistentAttribute<T, ?> findAttribute(@Nonnull String name) {

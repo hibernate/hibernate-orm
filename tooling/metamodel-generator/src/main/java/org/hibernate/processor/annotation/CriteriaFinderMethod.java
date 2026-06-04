@@ -65,7 +65,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		select( declaration );
 		setFirstResultLimit( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = initiallyUnwrapped();
+		var unwrapped = initiallyUnwrapped();
 		unwrapped = enableFetchProfile( declaration, unwrapped );
 		execute( declaration, paramTypes, unwrapped );
 	}

@@ -34,7 +34,7 @@ class EnabledFetchProfileMetaAttribute extends NameMetaAttribute {
 
 	@Override
 	public String getAttributeNameDeclarationString() {
-		StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		declaration
 				.append("\n/**\n * @see ")
 				.append("#");
@@ -47,8 +47,8 @@ class EnabledFetchProfileMetaAttribute extends NameMetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final Metamodel entity = getHostingEntity();
-		final StringBuilder declaration = new StringBuilder();
+		final var entity = getHostingEntity();
+		final var declaration = new StringBuilder();
 		declaration
 				.append("\n/**")
 				.append("\n * The fetch profile named {@value ")

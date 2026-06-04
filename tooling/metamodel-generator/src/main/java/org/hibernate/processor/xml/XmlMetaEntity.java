@@ -21,10 +21,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyClassImpl;
@@ -96,7 +94,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	static XmlMetaEntity create(JaxbEntityImpl ormEntity, String defaultPackageName, TypeElement element, Context context) {
-		XmlMetaEntity entity = new XmlMetaEntity( ormEntity, defaultPackageName, element, context );
+		var entity = new XmlMetaEntity( ormEntity, defaultPackageName, element, context );
 		// entities can be directly initialised
 		entity.init();
 		return entity;
@@ -122,8 +120,8 @@ public class XmlMetaEntity implements Metamodel {
 
 	private XmlMetaEntity(String clazz, String defaultPackageName, TypeElement element, Context context, Boolean metaComplete) {
 		this.defaultPackageName = defaultPackageName;
-		String className = clazz;
-		String pkg = defaultPackageName;
+		var className = clazz;
+		var pkg = defaultPackageName;
 		if ( isFullyQualified( className ) ) {
 			// if the class name is fully qualified we have to extract the package name from the fqcn.
 			// default package name gets ignored
@@ -200,7 +198,7 @@ public class XmlMetaEntity implements Metamodel {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
+		final var sb = new StringBuilder();
 		sb.append( "XmlMetaEntity" );
 		sb.append( "{accessTypeInfo=" ).append( accessTypeInfo );
 		sb.append( ", clazzName='" ).append( clazzName ).append( '\'' );
@@ -215,12 +213,12 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private @Nullable String[] getCollectionTypes(String propertyName, String explicitTargetEntity, @Nullable String explicitMapKeyClass, ElementKind expectedElementKind) {
-		for ( Element elem : element.getEnclosedElements() ) {
+		for ( var elem : element.getEnclosedElements() ) {
 			if ( !expectedElementKind.equals( elem.getKind() ) ) {
 				continue;
 			}
 
-			String elementPropertyName = elem.getSimpleName().toString();
+			var elementPropertyName = elem.getSimpleName().toString();
 			if ( elem.getKind().equals( ElementKind.METHOD ) ) {
 				elementPropertyName = StringUtil.getPropertyName( elementPropertyName );
 			}
@@ -229,7 +227,7 @@ public class XmlMetaEntity implements Metamodel {
 				continue;
 			}
 
-			DeclaredType type = determineDeclaredType( elem );
+			var type = determineDeclaredType( elem );
 			if ( type != null ) {
 				return determineTypes( propertyName, explicitTargetEntity, explicitMapKeyClass, type );
 			}
@@ -243,7 +241,7 @@ public class XmlMetaEntity implements Metamodel {
 			type = ( (DeclaredType) elem.asType() );
 		}
 		else if ( elem.asType() instanceof ExecutableType ) {
-			ExecutableType executableType = (ExecutableType) elem.asType();
+			var executableType = (ExecutableType) elem.asType();
 			if ( executableType.getReturnType() instanceof DeclaredType ) {
 				type = (DeclaredType) executableType.getReturnType();
 			}
@@ -252,7 +250,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private @Nullable String[] determineTypes(String propertyName, String explicitTargetEntity, @Nullable String explicitMapKeyClass, DeclaredType type) {
-		@Nullable String[] types = new String[3];
+		@Nullable var types = new String[3];
 		determineTargetType( type, propertyName, explicitTargetEntity, types );
 		if ( determineCollectionType( type, types ).equals( Constants.MAP_ATTRIBUTE ) ) {
 			determineMapType( type, explicitMapKeyClass, types );
@@ -274,7 +272,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private void determineTargetType(DeclaredType type, String propertyName, String explicitTargetEntity, @Nullable String[] types) {
-		List<? extends TypeMirror> typeArguments = type.getTypeArguments();
+		var typeArguments = type.getTypeArguments();
 
 		if ( typeArguments.isEmpty() && explicitTargetEntity == null ) {
 			throw new MetaModelGenerationException( "Unable to determine target entity type for " + clazzName + "." + propertyName + "." );
@@ -299,12 +297,12 @@ public class XmlMetaEntity implements Metamodel {
 	 *         type does not exist.
 	 */
 	private @Nullable String getType(String propertyName, @Nullable String explicitTargetEntity, ElementKind expectedElementKind) {
-		for ( Element elem : element.getEnclosedElements() ) {
+		for ( var elem : element.getEnclosedElements() ) {
 			if ( !expectedElementKind.equals( elem.getKind() ) ) {
 				continue;
 			}
 
-			String name = elem.getSimpleName().toString();
+			var name = elem.getSimpleName().toString();
 			final TypeMirror mirror;
 			if ( ElementKind.METHOD.equals( elem.getKind() ) ) {
 				name = StringUtil.getPropertyName( name );
@@ -369,9 +367,9 @@ public class XmlMetaEntity implements Metamodel {
 
 	private void parseAttributes(JaxbAttributesContainerImpl attributes) {
 		XmlMetaSingleAttribute attribute;
-		for ( JaxbIdImpl id : attributes.getIdAttributes() ) {
-			final ElementKind elementKind = getElementKind( id.getAccess() );
-			final String type = getType( id.getName(), null, elementKind );
+		for ( var id : attributes.getIdAttributes() ) {
+			final var elementKind = getElementKind( id.getAccess() );
+			final var type = getType( id.getName(), null, elementKind );
 			if ( type != null ) {
 				attribute = new XmlMetaSingleAttribute( this, id.getName(), type );
 				members.add( attribute );
@@ -379,46 +377,46 @@ public class XmlMetaEntity implements Metamodel {
 		}
 
 		if ( attributes.getEmbeddedIdAttribute() != null ) {
-			final JaxbEmbeddedIdImpl embeddedId = attributes.getEmbeddedIdAttribute();
-			final ElementKind elementKind = getElementKind( embeddedId.getAccess() );
-			final String type = getType( embeddedId.getName(), null, elementKind );
+			final var embeddedId = attributes.getEmbeddedIdAttribute();
+			final var elementKind = getElementKind( embeddedId.getAccess() );
+			final var type = getType( embeddedId.getName(), null, elementKind );
 			if ( type != null ) {
 				attribute = new XmlMetaSingleAttribute( this, embeddedId.getName(), type );
 				members.add( attribute );
 			}
 		}
 
-		for ( JaxbBasicImpl basic : attributes.getBasicAttributes() ) {
+		for ( var basic : attributes.getBasicAttributes() ) {
 			parseBasic( basic );
 		}
 
-		for ( JaxbManyToOneImpl manyToOne : attributes.getManyToOneAttributes() ) {
+		for ( var manyToOne : attributes.getManyToOneAttributes() ) {
 			parseManyToOne( manyToOne );
 		}
 
-		for ( JaxbOneToOneImpl oneToOne : attributes.getOneToOneAttributes() ) {
+		for ( var oneToOne : attributes.getOneToOneAttributes() ) {
 			parseOneToOne( oneToOne );
 		}
 
-		for ( JaxbManyToManyImpl manyToMany : attributes.getManyToManyAttributes() ) {
+		for ( var manyToMany : attributes.getManyToManyAttributes() ) {
 			if ( parseManyToMany( manyToMany ) ) {
 				break;
 			}
 		}
 
-		for ( JaxbOneToManyImpl oneToMany : attributes.getOneToManyAttributes() ) {
+		for ( var oneToMany : attributes.getOneToManyAttributes() ) {
 			if ( parseOneToMany( oneToMany ) ) {
 				break;
 			}
 		}
 
-		for ( JaxbElementCollectionImpl collection : attributes.getElementCollectionAttributes() ) {
+		for ( var collection : attributes.getElementCollectionAttributes() ) {
 			if ( parseElementCollection( collection ) ) {
 				break;
 			}
 		}
 
-		for ( JaxbEmbeddedImpl embedded : attributes.getEmbeddedAttributes() ) {
+		for ( var embedded : attributes.getEmbeddedAttributes() ) {
 			parseEmbedded( embedded );
 		}
 	}
@@ -427,31 +425,31 @@ public class XmlMetaEntity implements Metamodel {
 		if ( attributes == null ) {
 			return;
 		}
-		for ( JaxbBasicImpl basic : attributes.getBasicAttributes() ) {
+		for ( var basic : attributes.getBasicAttributes() ) {
 			parseBasic( basic );
 		}
 
-		for ( JaxbManyToOneImpl manyToOne : attributes.getManyToOneAttributes() ) {
+		for ( var manyToOne : attributes.getManyToOneAttributes() ) {
 			parseManyToOne( manyToOne );
 		}
 
-		for ( JaxbOneToOneImpl oneToOne : attributes.getOneToOneAttributes() ) {
+		for ( var oneToOne : attributes.getOneToOneAttributes() ) {
 			parseOneToOne( oneToOne );
 		}
 
-		for ( JaxbManyToManyImpl manyToMany : attributes.getManyToManyAttributes() ) {
+		for ( var manyToMany : attributes.getManyToManyAttributes() ) {
 			if ( parseManyToMany( manyToMany ) ) {
 				break;
 			}
 		}
 
-		for ( JaxbOneToManyImpl oneToMany : attributes.getOneToManyAttributes() ) {
+		for ( var oneToMany : attributes.getOneToManyAttributes() ) {
 			if ( parseOneToMany( oneToMany ) ) {
 				break;
 			}
 		}
 
-		for ( JaxbElementCollectionImpl collection : attributes.getElementCollectionAttributes() ) {
+		for ( var collection : attributes.getElementCollectionAttributes() ) {
 			if ( parseElementCollection( collection ) ) {
 				break;
 			}
@@ -461,9 +459,9 @@ public class XmlMetaEntity implements Metamodel {
 	private boolean parseElementCollection(JaxbElementCollectionImpl collection) {
 		@Nullable String[] types;
 		XmlMetaCollection metaCollection;
-		ElementKind elementKind = getElementKind( collection.getAccess() );
-		String explicitTargetClass = determineExplicitTargetEntity( collection.getTargetClass() );
-		String explicitMapKey = determineExplicitMapKeyClass( collection.getMapKeyClass() );
+		var elementKind = getElementKind( collection.getAccess() );
+		var explicitTargetClass = determineExplicitTargetEntity( collection.getTargetClass() );
+		var explicitMapKey = determineExplicitMapKeyClass( collection.getMapKeyClass() );
 		try {
 			types = getCollectionTypes(
 					collection.getName(), explicitTargetClass, explicitMapKey, elementKind
@@ -474,9 +472,9 @@ public class XmlMetaEntity implements Metamodel {
 			return true;
 		}
 		if ( types != null ) {
-			final String type = NullnessUtil.castNonNull( types[0] );
-			final String collectionType = NullnessUtil.castNonNull( types[1] );
-			final String keyType = types[2];
+			final var type = NullnessUtil.castNonNull( types[0] );
+			final var collectionType = NullnessUtil.castNonNull( types[1] );
+			final var keyType = types[2];
 			if ( keyType == null ) {
 				metaCollection = new XmlMetaCollection( this, collection.getName(), type, collectionType );
 			}
@@ -490,8 +488,8 @@ public class XmlMetaEntity implements Metamodel {
 
 	private void parseEmbedded(JaxbEmbeddedImpl embedded) {
 		XmlMetaSingleAttribute attribute;
-		ElementKind elementKind = getElementKind( embedded.getAccess() );
-		String type = getType( embedded.getName(), null, elementKind );
+		var elementKind = getElementKind( embedded.getAccess() );
+		var type = getType( embedded.getName(), null, elementKind );
 		if ( type != null ) {
 			attribute = new XmlMetaSingleAttribute( this, embedded.getName(), type );
 			members.add( attribute );
@@ -499,7 +497,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private String determineExplicitTargetEntity(String targetClass) {
-		String explicitTargetClass = targetClass;
+		var explicitTargetClass = targetClass;
 		if ( explicitTargetClass != null ) {
 			explicitTargetClass = determineFullyQualifiedClassName( defaultPackageName, targetClass );
 		}
@@ -517,9 +515,9 @@ public class XmlMetaEntity implements Metamodel {
 	private boolean parseOneToMany(JaxbOneToManyImpl oneToMany) {
 		@Nullable String[] types;
 		XmlMetaCollection metaCollection;
-		ElementKind elementKind = getElementKind( oneToMany.getAccess() );
-		String explicitTargetClass = determineExplicitTargetEntity( oneToMany.getTargetEntity() );
-		String explicitMapKey = determineExplicitMapKeyClass( oneToMany.getMapKeyClass() );
+		var elementKind = getElementKind( oneToMany.getAccess() );
+		var explicitTargetClass = determineExplicitTargetEntity( oneToMany.getTargetEntity() );
+		var explicitMapKey = determineExplicitMapKeyClass( oneToMany.getMapKeyClass() );
 		try {
 			types = getCollectionTypes( oneToMany.getName(), explicitTargetClass, explicitMapKey, elementKind );
 		}
@@ -528,9 +526,9 @@ public class XmlMetaEntity implements Metamodel {
 			return true;
 		}
 		if ( types != null ) {
-			final String type = NullnessUtil.castNonNull( types[0] );
-			final String collectionType = NullnessUtil.castNonNull( types[1] );
-			final String keyType = types[2];
+			final var type = NullnessUtil.castNonNull( types[0] );
+			final var collectionType = NullnessUtil.castNonNull( types[1] );
+			final var keyType = types[2];
 			if ( keyType == null ) {
 				metaCollection = new XmlMetaCollection( this, oneToMany.getName(), type, collectionType );
 			}
@@ -545,9 +543,9 @@ public class XmlMetaEntity implements Metamodel {
 	private boolean parseManyToMany(JaxbManyToManyImpl manyToMany) {
 		@Nullable String[] types;
 		XmlMetaCollection metaCollection;
-		ElementKind elementKind = getElementKind( manyToMany.getAccess() );
-		String explicitTargetClass = determineExplicitTargetEntity( manyToMany.getTargetEntity() );
-		String explicitMapKey = determineExplicitMapKeyClass( manyToMany.getMapKeyClass() );
+		var elementKind = getElementKind( manyToMany.getAccess() );
+		var explicitTargetClass = determineExplicitTargetEntity( manyToMany.getTargetEntity() );
+		var explicitMapKey = determineExplicitMapKeyClass( manyToMany.getMapKeyClass() );
 		try {
 			types = getCollectionTypes(
 					manyToMany.getName(), explicitTargetClass, explicitMapKey, elementKind
@@ -558,9 +556,9 @@ public class XmlMetaEntity implements Metamodel {
 			return true;
 		}
 		if ( types != null ) {
-			final String type = NullnessUtil.castNonNull( types[0] );
-			final String collectionType = NullnessUtil.castNonNull( types[1] );
-			final String keyType = types[2];
+			final var type = NullnessUtil.castNonNull( types[0] );
+			final var collectionType = NullnessUtil.castNonNull( types[1] );
+			final var keyType = types[2];
 			if ( keyType == null ) {
 				metaCollection = new XmlMetaCollection( this, manyToMany.getName(), type, collectionType );
 			}
@@ -574,8 +572,8 @@ public class XmlMetaEntity implements Metamodel {
 
 	private void parseOneToOne(JaxbOneToOneImpl oneToOne) {
 		XmlMetaSingleAttribute attribute;
-		ElementKind elementKind = getElementKind( oneToOne.getAccess() );
-		String type = getType( oneToOne.getName(), oneToOne.getTargetEntity(), elementKind );
+		var elementKind = getElementKind( oneToOne.getAccess() );
+		var type = getType( oneToOne.getName(), oneToOne.getTargetEntity(), elementKind );
 		if ( type != null ) {
 			attribute = new XmlMetaSingleAttribute( this, oneToOne.getName(), type );
 			members.add( attribute );
@@ -584,8 +582,8 @@ public class XmlMetaEntity implements Metamodel {
 
 	private void parseManyToOne(JaxbManyToOneImpl manyToOne) {
 		XmlMetaSingleAttribute attribute;
-		ElementKind elementKind = getElementKind( manyToOne.getAccess() );
-		String type = getType( manyToOne.getName(), manyToOne.getTargetEntity(), elementKind );
+		var elementKind = getElementKind( manyToOne.getAccess() );
+		var type = getType( manyToOne.getName(), manyToOne.getTargetEntity(), elementKind );
 		if ( type != null ) {
 			attribute = new XmlMetaSingleAttribute( this, manyToOne.getName(), type );
 			members.add( attribute );
@@ -594,8 +592,8 @@ public class XmlMetaEntity implements Metamodel {
 
 	private void parseBasic(JaxbBasicImpl basic) {
 		XmlMetaSingleAttribute attribute;
-		ElementKind elementKind = getElementKind( basic.getAccess() );
-		String type = getType( basic.getName(), null, elementKind );
+		var elementKind = getElementKind( basic.getAccess() );
+		var type = getType( basic.getName(), null, elementKind );
 		if ( type != null ) {
 			attribute = new XmlMetaSingleAttribute( this, basic.getName(), type );
 			members.add( attribute );
@@ -603,7 +601,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private void logMetaModelException(String name, MetaModelGenerationException e) {
-		StringBuilder builder = new StringBuilder();
+		var builder = new StringBuilder();
 		builder.append( "Error processing xml for " );
 		builder.append( clazzName );
 		builder.append( "." );

@@ -45,7 +45,7 @@ class TypedMetaAttribute extends NameMetaAttribute {
 
 	@Override
 	public String getAttributeNameDeclarationString() {
-		StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		declaration
 				.append("\n/**\n * @see ")
 				.append("#");
@@ -58,9 +58,9 @@ class TypedMetaAttribute extends NameMetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final boolean isQuery = isQuery();
-		final Metamodel entity = getHostingEntity();
-		final StringBuilder declaration = new StringBuilder();
+		final var isQuery = isQuery();
+		final var entity = getHostingEntity();
+		final var declaration = new StringBuilder();
 		declaration
 				.append("\n/**")
 				.append("\n * The ")

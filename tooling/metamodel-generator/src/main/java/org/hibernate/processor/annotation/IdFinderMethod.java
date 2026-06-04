@@ -37,7 +37,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		super( annotationMetaEntity, method, methodName, entity, entity, containerType, belongsToDao, sessionType, sessionName,
 				fetchProfiles, paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType,
 				nullable );
-		int idParameter = idParameter(paramNames, paramTypes);
+		var idParameter = idParameter(paramNames, paramTypes);
 		this.paramName = paramNames.get(idParameter);
 		this.paramType = paramTypes.get(idParameter);
 	}
@@ -63,7 +63,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final StringBuilder declaration = new StringBuilder();
+		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
 		preamble( declaration, paramTypes );

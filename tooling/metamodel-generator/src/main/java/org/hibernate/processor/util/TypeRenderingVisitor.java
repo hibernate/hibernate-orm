@@ -5,9 +5,7 @@
 package org.hibernate.processor.util;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
@@ -42,9 +40,9 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 	public static String toString(TypeMirror typeMirror) {
 		if ( typeMirror instanceof TypeVariable ) {
 			// Top level type variables don't need to render the upper bound as `T extends Type`
-			final Element typeVariableElement = ( (TypeVariable) typeMirror ).asElement();
+			final var typeVariableElement = ( (TypeVariable) typeMirror ).asElement();
 			if ( typeVariableElement instanceof TypeParameterElement ) {
-				final TypeParameterElement typeParameter = (TypeParameterElement) typeVariableElement;
+				final var typeParameter = (TypeParameterElement) typeVariableElement;
 				if ( typeParameter.getEnclosingElement().getKind() == ElementKind.METHOD ) {
 					// But for method level type variable we return the upper bound
 					// because the type variable has no meaning except for that method
@@ -62,14 +60,14 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 			// For top level type only the first type is relevant
 			typeMirror = ( (IntersectionType) typeMirror ).getBounds().get( 0 );
 		}
-		final TypeRenderingVisitor typeRenderingVisitor = new TypeRenderingVisitor();
+		final var typeRenderingVisitor = new TypeRenderingVisitor();
 		typeMirror.accept( typeRenderingVisitor, null );
 		return typeRenderingVisitor.sb.toString();
 	}
 
 	@Override
 	public @Nullable Object visitPrimitive(PrimitiveType t, @Nullable Object o) {
-		final String primitiveTypeName = getPrimitiveTypeName( t.getKind() );
+		final var primitiveTypeName = getPrimitiveTypeName( t.getKind() );
 		if ( primitiveTypeName != null ) {
 			sb.append( primitiveTypeName );
 		}
@@ -115,7 +113,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 	@Override
 	public @Nullable Object visitDeclared(DeclaredType t, @Nullable Object o) {
 		sb.append( t.asElement().toString() );
-		List<? extends TypeMirror> typeArguments = t.getTypeArguments();
+		var typeArguments = t.getTypeArguments();
 		if ( !typeArguments.isEmpty() ) {
 			sb.append( '<' );
 			typeArguments.get( 0 ).accept( this, null );
@@ -130,9 +128,9 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 
 	@Override
 	public @Nullable Object visitTypeVariable(TypeVariable t, @Nullable Object o) {
-		final Element typeVariableElement = t.asElement();
+		final var typeVariableElement = t.asElement();
 		if ( typeVariableElement instanceof TypeParameterElement ) {
-			final TypeParameterElement typeParameter = (TypeParameterElement) typeVariableElement;
+			final var typeParameter = (TypeParameterElement) typeVariableElement;
 			sb.append( typeParameter );
 			if ( !JAVA_OBJECT.equals( t.getUpperBound().toString() ) && visitedTypeVariables.add( t ) ) {
 				sb.append( " extends " );
@@ -167,7 +165,7 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 
 	@Override
 	public @Nullable Object visitIntersection(IntersectionType t, @Nullable Object o) {
-		final List<? extends TypeMirror> bounds = t.getBounds();
+		final var bounds = t.getBounds();
 		bounds.get( 0 ).accept( this, null );
 		for ( int i = 0; i < bounds.size(); i++ ) {
 			sb.append( " & " );

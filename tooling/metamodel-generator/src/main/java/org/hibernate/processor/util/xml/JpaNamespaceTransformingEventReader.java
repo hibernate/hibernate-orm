@@ -6,7 +6,6 @@ package org.hibernate.processor.util.xml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.xml.namespace.QName;
@@ -111,14 +110,14 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 	}
 
 	private StartElement transform(StartElement startElement) {
-		String elementName = startElement.getName().getLocalPart();
+		var elementName = startElement.getName().getLocalPart();
 		// use the start element to determine whether we have a persistence.xml or orm.xml
 		if ( START_ELEMENT_TO_NAMESPACE_URI.containsKey( elementName ) ) {
 			currentDocumentNamespaceUri = START_ELEMENT_TO_NAMESPACE_URI.get( elementName );
 		}
 
-		List<Attribute> newElementAttributeList = updateElementAttributes( startElement );
-		List<Namespace> newNamespaceList = updateElementNamespaces( startElement );
+		var newElementAttributeList = updateElementAttributes( startElement );
+		var newNamespaceList = updateElementNamespaces( startElement );
 
 		// create the new element
 		return xmlEventFactory.createStartElement(
@@ -129,10 +128,10 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 	}
 
 	private List<Namespace> updateElementNamespaces(StartElement startElement) {
-		List<Namespace> newNamespaceList = new ArrayList<>();
-		Iterator<Namespace> existingNamespaceIterator = startElement.getNamespaces();
+		var newNamespaceList = new ArrayList<Namespace>();
+		var existingNamespaceIterator = startElement.getNamespaces();
 		while ( existingNamespaceIterator.hasNext() ) {
-			Namespace namespace = existingNamespaceIterator.next();
+			var namespace = existingNamespaceIterator.next();
 			if ( NAMESPACE_MAPPING.containsKey( namespace.getNamespaceURI() ) ) {
 				newNamespaceList.add( xmlEventFactory.createNamespace( EMPTY_PREFIX, currentDocumentNamespaceUri ) );
 			}
@@ -151,10 +150,10 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 
 	private List<Attribute> updateElementAttributes(StartElement startElement) {
 		// adjust the version attribute
-		List<Attribute> newElementAttributeList = new ArrayList<>();
-		Iterator<Attribute> existingAttributesIterator = startElement.getAttributes();
+		var newElementAttributeList = new ArrayList<Attribute>();
+		var existingAttributesIterator = startElement.getAttributes();
 		while ( existingAttributesIterator.hasNext() ) {
-			Attribute attribute = existingAttributesIterator.next();
+			var attribute = existingAttributesIterator.next();
 			if ( VERSION_ATTRIBUTE_NAME.equals( attribute.getName().getLocalPart() ) ) {
 				if ( currentDocumentNamespaceUri.equals( DEFAULT_PERSISTENCE_NAMESPACE ) ) {
 					if ( !DEFAULT_PERSISTENCE_VERSION.equals( attribute.getName().getPrefix() ) ) {

@@ -53,13 +53,13 @@ final class QueryOptionsSupport {
 	}
 
 	private static void setQueryHints(StringBuilder declaration, AnnotationMirror queryOptions) {
-		final AnnotationValue hints = getAnnotationValue( queryOptions, "hints" );
+		final var hints = getAnnotationValue( queryOptions, "hints" );
 		if ( hints != null ) {
 			@SuppressWarnings("unchecked")
-			final List<? extends AnnotationValue> values =
+			final var values =
 					(List<? extends AnnotationValue>) hints.getValue();
-			for ( AnnotationValue value : values ) {
-				final AnnotationMirror hint = (AnnotationMirror) value.getValue();
+			for ( var value : values ) {
+				final var hint = (AnnotationMirror) value.getValue();
 				setQueryHint( declaration, annotationString( hint, "name" ), annotationString( hint, "value" ) );
 			}
 		}
@@ -81,9 +81,9 @@ final class QueryOptionsSupport {
 			boolean update,
 			boolean nativeQuery) {
 		if ( !update && !nativeQuery ) {
-			final AnnotationValue entityGraph = getAnnotationValue( queryOptions, "entityGraph" );
+			final var entityGraph = getAnnotationValue( queryOptions, "entityGraph" );
 			if ( entityGraph != null ) {
-				final String graphName = entityGraph.getValue().toString();
+				final var graphName = entityGraph.getValue().toString();
 				if ( !graphName.isEmpty() ) {
 					declaration
 							.append("\n\t\t\t.setHint(\"jakarta.persistence.loadgraph\", ");
@@ -101,7 +101,7 @@ final class QueryOptionsSupport {
 			AbstractQueryMethod method,
 			StringBuilder declaration,
 			AnnotationMirror queryOptions) {
-		final AnnotationValue timeout = getAnnotationValue( queryOptions, "timeout" );
+		final var timeout = getAnnotationValue( queryOptions, "timeout" );
 		if ( timeout != null ) {
 			declaration
 					.append("\n\t\t\t.setTimeout(")
@@ -118,9 +118,9 @@ final class QueryOptionsSupport {
 			AnnotationMirror queryOptions,
 			String member,
 			String methodName) {
-		final AnnotationValue option = getAnnotationValue( queryOptions, member );
+		final var option = getAnnotationValue( queryOptions, member );
 		if ( option != null && option.getValue() instanceof VariableElement variable ) {
-			final TypeElement type = (TypeElement) variable.getEnclosingElement();
+			final var type = (TypeElement) variable.getEnclosingElement();
 			declaration
 					.append("\n\t\t\t.")
 					.append(methodName)
@@ -133,16 +133,16 @@ final class QueryOptionsSupport {
 	}
 
 	private static String annotationString(AnnotationMirror annotation, String member) {
-		final AnnotationValue value = getAnnotationValue( annotation, member );
+		final var value = getAnnotationValue( annotation, member );
 		return value == null ? "" : value.getValue().toString();
 	}
 
 	static String stringLiteral(String string) {
-		final StringBuilder literal =
+		final var literal =
 				new StringBuilder( string.length() + 2 )
 						.append('"');
 		for ( int i = 0; i < string.length(); i++ ) {
-			final char character = string.charAt( i );
+			final var character = string.charAt( i );
 			literal.append(switch ( character ) {
 				case '\b' -> "\\b";
 				case '\t' -> "\\t";

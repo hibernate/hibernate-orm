@@ -30,14 +30,11 @@ without publishing upstream, you can install the Jakarta Persistence artifacts t
 
 [source,bash]
 ----
-./gradlew :hibernate-tck-runner:test -Pdb=pgsql_ci -Pruntck=true -DenableMavenLocalRepo=true -Pgradle.libs.versions.persistenceTck=4.0.0-SNAPSHOT
+./gradlew :hibernate-tck-runner:test -Pdb=pgsql_ci -Pruntck=true -DenableMavenLocalRepo=true
 ----
 
 The `-DenableMavenLocalRepo=true` system property adds `mavenLocal()` as a repository so that
 locally built artifacts are picked up. This flag works for the main build as well, not just the TCK runner.
-
-The `-Pgradle.libs.versions.persistenceTck=4.0.0-SNAPSHOT` overrides the version of the TCK used to run the tests.
-Specify the version that you've built and want to test against.
 
 == Testing from the IDE
 

@@ -38,6 +38,13 @@ public final class Constants {
 	public static final String CONVERT = "jakarta.persistence.Convert";
 	public static final String GENERATED_VALUE = "jakarta.persistence.GeneratedValue";
 	public static final String ORDER_BY = "jakarta.persistence.OrderBy";
+	public static final String ENTITY_LISTENER = "jakarta.persistence.EntityListener";
+	public static final String PRE_INSERT = "jakarta.persistence.PreInsert";
+	public static final String POST_INSERT = "jakarta.persistence.PostInsert";
+	public static final String PRE_UPDATE = "jakarta.persistence.PreUpdate";
+	public static final String POST_UPDATE = "jakarta.persistence.PostUpdate";
+	public static final String PRE_DELETE = "jakarta.persistence.PreDelete";
+	public static final String POST_DELETE = "jakarta.persistence.PostDelete";
 
 	public static final String NAMED_QUERY = "jakarta.persistence.NamedQuery";
 	public static final String NAMED_QUERIES = "jakarta.persistence.NamedQueries";

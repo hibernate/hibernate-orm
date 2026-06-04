@@ -30,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
+import static org.hibernate.processor.util.Constants.ENTITY_LISTENER;
 import static org.hibernate.processor.util.Constants.JD_STATIC_METAMODEL;
 import static org.hibernate.processor.util.Constants.SPRING_COMPONENT;
 import static org.hibernate.processor.util.Constants.STATIC_METAMODEL;
@@ -103,6 +104,9 @@ public final class ClassWriter {
 			}
 			if ( context.addDependentAnnotation() && entity.isInjectable() ) {
 				pw.println( writeScopeAnnotation( entity ) );
+			}
+			if ( isLifecycleEventListener( entity ) ) {
+				pw.println( writeEntityListenerAnnotation( entity ) );
 			}
 			if ( entity.getElement() instanceof TypeElement && !entity.isInjectable() ) {
 				pw.println( writeStaticMetaModelAnnotation( entity ) );
@@ -328,6 +332,15 @@ public final class ClassWriter {
 
 	private static String writeScopeAnnotation(Metamodel entity) {
 		return "@" + entity.importType( entity.scope() );
+	}
+
+	private static boolean isLifecycleEventListener(Metamodel entity) {
+		return entity instanceof AnnotationMetaEntity annotationMetaEntity
+			&& annotationMetaEntity.isLifecycleEventListener();
+	}
+
+	private static String writeEntityListenerAnnotation(Metamodel entity) {
+		return "@" + entity.importType( ENTITY_LISTENER );
 	}
 
 	private static String writeComponentAnnotation(Metamodel entity) {

@@ -18,6 +18,7 @@ import java.util.StringTokenizer;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.util.Constants.BOXED_VOID;
+import static org.hibernate.processor.util.Constants.COMPLETABLE_FUTURE;
 import static org.hibernate.processor.util.Constants.COLLECTORS;
 import static org.hibernate.processor.util.Constants.HIB_JAKARTA_DATA_RESTRICTION;
 import static org.hibernate.processor.util.Constants.HIB_KEYED_PAGE;
@@ -683,11 +684,15 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					.append(" _results = ");
 		}
 		else {
-			if ( !"void".equals(returnTypeName) || isReactiveSessionAccess() ) {
-				declaration
-						.append("return ");
+			if ( !returnsVoid() || isReactiveSessionAccess() ) {
+				returnResult( declaration );
 			}
 		}
+	}
+
+	boolean returnsVoid() {
+		return "void".equals( returnTypeName )
+			|| isAsynchronousCompletionStageWithVoidResult();
 	}
 
 	void select(StringBuilder declaration) {
@@ -1109,6 +1114,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				declaration
 						.append("\t\t\t.getSingleResult()");
 			}
+			endReturnResult( declaration );
 		}
 		else {
 			switch (containerType) {
@@ -1122,19 +1128,23 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append(annotationMetaEntity.importType(returnTypeName))
 								.append("[0])");
 					}
+					endReturnResult( declaration );
 					break;
 				case OPTIONAL:
 					unwrapQuery(declaration, unwrapped);
 					declaration
 							.append("\t\t\t.uniqueResultOptional()");
+					endReturnResult( declaration );
 					break;
 				case STREAM:
 					declaration
 							.append("\t\t\t.getResultStream()");
+					endReturnResult( declaration );
 					break;
 				case LIST:
 					declaration
 							.append("\t\t\t.getResultList()");
+					endReturnResult( declaration );
 					break;
 				case HIB_KEYED_RESULT_LIST:
 					unwrapQuery(declaration, unwrapped);
@@ -1142,6 +1152,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 							.append("\t\t\t.getKeyedResultList(")
 							.append(parameterName(HIB_KEYED_PAGE, paramTypes, paramNames))
 							.append(")");
+					endReturnResult( declaration );
 					break;
 				case JD_PAGE:
 					if ( isReactive() ) {
@@ -1157,7 +1168,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					else {
 						declaration
 								.append("\t\t\t.getResultList();\n")
-								.append("\t\treturn ");
+								.append("\t\t");
+						returnResult( declaration );
 					}
 					declaration
 							.append("new ")
@@ -1170,6 +1182,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						declaration
 								.append(')');
 					}
+					endReturnResult( declaration );
 					break;
 				case JD_CURSORED_PAGE:
 					if ( returnTypeName == null ) {
@@ -1189,8 +1202,14 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 										parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 								.replace("Entity",
 										annotationMetaEntity.importType(returnTypeName));
+						if ( isAsynchronousCompletionStage() ) {
+							fragment = fragment.replace( "\t\treturn ", "\t\treturn "
+									+ annotationMetaEntity.staticImport( COMPLETABLE_FUTURE, "completedStage" )
+									+ "(" );
+						}
 						declaration
 								.append(fragment);
+						endReturnResult( declaration );
 					}
 					break;
 				default:
@@ -1207,6 +1226,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 							declaration.setLength(lastIndex);
 						}
 					}
+					endReturnResult( declaration );
 			}
 		}
 	}

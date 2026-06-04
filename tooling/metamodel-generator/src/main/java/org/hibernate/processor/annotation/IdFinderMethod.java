@@ -94,6 +94,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			}
 			declaration
 					.append(')');
+			endReturnResult( declaration );
 		}
 		else if (!nullable) {
 			if ( isReactive() ) {
@@ -117,7 +118,10 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					throwEmptyResult( declaration );
 					declaration
 							.append( ";\n" )
-							.append( "\t\treturn _result" );
+							.append( "\t\t" );
+					returnResult( declaration );
+					declaration.append( "_result" );
+					endReturnResult( declaration );
 				}
 				else {
 					declaration
@@ -125,9 +129,15 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					throwObjectNotFound( declaration );
 					declaration
 							.append( ";\n" )
-							.append( "\treturn _result" );
+							.append( "\t" );
+					returnResult( declaration );
+					declaration.append( "_result" );
+					endReturnResult( declaration );
 				}
 			}
+		}
+		else {
+			endReturnResult( declaration );
 		}
 	}
 
@@ -166,7 +176,9 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		}
 		if (containerType != null && !isReactive()) {
 			declaration
-					.append("\treturn ")
+					.append("\t");
+			returnResult( declaration );
+			declaration
 					.append(annotationMetaEntity.staticImport(containerType, "ofNullable"))
 					.append('(');
 		}
@@ -176,7 +188,8 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		}
 		else {
 			declaration
-					.append("\treturn ");
+					.append("\t");
+			returnResult( declaration );
 		}
 		declaration
 				.append(sessionName)

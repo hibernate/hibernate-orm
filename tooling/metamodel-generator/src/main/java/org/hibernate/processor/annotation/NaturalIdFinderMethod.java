@@ -98,6 +98,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			declaration
 					.append("\t\t\t.loadOptional()");
 		}
+		endReturnResult( declaration );
 	}
 
 	private void findReactively(StringBuilder declaration) {

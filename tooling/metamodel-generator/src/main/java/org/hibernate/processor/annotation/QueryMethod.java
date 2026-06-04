@@ -115,6 +115,14 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
+	void results(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
+		super.results( declaration, paramTypes, containerType );
+		if ( isUpdate && returnsLong() ) {
+			declaration.append( "(long) " );
+		}
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		final List<String> paramTypes = parameterTypes();
 		if ( usesAugmentedQueryReference() ) {
@@ -491,7 +499,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			// so we need to cast to the entity type
 			declaration
 					.append("(")
-					.append(fullReturnType)
+					.append(annotationMetaEntity.importType(returnTypeName))
 					.append(") ");
 		}
 	}
@@ -500,7 +508,12 @@ public class QueryMethod extends AbstractQueryMethod {
 		if ( isUpdate ) {
 			declaration
 					.append("\t\t\t.executeUpdate()");
-			if ( isReactive() ) {
+			if ( isAsynchronousCompletionStageWithVoidResult() ) {
+				declaration
+						.append( ";\n\t\t" );
+				returnNullResult( declaration );
+			}
+			else if ( isReactive() ) {
 				if ( VOID.equals(returnTypeName) ) {
 					declaration
 							.append( "\n\t\t\t.replaceWithVoid()" );
@@ -511,10 +524,11 @@ public class QueryMethod extends AbstractQueryMethod {
 				}
 			}
 			else {
-				if ( "boolean".equals( returnTypeName ) ) {
+				if ( "boolean".equals( returnTypeName ) || BOOLEAN.equals( returnTypeName ) ) {
 					declaration
 							.append( " > 0" );
 				}
+				endReturnResult( declaration );
 			}
 		}
 		else {
@@ -523,6 +537,11 @@ public class QueryMethod extends AbstractQueryMethod {
 							|| isNative && returnTypeName != null;
 			executeSelect( declaration, paramTypes, containerType, unwrapped, mustUnwrap );
 		}
+	}
+
+	private boolean returnsLong() {
+		return "long".equals( returnTypeName )
+			|| "java.lang.Long".equals( returnTypeName );
 	}
 
 	@Override

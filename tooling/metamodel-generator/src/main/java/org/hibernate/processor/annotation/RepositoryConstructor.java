@@ -77,22 +77,41 @@ public class RepositoryConstructor implements MetaAttribute {
 		declaration
 				.append('\n');
 		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
-			declaration
-					.append("protected ");
-			if ( !dataRepository ) {
-				// don't mark the field final
-				// because it will be initialized
-				// in @PostConstruct
-				declaration
-						.append("final ");
-			}
-			notNull( declaration );
-			declaration
-					.append(annotationMetaEntity.importType(sessionTypeName))
-					.append(" ")
-					.append(sessionVariableName)
-					.append(";\n\n");
+			backingField( declaration );
 		}
+		constructor( declaration );
+		// resource accessor method a.k.a. session getter
+		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
+			accessor( declaration );
+		}
+		return declaration.toString();
+	}
+
+	private void accessor(StringBuilder declaration) {
+		declaration
+				.append("\n\n");
+		if (addOverrideAnnotation) {
+			declaration.append("@Override\n");
+		}
+		declaration
+				.append("public ");
+		notNull( declaration );
+		declaration
+				.append(annotationMetaEntity.importType(providedSessionType()))
+				.append(" ")
+				.append(methodName)
+				.append("() {")
+				.append("\n\treturn ")
+				.append(sessionVariableName);
+		if ( annotationMetaEntity.isProvidedSessionAccess() ) {
+			declaration
+					.append( ".getObject()" );
+		}
+		declaration
+				.append(";\n}");
+	}
+
+	private void constructor(StringBuilder declaration) {
 		inject( declaration );
 		declaration
 				.append("public ")
@@ -121,31 +140,24 @@ public class RepositoryConstructor implements MetaAttribute {
 		}
 		declaration
 				.append("}");
-		// resource accessor method a.k.a. session getter
-		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
+	}
+
+	private void backingField(StringBuilder declaration) {
+		declaration
+				.append("protected ");
+		if ( !dataRepository ) {
+			// don't mark the field final
+			// because it will be initialized
+			// in @PostConstruct
 			declaration
-					.append("\n\n");
-			if (addOverrideAnnotation) {
-				declaration.append("@Override\n");
-			}
-			declaration
-					.append("public ");
-			notNull( declaration );
-			declaration
-					.append(annotationMetaEntity.importType(providedSessionType()))
-					.append(" ")
-					.append(methodName)
-					.append("() {")
-					.append("\n\treturn ")
-					.append(sessionVariableName);
-			if ( annotationMetaEntity.isProvidedSessionAccess() ) {
-				declaration
-						.append( ".getObject()" );
-			}
-			declaration
-					.append(";\n}");
+					.append("final ");
 		}
-		return declaration.toString();
+		notNull( declaration );
+		declaration
+				.append(annotationMetaEntity.importType(sessionTypeName))
+				.append(" ")
+				.append(sessionVariableName)
+				.append(";\n\n");
 	}
 
 	private String providedSessionType() {

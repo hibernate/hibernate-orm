@@ -107,6 +107,7 @@ public final class Constants {
 	public static final String JD_REFRESH = "jakarta.data.repository.stateful.Refresh";
 	public static final String JD_REMOVE = "jakarta.data.repository.stateful.Remove";
 	public static final String JD_DETACH = "jakarta.data.repository.stateful.Detach";
+	public static final String JD_ASYNCHRONOUS = "jakarta.enterprise.concurrent.Asynchronous";
 	public static final String JD_LIMIT = "jakarta.data.Limit";
 	public static final String JD_SORT = "jakarta.data.Sort";
 	public static final String JD_ORDER = "jakarta.data.Order";
@@ -216,6 +217,8 @@ public final class Constants {
 	public static final String MAP = "java.util.Map";
 	public static final String SET = "java.util.Set";
 	public static final String OPTIONAL = "java.util.Optional";
+	public static final String COMPLETABLE_FUTURE = "java.util.concurrent.CompletableFuture";
+	public static final String COMPLETION_STAGE = "java.util.concurrent.CompletionStage";
 	public static final String STREAM = "java.util.stream.Stream";
 	public static final String COLLECTORS = "java.util.stream.Collectors";
 

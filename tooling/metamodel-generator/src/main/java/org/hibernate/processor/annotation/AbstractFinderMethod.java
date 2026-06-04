@@ -177,7 +177,9 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod {
 					.append("\ttry {\n\t");
 		}
 		declaration
-				.append("\treturn ")
+				.append("\t");
+		returnResult( declaration );
+		declaration
 				.append(sessionName)
 				.append(getObjectCall());
 	}

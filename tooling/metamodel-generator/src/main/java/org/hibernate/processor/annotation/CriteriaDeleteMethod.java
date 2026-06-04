@@ -61,9 +61,11 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 			declaration
 					.append("\n\ttry {\n\t\t");
 		}
-		if ( !"void".equals(fullReturnType) ) {
-			declaration
-					.append("return ");
+		if ( !returnsNoResult() ) {
+			returnResult( declaration );
+			if ( returnsLong() ) {
+				declaration.append( "(long) " );
+			}
 		}
 	}
 
@@ -80,6 +82,16 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 		}
 	}
 
+	private boolean returnsLong() {
+		return "long".equals( fullReturnType )
+			|| fullReturnType.endsWith( "<java.lang.Long>" );
+	}
+
+	private boolean returnsNoResult() {
+		return "void".equals( fullReturnType )
+			|| isAsynchronousCompletionStageWithVoidResult();
+	}
+
 	@Override
 	String specificationType() {
 		return "org.hibernate.query.specification.MutationSpecification";
@@ -88,10 +100,18 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 	private void execute(StringBuilder declaration) {
 		declaration
 				.append(".executeUpdate()");
-		if ( isReactive()
+		if ( isAsynchronousCompletionStageWithVoidResult() ) {
+			declaration
+					.append( ";\n\t\t" );
+			returnNullResult( declaration );
+		}
+		else if ( isReactive()
 				&& fullReturnType.endsWith("<java.lang.Void>") ) {
 			declaration
 					.append( ".replaceWithVoid()" );
+		}
+		else {
+			endReturnResult( declaration );
 		}
 	}
 

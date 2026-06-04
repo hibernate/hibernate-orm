@@ -1904,7 +1904,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			boolean isNative) {
 		final AnnotationValue value = getAnnotationValue( mirror );
 		if ( value != null && value.getValue() instanceof String queryString ) {
-			final TypeMirror methodReturnType = memberMethodType( method ).getReturnType();
+			final TypeMirror methodReturnType =
+					unwrappedReturnTypeIfPossible( method, memberMethodType( method ).getReturnType() );
 			final StaticQueryReturnType queryReturnType =
 					staticQueryReturnType( method, methodReturnType, mirror, value, queryString );
 			if ( queryReturnType != null ) {
@@ -2000,12 +2001,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			case DECLARED -> {
-				final TypeMirror queryResultType = staticQueryResultType( (DeclaredType) methodReturnType );
-				resultType( method, queryResultType, mirror, value );
-				yield new StaticQueryReturnType( false,
-						typeAsString( queryResultType ),
-						returnTypeClass( queryResultType ),
-						queryResultType );
+				if ( statement && isValidUpdateReturnType( methodReturnType, method, isReactive() ) ) {
+					yield new StaticQueryReturnType( true, null, null, methodReturnType );
+				}
+				else {
+					final TypeMirror queryResultType = staticQueryResultType( (DeclaredType) methodReturnType );
+					resultType( method, queryResultType, mirror, value );
+					yield new StaticQueryReturnType( false,
+							typeAsString( queryResultType ),
+							returnTypeClass( queryResultType ),
+							queryResultType );
+				}
 			}
 			case ARRAY -> {
 				final TypeMirror queryResultType = staticArrayQueryResultType( (ArrayType) methodReturnType );
@@ -2083,13 +2089,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void addQueryMethod(ExecutableElement method) {
 		validateFirst( method );
 		validateSelectUse( method );
-		final TypeMirror returnType = memberMethodType( method ).getReturnType();
+		final TypeMirror returnType = unwrappedReturnTypeIfPossible( method, memberMethodType( method ).getReturnType() );
 		final TypeKind kind = returnType.getKind();
 		if ( kind == TypeKind.VOID || kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) unUniIfPossible( method, returnType );
+			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -2121,6 +2127,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	private TypeMirror unwrappedReturnTypeIfPossible(ExecutableElement method, TypeMirror returnType) {
+		return unUniIfPossible( method, unCompletionStageIfPossible( method, returnType ) );
+	}
+
 	private TypeMirror unUniIfPossible(ExecutableElement method, TypeMirror returnType) {
 		final TypeMirror result = ununi( returnType );
 		if ( repository ) {
@@ -2136,6 +2146,41 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		return result;
+	}
+
+	private TypeMirror unCompletionStageIfPossible(ExecutableElement method, TypeMirror returnType) {
+		final boolean asynchronous = hasAnnotation( method, JD_ASYNCHRONOUS );
+		final TypeMirror result = completionStageResultType( returnType );
+		if ( asynchronous && isReactive() ) {
+			message( method,
+					"'@Asynchronous' must not be used on repositories backed by a reactive session",
+					Diagnostic.Kind.ERROR );
+			return returnType;
+		}
+		if ( result == null ) {
+			if ( asynchronous ) {
+				if ( isCompletionStage( returnType ) ) {
+					message( method,
+							"return type 'CompletionStage' must declare exactly one type argument",
+							Diagnostic.Kind.ERROR );
+				}
+				else {
+					message( method,
+							"method annotated '@Asynchronous' must return 'CompletionStage'",
+							Diagnostic.Kind.ERROR );
+				}
+			}
+			return returnType;
+		}
+		else if ( asynchronous ) {
+			return result;
+		}
+		else if ( jakartaDataRepository ) {
+			message( method,
+					"repository methods returning 'CompletionStage' must be annotated '@Asynchronous'",
+					Diagnostic.Kind.ERROR );
+		}
+		return returnType;
 	}
 
 	private boolean validatedQueryReturnType(ExecutableElement method, TypeElement typeElement) {
@@ -2268,6 +2313,32 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return returnType;
 	}
 
+	private static TypeMirror completionStageResultType(TypeMirror returnType) {
+		if ( returnType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			if ( typeElement.getQualifiedName().contentEquals( COMPLETION_STAGE )
+					&& declaredType.getTypeArguments().size() == 1 ) {
+				return declaredType.getTypeArguments().get( 0 );
+			}
+		}
+		return null;
+	}
+
+	private static boolean isCompletionStage(TypeMirror returnType) {
+		if ( returnType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			return typeElement.getQualifiedName().contentEquals( COMPLETION_STAGE );
+		}
+		return false;
+	}
+
+	private static boolean isAsynchronousCompletionStage(ExecutableElement method) {
+		return hasAnnotation( method, JD_ASYNCHRONOUS )
+			&& isCompletionStage( method.getReturnType() );
+	}
+
 	private static boolean isUni(TypeMirror returnType) {
 		if ( returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
@@ -2329,14 +2400,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( returnType != null ) {
 			if ( isReactive()
 					? isLegalReactiveDeleteReturnType( returnType )
-					: isLegalDeleteReturnType( returnType ) ) {
+					: isAsynchronousCompletionStage( method )
+							? isLegalAsynchronousDeleteReturnType( returnType )
+							: isLegalDeleteReturnType( returnType ) ) {
 				createCriteriaDelete( method );
 			}
 			else {
 				message( method,
 						isReactive()
 								? "must be 'Uni<Void>' or 'Uni<Integer>'"
-								: "must be 'void' or return 'int' or 'long'",
+								: isAsynchronousCompletionStage( method )
+										? "must return 'CompletionStage<Void>', 'CompletionStage<Integer>', or 'CompletionStage<Long>'"
+										: "must be 'void' or return 'int' or 'long'",
 						Diagnostic.Kind.ERROR );
 			}
 		}
@@ -2347,6 +2422,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return kind == TypeKind.VOID
 			|| kind == TypeKind.INT
 			|| kind == TypeKind.LONG;
+	}
+
+	private static boolean isLegalAsynchronousDeleteReturnType(TypeMirror returnType) {
+		final TypeKind kind = returnType.getKind();
+		if ( kind == TypeKind.DECLARED ) {
+			final DeclaredType type = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) type.asElement();
+			final Name name = typeElement.getQualifiedName();
+			return name.contentEquals( Void.class.getName() )
+				|| name.contentEquals( Integer.class.getName() )
+				|| name.contentEquals( Long.class.getName() );
+		}
+		else {
+			return isLegalDeleteReturnType( returnType );
+		}
 	}
 
 	private static boolean isLegalReactiveDeleteReturnType(TypeMirror returnType) {
@@ -2364,7 +2454,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addLifecycleMethod(ExecutableElement method) {
-		final TypeMirror returnType = unUniIfPossible( method, method.getReturnType() );
+		final TypeMirror returnType = unwrappedReturnTypeIfPossible( method, method.getReturnType() );
 		if ( method.getParameters().size() != 1 ) {
 			message( method,
 					"must have exactly one parameter",
@@ -2519,28 +2609,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return LifecycleMethod.ParameterKind.NORMAL;
 		}
 	}
-
-	private TypeMirror lifecycleParameterArgument(TypeMirror parameterType) {
-		switch ( parameterType.getKind() ) {
-			case ARRAY:
-				final ArrayType arrayType = (ArrayType) parameterType;
-				return arrayType.getComponentType();
-			case DECLARED:
-				final DeclaredType declaredType = (DeclaredType) parameterType;
-				final TypeElement typeElement = (TypeElement) declaredType.asElement();
-				if ( typeElement.getQualifiedName().contentEquals( LIST ) ) {
-					final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-					return !typeArguments.isEmpty()
-							? typeArguments.get( 0 )
-							: context.getElementUtils().getTypeElement( JAVA_OBJECT ).asType();
-				}
-				else {
-					return parameterType;
-				}
-			default:
-				return parameterType;
-		}
-	}
+//
+//	private TypeMirror lifecycleParameterArgument(TypeMirror parameterType) {
+//		switch ( parameterType.getKind() ) {
+//			case ARRAY:
+//				final ArrayType arrayType = (ArrayType) parameterType;
+//				return arrayType.getComponentType();
+//			case DECLARED:
+//				final DeclaredType declaredType = (DeclaredType) parameterType;
+//				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+//				if ( typeElement.getQualifiedName().contentEquals( LIST ) ) {
+//					final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+//					return !typeArguments.isEmpty()
+//							? typeArguments.get( 0 )
+//							: context.getElementUtils().getTypeElement( JAVA_OBJECT ).asType();
+//				}
+//				else {
+//					return parameterType;
+//				}
+//			default:
+//				return parameterType;
+//		}
+//	}
 
 	private static boolean isVoid(TypeMirror returnType) {
 		switch ( returnType.getKind() ) {
@@ -2654,7 +2744,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final DeclaredType declaredType = (DeclaredType) componentType;
 				final TypeElement entity = (TypeElement) declaredType.asElement();
 				// multiple results, it has to be a criteria finder
-				createCriteriaFinder( method, arrayType.getComponentType(), "[]", entity, null );
+				createCriteriaFinder( method, /*arrayType.getComponentType(),*/ "[]", entity, null );
 			}
 			else if ( componentType.getKind().isPrimitive() ) {
 				message( method,
@@ -2666,7 +2756,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( entity != null ) {
 					final ResultSelection selection = resultSelection( method, componentType, entity, false );
 					if ( selection != null ) {
-						createCriteriaFinder( method, componentType, "[]", entity, selection );
+						createCriteriaFinder( method, /*componentType,*/ "[]", entity, selection );
 					}
 				}
 			}
@@ -2683,7 +2773,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			else if ( containerType != null
 				&& !containerType.getQualifiedName().contentEquals( OPTIONAL ) ) {
 				// multiple results, so it has to be a criteria finder
-				createCriteriaFinder( method, declaredType, containerType.toString(), entity, null );
+				createCriteriaFinder( method, /*declaredType,*/ containerType.toString(), entity, null );
 			}
 			else {
 				final boolean firstWithOrdering = hasAnnotation( method, JD_FIRST ) && hasOrder( method );
@@ -2702,7 +2792,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								.filter( AnnotationMetaEntity::isFinderParameterMappingToAttribute )
 								.count();
 				if ( firstWithOrdering ) {
-					createCriteriaFinder( method, declaredType, containerTypeName, entity, null );
+					createCriteriaFinder( method, /*declaredType,*/ containerTypeName, entity, null );
 				}
 				else {
 					switch ( (int) parameterCount ) {
@@ -2731,7 +2821,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					else {
 						createCriteriaFinder(
 								method,
-								returnType,
+//								returnType,
 								containerType == null ? null : containerType.getQualifiedName().toString(),
 								entity,
 								selection
@@ -2845,7 +2935,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return null;
 		}
 		final List<? extends RecordComponentElement> components = recordType.getRecordComponents();
-		if ( methodSelects.size() > 0 && methodSelects.size() != components.size() ) {
+		if ( !methodSelects.isEmpty() && methodSelects.size() != components.size() ) {
 			message( method,
 					"'@Select' count (" + methodSelects.size() + ") does not match record component count ("
 					+ components.size() + ") of '" + recordType.getQualifiedName() + "'",
@@ -3084,7 +3174,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 */
 	private void createCriteriaFinder(
 			ExecutableElement method,
-			TypeMirror returnType,
+//			TypeMirror returnType,
 			@Nullable String containerType,
 			TypeElement entity,
 			@Nullable ResultSelection selection) {
@@ -3864,7 +3954,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( isConstraintParameterType( parameterType( param ) ) ) {
 			return ParameterConstraint.RUNTIME;
 		}
-		final ParameterConstraint explicitConstraint = explicitParameterConstraint( param, false );
+		final ParameterConstraint explicitConstraint =
+				explicitParameterConstraint( param, false );
 		if ( explicitConstraint != null ) {
 			return explicitConstraint;
 		}
@@ -4208,7 +4299,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		checkParameters( method, validationReturnType, paramNames, paramTypes, mirror, value, queryString, isNative );
 
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
-		final DeclaredType resultType = resultType( method, returnType, mirror, value );
+//		final DeclaredType resultType = resultType( method, returnType, mirror, value );
 		final DeclaredType validationResultType =
 				resultType( method, validationReturnType, mirror, value );
 		final List<OrderBy> orderBys =
@@ -4823,12 +4914,35 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				|| returnTypeName.equals( UNI_BOOLEAN )
 				|| returnTypeName.equals( UNI_INTEGER );
 		}
+		else if ( isAsynchronousCompletionStage( method ) ) {
+			return isLegalAsynchronousUpdateReturnType( returnType );
+		}
 		else {
 			// non-reactive
-			return returnType.getKind() == TypeKind.VOID
-				|| returnType.getKind() == TypeKind.BOOLEAN
-				|| returnType.getKind() == TypeKind.INT
-				|| returnType.getKind() == TypeKind.LONG;
+			final TypeKind kind = returnType.getKind();
+			return kind == TypeKind.VOID
+				|| kind == TypeKind.BOOLEAN
+				|| kind == TypeKind.INT
+				|| kind == TypeKind.LONG;
+		}
+	}
+
+	private static boolean isLegalAsynchronousUpdateReturnType(TypeMirror returnType) {
+		if ( returnType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType type = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) type.asElement();
+			final Name name = typeElement.getQualifiedName();
+			return name.contentEquals( Void.class.getName() )
+				|| name.contentEquals( Boolean.class.getName() )
+				|| name.contentEquals( Integer.class.getName() )
+				|| name.contentEquals( Long.class.getName() );
+		}
+		else {
+			final TypeKind kind = returnType.getKind();
+			return kind == TypeKind.VOID
+				|| kind == TypeKind.BOOLEAN
+				|| kind == TypeKind.INT
+				|| kind == TypeKind.LONG;
 		}
 	}
 
@@ -5173,7 +5287,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			// get the "fqcn" without any type arguments
-			result.append( te.getQualifiedName().toString() );
+			result.append( te.getQualifiedName() );
 			// add the < ? ,? ....> as necessary:
 			if ( !dt.getTypeArguments().isEmpty() ) {
 				result.append( "<" );

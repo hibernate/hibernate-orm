@@ -461,12 +461,15 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			selectProjectionResultList( declaration, paramTypes );
 			declaration
 					.append( ";\n" )
-					.append( indent )
-					.append( "return new " )
+					.append( indent );
+			returnResult( declaration );
+			declaration
+					.append( "new " )
 					.append( annotationMetaEntity.importType( "jakarta.data.page.impl.PageRecord" ) )
 					.append( "<>(" )
 					.append( parameterName(JD_PAGE_REQUEST, paramTypes, paramNames) )
 					.append( ", _results, _totalResults)" );
+			endReturnResult( declaration );
 		}
 		else if ( containerType == null ) {
 			declaration
@@ -477,18 +480,20 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			handlePageParameters( declaration, paramTypes, null );
 			declaration
 					.append( nullable ? "\t\t\t.getSingleResultOrNull();\n" : "\t\t\t.getSingleResult();\n" )
-					.append( indent )
-					.append( "return " );
+					.append( indent );
+			returnResult( declaration );
 			if ( nullable ) {
 				declaration.append( "_result == null ? null : " );
 			}
 			projectionResult( declaration, "_result" );
+			endReturnResult( declaration );
 		}
 		else {
 			declaration
-					.append( indent )
-					.append( "return " );
+					.append( indent );
+			returnResult( declaration );
 			selectProjectionResult( declaration, paramTypes );
+			endReturnResult( declaration );
 		}
 	}
 

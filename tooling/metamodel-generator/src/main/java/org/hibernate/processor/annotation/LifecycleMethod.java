@@ -104,6 +104,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 					.append( ";\n" );
 		}
 		returnArgument(declaration);
+		returnNullCompletionStage( declaration );
 		declaration.append("}");
 		return declaration.toString();
 	}
@@ -112,7 +113,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		if ( isMerge() && parameterKind != ParameterKind.NORMAL && !isReactive() ) {
 			declaration
 					.append("\t")
-					.append(resolveAsString( method.getReturnType() ))
+					.append(resolveAsString( returnArgumentType() ))
 					.append(" _result;\n");
 		}
 	}
@@ -120,9 +121,19 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	private void returnArgument(StringBuilder declaration) {
 		if ( returnArgument && !isReactive() ) {
 			declaration
-					.append( "\treturn " )
-					.append( returnedArgumentName() )
-					.append( ";\n" );
+					.append( "\t" );
+			returnResult( declaration );
+			declaration.append( returnedArgumentName() );
+			endReturnResult( declaration );
+			declaration.append( ";\n" );
+		}
+	}
+
+	private void returnNullCompletionStage(StringBuilder declaration) {
+		if ( !returnArgument && !isReactive() && isAsynchronousCompletionStageWithVoidResult() ) {
+			declaration.append( "\t" );
+			returnNullResult( declaration );
+			declaration.append( ";\n" );
 		}
 	}
 
@@ -451,12 +462,17 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private String returnType() {
-		if ( returnArgument ) {
+		if ( returnArgument || isAsynchronousCompletionStage() ) {
 			return resolveAsString(method.getReturnType());
 		}
 		else {
 			return isReactive() ? annotationMetaEntity.importType(UNI) + "<Void>" : "void";
 		}
+	}
+
+	private TypeMirror returnArgumentType() {
+		final TypeMirror typeArgument = completionStageResultType();
+		return typeArgument == null ? method.getReturnType() : typeArgument;
 	}
 
 	private void notNull(StringBuilder declaration) {

@@ -131,6 +131,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final Context context;
 	private final boolean managed;
 	private boolean jakartaDataRepository;
+	private boolean lifecycleEventListener;
 	private final boolean quarkusInjection;
 	private final boolean springInjection;
 	private String qualifiedName;
@@ -417,6 +418,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	boolean isJakartaDataRepository() {
 		return jakartaDataRepository;
+	}
+
+	public boolean isLifecycleEventListener() {
+		if ( !initialized ) {
+			getMembers();
+		}
+		return lifecycleEventListener;
 	}
 
 	@Override
@@ -2383,13 +2391,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			else if ( validateLifecycleReturnType( method, operation, parameter, returnType,
 					declaredParameterType, parameterType, returnArgument ) ) {
 				final String entity = typeAsString( parameterType );
+				final String actualEntity = typeAsString( lifecycleParameterArgument( parameterType ) );
 				final String methodName = method.getSimpleName().toString();
 				putMember(
 						methodName + '.' + entity,
 						new LifecycleMethod(
 								this, method,
 								entity,
-								typeAsString( lifecycleParameterArgument( parameterType ) ),
+								actualEntity,
 								methodName,
 								parameter.getSimpleName().toString(),
 								getSessionVariableName(),
@@ -2402,8 +2411,42 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								element
 						)
 				);
+				addLifecycleEventCallbacks( actualEntity, operation );
 			}
 		}
+	}
+
+	private void addLifecycleEventCallbacks(String entity, String operation) {
+		if ( needsEventBus() ) {
+			switch ( operation ) {
+				case "persist":
+					addLifecycleEventCallbacks( entity, PRE_INSERT, "PreInsertEvent", POST_INSERT, "PostInsertEvent" );
+					break;
+				case "merge":
+					addLifecycleEventCallbacks( entity, PRE_INSERT, "PreInsertEvent", POST_INSERT, "PostInsertEvent" );
+					addLifecycleEventCallbacks( entity, PRE_UPDATE, "PreUpdateEvent", POST_UPDATE, "PostUpdateEvent" );
+					break;
+				case "remove":
+					addLifecycleEventCallbacks( entity, PRE_DELETE, "PreDeleteEvent", POST_DELETE, "PostDeleteEvent" );
+					break;
+			}
+		}
+	}
+
+	private void addLifecycleEventCallbacks(
+			String entity,
+			String preCallback,
+			String preEventType,
+			String postCallback,
+			String postEventType) {
+		addLifecycleEventCallback( entity, preCallback, preEventType );
+		addLifecycleEventCallback( entity, postCallback, postEventType );
+	}
+
+	private void addLifecycleEventCallback(String entity, String callback, String eventType) {
+		lifecycleEventListener = true;
+		members.putIfAbsent( "event." + eventType + '.' + entity,
+				new LifecycleEventCallback( this, entity, callback, eventType ) );
 	}
 
 	private boolean validateLifecycleReturnType(

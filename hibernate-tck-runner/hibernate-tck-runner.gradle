@@ -25,15 +25,10 @@ repositories {
     org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it)
 }
 
-configurations {
-    tckTests
-}
-
 dependencies {
     testImplementation libs.test.junitJupiterApi
     testImplementation libs.test.junitJupiterSuiteEngine
     testImplementation libs.test.jakartaPersistenceTckTests
-    tckTests libs.test.jakartaPersistenceTckTests
 
     testRuntimeOnly project(':hibernate-core')
     testRuntimeOnly project(':hibernate-testing')
@@ -42,8 +37,9 @@ dependencies {
 test {
     useJUnitPlatform()
 
+    // We only include the @Suite since it is the one which picks up all the tests
+    // filters then and decides how to dun things:
     filter {
-        includeTestsMatching "*Client*"
         includeTestsMatching "JakartaPersistenceTckTestRunner"
     }
 

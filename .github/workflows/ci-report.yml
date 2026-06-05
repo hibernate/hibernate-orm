@@ -9,11 +9,18 @@ defaults:
   run:
     shell: bash
 
+permissions: { } # none, jobs are defining their own if they need any
+
 jobs:
   publish-build-scans:
     name: Publish Develocity build scans
     if: github.repository == 'hibernate/hibernate-orm' && github.event.workflow_run.conclusion != 'cancelled'
     runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+
     steps:
       # Checkout target branch which has trusted code
       - name: Check out target branch
@@ -29,14 +36,17 @@ jobs:
 
       - name: Generate cache key
         id: cache-key
+        env:
+          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
         run: |
-          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
           CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
           CURRENT_DAY=$(/bin/date -u "+%d")
           ROOT_CACHE_KEY="buildtool-cache"
-          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
-          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
-          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+          {
+            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
+            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
+            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
+          }>> "$GITHUB_OUTPUT"
       - name: Restore Maven/Gradle Dependency/Dist Caches
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
@@ -81,33 +91,45 @@ jobs:
     name: Publish Sonar scan
     if: github.repository == 'hibernate/hibernate-orm' && github.event.workflow_run.conclusion != 'cancelled'
     runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+
     steps:
       - name: Determine the Branch Reference for which the original action was triggered
         id: determine_branch_ref
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_EVENT: ${{ github.event.workflow_run.event }}
+          FORK_OWNER: ${{ github.event.workflow_run.head_repository.owner.login }}
+          REPO_OWNER: ${{ github.event.workflow_run.repository.owner.login }}
+          REPO_FULL_NAME: ${{ github.event.workflow_run.repository.full_name }}
+          HEAD_BRANCH_NAME: ${{ github.event.workflow_run.head_branch }}
         run: |
-          if [ "${{ github.event.workflow_run.event }}" == "pull_request" ]; then
+          BRANCH_NAME="$HEAD_BRANCH_NAME"
+          if [ "$GH_EVENT" == "pull_request" ]; then
             echo "::notice::Triggering workflow was executed for a pull request"
-
-            FORK_OWNER="${{ github.event.workflow_run.head_repository.owner.login }}"
-            BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
-            if [ "${{ github.event.workflow_run.head_repository.owner.login }}" != "${{ github.event.workflow_run.repository.owner.login }}" ]; then
+            
+            if [ "$FORK_OWNER" != "$REPO_OWNER" ]; then
               BRANCH_NAME="$FORK_OWNER:$BRANCH_NAME"
             fi
-            GH_RESPONSE=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json number,baseRefName)
-            TARGET_BRANCH=$(echo $GH_RESPONSE | jq -r '.baseRefName')
-            PR_ID=$(echo $GH_RESPONSE | jq -r '.number')
+            GH_RESPONSE=$(gh pr view "$BRANCH_NAME" --repo "$REPO_FULL_NAME" --json number,baseRefName)
+            TARGET_BRANCH=$(echo "$GH_RESPONSE" | jq -r '.baseRefName')
+            PR_ID=$(echo "$GH_RESPONSE" | jq -r '.number')
 
             echo "::notice::PR found. Target branch is: $TARGET_BRANCH"
             echo "::notice::          Pull Request number is: $PR_ID"
             echo "::notice::          Branch to merge is: $BRANCH_NAME"
-            echo "original_branch_ref=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
-            echo "pr_id=$PR_ID" >> "$GITHUB_OUTPUT"
-            echo "branch_to_merge=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
+            {
+              echo "original_branch_ref=$TARGET_BRANCH"
+              echo "pr_id=$PR_ID"
+              echo "branch_to_merge=$BRANCH_NAME"
+            } >> "$GITHUB_OUTPUT"
           else
             echo "::notice::Triggering workflow was executed for a push event? Using the head_branch value."
-            echo "original_branch_ref=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
+            echo "original_branch_ref=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
           fi
       # Checkout target branch (from the main repository)
       - name: Check out target branch
@@ -130,9 +152,11 @@ jobs:
       - name: Check out merged code (if PR)
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_EVENT: ${{ github.event.workflow_run.event }}
+          GH_PR_ID: ${{steps.determine_branch_ref.outputs.pr_id}}
         run: |
-          if [ "${{ github.event.workflow_run.event }}" == "pull_request" ]; then
-            gh pr checkout ${{steps.determine_branch_ref.outputs.pr_id}}
+          if [ "$GH_EVENT" == "pull_request" ]; then
+            gh pr checkout "$GH_PR_ID"
           fi
 
           # so we aren't tempted to run a Gradle command!
@@ -145,7 +169,7 @@ jobs:
           distribution: temurin
 
       - name: Download coverage reports
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: build-results-data
           github-token: ${{ github.token }}
@@ -158,34 +182,42 @@ jobs:
 
       - name: Install Sonar CLI
         run: |
-          SONAR_HASH=8fbfb1eb546b734a60fc3e537108f06e389a8ca124fbab3a16236a8a51edcc15
-          SONAR_SCANNER_VERSION=8.0.1.6346
-          export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION
-          curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION.zip
-          DOWNLOADED_HASH=$(sha256sum $HOME/.sonar/sonar-scanner.zip | awk '{print $1}')
+          SONAR_HASH="8fbfb1eb546b734a60fc3e537108f06e389a8ca124fbab3a16236a8a51edcc15"
+          SONAR_SCANNER_VERSION="8.0.1.6346"
+          export SONAR_SCANNER_HOME="$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION"
+          curl --create-dirs --fail -sSLo "$HOME/.sonar/sonar-scanner.zip" https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION.zip
+          DOWNLOADED_HASH=$(sha256sum "$HOME/.sonar/sonar-scanner.zip" | awk '{print $1}')
           if [ "$DOWNLOADED_HASH" == "$SONAR_HASH" ]; then
             echo "Successfully verified the file checksum"
           else
             echo "Error: Failed the file checksum verification. Expected: $SONAR_HASH but got $DOWNLOADED_HASH instead"
             exit 1
           fi
-          unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
+          unzip -o "$HOME/.sonar/sonar-scanner.zip" -d "$HOME/.sonar/"
           mv "$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION"/* "$HOME/.sonar/" 
 
       - name: Sonar Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GH_EVENT: ${{ github.event.workflow_run.event }}
+          HEAD_BRANCH: ${{github.event.workflow_run.head_branch}}
+          STEP_OUTPUT_BRANCH_TO_MERGE: ${{steps.determine_branch_ref.outputs.branch_to_merge}}
+          STEP_OUTPUT_PR_ID: ${{steps.determine_branch_ref.outputs.pr_id}}
+          STEP_OUTPUT_ORIGINAL_BRANCH_REF: ${{steps.determine_branch_ref.outputs.original_branch_ref}}
         run: |
           find . -name "*.exec" -type f
           EXTRA_ARGS=""
-          if [ "${{ github.event.workflow_run.event }}" == "pull_request" ]; then
+          if [ "$GH_EVENT" == "pull_request" ]; then
             echo "::notice::Triggering workflow was executed for a pull request"
   
-            EXTRA_ARGS="-Dsonar.pullrequest.branch=${{steps.determine_branch_ref.outputs.branch_to_merge}} -Dsonar.pullrequest.key=${{steps.determine_branch_ref.outputs.pr_id}} -Dsonar.pullrequest.base=${{steps.determine_branch_ref.outputs.original_branch_ref}} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=hibernate/hibernate-orm"
+            EXTRA_ARGS="-Dsonar.pullrequest.branch=$STEP_OUTPUT_BRANCH_TO_MERGE -Dsonar.pullrequest.key=$STEP_OUTPUT_PR_ID -Dsonar.pullrequest.base=$STEP_OUTPUT_ORIGINAL_BRANCH_REF -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=hibernate/hibernate-orm"
           else
-            EXTRA_ARGS="-Dsonar.branch.name=${{github.event.workflow_run.head_branch}}"
+            EXTRA_ARGS="-Dsonar.branch.name=$HEAD_BRANCH"
           fi
 
-          $HOME/.sonar/bin/sonar-scanner $EXTRA_ARGS \
+          "$HOME/.sonar/bin/sonar-scanner" "$EXTRA_ARGS" \
+              -Dsonar.host.url="https://sonarcloud.io" \
+              -Dsonar.organization="hibernate" \
+              -Dsonar.projectKey="hibernate_hibernate-orm" \
               -Dsonar.java.libraries="$(pwd)/target/sonar-dependencies/*.jar" \
               -Dsonar.coverage.jacoco.xmlReportPaths="$(pwd)/reporting/target/reports/jacoco/mergeCodeCoverageReport/mergeCodeCoverageReport.xml"

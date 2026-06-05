@@ -73,14 +73,17 @@ jobs:
 
       - name: Generate cache key
         id: cache-key
+        env:
+          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
         run: |
-          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
           CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
           CURRENT_DAY=$(/bin/date -u "+%d")
           ROOT_CACHE_KEY="buildtool-cache"
-          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
-          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
-          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+          {
+            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
+            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
+            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
+          } >> "$GITHUB_OUTPUT"
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -192,14 +195,17 @@ jobs:
           java-version: '25'
       - name: Generate cache key
         id: cache-key
+        env:
+          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
         run: |
-          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
           CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
           CURRENT_DAY=$(/bin/date -u "+%d")
           ROOT_CACHE_KEY="buildtool-cache-oracle-test-pilot"
-          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
-          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
-          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+          { 
+            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
+            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
+            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
+          } >> "$GITHUB_OUTPUT"
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -330,14 +336,17 @@ jobs:
 
       - name: Generate cache key
         id: cache-key
+        env:
+          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
         run: |
-          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
           CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
           CURRENT_DAY=$(/bin/date -u "+%d")
           ROOT_CACHE_KEY="buildtool-cache-tck-run"
-          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
-          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
-          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+          {
+            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
+            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
+            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
+          } >> "$GITHUB_OUTPUT"
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
@@ -430,14 +439,17 @@ jobs:
 
       - name: Generate cache key
         id: cache-key
+        env:
+          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
         run: |
-          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
           CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
           CURRENT_DAY=$(/bin/date -u "+%d")
           ROOT_CACHE_KEY="buildtool-cache"
-          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
-          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
-          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+          {
+            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
+            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
+            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
+          } >> "$GITHUB_OUTPUT"
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -524,14 +536,17 @@ jobs:
 
       - name: Generate cache key
         id: cache-key
+        env:
+          CURRENT_BRANCH: ${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}
         run: |
-          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
           CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
           CURRENT_DAY=$(/bin/date -u "+%d")
           ROOT_CACHE_KEY="buildtool-cache"
-          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
-          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
-          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+          {
+            echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}"
+            echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}"
+            echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}"
+          } >> "$GITHUB_OUTPUT"
       - name: Restore Maven/Gradle Dependency/Dist Caches
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:

@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -16,6 +17,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -87,6 +89,7 @@ public class JsonFunctionsSpecialTypesTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support encode/decode function")
 	public void testJsonValueBinary(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create a JSON object with binary data and extract it back
@@ -169,6 +172,7 @@ public class JsonFunctionsSpecialTypesTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support encode/decode function")
 	public void testJsonObjectWithBinary(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create JSON object with binary data
@@ -199,6 +203,7 @@ public class JsonFunctionsSpecialTypesTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArray.class)
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support encode/decode function")
 	public void testJsonArrayWithBinary(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create JSON array with binary data
@@ -214,6 +219,7 @@ public class JsonFunctionsSpecialTypesTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support encode/decode function")
 	public void testJsonObjectMultipleSpecialTypes(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			// Create JSON object with multiple special types

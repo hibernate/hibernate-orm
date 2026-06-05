@@ -12,6 +12,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.List;
 
+import static org.hibernate.processor.util.Constants.HIB_ENABLED_FETCH_PROFILE;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
 import static org.hibernate.processor.util.Constants.TIMEOUT;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
@@ -30,6 +31,59 @@ final class QueryOptionsSupport {
 			boolean update,
 			boolean nativeQuery) {
 		setQueryOptions( method, declaration, getAnnotationMirror( method.method, QUERY_OPTIONS ), update, nativeQuery );
+	}
+
+	static boolean appendEntityGraphArgument(
+			AbstractQueryMethod method,
+			StringBuilder declaration,
+			String entity) {
+		final var queryOptions = getAnnotationMirror( method.method, QUERY_OPTIONS );
+		if ( queryOptions != null && !method.isReactive() ) {
+			final var entityGraph = getAnnotationValue( queryOptions, "entityGraph" );
+			if ( entityGraph != null ) {
+				final var graphName = entityGraph.getValue().toString();
+				if ( !graphName.isEmpty() ) {
+					method.localSession( declaration );
+					declaration
+							.append( ".getEntityGraph(" )
+							.append( method.annotationMetaEntity.importType( entity ) )
+							.append( ".class, " )
+							.append( stringLiteral( graphName ) )
+							.append( ")" );
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	static void appendFindOptions(
+			AbstractQueryMethod method,
+			StringBuilder declaration,
+			List<String> fetchProfiles,
+			boolean naturalId) {
+		if ( method.isReactive() ) {
+			return;
+		}
+		if ( naturalId ) {
+			appendFindOption( method, declaration, "org.hibernate.KeyType", "NATURAL" );
+		}
+		for ( var profile : fetchProfiles ) {
+			declaration
+					.append( ", new " )
+					.append( method.annotationMetaEntity.importType( HIB_ENABLED_FETCH_PROFILE ) )
+					.append( "(" )
+					.append( profile )
+					.append( ")" );
+		}
+		final var queryOptions = getAnnotationMirror( method.method, QUERY_OPTIONS );
+		if ( queryOptions != null ) {
+			appendTimeoutOption( method, declaration, queryOptions );
+			appendEnumFindOption( method, declaration, queryOptions, "cacheStoreMode" );
+			appendEnumFindOption( method, declaration, queryOptions, "cacheRetrieveMode" );
+			appendEnumFindOption( method, declaration, queryOptions, "lockMode" );
+			appendEnumFindOption( method, declaration, queryOptions, "lockScope" );
+		}
 	}
 
 	private static void setQueryOptions(
@@ -112,6 +166,21 @@ final class QueryOptionsSupport {
 		}
 	}
 
+	private static void appendTimeoutOption(
+			AbstractQueryMethod method,
+			StringBuilder declaration,
+			AnnotationMirror queryOptions) {
+		final var timeout = getAnnotationValue( queryOptions, "timeout" );
+		if ( timeout != null ) {
+			declaration
+					.append( ", " )
+					.append( method.annotationMetaEntity.importType( TIMEOUT ) )
+					.append( ".milliseconds(" )
+					.append( timeout.getValue() )
+					.append( ")" );
+		}
+	}
+
 	private static void setEnumQueryOption(
 			AbstractQueryMethod method,
 			StringBuilder declaration,
@@ -130,6 +199,31 @@ final class QueryOptionsSupport {
 					.append(variable.getSimpleName())
 					.append(")");
 		}
+	}
+
+	private static void appendEnumFindOption(
+			AbstractQueryMethod method,
+			StringBuilder declaration,
+			AnnotationMirror queryOptions,
+			String member) {
+		final var option = getAnnotationValue( queryOptions, member );
+		if ( option != null && option.getValue() instanceof VariableElement variable ) {
+			final var type = (TypeElement) variable.getEnclosingElement();
+			appendFindOption( method, declaration, type.getQualifiedName().toString(),
+					variable.getSimpleName().toString() );
+		}
+	}
+
+	private static void appendFindOption(
+			AbstractQueryMethod method,
+			StringBuilder declaration,
+			String type,
+			String member) {
+		declaration
+				.append( ", " )
+				.append( method.annotationMetaEntity.importType( type ) )
+				.append( "." )
+				.append( member );
 	}
 
 	private static String annotationString(AnnotationMirror annotation, String member) {

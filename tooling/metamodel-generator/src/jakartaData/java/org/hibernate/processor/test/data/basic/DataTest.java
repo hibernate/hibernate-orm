@@ -42,6 +42,13 @@ class DataTest {
 		assertTrue( repository.contains( ".setHint(\"find.hint\", \"yes\")" ) );
 		assertTrue( repository.contains( ".setTimeout(Timeout.milliseconds(600))" ) );
 		assertTrue( repository.contains( ".setTimeout(Timeout.milliseconds(700))" ) );
+		assertTrue( repository.contains( ".find(Book.class, isbn, Timeout.milliseconds(650), CacheRetrieveMode.BYPASS)" ) );
+		assertTrue( repository.contains( "_key.put(\"title\", title);" ) );
+		assertTrue( repository.contains( "_key.put(\"publicationDate\", publicationDate);" ) );
+		assertTrue( repository.contains( ".find(Book.class, _key, KeyType.NATURAL, Timeout.milliseconds(550), "
+				+ "LockModeType.PESSIMISTIC_READ)" ) );
+		assertFalse( repository.contains( ".byId(" ) );
+		assertFalse( repository.contains( ".byNaturalId(" ) );
 		assertFalse( repository.contains( "TypedQueryReference<" ) );
 		assertFalse( repository.contains( "_defaultBooksWithHql(String title)" ) );
 		assertFalse( repository.contains( "_defaultBooksWithSql(String title)" ) );

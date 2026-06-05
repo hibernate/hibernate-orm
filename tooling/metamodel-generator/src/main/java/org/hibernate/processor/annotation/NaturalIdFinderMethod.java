@@ -10,6 +10,8 @@ import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.processor.annotation.QueryOptionsSupport.appendEntityGraphArgument;
+import static org.hibernate.processor.annotation.QueryOptionsSupport.appendFindOptions;
 
 /**
  * @author Gavin King
@@ -57,12 +59,12 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		comment( declaration );
 		modifiers( declaration );
 		preamble( declaration, paramTypes );
-		tryReturn( declaration );
-		unwrapSession( declaration );
 		if ( isReactive() ) {
+			returnReactively( declaration );
 			findReactively( declaration );
 		}
 		else {
+			createNaturalIdKey( declaration );
 			findBlockingly( declaration );
 		}
 		convertExceptions( declaration );
@@ -70,39 +72,102 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		return declaration.toString();
 	}
 
-	private void findBlockingly(StringBuilder declaration) {
+	private void returnReactively(StringBuilder declaration) {
 		declaration
-				.append(".byNaturalId(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class)\n");
-		enableFetchProfile( declaration, true );
-		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			if ( !isSessionParameter( paramTypes.get(i) ) ) {
-				final var paramName = paramNames.get(i);
-				declaration
-						.append("\t\t\t.using(")
-						.append(annotationMetaEntity.importType(entity + '_'))
-						.append('.')
-						.append(paramName)
-						.append(", ")
-						.append(paramName)
-						.append(")\n");
-			}
-		}
-		if ( containerType == null ) {
-			//TODO we should probably throw if this returns null
+				.append("\t");
+		returnResult( declaration );
+		declaration
+				.append(sessionName)
+				.append(getObjectCall());
+	}
+
+	private void findBlockingly(StringBuilder declaration) {
+		if ( dataRepository ) {
 			declaration
-					.append("\t\t\t.load()");
+					.append("\ttry {\n\t");
 		}
-		else {
+		declaration
+				.append("\t");
+		returnResult( declaration );
+		if ( containerType != null ) {
 			declaration
-					.append("\t\t\t.loadOptional()");
+					.append(annotationMetaEntity.staticImport(containerType, "ofNullable"))
+					.append('(');
+		}
+		declaration
+				.append(sessionName)
+				.append(getObjectCall())
+				.append(".find(");
+		if ( !appendEntityGraphArgument( this, declaration, entity ) ) {
+			declaration
+					.append(annotationMetaEntity.importType(entity))
+					.append(".class");
+		}
+		declaration
+				.append(", ")
+				.append(naturalIdKey());
+		appendFindOptions( this, declaration, fetchProfiles, true );
+		declaration.append(")");
+		if ( containerType != null ) {
+			declaration.append(')');
 		}
 		endReturnResult( declaration );
 	}
 
+	private void createNaturalIdKey(StringBuilder declaration) {
+		if ( hasCompositeNaturalId() ) {
+			declaration
+					.append("\tvar _key = new ")
+					.append(annotationMetaEntity.importType( "java.util.HashMap" ))
+					.append("<String, Object>();\n");
+			for ( int i = 0; i < paramNames.size(); i ++ ) {
+				if ( !isSessionParameter( paramTypes.get(i) ) ) {
+					final var paramName = paramNames.get(i);
+					declaration
+							.append("\t_key.put(")
+							.append(QueryOptionsSupport.stringLiteral( paramName ))
+							.append(", ")
+							.append(parameterName( paramName ))
+							.append(");\n");
+				}
+			}
+		}
+	}
+
+	private String naturalIdKey() {
+		return hasCompositeNaturalId()
+				? "_key"
+				: parameterName( naturalIdParameterName() );
+	}
+
+	private String naturalIdParameterName() {
+		for ( int i = 0; i < paramNames.size(); i ++ ) {
+			if ( !isSessionParameter( paramTypes.get(i) ) ) {
+				return paramNames.get(i);
+			}
+		}
+		throw new IllegalStateException( "no natural id parameter" );
+	}
+
+	private boolean hasCompositeNaturalId() {
+		var count = 0;
+		for ( String paramType : paramTypes ) {
+			if ( !isSessionParameter( paramType ) ) {
+				count++;
+			}
+		}
+		return count > 1;
+	}
+
 	private void findReactively(StringBuilder declaration) {
-		final var composite = isComposite();
+		final var composite = hasCompositeNaturalId();
+		if ( isReactiveSessionAccess() ) {
+			declaration
+					.append(".chain(")
+					.append(localSessionName())
+					.append(" -> ")
+					.append(localSessionName());
+		}
 		declaration
 				.append(".find(");
 		if (composite) {
@@ -146,15 +211,10 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if (composite) {
 			declaration.append("\n\t\t\t)\n\t");
 		}
-		declaration.append(')');
-	}
-
-	private boolean isComposite() {
-		for ( String type : paramTypes ) {
-			if ( !isSessionParameter( type ) ) {
-				return true;
-			}
+		if ( isReactiveSessionAccess() ) {
+			declaration.append(')');
 		}
-		return false;
+		declaration.append(')');
+		endReturnResult( declaration );
 	}
 }

@@ -1,0 +1,29 @@
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.boot.models.xml.column.transform.attributeoverride</package>
+    <entity class="Widget" metadata-complete="true" access="FIELD">
+        <table name="widgets"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <embedded name="measurement">
+                <attribute-override name="valueInInches">
+                    <column name="value_centimeters" nullable="false">
+                        <read>value_centimeters / 2.54E0</read>
+                        <write>? * 2.54E0</write>
+                    </column>
+                </attribute-override>
+            </embedded>
+        </attributes>
+    </entity>
+    <embeddable class="Measurement" metadata-complete="true" access="FIELD">
+        <attributes>
+            <basic name="valueInInches"/>
+        </attributes>
+    </embeddable>
+</entity-mappings>

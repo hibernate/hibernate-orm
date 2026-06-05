@@ -6,14 +6,15 @@ package org.hibernate;
 
 import jakarta.persistence.FindOption;
 
-/// Indicates whether to perform synchronization (a sort of flush)
-/// before a [find by natural-id][KeyType#NATURAL].
+/// Indicates whether natural id synchronization (a sort of flush)
+/// should occur before a [find by natural id][KeyType#NATURAL].
 ///
 /// @author Steve Ebersole
+/// @since 7.3
 public enum NaturalIdSynchronization implements FindOption {
-	/// Perform the synchronization.
+	/// Synchronization should occur.
 	ENABLED,
 
-	///  Do not perform the synchronization.
+	/// Synchronization should not occur.
 	DISABLED;
 }

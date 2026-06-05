@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.hibernate.dialect.aggregate.HANAAggregateSupport;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -59,7 +61,13 @@ public class HANAJsonObjectFunction extends JsonObjectFunction {
 		sqlAppender.appendSql( ')' );
 	}
 
-	private static void replaceJsonArgumentsEscaping(
+	@Override
+	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
+		final JdbcMappingContainer expressionType = ( (Expression) value ).getExpressionType();
+		HANAAggregateSupport.appendJsonWriteExpression( sqlAppender, () -> value.accept( walker ), expressionType.getSingleJdbcMapping() );
+	}
+
+	private void replaceJsonArgumentsEscaping(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker,
@@ -101,7 +109,7 @@ public class HANAJsonObjectFunction extends JsonObjectFunction {
 				sqlAppender.appendSql( separator );
 				final SqlAstNode key = sqlAstArguments.get( i );
 				final SqlAstNode value = sqlAstArguments.get( i + 1 );
-				value.accept( walker );
+				renderValue( sqlAppender, value, walker );
 				sqlAppender.appendSql( ' ' );
 				final String literalValue = walker.getLiteralValue( (Expression) key );
 				sqlAppender.appendDoubleQuoteEscapedString( literalValue );

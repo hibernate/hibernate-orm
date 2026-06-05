@@ -634,16 +634,16 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append("@SafeVarargs\n");
 		}
 		if ( belongsToDao ) {
-			declaration
-					.append("@Override\npublic ");
+			declaration.append("@Override\n");
+			returnNullness( declaration );
+			declaration.append("public ");
 			if ( hasVarargs ) {
 				declaration
 						.append("final ");
 			}
 		}
 		else {
-			declaration
-					.append("public static ");
+			declaration.append("public static ");
 		}
 	}
 

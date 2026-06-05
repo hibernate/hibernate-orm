@@ -19,6 +19,7 @@ import java.util.StringJoiner;
 
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.type.TypeKind.VOID;
+import static org.hibernate.processor.util.Constants.COMPLETION_STAGE;
 import static org.hibernate.processor.util.Constants.HIB_STATELESS_SESSION;
 import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.NONNULL;
@@ -388,7 +389,10 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 
 	private void preamble(StringBuilder declaration) {
 		declaration
-				.append("\n@Override\npublic ")
+				.append("\n@Override\n");
+		returnNonnull( declaration );
+		declaration
+				.append("public ")
 				.append(parameterTypeBounds())
 				.append(returnType())
 				.append(' ')
@@ -404,6 +408,27 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				.append(element.getSimpleName())
 				.append(')')
 				.append(" {\n");
+	}
+
+	private void returnNonnull(StringBuilder declaration) {
+		if ( addNonnullAnnotation && returnsUniOrCompletionStage() ) {
+			declaration
+					.append('@')
+					.append(annotationMetaEntity.importType(NONNULL))
+					.append('\n');
+		}
+	}
+
+	private boolean returnsUniOrCompletionStage() {
+		if ( method.getReturnType() instanceof DeclaredType declaredType
+				&& declaredType.asElement() instanceof TypeElement typeElement ) {
+			final var returnTypeName = typeElement.getQualifiedName();
+			return returnTypeName.contentEquals( UNI )
+				|| returnTypeName.contentEquals( COMPLETION_STAGE );
+		}
+		else {
+			return false;
+		}
 	}
 
 	private String parameterTypeBounds() {

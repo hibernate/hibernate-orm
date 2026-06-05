@@ -35,6 +35,13 @@ class DaoTest {
 		assertTrue( statefulDao.contains( ".find(Book.class, isbn, new EnabledFetchProfile(\"Goodbye\"))" ) );
 		assertTrue( statelessDao.contains( ".find(Book.class, isbn, new EnabledFetchProfile(\"Goodbye\"))" ) );
 		assertTrue( statelessDao.contains( ".find(Book.class, _key, KeyType.NATURAL, new EnabledFetchProfile(\"Hello\"))" ) );
+		assertTrue( dao.contains( "@Nonnull\n\tpublic Book findByIsbn(String isbn)" ) );
+		assertTrue( dao.contains( "@Nullable\n\tpublic Long one()" ) );
+		assertTrue( statefulDao.contains(
+				"@Nonnull\n\tpublic Book getBook(String title, String author)" ) );
+		assertTrue( statefulDao.contains(
+				"@Nullable\n\tpublic Book getBookOrNull(String title, String author)" ) );
+		assertTrue( statefulDao.contains( "if (_result == null) throw new ObjectNotFoundException((Object) _key" ) );
 		assertFalse( dao.contains( ".byId(" ) );
 		assertFalse( statefulDao.contains( ".byId(" ) );
 		assertFalse( statelessDao.contains( ".byId(" ) );

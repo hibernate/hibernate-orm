@@ -3626,7 +3626,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							enabledFetchProfiles( method ),
 							context.addNonnullAnnotation(),
 							jakartaDataRepository,
-							fullReturnType( method )
+							fullReturnType( method ),
+							hasAnnotation( method, NULLABLE )
 					)
 			);
 		}
@@ -3729,7 +3730,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									profiles,
 									context.addNonnullAnnotation(),
 									jakartaDataRepository,
-									fullReturnType( method )
+									fullReturnType( method ),
+									hasAnnotation( method, NULLABLE )
 							)
 					);
 					break;

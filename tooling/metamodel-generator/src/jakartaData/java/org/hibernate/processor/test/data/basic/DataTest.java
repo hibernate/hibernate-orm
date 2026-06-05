@@ -42,11 +42,15 @@ class DataTest {
 		assertTrue( repository.contains( ".setHint(\"find.hint\", \"yes\")" ) );
 		assertTrue( repository.contains( ".setTimeout(Timeout.milliseconds(600))" ) );
 		assertTrue( repository.contains( ".setTimeout(Timeout.milliseconds(700))" ) );
-		assertTrue( repository.contains( ".find(Book.class, isbn, Timeout.milliseconds(650), CacheRetrieveMode.BYPASS)" ) );
+		assertTrue( repository.contains( ".get(Book.class, isbn, Timeout.milliseconds(650), CacheRetrieveMode.BYPASS)" ) );
 		assertTrue( repository.contains( "_key.put(\"title\", title);" ) );
 		assertTrue( repository.contains( "_key.put(\"publicationDate\", publicationDate);" ) );
-		assertTrue( repository.contains( ".find(Book.class, _key, KeyType.NATURAL, Timeout.milliseconds(550), "
+		assertTrue( repository.contains( ".get(Book.class, _key, KeyType.NATURAL, Timeout.milliseconds(550), "
 				+ "LockModeType.PESSIMISTIC_READ)" ) );
+		assertTrue( repository.contains( "return session.find(Book.class, isbn);" ) );
+		assertTrue( repository.contains( "return ofNullable(session.find(Book.class, _key, KeyType.NATURAL));" ) );
+		assertTrue( repository.contains( "catch (EntityNotFoundException _ex) {\n"
+				+ "\t\t\tthrow new EmptyResultException(_ex.getMessage(), _ex);" ) );
 		assertFalse( repository.contains( ".byId(" ) );
 		assertFalse( repository.contains( ".byNaturalId(" ) );
 		assertFalse( repository.contains( "TypedQueryReference<" ) );

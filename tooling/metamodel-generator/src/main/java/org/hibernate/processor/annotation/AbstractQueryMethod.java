@@ -519,6 +519,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				handle( declaration, "jakarta.persistence.NonUniqueResultException",
 						"jakarta.data.exceptions.NonUniqueResultException" );
 			}
+			if ( useGet() ) {
+				handle( declaration, "jakarta.persistence.EntityNotFoundException",
+						"jakarta.data.exceptions.EmptyResultException" );
+			}
 			handle( declaration, "jakarta.persistence.PersistenceException",
 					"jakarta.data.exceptions.DataException" );
 			if ( isReactive() ) {
@@ -533,6 +537,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	abstract boolean singleResult();
+
+	boolean useGet() {
+		return false;
+	}
 
 	static void closingBrace(StringBuilder declaration) {
 		declaration.append("}");

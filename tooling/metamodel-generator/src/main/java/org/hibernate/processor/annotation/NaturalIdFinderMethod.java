@@ -100,11 +100,20 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			endReturnResult( declaration );
 		}
 		else if ( !nullable ) {
-			declaration
-					.append("\tvar _result = ");
-			findInvocation( declaration );
-			declaration.append(";\n");
-			throwIfNullBlockingly( declaration );
+			if ( useGet() ) {
+				declaration
+						.append("\t");
+				returnResult( declaration );
+				findInvocation( declaration );
+				endReturnResult( declaration );
+			}
+			else {
+				declaration
+						.append("\tvar _result = ");
+				findInvocation( declaration );
+				declaration.append(";\n");
+				throwIfNullBlockingly( declaration );
+			}
 		}
 		else {
 			declaration
@@ -119,7 +128,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append(sessionName)
 				.append(getObjectCall())
-				.append(".find(");
+				.append(useGet() ? ".get(" : ".find(");
 		if ( !appendEntityGraphArgument( this, declaration, entity ) ) {
 			declaration
 					.append(annotationMetaEntity.importType(entity))

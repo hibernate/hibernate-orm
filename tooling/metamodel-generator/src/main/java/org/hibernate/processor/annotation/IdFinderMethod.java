@@ -81,7 +81,10 @@ public class IdFinderMethod extends AbstractFinderMethod {
 	}
 
 	private void throwIfNull(StringBuilder declaration) {
-		if (containerType != null) {
+		if ( useGet() ) {
+			endReturnResult( declaration );
+		}
+		else if (containerType != null) {
 			if ( isReactive() ) {
 				declaration
 						.append("\n\t\t\t.map(")
@@ -179,6 +182,11 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					.append(annotationMetaEntity.staticImport(containerType, "ofNullable"))
 					.append('(');
 		}
+		else if ( useGet() ) {
+			declaration
+					.append("\t");
+			returnResult( declaration );
+		}
 		else if (!nullable && !isReactive()) {
 			declaration
 					.append("\tvar _result = ");
@@ -202,7 +210,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					.append(localSessionName());
 		}
 		declaration
-				.append(isReactive() && isUsingStatelessSession() ? ".get(" : ".find(");
+				.append(useGet() || isReactive() && isUsingStatelessSession() ? ".get(" : ".find(");
 		if ( !appendEntityGraphArgument( this, declaration, entity ) ) {
 			declaration
 					.append(annotationMetaEntity.importType(entity))

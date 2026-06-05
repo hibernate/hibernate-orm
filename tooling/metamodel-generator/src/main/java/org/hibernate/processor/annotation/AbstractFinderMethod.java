@@ -191,4 +191,12 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod {
 		}
 		declaration.append(belongsToDao ? "public " : "public static ");
 	}
+
+	@Override
+	boolean useGet() {
+		return dataRepository
+			&& !isReactive()
+			&& containerType == null
+			&& !nullable;
+	}
 }

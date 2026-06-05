@@ -37,7 +37,9 @@ class AsyncRepositoryTest {
 		assertTrue( repository.contains( "import jakarta.enterprise.concurrent.Asynchronous;" ) );
 		assertTrue( repository.contains( "@Asynchronous" ) );
 		assertTrue( repository.contains( "CompletionStage<AsyncBook> bookByIsbn(" ) );
-		assertTrue( repository.contains( "return completedStage(_result);" ) );
+		assertTrue( repository.contains( "return completedStage(entityAgent.get(AsyncBook.class, isbn));" ) );
+		assertTrue( repository.contains( "catch (EntityNotFoundException _ex) {\n"
+				+ "\t\t\tthrow new EmptyResultException(_ex.getMessage(), _ex);" ) );
 		assertTrue( repository.contains( "CompletionStage<List<AsyncBook>> booksByTitle(" ) );
 		assertTrue( repository.contains( "return completedStage(_select" ) );
 		assertTrue( repository.contains( "CompletionStage<Integer> updateTitle(" ) );

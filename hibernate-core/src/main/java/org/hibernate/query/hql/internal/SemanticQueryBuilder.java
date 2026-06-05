@@ -1028,9 +1028,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				)
 		);
 		final List<SqmQueryPart<X>> queryParts;
-		final var setOperator = queryGroup.getSetOperator();
-		if ( setOperator == null || setOperator == operator ) {
-			queryGroup.setSetOperator( operator );
+		if ( queryGroup.getSetOperator() == operator ) {
 			queryParts = queryGroup.queryParts();
 		}
 		else {

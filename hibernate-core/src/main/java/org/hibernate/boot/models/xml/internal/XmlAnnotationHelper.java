@@ -204,7 +204,7 @@ public class XmlAnnotationHelper {
 
 	public static void applyColumnTransformation(
 			JaxbColumnImpl jaxbColumn,
-			MutableMemberDetails memberDetails,
+			MutableAnnotationTarget memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( isEmpty( jaxbColumn.getRead() )
 				&& isEmpty( jaxbColumn.getWrite() ) ) {
@@ -704,6 +704,9 @@ public class XmlAnnotationHelper {
 		final ColumnJpaAnnotation columnAnn = COLUMN.createUsage( modelBuildingContext );
 		overrideUsage.column( columnAnn );
 		columnAnn.apply( jaxbOverride.getColumn(), xmlDocumentContext );
+		if ( jaxbOverride.getColumn() != null ) {
+			applyColumnTransformation( jaxbOverride.getColumn(), target, xmlDocumentContext );
+		}
 		return overrideUsage;
 	}
 

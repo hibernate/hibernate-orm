@@ -75,6 +75,7 @@ public interface BookAuthorRepository {
 	Book[] insertBooks3(Book[] books);
 
 	@Find
+	@QueryOptions(timeout = 650, cacheRetrieveMode = CacheRetrieveMode.BYPASS)
 	Book book(String isbn);
 
 	@Find
@@ -105,6 +106,7 @@ public interface BookAuthorRepository {
 	List<Author> authors(@By("ssn") String[] ssns);
 
 	@Find
+	@QueryOptions(timeout = 550, lockMode = LockModeType.PESSIMISTIC_READ)
 	Book byTitleAndDate(String title, LocalDate publicationDate);
 
 	@Find

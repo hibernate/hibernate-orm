@@ -10,6 +10,8 @@ import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.processor.annotation.QueryOptionsSupport.appendEntityGraphArgument;
+import static org.hibernate.processor.annotation.QueryOptionsSupport.appendFindOptions;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
@@ -71,12 +73,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			nullCheck( declaration, paramName );
 		}
 		varOrReturn( declaration );
-		if ( fetchProfiles.isEmpty() ) {
-			findWithNoFetchProfiles( declaration );
-		}
-		else {
-			findWithFetchProfiles( declaration );
-		}
+		find( declaration );
 		throwIfNull( declaration );
 		convertExceptions( declaration );
 		closingBrace( declaration );
@@ -196,20 +193,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				.append(getObjectCall());
 	}
 
-	private void findWithFetchProfiles(StringBuilder declaration) {
-		unwrapSession( declaration );
-		declaration
-				.append(".byId(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class)\n");
-		enableFetchProfile( declaration, true );
-		declaration
-				.append("\t\t\t.load(")
-				.append(paramName)
-				.append(")");
-	}
-
-	private void findWithNoFetchProfiles(StringBuilder declaration) {
+	private void find(StringBuilder declaration) {
 		if ( isReactiveSessionAccess() ) {
 			declaration
 					.append(".chain(")
@@ -218,10 +202,16 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					.append(localSessionName());
 		}
 		declaration
-				.append(isReactive() && isUsingStatelessSession() ? ".get(" : ".find(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class, ")
+				.append(isReactive() && isUsingStatelessSession() ? ".get(" : ".find(");
+		if ( !appendEntityGraphArgument( this, declaration, entity ) ) {
+			declaration
+					.append(annotationMetaEntity.importType(entity))
+					.append(".class");
+		}
+		declaration
+				.append(", ")
 				.append(parameterName(paramName));
+		appendFindOptions( this, declaration, fetchProfiles, false );
 		if ( isReactiveSessionAccess() ) {
 			declaration
 					.append(')');

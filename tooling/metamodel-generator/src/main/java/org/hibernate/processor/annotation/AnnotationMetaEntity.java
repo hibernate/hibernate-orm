@@ -3608,7 +3608,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		warnAboutMissingOrder( method );
-		if ( !usingStatelessSession( sessionType[0] ) // no byNaturalId() lookup API for SS
+		if ( supportsNaturalIdFinderMethod( sessionType[0] )
 			&& equalityOnly
 			&& matchesNaturalKey( entity, fieldTypes ) ) {
 			putMember( methodKey,
@@ -3714,28 +3714,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					);
 					break;
 				case NATURAL_ID:
-					if ( !usingStatelessSession( sessionType[0] ) ) {// no byNaturalId() lookup API for SS
-						putMember( methodKey,
-								new NaturalIdFinderMethod(
-										this, method,
-										methodName,
-										returnType.toString(),
-										containerType,
-										paramNames,
-										paramTypes,
-										parameterNullability( method, entity ),
-										repository,
-										sessionType[0],
-										sessionType[1],
-										profiles,
-										context.addNonnullAnnotation(),
-										jakartaDataRepository,
-										fullReturnType( method )
-								)
-						);
-						break;
-					}
-					// else intentionally fall through
+					putMember( methodKey,
+							new NaturalIdFinderMethod(
+									this, method,
+									methodName,
+									returnType.toString(),
+									containerType,
+									paramNames,
+									paramTypes,
+									parameterNullability( method, entity ),
+									repository,
+									sessionType[0],
+									sessionType[1],
+									profiles,
+									context.addNonnullAnnotation(),
+									jakartaDataRepository,
+									fullReturnType( method )
+							)
+					);
+					break;
 				case BASIC:
 				case MULTIVALUED:
 					putMember( methodKey,
@@ -3774,24 +3771,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static FieldType pickStrategy(FieldType fieldType, String sessionType, List<String> profiles) {
-		if ( (usingStatelessSession( sessionType ) || usingReactiveSession( sessionType ))
-			&& !profiles.isEmpty() ) {
-			// no support for passing fetch profiles i.e. IdentifierLoadAccess
-			// in SS or M.S except via Query.enableFetchProfile()
+		if ( usingReactiveSession( sessionType )
+				&& !profiles.isEmpty() ) {
+			// no support for passing fetch profiles in
+			// Mutiny.Session except via Query.enableFetchProfile()
 			return FieldType.BASIC;
 		}
 		else {
 			return switch ( fieldType ) {
-				case ID ->
-					// no byId() API for SS or M.S, only get()
-						FieldType.ID;
+				case ID -> FieldType.ID;
 				case NATURAL_ID ->
-					// no byNaturalId() lookup API for SS
-					// no byNaturalId() in M.S, but we do have Identifier workaround
-						FieldType.NATURAL_ID;
+						supportsNaturalIdFinderMethod( sessionType )
+								? FieldType.NATURAL_ID
+								: FieldType.BASIC;
 				default -> FieldType.BASIC;
 			};
 		}
+	}
+
+	private static boolean supportsNaturalIdFinderMethod(String sessionType) {
+		// NaturalIdFinderMethod uses find(..., KeyType.NATURAL) for blocking sessions,
+		// and Identifier for reactive stateful sessions. Mutiny.StatelessSession has
+		// no natural id find overload matching the Identifier path, so use criteria.
+		return !usingReactiveStatelessSession( sessionType );
 	}
 
 	private boolean matchesNaturalKey(TypeElement entity, List<FieldType> fieldTypes) {
@@ -5695,6 +5697,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			|| UNI_MUTINY_STATELESS_SESSION.equals( sessionType )
 			|| SPRING_ENTITY_AGENT_PROVIDER.equals( sessionType )
 			|| SPRING_STATELESS_SESSION_PROVIDER.equals( sessionType );
+	}
+
+	private static boolean usingReactiveStatelessSession(String sessionType) {
+		return MUTINY_STATELESS_SESSION.equals( sessionType )
+			|| UNI_MUTINY_STATELESS_SESSION.equals( sessionType );
 	}
 
 	private static boolean usingStatefulSession(String sessionType) {

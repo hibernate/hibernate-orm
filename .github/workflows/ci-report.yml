@@ -206,16 +206,22 @@ jobs:
           STEP_OUTPUT_ORIGINAL_BRANCH_REF: ${{steps.determine_branch_ref.outputs.original_branch_ref}}
         run: |
           find . -name "*.exec" -type f
-          EXTRA_ARGS=""
+          EXTRA_ARGS=()
           if [ "$GH_EVENT" == "pull_request" ]; then
             echo "::notice::Triggering workflow was executed for a pull request"
-  
-            EXTRA_ARGS="-Dsonar.pullrequest.branch=$STEP_OUTPUT_BRANCH_TO_MERGE -Dsonar.pullrequest.key=$STEP_OUTPUT_PR_ID -Dsonar.pullrequest.base=$STEP_OUTPUT_ORIGINAL_BRANCH_REF -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=hibernate/hibernate-orm"
+
+            EXTRA_ARGS=(
+              "-Dsonar.pullrequest.branch=$STEP_OUTPUT_BRANCH_TO_MERGE"
+              "-Dsonar.pullrequest.key=$STEP_OUTPUT_PR_ID"
+              "-Dsonar.pullrequest.base=$STEP_OUTPUT_ORIGINAL_BRANCH_REF"
+              "-Dsonar.pullrequest.provider=GitHub"
+              "-Dsonar.pullrequest.github.repository=hibernate/hibernate-orm"
+            )
           else
-            EXTRA_ARGS="-Dsonar.branch.name=$HEAD_BRANCH"
+            EXTRA_ARGS=("-Dsonar.branch.name=$HEAD_BRANCH")
           fi
 
-          "$HOME/.sonar/bin/sonar-scanner" "$EXTRA_ARGS" \
+          "$HOME/.sonar/bin/sonar-scanner" "${EXTRA_ARGS[@]}" \
               -Dsonar.host.url="https://sonarcloud.io" \
               -Dsonar.organization="hibernate" \
               -Dsonar.projectKey="hibernate_hibernate-orm" \

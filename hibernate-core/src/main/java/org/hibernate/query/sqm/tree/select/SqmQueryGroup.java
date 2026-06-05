@@ -40,13 +40,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
 public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T> {
 
 	private final List<SqmQueryPart<T>> queryParts;
-	private SetOperator setOperator;
-
-	@Deprecated(forRemoval = true)
-	@SuppressWarnings("NullAway")
-	public SqmQueryGroup(SqmQueryPart<T> queryPart) {
-		this( queryPart.nodeBuilder(), null, listOf( queryPart ) );
-	}
+	private final SetOperator setOperator;
 
 	public SqmQueryGroup(SqmQueryPart<T> queryPart, SetOperator setOperator) {
 		this( queryPart.nodeBuilder(), setOperator, listOf( queryPart ) );
@@ -96,10 +90,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 
 	@Override
 	public boolean isSimpleQueryPart() {
-		// FIXME other parts of this class clearly imply setOperator cannot be null. What gives?
-		return setOperator == null
-			&& queryParts.size() == 1
-			&& queryParts.get( 0 ).isSimpleQueryPart();
+		return false;
 	}
 
 	@Override
@@ -116,14 +107,6 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	public SetOperator getSetOperator() {
 		return setOperator;
 	}
-
-	public void setSetOperator(SetOperator setOperator) {
-		if ( setOperator == null ) {
-			throw new IllegalArgumentException();
-		}
-		this.setOperator = setOperator;
-	}
-
 
 	@Nonnull
 	@Override

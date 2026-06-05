@@ -18,6 +18,8 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import java.io.IOException;
@@ -116,7 +118,7 @@ public final class ClassWriter {
 			}
 			entity.inheritedAnnotations()
 					.forEach( annotation -> {
-						printAnnotation( annotation, pw );
+						printAnnotation( entity, annotation, pw );
 						pw.print('\n');
 					} );
 
@@ -152,7 +154,7 @@ public final class ClassWriter {
 									metaMember.inheritedAnnotations()
 											.forEach(annotation -> {
 												pw.print('\t');
-												printAnnotation( annotation, pw );
+												printAnnotation( entity, annotation, pw );
 												pw.print('\n');
 											});
 								}
@@ -166,10 +168,10 @@ public final class ClassWriter {
 		}
 	}
 
-	private static void printAnnotation(AnnotationMirror annotation, PrintWriter pw) {
+	private static void printAnnotation(Metamodel entity, AnnotationMirror annotation, PrintWriter pw) {
 		pw.print('@');
 		final var type = (TypeElement) annotation.getAnnotationType().asElement();
-		pw.print( type.getQualifiedName().toString() );
+		pw.print( entity.importType( type.getQualifiedName().toString() ) );
 		var elementValues = annotation.getElementValues();
 		if (!elementValues.isEmpty()) {
 			pw.print('(');
@@ -183,43 +185,61 @@ public final class ClassWriter {
 				}
 				pw.print( entry.getKey().getSimpleName() );
 				pw.print( '=' );
-				printAnnotationValue( pw, entry.getValue() );
+				printAnnotationValue( entity, pw, entry.getValue() );
 			}
 			pw.print(')');
 		}
 	}
 
-	private static void printAnnotationValue(PrintWriter pw, AnnotationValue value) {
+	private static void printAnnotationValue(Metamodel entity, PrintWriter pw, AnnotationValue value) {
 		final var argument = value.getValue();
 		if (argument instanceof VariableElement variable) {
-			pw.print( variable.getEnclosingElement() );
+			final var enclosing = variable.getEnclosingElement();
+			if ( enclosing instanceof TypeElement typeElement ) {
+				pw.print( entity.importType( typeElement.getQualifiedName().toString() ) );
+			}
+			else {
+				pw.print( enclosing );
+			}
 			pw.print('.');
 			pw.print( variable.getSimpleName().toString() );
 		}
 		else if (argument instanceof AnnotationMirror childAnnotation) {
-			printAnnotation( childAnnotation, pw );
+			printAnnotation( entity, childAnnotation, pw );
 		}
-		else if (argument instanceof TypeMirror) {
-			pw.print(argument);
+		else if (argument instanceof TypeMirror typeMirror) {
+			pw.print( classLiteralName( entity, typeMirror ) );
 			pw.print(".class");
 		}
-		else if (argument instanceof List) {
-			final var list = (List<? extends AnnotationValue>) argument;
+		else if (argument instanceof List<?> list) {
 			pw.print('{');
 			var first = true;
-			for (AnnotationValue listedValue : list) {
+			for (var listedValue : list) {
 				if (first) {
 					first = false;
 				}
 				else {
 					pw.print(',');
 				}
-				printAnnotationValue( pw, listedValue );
+				printAnnotationValue( entity, pw, (AnnotationValue) listedValue );
 			}
 			pw.print('}');
 		}
 		else {
 			pw.print( argument );
+		}
+	}
+
+	private static String classLiteralName(Metamodel entity, TypeMirror typeMirror) {
+		if ( typeMirror instanceof DeclaredType declaredType
+				&& declaredType.asElement() instanceof TypeElement typeElement ) {
+			return entity.importType( typeElement.getQualifiedName().toString() );
+		}
+		else if ( typeMirror instanceof ArrayType arrayType ) {
+			return classLiteralName( entity, arrayType.getComponentType() ) + "[]";
+		}
+		else {
+			return typeMirror.toString();
 		}
 	}
 

@@ -4,7 +4,7 @@
 antlr = "4.13.2"
 # WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
 # make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
-byteBuddy = "1.18.8"
+byteBuddy = "1.18.10"
 geolatte = "1.12"
 hibernateModels = "1.1.1"
 jandex = "3.5.3"

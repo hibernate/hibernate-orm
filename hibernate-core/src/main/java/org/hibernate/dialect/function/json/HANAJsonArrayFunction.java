@@ -7,10 +7,13 @@ package org.hibernate.dialect.function.json;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.aggregate.HANAAggregateSupport;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -50,7 +53,7 @@ public class HANAJsonArrayFunction extends JsonArrayFunction {
 		final String prefix = "0".repeat( digits );
 
 		final List<String> jsonArgumentFields = getJsonArgumentFields( prefix, sqlAstArguments, argumentsCount );
-		sqlAppender.appendSql( "(select json_query(t.x,'$[0].*' with wrapper) from (" );
+		sqlAppender.appendSql( "(select json_query((" );
 		replaceJsonArgumentsEscaping(
 				sqlAppender,
 				sqlAstArguments,
@@ -61,10 +64,16 @@ public class HANAJsonArrayFunction extends JsonArrayFunction {
 				argumentsCount,
 				nullBehavior
 		);
-		sqlAppender.appendSql( ") t)" );
+		sqlAppender.appendSql( "),'$[0].*' with wrapper) from sys.dummy)" );
 	}
 
-	private static void replaceJsonArgumentsEscaping(
+	@Override
+	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
+		final JdbcMappingContainer expressionType = ( (Expression) value ).getExpressionType();
+		HANAAggregateSupport.appendJsonWriteExpression( sqlAppender, () -> value.accept( walker ), expressionType.getSingleJdbcMapping() );
+	}
+
+	private void replaceJsonArgumentsEscaping(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker,
@@ -76,13 +85,13 @@ public class HANAJsonArrayFunction extends JsonArrayFunction {
 
 		if ( i < jsonArgumentFields.size() ) {
 			// Take the substring before the match
-			sqlAppender.appendSql( "select substring(t.x, 1, locate_regexpr(r.x in t.x) - 2)" );
+			sqlAppender.appendSql( "select substring(t.jsonresult, 1, locate_regexpr(r.x in t.jsonresult) - 2)" );
 
 			// The match itself after replacing double backslashes and backslash escaped quotes
-			sqlAppender.appendSql( "|| replace(replace(substr_regexpr(r.x in t.x),'\\\\','\\'),'\\\"','\"')" );
+			sqlAppender.appendSql( "|| replace(replace(substr_regexpr(r.x in t.jsonresult),'\\\\','\\'),'\\\"','\"')" );
 
 			// And the rest of the string after the match
-			sqlAppender.appendSql( "|| substring(t.x, locate_regexpr(r.x in t.x) + length(substr_regexpr(r.x in t.x)) + 1) x");
+			sqlAppender.appendSql( "|| substring(t.jsonresult, locate_regexpr(r.x in t.jsonresult) + length(substr_regexpr(r.x in t.jsonresult)) + 1) jsonresult");
 
 			sqlAppender.appendSql( " from (" );
 			replaceJsonArgumentsEscaping(
@@ -102,29 +111,28 @@ public class HANAJsonArrayFunction extends JsonArrayFunction {
 			sqlAppender.appendSql( "' x from sys.dummy) r" );
 		}
 		else {
-			sqlAppender.appendSql( "select t.jsonresult x from (select " );
+			sqlAppender.appendSql( "select " );
 			renderArrayArguments( sqlAppender, sqlAstArguments, walker, prefix, argumentsCount );
 			sqlAppender.appendSql( " from sys.dummy for json" );
 			if ( nullBehavior == JsonNullBehavior.NULL ) {
 				sqlAppender.appendSql( "('omitnull'='no')" );
 			}
-			sqlAppender.appendSql( ") t" );
 		}
 	}
 
-	private static void renderArrayArguments(
+	private void renderArrayArguments(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker,
 			String prefix,
 			int argumentsCount) {
-		sqlAstArguments.get( 0 ).accept( walker );
+		renderValue( sqlAppender, sqlAstArguments.get( 0 ), walker );
 		sqlAppender.appendSql( " C" );
 		sqlAppender.append( prefix, 1, prefix.length() );
 		sqlAppender.appendSql( "0" );
 		for ( int i = 1; i < argumentsCount; i++ ) {
 			sqlAppender.appendSql( ',' );
-			sqlAstArguments.get( i ).accept( walker );
+			renderValue( sqlAppender, sqlAstArguments.get( i ), walker );
 			sqlAppender.appendSql( " C" );
 			final String position = Integer.toString( i );
 			sqlAppender.append( prefix, position.length(), prefix.length() );

@@ -6,10 +6,12 @@ package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -53,13 +55,26 @@ public class SpannerPostgreSQLJsonArrayFunction extends JsonArrayFunction {
 			char separator = '(';
 			for ( int i = 0; i < argumentsCount; i++ ) {
 				sqlAppender.appendSql( separator );
-				sqlAstArguments.get( i ).accept( walker );
+				renderValue( sqlAppender, sqlAstArguments.get( i ), walker );
 				separator = ',';
 			}
 			sqlAppender.appendSql( ')' );
 			if ( nullBehavior == JsonNullBehavior.ABSENT ) {
 				sqlAppender.appendSql( ") e(v) where jsonb_typeof(e.v) != 'null')" );
 			}
+		}
+	}
+
+	@Override
+	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
+		final JdbcMappingContainer expressionType = ((Expression) value).getExpressionType();
+		if ( expressionType.getSingleJdbcMapping().getJdbcType().isBinary() ) {
+			sqlAppender.appendSql( "encode(" );
+			value.accept( walker );
+			sqlAppender.appendSql( ",'hex')" );
+		}
+		else {
+			value.accept( walker );
 		}
 	}
 }

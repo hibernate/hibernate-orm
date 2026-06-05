@@ -18,7 +18,7 @@ services:
       - --lower_case_table_names=2
       - --init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-phibernate_orm_test"]
+      test: ["CMD-SHELL", "mysql  -u root -phibernate_orm_test -e 'select 1' || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 12

@@ -185,7 +185,10 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod {
 	}
 
 	void modifiers(StringBuilder declaration) {
-		declaration
-				.append(belongsToDao ? "@Override\npublic " : "public static ");
+		if ( belongsToDao ) {
+			declaration.append("@Override\n");
+			returnNullness( declaration );
+		}
+		declaration.append(belongsToDao ? "public " : "public static ");
 	}
 }

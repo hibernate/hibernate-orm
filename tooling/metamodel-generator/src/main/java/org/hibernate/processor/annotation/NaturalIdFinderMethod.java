@@ -35,10 +35,11 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			List<String> fetchProfiles,
 			boolean addNonnullAnnotation,
 			boolean dataRepository,
-			String fullReturnType) {
+			String fullReturnType,
+			boolean nullable) {
 		super( annotationMetaEntity, method, methodName, entity, entity, containerType, belongsToDao, sessionType, sessionName,
 				fetchProfiles, paramNames, paramTypes, emptyList(), addNonnullAnnotation, dataRepository, fullReturnType,
-				true );
+				nullable );
 		this.paramNullability = paramNullability;
 	}
 
@@ -62,6 +63,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if ( isReactive() ) {
 			returnReactively( declaration );
 			findReactively( declaration );
+			throwIfNullReactively( declaration );
 		}
 		else {
 			createNaturalIdKey( declaration );
@@ -86,14 +88,34 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			declaration
 					.append("\ttry {\n\t");
 		}
-		declaration
-				.append("\t");
-		returnResult( declaration );
 		if ( containerType != null ) {
+			declaration
+					.append("\t");
+			returnResult( declaration );
 			declaration
 					.append(annotationMetaEntity.staticImport(containerType, "ofNullable"))
 					.append('(');
+			findInvocation( declaration );
+			declaration.append(')');
+			endReturnResult( declaration );
 		}
+		else if ( !nullable ) {
+			declaration
+					.append("\tvar _result = ");
+			findInvocation( declaration );
+			declaration.append(";\n");
+			throwIfNullBlockingly( declaration );
+		}
+		else {
+			declaration
+					.append("\t");
+			returnResult( declaration );
+			findInvocation( declaration );
+			endReturnResult( declaration );
+		}
+	}
+
+	private void findInvocation(StringBuilder declaration) {
 		declaration
 				.append(sessionName)
 				.append(getObjectCall())
@@ -108,10 +130,112 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 				.append(naturalIdKey());
 		appendFindOptions( this, declaration, fetchProfiles, true );
 		declaration.append(")");
-		if ( containerType != null ) {
-			declaration.append(')');
+	}
+
+	private void throwIfNullBlockingly(StringBuilder declaration) {
+		if ( dataRepository ) {
+			declaration
+					.append( "\t\tif (_result == null) " );
+			throwEmptyResult( declaration );
+			declaration
+					.append( ";\n" )
+					.append( "\t\t" );
+			returnResult( declaration );
+			declaration.append( "_result" );
+			endReturnResult( declaration );
 		}
-		endReturnResult( declaration );
+		else {
+			declaration
+					.append( "\tif (_result == null) " );
+			throwObjectNotFound( declaration );
+			declaration
+					.append( ";\n" )
+					.append( "\t" );
+			returnResult( declaration );
+			declaration.append( "_result" );
+			endReturnResult( declaration );
+		}
+	}
+
+	private void throwIfNullReactively(StringBuilder declaration) {
+		if ( containerType != null ) {
+			declaration
+					.append("\n\t\t\t.map(")
+					.append(annotationMetaEntity.importType(containerType))
+					.append("::")
+					.append("ofNullable)");
+			endReturnResult( declaration );
+		}
+		else if ( !nullable ) {
+			declaration
+					.append( "\n\t\t\t.replaceIfNullWith(() -> { " );
+			if ( dataRepository ) {
+				throwEmptyResult( declaration );
+			}
+			else {
+				throwObjectNotFound( declaration );
+			}
+			declaration
+					.append( "; })" );
+		}
+		else {
+			endReturnResult( declaration );
+		}
+	}
+
+	private void throwEmptyResult(StringBuilder declaration) {
+		declaration
+				.append( "throw new " )
+				.append( annotationMetaEntity.importType( "jakarta.data.exceptions.EmptyResultException" ) )
+				.append( "(\"No '" )
+				.append( annotationMetaEntity.importType( entity ) )
+				.append( "' for given natural id [\" + " );
+		appendNaturalIdKey( declaration );
+		declaration
+				.append( " + \"]\",\n\t\t\t\t\tnew " )
+				.append( annotationMetaEntity.importType( "org.hibernate.ObjectNotFoundException" ) )
+				.append( "((Object) " );
+		appendNaturalIdKey( declaration );
+		declaration
+				.append( ", \"" )
+				.append( entity )
+				.append( "\"))");
+	}
+
+	private void throwObjectNotFound(StringBuilder declaration) {
+		declaration
+				.append( "throw new " )
+				.append( annotationMetaEntity.importType( "org.hibernate.ObjectNotFoundException" ) )
+				.append( "((Object) " );
+		appendNaturalIdKey( declaration );
+		declaration
+				.append( ", \"" )
+				.append( entity )
+				.append( "\")" );
+	}
+
+	private void appendNaturalIdKey(StringBuilder declaration) {
+		if ( isReactive() && hasCompositeNaturalId() ) {
+			declaration
+					.append( annotationMetaEntity.importType( "java.util.Arrays" ) )
+					.append( ".asList(" );
+			var first = true;
+			for ( int i = 0; i < paramNames.size(); i++ ) {
+				if ( !isSessionParameter( paramTypes.get( i ) ) ) {
+					if ( first ) {
+						first = false;
+					}
+					else {
+						declaration.append( ", " );
+					}
+					declaration.append( parameterName( paramNames.get( i ) ) );
+				}
+			}
+			declaration.append( ')' );
+		}
+		else {
+			declaration.append( naturalIdKey() );
+		}
 	}
 
 	private void createNaturalIdKey(StringBuilder declaration) {
@@ -215,6 +339,5 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			declaration.append(')');
 		}
 		declaration.append(')');
-		endReturnResult( declaration );
 	}
 }

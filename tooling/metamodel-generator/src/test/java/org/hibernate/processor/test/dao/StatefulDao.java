@@ -35,6 +35,10 @@ public interface StatefulDao {
 	Book getBook(String title, String author);
 
 	@Find
+	@Nullable
+	Book getBookOrNull(String title, String author);
+
+	@Find
 	Optional<Book> getBookMaybe(String title, String author);
 
 	@Find(enabledFetchProfiles="Hello")

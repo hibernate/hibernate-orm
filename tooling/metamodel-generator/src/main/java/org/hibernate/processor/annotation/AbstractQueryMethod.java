@@ -38,6 +38,7 @@ import static org.hibernate.processor.util.Constants.JD_RESTRICTION;
 import static org.hibernate.processor.util.Constants.JD_SORT;
 import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.NONNULL;
+import static org.hibernate.processor.util.Constants.NULLABLE;
 import static org.hibernate.processor.util.Constants.OPTIONAL;
 import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.SESSION_TYPES;
@@ -234,6 +235,15 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					.append('@')
 					.append(annotationMetaEntity.importType(NONNULL))
 					.append(' ');
+		}
+	}
+
+	void returnNullness(StringBuilder declaration) {
+		if ( addNonnullAnnotation && returnTypeName != null && !returnsVoid() && !isPrimitive( returnTypeName ) ) {
+			declaration
+					.append('@')
+					.append(annotationMetaEntity.importType(nullable ? NULLABLE : NONNULL))
+					.append('\n');
 		}
 	}
 

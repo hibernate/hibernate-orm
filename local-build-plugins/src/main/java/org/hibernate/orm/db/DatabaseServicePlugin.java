@@ -31,7 +31,7 @@ public class DatabaseServicePlugin implements Plugin<Project> {
 
 		// H2 and HSQLDB are in-memory, so there is no sharing that needs to be avoided
 		if ( database != null && !"h2".equals( database ) && !"hsqldb".equals( database ) ) {
-			project.getTasks().withType( Test.class ).forEach(
+			project.getTasks().withType( Test.class ).configureEach(
 					test -> test.usesService( databaseServiceProvider )
 			);
 		}

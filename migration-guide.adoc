@@ -403,6 +403,20 @@ _Be aware that creating a Cat, with the above model, will result in calls to bot
 that creating a Dog, both `postInsert(Animal)` and `postInsert(Dog)`._
 
 
+[[cubrid-dialect]]
+=== CUBRID dialect
+
+`CUBRIDDialect` now requires CUBRID 10.2 or later, the oldest version still supported by the vendor,
+and declares several capability flags explicitly for 10.2. Two of these are visible at runtime.
+
+`getNullOrdering()` is now `SMALLEST`, which matches CUBRID's native ordering (NULL first when
+ascending and last when descending). Queries that relied on the previous inherited default may order
+NULL values differently.
+
+Pessimistic locking now produces a `FOR UPDATE` clause. The dialect previously returned an empty lock
+string, so `PESSIMISTIC_READ` and `PESSIMISTIC_WRITE` had no effect.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

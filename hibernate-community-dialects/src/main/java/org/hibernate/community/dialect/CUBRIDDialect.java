@@ -11,14 +11,19 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.CUBRIDSequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorCUBRIDDatabaseImpl;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -59,17 +64,23 @@ import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
- * An SQL dialect for CUBRID (8.3.x and later).
+ * An SQL dialect for CUBRID 10.2 and above.
  *
  * @author Seok Jeong Il
  */
 public class CUBRIDDialect extends Dialect {
 
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 2 );
+
 	/**
 	 * Constructs a CUBRIDDialect
 	 */
 	public CUBRIDDialect() {
-		super( SimpleDatabaseVersion.ZERO_VERSION );
+		this( MINIMUM_VERSION );
+	}
+
+	public CUBRIDDialect(DatabaseVersion version) {
+		super( version );
 	}
 
 	@Override
@@ -91,8 +102,6 @@ public class CUBRIDDialect extends Dialect {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-		//precision of a Mimer 'float(p)' represents
-		//decimal digits instead of binary digits
 		ddlTypeRegistry.addDescriptor( new BinaryFloatDdlType( this ) );
 
 		//CUBRID has no 'binary' nor 'varbinary', but 'bit' is
@@ -147,7 +156,7 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	public CUBRIDDialect(DialectResolutionInfo info) {
-		this();
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
 		registerKeywords( info );
 	}
 
@@ -217,7 +226,7 @@ public class CUBRIDDialect extends Dialect {
 		functionFactory.log2();
 		functionFactory.log10();
 		functionFactory.pi();
-		//rand() returns an integer between 0 and 231 on CUBRID
+		//rand() returns an integer between 0 and 2^31 on CUBRID
 //		functionFactory.rand();
 		functionFactory.radians();
 		functionFactory.degrees();
@@ -233,7 +242,6 @@ public class CUBRIDDialect extends Dialect {
 		functionFactory.bitLength();
 		functionFactory.md5();
 		functionFactory.trunc();
-//		functionFactory.truncate();
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.substr();
 		//also natively supports ANSI-style substring()
@@ -265,6 +273,11 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public boolean supportsColumnCheck() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsTableCheck() {
 		return false;
 	}
 
@@ -313,14 +326,16 @@ public class CUBRIDDialect extends Dialect {
 		return ']';
 	}
 
-	@Override
-	public LockingSupport getLockingSupport() {
-		return LockingSupportSimple.STANDARD_SUPPORT;
-	}
+	private static final LockingSupport LOCKING_SUPPORT = new LockingSupportSimple(
+			PessimisticLockStyle.CLAUSE,
+			LockTimeoutType.NONE,
+			OuterJoinLockingType.FULL,
+			ConnectionLockTimeoutStrategy.NONE
+	);
 
 	@Override
-	public String getForUpdateString() {
-		return "";
+	public LockingSupport getLockingSupport() {
+		return LOCKING_SUPPORT;
 	}
 
 	@Override
@@ -356,6 +371,68 @@ public class CUBRIDDialect extends Dialect {
 	@Override
 	public boolean supportsTemporaryTables() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNestedWithClause() {
+		//pinned false: derives from supportsWithClauseInSubquery(), but CUBRID rejects a with clause nested in another CTE
+		return false;
+	}
+
+	@Override
+	public boolean supportsRecursiveCTE() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNonQueryWithCTE() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIsTrue() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsValuesList() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
+
+	//CUBRID cannot change only the column type, so emit the full column definition
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "modify column " + columnName + " " + columnDefinition.trim();
+	}
+
+	@Override
+	public boolean canCreateSchema() {
+		return false;
+	}
+
+	@Override
+	public int getMaxIdentifierLength() {
+		return 254;
+	}
+
+	@Override
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.SMALLEST;
 	}
 
 	@Override
@@ -522,6 +599,11 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public boolean supportsRowValueConstructorSyntax() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorGtLtSyntax() {
 		return false;
 	}
 
@@ -532,6 +614,11 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
 		return false;
 	}
 

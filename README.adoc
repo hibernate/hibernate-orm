@@ -20,7 +20,7 @@ See link:MAINTAINERS.md#ci[MAINTAINERS.md] for information about CI.
 
 The build requires at least JDK 25, and produces Java 17 bytecode.
 
-Hibernate uses https://gradle.org[Gradle] as its build tool. See the _Gradle Primer_ section below if you are new to
+Hibernate uses https://gradle.org[Gradle] as its build tool. See the _Gradle Primer_ section below if you're new to
 Gradle.
 
 Contributors should read the link:CONTRIBUTING.md[Contributing Guide].
@@ -30,54 +30,70 @@ https://hibernate.org/community/contribute/eclipse-ide/[Eclipse] as your develop
 
 == Gradle Primer
 
-The Gradle build tool has amazing documentation.  2 in particular that are indispensable:
+The Gradle build tool has excellent documentation.
 
 * https://docs.gradle.org/current/userguide/userguide_single.html[Gradle User Guide] is a typical user guide in that
 it follows a topical approach to describing all of the capabilities of Gradle.
 * https://docs.gradle.org/current/dsl/index.html[Gradle DSL Guide] is unique and excellent in quickly
 getting up to speed on certain aspects of Gradle.
 
-We will cover the basics developers and contributors new to Gradle need to know to get productive quickly.
+Here we summarize the features you'll need to get started in this project.
 
-NOTE: The project defines a https://docs.gradle.org/current/userguide/gradle_wrapper.html[Gradle Wrapper].
-The rest of the section will assume execution through the wrapper.
+NOTE: The project has a https://docs.gradle.org/current/userguide/gradle_wrapper.html[Gradle Wrapper].
+The rest of the section will assume execution via the wrapper.
 
 === Executing Tasks
 
-Gradle uses the concept of build tasks (equivalent to Ant targets or Maven phases/goals). You can get a list of
-available tasks via 
+To print a list of available build _tasks_, execute:
 
 ----
-gradle tasks
+./gradlew tasks
 ----
 
-To execute a task across all modules, simply perform that task from the root directory. Gradle will visit each
-sub-project and execute that task if the sub-project defines it. To execute a task in a specific module you can
-either:
+To execute a task across all modules, simply execute the task from the root directory.
 
-. `cd` into that module directory and execute the task
-. name the "task path". For example, to run the tests for the _hibernate-core_ module from the root directory
-you could say `gradle hibernate-core:test`
+----
+cd hibernate-orm
+./gradlew build
+----
+
+Gradle visits each subproject and executes the task if the subproject defines it.
+
+To execute a task in a specific module, either:
+
+- `cd` into that module directory and execute the task, or
+- explicitly qualify the task name with the name of the module.
+
+For example, to run the tests for the `hibernate-core` module from the root directory you could type:
+
+----
+./gradlew hibernate-core:test
+----
 
 === Common tasks
 
 The common tasks you might use in building Hibernate include:
 
-* _build_ - Assembles (jars) and tests this project
-* _compile_ - Performs all compilation tasks including staging resources from both main and test
-* _jar_ - Generates a jar archive with all the compiled classes
-* _test_ - Runs the tests
-* _publishToMavenLocal_ - Installs the project jar to your local maven cache (aka ~/.m2/repository). Note that Gradle
-never uses this, but it can be useful for testing your build with other local Maven-based builds.
-* _clean_ - Cleans the build directory
+`build` :: Assembles (jars) and tests this project
+`compile` :: Performs all compilation tasks including staging resources from both main and test
+`jar` :: Generates a jar archive with all the compiled classes
+`test` :: Runs the tests
+`publishToMavenLocal` or `pTML` :: Installs the project jar to your local Maven cache at `~/.m2/repository`. Note that Gradle never uses this, but it can be useful for testing a build with other local Maven-based builds.
+`clean` :: Cleans the build directory
 
 == Testing and databases
 
-Testing against a specific database can be achieved in 2 different ways:
+Testing Hibernate against an embedded h2 database is easy.
+Just run:
 
-=== Using the "Matrix Testing Plugin" for Gradle.
+----
+./gradlew test
+----
 
-Coming later…
+To run against another database:
+
+1. start the database using `podman` or `docker`, and then
+2. run the tests with the correct profile for that database.
 
 === Using profiles
 
@@ -102,7 +118,7 @@ gradle clean compile -Pdb=postgresql
 
 __NOTE: To run tests against a JDBC driver that is not available via Maven central, add the driver to your local Maven repository (`~/.m2/repository`) or to a personal Maven repository server.__
 
-=== Starting test databases locally as containers
+=== Starting a test database as a container
 
 If podman or docker is installed, there's no need to install any database to test Hibernate.
 The script `db.sh` starts a preconfigured database which can be used for testing.
@@ -206,18 +222,14 @@ The following table illustrates a list of commands for various databases that ca
 |`./gradlew test -Pdb=spannerpgsql`
 |===
 
-To stop a container started by `docker`, use the command
+Stopping a test database
+
+To stop a container, use the `stop` command.
+For example:
 
 [source]
 ----
-docker stop $container_name
+podman stop mariadb
 ----
 
-NOTE:: Substitute `podman` command for `docker` if using `podman`
-
-E.g., to stop the mariadb container
-
-[source]
-----
-docker stop mariadb
-----
+Substitute `docker` for `podman` if appropriate.

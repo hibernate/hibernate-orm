@@ -9,6 +9,8 @@ import jakarta.annotation.Nullable;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
+import static org.hibernate.processor.annotation.QueryOptionsSupport.setQueryOptions;
+
 /**
  * @author Gavin King
  */
@@ -58,7 +60,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		applyOrderingParameters( declaration, paramTypes, containerType );
 		inTry( declaration );
 		createQuery( declaration, true );
-		QueryOptionsSupport.setQueryOptions( this, declaration, false, false );
+		setQueryOptions( this, declaration, false, false );
 		declaration.append( ";\n" );
 		results( declaration, paramTypes, containerType );
 		castResult( declaration );

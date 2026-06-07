@@ -8,6 +8,7 @@ import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.processor.annotation.QueryOptionsSupport.setQueryOptions;
 
 /**
  * @author Gavin King
@@ -52,7 +53,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 		handleRestrictionParameters( declaration, paramTypes );
 		tryReturn(declaration);
 		createQuery( declaration, false );
-		QueryOptionsSupport.setQueryOptions( this, declaration, true, false );
+		setQueryOptions( this, declaration, true, false );
 		execute( declaration );
 	}
 

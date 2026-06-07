@@ -1858,20 +1858,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean canGenerateStaticQueryMethod(ExecutableElement method) {
 		return !isCompanionMethod( method )
-			&& ( method.isDefault() || !isReactive() && hasNamedRepositoryQueryAnnotation( method ) );
+			&& ( method.isDefault() || hasNamedRepositoryQueryAnnotation( method ) );
 	}
 
 	private boolean shouldGenerateStaticQueryMethodInMetamodel(ExecutableElement method) {
 		return element.getTypeParameters().isEmpty()
-			&& !hasReactiveReturnType( method )
 			&& ( repositoryQueryMetamodel
 					? canGenerateStaticQueryMethod( method ) && hasQueryStringAnnotation( method )
 					: containsAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY ) );
-	}
-
-	private static boolean hasReactiveReturnType(ExecutableElement method) {
-		final var returnType = method.getReturnType().toString();
-		return returnType.equals( UNI ) || returnType.startsWith( UNI + "<" );
 	}
 
 	private static boolean isCompanionMethod(ExecutableElement method) {
@@ -2017,7 +2011,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			case DECLARED -> {
-				if ( statement && isValidUpdateReturnType( methodReturnType, method, isReactive() ) ) {
+				if ( statement && isValidUpdateReturnType( methodReturnType, method, hasReactiveReturn( method ) ) ) {
 					yield new StaticQueryReturnType( true, null, null, methodReturnType );
 				}
 				else {
@@ -4423,7 +4417,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			List<String> paramTypes) {
 		return canGenerateStaticQueryMethod( method )
 			&& repository
-			&& !isReactive()
 			&& canBindReferenceArguments( queryString, isNative, paramNames, paramTypes )
 			&& canBindReferenceArguments( queryString, isNative, staticQueryParameterNames( method ), paramTypes );
 	}
@@ -4913,7 +4906,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeMirror returnType,
 			AnnotationMirror mirror,
 			AnnotationValue value) {
-		final var reactive = isReactive();
+		final var reactive = hasReactiveReturn( method );
 		if ( !isValidUpdateReturnType( returnType, method, reactive ) ) {
 			message( method, mirror, value,
 					"return type of mutation query method must be "
@@ -4945,6 +4938,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				|| kind == TypeKind.INT
 				|| kind == TypeKind.LONG;
 		}
+	}
+
+	private boolean hasReactiveReturn(ExecutableElement method) {
+		return isReactive() || isUni( method.getReturnType() );
 	}
 
 	private static boolean isLegalAsynchronousUpdateReturnType(TypeMirror returnType) {

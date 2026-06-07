@@ -229,10 +229,17 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 		else if ( useQueryReferenceCreateQuery() ) {
 			localSession( declaration );
-			declaration
-					.append( isUpdate ? ".createStatement(" : ".createQuery(" );
-			createQueryReference( declaration );
-			declaration.append(")");
+			if ( useReactiveStatementReferenceCreateQuery() ) {
+				declaration.append( ".createNamedQuery(" );
+				createQueryReference( declaration );
+				declaration.append(".getName())");
+			}
+			else {
+				declaration
+						.append( isUpdate ? ".createStatement(" : ".createQuery(" );
+				createQueryReference( declaration );
+				declaration.append(")");
+			}
 		}
 		else if ( useNamedQuery() ) {
 			localSession( declaration );
@@ -316,13 +323,19 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private boolean bindsParametersFromReference() {
 		return namedQueryName != null
-			&& ( usesAugmentedQueryReference() || useSpecificationCreateQuery() || useQueryReferenceCreateQuery() );
+			&& ( usesAugmentedQueryReference()
+					|| useSpecificationCreateQuery()
+					|| useQueryReferenceCreateQuery() && !useReactiveStatementReferenceCreateQuery() );
 	}
 
 	private boolean useQueryReferenceCreateQuery() {
 		return namedQueryName != null
 			&& !isUsingSpecification()
 			&& useGeneratedQueryReferenceMethod();
+	}
+
+	private boolean useReactiveStatementReferenceCreateQuery() {
+		return isReactive() && isUpdate;
 	}
 
 	private boolean useNamedQuery() {

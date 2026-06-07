@@ -604,7 +604,6 @@ public class HibernateProcessor extends AbstractProcessor {
 		for ( var member : context.getAllMembers( typeElement ) ) {
 			if ( member instanceof ExecutableElement method
 					&& !isCompanionMethod( method )
-					&& !hasReactiveReturnType( method )
 					&& hasAnnotation( method, HQL, SQL, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY )
 					&& ( method.isDefault() || hasAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY ) ) ) {
 				return true;
@@ -616,11 +615,6 @@ public class HibernateProcessor extends AbstractProcessor {
 	private static boolean isCompanionMethod(ExecutableElement method) {
 		return method.getEnclosingElement() instanceof TypeElement typeElement
 			&& typeElement.getQualifiedName().toString().endsWith( "$" );
-	}
-
-	private static boolean hasReactiveReturnType(ExecutableElement method) {
-		final var returnType = method.getReturnType().toString();
-		return returnType.equals( Constants.UNI ) || returnType.startsWith( Constants.UNI + "<" );
 	}
 
 	private void createMetaModelClasses() {

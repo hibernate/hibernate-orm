@@ -1,6 +1,15 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.18.Final (June 07, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39410
+
+
+** Bug
+    * HHH-20386 Metamodel generator / Processor loses generic type parameter for Set<String> in Hibernate 7
+
 Changes in 7.2.17.Final (May 31, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

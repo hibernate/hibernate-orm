@@ -158,21 +158,21 @@ stage('Build') {
 							switch (buildEnv.dbName) {
 								case "edb":
 									docker.image('quay.io/enterprisedb/edb-postgres-advanced:15.4-3.3-postgis').pull()
-									sh "./docker_db.sh edb"
+									sh "./db.sh edb"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "sybase_jconn":
 									docker.image('nguoianphu/docker-sybase').pull()
-									sh "./docker_db.sh sybase"
+									sh "./db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
 								case "cockroachdb":
 									docker.image('cockroachdb/cockroach:v23.1.12').pull()
-									sh "./docker_db.sh cockroachdb"
+									sh "./db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 								case "informix":
-									sh "./docker_db.sh informix"
+									sh "./db.sh informix"
 									state[buildEnv.tag]['containerName'] = "informix"
 									// Disable parallel testing
 									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +

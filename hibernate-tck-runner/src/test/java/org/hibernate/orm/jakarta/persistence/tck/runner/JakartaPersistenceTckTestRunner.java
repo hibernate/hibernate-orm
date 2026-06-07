@@ -22,7 +22,7 @@ import org.junit.platform.suite.api.SuiteDisplayName;
 		// FQCN of a test to skip, e.g. "ee.jakarta.tck.persistence.jpa40.find.Client",
 } )
 // If you want to run this from an IDE (like IDEA... )
-//  make sure to include `-Pdb=pgsql_ci` at the very end of the `Run` input of your run configuration
+//  make sure to include `-Pdb=pgsql` at the very end of the `Run` input of your run configuration
 //  Failing that ^ just comment out the test.onlyIf part in the Gradle config of this module...
 public class JakartaPersistenceTckTestRunner {
 

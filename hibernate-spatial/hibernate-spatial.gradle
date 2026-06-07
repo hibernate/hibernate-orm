@@ -43,18 +43,18 @@ tasks.test {
 
 	enabled = ['h2',
 			   'pgsql',
-			   'pgsql_ci',
+			   'pgsql',
 			   'cockroachdb',
 			   'mariadb',
-			   'mariadb_ci',
+			   'mariadb',
 			   'mysql',
-			   'mysql_ci',
+			   'mysql',
 			   'oracle',
-			   'oracle_ci',
+			   'oracle',
 			   'oracle_test_pilot_database',
-			   'oracle_xe_ci',
+			   'oracle_xe',
 			   'mssql',
-			   'mssql_ci'
+			   'mssql'
 	].contains( project.db )
 }
 

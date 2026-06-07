@@ -7,19 +7,19 @@ within Hibernate ORM start the Postgresql database as usual with:
 
 [source,bash]
 ----
-./docker_db.sh postgresql
+./db.sh postgresql
 ----
 
 To run the Jakarta Persistence TCK from the terminal execute:
 
 [source,bash]
 ----
-./gradlew :hibernate-tck-runner:test -Pdb=pgsql_ci -Pruntck=true
+./gradlew :hibernate-tck-runner:test -Pdb=pgsql -Pruntck=true
 ----
 
 [NOTE]
 ====
-Make sure to include the `pgsql_ci` database parameter!
+Make sure to include the `pgsql` database parameter!
 ====
 
 == Testing with a locally built Jakarta Persistence
@@ -30,7 +30,7 @@ without publishing upstream, you can install the Jakarta Persistence artifacts t
 
 [source,bash]
 ----
-./gradlew :hibernate-tck-runner:test -Pdb=pgsql_ci -Pruntck=true -DenableMavenLocalRepo=true
+./gradlew :hibernate-tck-runner:test -Pdb=pgsql -Pruntck=true -DenableMavenLocalRepo=true
 ----
 
 The `-DenableMavenLocalRepo=true` system property adds `mavenLocal()` as a repository so that
@@ -43,7 +43,7 @@ but should be applicable to any other IDE.
 
 * Go to `org.hibernate.orm.jakarta.persistence.tck.runner.JakartaPersistenceTckTestRunner`
 * Run it to create a run configuration.
-* Edit the newly created run configuration and add the `-Pdb=pgsql_ci` at the very end of the run command:
+* Edit the newly created run configuration and add the `-Pdb=pgsql` at the very end of the run command:
 
 image::edit-run-configuration.png[]
 

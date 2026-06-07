@@ -282,7 +282,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/35980
     * HHH-20013 remove dependency to Classmate
     * HHH-20012 Update the TiDBDialect
     * HHH-20011 Upgrade minmum version supported for cockroach and upgrade db testing to 25
-    * HHH-20009 docker_db.sh fails to start PostgreSQL 17 and 18 on Apple Silicon (ARM64)
+    * HHH-20009 db.sh fails to start PostgreSQL 17 and 18 on Apple Silicon (ARM64)
     * HHH-19997 Update TiDB testing environment
     * HHH-19992 auto-generate check constraint on @OrderColumn
     * HHH-19950 Alternative to pre-set parameters offered for deprecated DynamicParameterizedType

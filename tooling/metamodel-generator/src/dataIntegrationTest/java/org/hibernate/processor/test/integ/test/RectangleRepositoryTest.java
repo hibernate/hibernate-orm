@@ -86,7 +86,10 @@ class RectangleRepositoryTest {
 			repo.save( new Rectangle( "tiny", 0, 0, 2, 3 ) );       // area = 6
 			repo.save( new Rectangle( "mid", 0, 0, 10, 10 ) );      // area = 100
 			repo.save( new Rectangle( "big", 0, 0, 100, 200 ) );    // area = 20000
+		} );
 
+		scope.inStatelessTransaction( session -> {
+			var repo = new _RectangleRepository( session );
 			assertEquals( 3, repo.countWithAreaAtLeast( 1 ) );
 			assertEquals( 2, repo.countWithAreaAtLeast( 50 ) );
 			assertEquals( 1, repo.countWithAreaAtLeast( 1000 ) );

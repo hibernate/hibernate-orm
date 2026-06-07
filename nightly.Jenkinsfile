@@ -109,45 +109,45 @@ stage('Build') {
 										" -Pgradle.libs.versions.hsqldb=2.6.1"
 									break;
 								case "mysql_8_0":
-									sh "./docker_db.sh mysql_8_0"
+									sh "./db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
 								case "mariadb_10_6":
-									sh "./docker_db.sh mariadb_10_6"
+									sh "./db.sh mariadb_10_6"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
 								case "postgresql_14":
-									sh "./docker_db.sh postgresql_14"
+									sh "./db.sh postgresql_14"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
 								case "edb_14":
-									sh "./docker_db.sh edb_14"
+									sh "./db.sh edb_14"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "db2_11_5":
-									sh "./docker_db.sh db2_11_5"
+									sh "./db.sh db2_11_5"
 									state[buildEnv.tag]['containerName'] = "db2"
 									// The tenant feature was only added in DB2 12, so disable parallel testing
 									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 										" -Ptest.threads=1"
 									break;
 								case "informix":
-									sh "./docker_db.sh informix"
+									sh "./db.sh informix"
 									state[buildEnv.tag]['containerName'] = "informix"
 									// Disable parallel testing
 									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 										" -Ptest.threads=1"
 									break;
 								case "mssql_2017":
-									sh "./docker_db.sh mssql_2017"
+									sh "./db.sh mssql_2017"
 									state[buildEnv.tag]['containerName'] = "mssql"
 									break;
 								case "sybase_jconn":
-									sh "./docker_db.sh sybase"
+									sh "./db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
 								case "cockroachdb":
-									sh "./docker_db.sh cockroachdb"
+									sh "./db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}

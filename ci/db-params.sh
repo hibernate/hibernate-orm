@@ -14,29 +14,29 @@ elif [ "$RDBMS" == "hsqldb" ]; then
 elif [ "$RDBMS" == "hsqldb_2_6" ]; then
   goal="-Pdb=hsqldb -PdbVersion=2.6"
 elif [ "$RDBMS" == "mysql" ]; then
-  goal="-Pdb=mysql_ci"
+  goal="-Pdb=mysql"
 elif [ "$RDBMS" == "mysql_8_0" ]; then
-  goal="-Pdb=mysql_ci -PdbVersion=8.0"
+  goal="-Pdb=mysql -PdbVersion=8.0"
 elif [ "$RDBMS" == "mariadb" ]; then
-  goal="-Pdb=mariadb_ci"
+  goal="-Pdb=mariadb"
 elif [ "$RDBMS" == "mariadb_10_6" ]; then
-  goal="-Pdb=mariadb_ci -PdbVersion=10.6"
+  goal="-Pdb=mariadb -PdbVersion=10.6"
 elif [ "$RDBMS" == "postgresql" ]; then
-  goal="-Pdb=pgsql_ci"
+  goal="-Pdb=pgsql"
 elif [ "$RDBMS" == "postgresql_14" ]; then
-  goal="-Pdb=pgsql_ci -PdbVersion=14"
+  goal="-Pdb=pgsql -PdbVersion=14"
 elif [ "$RDBMS" == "gaussdb"  ]; then
   goal="-Pdb=gaussdb -DdbHost=localhost:8000"
 elif [ "$RDBMS" == "edb" ]; then
-  goal="-Pdb=edb_ci -DdbHost=localhost:5444"
+  goal="-Pdb=edb -DdbHost=localhost:5444"
 elif [ "$RDBMS" == "edb_14" ]; then
-  goal="-Pdb=edb_ci -DdbHost=localhost:5444 -PdbVersion=14"
+  goal="-Pdb=edb -DdbHost=localhost:5444 -PdbVersion=14"
 elif [ "$RDBMS" == "oracle" ]; then
-  goal="-Pdb=oracle_ci"
+  goal="-Pdb=oracle"
 elif [ "$RDBMS" == "oracle_xe" ]; then
-  goal="-Pdb=oracle_xe_ci -PdbVersion=18"
+  goal="-Pdb=oracle_xe -PdbVersion=18"
 elif [ "$RDBMS" == "oracle_21" ]; then
-  goal="-Pdb=oracle_xe_ci -PdbVersion=21"
+  goal="-Pdb=oracle_xe -PdbVersion=21"
 elif [ "$RDBMS" == "oracle_atps_tls" ]; then
   echo "Managing Oracle Autonomous Database..."
   export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous&hostname=`hostname`" -H 'accept: application/json')
@@ -87,18 +87,18 @@ elif [ "$RDBMS" == "base-database-service-26ai" ]; then
   echo "Managing OTP Database..."
   goal="-Pdb=oracle_test_pilot_database -PdbVersion=26 -DrunID=$RUNID -DdbPassword=$TESTPILOT_PASSWORD -DdbConnectionStringSuffix=$TESTPILOT_CONNECTION_STRING_SUFFIX"
 elif [ "$RDBMS" == "db2" ]; then
-  goal="-Pdb=db2_ci"
+  goal="-Pdb=db2"
 elif [ "$RDBMS" == "db2_11_5" ]; then
-  goal="-Pdb=db2_old_ci"
+  goal="-Pdb=db2_old"
 elif [ "$RDBMS" == "mssql" ]; then
-  goal="-Pdb=mssql_ci"
+  goal="-Pdb=mssql"
 elif [ "$RDBMS" == "mssql_2017" ]; then
-  goal="-Pdb=mssql_ci -PdbVersion=2017"
+  goal="-Pdb=mssql -PdbVersion=2017"
 # Exclude some Sybase tests on CI because they use `xmltable` function which has a memory leak on the DB version in CI
 elif [ "$RDBMS" == "sybase" ]; then
-  goal="-Pdb=sybase_ci -PexcludeTests=**.GenerateSeriesTest*"
+  goal="-Pdb=sybase -PexcludeTests=**.GenerateSeriesTest*"
 elif [ "$RDBMS" == "sybase_jconn" ]; then
-  goal="-Pdb=sybase_jconn_ci -PexcludeTests=**.GenerateSeriesTest*"
+  goal="-Pdb=sybase_jconn -PexcludeTests=**.GenerateSeriesTest*"
 elif [ "$RDBMS" == "teradata" ]; then
   goal="-Pdb=teradata"
 elif [ "$RDBMS" == "tidb" ]; then

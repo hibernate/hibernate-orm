@@ -56,7 +56,7 @@ ext {
 //                        'jdbc.datasource' : 'org.apache.derby.jdbc.EmbeddedDataSource',
                     'connection.init_sql' : ''
             ],
-            pgsql_ci : [
+            pgsql : [
                     'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
                     'jdbc.driver': 'org.postgresql.Driver',
                     'jdbc.user'  : 'hibernate_orm_test',
@@ -78,7 +78,7 @@ ext {
                     'jdbc.datasource'    : 'com.huawei.gaussdb.jdbc.Driver',
                     'connection.init_sql': ''
             ],
-            edb_ci : [
+            edb : [
                     'db.dialect' : 'org.hibernate.dialect.PostgresPlusDialect',
                     'jdbc.driver': 'com.edb.Driver',
                     'jdbc.user'  : 'hibernate_orm_test',
@@ -89,7 +89,7 @@ ext {
 //                        'jdbc.datasource' : 'com.edb.ds.PGSimpleDataSource',
                     'connection.init_sql' : ''
             ],
-            sybase_ci : [
+            sybase : [
                     'db.dialect' : 'org.hibernate.dialect.SybaseASEDialect',
                     'jdbc.driver': 'net.sourceforge.jtds.jdbc.Driver',
                     'jdbc.user'  : 'hibernate_orm_test',
@@ -100,7 +100,7 @@ ext {
 //                        'jdbc.datasource' : 'net.sourceforge.jtds.jdbcx.JtdsDataSource',
                     'connection.init_sql' : 'set ansinull on'
             ],
-            sybase_jconn_ci : [
+            sybase_jconn : [
                     'db.dialect' : 'org.hibernate.dialect.SybaseASEDialect',
                     'jdbc.driver': 'com.sybase.jdbc4.jdbc.SybDriver',
                     'jdbc.user'  : 'hibernate_orm_test',
@@ -120,7 +120,7 @@ ext {
                     'jdbc.datasource' : 'com.teradata.jdbc.TeraDriver',
                     'connection.init_sql' : ''
             ],
-            mysql_ci : [
+            mysql : [
                     'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
                     'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
                     'jdbc.user'  : 'hibernate_orm_test',
@@ -130,7 +130,7 @@ ext {
 //                        'jdbc.datasource' : 'com.mysql.cj.jdbc.MysqlDataSource',
                     'connection.init_sql' : ''
             ],
-            mariadb_ci : [
+            mariadb : [
                     'db.dialect' : 'org.hibernate.dialect.MariaDBDialect',
                     'jdbc.driver': 'org.mariadb.jdbc.Driver',
                     'jdbc.user'  : 'root',
@@ -150,7 +150,7 @@ ext {
 //                        'jdbc.datasource' : 'com.mysql.cj.jdbc.MysqlDataSource',
                     'connection.init_sql' : ''
             ],
-            oracle_ci : [
+            oracle : [
                     'db.dialect' : 'org.hibernate.dialect.OracleDialect',
                     'jdbc.driver': 'oracle.jdbc.OracleDriver',
                     'jdbc.user'  : 'hibernate_orm_test_$worker',
@@ -160,7 +160,7 @@ ext {
 //                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
                     'connection.init_sql' : ''
             ],
-            oracle_xe_ci : [
+            oracle_xe : [
                     'db.dialect' : 'org.hibernate.dialect.OracleDialect',
                     'jdbc.driver': 'oracle.jdbc.OracleDriver',
                     'jdbc.user'  : 'hibernate_orm_test_$worker',
@@ -170,7 +170,7 @@ ext {
 //                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
                     'connection.init_sql' : ''
             ],
-            oracle_legacy_ci : [
+            oracle_legacy : [
                     'db.dialect' : 'org.hibernate.dialect.OracleDialect',
                     'jdbc.driver': 'oracle.jdbc.OracleDriver',
                     'jdbc.user'  : 'hibernate_orm_test',
@@ -261,7 +261,7 @@ ext {
                     'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
                     'connection.init_sql' : ''
             ],
-            mssql_ci : [
+            mssql : [
                     'db.dialect' : 'org.hibernate.dialect.SQLServerDialect',
                     'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
                     'jdbc.user'  : 'sa',
@@ -282,7 +282,7 @@ ext {
 //                        'jdbc.datasource' : 'com.informix.jdbcx.IfxDataSource',
                     'connection.init_sql' : ''
             ],
-            db2_old_ci : [
+            db2_old : [
                     'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
                     'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
                     'jdbc.user'  : 'orm_test',
@@ -292,7 +292,7 @@ ext {
 //                        'jdbc.datasource' : 'com.ibm.db2.jcc.DB2SimpleDataSource',
                     'connection.init_sql' : ''
             ],
-            db2_ci : [
+            db2 : [
                     'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
                     'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
                     'jdbc.user'  : 'orm_test',
@@ -313,7 +313,7 @@ ext {
 //                        'jdbc.datasource' : 'com.sap.db.jdbcext.HanaDataSource',
                     'connection.init_sql' : ''
             ],
-            hana_ci : [
+            hana : [
                     'db.dialect' : 'org.hibernate.dialect.HANADialect',
                     'jdbc.driver': 'com.sap.db.jdbc.Driver',
                     'jdbc.user'  : 'hibernate_orm_test_$worker',

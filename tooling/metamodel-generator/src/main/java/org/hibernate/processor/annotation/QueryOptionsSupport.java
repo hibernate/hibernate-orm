@@ -12,6 +12,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.List;
 
+import static org.hibernate.processor.annotation.QueryMethod.PARAM_INDENT;
 import static org.hibernate.processor.util.Constants.HIB_ENABLED_FETCH_PROFILE;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
 import static org.hibernate.processor.util.Constants.TIMEOUT;
@@ -30,7 +31,9 @@ final class QueryOptionsSupport {
 			StringBuilder declaration,
 			boolean update,
 			boolean nativeQuery) {
-		setQueryOptions( method, declaration, getAnnotationMirror( method.method, QUERY_OPTIONS ), update, nativeQuery );
+		setQueryOptions( method, declaration,
+				getAnnotationMirror( method.method, QUERY_OPTIONS ),
+				update, nativeQuery );
 	}
 
 	static boolean appendEntityGraphArgument(
@@ -45,11 +48,11 @@ final class QueryOptionsSupport {
 				if ( !graphName.isEmpty() ) {
 					method.localSession( declaration );
 					declaration
-							.append( ".getEntityGraph(" )
-							.append( method.annotationMetaEntity.importType( entity ) )
-							.append( ".class, " )
-							.append( stringLiteral( graphName ) )
-							.append( ")" );
+							.append(".getEntityGraph(")
+							.append(method.annotationMetaEntity.importType(entity))
+							.append(".class, ")
+							.append(stringLiteral(graphName))
+							.append(')');
 					return true;
 				}
 			}
@@ -111,17 +114,21 @@ final class QueryOptionsSupport {
 		if ( hints != null ) {
 			@SuppressWarnings("unchecked")
 			final var values =
-					(List<? extends AnnotationValue>) hints.getValue();
+					(List<? extends AnnotationValue>)
+							hints.getValue();
 			for ( var value : values ) {
 				final var hint = (AnnotationMirror) value.getValue();
-				setQueryHint( declaration, annotationString( hint, "name" ), annotationString( hint, "value" ) );
+				setQueryHint( declaration,
+						annotationString( hint, "name" ),
+						annotationString( hint, "value" ) );
 			}
 		}
 	}
 
 	private static void setQueryHint(StringBuilder declaration, String name, String value) {
 		declaration
-				.append("\n\t\t\t.setHint(")
+				.append(PARAM_INDENT)
+				.append(".setHint(")
 				.append(stringLiteral(name))
 				.append(", ")
 				.append(stringLiteral(value))
@@ -140,7 +147,8 @@ final class QueryOptionsSupport {
 				final var graphName = entityGraph.getValue().toString();
 				if ( !graphName.isEmpty() ) {
 					declaration
-							.append("\n\t\t\t.setHint(\"jakarta.persistence.loadgraph\", ");
+							.append(PARAM_INDENT)
+							.append(".setHint(\"jakarta.persistence.loadgraph\", ");
 					method.localSession( declaration );
 					declaration
 							.append(".getEntityGraph(")
@@ -158,7 +166,8 @@ final class QueryOptionsSupport {
 		final var timeout = getAnnotationValue( queryOptions, "timeout" );
 		if ( timeout != null ) {
 			declaration
-					.append("\n\t\t\t.setTimeout(")
+					.append(PARAM_INDENT)
+					.append(".setTimeout(")
 					.append(method.annotationMetaEntity.importType(TIMEOUT))
 					.append(".milliseconds(")
 					.append(timeout.getValue())
@@ -173,11 +182,11 @@ final class QueryOptionsSupport {
 		final var timeout = getAnnotationValue( queryOptions, "timeout" );
 		if ( timeout != null ) {
 			declaration
-					.append( ", " )
-					.append( method.annotationMetaEntity.importType( TIMEOUT ) )
-					.append( ".milliseconds(" )
-					.append( timeout.getValue() )
-					.append( ")" );
+					.append(", ")
+					.append(method.annotationMetaEntity.importType(TIMEOUT))
+					.append(".milliseconds(")
+					.append(timeout.getValue())
+					.append(")");
 		}
 	}
 
@@ -191,13 +200,14 @@ final class QueryOptionsSupport {
 		if ( option != null && option.getValue() instanceof VariableElement variable ) {
 			final var type = (TypeElement) variable.getEnclosingElement();
 			declaration
-					.append("\n\t\t\t.")
+					.append(PARAM_INDENT)
+					.append('.')
 					.append(methodName)
-					.append("(")
+					.append('(')
 					.append(method.annotationMetaEntity.importType(type.getQualifiedName().toString()))
-					.append(".")
+					.append('.')
 					.append(variable.getSimpleName())
-					.append(")");
+					.append(')');
 		}
 	}
 
@@ -220,10 +230,10 @@ final class QueryOptionsSupport {
 			String type,
 			String member) {
 		declaration
-				.append( ", " )
-				.append( method.annotationMetaEntity.importType( type ) )
-				.append( "." )
-				.append( member );
+				.append(", ")
+				.append(method.annotationMetaEntity.importType(type))
+				.append('.')
+				.append(member);
 	}
 
 	private static String annotationString(AnnotationMirror annotation, String member) {

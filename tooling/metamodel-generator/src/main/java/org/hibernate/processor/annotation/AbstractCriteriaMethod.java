@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
+import static org.hibernate.processor.annotation.QueryOptionsSupport.setQueryOptions;
 import static org.hibernate.processor.util.Constants.HIB_JAKARTA_DATA_RESTRICTION;
 import static org.hibernate.processor.util.Constants.JD_PAGE;
 import static org.hibernate.processor.util.Constants.JD_PAGE_REQUEST;
@@ -89,7 +90,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		createProjectionSpecification( declaration );
 		inTry( declaration );
 		createQuery( declaration, true );
-		QueryOptionsSupport.setQueryOptions( this, declaration, false, false );
+		setQueryOptions( this, declaration, false, false );
 		declaration.append( ";\n" );
 		executeProjectionQuery( declaration, paramTypes );
 		convertExceptions( declaration );
@@ -458,7 +459,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			projectionTotalResults( declaration, indent, paramTypes );
 			declaration
 					.append( indent )
-					.append( "var _results = " );
+					.append( "var _results =\n\t\t\t" );
 			selectProjectionResultList( declaration, paramTypes );
 			declaration
 					.append( ";\n" )
@@ -480,7 +481,8 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			setFirstResultLimit( declaration );
 			handlePageParameters( declaration, paramTypes, null );
 			declaration
-					.append( nullable ? "\t\t\t.getSingleResultOrNull();\n" : "\t\t\t.getSingleResult();\n" )
+					.append( nullable ? ".getSingleResultOrNull();" : ".getSingleResult();" )
+					.append( "\t\t\t\t\n" )
 					.append( indent );
 			returnResult( declaration );
 			if ( nullable ) {

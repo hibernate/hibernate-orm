@@ -12,6 +12,7 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
+import static org.hibernate.processor.annotation.QueryOptionsSupport.setQueryOptions;
 import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 import static org.hibernate.processor.util.Constants.BOOLEAN;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
@@ -143,7 +144,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			setParameters( declaration, paramTypes );
 		}
 		if ( !useNamedQuery() && !bindsParametersFromReference() ) {
-			QueryOptionsSupport.setQueryOptions( this, declaration, isUpdate, isNative );
+			setQueryOptions( this, declaration, isUpdate, isNative );
 		}
 		declaration.append( ";\n" );
 		results( declaration, paramTypes, containerType );
@@ -194,8 +195,9 @@ public class QueryMethod extends AbstractQueryMethod {
 						.append('\t');
 			}
 			declaration
-					.append('\t');
-			declaration.append("var _select = ");
+					.append('\t')
+					.append("var _select =")
+					.append(ASSIGNMENT_INDENT);
 		}
 		if ( usesAugmentedQueryReference() ) {
 			localSession( declaration );
@@ -515,7 +517,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void execute(StringBuilder declaration, boolean unwrapped) {
 		if ( isUpdate ) {
 			declaration
-					.append( isReactive() ? "\t\t\t.executeUpdate()" : "\t\t\t.execute()" );
+					.append( isReactive() ? ".executeUpdate()" : ".execute()" );
 			if ( isAsynchronousCompletionStageWithVoidResult() ) {
 				declaration
 						.append( ";\n\t\t" );
@@ -524,11 +526,11 @@ public class QueryMethod extends AbstractQueryMethod {
 			else if ( isReactive() ) {
 				if ( VOID.equals(returnTypeName) ) {
 					declaration
-							.append( "\n\t\t\t.replaceWithVoid()" );
+							.append( ".replaceWithVoid()" );
 				}
 				else if ( BOOLEAN.equals(returnTypeName) ) {
 					declaration
-							.append( "\n\t\t\t.map(rows -> rows>0)" );
+							.append( ".map(rows -> rows>0)" );
 				}
 			}
 			else {
@@ -596,9 +598,12 @@ public class QueryMethod extends AbstractQueryMethod {
 		return recognizer.found;
 	}
 
+	static final String PARAM_INDENT = "\n\t\t\t\t\t\t";
+
 	private static void setOrdinalParameter(StringBuilder declaration, int i, String paramName) {
 		declaration
-				.append("\n\t\t\t.setParameter(")
+				.append(PARAM_INDENT)
+				.append(".setParameter(")
 				.append(i)
 				.append(", ")
 				.append(paramName)
@@ -607,7 +612,8 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private static void setNamedParameter(StringBuilder declaration, String paramName) {
 		declaration
-				.append("\n\t\t\t.setParameter(\"")
+				.append(PARAM_INDENT)
+				.append(".setParameter(\"")
 				.append(paramName)
 				.append("\", ")
 				.append(paramName)

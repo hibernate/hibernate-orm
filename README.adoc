@@ -20,6 +20,14 @@ Hibernate is the best way for a program written in Java to take advantage of the
 
 See https://hibernate.org/orm/[hibernate.org] for more information.
 
+== Getting started
+
+Documentation for Hibernate ORM is available at:
+
+<https://hibernate.org/orm/documentation>
+
+https://github.com/hibernate/hibernate-orm/blob/main/documentation/src/main/asciidoc/introduction/Configuration.adoc[This page] explains how to include Hibernate ORM in a Java project and configure a connection to the database.
+
 == Building from sources
 
 The build requires at least JDK 25, and produces Java 17 bytecode.

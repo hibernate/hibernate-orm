@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -119,13 +120,22 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 	}
 
 	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
+		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
+		return sqlAppender.toString();
+	}
+
+	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
 				// We encode binary data as hex
-				return "rawtohex(" + customWriteExpression + ")";
+				sqlAppender.append( "rawtohex(" );
+				renderFunction.run();
+				sqlAppender.append( ")" );
+				break;
 			case ARRAY:
 				final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
 				switch ( pluralType.getElementType().getJdbcType().getDefaultSqlTypeCode() ) {
@@ -133,12 +143,18 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 					case VARBINARY:
 					case LONG32VARBINARY:
 						// We encode binary data as hex
-						return "(select array_agg(rawtohex(t.c1)) from unnest(" + customWriteExpression + ") t)";
+						sqlAppender.append( "(select array_agg(rawtohex(t.c1)) from unnest(" );
+						renderFunction.run();
+						sqlAppender.append( ") t)" );
+						break;
 					default:
-						return customWriteExpression;
+						renderFunction.run();
+						break;
 				}
+				break;
 			default:
-				return customWriteExpression;
+				renderFunction.run();
+				break;
 		}
 	}
 

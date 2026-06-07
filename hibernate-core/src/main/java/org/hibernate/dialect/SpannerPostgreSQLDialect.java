@@ -263,8 +263,8 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	@Override
 	protected void registerJsonFunction(CommonFunctionFactory functionFactory) {
-		functionFactory.jsonObject_postgresql();
-		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonObject_postgresql( false );
+		functionFactory.jsonArray_postgresql( false );
 		functionFactory.jsonSet_postgresql();
 		functionFactory.jsonRemove_postgresql();
 		functionFactory.jsonReplace_postgresql();

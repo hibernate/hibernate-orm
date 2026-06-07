@@ -56,7 +56,7 @@ ext {
 //                        'jdbc.datasource' : 'org.apache.derby.jdbc.EmbeddedDataSource',
                     'connection.init_sql' : ''
             ],
-            pgsql : [
+            postgresql : [
                     'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
                     'jdbc.driver': 'org.postgresql.Driver',
                     'jdbc.user'  : 'hibernate_orm_test',
@@ -379,4 +379,8 @@ ext {
                     'connection.init_sql' : '',
             ],
     ]
+
+    // Backward compatibility for existing scripts
+    // and IDE configurations using `-Pdb=pgsql`
+    dbBundle.pgsql = dbBundle.postgresql
 }

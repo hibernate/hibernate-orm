@@ -42,7 +42,7 @@ sourceSets.test.resources {
 tasks.test {
 
 	enabled = ['h2',
-			   'pgsql',
+			   'postgresql',
 			   'pgsql',
 			   'cockroachdb',
 			   'mariadb',
@@ -57,4 +57,3 @@ tasks.test {
 			   'mssql'
 	].contains( project.db )
 }
-

@@ -46,6 +46,11 @@ class ReactiveTest {
 		assertTrue( library.contains( "session.createNamedQuery(Library_.updateAuthorAddress1(id, address).getName())" ) );
 		assertTrue( library.contains( "session.createNamedQuery(Library_.updateAuthorAddress2(id, address).getName())" ) );
 		assertTrue( library.contains( "session.createNamedQuery(Library_.updateAuthorAddress3(id, address).getName())" ) );
+		assertTrue( library.contains( "return (pageRequest.requestTotal()" ) );
+		assertTrue( library.contains( "? _select.getResultCount()" ) );
+		assertTrue( library.contains( ": Uni.createFrom().item(-1L)" ) );
+		assertTrue( library.contains( ".chain(_totalResults ->" ) );
+		assertFalse( library.contains( "long _totalResults" ) );
 		assertFalse( library.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
 		assertFalse( library.contains( "createNamedQuery(\"org.hibernate.processor.test.data.reactive.Library#booksWithAuthors()" ) );
 		assertFalse( library.contains( "createNamedQuery(\"org.hibernate.processor.test.data.reactive.Library#updateAuthorAddress" ) );
@@ -53,6 +58,11 @@ class ReactiveTest {
 		assertTrue( library2QueryMetamodel.contains( "TypedQueryReference<BookWithAuthor> booksWithAuthors()" ) );
 		assertTrue( library2.contains( "SelectionSpecification.create(Library2_.booksByTitle(titlePattern))" ) );
 		assertTrue( library2.contains( "session.createQuery(Library2_.booksWithAuthors())" ) );
+		assertTrue( library2.contains( "return (pageRequest.requestTotal()" ) );
+		assertTrue( library2.contains( "? _select.getResultCount()" ) );
+		assertTrue( library2.contains( ": Uni.createFrom().item(-1L)" ) );
+		assertTrue( library2.contains( ".chain(_totalResults ->" ) );
+		assertFalse( library2.contains( "long _totalResults" ) );
 		assertFalse( library2.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
 		assertFalse( library2.contains( "createNamedQuery(\"org.hibernate.processor.test.data.reactive.Library2#booksWithAuthors()" ) );
 		assertMetamodelClassGeneratedFor( Author.class, true );

@@ -44,6 +44,7 @@ import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.SESSION_TYPES;
 import static org.hibernate.processor.util.Constants.STREAM;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY;
+import static org.hibernate.processor.util.Constants.UNI;
 import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
@@ -715,7 +716,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					.append(ASSIGNMENT_INDENT);
 		}
 		else {
-			if ( !returnsVoid() || isReactiveSessionAccess() ) {
+			if ( !isReactiveJakartaPage(containerType)
+					&& ( !returnsVoid() || isReactiveSessionAccess() ) ) {
 				returnResult( declaration );
 			}
 		}
@@ -744,14 +746,28 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	private void totalResults(StringBuilder declaration, List<String> paramTypes) {
-		declaration
-				.append("\tlong _totalResults =")
-				.append(ASSIGNMENT_INDENT);
 		if ( isReactive() ) {
-			declaration.append("-1;\n"); //TODO: add getResultCount() to HR
+			declaration
+					.append("\treturn (")
+					.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
+					.append(".requestTotal()")
+					.append(PAGINATION_INDENT)
+					.append("? ");
+			select( declaration );
+			declaration
+					.append(".getResultCount()")
+					.append(PAGINATION_INDENT)
+					.append(": ")
+					.append(annotationMetaEntity.importType(UNI))
+					.append(".createFrom().item(-1L))")
+					.append("\n\t\t\t")
+					.append(".chain(_totalResults ->")
+					.append(ASSIGNMENT_INDENT);
 		}
 		else {
 			declaration
+					.append("\tlong _totalResults =")
+					.append(ASSIGNMENT_INDENT)
 					.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 					.append(".requestTotal()")
 					.append(PAGINATION_INDENT)
@@ -764,6 +780,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					.append(PAGINATION_INDENT)
 					.append(": -1;\n");
 		}
+	}
+
+	private boolean isReactiveJakartaPage(@Nullable String containerType) {
+		return isReactive() && isJakartaPage(containerType);
 	}
 
 	void collectOrdering(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
@@ -1215,7 +1235,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 							.append(", _results, _totalResults)");
 					if ( isReactive() ) {
 						declaration
-								.append(')');
+								.append("))");
 					}
 					endReturnResult( declaration );
 					break;

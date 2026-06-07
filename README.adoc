@@ -79,60 +79,63 @@ Testing against a specific database can be achieved in 2 different ways:
 
 Coming later…
 
-=== Using "profiles"
+=== Using profiles
 
-The Hibernate build defines several database testing "profiles" in `databases.gradle`. These
-profiles can be activated by name using the `db` build property which can be passed either as
-a JVM system prop (`-D`) or as a Gradle project property (`-P`). Examples below use the Gradle
-project property approach.
+The Hibernate build defines several database testing _profiles_ in `local.databases.gradle`.
+A profile may be activated by name using the `db` build property which can be passed either:
+
+- as a JVM system property `-Ddb=...`, or
+- as a Gradle project property `-Pdb=...`.
+
+Examples below use the Gradle project property.
 
 ----
-gradle clean build -Pdb=pgsql_ci
+gradle clean build -Pdb=postgresql
 ----
 
 To run a test from your IDE, you need to ensure the property expansions happen.
 Use the following command:
 
 ----
-gradle clean compile -Pdb=pgsql_ci
+gradle clean compile -Pdb=postgresql
 ----
 
-__NOTE: If you are running tests against a JDBC driver that is not available via Maven central be sure to
-add these drivers to your local Maven repo cache (~/.m2/repository) or (better) add it to a personal Maven repo server__
+__NOTE: To run tests against a JDBC driver that is not available via Maven central, add the driver to your local Maven repository (`~/.m2/repository`) or to a personal Maven repository server.__
 
-=== Starting test databases locally as docker containers
+=== Starting test databases locally as containers
 
-You don't have to install all databases locally to be able to test against them in case you have docker available.
-The script `docker_db.sh` allows you to start a pre-configured database which can be used for testing.
+If podman or docker is installed, there's no need to install any database to test Hibernate.
+The script `db.sh` starts a preconfigured database which can be used for testing.
 
-All you have to do is run the following command:
-
-----
-./docker_db.sh postgresql
-----
-
-omitting the argument will print a list of possible options.
-
-If you need to keep multiple databases started by the script running, start them with `-k/--keep-orphans` argument:
+Simply run the following command:
 
 ----
-./docker_db.sh -k postgresql
-./docker_db.sh -k mysql
+./db.sh postgresql
 ----
 
-When the database is properly started, you can run tests with special profiles that are suffixed with `_ci`
-e.g. `pgsql_ci` for PostgreSQL. By using the system property `dbHost` you can configure the IP address of your docker host.
+Running `./db.sh` without an argument prints a list of available database configurations.
 
-The command for running tests could look like the following:
+By default, `./db.sh` kills any previously started database.
+To keep multiple databases running, use `--keep-orphans` or `-k`:
 
 ----
-./gradlew test -Pdb=pgsql_ci "-DdbHost=192.168.99.100"
+./db.sh -k postgresql
+./db.sh -k mysql
+----
+
+When the database is properly started, run tests with the corresponding profile, for example, `-Pdb=postgresql` for PostgreSQL.
+The system property `dbHost` configures the IP address of your docker host.
+
+The command for running tests might look like the following:
+
+----
+./gradlew test -Pdb=postgresql "-DdbHost=192.168.99.100"
 ----
 
 The following table illustrates a list of commands for various databases that can be tested locally.
 
 |===
-|Database |`docker_db.sh` |Gradle command
+|Database |`db.sh` |Gradle command
 
 |H2
 |-
@@ -147,59 +150,59 @@ The following table illustrates a list of commands for various databases that ca
 |`./gradlew test -Pdb=derby`
 
 |MySQL
-|`./docker_db.sh mysql`
-|`./gradlew test -Pdb=mysql_ci`
+|`./db.sh mysql`
+|`./gradlew test -Pdb=mysql`
 
 |MariaDB
-|`./docker_db.sh mariadb`
-|`./gradlew test -Pdb=mariadb_ci`
+|`./db.sh mariadb`
+|`./gradlew test -Pdb=mariadb`
 
 |PostgreSQL
-|`./docker_db.sh postgresql`
-|`./gradlew test -Pdb=pgsql_ci`
+|`./db.sh postgresql`
+|`./gradlew test -Pdb=postgresql`
 
 |EnterpriseDB
-|`./docker_db.sh edb`
-|`./gradlew test -Pdb=edb_ci`
+|`./db.sh edb`
+|`./gradlew test -Pdb=edb`
 
 |Oracle
-|`./docker_db.sh oracle`
-|`./gradlew test -Pdb=oracle_ci`
+|`./db.sh oracle`
+|`./gradlew test -Pdb=oracle`
 
 |DB2
-|`./docker_db.sh db2`
-|`./gradlew test -Pdb=db2_ci`
+|`./db.sh db2`
+|`./gradlew test -Pdb=db2`
 
 |SQL Server
-|`./docker_db.sh mssql`
-|`./gradlew test -Pdb=mssql_ci`
+|`./db.sh mssql`
+|`./gradlew test -Pdb=mssql`
 
 |Sybase ASE (jTDS)
-|`./docker_db.sh sybase`
-|`./gradlew test -Pdb=sybase_ci`
+|`./db.sh sybase`
+|`./gradlew test -Pdb=sybase`
 
 |Sybase ASE (jConnect)
-|`./docker_db.sh sybase`
-|`./gradlew test -Pdb=sybase_jconn_ci`
+|`./db.sh sybase`
+|`./gradlew test -Pdb=sybase_jconn`
 
 |SAP HANA
-|`./docker_db.sh hana`
-|`./gradlew test -Pdb=hana_ci`
+|`./db.sh hana`
+|`./gradlew test -Pdb=hana`
 
 |CockroachDB
-|`./docker_db.sh cockroachdb`
+|`./db.sh cockroachdb`
 |`./gradlew test -Pdb=cockroachdb`
 
 |TiDB
-|`./docker_db.sh tidb`
+|`./db.sh tidb`
 |`./gradlew test -Pdb=tidb`
 
 |Informix
-|`./docker_db.sh informix`
+|`./db.sh informix`
 |`./gradlew test -Pdb=informix`
 
 |Spanner PostgreSQL
-|`./docker_db.sh spanner_pg`
+|`./db.sh spanner_pg`
 |`./gradlew test -Pdb=spannerpgsql`
 |===
 

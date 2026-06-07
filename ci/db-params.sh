@@ -22,9 +22,9 @@ elif [ "$RDBMS" == "mariadb" ]; then
 elif [ "$RDBMS" == "mariadb_10_6" ]; then
   goal="-Pdb=mariadb -PdbVersion=10.6"
 elif [ "$RDBMS" == "postgresql" ]; then
-  goal="-Pdb=pgsql"
+  goal="-Pdb=postgresql"
 elif [ "$RDBMS" == "postgresql_14" ]; then
-  goal="-Pdb=pgsql -PdbVersion=14"
+  goal="-Pdb=postgresql -PdbVersion=14"
 elif [ "$RDBMS" == "gaussdb"  ]; then
   goal="-Pdb=gaussdb -DdbHost=localhost:8000"
 elif [ "$RDBMS" == "edb" ]; then

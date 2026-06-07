@@ -8,13 +8,17 @@ image:https://testpilot.oracle.com/ords/testpilot/badges/github/hibernate/hibern
 
 Hibernate ORM is a powerful object/relational mapping solution for Java, and makes it easy to develop persistence logic for applications, libraries, and frameworks.
 
-Hibernate implements JPA, the standard API for object/relational persistence in Java, but also offers an extensive set of features and APIs which go beyond the specification.
+Hibernate exposes relational data in a natural and type safe form,
 
-See https://hibernate.org/orm/[Hibernate.org] for more information.
+- making it easy to write **complex queries** and work with their results,
+- letting the program easily **synchronize changes** made in memory with the database,
+- respecting the ACID properties of **transactions**,
+- automatically handling *temporal data* and *audit logging*,
+- and allowing **performance optimizations** to be made after the basic persistence logic has already been written.
 
-== Continuous Integration
+Hibernate is the best way for a program written in Java to take advantage of the power of the relational model, and of the expressivity of SQL, without sacrificing performance or code reuse.
 
-See link:MAINTAINERS.md#ci[MAINTAINERS.md] for information about CI.
+See https://hibernate.org/orm/[hibernate.org] for more information.
 
 == Building from sources
 
@@ -233,3 +237,7 @@ podman stop mariadb
 ----
 
 Substitute `docker` for `podman` if appropriate.
+
+== Continuous Integration
+
+See link:MAINTAINERS.md#ci[MAINTAINERS.md] for information about CI.

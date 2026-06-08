@@ -16,8 +16,6 @@ import jakarta.persistence.EntityManager;
 /// In JDBC batching cases, [#performingSql] is called for each [java.sql.Statement#addBatch] call.  In these
 /// cases, `batchPosition` is the addition's position within the current batch.
 ///
-/// @apiNote Also provides [#swallowSql(String, int)] as a simple npo-op reference.
-///
 /// @since 8.0
 ///
 /// @author Steve Ebersole

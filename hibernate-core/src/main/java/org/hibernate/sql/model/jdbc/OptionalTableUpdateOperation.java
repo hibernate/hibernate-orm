@@ -71,6 +71,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
 
+	// Used by Hibernate Reactive
 	@Deprecated(forRemoval = true)
 	public OptionalTableUpdateOperation(
 			MutationTarget mutationTarget,

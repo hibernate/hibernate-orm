@@ -112,4 +112,4 @@ var book = session.getReference(Book.class, isbn, NATURAL);
 [[row-level-security]]
 == Discriminator-Based Multi-Tenancy and Row-Level Security
 
-On databases with built-in support for row-level security, Hibernate now uses row-level security to enforce the visibility rules association with discriminator-based multi-tenancy.
+On databases with built-in support for row-level security, Hibernate now uses row-level security to enforce the visibility rules implied by discriminator-based multi-tenancy.

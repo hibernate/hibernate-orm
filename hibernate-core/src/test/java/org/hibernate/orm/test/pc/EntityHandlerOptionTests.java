@@ -6,6 +6,7 @@ package org.hibernate.orm.test.pc;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
@@ -322,6 +323,7 @@ public class EntityHandlerOptionTests {
 	}
 
 	@Entity
+	@Table(name = "test_entity")
 	public static class TestEntity {
 		@Id
 		private Integer id;
@@ -337,6 +339,7 @@ public class EntityHandlerOptionTests {
 	}
 
 	@Entity
+	@Table(name = "test_entity2")
 	public static class TestEntity2 {
 		@Id
 		private Integer id;

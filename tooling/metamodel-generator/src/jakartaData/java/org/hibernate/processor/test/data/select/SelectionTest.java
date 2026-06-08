@@ -69,6 +69,11 @@ class SelectionTest {
 						"SelectionBook firstByStatus(SelectionStatus status, @Nonnull jakarta.data.Order<SelectionBook> order)" ) );
 		assertTrue( repository.contains( "applyOrder(order, _query, _entity, _builder);" ) );
 		assertTrue( repository.contains(
+				"SelectionSpecification.create(SelectionRepository_.queryBooksWithOptions(titlePattern))" ) );
+		assertTrue( repository.contains( ".setParameter(1, titlePattern)" ) );
+		assertFalse( repository.contains( ".setCacheRetrieveMode(CacheRetrieveMode.BYPASS)" ) );
+		assertFalse( repository.contains( ".setHint(\"hint\", \"1\")" ) );
+		assertTrue( repository.contains(
 				"var _reference = _builder.augment(SelectionRepository_.queryTitlesByStatus(status), _query -> {" ) );
 		assertTrue( repository.contains(
 				"var _query = _builder.createQuery(String.class, QUERY_TITLES_WITH_STRING_FALLBACK_SelectionStatus_int);" ) );

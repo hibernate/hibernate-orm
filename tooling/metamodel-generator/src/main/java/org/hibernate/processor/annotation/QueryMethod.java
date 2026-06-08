@@ -138,7 +138,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		if ( !bindsParametersFromReference() ) {
 			setParameters( declaration, paramTypes );
 		}
-		if ( !useNamedQuery() && !bindsParametersFromReference() ) {
+		if ( !useNamedQuery() && !usesQueryReference() ) {
 			setQueryOptions( this, declaration, isUpdate, isNative );
 		}
 		declaration.append( ";\n" );
@@ -166,7 +166,9 @@ public class QueryMethod extends AbstractQueryMethod {
 		createQuery( declaration, true );
 		if ( !bindsParametersFromReference() ) {
 			setParameters( declaration, paramTypes );
-			setQueryOptions( this, declaration, isUpdate, isNative );
+			if ( !usesQueryReference() ) {
+				setQueryOptions( this, declaration, isUpdate, isNative );
+			}
 		}
 		declaration.append( ";\n" );
 		results( declaration, paramTypes, containerType );
@@ -344,6 +346,12 @@ public class QueryMethod extends AbstractQueryMethod {
 			&& ( usesAugmentedQueryReference()
 					|| useSpecificationCreateQuery() && useSpecificationQueryReference()
 					|| useQueryReferenceCreateQuery() && !useReactiveStatementReferenceCreateQuery() );
+	}
+
+	private boolean usesQueryReference() {
+		return usesAugmentedQueryReference()
+			|| useSpecificationQueryReference()
+			|| useQueryReferenceCreateQuery() && !useReactiveStatementReferenceCreateQuery();
 	}
 
 	private boolean useQueryReferenceCreateQuery() {

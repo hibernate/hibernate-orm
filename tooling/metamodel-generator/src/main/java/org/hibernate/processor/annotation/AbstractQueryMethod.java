@@ -773,9 +773,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					.append(PAGINATION_INDENT)
 					.append("? ");
 			select( declaration );
-			unwrapQuery( declaration, !isUsingEntityHandler() );
+//			unwrapQuery( declaration, !isUsingEntityHandler() );
 			declaration
-					.append("\t\t")
+//					.append("\t\t")
 					.append(".getResultCount()")
 					.append(PAGINATION_INDENT)
 					.append(": -1;\n");

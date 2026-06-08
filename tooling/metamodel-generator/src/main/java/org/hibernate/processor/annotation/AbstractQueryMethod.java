@@ -1152,6 +1152,38 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		return false;
 	}
 
+	void createBuilder(StringBuilder declaration) {
+		declaration
+				.append("\tvar _builder = ");
+		localSession( declaration );
+		declaration
+				.append(".getCriteriaBuilder();\n");
+	}
+
+	void select(StringBuilder declaration, String entity, ResultSelection selection) {
+		declaration
+				.append("\t\t_query.select(");
+		if ( selection.recordProjection() ) {
+			declaration
+					.append("_builder.construct(")
+					.append(annotationMetaEntity.importType(selection.resultTypeName()))
+					.append(".class");
+			for ( var path : selection.paths() ) {
+				declaration
+						.append(',')
+						.append(PAGINATION_INDENT);
+				selectionExpression( declaration, path, entity );
+			}
+			declaration
+					.append(')');
+		}
+		else {
+			selectionExpression( declaration, selection.paths().get( 0 ), entity );
+		}
+		declaration
+				.append(");\n");
+	}
+
 	protected void executeSelect(
 			StringBuilder declaration,
 			List<String> paramTypes,
@@ -1308,10 +1340,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			&& containerType.startsWith("org.hibernate");
 	}
 
-	boolean isUnifiableReturnType(@Nullable String containerType) {
-		return containerType == null
-			|| LIST.equals(containerType)
-			|| JD_PAGE.equals(containerType)
-			|| JD_CURSORED_PAGE.equals(containerType);
-	}
+//	boolean isUnifiableReturnType(@Nullable String containerType) {
+//		return containerType == null
+//			|| LIST.equals(containerType)
+//			|| JD_PAGE.equals(containerType)
+//			|| JD_CURSORED_PAGE.equals(containerType);
+//	}
 }

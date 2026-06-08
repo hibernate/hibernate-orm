@@ -219,7 +219,8 @@ final class QueryOptionsSupport {
 		final var option = getAnnotationValue( queryOptions, member );
 		if ( option != null && option.getValue() instanceof VariableElement variable ) {
 			final var type = (TypeElement) variable.getEnclosingElement();
-			appendFindOption( method, declaration, type.getQualifiedName().toString(),
+			appendFindOption( method, declaration,
+					type.getQualifiedName().toString(),
 					variable.getSimpleName().toString() );
 		}
 	}

@@ -300,6 +300,9 @@ public interface BookAuthorRepository {
 	@Query("where price < :price and pages > :pages")
 	Book[] valueBooks2(@Param("price") BigDecimal maxPrice, @Param("pages") int minPages);
 
+	@Query("from Book where title like :titlePattern and pages > ?2")
+	List<Book> booksWithStringFallback(String titlePattern, int minPages, Order<Book> order);
+
 	@Save
 	Book write(Book book);
 

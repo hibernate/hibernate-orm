@@ -45,17 +45,17 @@ class SelectionTest {
 
 		assertTrue( repository.contains( "_query.select(_entity.get(SelectionBook_.title));" ) );
 		assertTrue( repository.contains( "_query.select(_entity.get(SelectionBook_.pages));" ) );
-		assertTrue( repository.contains(
+		assertTrue( normalizedRepository.contains(
 				"_builder.construct(TitleAndPages.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" )
-				|| repository.contains(
+				|| normalizedRepository.contains(
 						"_builder.construct(SelectionRepository.TitleAndPages.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" ) );
-		assertTrue( repository.contains(
+		assertTrue( normalizedRepository.contains(
 				"_builder.construct(Renamed.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" )
-				|| repository.contains(
+				|| normalizedRepository.contains(
 						"_builder.construct(SelectionRepository.Renamed.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" ) );
-		assertTrue( repository.contains(
+		assertTrue( normalizedRepository.contains(
 				"_builder.construct(Named.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" )
-				|| repository.contains(
+				|| normalizedRepository.contains(
 						"_builder.construct(SelectionRepository.Named.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages))" ) );
 		assertFalse( repository.contains( "SelectionSpecification.create(SelectionBook.class)" ) );
 		assertFalse( repository.contains( "ProjectionSpecification.create" ) );
@@ -70,6 +70,11 @@ class SelectionTest {
 		assertTrue( repository.contains( "applyOrder(order, _query, _entity, _builder);" ) );
 		assertTrue( repository.contains(
 				"var _reference = _builder.augment(SelectionRepository_.queryTitlesByStatus(status), _query -> {" ) );
+		assertTrue( repository.contains(
+				"var _query = _builder.createQuery(String.class, QUERY_TITLES_WITH_STRING_FALLBACK_SelectionStatus_int);" ) );
+		assertTrue( repository.contains( ".setParameter(\"status\", status)" ) );
+		assertTrue( repository.contains( ".setParameter(2, minPages)" ) );
+		assertFalse( repository.contains( "SelectionRepository_.queryTitlesWithStringFallback" ) );
 		assertTrue( repository.contains(
 				"var _reference = _builder.augment(SelectionRepository_.queryRenamedByStatus(status), _query -> {" ) );
 		assertTrue( normalizedRepository.contains(

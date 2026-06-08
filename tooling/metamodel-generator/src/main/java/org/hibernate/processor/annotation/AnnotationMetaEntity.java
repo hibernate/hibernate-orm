@@ -67,6 +67,8 @@ import jakarta.persistence.AccessType;
 
 import static java.lang.Character.toUpperCase;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
+import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
+import static org.hibernate.processor.annotation.StaticQueryMethod.queryName;
 import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
@@ -4425,14 +4427,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			ExecutableElement method,
 			AnnotationMirror mirror,
 			List<String> paramTypes) {
-		return repository && isNamedRepositoryQueryAnnotation( mirror )
-				? StaticQueryMethod.queryName( getQualifiedName(), method.getSimpleName().toString(), paramTypes )
+		return repository
+			&& isNamedRepositoryQueryAnnotation( mirror )
+				? queryName( getQualifiedName(), method.getSimpleName().toString(), paramTypes )
 				: null;
 	}
 
 	private static boolean isNamedRepositoryQueryAnnotation(AnnotationMirror mirror) {
-		final var annotationName =
-				( (TypeElement) mirror.getAnnotationType().asElement() ).getQualifiedName().toString();
+		final var annotationType = (TypeElement) mirror.getAnnotationType().asElement();
+		final var annotationName = annotationType.getQualifiedName().toString();
 		return JAKARTA_QUERY.equals( annotationName )
 			|| NATIVE_QUERY.equals( annotationName )
 			|| JD_QUERY.equals( annotationName );
@@ -4466,7 +4469,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			resultMappings.add( constructorResult( method, constructorResult ) );
 		}
 		final var inferredColumnType =
-				entityResults.isEmpty() && constructorResults.isEmpty() && columnResults.size() == 1
+				entityResults.isEmpty()
+					&& constructorResults.isEmpty()
+					&& columnResults.size() == 1
 						? returnType
 						: null;
 		for ( var columnResult : columnResults ) {
@@ -4609,14 +4614,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final var entityClass = annotationClassName( entityResult, "entityClass" );
 		final var fields = fieldResults( method, entityResult, entityClass );
 		final var discriminatorColumn = annotationString( entityResult, "discriminatorColumn" );
-		final var mapping = new StringBuilder()
+		final var mapping = new StringBuilder();
+		mapping
 				.append( resultSetMapping( "entity" ) )
 				.append( '(' )
 				.append( classLiteral( entityClass ) );
 		if ( !discriminatorColumn.isEmpty() ) {
 			mapping
 					.append( ", " )
-					.append( QueryOptionsSupport.stringLiteral( discriminatorColumn ) );
+					.append( stringLiteral( discriminatorColumn ) );
 		}
 		for ( var field : fields ) {
 			mapping
@@ -4645,8 +4651,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			fields.add( resultSetMapping( "field" )
 					+ "(" + classLiteral( entityClass )
 					+ ", " + fieldTypeLiteral( method, fieldResult, entityClass, name )
-					+ ", " + QueryOptionsSupport.stringLiteral( name )
-					+ ", " + QueryOptionsSupport.stringLiteral( column ) + ")" );
+					+ ", " + stringLiteral( name )
+					+ ", " + stringLiteral( column ) + ")" );
 		}
 		return fields;
 	}
@@ -4688,13 +4694,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private String columnResult(AnnotationMirror columnResult, @Nullable TypeMirror inferredColumnType) {
 		final var name = annotationString( columnResult, "name" );
 		final var explicitType = annotationClassNameOrNull( columnResult, "type" );
-		final var type = explicitType == null || isVoidClass( explicitType )
-				? inferredColumnType == null ? null : returnTypeClass( inferredColumnType )
-				: explicitType;
+		final var type =
+				explicitType == null || isVoidClass( explicitType )
+						? inferredColumnType == null ? null : returnTypeClass( inferredColumnType )
+						: explicitType;
 		return type == null || isVoidClass( type )
-				? resultSetMapping( "column" ) + "(" + QueryOptionsSupport.stringLiteral( name ) + ")"
+				? resultSetMapping( "column" ) + "(" + stringLiteral( name ) + ")"
 				: resultSetMapping( "column" )
-						+ "(" + QueryOptionsSupport.stringLiteral( name ) + ", " + classLiteral( type ) + ")";
+						+ "(" + stringLiteral( name ) + ", " + classLiteral( type ) + ")";
 	}
 
 	private List<AnnotationMirror> annotationArray(AnnotationMirror annotationMirror, String member) {
@@ -4702,14 +4709,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( value == null ) {
 			return emptyList();
 		}
-		final var result = new ArrayList<AnnotationMirror>();
-		@SuppressWarnings("unchecked")
-		final var annotationValues =
-				(List<? extends AnnotationValue>) value.getValue();
-		for ( var annotationValue : annotationValues ) {
-			result.add( (AnnotationMirror) annotationValue.getValue() );
+		else {
+			final var result = new ArrayList<AnnotationMirror>();
+			@SuppressWarnings("unchecked") final var annotationValues =
+					(List<? extends AnnotationValue>) value.getValue();
+			for ( var annotationValue : annotationValues ) {
+				result.add( (AnnotationMirror) annotationValue.getValue() );
+			}
+			return result;
 		}
-		return result;
 	}
 
 	private String annotationString(AnnotationMirror annotationMirror, String member) {

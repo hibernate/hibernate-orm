@@ -18,6 +18,9 @@ import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Select;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.QueryHint;
+import jakarta.persistence.query.QueryOptions;
 
 @Repository
 public interface SelectionRepository extends CrudRepository<SelectionBook, Long> {
@@ -88,6 +91,11 @@ public interface SelectionRepository extends CrudRepository<SelectionBook, Long>
 	@Query("where status = :status order by title")
 	@First(2)
 	List<SelectionBook> firstTwoByQuery(SelectionStatus status);
+
+	@Query("where title like ?1")
+	@OrderBy("title")
+	@QueryOptions(cacheRetrieveMode = CacheRetrieveMode.BYPASS, hints = @QueryHint(name = "hint", value = "1"))
+	List<SelectionBook> queryBooksWithOptions(String titlePattern);
 
 	@Query("where status = :status")
 	@Select("title")

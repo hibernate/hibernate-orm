@@ -403,6 +403,15 @@ _Be aware that creating a Cat, with the above model, will result in calls to bot
 that creating a Dog, both `postInsert(Animal)` and `postInsert(Dog)`._
 
 
+[[row-level-security]]
+=== Discriminator-Based Multi-Tenancy and Row-Level Security
+
+On databases with built-in support for row-level security, Hibernate now uses row-level security to enforce the visibility rules association with discriminator-based multi-tenancy.
+This requires specific DDL which the schema management tooling is responsible for generating.
+
+To recover the previous behavior, where discriminator-based multi-tenancy rules were not enforced by the database, set the configuration property `hibernate.multi_tenant.rls_enabled=false`.
+
+
 [[cubrid-dialect]]
 === CUBRID dialect
 

@@ -529,6 +529,7 @@ To make use of multi-tenancy, we'll usually need to set at least one of these co
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_SCHEMA_MAPPER[`hibernate.multi_tenant.schema_mapper`]  | Specifies the `TenantSchemaMapper` for schema-based multi-tenancy
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CREDENTIALS_MAPPER[`hibernate.multi_tenant.credentials_mapper`]  | Specifies the `TenantCredentialsMapper` for schema-based or discriminator-based multi-tenancy
 | link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CONNECTION_PROVIDER[`hibernate.multi_tenant_connection_provider`]  | Specifies the `MultiTenantConnectionProvider` for database-based multi-tenancy
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_RLS_ENABLED[`hibernate.multi_tenant.rls_enabled`]  | When `false`, disables enforcement of discriminator-based multi-tenancy via database-native row-level security
 |===
 
 // Do not configure those properties if you would like the configured `BeanContainer` provide the implementation.
@@ -591,6 +592,10 @@ Within a given session, our data is automatically filtered so that only rows tag
 ====
 Native SQL queries are _not_ automatically filtered by tenant id; you'll have to do that part yourself.
 ====
+
+Since Hibernate 8.0, the visibility rules for discriminator-based multi-tenancy are enforced by the database itself on platforms with built-in support for row-level security.
+Hibernate automatically generates DDL with the necessary row-level security constraints.
+This feature is enabled by default, but may be disabled by setting `hibernate.multi_tenant.rls_enabled=false`.
 
 [[read-only-replicas]]
 === Read-only replicas

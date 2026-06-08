@@ -323,7 +323,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override @Deprecated(since = "7")
 	SelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);
 
-	@Override
+	@Override @Incubating
 	SelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
@@ -601,7 +601,12 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @param lockScope The lock scope to apply
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated This method will be removed in Hibernate 8.0,
+	 * since equivalent functionality is offered by
+	 * {@link PessimisticLockScope} in JPA 4.
 	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	SelectionQuery<R> setLockScope(Locking.Scope lockScope);
 
 	/**

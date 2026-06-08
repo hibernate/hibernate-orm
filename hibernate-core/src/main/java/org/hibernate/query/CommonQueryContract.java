@@ -12,6 +12,7 @@ import java.util.Map;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
 import org.hibernate.Session;
 
 import jakarta.persistence.FlushModeType;
@@ -79,19 +80,29 @@ public interface CommonQueryContract {
 	 * {@link FlushMode} of the owning {@link Session} determines whether
 	 * it is flushed.
 	 *
+	 * @apiNote The return type of this method will change in Hibernate
+	 * 8.0, since {@code jakarta.persistence.QueryFlushMode} was introduced
+	 * by JPA 4.
+	 *
 	 * @see Session#getHibernateFlushMode()
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	QueryFlushMode getQueryFlushMode();
 
 	/**
 	 * Set the {@link QueryFlushMode} to use for this query.
 	 *
+	 * @apiNote The parameter type of this method will change in Hibernate
+	 * 8.0, since {@code jakarta.persistence.QueryFlushMode} was introduced
+	 * by JPA 4.
+	 *
 	 * @see Session#getHibernateFlushMode()
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	CommonQueryContract setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	/**

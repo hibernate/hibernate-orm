@@ -427,18 +427,20 @@ public class HibernateProcessor extends AbstractProcessor {
 			final TypeElement typeElement = context.getElementUtils().getTypeElement( elementName );
 			try {
 				final Element parent = typeElement.getEnclosingElement();
-				if ( hasAnnotation( typeElement, JD_REPOSITORY ) && hasRepositoryQueryReferenceMethods( typeElement ) ) {
-					final AnnotationMetaEntity queryMetaEntity =
-							AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
-									parentMetadata( parent, context::getMetaEntity ),
-									null );
-					context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
-				}
-				final AnnotationMetaEntity metaEntity =
+				final var metaEntity =
 						AnnotationMetaEntity.createRepository( typeElement, context,
 								repositoryParentMetadata( parent ),
 								null );
-				context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+				if ( metaEntity.isInitialized() ) {
+					if ( hasAnnotation( typeElement, JD_REPOSITORY ) && hasRepositoryQueryReferenceMethods( typeElement ) ) {
+						final AnnotationMetaEntity queryMetaEntity =
+								AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
+										parentMetadata( parent, context::getMetaEntity ),
+										null );
+						context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
+					}
+					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+				}
 				context.removeElementToRedo( elementName );
 			}
 			catch (ProcessLaterException processLaterException) {
@@ -513,18 +515,18 @@ public class HibernateProcessor extends AbstractProcessor {
 					|| provider.getValue().toString().isEmpty()
 					|| provider.getValue().toString().equalsIgnoreCase("hibernate") ) {
 					context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
-					if ( hasRepositoryQueryReferenceMethods( typeElement ) ) {
-						final var queryMetaEntity =
-								AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
-										parentMetadata( parent, context::getMetaEntity ),
-										primaryEntity );
-						context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
-					}
 					final var metaEntity =
 							AnnotationMetaEntity.createRepository( typeElement, context,
 									repositoryParentMetadata( parent ),
 									primaryEntity );
 					if ( metaEntity.isInitialized() ) {
+						if ( hasRepositoryQueryReferenceMethods( typeElement ) ) {
+							final var queryMetaEntity =
+									AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
+											parentMetadata( parent, context::getMetaEntity ),
+											primaryEntity );
+							context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
+						}
 						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 					}
 					// otherwise discard it (assume it has query by magical method name stuff)
@@ -533,18 +535,20 @@ public class HibernateProcessor extends AbstractProcessor {
 			else {
 				if ( isImplicitRepository( typeElement ) ) {
 					context.logMessage( Diagnostic.Kind.OTHER, "Processing implicit repository class '" + element + "'" );
-					if ( hasRepositoryQueryReferenceMethods( typeElement ) ) {
-						final var queryMetaEntity =
-								AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
-										parentMetadata( parent, context::getMetaEntity ),
-										primaryEntity );
-						context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
-					}
 					final var metaEntity =
 							AnnotationMetaEntity.createRepository( typeElement, context,
 									repositoryParentMetadata( parent ),
 									primaryEntity );
-					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+					if ( metaEntity.isInitialized() ) {
+						if ( hasRepositoryQueryReferenceMethods( typeElement ) ) {
+							final var queryMetaEntity =
+									AnnotationMetaEntity.createQueryMetamodel( typeElement, context,
+											parentMetadata( parent, context::getMetaEntity ),
+											primaryEntity );
+							context.addMetaAuxiliary( queryMetaEntity.getQualifiedName(), queryMetaEntity );
+						}
+						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+					}
 				}
 				else if ( hasStaticQueryMethods( typeElement ) ) {
 					context.logMessage( Diagnostic.Kind.OTHER, "Processing static query class '" + element + "'" );
@@ -603,18 +607,12 @@ public class HibernateProcessor extends AbstractProcessor {
 	private boolean hasRepositoryQueryReferenceMethods(TypeElement typeElement) {
 		for ( var member : context.getAllMembers( typeElement ) ) {
 			if ( member instanceof ExecutableElement method
-					&& !isCompanionMethod( method )
 					&& hasAnnotation( method, HQL, SQL, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY )
 					&& ( method.isDefault() || hasAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY ) ) ) {
 				return true;
 			}
 		}
 		return false;
-	}
-
-	private static boolean isCompanionMethod(ExecutableElement method) {
-		return method.getEnclosingElement() instanceof TypeElement typeElement
-			&& typeElement.getQualifiedName().toString().endsWith( "$" );
 	}
 
 	private void createMetaModelClasses() {

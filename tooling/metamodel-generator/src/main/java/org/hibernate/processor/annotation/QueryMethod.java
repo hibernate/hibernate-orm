@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor.annotation;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sql.internal.ParameterParser;
@@ -13,7 +14,6 @@ import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static org.hibernate.processor.annotation.QueryOptionsSupport.setQueryOptions;
-import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 import static org.hibernate.processor.util.Constants.BOOLEAN;
 import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.VOID;
@@ -25,7 +25,6 @@ import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFrom
  */
 public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
-	private final @Nullable String namedQueryName;
 	private final @Nullable String returnTypeClass;
 	private final @Nullable String containerType;
 	private final @Nullable String resultSetMapping;
@@ -40,7 +39,6 @@ public class QueryMethod extends AbstractQueryMethod {
 			ExecutableElement method,
 			String methodName,
 			String queryString,
-			@Nullable String namedQueryName,
 			@Nullable
 			String returnTypeName,
 			@Nullable
@@ -74,7 +72,6 @@ public class QueryMethod extends AbstractQueryMethod {
 				fullReturnType,
 				nullable );
 		this.queryString = queryString;
-		this.namedQueryName = namedQueryName;
 		this.returnTypeClass = returnTypeClass;
 		this.containerType = containerType;
 		this.resultSetMapping = resultSetMapping;
@@ -120,10 +117,14 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	public String getAttributeDeclarationString() {
+		return useAugmentedQuery()
+				? augmentedQueryAttributeDeclarationString()
+				: unaugmentedQueryAttributeDeclarationString();
+	}
+
+	@Nonnull
+	private String unaugmentedQueryAttributeDeclarationString() {
 		final var paramTypes = parameterTypes();
-		if ( usesAugmentedQuery() ) {
-			return augmentedQueryAttributeDeclarationString( paramTypes );
-		}
 		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration, paramTypes );
@@ -138,7 +139,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		if ( !bindsParametersFromReference() ) {
 			setParameters( declaration, paramTypes );
 		}
-		if ( !useNamedQuery() && !usesQueryReference() ) {
+		if ( !usesQueryReference() ) {
 			setQueryOptions( this, declaration, isUpdate, isNative );
 		}
 		declaration.append( ";\n" );
@@ -154,7 +155,8 @@ public class QueryMethod extends AbstractQueryMethod {
 		return declaration.toString();
 	}
 
-	private String augmentedQueryAttributeDeclarationString(List<String> paramTypes) {
+	private String augmentedQueryAttributeDeclarationString() {
+		final var paramTypes = parameterTypes();
 		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration, paramTypes );
@@ -166,9 +168,9 @@ public class QueryMethod extends AbstractQueryMethod {
 		createQuery( declaration, true );
 		if ( !bindsParametersFromReference() ) {
 			setParameters( declaration, paramTypes );
-			if ( !usesQueryReference() ) {
-				setQueryOptions( this, declaration, isUpdate, isNative );
-			}
+		}
+		if ( !usesQueryReference() ) {
+			setQueryOptions( this, declaration, isUpdate, isNative );
 		}
 		declaration.append( ";\n" );
 		results( declaration, paramTypes, containerType );
@@ -200,7 +202,7 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append("var _select =")
 					.append(ASSIGNMENT_INDENT);
 		}
-		if ( usesAugmentedQueryReference() ) {
+		if ( useAugmentedQueryReference() ) {
 			localSession( declaration );
 			declaration
 					.append( ".createQuery(_reference)" );
@@ -247,21 +249,6 @@ public class QueryMethod extends AbstractQueryMethod {
 				declaration.append(")");
 			}
 		}
-		else if ( useNamedQuery() ) {
-			localSession( declaration );
-			declaration
-					.append('.')
-					.append(createNamedQueryMethod())
-					.append("(")
-					.append(stringLiteral(namedQueryName));
-			if ( returnTypeClass != null && !isUpdate ) {
-				declaration
-						.append(", ")
-						.append(annotationMetaEntity.importType(returnTypeClass))
-						.append(".class");
-			}
-			declaration.append(")");
-		}
 		else {
 			localSession( declaration );
 			declaration
@@ -291,7 +278,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			declaration
 					.append( "\tvar _spec = " )
 					.append( annotationMetaEntity.importType( specificationType() ) );
-			if ( isUpdate && useSpecificationQueryReference() ) {
+			if ( isUpdate && useGeneratedQueryReferenceMethod() ) {
 				declaration
 						.append( ".<" )
 						.append( annotationMetaEntity.importType( targetType ) )
@@ -300,7 +287,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			else {
 				declaration.append( ".create(" );
 			}
-			if ( useSpecificationQueryReference() ) {
+			if ( useGeneratedQueryReferenceMethod() ) {
 				createQueryReference( declaration );
 			}
 			else {
@@ -331,7 +318,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	 * be converted to Criteria, mutation queries cannot have a select projection, and
 	 * the reactive generator uses Hibernate Reactive query APIs.
 	 */
-	private boolean usesAugmentedQuery() {
+	private boolean useAugmentedQuery() {
 		return selection != null
 			&& selectionEntity != null
 			&& !isUpdate
@@ -347,8 +334,8 @@ public class QueryMethod extends AbstractQueryMethod {
 	 * and {@code @QueryOptions}, so the repository can augment the reference instead
 	 * of reconstructing the query from a string.
 	 */
-	private boolean usesAugmentedQueryReference() {
-		return usesAugmentedQuery()
+	private boolean useAugmentedQueryReference() {
+		return useAugmentedQuery()
 			&& useGeneratedQueryReferenceMethod();
 	}
 
@@ -361,7 +348,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	 * reference arguments. We still need Criteria augmentation for the projection.
 	 */
 	private boolean usesAugmentedCriteriaQuery() {
-		return usesAugmentedQuery()
+		return useAugmentedQuery()
 			&& !useGeneratedQueryReferenceMethod();
 	}
 
@@ -375,24 +362,24 @@ public class QueryMethod extends AbstractQueryMethod {
 	 * so the generated code must still call {@code setParameter()} explicitly.
 	 */
 	private boolean bindsParametersFromReference() {
-		return namedQueryName != null
-			&& ( usesAugmentedQueryReference()
-					|| useSpecificationCreateQuery() && useSpecificationQueryReference()
-					|| useQueryReferenceCreateQuery() && !useReactiveStatementReferenceCreateQuery() );
+		return useAugmentedQueryReference()
+			|| useGeneratedQueryReferenceMethod()
+				&& ( isUsingSpecification()
+						? useSpecificationCreateQuery()
+						: !useReactiveStatementReferenceCreateQuery() );
 	}
 
 	/**
 	 * Does the generated query originate from a generated query reference method?
 	 * <p>
-	 * This is intentionally broader than {@link #bindsParametersFromReference()}
-	 * because some paths still need explicit parameter binding, but all reference-backed
-	 * paths already carry {@code @QueryOptions}, so those options must not be applied
-	 * again to the query object.
+	 * This is intentionally broader than {@link #bindsParametersFromReference()} because
+	 * some paths still need explicit parameter binding, but all reference-backed paths
+	 * already carry {@code @QueryOptions}, so those options must not be applied again to
+	 * the query object.
 	 */
 	private boolean usesQueryReference() {
-		return usesAugmentedQueryReference()
-			|| useSpecificationQueryReference()
-			|| useQueryReferenceCreateQuery() && !useReactiveStatementReferenceCreateQuery();
+		return useAugmentedQueryReference()
+			|| useGeneratedQueryReferenceMethod();
 	}
 
 	/**
@@ -406,8 +393,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	 * query string constant.
 	 */
 	private boolean useQueryReferenceCreateQuery() {
-		return namedQueryName != null
-			&& !isUsingSpecification()
+		return !isUsingSpecification()
 			&& useGeneratedQueryReferenceMethod();
 	}
 
@@ -423,35 +409,6 @@ public class QueryMethod extends AbstractQueryMethod {
 	// TODO: Fix Hibernate Reactive to remove this special case!
 	private boolean useReactiveStatementReferenceCreateQuery() {
 		return isReactive() && isUpdate;
-	}
-
-	/**
-	 * Should a dynamic query specification be initialized from the generated reference?
-	 * <p>
-	 * Dynamic restrictions or ordering require a {@code SelectionSpecification} or
-	 * {@code MutationSpecification}. When the generated reference exists, it should be
-	 * the base of that specification so named query metadata and {@code @QueryOptions}
-	 * are preserved. Without it, the specification is created from the query string
-	 * constant instead.
-	 */
-	private boolean useSpecificationQueryReference() {
-		return namedQueryName != null
-			&& useGeneratedQueryReferenceMethod();
-	}
-
-	/**
-	 * Should the query method call the named query API by name?
-	 * <p>
-	 * This is the fallback for named repository queries that do not need augmentation
-	 * and cannot be created from a static query reference. Specification methods are
-	 * excluded because they need a query string or reference as the specification base
-	 * instead of an already-created query. (Our specification APIs do not allow passing
-	 * a named query name.)
-	 */
-	private boolean useNamedQuery() {
-		return namedQueryName != null
-			&& !isUsingSpecification()
-			&& !useQueryReferenceCreateQuery();
 	}
 
 	private @Nullable String specificationTargetType() {
@@ -527,7 +484,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private void createAugmentedQuery(StringBuilder declaration) {
 		createBuilder( declaration );
-		final boolean augmentedQueryReference = usesAugmentedQueryReference();
+		final boolean augmentedQueryReference = useAugmentedQueryReference();
 		if ( augmentedQueryReference ) {
 			declaration
 					.append( "\tvar _reference = _builder.augment(" );
@@ -580,17 +537,6 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 		else {
 			return isUpdate ? "createMutationQuery" : "createSelectionQuery";
-		}
-	}
-
-	private String createNamedQueryMethod() {
-		if ( isUpdate && !isReactive() ) {
-			return isUsingEntityHandler()
-					? "createNamedStatement"
-					: "createNamedMutationQuery";
-		}
-		else {
-			return "createNamedQuery";
 		}
 	}
 
@@ -648,18 +594,21 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	void setParameters(StringBuilder declaration, List<String> paramTypes) {
+		int positionalParameterPosition = 0;
 		for ( int i = 0; i < paramNames.size(); i++ ) {
 			if ( !isSpecialParam( paramTypes.get(i) ) ) {
 				final var paramName = paramNames.get(i);
-				final var ordinal = i+1;
 				if ( queryString.contains(":" + paramName) ) {
 					setNamedParameter( declaration, paramName );
 				}
-				else if ( queryString.contains("?" + ordinal) ) {
-					setOrdinalParameter( declaration, ordinal, paramName );
-				}
-				else if ( isNative && hasJdbcOrdinalParameter( ordinal ) ) {
-					setOrdinalParameter( declaration, ordinal, paramName );
+				else {
+					positionalParameterPosition++;
+					if ( queryString.contains( "?" + positionalParameterPosition ) ) {
+						setOrdinalParameter( declaration, positionalParameterPosition, paramName );
+					}
+					else if ( isNative && hasJdbcOrdinalParameter( positionalParameterPosition ) ) {
+						setOrdinalParameter( declaration, positionalParameterPosition, paramName );
+					}
 				}
 			}
 		}

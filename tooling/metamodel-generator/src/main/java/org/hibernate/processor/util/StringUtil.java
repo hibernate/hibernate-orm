@@ -48,7 +48,6 @@ public final class StringUtil {
 					&& ( isValidPropertyName( methodName, IS )
 						|| isValidPropertyName( methodName, HAS ) );
 		}
-
 	}
 
 	private static boolean isVoid(String returnType) {
@@ -56,12 +55,15 @@ public final class StringUtil {
 	}
 
 	private static boolean isBoolean(String type) {
-		return "Boolean".equals( type ) || "java.lang.Boolean".equals( type ) || "boolean".equals( type );
+		return "Boolean".equals( type )
+			|| "java.lang.Boolean".equals( type )
+			|| "boolean".equals( type );
 	}
 
 	private static boolean isValidPropertyName(String name, String prefix) {
 		// the name has to start with the prefix and have at least one more character
-		return name.startsWith( prefix ) && name.length() > prefix.length();
+		return name.startsWith( prefix )
+			&& name.length() > prefix.length();
 	}
 
 	public static String getPropertyName(String name) {
@@ -84,9 +86,12 @@ public final class StringUtil {
 	}
 
 	public static String decapitalize(String string) {
-		return string == null || string.isEmpty() || startsWithSeveralUpperCaseLetters( string )
+		return string == null
+			|| string.isEmpty()
+			|| startsWithSeveralUpperCaseLetters( string )
 				? string
-				: string.substring( 0, 1 ).toLowerCase(Locale.ROOT) + string.substring( 1 );
+				: string.substring( 0, 1 ).toLowerCase(Locale.ROOT)
+						+ string.substring( 1 );
 	}
 
 	public static String nameToFieldName(String name){

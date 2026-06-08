@@ -76,10 +76,9 @@ class SelectionTest {
 		assertTrue( repository.contains(
 				"var _reference = _builder.augment(SelectionRepository_.queryTitlesByStatus(status), _query -> {" ) );
 		assertTrue( repository.contains(
-				"var _query = _builder.createQuery(String.class, QUERY_TITLES_WITH_STRING_FALLBACK_SelectionStatus_int);" ) );
-		assertTrue( repository.contains( ".setParameter(\"status\", status)" ) );
-		assertTrue( repository.contains( ".setParameter(2, minPages)" ) );
-		assertFalse( repository.contains( "SelectionRepository_.queryTitlesWithStringFallback" ) );
+				"var _reference = _builder.augment(SelectionRepository_.queryTitlesWithStringFallback(minPages, status), _query -> {" ) );
+		assertFalse( repository.contains( ".setParameter(\"status\", status)" ) );
+		assertFalse( repository.contains( ".setParameter(\"minPages\", minPages)" ) );
 		assertTrue( repository.contains(
 				"var _reference = _builder.augment(SelectionRepository_.queryRenamedByStatus(status), _query -> {" ) );
 		assertTrue( normalizedRepository.contains(

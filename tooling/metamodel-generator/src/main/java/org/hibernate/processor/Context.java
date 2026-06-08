@@ -362,7 +362,25 @@ public final class Context {
 	}
 
 	public void addMetaAuxiliary(String qualifiedName, Metamodel metamodel) {
-		metaAuxiliaries.put( getFullyQualifiedClassName( metamodel ), metamodel );
+		final var generatedClassName = getFullyQualifiedClassName( metamodel );
+		final var existing = metaAuxiliaries.get( generatedClassName );
+		if ( existing == null || isMoreSpecific( metamodel, existing ) || !isMoreSpecific( existing, metamodel ) ) {
+			metaAuxiliaries.put( generatedClassName, metamodel );
+		}
+	}
+
+	private boolean isMoreSpecific(Metamodel metamodel, Metamodel other) {
+		if ( metamodel.getElement() instanceof TypeElement typeElement
+				&& other.getElement() instanceof TypeElement otherTypeElement ) {
+			final var types = getTypeUtils();
+			final var type = types.erasure( typeElement.asType() );
+			final var otherType = types.erasure( otherTypeElement.asType() );
+			return types.isSubtype( type, otherType )
+				&& !types.isSameType( type, otherType );
+		}
+		else {
+			return false;
+		}
 	}
 
 	public void addAccessTypeInformation(String qualifiedName, AccessTypeInformation info) {

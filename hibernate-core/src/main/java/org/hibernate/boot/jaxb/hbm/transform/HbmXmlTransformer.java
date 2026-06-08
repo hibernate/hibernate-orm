@@ -128,6 +128,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalIdImpl;
@@ -135,6 +136,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOrderColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAnyMappingImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationAttribute;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableCapable;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
@@ -657,7 +661,7 @@ public class HbmXmlTransformer {
 		else {
 			final var jaxbTable = new JaxbTableImpl();
 			jaxbEntity.setTable( jaxbTable );
-			jaxbTable.setName( table.getName() );
+			jaxbTable.setName( table.getQuotedName() );
 			jaxbTable.setComment( table.getComment() );
 			transferBaseTableInfo( table, jaxbTable );
 		}
@@ -1390,7 +1394,12 @@ public class HbmXmlTransformer {
 				}
 				else if ( hbmCollection.getManyToMany() != null ) {
 					try {
-						attributes.getManyToManyAttributes().add( transformManyToMany( hbmCollection, propertyInfo ) );
+						if ( hbmCollection.getManyToMany().isUnique() ) {
+							attributes.getOneToManyAttributes().add( transformManyToManyToOneToMany( hbmCollection, propertyInfo ) );
+						}
+						else {
+							attributes.getManyToManyAttributes().add( transformManyToMany( hbmCollection, propertyInfo ) );
+						}
 					}
 					catch (Exception e) {
 						throw new TransformationException( "Error transforming many-to-many : " + hbmCollection.getName(), e, origin() );
@@ -1692,35 +1701,37 @@ public class HbmXmlTransformer {
 		);
 		jaxbManyToOne.setCascade( convertCascadeType( hbmNode.getCascade() ) );
 
-		if ( isNotEmpty( hbmNode.getPropertyRef() ) ) {
-			jaxbManyToOne.setPropertyRef( new JaxbPropertyRefImpl() );
-			jaxbManyToOne.getPropertyRef().setName( hbmNode.getPropertyRef() );
-		}
-
 		final var manyToOneProperty = propertyInfo.bootModelProperty();
 		final var manyToOne = (ManyToOne) manyToOneProperty.getValue();
-		transferColumnsAndFormulas(
-				manyToOne,
-				new ColumnAndFormulaTarget() {
-					@Override
-					public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
-						return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
-					}
+		if ( isNotEmpty( hbmNode.getPropertyRef() ) ) {
+			final JaxbPropertyRefImpl propertyRef = new JaxbPropertyRefImpl();
+			propertyRef.setName( hbmNode.getPropertyRef() );
+			jaxbManyToOne.setPropertyRef( propertyRef );
+		}
+		else {
+			transferColumnsAndFormulas(
+					manyToOne,
+					new ColumnAndFormulaTarget() {
+						@Override
+						public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
+							return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
+						}
 
-					@Override
-					public void addColumn(TargetColumnAdapter column) {
-						jaxbManyToOne.getJoinColumnOrJoinFormula()
-								.add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
-					}
+						@Override
+						public void addColumn(TargetColumnAdapter column) {
+							jaxbManyToOne.getJoinColumnOrJoinFormula()
+									.add( ((TargetColumnAdapterJaxbJoinColumn) column).getTargetColumn() );
+						}
 
-					@Override
-					public void addFormula(String formula) {
-						jaxbManyToOne.getJoinColumnOrJoinFormula().add( formula );
-					}
-				},
-				new ColumnDefaultsProperty( manyToOneProperty ),
-				propertyInfo.tableName()
-		);
+						@Override
+						public void addFormula(String formula) {
+							jaxbManyToOne.getJoinColumnOrJoinFormula().add( formula );
+						}
+					},
+					new ColumnDefaultsProperty( manyToOneProperty ),
+					propertyInfo.tableName()
+			);
+		}
 
 		jaxbManyToOne.setForeignKey( transformForeignKey( hbmNode.getForeignKey() ) );
 
@@ -1976,6 +1987,32 @@ public class HbmXmlTransformer {
 			mapKey.setName( source.getIndex().getColumnAttribute() );
 			target.setMapKeyColumn( mapKey );
 		}
+		else if ( source.getMapKeyManyToMany() != null ) {
+			final var hbmMapKeyManyToMany = source.getMapKeyManyToMany();
+			if ( isNotEmpty( hbmMapKeyManyToMany.getColumnAttribute() ) ) {
+				final var mapKeyJoinColumn = new JaxbMapKeyJoinColumnImpl();
+				mapKeyJoinColumn.setName( hbmMapKeyManyToMany.getColumnAttribute() );
+				target.getMapKeyJoinColumns().add( mapKeyJoinColumn );
+			}
+			else if ( isNotEmpty( hbmMapKeyManyToMany.getColumnOrFormula() ) ) {
+				for ( Serializable columnOrFormula : hbmMapKeyManyToMany.getColumnOrFormula() ) {
+					if ( columnOrFormula instanceof JaxbHbmColumnType column ) {
+						final var mapKeyJoinColumn = new JaxbMapKeyJoinColumnImpl();
+						mapKeyJoinColumn.setName( column.getName() );
+						target.getMapKeyJoinColumns().add( mapKeyJoinColumn );
+					}
+					else {
+						handleUnsupported(
+								"Transformation of formula within map-key-many-to-many is not supported - `%s`",
+								origin()
+						);
+					}
+				}
+			}
+			if ( isNotEmpty( hbmMapKeyManyToMany.getForeignKey() ) ) {
+				target.setMapKeyForeignKey( transformForeignKey( hbmMapKeyManyToMany.getForeignKey() ) );
+			}
+		}
 		else if ( source.getMapKey() != null ) {
 			if ( ! isEmpty( source.getMapKey().getFormulaAttribute() ) ) {
 				handleUnsupported(
@@ -2017,15 +2054,26 @@ public class HbmXmlTransformer {
 	}
 
 	private String resolveMapKeyType(JaxbHbmMapKeyBasicType mapKey) {
+		final String typeName;
 		if ( isNotEmpty( mapKey.getTypeAttribute() ) ) {
-			return mapKey.getTypeAttribute();
+			typeName = mapKey.getTypeAttribute();
 		}
 		else if ( mapKey.getType() != null ) {
-			return nullIfEmpty( mapKey.getType().getName() );
+			typeName = nullIfEmpty( mapKey.getType().getName() );
 		}
 		else {
 			return null;
 		}
+		return typeName != null ? normalizeTypeName( typeName ) : null;
+	}
+
+	private static String normalizeTypeName(String typeName) {
+		return switch ( typeName.toLowerCase( Locale.ROOT ) ) {
+			case "integer" -> Integer.class.getSimpleName();
+			case "character" -> Character.class.getSimpleName();
+			case "string" -> String.class.getSimpleName();
+			default -> typeName;
+		};
 	}
 
 	private Boolean invert(Boolean value) {
@@ -2351,15 +2399,43 @@ public class HbmXmlTransformer {
 
 	private JaxbManyToManyImpl transformManyToMany(PluralAttributeInfo hbmCollection, PropertyInfo propertyInfo) {
 		final var target = new JaxbManyToManyImpl();
-		transferManyToManyInfo( hbmCollection, hbmCollection.getManyToMany(), propertyInfo, target );
+		transferManyToManyInfo(
+				hbmCollection,
+				hbmCollection.getManyToMany(),
+				propertyInfo,
+				target,
+				target::setCascade,
+				null,
+				target::setSqlJoinTableRestriction
+		);
 		return target;
 	}
 
-	private void transferManyToManyInfo(
+	private JaxbOneToManyImpl transformManyToManyToOneToMany(PluralAttributeInfo hbmCollection, PropertyInfo propertyInfo) {
+		final var target = new JaxbOneToManyImpl();
+		transferManyToManyInfo(
+				hbmCollection,
+				hbmCollection.getManyToMany(),
+				propertyInfo,
+				target,
+				target::setCascade,
+				target::setOrphanRemoval,
+				target::setSqlJoinTableRestriction
+		);
+		for ( var inverseColumn : target.getJoinTable().getInverseJoinColumn() ) {
+			inverseColumn.setUnique( true );
+		}
+		return target;
+	}
+
+	private <T extends JaxbPluralAttribute & JaxbJoinTableCapable & JaxbAssociationAttribute & JaxbNotFoundCapable> void transferManyToManyInfo(
 			PluralAttributeInfo hbmCollection,
 			JaxbHbmManyToManyCollectionElementType manyToMany,
 			PropertyInfo propertyInfo,
-			JaxbManyToManyImpl target) {
+			T target,
+			Consumer<JaxbCascadeTypeImpl> cascadeSetter,
+			Consumer<Boolean> orphanRemovalSetter,
+			Consumer<String> joinTableRestrictionSetter) {
 		if ( manyToMany.isEmbedXml() != null ) {
 			handleUnsupported( "`embed-xml` no longer supported" );
 		}
@@ -2470,6 +2546,11 @@ public class HbmXmlTransformer {
 				? manyToMany.getClazz()
 				: manyToMany.getEntityName() );
 
+		if ( orphanRemovalSetter != null ) {
+			orphanRemovalSetter.accept( isOrphanRemoval( hbmCollection.getCascade() ) );
+		}
+		cascadeSetter.accept( convertCascadeType( hbmCollection.getCascade() ) );
+
 		if ( manyToMany.getNotFound() == JaxbHbmNotFoundEnum.IGNORE ) {
 			target.setNotFound( NotFoundAction.IGNORE );
 		}
@@ -2482,7 +2563,7 @@ public class HbmXmlTransformer {
 			target.setSqlRestriction( manyToMany.getWhere() );
 		}
 		if ( isNotEmpty( hbmCollection.getWhere() ) ) {
-			target.setSqlJoinTableRestriction( hbmCollection.getWhere() );
+			joinTableRestrictionSetter.accept( hbmCollection.getWhere() );
 		}
 		if ( hbmCollection.getSqlInsert() != null ) {
 			final var jaxbCustomSql = new JaxbCustomSqlImpl();
@@ -2568,10 +2649,14 @@ public class HbmXmlTransformer {
 
 		final var hbmGenerator = source.getGenerator();
 		if ( hbmGenerator != null && !"assigned".equals( hbmGenerator.getClazz() ) ) {
+			final var generatorName = source.getName() + "-id-generator";
 			final var jaxbGeneratedValue = new JaxbGeneratedValueImpl();
+			jaxbGeneratedValue.setGenerator( generatorName );
 			target.setGeneratedValue( jaxbGeneratedValue );
 
 			final var generator = new JaxbGenericIdGeneratorImpl();
+			generator.setName( generatorName );
+
 			target.setGenericGenerator( generator );
 			generator.setClazz( hbmGenerator.getClazz() );
 

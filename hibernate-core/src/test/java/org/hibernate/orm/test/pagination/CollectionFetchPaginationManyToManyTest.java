@@ -146,11 +146,13 @@ public class CollectionFetchPaginationManyToManyTest {
 			assertTrue( generated.contains( "book_entity" ) );
 			var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 			if ( !(dialect instanceof HSQLDialect ) && !(dialect instanceof MariaDBDialect) && !(dialect instanceof OracleDialect) && !(dialect instanceof SpannerDialect) ) {
-				final int existsStart = generated.indexOf( "exists(select 1 from author_book_link" );
+				final int existsStart = generated.indexOf( "exists(select 1 " );
+				final int existsFrom = generated.indexOf( " from author_book_link", existsStart );
 				final int existsWhere = generated.indexOf( " where", existsStart );
 				assertTrue( existsStart >= 0 );
-				assertTrue( existsWhere > existsStart );
-				assertFalse( generated.substring( existsStart, existsWhere ).contains( "book_entity" ) );
+				assertTrue( existsFrom > existsStart );
+				assertTrue( existsWhere > existsFrom );
+				assertFalse( generated.substring( existsFrom, existsWhere ).contains( "book_entity" ) );
 			}
 		} );
 	}

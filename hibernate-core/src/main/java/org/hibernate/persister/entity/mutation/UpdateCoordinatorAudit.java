@@ -15,7 +15,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
  * Update coordinator for audited entities.
  */
 public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements UpdateCoordinator {
-	private final UpdateCoordinator currentUpdateCoordinator;
+	final UpdateCoordinator currentUpdateCoordinator;
 
 	public UpdateCoordinatorAudit(
 			EntityPersister entityPersister,
@@ -53,7 +53,7 @@ public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements 
 				session
 		);
 		if ( shouldAuditUpdate( dirtyAttributeIndexes, hasDirtyCollection ) ) {
-			enqueueAuditEntry( entity, values, ModificationType.MOD, session );
+			enqueueAuditEntry( resolveEntityKey( entity, id, session ), entity, values, ModificationType.MOD, session );
 		}
 		return generatedValues;
 	}
@@ -67,7 +67,7 @@ public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements 
 		currentUpdateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
 
-	private boolean shouldAuditUpdate(int[] dirtyAttributeIndexes, boolean hasDirtyCollection) {
+	boolean shouldAuditUpdate(int[] dirtyAttributeIndexes, boolean hasDirtyCollection) {
 		if ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) {
 			return true;
 		}

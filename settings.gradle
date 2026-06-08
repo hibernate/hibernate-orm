@@ -27,25 +27,32 @@ dependencyResolutionManagement {
         // See MAINTAINERS.md for documentation.
         // TODO Move to infra overrides instead;
         //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
-        if ( System.env['MAVEN_MIRROR'] ) {
+        if ( System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR'] ) {
             maven {
-                url System.env['MAVEN_MIRROR']
-                allowInsecureProtocol = true
+                url System.getProperty( 'MAVEN_MIRROR' ) ?: System.env['MAVEN_MIRROR']
+                if ( System.getProperty( 'MAVEN_MIRROR_USERNAME' ) || System.env['MAVEN_MIRROR_USERNAME'] ) {
+                    credentials {
+                        username = System.getProperty( 'MAVEN_MIRROR_USERNAME' ) ?: System.env['MAVEN_MIRROR_USERNAME']
+                        if ( System.getProperty( 'MAVEN_MIRROR_PASSWORD' ) || System.env['MAVEN_MIRROR_PASSWORD'] ) {
+                            password = System.getProperty( 'MAVEN_MIRROR_PASSWORD' ) ?: System.env['MAVEN_MIRROR_PASSWORD']
+                        }
+                    }
+                }
             }
         }
         else {
             mavenCentral()
-        }
 
-        if (System.getProperty('JPA_PREVIEW') != null) {
-			maven {
-				url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
-			}
-            // Needed for the SNAPSHOT versions of Jakarta Persistence
-            maven {
-                url "https://central.sonatype.com/repository/maven-snapshots/"
+            if (System.getProperty('JPA_PREVIEW') != null) {
+                maven {
+                    url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
+                }
+                // Needed for the SNAPSHOT versions of Jakarta Persistence
+                maven {
+                    url "https://central.sonatype.com/repository/maven-snapshots/"
+                }
             }
-		}
+        }
 
         //Allow loading additional dependencies from a local path;
         //useful to load JDBC drivers which can not be distributed in public.

@@ -77,6 +77,70 @@ public interface DialectSpecificSettings {
 	String ORACLE_VALUE_LOB_ENABLED = "hibernate.dialect.oracle.value_lob_enabled";
 
 	/**
+	 * Specifies the fully-qualified Oracle Deep Data Security end-user context
+	 * name used for discriminator-based multitenancy with {@code @TenantId}.
+	 * <p>
+	 * This setting enables Oracle Deep Data Security row-level security when it
+	 * is configured together with {@link #ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE}.
+	 *
+	 * @since 8.0
+	 */
+	String ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME =
+			"hibernate.dialect.oracle.deep_data_security.tenant_context_name";
+
+	/**
+	 * Specifies the Oracle Deep Data Security context attribute which holds the
+	 * current Hibernate tenant identifier.
+	 *
+	 * @settingDefault {@code tenant_id}
+	 * @since 8.0
+	 */
+	String ORACLE_DEEP_DATA_SECURITY_TENANT_IDENTIFIER_ATTRIBUTE =
+			"hibernate.dialect.oracle.deep_data_security.tenant_identifier_attribute";
+
+	/**
+	 * Specifies the Oracle Deep Data Security context attribute which indicates
+	 * that the current Hibernate tenant is a root tenant.
+	 *
+	 * @settingDefault {@code tenant_id_root}
+	 * @since 8.0
+	 */
+	String ORACLE_DEEP_DATA_SECURITY_ROOT_TENANT_IDENTIFIER_ATTRIBUTE =
+			"hibernate.dialect.oracle.deep_data_security.root_tenant_identifier_attribute";
+
+	/**
+	 * Specifies the Oracle data role or end user to which Hibernate-generated
+	 * tenant isolation data grants are assigned.
+	 * <p>
+	 * This setting enables Oracle Deep Data Security row-level security when it
+	 * is configured together with {@link #ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME}.
+	 *
+	 * @since 8.0
+	 */
+	String ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE =
+			"hibernate.dialect.oracle.deep_data_security.tenant_data_grantee";
+
+	/**
+	 * Specifies an {@link org.hibernate.dialect.rowsecurity.OracleDeepDataSecurityContextProvider}
+	 * which supplies the base Oracle JDBC end-user security context for the current
+	 * request. Hibernate adds {@code @TenantId} attributes to the supplied context.
+	 *
+	 * @since 8.0
+	 */
+	String ORACLE_DEEP_DATA_SECURITY_CONTEXT_PROVIDER =
+			"hibernate.dialect.oracle.deep_data_security.context_provider";
+
+	/**
+	 * Specifies whether Hibernate should emit {@code SET USE DATA GRANTS ONLY}
+	 * for tables secured by generated Oracle Deep Data Security data grants.
+	 *
+	 * @settingDefault {@code true}
+	 * @since 8.0
+	 */
+	String ORACLE_DEEP_DATA_SECURITY_USE_DATA_GRANTS_ONLY =
+			"hibernate.dialect.oracle.deep_data_security.use_data_grants_only";
+
+	/**
 	 * Specifies whether the {@code ansinull} setting is enabled on Sybase.
 	 * <p>
 	 * Ignored if Hibernate is able to determine the value of {@code ansinull}

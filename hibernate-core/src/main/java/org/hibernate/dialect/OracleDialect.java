@@ -24,6 +24,9 @@ import org.hibernate.dialect.lock.internal.OracleLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
+import org.hibernate.dialect.rowsecurity.NoRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.OracleDeepDataSecurityRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.OracleSqlAstTranslator;
@@ -236,6 +239,7 @@ public class OracleDialect extends Dialect {
 	protected final int driverMinorVersion;
 	private boolean useBinaryFloat;
 	private boolean useValueLOB; //TODO: if removed or issue fixed update SkipLockedWithLobTest
+	private RowLevelSecurity rowLevelSecurity = NoRowLevelSecurity.INSTANCE;
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -1016,6 +1020,9 @@ public class OracleDialect extends Dialect {
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		useBinaryFloat = configurationService.getSetting( ORACLE_USE_BINARY_FLOATS, StandardConverters.BOOLEAN, true );
 		useValueLOB = configurationService.getSetting( ORACLE_VALUE_LOB_ENABLED, StandardConverters.BOOLEAN, true );
+		rowLevelSecurity = getVersion().isSameOrAfter( 26 )
+				? OracleDeepDataSecurityRowLevelSecurity.fromSettings( configurationService.getSettings() )
+				: NoRowLevelSecurity.INSTANCE;
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry, this ) == BIT ) {
@@ -1516,6 +1523,11 @@ public class OracleDialect extends Dialect {
 	@Override
 	public LockingSupport getLockingSupport() {
 		return OracleLockingSupport.ORACLE_LOCKING_SUPPORT;
+	}
+
+	@Override
+	public RowLevelSecurity getRowLevelSecurity() {
+		return rowLevelSecurity;
 	}
 
 	@Override

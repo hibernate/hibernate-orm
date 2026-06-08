@@ -22,11 +22,13 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.rowsecurity.CockroachRowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.DB2RowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.OracleDeepDataSecurityRowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.PostgreSQLRowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.SQLServerRowLevelSecurity;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -35,6 +37,9 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_USE_DATA_GRANTS_ONLY;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
 
 @BaseUnitTest
@@ -158,6 +163,104 @@ class RowLevelSecurityTest {
 							+ " enforced for all access enable",
 					"alter table document activate row access control"
 			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
+	void oracleDeepDataSecurityTenantIdRegistersDataGrantDdl() {
+		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.DIALECT, Oracle26Dialect.class )
+				.applySetting( ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME, "app.hibernate_tenancy" )
+				.applySetting( ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE, "employee_role" )
+				.build();
+		try {
+			final var metadata = new MetadataSources( registry )
+					.addAnnotatedClass( StringDocument.class )
+					.buildMetadata();
+			final org.hibernate.mapping.Table table =
+					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
+			final var context =
+					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+			final List<String> auxiliaryCommands = metadata.getDatabase().getAuxiliaryDatabaseObjects().stream()
+					.flatMap( object -> Arrays.stream( object.sqlCreateStrings( context ) ) )
+					.toList();
+			final List<String> commands = table.getInitCommands( context ).stream()
+					.flatMap( command -> Arrays.stream( command.initCommands() ) )
+					.toList();
+
+			assertThat( auxiliaryCommands ).containsExactly(
+					"create or replace end user context app.hibernate_tenancy using json schema "
+							+ "'{\"type\":\"object\",\"properties\":{"
+							+ "\"tenant_id\":{\"type\":\"string\"},"
+							+ "\"tenant_id_root\":{\"type\":\"string\",\"default\":\"false\"}"
+							+ "}}'"
+			);
+			final String predicate = "tenant_id = cast(ORA_END_USER_CONTEXT.app.hibernate_tenancy.tenant_id"
+					+ " as varchar2(255 char))"
+					+ " or ORA_END_USER_CONTEXT.app.hibernate_tenancy.tenant_id_root = 'true'";
+			assertThat( commands ).containsExactly(
+					"create or replace data grant " + oracleDataGrantName( table )
+							+ " as select, insert, update, delete on document"
+							+ " where " + predicate
+							+ " to employee_role",
+					"set use data grants only on document enabled"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
+	void oracleDeepDataSecurityIsOptIn() {
+		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.DIALECT, Oracle26Dialect.class )
+				.build();
+		try {
+			final var metadata = new MetadataSources( registry )
+					.addAnnotatedClass( StringDocument.class )
+					.buildMetadata();
+			final org.hibernate.mapping.Table table =
+					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
+			final var context =
+					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+
+			assertThat( metadata.getDatabase().getDialect().getRowLevelSecurity().supportsRowLevelSecurity() )
+					.isFalse();
+			assertThat( metadata.getDatabase().getAuxiliaryDatabaseObjects() ).isEmpty();
+			assertThat( table.getInitCommands( context ) ).isEmpty();
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
+	void oracleDeepDataSecurityCanDisableUseDataGrantsOnlyDdl() {
+		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.DIALECT, Oracle26Dialect.class )
+				.applySetting( ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME, "app.hibernate_tenancy" )
+				.applySetting( ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE, "employee_role" )
+				.applySetting( ORACLE_DEEP_DATA_SECURITY_USE_DATA_GRANTS_ONLY, false )
+				.build();
+		try {
+			final var metadata = new MetadataSources( registry )
+					.addAnnotatedClass( StringDocument.class )
+					.buildMetadata();
+			final org.hibernate.mapping.Table table =
+					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
+			final var context =
+					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+			final List<String> commands = table.getInitCommands( context ).stream()
+					.flatMap( command -> Arrays.stream( command.initCommands() ) )
+					.toList();
+
+			assertThat( commands ).hasSize( 1 );
+			assertThat( commands.get( 0 ) )
+					.startsWith( "create or replace data grant " + oracleDataGrantName( table ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( registry );
@@ -293,6 +396,22 @@ class RowLevelSecurityTest {
 				.isEqualTo( "hibernate.tenant_id_root" );
 	}
 
+	@Test
+	void oracleDeepDataSecurityUsesConfiguredContextAttributes() {
+		final var rowLevelSecurity = new OracleDeepDataSecurityRowLevelSecurity(
+				"app.hibernate_tenancy",
+				"tenant",
+				"root_tenant",
+				"employee_role",
+				true
+		);
+
+		assertThat( rowLevelSecurity.getTenantIdentifierSettingName() )
+				.isEqualTo( "app.hibernate_tenancy.tenant" );
+		assertThat( rowLevelSecurity.getRootTenantIdentifierSettingName() )
+				.isEqualTo( "app.hibernate_tenancy.root_tenant" );
+	}
+
 	private static String db2PermissionName(org.hibernate.mapping.Table table) {
 		return DB2RowLevelSecurity.TENANT_ISOLATION_PERMISSION + "_" + Integer.toUnsignedString(
 				table.getQualifiedTableName().toString().hashCode(),
@@ -307,6 +426,13 @@ class RowLevelSecurityTest {
 		);
 	}
 
+	private static String oracleDataGrantName(org.hibernate.mapping.Table table) {
+		return OracleDeepDataSecurityRowLevelSecurity.TENANT_ISOLATION_DATA_GRANT + "_" + Integer.toUnsignedString(
+				table.getQualifiedTableName().toString().hashCode(),
+				36
+		);
+	}
+
 	public static class SQLServer2016Dialect extends SQLServerDialect {
 		public SQLServer2016Dialect() {
 			super( DatabaseVersion.make( 13 ) );
@@ -316,6 +442,12 @@ class RowLevelSecurityTest {
 	public static class Cockroach252Dialect extends CockroachDialect {
 		public Cockroach252Dialect() {
 			super( DatabaseVersion.make( 25, 2 ) );
+		}
+	}
+
+	public static class Oracle26Dialect extends OracleDialect {
+		public Oracle26Dialect() {
+			super( DatabaseVersion.make( 26 ) );
 		}
 	}
 

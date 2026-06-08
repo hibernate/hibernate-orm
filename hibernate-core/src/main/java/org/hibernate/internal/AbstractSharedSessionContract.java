@@ -1011,6 +1011,7 @@ abstract class AbstractSharedSessionContract
 
 			try {
 				if ( !isTransactionCoordinatorShared ) {
+					tearDownRowLevelSecurityIfConnected();
 					checkBeforeClosingJdbcCoordinator();
 					//noinspection resource
 					jdbcCoordinator.close();
@@ -1204,7 +1205,12 @@ abstract class AbstractSharedSessionContract
 			final boolean root = resolver != null && resolver.isRoot( tenantIdentifier );
 			try {
 				getJdbcServices().getDialect().getRowLevelSecurity()
-						.setTenantIdentifier( connection, getTenantIdentifier(), root );
+						.setTenantIdentifier(
+								connection,
+								getTenantIdentifier(),
+								root,
+								factory.getServiceRegistry()
+						);
 			}
 			catch (SQLException e) {
 				throw getJdbcServices().getSqlExceptionHelper().convert(
@@ -1212,6 +1218,30 @@ abstract class AbstractSharedSessionContract
 						"Unable to set row-level security tenant identifier"
 				);
 			}
+		}
+	}
+
+	private void tearDownRowLevelSecurityIfConnected() {
+		if ( usesRowLevelSecurity() ) {
+			final var logicalConnection = getJdbcCoordinator().getLogicalConnection();
+			if ( logicalConnection.isPhysicallyConnected() ) {
+				try {
+					tearDownRowLevelSecurity( logicalConnection.getPhysicalConnection() );
+				}
+				catch (SQLException e) {
+					throw getJdbcServices().getSqlExceptionHelper().convert(
+							e,
+							"Unable to clear row-level security tenant identifier"
+					);
+				}
+			}
+		}
+	}
+
+	private void tearDownRowLevelSecurity(Connection connection) throws SQLException {
+		if ( usesRowLevelSecurity() ) {
+			getJdbcServices().getDialect().getRowLevelSecurity()
+					.clearTenantIdentifier( connection, factory.getServiceRegistry() );
 		}
 	}
 
@@ -1437,11 +1467,16 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	public void beforeReleaseConnection(Connection connection) throws SQLException {
-		if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
-			connection.setSchema( initialSchema );
+		try {
+			tearDownRowLevelSecurity( connection );
 		}
-		if ( readOnly && manageReadOnly() ) {
-			connection.setReadOnly( false );
+		finally {
+			if ( useSchemaBasedMultiTenancy() && manageSchema() ) {
+				connection.setSchema( initialSchema );
+			}
+			if ( readOnly && manageReadOnly() ) {
+				connection.setReadOnly( false );
+			}
 		}
 	}
 

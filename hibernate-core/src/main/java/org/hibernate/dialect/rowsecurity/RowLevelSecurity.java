@@ -13,6 +13,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 
@@ -99,6 +100,34 @@ public interface RowLevelSecurity {
 	 * @param root Whether the tenant identifier is a root tenant
 	 */
 	default void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root) throws SQLException {
+	}
+
+	/**
+	 * Apply the current Hibernate tenant identifier to the database connection,
+	 * with access to the service registry for dialects which need to resolve a
+	 * configured provider or service.
+	 *
+	 * @param connection The JDBC connection
+	 * @param tenantIdentifier The tenant identifier rendered as a string
+	 * @param root Whether the tenant identifier is a root tenant
+	 * @param serviceRegistry The service registry
+	 */
+	default void setTenantIdentifier(
+			Connection connection,
+			String tenantIdentifier,
+			boolean root,
+			ServiceRegistry serviceRegistry) throws SQLException {
+		setTenantIdentifier( connection, tenantIdentifier, root );
+	}
+
+	/**
+	 * Clear row-level security tenant state from the database connection before
+	 * it is returned to a pool.
+	 *
+	 * @param connection The JDBC connection
+	 * @param serviceRegistry The service registry
+	 */
+	default void clearTenantIdentifier(Connection connection, ServiceRegistry serviceRegistry) throws SQLException {
 	}
 
 	/**

@@ -820,7 +820,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 							paramNames.get( i ),
 							add,
 							orderingTypeName,
-							cursoredPage );
+							cursoredPage
+					);
 				}
 			}
 		}
@@ -959,19 +960,19 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			String indent,
 			String orderingTypeName,
 			boolean includeHibernateOrders) {
-		if ( !hasCriteriaOrdering( paramTypes, includeHibernateOrders ) ) {
-			return;
-		}
-		for ( var orderBy : orderBys ) {
-			applyStaticCriteriaOrder( declaration, orderBy, indent, orderingTypeName );
-		}
-		for ( int i = 0; i < paramNames.size(); i++ ) {
-			applyCriteriaOrderParameter(
-					declaration,
-					paramTypes.get( i ),
-					parameterVariableName( i ),
-					indent,
-					includeHibernateOrders );
+		if ( hasCriteriaOrdering( paramTypes, includeHibernateOrders ) ) {
+			for ( var orderBy : orderBys ) {
+				applyStaticCriteriaOrder( declaration, orderBy, indent, orderingTypeName );
+			}
+			for ( int i = 0; i < paramNames.size(); i++ ) {
+				applyCriteriaOrderParameter(
+						declaration,
+						paramTypes.get( i ),
+						parameterVariableName( i ),
+						indent,
+						includeHibernateOrders
+				);
+			}
 		}
 	}
 

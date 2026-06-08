@@ -4,7 +4,6 @@
  */
 package org.hibernate.processor.annotation;
 
-import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sql.internal.ParameterParser;
@@ -117,22 +116,20 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		return useAugmentedQuery()
-				? augmentedQueryAttributeDeclarationString()
-				: unaugmentedQueryAttributeDeclarationString();
-	}
-
-	@Nonnull
-	private String unaugmentedQueryAttributeDeclarationString() {
 		final var paramTypes = parameterTypes();
 		final var declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration, paramTypes );
 		preamble( declaration, paramTypes );
 		nullChecks( declaration, paramTypes );
-		createSpecification( declaration );
-		handleRestrictionParameters( declaration, paramTypes );
-		collectOrdering( declaration, paramTypes, containerType );
+		if ( useAugmentedQuery() ) {
+			createAugmentedQuery( declaration );
+		}
+		else {
+			createSpecification( declaration );
+			handleRestrictionParameters( declaration, paramTypes );
+			collectOrdering( declaration, paramTypes, containerType );
+		}
 		chainSession( declaration );
 		inTry( declaration );
 		createQuery( declaration, true );
@@ -144,7 +141,6 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 		declaration.append( ";\n" );
 		results( declaration, paramTypes, containerType );
-		castResult( declaration );
 		select( declaration );
 		setFirstResultLimit( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
@@ -155,36 +151,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		return declaration.toString();
 	}
 
-	private String augmentedQueryAttributeDeclarationString() {
-		final var paramTypes = parameterTypes();
-		final var declaration = new StringBuilder();
-		comment( declaration );
-		modifiers( declaration, paramTypes );
-		preamble( declaration, paramTypes );
-		nullChecks( declaration, paramTypes );
-		createAugmentedQuery( declaration );
-		chainSession( declaration );
-		inTry( declaration );
-		createQuery( declaration, true );
-		if ( !bindsParametersFromReference() ) {
-			setParameters( declaration, paramTypes );
-		}
-		if ( !usesQueryReference() ) {
-			setQueryOptions( this, declaration, isUpdate, isNative );
-		}
-		declaration.append( ";\n" );
-		results( declaration, paramTypes, containerType );
-		select( declaration );
-		setFirstResultLimit( declaration );
-		handlePageParameters( declaration, paramTypes, containerType );
-		execute( declaration, initiallyUnwrapped() );
-		convertExceptions( declaration );
-		chainSessionEnd( false, declaration );
-		closingBrace( declaration );
-		return declaration.toString();
-	}
-
-	String specificationType() {
+	private String specificationType() {
 		return isUpdate
 				? "org.hibernate.query.specification.MutationSpecification"
 				: "org.hibernate.query.specification.SelectionSpecification";
@@ -205,19 +172,19 @@ public class QueryMethod extends AbstractQueryMethod {
 		if ( useAugmentedQueryReference() ) {
 			localSession( declaration );
 			declaration
-					.append( ".createQuery(_reference)" );
+					.append(".createQuery(_reference)");
 		}
-		else if ( usesAugmentedCriteriaQuery() ) {
+		else if ( usesAugmentedQueryString() ) {
 			localSession( declaration );
 			declaration
-					.append( ".createQuery(_query)" );
+					.append(".createQuery(_query)");
 		}
 		else if ( useSpecificationCreateQuery() ) {
 			declaration
 					.append("_spec.createQuery(");
 			localSession( declaration );
 			declaration
-					.append(")");
+					.append(')');
 		}
 		else if ( isUsingSpecification() ) {
 			localSession( declaration );
@@ -244,7 +211,9 @@ public class QueryMethod extends AbstractQueryMethod {
 			}
 			else {
 				declaration
-						.append( isUpdate ? ".createStatement(" : ".createQuery(" );
+						.append(isUpdate
+								? ".createStatement("
+								: ".createQuery(");
 				createQueryReference( declaration );
 				declaration.append(")");
 			}
@@ -254,18 +223,20 @@ public class QueryMethod extends AbstractQueryMethod {
 			declaration
 					.append('.')
 					.append(createQueryMethod())
-					.append("(")
+					.append('(')
 					.append(getConstantName());
-			if ( resultSetMapping != null && !isUpdate && !isReactive() ) {
+			if ( !isUpdate ) {
 				declaration
-						.append(", ")
-						.append(resultSetMapping);
-			}
-			else if ( returnTypeClass != null && !isUpdate ) {
-				declaration
-						.append(", ")
-						.append(annotationMetaEntity.importType(returnTypeClass))
-						.append(".class");
+						.append( ", " );
+				if ( resultSetMapping != null && !isReactive() ) {
+					declaration
+							.append( resultSetMapping );
+				}
+				else if ( returnTypeClass != null) {
+					declaration
+							.append( annotationMetaEntity.importType( returnTypeClass ) )
+							.append( ".class" );
+				}
 			}
 			declaration.append(")");
 		}
@@ -347,7 +318,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	 * unavailable, for example, because the method parameters cannot be represented as
 	 * reference arguments. We still need Criteria augmentation for the projection.
 	 */
-	private boolean usesAugmentedCriteriaQuery() {
+	private boolean usesAugmentedQueryString() {
 		return useAugmentedQuery()
 			&& !useGeneratedQueryReferenceMethod();
 	}
@@ -536,19 +507,9 @@ public class QueryMethod extends AbstractQueryMethod {
 			return "createQuery";
 		}
 		else {
-			return isUpdate ? "createMutationQuery" : "createSelectionQuery";
-		}
-	}
-
-	private void castResult(StringBuilder declaration) {
-		if ( isNative && returnTypeName != null && containerType == null
-				&& isUsingEntityHandler() ) {
-			// EntityManager.createNativeQuery() does not return TypedQuery,
-			// so we need to cast to the entity type
-			declaration
-					.append("(")
-					.append(annotationMetaEntity.importType(returnTypeName))
-					.append(") ");
+			return isUpdate
+					? "createMutationQuery"
+					: "createSelectionQuery";
 		}
 	}
 

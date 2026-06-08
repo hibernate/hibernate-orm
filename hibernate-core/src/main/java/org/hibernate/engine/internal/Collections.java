@@ -31,16 +31,22 @@ public final class Collections {
 	 * @param collection The collection to be updated by unreachability.
 	 * @param session The session
 	 */
-	public static void processUnreachableCollection(PersistentCollection<?> collection, SessionImplementor session) {
+	public static void processUnreachableCollection(
+			PersistentCollection<?> collection,
+			EventSource session,
+			FlushProcessingContext flushProcessingContext) {
 		if ( collection.getOwner() == null ) {
-			processNeverReferencedCollection( collection, session );
+			processNeverReferencedCollection( collection, session, flushProcessingContext );
 		}
 		else {
-			processDereferencedCollection( collection, session );
+			processDereferencedCollection( collection, session, flushProcessingContext );
 		}
 	}
 
-	private static void processDereferencedCollection(PersistentCollection<?> collection, SessionImplementor session) {
+	private static void processDereferencedCollection(
+			PersistentCollection<?> collection,
+			EventSource session,
+			FlushProcessingContext flushProcessingContext) {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var entry = persistenceContext.getCollectionEntry( collection );
 		final var loadedPersister = entry.getLoadedPersister();
@@ -72,7 +78,7 @@ public final class Collections {
 		// do the work
 		entry.setCurrentPersister( null );
 		entry.setCurrentKey( null );
-		prepareCollectionForUpdate( collection, entry, session.getFactory() );
+		prepareCollectionForUpdate( collection, entry, session.getFactory(), flushProcessingContext );
 
 	}
 
@@ -104,7 +110,10 @@ public final class Collections {
 		return ownerId;
 	}
 
-	private static void processNeverReferencedCollection(PersistentCollection<?> collection, SessionImplementor session)
+	private static void processNeverReferencedCollection(
+			PersistentCollection<?> collection,
+			EventSource session,
+			FlushProcessingContext flushProcessingContext)
 			throws HibernateException {
 		final var entry =
 				session.getPersistenceContextInternal()
@@ -119,7 +128,7 @@ public final class Collections {
 
 		entry.setCurrentPersister( loadedPersister );
 		entry.setCurrentKey( loadedKey );
-		prepareCollectionForUpdate( collection, entry, session.getFactory() );
+		prepareCollectionForUpdate( collection, entry, session.getFactory(), flushProcessingContext );
 	}
 
 	/**
@@ -134,7 +143,8 @@ public final class Collections {
 			PersistentCollection<?> collection,
 			CollectionType type,
 			Object entity,
-			SessionImplementor session) {
+			EventSource session,
+			FlushProcessingContext flushProcessingContext) {
 		collection.setOwner( entity );
 		final var collectionEntry =
 				session.getPersistenceContextInternal()
@@ -165,19 +175,19 @@ public final class Collections {
 				CORE_LOGGER.skippingUninitializedBytecodeLazyCollection(
 						collectionInfoString( persister, collection, collectionEntry.getCurrentKey(), session ) );
 			}
-			collectionEntry.setReached( true );
-			collectionEntry.setProcessed( true );
+			flushProcessingContext.markCollectionReached( collection );
+			flushProcessingContext.markCollectionProcessed( collection );
 		}
-		// The CollectionEntry.isReached() stuff is just to detect any silly users
+		// The reached status is just to detect any silly users
 		// who set up circular or shared references between/to collections.
-		else if ( collectionEntry.isReached() ) {
+		else if ( flushProcessingContext.isCollectionReached( collection ) ) {
 			// We've been here before
 			throw new HibernateException( "Found shared references to a collection: " + type.getRole() );
 		}
 		else {
-			collectionEntry.setReached( true );
+			flushProcessingContext.markCollectionReached( collection );
 			logReachedCollection( collection, session, persister, collectionEntry );
-			prepareCollectionForUpdate( collection, collectionEntry, factory );
+			prepareCollectionForUpdate( collection, collectionEntry, factory, flushProcessingContext );
 		}
 	}
 
@@ -224,17 +234,14 @@ public final class Collections {
 
 	/**
 	 * 1. record the collection role that this collection is referenced by
-	 * 2. decide if the collection needs deleting/creating/updating (but
-	 *	don't actually schedule the action yet)
+	 * 2. decide if the collection needs deleting/creating/updating
 	 */
 	private static void prepareCollectionForUpdate(
 			PersistentCollection<?> collection,
 			CollectionEntry collectionEntry,
-			SessionFactoryImplementor factory) {
-		if ( collectionEntry.isProcessed() ) {
-			throw new AssertionFailure( "collection was processed twice by flush()" );
-		}
-		collectionEntry.setProcessed( true );
+			SessionFactoryImplementor factory,
+			FlushProcessingContext flushProcessingContext) {
+		flushProcessingContext.markCollectionProcessed( collection );
 
 		final var loadedPersister = collectionEntry.getLoadedPersister();
 		final var currentPersister = collectionEntry.getCurrentPersister();
@@ -253,13 +260,22 @@ public final class Collections {
 
 				// do the work
 				if ( currentPersister != null ) {
-					collectionEntry.setDorecreate( true );
+					flushProcessingContext.queueCollectionRecreate(
+							collection,
+							currentPersister,
+							collectionEntry.getCurrentKey()
+					);
 				}
 
 				if ( loadedPersister != null ) {
 					// we will need to remove the old entries
-					collectionEntry.setDoremove( true );
-					if ( collectionEntry.isDorecreate() ) {
+					flushProcessingContext.queueCollectionRemove(
+							collection,
+							loadedPersister,
+							collectionEntry.getLoadedKey(),
+							collectionEntry.isSnapshotEmpty( collection )
+					);
+					if ( currentPersister != null ) {
 						CORE_LOGGER.forcingCollectionInitialization();
 						collection.forceInitialization();
 					}
@@ -267,7 +283,12 @@ public final class Collections {
 			}
 			else if ( collection.isDirty() ) {
 				// the collection's elements have changed
-				collectionEntry.setDoupdate( true );
+				flushProcessingContext.queueCollectionUpdate(
+						collection,
+						loadedPersister,
+						collectionEntry.getLoadedKey(),
+						collectionEntry.isSnapshotEmpty( collection )
+				);
 			}
 		}
 	}

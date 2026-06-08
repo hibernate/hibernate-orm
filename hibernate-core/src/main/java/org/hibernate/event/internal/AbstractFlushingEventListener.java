@@ -8,13 +8,11 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
@@ -33,7 +31,6 @@ import org.hibernate.persister.entity.EntityPersister;
 
 
 import static org.hibernate.engine.internal.Collections.processUnreachableCollection;
-import static org.hibernate.engine.internal.Collections.skipRemoval;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 
 /**
@@ -55,19 +52,25 @@ public abstract class AbstractFlushingEventListener {
 	 * @param event The flush event.
 	 * @throws HibernateException Error flushing caches to execution queues.
 	 */
-	protected void flushEverythingToExecutions(FlushEvent event) throws HibernateException {
+	protected FlushProcessingContext prepareFlushProcessing(FlushEvent event) throws HibernateException {
 		EVENT_LISTENER_LOGGER.flushingSession();
 		final var session = event.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
-		preFlush( session, persistenceContext );
-		flushEverythingToExecutions( event, persistenceContext, session );
+		final var flushProcessingContext = beginFlushProcessing( session, persistenceContext );
+		preFlush( session, persistenceContext, flushProcessingContext );
+		flushEverythingToExecutions( event, persistenceContext, session, flushProcessingContext );
+		return flushProcessingContext;
 	}
 
-	protected void flushEverythingToExecutions(FlushEvent event, PersistenceContext persistenceContext, EventSource session) {
+	protected void flushEverythingToExecutions(
+			FlushEvent event,
+			PersistenceContext persistenceContext,
+			EventSource session,
+			FlushProcessingContext flushProcessingContext) {
 		persistenceContext.setFlushing( true );
 		try {
 			final int entityCount = flushEntities( event, persistenceContext );
-			final int collectionCount = flushCollections( session, persistenceContext );
+			final int collectionCount = flushCollections( session, persistenceContext, flushProcessingContext );
 			event.setNumberOfEntitiesProcessed( entityCount );
 			event.setNumberOfCollectionsProcessed( collectionCount );
 		}
@@ -78,14 +81,27 @@ public abstract class AbstractFlushingEventListener {
 		logFlushResults( event );
 	}
 
-	protected void preFlush(EventSource session, PersistenceContext persistenceContext) {
+	protected FlushProcessingContext beginFlushProcessing(EventSource session, PersistenceContext persistenceContext) {
+		final var flushProcessingContext = new FlushProcessingContext( session );
+		persistenceContext.setCollectionFlushActionTracker( flushProcessingContext );
+		return flushProcessingContext;
+	}
+
+	protected void clearFlushProcessing(PersistenceContext persistenceContext) {
+		persistenceContext.setCollectionFlushActionTracker( null );
+	}
+
+	protected void preFlush(
+			EventSource session,
+			PersistenceContext persistenceContext,
+			FlushProcessingContext flushProcessingContext) {
 		session.runInterceptorCallback(
 				() -> session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() ) );
 		prepareEntityFlushes( session, persistenceContext );
 		// we could move this inside if we wanted to
 		// tolerate collection initializations during
 		// collection dirty checking:
-		prepareCollectionFlushes( persistenceContext );
+		prepareCollectionFlushes( persistenceContext, flushProcessingContext );
 		// now, any collections that are initialized
 		// inside this block do not get updated - they
 		// are ignored until the next flush
@@ -124,7 +140,6 @@ public abstract class AbstractFlushingEventListener {
 		final var context = PersistContext.create();
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( var entry : persistenceContext.reentrantSafeEntityEntries() ) {
-//		for ( Map.Entry entry : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			final var entityEntry = entry.getValue();
 			if ( flushable( entityEntry ) ) {
 				cascadeOnFlush( session, entityEntry.getPersister(), entry.getKey(), context );
@@ -179,11 +194,13 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * Initialize the flags of the {@link CollectionEntry}, including the dirty check.
+	 * Initialize flush-local collection state, including the dirty check.
 	 */
-	private void prepareCollectionFlushes(PersistenceContext persistenceContext) throws HibernateException {
+	private void prepareCollectionFlushes(
+			PersistenceContext persistenceContext,
+			FlushProcessingContext flushProcessingContext) throws HibernateException {
 		// Initialize dirty flags for arrays + collections with composite elements
-		// and reset reached, doupdate, etc.
+		// and reset flush-local collection processing state.
 		EVENT_LISTENER_LOGGER.dirtyCheckingCollections();
 		final var collectionEntries = persistenceContext.getCollectionEntries();
 		if ( collectionEntries != null ) {
@@ -191,6 +208,7 @@ public abstract class AbstractFlushingEventListener {
 					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
 							collectionEntries;
 			for ( var entry : identityMap.toArray() ) {
+				flushProcessingContext.beginCollectionFlush( entry.getKey() );
 				entry.getValue().preFlush( entry.getKey() );
 			}
 		}
@@ -259,68 +277,26 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * Process any unreferenced collections and then inspect all known collections,
-	 * scheduling creates/removes/updates.
+	 * Process any unreferenced collections, queue delayed collection operations,
+	 * and sort the collection actions queued during collection processing.
 	 */
 	@SuppressWarnings("removal")
-	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext)
+	private int flushCollections(
+			final EventSource session,
+			final PersistenceContext persistenceContext,
+			final FlushProcessingContext flushProcessingContext)
 			throws HibernateException {
 		EVENT_LISTENER_LOGGER.processingUnreferencedCollections();
 		final var collectionEntries = persistenceContext.getCollectionEntries();
-		final int count = processUnreachableCollections( session, collectionEntries );
-
-		// Schedule updates to collections:
+		final int count = processUnreachableCollections( session, collectionEntries, flushProcessingContext );
 
 		EVENT_LISTENER_LOGGER.schedulingCollectionOperations();
 		final var actionQueue = session.getActionQueue();
-		final var interceptor = session.getInterceptor();
 		persistenceContext.forEachCollectionEntry(
 				(collection, collectionEntry) -> {
-					if ( collectionEntry.isDorecreate() ) {
-						final var currentKey = collectionEntry.getCurrentKey();
-						EVENT_LISTENER_LOGGER.debugf( "Creating CollectionRecreateAction for role=%s, key=%s", collectionEntry.getCurrentPersister().getRole(), currentKey );
-						session.runInterceptorCallback(
-								() -> interceptor.onCollectionRecreate( collection, currentKey ) );
-						actionQueue.addAction(
-								new CollectionRecreateAction(
-										collection,
-										collectionEntry.getCurrentPersister(),
-										currentKey,
-										session
-								)
-						);
-					}
-					if ( collectionEntry.isDoremove() ) {
-						final var loadedKey = collectionEntry.getLoadedKey();
-						session.runInterceptorCallback(
-								() -> interceptor.onCollectionRemove( collection, loadedKey ) );
-						if ( !skipRemoval( session, collectionEntry.getLoadedPersister(), loadedKey ) ) {
-							actionQueue.addAction(
-									new CollectionRemoveAction(
-											collection,
-											collectionEntry.getLoadedPersister(),
-											loadedKey,
-											collectionEntry.isSnapshotEmpty( collection ),
-											session
-									)
-							);
-						}
-					}
-					if ( collectionEntry.isDoupdate() ) {
-						final var loadedKey = collectionEntry.getLoadedKey();
-						session.runInterceptorCallback(
-								() -> interceptor.onCollectionUpdate( collection, loadedKey ) );
-						actionQueue.addAction(
-								new CollectionUpdateAction(
-										collection,
-										collectionEntry.getLoadedPersister(),
-										loadedKey,
-										collectionEntry.isSnapshotEmpty( collection ),
-										session
-								)
-						);
-					}
-					// todo : I'm not sure the !wasInitialized part should really be part of this check
+					// Delayed operations are processed separately only while the collection remains
+					// uninitialized. Once initialized, normal collection dirty-checking/action
+					// handling owns the changes.
 					if ( !collection.wasInitialized() && collection.hasQueuedOperations() ) {
 						actionQueue.addAction(
 								new QueuedOperationCollectionAction(
@@ -340,7 +316,8 @@ public abstract class AbstractFlushingEventListener {
 
 	private static int processUnreachableCollections(
 			EventSource session,
-			Map<PersistentCollection<?>, CollectionEntry> collectionEntries) {
+			Map<PersistentCollection<?>, CollectionEntry> collectionEntries,
+			FlushProcessingContext flushProcessingContext) {
 		if ( collectionEntries == null ) {
 			return 0;
 		}
@@ -351,8 +328,8 @@ public abstract class AbstractFlushingEventListener {
 							collectionEntries;
 			for ( var entry : identityMap.toArray() ) {
 				final var collectionEntry = entry.getValue();
-				if ( !collectionEntry.isReached() && !collectionEntry.isIgnore() ) {
-					processUnreachableCollection( entry.getKey(), session );
+				if ( !flushProcessingContext.wasCollectionReached( entry.getKey() ) && !collectionEntry.isIgnore() ) {
+					processUnreachableCollection( entry.getKey(), session, flushProcessingContext );
 				}
 			}
 			return count;
@@ -405,7 +382,8 @@ public abstract class AbstractFlushingEventListener {
 	 * <li> call {@link Interceptor#postFlush}
 	 * </ol>
 	 */
-	protected void postFlush(SessionImplementor session) throws HibernateException {
+	protected void postFlush(SessionImplementor session, FlushProcessingContext flushProcessingContext)
+			throws HibernateException {
 		EVENT_LISTENER_LOGGER.postFlush();
 
 		final var persistenceContext = session.getPersistenceContextInternal();
@@ -417,7 +395,7 @@ public abstract class AbstractFlushingEventListener {
 
 		persistenceContext.forEachCollectionEntry(
 				(persistentCollection, collectionEntry) -> {
-					collectionEntry.postFlush( persistentCollection );
+					collectionEntry.postFlush( persistentCollection, flushProcessingContext );
 					final var loadedPersister = collectionEntry.getLoadedPersister();
 					final Object key = collectionEntry.getLoadedKey();
 					if ( loadedPersister != null && key != null ) {

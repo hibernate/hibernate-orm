@@ -52,12 +52,16 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 		final var collection = (AbstractPersistentCollection<?>) getCollection();
 		collection.clearOperationQueue();
 
-		// The other CollectionAction types call CollectionEntry#afterAction, which
-		// clears the dirty flag. We don't want to call CollectionEntry#afterAction unless
-		// there is no other CollectionAction that will be executed on the same collection.
-		final var ce = getSession().getPersistenceContextInternal().getCollectionEntry( getCollection() );
-		if ( !ce.isDoremove() && !ce.isDoupdate() && !ce.isDorecreate() ) {
-			ce.afterAction( getCollection() );
+			// The other CollectionAction types call CollectionEntry#afterAction, which
+			// clears the dirty flag. We don't want to call CollectionEntry#afterAction unless
+			// there is no other CollectionAction that will be executed on the same collection.
+			final var ce = getSession().getPersistenceContextInternal().getCollectionEntry( getCollection() );
+			final var collectionFlushActionTracker =
+					getSession().getPersistenceContextInternal()
+							.getCollectionFlushActionTracker();
+			if ( collectionFlushActionTracker == null
+					|| !collectionFlushActionTracker.hasQueuedCollectionAction( getCollection() ) ) {
+				ce.afterAction( getCollection() );
+			}
 		}
 	}
-}

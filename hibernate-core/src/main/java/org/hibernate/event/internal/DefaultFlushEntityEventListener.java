@@ -11,6 +11,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
 import org.hibernate.engine.internal.Versioning;
@@ -150,7 +151,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// Search for collections by reachability, updating their role.
 			// We don't want to touch collections reachable from a deleted object
 			if ( persister.hasCollections() ) {
-				new FlushVisitor( session, entity )
+				new FlushVisitor(
+						session,
+						entity,
+						(FlushProcessingContext) session.getPersistenceContextInternal()
+								.getCollectionFlushActionTracker()
+				)
 						.processEntityPropertyValues( values, persister.getPropertyTypes() );
 			}
 		}

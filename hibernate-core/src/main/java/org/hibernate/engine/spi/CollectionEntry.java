@@ -43,15 +43,6 @@ public final class CollectionEntry implements Serializable {
 	private transient @Nullable CollectionPersister loadedPersister;
 	private @Nullable Object loadedKey;
 
-	// ATTRIBUTES USED ONLY DURING FLUSH CYCLE
-
-	// during flush, we navigate the object graph to
-	// collections and decide what to do with them
-	private transient boolean reached;
-	private transient boolean processed;
-	private transient boolean doupdate;
-	private transient boolean doremove;
-	private transient boolean dorecreate;
 	// if we instantiate a collection during the flush() process,
 	// we must ignore it for the rest of the flush()
 	private transient boolean ignore;
@@ -197,12 +188,6 @@ public final class CollectionEntry implements Serializable {
 			CORE_LOGGER.collectionDirty(
 					collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
 		}
-
-		reached = false;
-		processed = false;
-		doupdate = false;
-		doremove = false;
-		dorecreate = false;
 	}
 
 	public void postInitialize(PersistentCollection<?> collection, SharedSessionContractImplementor session) {
@@ -219,8 +204,8 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * Called after a successful flush
 	 */
-	public void postFlush(PersistentCollection<?> collection) {
-		if ( !ignore && !processed ) {
+	public void postFlush(PersistentCollection<?> collection, CollectionFlushActionTracker collectionFlushActionTracker) {
+		if ( !ignore && !collectionFlushActionTracker.wasCollectionProcessed( collection ) ) {
 			throw new HibernateException( "Collection '" + collection.getRole() + "' was not processed by flush"
 					+ " (this is likely due to unsafe use of the session, for example, current use in multiple threads, or updates during entity lifecycle callbacks)");
 		}
@@ -236,7 +221,7 @@ public final class CollectionEntry implements Serializable {
 		loadedPersister = currentPersister;
 		role = currentPersister == null ? null : currentPersister.getRole();
 		if ( collection.wasInitialized()
-				&& ( doremove || dorecreate || doupdate ) ) {
+				&& hasQueuedCollectionAction( collection ) ) {
 			// update the snapshot
 			snapshot = isModifiable()
 					? collection.getSnapshot( castNonNull( loadedPersister ) )
@@ -308,44 +293,13 @@ public final class CollectionEntry implements Serializable {
 		return loadedKey == null;
 	}
 
-	public boolean isReached() {
-		return reached;
-	}
-
-	public void setReached(boolean reached) {
-		this.reached = reached;
-	}
-
-	public boolean isProcessed() {
-		return processed;
-	}
-
-	public void setProcessed(boolean processed) {
-		this.processed = processed;
-	}
-
-	public boolean isDoupdate() {
-		return doupdate;
-	}
-
-	public void setDoupdate(boolean doupdate) {
-		this.doupdate = doupdate;
-	}
-
-	public boolean isDoremove() {
-		return doremove;
-	}
-
-	public void setDoremove(boolean doremove) {
-		this.doremove = doremove;
-	}
-
-	public boolean isDorecreate() {
-		return dorecreate;
-	}
-
-	public void setDorecreate(boolean dorecreate) {
-		this.dorecreate = dorecreate;
+	private boolean hasQueuedCollectionAction(PersistentCollection<?> collection) {
+		final var session = collection.getSession();
+		if ( session == null ) {
+			return false;
+		}
+		final var collectionFlushActionTracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		return collectionFlushActionTracker != null && collectionFlushActionTracker.hasQueuedCollectionAction( collection );
 	}
 
 	public boolean isIgnore() {

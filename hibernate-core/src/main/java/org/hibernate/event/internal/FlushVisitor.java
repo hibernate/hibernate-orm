@@ -7,6 +7,7 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 
@@ -21,20 +22,22 @@ import static org.hibernate.engine.internal.Collections.processReachableCollecti
  */
 public class FlushVisitor extends AbstractVisitor {
 	private final Object owner;
+	private final FlushProcessingContext flushProcessingContext;
 
-	public FlushVisitor(EventSource session, Object owner) {
+	public FlushVisitor(EventSource session, Object owner, FlushProcessingContext flushProcessingContext) {
 		super(session);
 		this.owner = owner;
+		this.flushProcessingContext = flushProcessingContext;
 	}
 
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		if ( collection != null ) {
 			final var session = getSession();
-			final var persistentCollection = persistentCollection( collection, type, session );
-			if ( persistentCollection != null ) {
-				processReachableCollection( persistentCollection, type, owner, session );
+				final var persistentCollection = persistentCollection( collection, type, session );
+				if ( persistentCollection != null ) {
+					processReachableCollection( persistentCollection, type, owner, session, flushProcessingContext );
+				}
 			}
-		}
 		return null;
 	}
 

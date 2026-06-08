@@ -5,10 +5,12 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
@@ -102,16 +104,39 @@ public class WrapVisitor extends ProxyVisitor {
 										collectionInstance =
 												persister.getCollectionSemantics()
 														.instantiateWrapper( key, persister, session );
-										persistenceContext.addUninitializedCollection(
-												persister,
-												collectionInstance,
-												key,
-												entry.isReadOnly()
-										);
-										persistenceContext.getCollectionEntry( collectionInstance ).setDoremove( true );
+											persistenceContext.addUninitializedCollection(
+													persister,
+													collectionInstance,
+													key,
+													entry.isReadOnly()
+											);
+											final var collectionFlushActionTracker =
+													persistenceContext.getCollectionFlushActionTracker();
+											if ( collectionFlushActionTracker instanceof FlushProcessingContext flushProcessingContext ) {
+												flushProcessingContext.queueCollectionRemove(
+														collectionInstance,
+														persister,
+														key,
+														false
+												);
+											}
+											else {
+												final var collectionToRemove = collectionInstance;
+												session.runInterceptorCallback(
+														() -> session.getInterceptor().onCollectionRemove( collectionToRemove, key ) );
+												session.getActionQueue().addAction(
+														new CollectionRemoveAction(
+																collectionToRemove,
+																persister,
+																key,
+																false,
+																session
+														)
+												);
+											}
+										}
 									}
 								}
-							}
 						}
 					}
 				}

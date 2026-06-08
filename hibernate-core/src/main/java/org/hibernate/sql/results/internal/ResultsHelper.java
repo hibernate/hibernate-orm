@@ -62,7 +62,7 @@ public class ResultsHelper {
 			addCollectionHolder( persistenceContext, collectionDescriptor, collection );
 		}
 		persistenceContext.getBatchFetchQueue().removeBatchLoadableCollection( collectionEntry );
-		if ( addToCache( session, collectionEntry, collectionDescriptor, hasNoQueuedAdds, cacheStoreMode ) ) {
+		if ( addToCache( session, collection, collectionDescriptor, hasNoQueuedAdds, cacheStoreMode ) ) {
 			addCollectionToCache( persistenceContext, collectionDescriptor, collection, key, cacheStoreMode );
 		}
 		final var statistics = session.getFactory().getStatistics();
@@ -80,15 +80,23 @@ public class ResultsHelper {
 	}
 
 	private static boolean addToCache(
-			SharedSessionContract session,
-			CollectionEntry collectionEntry,
+			SharedSessionContractImplementor session,
+			PersistentCollection<?> collection,
 			CollectionPersister collectionDescriptor,
 			boolean hasNoQueuedAdds,
 			CacheStoreMode cacheStoreMode) {
 		return hasNoQueuedAdds  // there were no queued additions
 			&& collectionDescriptor.hasCache()  // the collection role has a cache
 			&& isCachePutEnabled( session, cacheStoreMode )  // the effective cache mode allows puts
-			&& !collectionEntry.isDoremove();  // this is not a forced initialization during flush
+			&& !hasQueuedCollectionRemove( session, collection );  // this is not a forced initialization during flush
+	}
+
+	private static boolean hasQueuedCollectionRemove(SharedSessionContractImplementor session, PersistentCollection<?> collection) {
+		final var collectionFlushActionTracker =
+				session.getPersistenceContextInternal()
+						.getCollectionFlushActionTracker();
+		return collectionFlushActionTracker != null
+				&& collectionFlushActionTracker.hasQueuedCollectionRemove( collection );
 	}
 
 	private static void addCollectionHolder(

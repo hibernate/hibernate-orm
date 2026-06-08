@@ -73,9 +73,8 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 	}
 
 	@Override
-	public List<JdbcParameterBinder> getParameterBinders() {
-		//noinspection unchecked
-		return (List<JdbcParameterBinder>) parameterBinders;
+	public List<? extends JdbcParameterBinder> getParameterBinders() {
+		return parameterBinders;
 	}
 
 	@Override

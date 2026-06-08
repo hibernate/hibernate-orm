@@ -16,7 +16,6 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -31,9 +30,6 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.TableDelete;
-import org.hibernate.sql.model.ast.TableInsert;
-import org.hibernate.sql.model.ast.TableUpdate;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
@@ -44,13 +40,14 @@ import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.exception.ConstraintViolationException.ConstraintKind.UNIQUE;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
@@ -301,28 +298,14 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	 * Used by Hibernate Reactive
 	 */
 	protected JdbcDeleteMutation createJdbcDelete(SharedSessionContractImplementor session) {
-		final TableDelete tableDelete;
-		if ( tableMapping.getDeleteDetails() != null
-				&& tableMapping.getDeleteDetails().getCustomSql() != null ) {
-			tableDelete = new TableDeleteCustomSql(
-					new MutatingTableReference( tableMapping ),
-					getMutationTarget(),
-					"upsert delete for " + mutationTarget.getRolePath(),
-					keyBindings,
-					optimisticLockBindings,
-					parameters
-			);
-		}
-		else {
-			tableDelete = new TableDeleteStandard(
-					new MutatingTableReference( tableMapping ),
-					getMutationTarget(),
-					"upsert delete for " + mutationTarget.getRolePath(),
-					keyBindings,
-					optimisticLockBindings,
-					parameters
-			);
-		}
+		final var deleteDetails = tableMapping.getDeleteDetails();
+		final var table = new MutatingTableReference( tableMapping );
+		final var target = getMutationTarget();
+		String comment = "upsert delete for " + mutationTarget.getRolePath();
+		final var tableDelete =
+				deleteDetails != null && deleteDetails.getCustomSql() != null
+						? new TableDeleteCustomSql( table, target, comment, keyBindings, optimisticLockBindings, parameters )
+						: new TableDeleteStandard( table, target, comment, keyBindings, optimisticLockBindings, parameters );
 
 		final var factory = session.getSessionFactory();
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
@@ -391,30 +374,16 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			SharedSessionContractImplementor session,
 			List<ColumnValueBinding> updateValueBindings,
 			List<ColumnValueParameter> updateParameters) {
-		final TableUpdate<JdbcMutationOperation> tableUpdate;
-		if ( tableMapping.getUpdateDetails() != null
-				&& tableMapping.getUpdateDetails().getCustomSql() != null ) {
-			tableUpdate = new TableUpdateCustomSql(
-					new MutatingTableReference( tableMapping ),
-					mutationTarget,
-					"upsert update for " + mutationTarget.getRolePath(),
-					updateValueBindings,
-					keyBindings,
-					optimisticLockBindings,
-					updateParameters
-			);
-		}
-		else {
-			tableUpdate = new TableUpdateStandard(
-					new MutatingTableReference( tableMapping ),
-					mutationTarget,
-					"upsert update for " + mutationTarget.getRolePath(),
-					updateValueBindings,
-					keyBindings,
-					optimisticLockBindings,
-					updateParameters
-			);
-		}
+		final var updateDetails = tableMapping.getUpdateDetails();
+		final String comment = "upsert update for " + mutationTarget.getRolePath();
+		final var table = new MutatingTableReference( tableMapping );
+		final var target = getMutationTarget();
+		final var tableUpdate =
+				updateDetails != null && updateDetails.getCustomSql() != null
+						? new TableUpdateCustomSql( table, target, comment, updateValueBindings,
+								keyBindings, optimisticLockBindings, updateParameters )
+						: new TableUpdateStandard( table, target, comment, updateValueBindings,
+								keyBindings, optimisticLockBindings, updateParameters );
 
 		return session.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 				.buildModelMutationTranslator( tableUpdate, session.getFactory() )
@@ -485,25 +454,14 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	 * Used by Hibernate Reactive
 	 */
 	protected JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
-		final TableInsert tableInsert;
-		if ( tableMapping.getInsertDetails() != null
-				&& tableMapping.getInsertDetails().getCustomSql() != null ) {
-			tableInsert = new TableInsertCustomSql(
-					new MutatingTableReference( tableMapping ),
-					getMutationTarget(),
-					CollectionHelper.combine( valueBindings, keyBindings ),
-					parameters
-			);
-		}
-		else {
-			tableInsert = new TableInsertStandard(
-					new MutatingTableReference( tableMapping ),
-					getMutationTarget(),
-					CollectionHelper.combine( valueBindings, keyBindings ),
-					Collections.emptyList(),
-					parameters
-			);
-		}
+		final var insertDetails = tableMapping.getInsertDetails();
+		final var table = new MutatingTableReference( tableMapping );
+		final var combinedBindings = combine( valueBindings, keyBindings );
+		final var target = getMutationTarget();
+		final var tableInsert =
+				insertDetails != null && insertDetails.getCustomSql() != null
+						? new TableInsertCustomSql( table, target, combinedBindings, parameters )
+						: new TableInsertStandard( table, target, combinedBindings, emptyList(), parameters );
 
 		final var factory = session.getSessionFactory();
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()

@@ -64,7 +64,7 @@ public final class MutationBindTemplate {
 		for ( int i = 0; i < parameterBinders.size(); i++ ) {
 			final var columnValueParameter = (ColumnValueParameter) parameterBinders.get( i );
 			final var valueDescriptor = new JdbcValueDescriptorImpl( columnValueParameter, offset + i + 1 );
-			final BindSlot slot = new BindSlot(
+			final var slot = new BindSlot(
 					i,
 					valueDescriptor.getColumnName(),
 					valueDescriptor.getUsage(),

@@ -111,8 +111,9 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 				jdbcServices.getJdbcEnvironment().getSqlAstTranslatorFactory()
 						.buildModelMutationTranslator( upsertDeleteAst, session.getFactory() )
 						.translate( null, MutationQueryOptions.INSTANCE );
-		final var statementGroup = new PreparedStatementGroupSingleTable( upsertDelete, session );
-		final var statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
+		final var statementDetails =
+				new PreparedStatementGroupSingleTable( upsertDelete, session )
+						.resolvePreparedStatementDetails( tableMapping.getTableName() );
 		try {
 			final var upsertDeleteStatement = statementDetails.resolveStatement();
 			final String sql = statementDetails.getSqlString();
@@ -145,7 +146,9 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			SharedSessionContractImplementor session) {
 		final var statement = statementDetails.resolveStatement();
 		int jdbcBindingPosition = 1;
-		for ( var binding : jdbcValueBindings.getBindingGroup( tableMapping.getTableName() ).getBindings() ) {
+		for ( var binding :
+				jdbcValueBindings.getBindingGroup( tableMapping.getTableName() )
+						.getBindings() ) {
 			final var valueDescriptor = binding.getValueDescriptor();
 			if ( valueDescriptor.getUsage() == ParameterUsage.RESTRICT ) {
 				bindKeyValue(
@@ -189,8 +192,9 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	private void performUpsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		MODEL_MUTATION_LOGGER.performingUpsert( tableMapping.getTableName() );
 
-		final var statementGroup = new PreparedStatementGroupSingleTable( upsertOperation, session );
-		final var statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
+		final var statementDetails =
+				new PreparedStatementGroupSingleTable( upsertOperation, session )
+						.resolvePreparedStatementDetails( tableMapping.getTableName() );
 		try {
 			final var updateStatement = statementDetails.resolveStatement();
 			final var jdbcServices = session.getJdbcServices();

@@ -30,7 +30,7 @@ public interface PreparableMutationOperation extends MutationOperation {
 	/**
 	 * Get the list of parameter binders for the generated PreparedStatement
 	 */
-	List<JdbcParameterBinder> getParameterBinders();
+	List<? extends JdbcParameterBinder> getParameterBinders();
 
 	/**
 	 * Whether the operation is callable

@@ -245,7 +245,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		sessionFactoryOptions = options;
 
 		statementObserver = options.getStatementObserver() == null
-				? StatementObserver::swallowSql
+				? IgnoredStatementObserver.IGNORE
 				: options.getStatementObserver();
 
 		serviceRegistry = getServiceRegistry( options, this );

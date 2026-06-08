@@ -30,8 +30,4 @@ public interface StatementObserver extends EntityManager.CreationOption, EntityA
 	/// @param sql The SQL which is being performed.
 	/// @param batchPosition The position within a batch; `-1` if not batched.
 	void performingSql(String sql, int batchPosition);
-
-	/// Simple "black hole" for "no observer".
-	static void swallowSql(String sql, int batchPosition) {
-	}
 }

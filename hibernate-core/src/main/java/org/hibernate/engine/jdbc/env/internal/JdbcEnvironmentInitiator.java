@@ -27,6 +27,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.event.monitor.internal.EmptyEventMonitor;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.internal.IgnoredStatementObserver;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -760,7 +761,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 		@Override
 		public StatementObserver getStatementObserver() {
-			return StatementObserver::swallowSql;
+			return IgnoredStatementObserver.IGNORE;
 		}
 
 		@Override

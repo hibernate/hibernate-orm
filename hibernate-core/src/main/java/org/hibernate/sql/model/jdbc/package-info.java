@@ -8,4 +8,7 @@
  *
  * @author Steve Ebersole
  */
+@Incubating
 package org.hibernate.sql.model.jdbc;
+
+import org.hibernate.Incubating;

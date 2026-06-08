@@ -28,5 +28,5 @@ public interface JdbcOperation {
 	/**
 	 * The list of parameter binders for the generated PreparedStatement.
 	 */
-	List<JdbcParameterBinder> getParameterBinders();
+	List<? extends JdbcParameterBinder> getParameterBinders();
 }

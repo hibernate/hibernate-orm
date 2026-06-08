@@ -19,7 +19,6 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
-import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
@@ -193,7 +192,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		// todo : validate that all query parameters were bound?
 		int paramBindingPosition = 1;
 		paramBindingPosition += limitHandler.bindLimitParametersAtStartOfQuery( limit, preparedStatement, paramBindingPosition );
-		for ( JdbcParameterBinder parameterBinder : jdbcSelect.getParameterBinders() ) {
+		for ( var parameterBinder : jdbcSelect.getParameterBinders() ) {
 			parameterBinder.bindParameterValue(
 					preparedStatement,
 					paramBindingPosition++,

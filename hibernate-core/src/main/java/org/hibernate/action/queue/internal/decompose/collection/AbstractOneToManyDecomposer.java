@@ -620,7 +620,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			}
 
 			@Override
-			public List<JdbcParameterBinder> getParameterBinders() {
+			public List<? extends JdbcParameterBinder> getParameterBinders() {
 				return jdbcOperation.getParameterBinders();
 			}
 

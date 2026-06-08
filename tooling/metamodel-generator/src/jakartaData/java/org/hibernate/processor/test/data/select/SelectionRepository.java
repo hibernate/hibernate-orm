@@ -93,6 +93,10 @@ public interface SelectionRepository extends CrudRepository<SelectionBook, Long>
 	@Select("title")
 	List<String> queryTitlesByStatus(SelectionStatus status);
 
+	@Query("where status = :status and pages > ?2")
+	@Select("title")
+	List<String> queryTitlesWithStringFallback(SelectionStatus status, int minPages);
+
 	@Query("where status = :status")
 	List<QueryRenamed> queryRenamedByStatus(SelectionStatus status);
 }

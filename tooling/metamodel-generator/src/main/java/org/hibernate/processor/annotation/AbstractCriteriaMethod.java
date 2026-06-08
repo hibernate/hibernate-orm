@@ -235,49 +235,18 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				.append("\tvar _query = _builder.")
 				.append(createCriteriaMethod())
 				.append('(')
-				.append( annotationMetaEntity.importType(resultType()) )
+				.append(annotationMetaEntity.importType(resultType()))
 				.append(".class);\n")
 				.append("\tvar _entity = _query.from(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class);\n");
 		if ( selection != null ) {
-			select( declaration, selection );
+			select( declaration, entity, selection );
 		}
 	}
 
 	private String resultType() {
 		return selection == null ? entity : selection.resultTypeName();
-	}
-
-	private void select(StringBuilder declaration, ResultSelection selection) {
-		declaration
-				.append("\t_query.select(");
-		if ( selection.recordProjection() ) {
-			declaration
-					.append("_builder.construct(")
-					.append(annotationMetaEntity.importType(selection.resultTypeName()))
-					.append(".class");
-			for ( var path : selection.paths() ) {
-				declaration
-						.append(", ");
-				selectionExpression( declaration, path, entity );
-			}
-			declaration
-					.append(")");
-		}
-		else {
-			selectionExpression( declaration, selection.paths().get( 0 ), entity );
-		}
-		declaration
-				.append(");\n");
-	}
-
-	private void createBuilder(StringBuilder declaration) {
-		declaration
-				.append("\tvar _builder = ");
-		localSession( declaration );
-		declaration
-				.append(".getCriteriaBuilder();\n");
 	}
 
 	@Override

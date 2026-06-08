@@ -72,6 +72,11 @@ class DataTest {
 		assertTrue( queryMetamodel.contains( "TypedQueryReference<Boolean> countBooksWithIsbn2()" ) );
 		assertTrue( queryMetamodel.contains( "TypedQueryReference<Author> withNoOrder2()" ) );
 		assertTrue( repository.contains( "SelectionSpecification.create(BookAuthorRepository_.booksWithJakartaQueryOrder(title))" ) );
+		assertTrue( repository.contains(
+				"SelectionSpecification.create(Book.class, BOOKS_WITH_STRING_FALLBACK_String_int)" ) );
+		assertTrue( repository.contains( ".setParameter(\"titlePattern\", titlePattern)" ) );
+		assertTrue( repository.contains( ".setParameter(2, minPages)" ) );
+		assertFalse( repository.contains( "BookAuthorRepository_.booksWithStringFallback" ) );
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
 		assertTrue( queryMetamodel.contains( "\"org.hibernate.processor.test.data.basic.BookAuthorRepository"
 				+ "#booksWithJakartaQueryOrder(java.lang.String,jakarta.data.Order)\"" ) );

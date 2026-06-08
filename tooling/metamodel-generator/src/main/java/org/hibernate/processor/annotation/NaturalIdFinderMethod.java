@@ -12,6 +12,7 @@ import java.util.List;
 import static java.util.Collections.emptyList;
 import static org.hibernate.processor.annotation.QueryOptionsSupport.appendEntityGraphArgument;
 import static org.hibernate.processor.annotation.QueryOptionsSupport.appendFindOptions;
+import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 
 /**
  * @author Gavin King
@@ -258,9 +259,9 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 					final var paramName = paramNames.get(i);
 					declaration
 							.append("\t_key.put(")
-							.append(QueryOptionsSupport.stringLiteral( paramName ))
+							.append(stringLiteral(paramName))
 							.append(", ")
-							.append(parameterName( paramName ))
+							.append(parameterName(paramName))
 							.append(");\n");
 				}
 			}

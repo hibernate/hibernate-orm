@@ -84,6 +84,11 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
+	}
+
+	@Override
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case BOOLEAN -> "bit";
@@ -156,8 +161,7 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	public CUBRIDDialect(DialectResolutionInfo info) {
-		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
-		registerKeywords( info );
+		super( info );
 	}
 
 	@Override

@@ -104,10 +104,10 @@ Just run:
 
 To run against another database:
 
-1. start the database using `podman` or `docker`, and then
-2. run the tests with the correct profile for that database.
+1. <<start-test-database,start the database>> using `podman` or `docker`, and then
+2. run the tests with the correct <<profiles,profile>> for that database.
 
-=== Using profiles
+=== Using profiles [[profiles]]
 
 The Hibernate build defines several database testing _profiles_ in `local.databases.gradle`.
 A profile may be activated by name using the `db` build property which can be passed either:
@@ -130,7 +130,7 @@ gradle clean compile -Pdb=postgresql
 
 __NOTE: To run tests against a JDBC driver that is not available via Maven central, add the driver to your local Maven repository (`~/.m2/repository`) or to a personal Maven repository server.__
 
-=== Starting a test database as a container
+=== Starting a test database as a container [[start-test-database]]
 
 If podman or docker is installed, there's no need to install any database to test Hibernate.
 The script `db.sh` starts a preconfigured database which can be used for testing.
@@ -163,7 +163,7 @@ The command for running tests might look like the following:
 The following table illustrates a list of commands for various databases that can be tested locally.
 
 |===
-|Database |`db.sh` |Gradle command
+|Database |Start database |Run tests
 
 |H2
 |-

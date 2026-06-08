@@ -309,7 +309,7 @@ tasks.withType( Test.class ).configureEach { test ->
 
     // see GradleParallelTestingResolver for how the test worker id is resolved in JDBC configs
     if ( project.db == "h2" || project.db == "hsqldb" || project.db == "postgresql" || project.db == "pgsql" || project.db == "edb"
-            || project.db == "oracle" || project.db == "oracle_xe" || project.db == "mysql" || project.db == "mariadb"
+            || project.db == "oracle_xe" || project.db == "mysql" || project.db == "mariadb"
             || project.db == "db2" || project.db == "mssql" || project.db == "cockroachdb" || project.db == "hana"
             || project.db == "tidb" ) {
         // Most systems have multi-threading and maxing out a core on both threads will hurt performance
@@ -326,13 +326,34 @@ tasks.withType( Test.class ).configureEach { test ->
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
     else if ( project.db == "oracle_test_pilot_database" ) {
-        // Since Oracle TestPilot databases run on separate machines, use all threads for testing
-        test.maxParallelForks = Runtime.runtime.availableProcessors() * 2
+        // Since Oracle TestPilot databases run on separate machines, but latency is a bit higher,
+        // use double the threads for testing, to hide the effect of the latency a bit
+        def threadCount = Runtime.runtime.availableProcessors() * 2
+        def testThreads = project.findProperty( "test.threads" )
+        if ( testThreads == null ) {
+            testThreads = threadCount
+        }
+        else {
+            testThreads = Integer.parseInt( testThreads.toString() )
+        }
+        test.maxParallelForks = testThreads
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
-    else if ( project.db == "hana_cloud" ) {
-        // Since HANA Cloud databases run on separate machines, use all threads for testing
-        test.maxParallelForks = Runtime.runtime.availableProcessors()
+    else if ( project.db == "hana_cloud" || project.db == "oracle" ) {
+        // Some profiles have databases on different machines or the latency
+        // of the database operations justifies more parallel work,
+        // so for these profiles we use a worker per thread,
+        // and halve the workers only if we are on a machine with more 16+ threads,
+        // to avoid overloading the system
+        def threadCount = Runtime.runtime.availableProcessors()
+        def testThreads = project.findProperty( "test.threads" )
+        if ( testThreads == null ) {
+            testThreads = threadCount >= 16 ? threadCount.intdiv( 2 ) : threadCount
+        }
+        else {
+            testThreads = Integer.parseInt( testThreads.toString() )
+        }
+        test.maxParallelForks = testThreads
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
     else if ( project.db == "spannerpgsql" || project.db == "spanner" ) {

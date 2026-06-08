@@ -679,6 +679,7 @@ EOF\""
 oracle_free_setup() {
     sleep 2;
     users=()
+    DB_COUNT=$(( DB_COUNT * 2 ))
     for n in $(seq 1 $DB_COUNT)
     do
       users+=("hibernate_orm_test_${n}")

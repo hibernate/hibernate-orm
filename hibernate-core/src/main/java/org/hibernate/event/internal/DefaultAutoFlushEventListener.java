@@ -40,11 +40,12 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				final var actionQueue = source.getActionQueue();
 				final var session = event.getSession();
 				final var persistenceContext = session.getPersistenceContextInternal();
+				final var flushProcessingContext = beginFlushProcessing( session, persistenceContext );
 				if ( !event.isSkipPreFlush() ) {
-					preFlush( session, persistenceContext );
+					preFlush( session, persistenceContext, flushProcessingContext );
 				}
 				final int oldSize = actionQueue.numberOfCollectionRemovals();
-				flushEverythingToExecutions( event, persistenceContext, session );
+				flushEverythingToExecutions( event, persistenceContext, session, flushProcessingContext );
 				if ( flushIsReallyNeeded( event, source ) ) {
 					EVENT_LISTENER_LOGGER.needToExecuteFlush();
 					event.setFlushRequired( true );
@@ -54,7 +55,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 					final var flushEvent = eventMonitor.beginFlushEvent();
 					try {
 						performExecutions( source );
-						postFlush( source );
+						postFlush( source, flushProcessingContext );
 						postPostFlush( source );
 					}
 					finally {
@@ -73,6 +74,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			}
 		}
 		finally {
+			clearFlushProcessing( source.getPersistenceContextInternal() );
 			eventMonitor.completePartialFlushEvent( partialFlushEvent, event );
 			eventListenerManager.partialFlushEnd(
 					event.getNumberOfEntitiesProcessed(),

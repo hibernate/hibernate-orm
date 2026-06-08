@@ -36,9 +36,9 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 			if ( persistenceContext.getNumberOfManagedEntities() > 0
 					|| persistenceContext.getCollectionEntriesSize() > 0 ) {
 				EVENT_LISTENER_LOGGER.executingFlush();
-				flushEverythingToExecutions( event );
+				final var flushProcessingContext = prepareFlushProcessing( event );
 				performExecutions( source );
-				postFlush( source );
+				postFlush( source, flushProcessingContext );
 				postPostFlush( source );
 
 				final var statistics = source.getFactory().getStatistics();
@@ -53,6 +53,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 			}
 		}
 		finally {
+			clearFlushProcessing( source.getPersistenceContextInternal() );
 			eventMonitor.completeFlushEvent( flushEvent, event );
 			eventListenerManager.flushEnd(
 					event.getNumberOfEntitiesProcessed(),

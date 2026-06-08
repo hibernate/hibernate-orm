@@ -36,6 +36,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.AssociationKey;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.CollectionFlushActionTracker;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
@@ -165,6 +166,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	private int loadCounter;
 	private int removeOrphanBeforeUpdatesCounter;
 	private boolean flushing;
+	private @Nullable CollectionFlushActionTracker collectionFlushActionTracker;
 
 	private boolean defaultReadOnly;
 	private boolean hasNonReadOnlyEntities;
@@ -1375,6 +1377,16 @@ class StatefulPersistenceContext implements PersistenceContext {
 		if ( afterFlush ) {
 			getNaturalIdResolutions().cleanupFromSynchronizations();
 		}
+	}
+
+	@Override
+	public @Nullable CollectionFlushActionTracker getCollectionFlushActionTracker() {
+		return collectionFlushActionTracker;
+	}
+
+	@Override
+	public void setCollectionFlushActionTracker(@Nullable CollectionFlushActionTracker collectionFlushActionTracker) {
+		this.collectionFlushActionTracker = collectionFlushActionTracker;
 	}
 
 	@Override

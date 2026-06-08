@@ -127,7 +127,7 @@ jmh {
     jmhVersion = '1.37'
     warmupIterations = 5
     iterations = 10
-    fork = 1
+    fork = project.hasProperty( 'jmh.fork' ) ? project.property( 'jmh.fork' ) as int : 1
     zip64 = true
 
     // Force JMH to use minimal logging configuration from src/jmh/resources

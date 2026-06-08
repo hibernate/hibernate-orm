@@ -632,6 +632,16 @@ public interface PersistenceContext {
 	void setFlushing(boolean flushing);
 
 	/**
+	 * Access to collection action state for the current flush.
+	 */
+	@Nullable CollectionFlushActionTracker getCollectionFlushActionTracker();
+
+	/**
+	 * Set the collection action state for the current flush.
+	 */
+	void setCollectionFlushActionTracker(@Nullable CollectionFlushActionTracker collectionFlushActionTracker);
+
+	/**
 	 * Call this before beginning a two-phase load
 	 */
 	void beforeLoad();

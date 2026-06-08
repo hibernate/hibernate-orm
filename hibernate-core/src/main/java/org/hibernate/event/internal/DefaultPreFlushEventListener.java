@@ -18,15 +18,17 @@ public class DefaultPreFlushEventListener extends AbstractFlushingEventListener 
 		eventListenerManager.prePartialFlushStart();
 		final var eventMonitor = source.getEventMonitor();
 		final var diagnosticEvent = eventMonitor.beginPrePartialFlush();
-		try {
-			if ( preFlushMightBeNeeded( source )
-					&& event.getParameterBindings().hasAnyTransientEntityBindings( source ) ) {
-				preFlush( source, source.getPersistenceContextInternal() );
+			try {
+				if ( preFlushMightBeNeeded( source )
+						&& event.getParameterBindings().hasAnyTransientEntityBindings( source ) ) {
+					final var persistenceContext = source.getPersistenceContextInternal();
+					preFlush( source, persistenceContext, beginFlushProcessing( source, persistenceContext ) );
+				}
 			}
-		}
-		finally {
-			eventMonitor.completePrePartialFlush( diagnosticEvent, source );
-			eventListenerManager.prePartialFlushEnd();
+			finally {
+				clearFlushProcessing( source.getPersistenceContextInternal() );
+				eventMonitor.completePrePartialFlush( diagnosticEvent, source );
+				eventListenerManager.prePartialFlushEnd();
 		}
 	}
 

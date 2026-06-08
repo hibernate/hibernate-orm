@@ -71,6 +71,14 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
 
+	@Deprecated(forRemoval = true)
+	public OptionalTableUpdateOperation(
+			MutationTarget mutationTarget,
+			OptionalTableUpdate upsert,
+			@SuppressWarnings("unused") SessionFactoryImplementor factory) {
+		this( (EntityMutationTarget) mutationTarget, upsert, upsert.getExpectation(), factory );
+	}
+
 	public OptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate upsert,

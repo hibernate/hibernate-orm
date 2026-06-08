@@ -94,7 +94,7 @@ public interface CommonQueryContract {
 	/**
 	 * Set the {@link QueryFlushMode} to use for this query.
 	 *
-	 * @apiNote The return type of this method will change in Hibernate
+	 * @apiNote The parameter type of this method will change in Hibernate
 	 * 8.0, since {@code jakarta.persistence.QueryFlushMode} was introduced
 	 * by JPA 4.
 	 *

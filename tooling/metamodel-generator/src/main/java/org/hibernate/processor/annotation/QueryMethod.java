@@ -323,6 +323,14 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append( getConstantName() );
 	}
 
+	/**
+	 * Does this query need Criteria augmentation to apply a Jakarta Data {@code @Select}
+	 * projection to an annotated query?
+	 * <p>
+	 * This is limited to non-native, non-reactive selection queries. Native SQL cannot
+	 * be converted to Criteria, mutation queries cannot have a select projection, and
+	 * the reactive generator uses Hibernate Reactive query APIs.
+	 */
 	private boolean usesAugmentedQuery() {
 		return selection != null
 			&& selectionEntity != null
@@ -331,16 +339,41 @@ public class QueryMethod extends AbstractQueryMethod {
 			&& !isReactive();
 	}
 
+	/**
+	 * Should an augmented {@code @Select} query start from the generated static query
+	 * reference method?
+	 * <p>
+	 * When the reference method is available, it carries the query name, arguments,
+	 * and {@code @QueryOptions}, so the repository can augment the reference instead
+	 * of reconstructing the query from a string.
+	 */
 	private boolean usesAugmentedQueryReference() {
 		return usesAugmentedQuery()
 			&& useGeneratedQueryReferenceMethod();
 	}
 
+	/**
+	 * Should an augmented {@code @Select} query be built directly from the query string
+	 * constant?
+	 * <p>
+	 * This is the fallback for annotated queries whose generated reference method is
+	 * unavailable, for example, because the method parameters cannot be represented as
+	 * reference arguments. We still need Criteria augmentation for the projection.
+	 */
 	private boolean usesAugmentedCriteriaQuery() {
 		return usesAugmentedQuery()
 			&& !useGeneratedQueryReferenceMethod();
 	}
 
+	/**
+	 * Are arguments to ordinary query parameters bound by the static query reference
+	 * or specification?
+	 * <p>
+	 * {@code Reference}s to static queries and statements include argument values, and
+	 * {@code QuerySpecification} binds them when it creates the query. Build criteria
+	 * paths are excluded because they turn the specification into a Criteria query first,
+	 * so the generated code must still call {@code setParameter()} explicitly.
+	 */
 	private boolean bindsParametersFromReference() {
 		return namedQueryName != null
 			&& ( usesAugmentedQueryReference()
@@ -348,27 +381,73 @@ public class QueryMethod extends AbstractQueryMethod {
 					|| useQueryReferenceCreateQuery() && !useReactiveStatementReferenceCreateQuery() );
 	}
 
+	/**
+	 * Does the generated query originate from a generated query reference method?
+	 * <p>
+	 * This is intentionally broader than {@link #bindsParametersFromReference()}
+	 * because some paths still need explicit parameter binding, but all reference-backed
+	 * paths already carry {@code @QueryOptions}, so those options must not be applied
+	 * again to the query object.
+	 */
 	private boolean usesQueryReference() {
 		return usesAugmentedQueryReference()
 			|| useSpecificationQueryReference()
 			|| useQueryReferenceCreateQuery() && !useReactiveStatementReferenceCreateQuery();
 	}
 
+	/**
+	 * Should the repository method call {@code createQuery(reference)} or
+	 * {@code createStatement(reference)} directly?
+	 * <p>
+	 * This is only valid when there is a named repository query, no dynamic specification
+	 * augmentation is needed, and a generated reference method exists. If a specification
+	 * is needed, the reference must be used to create the specification instead. If no
+	 * generated reference exists, the method falls back to either a named query or the
+	 * query string constant.
+	 */
 	private boolean useQueryReferenceCreateQuery() {
 		return namedQueryName != null
 			&& !isUsingSpecification()
 			&& useGeneratedQueryReferenceMethod();
 	}
 
+	/**
+	 * Is this the Hibernate Reactive mutation special case?
+	 * <p>
+	 * Hibernate Reactive does not yet support {@code StatementReference}, so reactive
+	 * mutation queries use the generated reference only to obtain the named query name
+	 * and then call {@code createNamedQuery(name)}. Since the query is not created from
+	 * the reference object, parameters and options cannot be assumed to have been applied
+	 * by the reference.
+	 */
+	// TODO: Fix Hibernate Reactive to remove this special case!
 	private boolean useReactiveStatementReferenceCreateQuery() {
 		return isReactive() && isUpdate;
 	}
 
+	/**
+	 * Should a dynamic query specification be initialized from the generated reference?
+	 * <p>
+	 * Dynamic restrictions or ordering require a {@code SelectionSpecification} or
+	 * {@code MutationSpecification}. When the generated reference exists, it should be
+	 * the base of that specification so named query metadata and {@code @QueryOptions}
+	 * are preserved. Without it, the specification is created from the query string
+	 * constant instead.
+	 */
 	private boolean useSpecificationQueryReference() {
 		return namedQueryName != null
 			&& useGeneratedQueryReferenceMethod();
 	}
 
+	/**
+	 * Should the query method call the named query API by name?
+	 * <p>
+	 * This is the fallback for named repository queries that do not need augmentation
+	 * and cannot be created from a static query reference. Specification methods are
+	 * excluded because they need a query string or reference as the specification base
+	 * instead of an already-created query. (Our specification APIs do not allow passing
+	 * a named query name.)
+	 */
 	private boolean useNamedQuery() {
 		return namedQueryName != null
 			&& !isUsingSpecification()
@@ -423,6 +502,15 @@ public class QueryMethod extends AbstractQueryMethod {
 		declaration.append( ')' );
 	}
 
+	/**
+	 * Is there a generated static query reference method in the query metamodel for
+	 * this repository method?
+	 * <p>
+	 * The method is only generated when the repository query can be represented as a
+	 * static reference with bindable arguments. If not, generated code must avoid both
+	 * calls to the metamodel reference method and inline {@code Static*Reference}
+	 * construction, and use the static query string constant instead.
+	 */
 	private boolean useGeneratedQueryReferenceMethod() {
 		return generatedQueryReferenceMethod;
 	}

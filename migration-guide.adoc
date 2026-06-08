@@ -149,6 +149,47 @@ The API for `ProcedureCall` and `ProcedureOutputs` has been redesigned for a num
 * Clean up leakage of various SPI contracts into these API contracts.
 * Align with changes in Jakarta Persistence 4.0.
 
+[[generic-generator]]
+=== `@GenericGenerator`
+
+The `@GenericGenerator` annotation was deprecated in Hibernate 6.5.
+Instead of removing it completely, we have modernized it and reversed its deprecation.
+Code still using `@GenericGenerator` must adapt to its reworked definition.
+
+
+[[hibernate-processor]]
+== Changes to Hibernate Processor
+
+Jakarta Data and Jakarta Persistence are now more integrated, which has led to some usage changes.
+
+[[jakarta-data-discovery]]
+=== Repository interface discovery
+
+With the addition of static queries to Jakarta Persistence comes a requirement for the Jakarta Persistence provider to discover Jakarta Data repository interfaces.
+When Hibernate is started via a `PersistenceConfiguration`, discovery is impossible, and so Jakarta Data repository interfaces must be explicitly registered with the configuration:
+
+[source,java]
+----
+var config = new PersistenceConfiguration("Jakarta Data Example");
+// register entities
+List.of(Book.class, Author.class, Publisher.class)
+        .forEach(config::managedClass);
+// register repository interfaces
+List.of(Library.class, Bookshop.class)
+        .forEach(config::managedClass);
+----
+
+[[jakarta-data-instantiation]]
+=== Repository implementation instantiation
+
+Previously, generated Jakarta Data Repository implementation classes were named with a trailing underscore.
+These classes are now named with a leading underscore to avoid collision with Jakarta Persistence static query methods.
+Thus, to directly instantiate a Jakarta Data Repository implementation, client code must now use:
+
+[source,java]
+Library library = new _Library(entityAgent);
+
+This change does not affect code which obtains a repository by injection.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -410,6 +451,21 @@ On databases with built-in support for row-level security, Hibernate now uses ro
 This requires specific DDL which the schema management tooling is responsible for generating.
 
 To recover the previous behavior, where discriminator-based multi-tenancy rules were not enforced by the database, set the configuration property `hibernate.multi_tenant.rls_enabled=false`.
+
+
+=== Session Reentrancy
+
+It has always been illegal to call the Hibernate session from an `Interceptor` or JPA entity lifecycle callback, but Hibernate has never previously enforced this, opening the door to undefined behavior in programs which did not respect this restriction.
+
+Hibernate now throws `IllegalStateException` if the session is accessed in an unsafe way from a callback.
+
+
+=== `EntityExistsException` and Exceptions from `StatelessSession`
+
+JPA 4 specifies that `EntityExistsException` should be thrown on any sort of unique key violation that occurs while inserting an entity, which means that Hibernate now throws this exception type in some cases where `ConstraintViolationException` was previously thrown.
+
+After the introduction of `EntityAgent`, the Hibernate `StatelessSession` now throws the exception types mandated by the JPA specification.
+Previously, it threw native exception types.
 
 
 [[cubrid-dialect]]

@@ -26,10 +26,10 @@ public abstract class Books {
 	@HQL("from Book where title is not null")
 	abstract List<Book> allbooks(StatelessSession ss);
 
-	@HQL("from Book where title like ?2")
+	@HQL("from Book where title like :title")
 	abstract TypedQuery<Book> findByTitle(EntityManager entityManager, String title);
 
-	@HQL("from Book where title like ?2 order by title fetch first ?3 rows only")
+	@HQL("from Book where title like :title order by title fetch first :N rows only")
 	abstract List<Book> findFirstNByTitle(Session session, String title, int N);
 
 	static class Summary { Summary(String title, String publisher, String isbn) {} }

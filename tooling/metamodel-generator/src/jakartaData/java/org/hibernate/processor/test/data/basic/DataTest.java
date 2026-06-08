@@ -4,9 +4,20 @@
  */
 package org.hibernate.processor.test.data.basic;
 
+import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
+import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
+
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaFileObject;
+import javax.tools.ToolProvider;
+import java.io.File;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
@@ -59,8 +70,8 @@ class DataTest {
 		assertFalse( repository.contains( "_defaultBooksWithJakartaDataQuery(String title)" ) );
 		assertFalse( repository.contains( "_defaultBooksWithJakartaQuery(String title)" ) );
 		assertFalse( repository.contains( "_defaultBooksWithNativeQuery(String title)" ) );
-		assertTrue( queryMetamodel.contains( "defaultBooksWithHql(String title)" ) );
-		assertTrue( queryMetamodel.contains( "defaultBooksWithSql(String title)" ) );
+		assertFalse( queryMetamodel.contains( "defaultBooksWithHql(String title)" ) );
+		assertFalse( queryMetamodel.contains( "defaultBooksWithSql(String title)" ) );
 		assertTrue( queryMetamodel.contains( "defaultBooksWithJakartaDataQuery(String title)" ) );
 		assertTrue( queryMetamodel.contains( "defaultBooksWithJakartaQuery(String title)" ) );
 		assertTrue( queryMetamodel.contains( "defaultBooksWithNativeQuery(String title)" ) );
@@ -73,10 +84,9 @@ class DataTest {
 		assertTrue( queryMetamodel.contains( "TypedQueryReference<Author> withNoOrder2()" ) );
 		assertTrue( repository.contains( "SelectionSpecification.create(BookAuthorRepository_.booksWithJakartaQueryOrder(title))" ) );
 		assertTrue( repository.contains(
-				"SelectionSpecification.create(Book.class, BOOKS_WITH_STRING_FALLBACK_String_int)" ) );
-		assertTrue( repository.contains( ".setParameter(\"titlePattern\", titlePattern)" ) );
-		assertTrue( repository.contains( ".setParameter(2, minPages)" ) );
-		assertFalse( repository.contains( "BookAuthorRepository_.booksWithStringFallback" ) );
+				"SelectionSpecification.create(BookAuthorRepository_.booksWithStringFallback(minPages, titlePattern))" ) );
+		assertFalse( repository.contains( ".setParameter(\"titlePattern\", titlePattern)" ) );
+		assertFalse( repository.contains( ".setParameter(\"minPages\", minPages)" ) );
 		assertFalse( repository.contains( "SelectionSpecification.create(new StaticTypedQueryReference<>(" ) );
 		assertTrue( queryMetamodel.contains( "\"org.hibernate.processor.test.data.basic.BookAuthorRepository"
 				+ "#booksWithJakartaQueryOrder(java.lang.String,jakarta.data.Order)\"" ) );
@@ -96,9 +106,7 @@ class DataTest {
 		assertTrue( bookMetamodel.contains( "PostUpsertEvent<Book>" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.bookWithTitle(title))" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.booksWithOptions(title))" ) );
-		assertTrue( repository.contains( "createNamedQuery(\"org.hibernate.processor.test.data.basic"
-				+ ".BookAuthorRepository#nativeBookWithResultMapping(jakarta.persistence.EntityManager,java.lang.String)\", "
-				+ "Book.class)" ) );
+		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.nativeBookWithResultMapping(isbn))" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.bookCountWithNativeResultMapping(title))" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.bookTitlesWithNativeResultMapping(title))" ) );
 		assertTrue( repository.contains( "createQuery(BookAuthorRepository_.bookRowsWithNativeResultMapping(title))" ) );
@@ -129,5 +137,49 @@ class DataTest {
 		assertMetamodelClassGeneratedFor( Concrete.class, true );
 		assertMetamodelClassGeneratedFor( Concrete.class );
 		assertNoMetamodelClassGeneratedFor( IdOperations.class );
+	}
+
+	@Test
+	void nonSequentialPositionalQueryParametersUseMeaningfulDiagnostic() throws Exception {
+		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+		final var compiler = ToolProvider.getSystemJavaCompiler();
+		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, null ) ) {
+			final var sourceFiles = List.of(
+					sourceFile( Author.class ),
+					sourceFile( Book.class ),
+					sourceFile( InvalidPositionalParameterRepository.class )
+			);
+			final var task = compiler.getTask(
+					null,
+					fileManager,
+					diagnostics,
+					List.of(
+							"-d",
+							TestUtil.getOutBaseDir( DataTest.class ).getAbsolutePath(),
+							"-processor",
+							HibernateProcessor.class.getName()
+					),
+					null,
+					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
+			);
+			assertFalse( task.call() );
+		}
+		final String messages = diagnostics.getDiagnostics()
+				.stream()
+				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
+				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
+				.collect( Collectors.joining( "\n" ) );
+
+		assertTrue( messages.contains(
+				"positional query parameters must be numbered sequentially starting at ?1" ) );
+		assertTrue( messages.contains(
+				"query parameters must be either all named or all positional" ) );
+	}
+
+	private static File sourceFile(Class<?> type) {
+		return new File(
+				TestUtil.getSourceBaseDir( type ),
+				type.getName().replace( '.', File.separatorChar ) + ".java"
+		);
 	}
 }

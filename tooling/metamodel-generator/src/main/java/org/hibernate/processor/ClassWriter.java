@@ -272,7 +272,7 @@ public final class ClassWriter {
 		}
 		if ( entity.isImplementation() ) {
 			pw.print( entity.getElement().getKind() == ElementKind.CLASS ? " extends " : " implements " );
-			pw.print( entity.getSimpleName() );
+			pw.print( entity.importType( entity.getQualifiedName() ) );
 		}
 
 		pw.println( " {" );

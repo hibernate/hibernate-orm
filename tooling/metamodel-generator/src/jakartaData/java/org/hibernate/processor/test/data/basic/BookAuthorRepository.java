@@ -193,7 +193,7 @@ public interface BookAuthorRepository {
 	@JakartaQuery("from Book where title like :title")
 	List<Book> booksWithJakartaQueryOrder(String title, Order<? super Book> order);
 
-	@NativeQuery("select isbn as book_isbn, title, text, publicationDate, price, pages from books where isbn = ?2")
+	@NativeQuery("select isbn as book_isbn, title, text, publicationDate, price, pages from books where isbn = ?1")
 	@EntityResult(entityClass = Book.class, fields = @FieldResult(name = "isbn", column = "book_isbn"))
 	Book nativeBookWithResultMapping(EntityManager entityManager, String isbn);
 
@@ -300,8 +300,8 @@ public interface BookAuthorRepository {
 	@Query("where price < :price and pages > :pages")
 	Book[] valueBooks2(@Param("price") BigDecimal maxPrice, @Param("pages") int minPages);
 
-	@Query("from Book where title like :titlePattern and pages > ?2")
-	List<Book> booksWithStringFallback(String titlePattern, int minPages, Order<Book> order);
+	@Query("from Book where pages > :minPages and title like :titlePattern")
+	List<Book> booksWithStringFallback(int minPages, String titlePattern, Order<Book> order);
 
 	@Save
 	Book write(Book book);

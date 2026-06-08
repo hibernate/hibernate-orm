@@ -20,9 +20,11 @@ import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FlushMode;
+import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.ReadOnlyMode;
 import org.hibernate.SessionCreationOption;
+import org.hibernate.StatementObserver;
 import org.hibernate.engine.creation.internal.options.StatefulOptions;
 import org.hibernate.engine.creation.internal.options.StatelessOptions;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -80,6 +82,12 @@ public final class OptionsHelper {
 		}
 		else if ( option instanceof SessionCreationOption.EffectiveAt effectiveAt ) {
 			options.asOf( effectiveAt.instant() );
+		}
+		else if ( option instanceof StatementObserver statementObserver ) {
+			options.statementObserver( statementObserver );
+		}
+		else if ( option instanceof Interceptor interceptor ) {
+			options.interceptor( interceptor );
 		}
 	}
 
@@ -151,6 +159,12 @@ public final class OptionsHelper {
 		}
 		else if ( option instanceof SessionCreationOption.EffectiveAt effectiveAt ) {
 			options.asOf( effectiveAt.instant() );
+		}
+		else if ( option instanceof StatementObserver statementObserver ) {
+			options.statementObserver( statementObserver );
+		}
+		else if ( option instanceof Interceptor interceptor ) {
+			options.interceptor( interceptor );
 		}
 	}
 

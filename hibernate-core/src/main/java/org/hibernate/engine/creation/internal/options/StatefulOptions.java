@@ -7,6 +7,7 @@ package org.hibernate.engine.creation.internal.options;
 import jakarta.persistence.EntityManager;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionEventListener;
+import org.hibernate.StatementObserver;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.OptionsHelper;
@@ -35,6 +36,7 @@ public class StatefulOptions extends CommonOptions implements SessionCreationOpt
 	private FlushMode flushMode;
 	private int defaultBatchFetchSize;
 	private boolean subselectFetchEnabled;
+	private StatementObserver statementObserver;
 
 	// Lazy: defaults are built only when overriding the factory-level listeners.
 	// Need a fresh build for each Session as the listener instances can't be

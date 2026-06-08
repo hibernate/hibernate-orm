@@ -4,6 +4,9 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityAgent;
+import jakarta.persistence.EntityManager;
+
 /// Observation of (almost) all JDBC [statements][java.sql.Statement] performed by Hibernate.
 ///
 /// Generally "performed" means calls to [java.sql.Statement#execute], [java.sql.Statement#executeQuery]
@@ -19,7 +22,7 @@ package org.hibernate;
 ///
 /// @author Steve Ebersole
 @Incubating
-public interface StatementObserver {
+public interface StatementObserver extends EntityManager.CreationOption, EntityAgent.CreationOption {
 	/// Callback that the given `sql` is about to be performed.
 	///
 	/// @apiNote "Performed" here could mean immediately executed, or added to a JDBC batch.

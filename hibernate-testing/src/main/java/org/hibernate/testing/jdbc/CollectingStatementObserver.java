@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 public class CollectingStatementObserver implements StatementObserver {
-	private List<Statement> statements = new ArrayList<>();
+	private final List<Statement> statements = new ArrayList<>();
 
 	@Override
 	public void performingSql(String sql, int batchPosition) {

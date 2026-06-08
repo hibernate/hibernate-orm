@@ -21,6 +21,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  */
 class JdbcSessionContextImpl implements JdbcSessionContext {
 	private final SessionFactoryImplementor sessionFactory;
+	private final StatementObserver statementObserver;
 	private final StatementInspector statementInspector;
 	private final PhysicalConnectionHandlingMode connectionHandlingMode;
 	private final JdbcServices jdbcServices;
@@ -30,12 +31,16 @@ class JdbcSessionContextImpl implements JdbcSessionContext {
 
 	JdbcSessionContextImpl(
 			SessionFactoryImplementor sessionFactory,
+			StatementObserver statementObserver,
 			StatementInspector statementInspector,
 			PhysicalConnectionHandlingMode connectionHandlingMode,
 			JdbcServices jdbcServices,
 			BatchBuilder batchBuilder,
 			JdbcEventHandler jdbcEventHandler) {
 		this.sessionFactory = sessionFactory;
+		this.statementObserver = statementObserver != null
+				? statementObserver
+				: sessionFactory.getStatementObserver();
 		this.statementInspector = statementInspector;
 		this.connectionHandlingMode = connectionHandlingMode;
 		this.jdbcServices = jdbcServices;
@@ -89,7 +94,7 @@ class JdbcSessionContextImpl implements JdbcSessionContext {
 
 	@Override
 	public StatementObserver getStatementObserver() {
-		return sessionFactory.getStatementObserver();
+		return statementObserver;
 	}
 
 	@Override

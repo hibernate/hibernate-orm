@@ -176,6 +176,10 @@ public class CommonOptions {
 		this.statementInspector = null;
 	}
 
+	public void statementObserver(StatementObserver statementObserver) {
+		this.statementObserver = statementObserver;
+	}
+
 	public void jdbcTimeZone(TimeZone timeZone) {
 		jdbcTimeZone = timeZone;
 	}

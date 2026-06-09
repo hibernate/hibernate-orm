@@ -98,6 +98,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.CustomSqlMapping;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
@@ -1276,38 +1277,26 @@ public abstract class CollectionBinder {
 
 		final var sqlInsert = property.getDirectAnnotationUsage( SQLInsert.class );
 		if ( sqlInsert != null ) {
-			collection.setCustomSQLInsert( sqlInsert.sql().trim(), sqlInsert.callable() );
-			final var verifier = sqlInsert.verify();
-			if ( verifier != Expectation.class ) {
-				collection.setInsertExpectation( getDefaultSupplier( verifier ) );
-			}
+			collection.setCustomSqlInsert( customSqlMapping( sqlInsert.sql(), sqlInsert.callable(), sqlInsert.verify() ) );
 		}
 
 		final var sqlUpdate = property.getDirectAnnotationUsage( SQLUpdate.class );
 		if ( sqlUpdate != null ) {
-			collection.setCustomSQLUpdate( sqlUpdate.sql().trim(), sqlUpdate.callable() );
-			final var verifier = sqlUpdate.verify();
-			if ( verifier != Expectation.class ) {
-				collection.setUpdateExpectation( getDefaultSupplier( verifier ) );
-			}
+			collection.setCustomSqlUpdate( customSqlMapping( sqlUpdate.sql(), sqlUpdate.callable(), sqlUpdate.verify() ) );
 		}
 
 		final var sqlDelete = property.getDirectAnnotationUsage( SQLDelete.class );
 		if ( sqlDelete != null ) {
-			collection.setCustomSQLDelete( sqlDelete.sql().trim(), sqlDelete.callable() );
-			final var verifier = sqlDelete.verify();
-			if ( verifier != Expectation.class ) {
-				collection.setDeleteExpectation( getDefaultSupplier( verifier ) );
-			}
+			collection.setCustomSqlDelete( customSqlMapping( sqlDelete.sql(), sqlDelete.callable(), sqlDelete.verify() ) );
 		}
 
 		final var sqlDeleteAll = property.getDirectAnnotationUsage( SQLDeleteAll.class );
 		if ( sqlDeleteAll != null ) {
-			collection.setCustomSQLDeleteAll( sqlDeleteAll.sql().trim(), sqlDeleteAll.callable() );
-			final var verifier = sqlDeleteAll.verify();
-			if ( verifier != Expectation.class ) {
-				collection.setDeleteAllExpectation( getDefaultSupplier( verifier ) );
-			}
+			collection.setCustomSqlDeleteAll( customSqlMapping(
+					sqlDeleteAll.sql(),
+					sqlDeleteAll.callable(),
+					sqlDeleteAll.verify()
+			) );
 		}
 
 		final var sqlSelect = property.getDirectAnnotationUsage( SQLSelect.class );
@@ -1324,6 +1313,17 @@ public abstract class CollectionBinder {
 			collection.setLoaderName( loaderName );
 			bindQuery( loaderName, hqlSelect, buildingContext );
 		}
+	}
+
+	private static CustomSqlMapping customSqlMapping(
+			String sql,
+			boolean callable,
+			Class<? extends Expectation> expectationClass) {
+		return new CustomSqlMapping(
+				sql.trim(),
+				callable,
+				expectationClass == Expectation.class ? null : getDefaultSupplier( expectationClass )
+		);
 	}
 
 	private void applySortingAndOrdering() {

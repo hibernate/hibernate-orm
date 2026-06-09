@@ -4,6 +4,7 @@
  */
 package org.hibernate.jpa;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceException;
@@ -19,10 +20,9 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.internal.PersistenceConfigurationBootstrapAdapter;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
-import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.internal.TransformerTracker;
@@ -207,10 +207,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	}
 
 	@Override
-	public boolean generateSchema(PersistenceConfiguration persistenceConfiguration) {
+	public boolean generateSchema(@Nonnull PersistenceConfiguration persistenceConfiguration) {
 		JPA_LOGGER.startingGenerateSchema( persistenceConfiguration.name() );
-		final var builder = getEntityManagerFactoryBuilder(persistenceConfiguration);
-		builder.generateSchema();
+		PersistenceConfigurationBootstrapAdapter.generateSchema( persistenceConfiguration );
 		return true;
 	}
 
@@ -246,22 +245,9 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				settingsMap( integration ), providedClassLoaderService );
 	}
 
-	@Override
-	public EntityManagerFactory createEntityManagerFactory(PersistenceConfiguration configuration) {
-		return getEntityManagerFactoryBuilder( configuration ).build();
-	}
-
-	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceConfiguration configuration) {
-		if ( configuration instanceof HibernatePersistenceConfiguration hibernatePersistenceConfiguration ) {
-			return new EntityManagerFactoryBuilderImpl( hibernatePersistenceConfiguration );
-		}
-		else {
-			return getEntityManagerFactoryBuilder(
-					new PersistenceConfigurationDescriptor( configuration ),
-					emptyMap(),
-					HibernatePersistenceProvider.class.getClassLoader()
-			);
-		}
+	@Override @Nonnull
+	public EntityManagerFactory createEntityManagerFactory(@Nonnull PersistenceConfiguration configuration) {
+		return PersistenceConfigurationBootstrapAdapter.build( configuration );
 	}
 
 	@Override

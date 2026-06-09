@@ -27,7 +27,7 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.StatisticsSettings;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.internal.PersistenceConfigurationBootstrapAdapter;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tool.schema.Action;
 
@@ -161,9 +161,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	@Override
 	@Nonnull
 	public SessionFactory createEntityManagerFactory() {
-		new EntityManagerFactoryBuilderImpl( this ).build();
-
-		return (SessionFactory) super.createEntityManagerFactory();
+		return (SessionFactory) new PersistenceConfigurationBootstrapAdapter().build( this );
 	}
 
 	/**

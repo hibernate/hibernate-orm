@@ -8,8 +8,6 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitTransactionType;
-import jakarta.annotation.Nonnull;
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -43,11 +41,9 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.JpaSettings;
-import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
@@ -62,10 +58,8 @@ import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import javax.sql.DataSource;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +70,6 @@ import static jakarta.persistence.PersistenceUnitTransactionType.JTA;
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.boot.scan.internal.ScanningHelper.performScanning;
 import static org.hibernate.cfg.AvailableSettings.CFG_XML_FILE;
 import static org.hibernate.cfg.AvailableSettings.CLASSLOADERS;
 import static org.hibernate.cfg.AvailableSettings.CLASS_CACHE_PREFIX;
@@ -111,7 +104,6 @@ import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER_INSTANCE;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
-import static org.hibernate.cfg.PersistenceSettings.PERSISTENCE_UNIT_NAME;
 import static org.hibernate.cfg.TransactionSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
@@ -120,7 +112,6 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
-import static org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor.collectSchemaManagementActions;
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 import static org.hibernate.jpa.internal.util.LogHelper.logPersistenceUnitInformation;
 import static org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper.interpretTransactionType;
@@ -164,98 +155,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private final StandardServiceRegistry standardServiceRegistry;
 	private final ManagedResources managedResources;
 	private final MetadataBuilderImplementor metamodelBuilder;
-
-	public  EntityManagerFactoryBuilderImpl(HibernatePersistenceConfiguration cfg) {
-		var bootRegistry = buildBootstrapServiceRegistry( cfg.properties(), null, null );
-		var registryBuilder = StandardServiceRegistryBuilder.forJpa( bootRegistry );
-
-		final var mergedSettings = createMergedSettings( cfg, registryBuilder );
-		ignoreFlushBeforeCompletion( mergedSettings );
-		// keep the merged config values for phase-2
-		configurationValues = mergedSettings.getConfigurationValues();
-
-		try {
-			// Build the "standard" service registry
-			registryBuilder.applySettings( configurationValues );
-			standardServiceRegistry = registryBuilder.build();
-
-			persistenceUnit = new PersistenceConfigurationDescriptor( cfg, standardServiceRegistry );
-
-			final var metadataSources = new MetadataSources( standardServiceRegistry );
-			metamodelBuilder =
-					(MetadataBuilderImplementor)
-							metadataSources.getMetadataBuilder( standardServiceRegistry );
-			applyMappingResources( metadataSources );
-			applyScanning( cfg, metadataSources, standardServiceRegistry );
-			applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
-			applyMetadataBuilderContributor();
-			managedResources =
-					MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
-			setupValidation();
-
-			setupEnhancement( persistenceUnit, metadataSources );
-			// for the time being we want to revoke access to the temp ClassLoader if one was passed
-			metamodelBuilder.applyTempClassLoader( null );
-		}
-		catch (Throwable throwable) {
-			bootRegistry.close();
-			cleanup();
-			throw throwable;
-		}
-	}
-
-	private void applyScanning(HibernatePersistenceConfiguration cfg, MetadataSources metadataSources, StandardServiceRegistry standardServiceRegistry) {
-		var scanningResult = performScanning( cfg, standardServiceRegistry );
-
-		scanningResult.discoveredPackages().forEach( metadataSources::addPackage );
-
-		scanningResult.discoveredClasses().forEach( metadataSources::addAnnotatedClassName );
-
-		scanningResult.mappingFiles().forEach( (mappingFileUri) -> {
-			try {
-				metadataSources.addURL( mappingFileUri.toURL() );
-			}
-			catch (MalformedURLException e) {
-				throw new HibernateException( "Unable to handle discovered mapping file : " + mappingFileUri, e );
-			}
-		} );
-	}
-
-	private MergedSettings createMergedSettings(
-			@Nonnull HibernatePersistenceConfiguration cfg,
-			@Nonnull StandardServiceRegistryBuilder standardRegistryBuilder) {
-		var mergedSettings = new MergedSettings();
-
-		mergedSettings.getConfigurationValues().putAll( cfg.properties() );
-		collectSchemaManagementActions( cfg, mergedSettings.getConfigurationValues()::putIfAbsent );
-		mergedSettings.getConfigurationValues().put( PERSISTENCE_UNIT_NAME, cfg.name() );
-
-		// see if the persistence.xml settings named a Hibernate config file
-		checkUnsupportedCfgXmlSetting( Collections.emptyMap(), mergedSettings );
-
-		normalizeSettings( null, null, mergedSettings );
-
-		// here we are going to iterate the merged config settings looking for:
-		//		1) additional JACC permissions
-		//		2) additional cache region declarations
-		//
-		// we will also clean up any references with null entries
-		final var iterator = mergedSettings.getConfigurationValues().entrySet().iterator();
-		while ( iterator.hasNext() ) {
-			final var entry = iterator.next();
-			final Object value = entry.getValue();
-			if ( value == null ) {
-				// remove entries with null values
-				iterator.remove();
-				break; //TODO: this looks wrong!
-			}
-			else if ( value instanceof String valueString ) {
-				handleCacheRegionDefinition( valueString, entry.getKey(), mergedSettings );
-			}
-		}
-
-		return mergedSettings;
-	}
 
 	public EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,

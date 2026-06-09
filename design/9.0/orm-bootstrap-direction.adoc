@@ -1,0 +1,303 @@
+= ORM Bootstrap Direction
+:toc:
+
+This note captures the proposed direction for using this PoC to replace and simplify large parts of ORM bootstrap,
+especially the JPA path through `EntityManagerFactoryBuilderImpl`.
+
+[NOTE]
+====
+This is an early, historical direction note.
+
+The distilled current target is captured in
+link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`],
+and ongoing implementation status lives in
+link:session-factory-bootstrap-plan.adoc[`session-factory-bootstrap-plan.adoc`].
+====
+
+== Current ORM Shape
+
+From the JPA side, `EntityManagerFactoryBuilderImpl` currently handles several phases inline:
+
+* Merge persistence-unit, integration, `hibernate.properties`, and cfg.xml settings into `MergedSettings`
+* Build the `BootstrapServiceRegistry`
+* Build the `StandardServiceRegistry`
+* Create `MetadataSources`
+* Push persistence-unit classes, packages, and XML into `MetadataSources`
+* Apply scanning results
+* Apply metadata-builder contributors and type/converter settings
+* Build `ManagedResources`
+* Later call `MetadataBuildingProcess.complete(...)`
+
+`MetadataBuildingProcess.processManagedResources(...)` then unpacks `ManagedResources` into:
+
+* XML preprocessing results
+* known class names
+* `ModelsContext`
+* global registrations
+* root entity, mapped-superclass, and embeddable categorization
+
+This means `ManagedResources` acts as the historical source bundle, while this PoC's `AvailableResources`
+is the cleaner replacement candidate.
+
+== Proposed Pipeline
+
+Replace the current implicit sequence with explicit intermediate products:
+
+[source]
+----
+JpaBootstrapSettings
+BootstrapSourceContributions
+AvailableResources
+CategorizedDomainModel
+ResolvedMetadata
+----
+
+The intended flow is:
+
+[source]
+----
+PersistenceUnitDescriptor / HibernatePersistenceConfiguration
+    -> BootstrapSourceContributions
+    -> AvailableResources
+    -> DomainModelCategorizer
+    -> BindingCoordinator / MetadataResolver
+----
+
+== Settings
+
+Extract settings merge into a focused component, e.g. `JpaSettingsResolver` or `BootstrapSettingsResolver`.
+
+Inputs:
+
+* `PersistenceUnitDescriptor`
+* integration settings
+* cfg.xml
+* `HibernatePersistenceConfiguration`
+
+Outputs:
+
+* resolved settings map
+* cache region definitions
+* bootstrap flags such as XML enabled, scanner settings, and enhancement settings
+
+Settings should remain separate from source resources.
+
+== Source Collection
+
+Extract JPA source collection from `EntityManagerFactoryBuilderImpl` and avoid routing through `MetadataSources`
+as the primary abstraction.
+
+Inputs:
+
+* persistence-unit class names
+* mapping file names
+* standard `META-INF/orm.xml`
+* [.line-through]#explicit `HBM_XML_FILES`#
+* scanner results
+* loaded classes
+* packages
+
+Output:
+
+* `BootstrapSourceContributions`: source contributions after entry-point source discovery, including scanner results, not yet categorized
+
+== AvailableResources
+
+`AvailableResources` should be the normalized source model produced by source collection.
+
+It should contain:
+
+* resolved `ClassDetails` for managed classes
+* resolved package-info `ClassDetails`
+* XML bindings
+
+Dynamic model names/classes are discovered during XML processing rather than
+stored as separate `AvailableResources` buckets.  Extra query imports should be
+represented explicitly by the caller/test infrastructure rather than folded into
+`AvailableResources`.
+
+It should not contain merged settings.
+
+It should not simply clone `ManagedResources`.  `ManagedResources` is raw-ish and historical, exposing class
+references, class names, package names, XML bindings, converter descriptors, and query imports.  `AvailableResources`
+should be source-model oriented and normalized for categorization.
+
+== XML Preprocessing
+
+Move XML preprocessing behind `AvailableResources`.  The PoC now uses direct
+consumption:
+
+[source]
+----
+AvailableResources -> XmlPreProcessingResult
+----
+
+== Categorization
+
+Categorization should consume normalized resources:
+
+[source]
+----
+AvailableResources + MetadataBuildingContext -> CategorizedDomainModel
+----
+
+This replaces the current ad hoc categorization work in `MetadataBuildingProcess.processManagedResources(...)`.
+
+== Binding
+
+Binding should consume categorized metadata and resolved bootstrap context:
+
+[source]
+----
+CategorizedDomainModel + settings/defaults/global registrations -> ORM mapping model
+----
+
+Binding should not need raw `MetadataSources` or raw `ManagedResources`.
+
+== Plan
+
+Concrete Refined Plan
+
+=== Extract Settings Merge
+
+Create a focused component around MergedSettings:
+JpaSettingsResolver or BootstrapSettingsResolver.
+
+Inputs:
+
+* PersistenceUnitDescriptor
+* integration settings
+* cfg.xml
+* HibernatePersistenceConfiguration
+
+Output:
+
+* ResolvedBootstrapSettings
+** resolved settings map
+** cache region definitions
+** bootstrap flags like XML enabled, scanner settings, enhancement settings
+
+
+=== Extract Source Collection
+
+Create a JPA source collector independent of MetadataSources.
+
+Inputs:
+
+* persistence unit class names
+* mapping file names
+* standard META-INF/orm.xml
+* [.line-through]#explicit HBM_XML_FILES#
+* scanner results
+* loaded classes
+* packages
+
+Output:
+
+* raw source contributions, not yet categorized
+
+
+=== Make AvailableResources the Normalized Source Model
+
+AvailableResources should be the output of source collection.
+
+It should contain:
+
+* resolved ClassDetails for managed classes
+* resolved package-info ClassDetails
+* XML bindings
+* dynamic model names/classes if needed
+* probably extra query imports, or a sibling object
+
+*It should not contain merged settings.*
+
+=== Move XML Preprocessing Behind AvailableResources
+
+Today XML preprocessing takes ManagedResources. In the PoC, make XML preprocessing consume AvailableResources directly.
+
+The pre-processing step itself belongs to categorization because it interprets
+XML bindings to discover mapped classes, dynamic model names, metadata-complete
+contributions, and deferred overlay work.  As this integrates upstream, it
+probably makes sense to move the remaining XML processing contracts such as
+`XmlPreProcessingResult`, `XmlProcessor`, and `XmlProcessingResult` under
+`org.hibernate.boot.models.categorize.internal`.
+
+More precisely, XML pre-processing and processing are source-interpretation
+concerns.  They sit between raw source collection and categorization in the
+abstract.  In this PoC there is no standalone interpreted-source artifact:
+pre-processing immediately feeds categorization, XML processing applies
+metadata-complete mappings for categorization, and deferred XML overlays are
+applied back into the categorization collector.  Until a first-class prepared
+source model emerges, keeping these helpers in categorization internals is the
+clearest representation of the current flow.
+
+The intended direction should be:
+
+[source]
+----
+AvailableResources -> XmlPreProcessingResult
+----
+
+=== Categorize From AvailableResources
+
+This is where the PoC’s DomainModelCategorizer belongs.
+
+[source]
+----
+(AvailableResources + MetadataBuildingContext) -> CategorizedDomainModel
+----
+
+This replaces the current ad hoc collection in MetadataBuildingProcess.processManagedResources(...).
+
+=== Only Then Bind
+
+Binding should consume:
+
+CategorizedDomainModel + resolved settings/defaults/global registrations
+
+Not raw MetadataSources, not raw ManagedResources.
+
+=== Key Design Decision
+
+AvailableResources *is not* a clone of ManagedResources.
+
+ManagedResources is raw-ish and historical:
+
+* class refs
+* class names
+* package names
+* XML bindings
+* converter descriptors
+* query imports
+
+AvailableResources should be normalized:
+
+* source-model objects already resolved enough for categorization
+* XML already bound
+* packages represented as class details
+* no setting merge concerns
+
+
+== Historical PoC Slice
+
+The original next slice was:
+
+[source]
+----
+PersistenceUnitDescriptor / HibernatePersistenceConfiguration
+    -> BootstrapSourceContributions
+    -> AvailableResources
+    -> DomainModelCategorizer
+----
+
+That slice is now covered locally and binding has also been wired through
+`MetadataResolver`.  Keep this section only as historical context for how the
+source/categorization work was first isolated.
+
+The original test target was:
+
+* Given JPA bootstrap inputs, the PoC derives the same available classes, packages, XML, and global registrations
+  that ORM currently derives through `EntityManagerFactoryBuilderImpl` and `ManagedResources`
+
+That established the source/categorization replacement boundary before the PoC
+moved on to binder and SessionFactory integration.

@@ -20,6 +20,9 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  * <li>SQL Server <em>does</em> allow unique constraints on nullable columns, but the semantics
  *     are that two null values are non-unique. So here we need to jump through hoops with the
  *     {@code create unique nonclustered index ... where ...} command.
+ * <li>H2 allows unique constraints on nullable columns, but the semantics with multiple null
+ *     values depend on the configured mode. So we need to explicitly create the index with
+ *     {@code nulls distinct} to make it work in all modes.
  * <li>Spanner does not allow unique column definition, but it does allow the creation of unique
  * 	   indexes instead, using {@code create unique index ...}
  * </ul>
@@ -27,7 +30,7 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  * @author Brett Meyer
  */
 public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
-	public AlterTableUniqueIndexDelegate(Dialect dialect ) {
+	public AlterTableUniqueIndexDelegate(Dialect dialect) {
 		super( dialect );
 	}
 
@@ -54,7 +57,7 @@ public class AlterTableUniqueIndexDelegate extends AlterTableUniqueDelegate {
 					first = false;
 				}
 				else {
-					statement.append(", ");
+					statement.append( ", " );
 				}
 				statement.append( column.getQuotedName( dialect ) );
 				if ( columnOrderMap.containsKey( column ) ) {

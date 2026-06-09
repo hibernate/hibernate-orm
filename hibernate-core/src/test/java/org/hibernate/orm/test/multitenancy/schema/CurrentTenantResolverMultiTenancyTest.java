@@ -3,7 +3,7 @@ package org.hibernate.orm.test.multitenancy.schema;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
 import org.hibernate.testing.RequiresDialectFeature;
@@ -25,8 +25,8 @@ public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenan
 	private TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();
 
 	@Override
-	protected void configure(SessionFactoryBuilder sfb) {
-		sfb.applyCurrentTenantIdentifierResolver( currentTenantResolver );
+	protected void configure(SessionFactoryOptionsCollector optionsCollector) {
+		optionsCollector.applyCurrentTenantIdentifierResolver( currentTenantResolver );
 	}
 
 	@Override

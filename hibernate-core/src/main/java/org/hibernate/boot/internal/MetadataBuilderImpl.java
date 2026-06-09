@@ -2,7 +2,6 @@ package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -10,7 +9,6 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
-import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
@@ -29,16 +27,20 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
-import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
+import org.hibernate.boot.pipeline.internal.MetadataResolver;
+import org.hibernate.boot.pipeline.internal.ResolvedMetadataImplementor;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
@@ -58,7 +60,6 @@ import org.hibernate.dialect.array.spi.ArraySupport;
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -77,7 +78,6 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_MODE;
 import static org.hibernate.cfg.ManagedBeanSettings.ALLOW_EXTENSIONS_IN_CDI;
 import static org.hibernate.cfg.MappingSettings.COLUMN_ORDERING_STRATEGY;
-import static org.hibernate.cfg.MappingSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.cfg.MappingSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT;
 import static org.hibernate.cfg.MappingSettings.GLOBALLY_QUOTED_IDENTIFIERS;
 import static org.hibernate.cfg.MappingSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS;
@@ -220,17 +220,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	@Deprecated(since = "8.0", forRemoval = true)
-	@Nonnull
-	public MetadataBuilder applyImplicitListSemantics(@Nullable CollectionClassification classification) {
-		if ( classification != null ) {
-			options.mappingDefaults.implicitListClassification = classification;
-		}
-		return this;
-	}
-
-	@Override
-	@Nonnull
 	public MetadataBuilder enableExplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
 		options.explicitDiscriminatorsForJoinedInheritanceSupported = supported;
 		return this;
@@ -434,7 +423,40 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	@Nonnull
 	public MetadataImplementor build() {
-		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
+				options.serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
+				bootstrapContext.isJpaBootstrap()
+		);
+		final var resolvedMetadata = MetadataResolver.resolve(
+				resolveMappingSettings( bootstrapSettings ),
+				sources,
+				bootstrapContext,
+				options
+		);
+		return new ResolvedMetadataImplementor(
+				bootstrapSettings,
+				resolvedMetadata
+		);
+	}
+
+	private ResolvedMappingSettings resolveMappingSettings(ResolvedBootstrapSettings bootstrapSettings) {
+		final var resolvedMappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				options.mappingDefaults.areEntitiesImplicitlyLazy()
+						? FetchType.LAZY
+						: FetchType.EAGER
+		);
+		final var cacheRegionDefinitions = new ArrayList<>( resolvedMappingSettings.cacheRegionDefinitions() );
+		cacheRegionDefinitions.addAll( bootstrapContext.getCacheRegionDefinitions() );
+		return new ResolvedMappingSettings(
+				resolvedMappingSettings.xmlMappingEnabled(),
+				resolvedMappingSettings.validateXml(),
+				resolvedMappingSettings.defaultToOneFetchType(),
+				options.createImplicitDiscriminatorsForJoinedInheritance(),
+				options.ignoreExplicitDiscriminatorsForJoinedInheritance(),
+				options.shouldImplicitlyForceDiscriminatorInSelect(),
+				cacheRegionDefinitions
+		);
 	}
 
 	@Override
@@ -455,8 +477,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean toOnesAreLazyByDefault = false;
 
 		private AccessType implicitCacheAccessType;
-		private CollectionClassification implicitListClassification;
-
 		public MappingDefaultsImpl(StandardServiceRegistry serviceRegistry) {
 			final var configService = serviceRegistry.requireService( ConfigurationService.class );
 
@@ -478,27 +498,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					value -> AccessType.fromExternalName( value.toString() )
 			);
 
-			implicitListClassification = configService.getSetting(
-					DEFAULT_LIST_SEMANTICS,
-					value -> {
-						final var classification = CollectionClassification.interpretSetting( value );
-						if ( classification != CollectionClassification.LIST
-							&& classification != CollectionClassification.BAG ) {
-							throw new AnnotationException(
-									String.format(
-											Locale.ROOT,
-											"'%s' should specify either '%s' or '%s' (was '%s')",
-											DEFAULT_LIST_SEMANTICS,
-											java.util.List.class.getName(),
-											java.util.Collection.class.getName(),
-											classification.name()
-									)
-							);
-						}
-						return classification;
-					},
-					CollectionClassification.BAG
-			);
 		}
 
 		@Override
@@ -567,10 +566,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return implicitCacheAccessType;
 		}
 
-		@Override
-		public CollectionClassification getImplicitListClassification() {
-			return implicitListClassification;
-		}
 	}
 
 	public static class MetadataBuildingOptionsImpl

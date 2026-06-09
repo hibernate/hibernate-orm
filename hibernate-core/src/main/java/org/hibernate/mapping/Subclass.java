@@ -119,7 +119,12 @@ public sealed class Subclass extends PersistentClass
 
 	@Override
 	public void addMappedSuperclassProperty(Property property) {
-		super.addMappedSuperclassProperty( property );
+		addMappedSuperclassProperty( property, null );
+	}
+
+	@Override
+	public void addMappedSuperclassProperty(Property property, MappedSuperclass origin) {
+		super.addMappedSuperclassProperty( property, origin );
 		getSuperclass().addSubclassProperty( property );
 	}
 
@@ -227,6 +232,14 @@ public sealed class Subclass extends PersistentClass
 		return getTable() != getRootTable();
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 		if ( isJoinedSubclass() ) {
 			getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );

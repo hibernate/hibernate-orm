@@ -4,7 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.JpaSettings;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ public abstract class AbstractSqlFunctionMetadataBuilderContributorTest
 	@Override
 	protected void addConfigOptions(Map<String, Object> options) {
 		options.put(
-				EntityManagerFactoryBuilderImpl.METADATA_BUILDER_CONTRIBUTOR,
+				JpaSettings.METADATA_BUILDER_CONTRIBUTOR,
 				matadataBuilderContributor()
 		);
 	}

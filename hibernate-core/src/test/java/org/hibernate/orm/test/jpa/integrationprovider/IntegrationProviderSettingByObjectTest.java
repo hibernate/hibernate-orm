@@ -2,7 +2,7 @@ package org.hibernate.orm.test.jpa.integrationprovider;
 
 import java.util.List;
 
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.JpaSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 		},
 		settingProviders = {
 				@SettingProvider(
-						settingName = EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER,
+						settingName = JpaSettings.INTEGRATOR_PROVIDER,
 						provider = DtoIntegratorProviderInstanceSettingProvider.class )
 		}
 )

@@ -44,6 +44,7 @@ public class OrderByMappingComplianceTest {
 	private void check(boolean complianceEnabled) {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+				.applySetting( AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, complianceEnabled )
 				.build();
 
 		try {
@@ -52,9 +53,7 @@ public class OrderByMappingComplianceTest {
 					.addAnnotatedClass( LineItem.class )
 					.buildMetadata();
 
-			final SessionFactory sf = bootModel.getSessionFactoryBuilder()
-					.enableJpaOrderByMappingCompliance( complianceEnabled )
-					.build();
+			final SessionFactory sf = bootModel.buildSessionFactory();
 
 			try {
 				TransactionUtil2.inTransaction(

@@ -2,7 +2,8 @@ package org.hibernate.orm.test.tenantid;
 
 import jakarta.persistence.Column;
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -91,8 +92,8 @@ public class TenantIdToOneBidirectionalTest implements SessionFactoryProducer {
 
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		final SessionFactoryBuilder sfb = model.getSessionFactoryBuilder();
-		sfb.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<String>() {
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
+		optionsCollector.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<String>() {
 			@Override
 			public String resolveCurrentTenantIdentifier() {
 				return currentTenant;
@@ -103,7 +104,7 @@ public class TenantIdToOneBidirectionalTest implements SessionFactoryProducer {
 				return false;
 			}
 		} );
-		return (SessionFactoryImplementor) sfb.build();
+		return SessionFactoryPipeline.build( model, optionsCollector );
 	}
 
 	@Entity( name = "RootEntity" )

@@ -19,6 +19,7 @@ import org.hibernate.MappingException;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.internal.Constructors;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDelete;
@@ -72,6 +73,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.AnnotationBasedUserType;
@@ -110,6 +112,7 @@ public class BasicValue extends SimpleValue
 	private Function<TypeConfiguration, BasicJavaType<?>> explicitJavaTypeAccess;
 	private Function<TypeConfiguration, JdbcType> explicitJdbcTypeAccess;
 	private Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess;
+	private SourceJavaType implicitSourceJavaType;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
 	private EnumType enumerationStyle;
@@ -149,6 +152,7 @@ public class BasicValue extends SimpleValue
 		this.explicitJavaTypeAccess = original.explicitJavaTypeAccess;
 		this.explicitJdbcTypeAccess = original.explicitJdbcTypeAccess;
 		this.explicitMutabilityPlanAccess = original.explicitMutabilityPlanAccess;
+		this.implicitSourceJavaType = original.implicitSourceJavaType;
 		this.implicitJavaTypeAccess = original.implicitJavaTypeAccess;
 		this.enumerationStyle = original.enumerationStyle;
 		this.temporalPrecision = original.temporalPrecision;
@@ -233,6 +237,10 @@ public class BasicValue extends SimpleValue
 		this.implicitJavaTypeAccess = implicitJavaTypeAccess;
 	}
 
+	public void setImplicitSourceJavaType(SourceJavaType implicitSourceJavaType) {
+		this.implicitSourceJavaType = implicitSourceJavaType;
+	}
+
 	@SPI(USE)
 	public Function<TypeConfiguration, BasicJavaType<?>> getExplicitJavaTypeAccess() {
 		return explicitJavaTypeAccess;
@@ -250,6 +258,10 @@ public class BasicValue extends SimpleValue
 
 	public Function<TypeConfiguration, java.lang.reflect.Type> getImplicitJavaTypeAccess() {
 		return implicitJavaTypeAccess;
+	}
+
+	public SourceJavaType getImplicitSourceJavaType() {
+		return implicitSourceJavaType;
 	}
 
 	public Selectable getColumn() {
@@ -319,8 +331,9 @@ public class BasicValue extends SimpleValue
 					typeConfiguration -> basicValue.explicitJdbcTypeAccess.apply( typeConfiguration );
 			explicitMutabilityPlanAccess =
 					typeConfiguration -> basicValue.explicitMutabilityPlanAccess.apply( typeConfiguration );
-			implicitJavaTypeAccess =
-					typeConfiguration -> basicValue.implicitJavaTypeAccess.apply( typeConfiguration );
+			implicitJavaTypeAccess = basicValue.implicitJavaTypeAccess == null
+					? null
+					: typeConfiguration -> basicValue.implicitJavaTypeAccess.apply( typeConfiguration );
 			enumerationStyle = basicValue.enumerationStyle;
 			temporalPrecision = basicValue.temporalPrecision;
 			timeZoneStorageType = basicValue.timeZoneStorageType;
@@ -509,7 +522,7 @@ public class BasicValue extends SimpleValue
 			);
 		}
 		else if ( isVersion() ) {
-			return VersionResolution.from( implicitJavaTypeAccess, timeZoneStorageType, getBuildingContext() );
+			return VersionResolution.from( this, timeZoneStorageType, getBuildingContext() );
 		}
 		else {
 			// determine JavaType if we can
@@ -810,6 +823,9 @@ public class BasicValue extends SimpleValue
 		if ( resolvedJavaType != null ) {
 			return resolvedJavaType;
 		}
+		else if ( implicitSourceJavaType != null ) {
+			return implicitSourceJavaType.asReflectType();
+		}
 		else if ( implicitJavaTypeAccess != null ) {
 			return implicitJavaTypeAccess.apply( typeConfiguration );
 		}
@@ -818,6 +834,48 @@ public class BasicValue extends SimpleValue
 		}
 		else {
 			return null;
+		}
+	}
+
+	public interface SourceJavaType {
+		TypeDetails typeDetails();
+
+		Class<?> rawJavaClass();
+
+		java.lang.reflect.Type asReflectType();
+
+		static SourceJavaType from(TypeDetails typeDetails, Class<?> explicitJavaType) {
+			return new SourceJavaType() {
+				@Override
+				public TypeDetails typeDetails() {
+					return typeDetails;
+				}
+
+				@Override
+				public Class<?> rawJavaClass() {
+					if ( explicitJavaType != null ) {
+						return explicitJavaType;
+					}
+					if ( typeDetails == null ) {
+						return null;
+					}
+					return typeDetails.determineRawClass().toJavaClass();
+				}
+
+				@Override
+				public java.lang.reflect.Type asReflectType() {
+					if ( explicitJavaType != null ) {
+						return explicitJavaType;
+					}
+					if ( typeDetails == null ) {
+						return null;
+					}
+					if ( typeDetails.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
+						return ParameterizedTypeImpl.from( typeDetails.asParameterizedType() );
+					}
+					return rawJavaClass();
+				}
+			};
 		}
 	}
 

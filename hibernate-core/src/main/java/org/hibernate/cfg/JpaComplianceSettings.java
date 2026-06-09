@@ -34,7 +34,6 @@ public interface JpaComplianceSettings {
 	 * @settingDefault {@link #JPA_COMPLIANCE}
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaTransactionComplianceEnabled()
-	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaTransactionCompliance(boolean)
 	 *
 	 * @since 5.3
 	 */
@@ -51,7 +50,6 @@ public interface JpaComplianceSettings {
 	 * @apiNote When disabled, allows the many useful features of HQL
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaQueryComplianceEnabled()
-	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaQueryCompliance(boolean)
 	 *
 	 * @since 5.3
 	 */
@@ -75,7 +73,6 @@ public interface JpaComplianceSettings {
 	 * @settingDefault {@link #JPA_COMPLIANCE}
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaOrderByMappingComplianceEnabled()
-	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaOrderByMappingCompliance(boolean)
 	 *
 	 * @since 6.0
 	 */
@@ -94,7 +91,6 @@ public interface JpaComplianceSettings {
 	 * @settingDefault {@link #JPA_COMPLIANCE}
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaClosedComplianceEnabled()
-	 * @see org.hibernate.boot.SessionFactoryBuilder#enableJpaClosedCompliance(boolean)
 	 *
 	 * @since 5.3
 	 */

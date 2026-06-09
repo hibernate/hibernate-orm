@@ -5,7 +5,6 @@ import java.util.EnumSet;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.CollectionClassification;
 
 import jakarta.persistence.CascadeType;
 
@@ -34,12 +33,6 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 	private final String implicitCascadeStyleName;
 	private final CollectionClassification implicitListClassification;
 
-	/**
-	 * @deprecated Use {@link Builder} for other defaults and {@link org.hibernate.annotations.DefaultListSemantics}
-	 * for list semantics.
-	 * Scheduled for removal in 9.0.
-	 */
-	@Deprecated(since = "8.0", forRemoval = true)
 	public OverriddenMappingDefaults(
 			String implicitSchemaName,
 			String implicitCatalogName,
@@ -54,8 +47,7 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 			String implicitPropertyAccessorName,
 			boolean entitiesImplicitlyLazy,
 			boolean pluralAttributesImplicitlyLazy,
-			AccessType implicitCacheAccessType,
-			CollectionClassification implicitListClassification) {
+			AccessType implicitCacheAccessType) {
 		this.implicitSchemaName = implicitSchemaName;
 		this.implicitCatalogName = implicitCatalogName;
 		this.implicitlyQuoteIdentifiers = implicitlyQuoteIdentifiers;
@@ -70,7 +62,6 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 		this.entitiesImplicitlyLazy = entitiesImplicitlyLazy;
 		this.pluralAttributesImplicitlyLazy = pluralAttributesImplicitlyLazy;
 		this.implicitCacheAccessType = implicitCacheAccessType;
-		this.implicitListClassification = implicitListClassification;
 	}
 
 	@Override
@@ -167,12 +158,6 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 		return implicitCacheAccessType;
 	}
 
-	@Override
-	@Deprecated(since = "8.0", forRemoval = true)
-	public CollectionClassification getDefaultListClassification() {
-		return implicitListClassification;
-	}
-
 	public static class Builder {
 		private String implicitSchemaName;
 		private String implicitCatalogName;
@@ -188,7 +173,6 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 		private boolean entitiesImplicitlyLazy;
 		private boolean pluralAttributesImplicitlyLazy;
 		private AccessType implicitCacheAccessType;
-		private CollectionClassification implicitListClassification;
 
 		public Builder(EffectiveMappingDefaults parentDefaults) {
 			this.implicitSchemaName = parentDefaults.getDefaultSchemaName();
@@ -302,27 +286,6 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 			return this;
 		}
 
-		/**
-		 * @deprecated Use {@link org.hibernate.annotations.DefaultListSemantics} on a package or module.
-		 * Scheduled for removal in 9.0.
-		 */
-		@Deprecated(since = "8.0", forRemoval = true)
-		public CollectionClassification getImplicitListClassification() {
-			return implicitListClassification;
-		}
-
-		/**
-		 * @deprecated Use {@link org.hibernate.annotations.DefaultListSemantics} on a package or module.
-		 * Scheduled for removal in 9.0.
-		 */
-		@Deprecated(since = "8.0", forRemoval = true)
-		public Builder setImplicitListClassification(CollectionClassification implicitListClassification) {
-			if ( implicitListClassification != null ) {
-				this.implicitListClassification = implicitListClassification;
-			}
-			return this;
-		}
-
 		public OverriddenMappingDefaults build() {
 			return new OverriddenMappingDefaults(
 					implicitSchemaName,
@@ -338,8 +301,7 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 					implicitPropertyAccessorName,
 					entitiesImplicitlyLazy,
 					pluralAttributesImplicitlyLazy,
-					implicitCacheAccessType,
-					implicitListClassification
+					implicitCacheAccessType
 			);
 		}
 	}

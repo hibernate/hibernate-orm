@@ -11,27 +11,19 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.Bag;
 import org.hibernate.loader.MultipleBagFetchException;
-import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@ServiceRegistry(
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ImplicitListAsBagProvider.class )
-)
 @DomainModel(
 		annotatedClasses = {
 				MultipleBagFetchHqlTest.Post.class,
@@ -101,6 +93,7 @@ public class MultipleBagFetchHqlTest {
 		private String title;
 
 		@OneToMany(fetch = FetchType.LAZY)
+		@Bag
 		private List<PostComment> comments = new ArrayList<PostComment>();
 
 		@ManyToMany(fetch = FetchType.LAZY)
@@ -108,6 +101,7 @@ public class MultipleBagFetchHqlTest {
 				joinColumns = @JoinColumn(name = "post_id"),
 				inverseJoinColumns = @JoinColumn(name = "tag_id")
 		)
+		@Bag
 		private List<Tag> tags = new ArrayList<>();
 
 		public Post() {

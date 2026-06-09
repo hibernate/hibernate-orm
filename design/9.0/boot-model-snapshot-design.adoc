@@ -1,0 +1,297 @@
+= Boot Model Snapshot And Restoration Design
+:toc:
+
+This document captures design considerations for storing and restoring boot-time
+model state in ORM 9.
+
+The goal is not to commit to storing the current binding model specifically.
+The question is broader: which layer should be snapshotted if ORM wants to skip
+expensive bootstrap work on a later run, and what would restoring that layer
+actually mean?
+
+Related documents:
+
+* link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`]
+* link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`]
+* link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
+
+== Motivation
+
+The ORM 9 pipeline is moving toward explicit products:
+
+[source]
+----
+AvailableResources
+        -> categorized source model
+        -> binding model and finalized views
+        -> resolved org.hibernate.mapping model
+        -> runtime model / SessionFactory
+----
+
+That shape creates a natural question: can one of these products be stored and
+restored so later bootstrap can skip source scanning, XML/annotation overlay,
+categorization, binding, or mapping-model materialization?
+
+This matters for:
+
+* faster application startup;
+* build-time augmentation environments;
+* ahead-of-time processing;
+* reproducible diagnostics;
+* tooling that wants a stable boot-model artifact;
+* keeping source-model facts available to later runtime/domain consumers without
+  retaining mutable in-process binder state.
+
+== Candidate Snapshot Layers
+
+=== Source/Categorization Snapshot
+
+A source snapshot would store normalized source facts after class/resource
+discovery, XML overlay, and categorization.
+
+Possible contents:
+
+* managed class names and managed type kind;
+* selected persistent members and access mode;
+* annotation/XML-derived facts after overlay;
+* hierarchy classifications;
+* available mapping resources and their hashes;
+* explicit `exclude-unlisted-classes` decisions.
+
+Advantages:
+
+* skips classpath/resource scanning and XML parsing;
+* preserves source-level diagnostics;
+* can still re-run binding against a newer mapping model implementation.
+
+Limitations:
+
+* still needs binding, contribution resolution, table/value creation, and
+  mapping-model materialization;
+* must represent Hibernate Models concepts using stable descriptors rather than
+  live `ClassDetails` / `MemberDetails` handles;
+* may be too early to provide the startup win expected by users.
+
+=== Binding Model Snapshot
+
+A binding snapshot would store finalized binding facts and the stable views
+derived from them.
+
+Possible contents:
+
+* managed type declarations and hierarchy order;
+* attribute declaration and usage nodes;
+* identifier, version, tenant-id, natural-id, collation, and extension
+  contributions;
+* mapped-superclass and embeddable contribution/application facts;
+* table, selectable, override, conversion, and value intent;
+* identifier/selectable correspondence;
+* static metamodel injection plan inputs.
+
+Advantages:
+
+* preserves the semantic source/application/correspondence facts that are hard
+  to recover from legacy `org.hibernate.mapping`;
+* can feed multiple consumers: mapping-model materialization, static metamodel
+  injection plans, diagnostics, validation, and tooling;
+* avoids storing mutable `PersistentClass`, `Property`, `Value`, or `Column`
+  instances directly;
+* lets ORM change the `org.hibernate.mapping` materializer while keeping a
+  stable finalized input product.
+
+Limitations:
+
+* the current `BootBindingModel` is not a durable format;
+* it still uses live Hibernate Models objects such as `ClassDetails`,
+  `MemberDetails`, annotation usages, and resolved type objects;
+* some semantic facts are still bridge/materialization state rather than pure
+  binding state;
+* restoring would still need to materialize `org.hibernate.mapping` and then
+  the runtime model;
+* custom extension contributions need a stable serializable SPI shape before
+  arbitrary extension output can be snapshotted safely.
+
+=== Resolved `org.hibernate.mapping` Snapshot
+
+A mapping snapshot would store the resolved boot mapping model after
+materialization.
+
+Possible contents:
+
+* entities, mapped superclasses, embeddables, tables, joins, values,
+  properties, collections, keys, and constraints;
+* resolved settings needed by downstream runtime model creation;
+* generated names, implicit names, type resolutions, converters, custom SQL,
+  filters, and callbacks;
+* side products such as static metamodel injection plans.
+
+Advantages:
+
+* skips source discovery, categorization, binding, and mapping-model
+  materialization;
+* is closest to the current runtime model creation input;
+* may offer the largest startup benefit before runtime model caching;
+* aligns with the long-term goal of making `org.hibernate.mapping` the resolved
+  boot mapping model.
+
+Limitations:
+
+* current `org.hibernate.mapping` is mutable and not designed as a durable
+  serialized format;
+* it still contains object references, services, callbacks, type objects,
+  custom strategy instances, and other process-local state;
+* if `org.hibernate.mapping` remains a flattened compatibility shape, it may
+  lose declaration/application facts needed by diagnostics, static metamodel
+  injection, or future runtime consumers;
+* restoring a mapping snapshot must validate compatibility with dialect,
+  settings, custom types, converters, strategies, and extension versions.
+
+=== Runtime Model Snapshot
+
+A runtime snapshot would store all or part of the post-`SessionFactory`
+runtime model.
+
+This is out of scope for the first design step.  Runtime model state is tightly
+coupled to services, dialect, generated SQL, type configuration, cache regions,
+integrators, and factory lifecycle.  It may be valuable later, but it should
+not drive the first boot-model snapshot design.
+
+== Recommended Direction
+
+Do not pick a single permanent snapshot layer yet.
+
+Instead, design the pipeline so two products can eventually be snapshotted:
+
+`FinalizedBindingSnapshot`::
+A stable, mapping-model-free representation of source/application/correspondence
+facts.  This is best for tooling, diagnostics, repeatable materialization, and
+future consumers that need source semantics.
+
+`ResolvedMappingSnapshot`::
+A stable representation of the resolved `org.hibernate.mapping` boot model.
+This is best for startup optimization because it can skip more phases.
+
+The important rule is that both must be explicit immutable snapshots, not Java
+serialization of the current mutable objects.
+
+[source]
+----
+BootBindingModel                    mutable in-process construction graph
+        -> FinalizedBindingSnapshot immutable semantic snapshot
+        -> BindingViews             read API over live graph or snapshot
+        -> resolved org.hibernate.mapping
+        -> ResolvedMappingSnapshot  immutable resolved boot-model snapshot
+        -> runtime model
+----
+
+This keeps the binding layer useful without making it a permanent replacement
+for `org.hibernate.mapping`.
+
+== Stable Identity
+
+Any snapshot layer needs stable keys rather than object identity.
+
+Likely keys:
+
+* managed type: class name plus managed kind;
+* attribute declaration: declaring managed type key plus attribute name;
+* attribute usage: usage container key plus attribute path plus declaration key;
+* entity hierarchy: root entity key plus absolute root key;
+* embeddable usage: owning role/path plus embeddable type key;
+* table: namespace plus logical table name plus quoting/case metadata;
+* selectable: table key plus logical selectable name/formula plus role;
+* identifier part: entity key plus identifier attribute path;
+* foreign key/correspondence: source role plus local selectable keys plus target
+  selectable keys.
+
+Live objects such as `ClassDetails`, `MemberDetails`, `Property`, `Value`,
+`Column`, services, strategy instances, and annotation usage objects should not
+be snapshot identity keys.
+
+== Validation And Invalidation
+
+Restoration is only safe if the snapshot records enough inputs to decide
+whether it is still valid.
+
+Possible invalidation inputs:
+
+* ORM version and snapshot schema version;
+* dialect family/version and relevant database capabilities;
+* bootstrap settings that affect binding/materialization;
+* mapping resource names, timestamps, hashes, or content digests;
+* managed class bytecode fingerprints or annotation metadata hashes;
+* XML mapping hashes after preprocessing;
+* custom type, converter, strategy, integrator, and extension versions;
+* naming strategy identifiers;
+* service-loaded contributors and producers;
+* JPA compliance settings and XML mapping enabled/disabled state.
+
+The design should assume invalidation is explicit and conservative.  A stale
+snapshot must fall back to normal bootstrap rather than silently producing a
+partially mismatched model.
+
+== Extension Contributions
+
+Snapshotting cannot be robust if extension output is arbitrary mutable mapping
+objects.
+
+The binding extension SPI design should therefore prefer structured
+contributions that can be snapshotted:
+
+* stable contribution type;
+* source role;
+* target role;
+* primitive/string/enum/configuration values;
+* class names for user strategies;
+* no direct `PersistentClass`, `Component`, `Property`, `Value`, or `Column`
+  instances.
+
+Legacy `AttributeBinder` / `TypeBinder` compatibility adapters may be
+non-snapshot-friendly.  A snapshot restore path can either reject such
+extensions, require them to rerun, or record that the snapshot is only valid for
+normal bootstrap.
+
+== Relationship To Static Metamodel Injection
+
+The static metamodel injection design is an example of a side product that
+should become snapshot-friendly.
+
+A role-aware `JpaStaticMetamodelInjectionPlan` can be produced while walking
+binding views to materialize the boot/mapping model.  That plan should be
+storable with either the finalized binding snapshot or the resolved mapping
+snapshot, then consumed later when runtime JPA metamodel objects exist.
+
+This avoids re-walking source or runtime-domain structures just to rediscover
+static metamodel field names.
+
+== Open Questions
+
+* Which snapshot layer should be implemented first: finalized binding snapshot,
+  resolved mapping snapshot, or a smaller side-product snapshot such as static
+  metamodel injection plan?
+* Should `BindingViews` be able to read from both live `BootBindingModel` and a
+  restored `FinalizedBindingSnapshot`?
+* Should `org.hibernate.mapping` objects become immutable or merely
+  snapshot-projected after materialization?
+* How should custom extension output declare whether it is snapshot-safe?
+* How much class/member metadata should be rehydrated eagerly versus lazily?
+* Can a restored mapping snapshot skip Hibernate Models entirely, or does
+  runtime JPA metamodel creation still need class/member descriptors?
+
+== Near-Term Guidance
+
+For now, do not try to serialize the current binding model or current
+`org.hibernate.mapping` objects.
+
+But new boot-model work should make future snapshots easier:
+
+* avoid object identity as semantic identity;
+* keep binding contracts mapping-model-free;
+* make contributions structured and role-aware;
+* separate mutable construction graphs from finalized views;
+* make side products such as static metamodel injection plans explicit;
+* record source roles and declaration/usage origins;
+* avoid storing live services or strategy instances in model facts.
+
+This keeps the option open to snapshot either the finalized binding layer or the
+resolved mapping layer once the model boundaries are clearer.

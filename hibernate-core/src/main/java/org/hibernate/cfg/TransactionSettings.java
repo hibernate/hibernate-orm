@@ -113,9 +113,6 @@ public interface TransactionSettings {
 	 *
 	 * @see org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveUserTransaction
 	 * @see org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveTransactionManager
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyPreferUserTransactions(boolean)
-	 *
 	 * @settingDefault {@code false} as {@code TransactionManager} is preferred.
 	 *
 	 * @since 5.0
@@ -152,8 +149,6 @@ public interface TransactionSettings {
 	 * Session is called.  This can certainly have performance considerations.
 	 *
 	 * @settingDefault {@code true} (enabled).
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJtaTrackingByThread(boolean)
 	 */
 	String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
 
@@ -174,8 +169,6 @@ public interface TransactionSettings {
 	 * closed automatically at the end of each transaction.
 	 *
 	 * @settingDefault {@code false}
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutoClosing(boolean)
 	 */
 	String AUTO_CLOSE_SESSION = "hibernate.transaction.auto_close_session";
 
@@ -184,8 +177,6 @@ public interface TransactionSettings {
 	 * {@link jakarta.transaction.Synchronization#beforeCompletion()} callback.
 	 *
 	 * @settingDefault {@code true} unless using JPA bootstrap
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutoFlushing(boolean)
 	 */
 	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
 
@@ -202,7 +193,6 @@ public interface TransactionSettings {
 	 *          done in a transaction. Use of this setting is discouraged.
 	 *
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#isInitializeLazyStateOutsideTransactionsEnabled
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyLazyInitializationOutsideTransaction(boolean)
 	 */
 	@Unsafe
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
@@ -225,7 +215,6 @@ public interface TransactionSettings {
 	 *          is not safe. Use of this setting is discouraged.
 	 *
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#isAllowOutOfTransactionUpdateOperations
-	 * @see org.hibernate.boot.SessionFactoryBuilder#allowOutOfTransactionUpdateOperations(boolean)
 	 *
 	 * @since 5.2
 	 */

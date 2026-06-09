@@ -11,7 +11,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Imported;
 import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -43,8 +42,8 @@ import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadataImpl;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -344,18 +343,6 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	@Nonnull
-	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		throw new UnsupportedOperationException(
-				"""
-				You should not be building a SessionFactory from an in-flight metadata collector; \
-				and of course we should better segment this in the API :)
-				"""
-		);
-	}
-
-	@Override
-	@Nonnull
 	public SessionFactoryImplementor buildSessionFactory() {
 		throw new UnsupportedOperationException(
 				"""
@@ -922,7 +909,7 @@ public class InFlightMetadataCollectorImpl
 			MetadataBuildingContext buildingContext,
 			boolean isExplicit) {
 		final var database = getDatabase();
-		final var namespace = locateNamespace( schemaName, catalogName, database );
+		final var namespace = locateNamespace( schemaName, catalogName, database, isExplicit );
 		// annotation binding depends on the "table name" for @Subselect bindings
 		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
 		final Identifier logicalName = name == null ? null : database.toIdentifier( name, isExplicit );
@@ -951,6 +938,17 @@ public class InFlightMetadataCollectorImpl
 
 	private static Namespace locateNamespace(String schemaName, String catalogName, Database database) {
 		return database.locateNamespace( database.toIdentifier( catalogName ), database.toIdentifier( schemaName ) );
+	}
+
+	private static Namespace locateNamespace(
+			String schemaName,
+			String catalogName,
+			Database database,
+			boolean isExplicit) {
+		return database.locateNamespace(
+				database.toIdentifier( catalogName, isExplicit ),
+				database.toIdentifier( schemaName, isExplicit )
+		);
 	}
 
 	@Override

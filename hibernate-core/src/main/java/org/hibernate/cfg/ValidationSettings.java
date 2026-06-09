@@ -21,8 +21,6 @@ public interface ValidationSettings {
 
 	/**
 	 * Used to pass along any discovered {@link jakarta.validation.ValidatorFactory}.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyValidatorFactory(Object)
 	 */
 	String JAKARTA_VALIDATION_FACTORY = "jakarta.persistence.validation.factory";
 
@@ -93,8 +91,6 @@ public interface ValidationSettings {
 	 * <p>
 	 * Defaults to disabled if Bean Validation is present in the classpath and
 	 * annotations are used, or enabled otherwise.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNullabilityChecking(boolean)
 	 */
 	String CHECK_NULLABILITY = "hibernate.check_nullability";
 

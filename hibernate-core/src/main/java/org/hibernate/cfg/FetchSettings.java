@@ -9,8 +9,6 @@ public interface FetchSettings {
 	/**
 	 * Specifies the maximum depth of nested outer join fetching.
 	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMaximumFetchDepth
-	 *
 	 * @settingDefault 0 (none)
 	 */
 	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
@@ -23,7 +21,6 @@ public interface FetchSettings {
 	 *
 	 * @see org.hibernate.annotations.BatchSize
 	 * @see org.hibernate.Session#setFetchBatchSize(int)
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultBatchFetchSize(int)
 	 */
 	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
 
@@ -39,7 +36,6 @@ public interface FetchSettings {
 	 *
 	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
 	 * @see org.hibernate.Session#setSubselectFetchingEnabled(boolean)
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applySubselectFetchEnabled(boolean)
 	 */
 	String USE_SUBSELECT_FETCH = "hibernate.use_subselect_fetch";
 }

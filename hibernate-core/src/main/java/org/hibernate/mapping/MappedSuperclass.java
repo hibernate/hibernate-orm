@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import static java.util.Collections.unmodifiableList;
+
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.MappedSuperclass mapped superclass}
  * of an entity class. A mapped superclass is not itself an entity, but it may declare persistent
@@ -13,6 +15,7 @@ import java.util.List;
 public class MappedSuperclass implements IdentifiableTypeClass {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
+	private final List<IdentifiableTypeClass> subTypes;
 	private final List<Property> declaredProperties;
 	private final Table implicitTable;
 	private Class<?> mappedClass;
@@ -27,6 +30,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		this.superMappedSuperclass = superMappedSuperclass;
 		this.superPersistentClass = superPersistentClass;
 		this.implicitTable = implicitTable;
+		this.subTypes = new ArrayList<>();
 		this.declaredProperties = new ArrayList<>();
 	}
 
@@ -58,6 +62,18 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 	 */
 	public PersistentClass getSuperPersistentClass() {
 		return superPersistentClass;
+	}
+
+	/**
+	 * Registers a direct managed-type subtype.
+	 * <p>
+	 * This is a boot-time graph construction hook.  Consumers should use
+	 * {@link #getSubTypes()} to read the direct managed-type graph.
+	 */
+	public void addSubType(IdentifiableTypeClass subType) {
+		if ( !subTypes.contains( subType ) ) {
+			subTypes.add( subType );
+		}
 	}
 
 	@Override
@@ -219,7 +235,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 
 	@Override
 	public List<IdentifiableTypeClass> getSubTypes() {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		return unmodifiableList( subTypes );
 	}
 
 	@Override

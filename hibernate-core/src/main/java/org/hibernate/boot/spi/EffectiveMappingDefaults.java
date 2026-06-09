@@ -4,9 +4,8 @@ import java.util.EnumSet;
 
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.metamodel.CollectionClassification;
 
 import jakarta.persistence.CascadeType;
 
@@ -138,12 +137,4 @@ public interface EffectiveMappingDefaults {
 	 */
 	AccessType getDefaultCacheAccessType();
 
-	/**
-	 * @deprecated No longer supported. Use {@link org.hibernate.annotations.DefaultListSemantics}
-	 * on a package or module. Scheduled for removal in 9.0.
-	 */
-	@Deprecated(forRemoval = true)
-	default CollectionClassification getDefaultListClassification() {
-		return CollectionClassification.LIST;
-	}
 }

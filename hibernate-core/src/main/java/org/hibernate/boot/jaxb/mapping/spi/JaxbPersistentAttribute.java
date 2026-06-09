@@ -26,4 +26,10 @@ public interface JaxbPersistentAttribute {
 	 */
 	String getAttributeAccessor();
 	void setAttributeAccessor(String value);
+
+	/**
+	 * Hibernate's bytecode-enhanced lazy loading group
+	 */
+	String getLazyGroup();
+	void setLazyGroup(String value);
 }

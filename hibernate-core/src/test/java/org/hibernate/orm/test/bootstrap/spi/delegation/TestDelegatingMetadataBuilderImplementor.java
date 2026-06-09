@@ -6,7 +6,6 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.spi.AbstractDelegatingMetadataBuilderImplementor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
-import org.hibernate.metamodel.CollectionClassification;
 
 /**
  * If this class does not compile anymore due to unimplemented methods, you should probably add the corresponding
@@ -29,12 +28,5 @@ public class TestDelegatingMetadataBuilderImplementor extends AbstractDelegating
 	@Override
 	public BootstrapContext getBootstrapContext() {
 		return delegate().getBootstrapContext();
-	}
-
-	@Override
-	@Deprecated(since = "8.0", forRemoval = true)
-	@Nonnull
-	public MetadataBuilder applyImplicitListSemantics(@Nullable CollectionClassification classification) {
-		return delegate().applyImplicitListSemantics( classification );
 	}
 }

@@ -20,11 +20,9 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.jpa.AvailableHints;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +33,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Vlad Mihalcea
@@ -47,20 +45,9 @@ import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 				FilterTest.AccountEager.class,
 				FilterTest.AccountNotFound.class,
 				FilterTest.AccountNotFoundException.class
-		},
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = FilterTest.CollectionClassificationProvider.class
-		)
-)
+		})
 public class FilterTest {
 
-	public static class CollectionClassificationProvider implements SettingProvider.Provider<CollectionClassification> {
-		@Override
-		public CollectionClassification getSetting() {
-			return CollectionClassification.BAG;
-		}
-	}
 
 	@BeforeEach
 	public void setup(EntityManagerFactoryScope scope) {

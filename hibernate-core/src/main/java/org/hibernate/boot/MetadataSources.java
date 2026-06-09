@@ -21,6 +21,8 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuilderFactory;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
 
@@ -38,6 +40,7 @@ import java.util.Map;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
 /**
  * Entry point for working with sources of O/R mapping metadata, either
@@ -59,9 +62,11 @@ import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
  *
  * @since 5.0
  *
- * @apiNote This class will be removed in 9.0.
+ * @deprecated Use {@linkplain HibernateBootstrap} or {@linkplain org.hibernate.jpa.HibernatePersistenceConfiguration}
+ * 		instead.  This pipeline of {@linkplain MetadataSources}, {@linkplain MetadataBuilder}, {@linkplain Metadata},
+ * 		and {@linkplain Metadata#buildSessionFactory()} mixes public and internal concerns in an inflexible manner.
  */
-@Remove
+@Deprecated(since = "9.0", forRemoval = true)
 public class MetadataSources implements Serializable {
 
 	private final ServiceRegistry serviceRegistry;
@@ -129,6 +134,15 @@ public class MetadataSources implements Serializable {
 
 	public Collection<String> getAnnotatedModuleNames() {
 		return annotatedModuleNames == null ? emptySet() : annotatedModuleNames;
+	}
+
+	private boolean isXmlMappingEnabled() {
+		if ( serviceRegistry instanceof StandardServiceRegistry ) {
+			final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+			return configurationService == null
+					|| configurationService.getSetting( MappingSettings.XML_MAPPING_ENABLED, BOOLEAN, true );
+		}
+		return true;
 	}
 
 	public Collection<String> getAnnotatedPackages() {
@@ -405,6 +419,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addResource(String name) {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		if ( !binderAccess.isXmlMappingEnabled() ) {
 			return this;
@@ -437,6 +454,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addFile(File file) {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		if ( !binderAccess.isXmlMappingEnabled() ) {
 			return this;
@@ -454,6 +474,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addXmlBinding(Binding<JaxbEntityMappingsImpl> binding) {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		return addMappingXmlBinding( binding );
 	}
 
@@ -465,6 +488,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addMappingXmlBinding(Binding<JaxbEntityMappingsImpl> binding) {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		if ( mappingXmlBindings == null ) {
 			mappingXmlBindings = new ArrayList<>();
 		}
@@ -537,6 +563,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addCacheableFile(File file, File cacheDirectory) {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		if ( !binderAccess.isXmlMappingEnabled() ) {
 			return this;
@@ -564,6 +593,9 @@ public class MetadataSources implements Serializable {
 	 * @throws MappingNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		if ( !binderAccess.isXmlMappingEnabled() ) {
 			return this;
@@ -591,6 +623,9 @@ public class MetadataSources implements Serializable {
 	 * @throws MappingNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file, File cacheDir) throws SerializationException {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		if ( !binderAccess.isXmlMappingEnabled() ) {
 			return this;
@@ -612,6 +647,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStreamAccess xmlInputStreamAccess) {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		if ( !binderAccess.isXmlMappingEnabled() ) {
 			return this;
@@ -628,6 +666,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStream xmlInputStream) {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		if ( !binderAccess.isXmlMappingEnabled() ) {
 			return this;
@@ -644,6 +685,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addURL(URL url) {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		if ( !binderAccess.isXmlMappingEnabled() ) {
 			return this;
@@ -663,6 +707,9 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addJar(File jar) {
+		if ( !isXmlMappingEnabled() ) {
+			return this;
+		}
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		if ( !binderAccess.isXmlMappingEnabled() ) {
 			return this;

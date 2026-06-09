@@ -11,6 +11,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -57,7 +58,7 @@ public class TestCase {
 			fail("property overrides not accepted");
 		} catch (BuildException e) {
 			// should happen
-			assertTrue(e.getMessage().contains("FAKEDialect"));
+			assertThat( e.getCause().getCause() ).hasMessageContaining( "FAKEDialect" );
 		}
 
 		assertFalse(ejb3.exists());

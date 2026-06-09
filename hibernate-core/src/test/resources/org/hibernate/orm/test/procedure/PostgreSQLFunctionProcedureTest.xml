@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+		version="8.0">
+	<database-object>
+		<create><![CDATA[
+			CREATE OR REPLACE FUNCTION fn_count_phones(
+				IN personId bigint)
+				RETURNS bigint AS
+			$BODY$
+				DECLARE
+					phoneCount bigint;
+				BEGIN
+					SELECT COUNT(*) INTO phoneCount
+					FROM phone
+					WHERE person_id = personId;
+					RETURN phoneCount;
+				END;
+			$BODY$
+			LANGUAGE plpgsql;
+		]]></create>
+		<drop><![CDATA[drop function fn_count_phones(bigint)]]></drop>
+		<dialect-scope name="org.hibernate.dialect.PostgreSQLDialect"/>
+		<dialect-scope name="org.hibernate.dialect.PostgresPlusDialect"/>
+	</database-object>
+
+	<database-object>
+		<create><![CDATA[
+			CREATE OR REPLACE FUNCTION fn_phones(personId BIGINT)
+				RETURNS REFCURSOR AS
+			$BODY$
+				DECLARE
+					phones REFCURSOR;
+				BEGIN
+					OPEN phones FOR
+						SELECT *
+						FROM phone
+						WHERE person_id = personId;
+					RETURN phones;
+				END;
+			$BODY$
+			LANGUAGE plpgsql
+		]]></create>
+		<drop><![CDATA[drop function fn_phones(bigint, bigint)]]></drop>
+		<dialect-scope name="org.hibernate.dialect.PostgreSQLDialect"/>
+		<dialect-scope name="org.hibernate.dialect.PostgresPlusDialect"/>
+	</database-object>
+
+	<database-object>
+		<create><![CDATA[
+			CREATE OR REPLACE FUNCTION singleRefCursor()
+				RETURNS REFCURSOR AS
+			$BODY$
+				DECLARE
+					p_recordset REFCURSOR;
+				BEGIN
+					OPEN p_recordset FOR SELECT 1;
+					RETURN p_recordset;
+				END;
+			$BODY$
+			LANGUAGE plpgsql;
+		]]></create>
+		<drop><![CDATA[drop function singleRefCursor()]]></drop>
+		<dialect-scope name="org.hibernate.dialect.PostgreSQLDialect"/>
+		<dialect-scope name="org.hibernate.dialect.PostgresPlusDialect"/>
+	</database-object>
+
+	<database-object>
+		<create><![CDATA[
+			CREATE OR REPLACE FUNCTION fn_is_null(
+				IN param varchar(255))
+				RETURNS boolean AS
+			$BODY$
+				DECLARE
+					result boolean;
+				BEGIN
+					SELECT param is null INTO result;
+					RETURN result;
+				END;
+			$BODY$
+			LANGUAGE plpgsql;
+		]]></create>
+		<drop><![CDATA[drop function fn_is_null(varchar)]]></drop>
+		<dialect-scope name="org.hibernate.dialect.PostgreSQLDialect"/>
+		<dialect-scope name="org.hibernate.dialect.PostgresPlusDialect"/>
+	</database-object>
+</entity-mappings>

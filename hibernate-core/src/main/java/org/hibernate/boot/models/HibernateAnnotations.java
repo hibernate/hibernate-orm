@@ -607,7 +607,7 @@ public interface HibernateAnnotations {
 	CompleteAnnotationDescriptor<MapKeyCompositeType, MapKeyCompositeTypeAnnotation> MAP_KEY_COMPOSITE_TYPE = new CompleteAnnotationDescriptor<>(
 			MapKeyCompositeType.class,
 			MapKeyCompositeTypeAnnotation.class,
-			EnumSet.allOf( Kind.class ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
 	CompleteAnnotationDescriptor<MapKeyFormula, MapKeyFormulaAnnotation> MAP_KEY_FORMULA = new CompleteAnnotationDescriptor<>(

@@ -21,7 +21,7 @@ public abstract class SchemaUtil {
 	public static Set<String> getColumnNames(String tableName, Metadata metadata) {
 		Set<String> result = new HashSet<>();
 		for ( Table table : metadata.collectTableMappings() ) {
-			if (tableName.equals( table.getName() ) ) {
+			if (tableName.equalsIgnoreCase( table.getName() ) ) {
 				Iterator<Column> columns = table.getColumns().iterator();
 				while ( columns.hasNext() ) {
 					Column column = columns.next();
@@ -35,7 +35,7 @@ public abstract class SchemaUtil {
 	@SuppressWarnings("unchecked")
 	public static boolean isColumnPresent(String tableName, String columnName, Metadata metadata) {
 		for ( Table table : metadata.collectTableMappings() ) {
-			if (tableName.equals( table.getName() ) ) {
+			if (tableName.equalsIgnoreCase( table.getName() ) ) {
 				Iterator<Column> columns = (Iterator<Column>) table.getColumns().iterator();
 				while ( columns.hasNext() ) {
 					Column column = columns.next();
@@ -51,7 +51,7 @@ public abstract class SchemaUtil {
 
 	public static boolean isTablePresent(String tableName, Metadata metadata) {
 		for ( Table table : metadata.collectTableMappings() ) {
-			if ( tableName.equals( table.getName() ) ) {
+			if ( tableName.equalsIgnoreCase( table.getName() ) ) {
 				return true;
 			}
 		}

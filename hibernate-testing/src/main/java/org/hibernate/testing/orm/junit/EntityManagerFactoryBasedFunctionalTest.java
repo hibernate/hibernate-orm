@@ -10,11 +10,11 @@ import org.hibernate.bytecode.enhance.spi.EnhancementModel;
 import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
@@ -24,7 +24,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -46,10 +45,10 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 	@Override
 	public EntityManagerFactory produceEntityManagerFactory() {
-		final EntityManagerFactory entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
+		final EntityManagerFactory entityManagerFactory = SessionFactoryBootstrap.build(
 				buildPersistenceUnitDescriptor(),
 				buildSettings()
-		).build();
+		);
 
 		entityManagerFactoryBuilt( entityManagerFactory );
 
@@ -102,7 +101,8 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 	protected Map<String, Object> buildSettings() {
 		Map<String, Object> settings = getConfig();
-		applySettings( settings );
+		settings.put( AvailableSettings.JPA_COMPLIANCE, strictJpaCompliance() );
+		settings.put( AvailableSettings.JPA_QUERY_COMPLIANCE, strictJpaCompliance() );
 
 		if ( exportSchema() ) {
 			settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
@@ -126,10 +126,6 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 	protected Map<String, Object> getConfig() {
 		Map<String, Object> config = PropertiesHelper.map( Environment.getProperties() );
-		ArrayList<Class<?>> classes = new ArrayList<>();
-
-		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		for ( Map.Entry<Class<?>, String> entry : getCachedClasses().entrySet() ) {
 			config.put(
 					AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(),
@@ -142,25 +138,12 @@ public class EntityManagerFactoryBasedFunctionalTest
 					entry.getValue()
 			);
 		}
-		if ( getEjb3DD().length > 0 ) {
-			ArrayList<String> dds = new ArrayList<>();
-			dds.addAll( Arrays.asList( getEjb3DD() ) );
-			config.put( AvailableSettings.ORM_XML_FILES, dds );
-		}
-
 		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		ServiceRegistryUtil.applySettings( config );
 		addConfigOptions( config );
 		return config;
-	}
-
-	protected void applySettings(Map<String, Object> settings) {
-		String[] mappings = getMappings();
-		if ( mappings != null ) {
-			settings.put( AvailableSettings.HBM_XML_FILES, String.join( ",", mappings ) );
-		}
 	}
 
 	public Map<Class<?>, String> getCachedClasses() {
@@ -176,14 +159,29 @@ public class EntityManagerFactoryBasedFunctionalTest
 	}
 
 	protected PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		return new TestingPersistenceUnitDescriptorImpl(
+				getClass().getSimpleName(),
+				Arrays.stream( getAnnotatedClasses() ).map( Class::getName ).toList(),
+				Arrays.asList( getEjb3DD() )
+		);
 	}
 
 	public static class TestingPersistenceUnitDescriptorImpl implements PersistenceUnitDescriptor {
 		private final String name;
+		private final List<String> managedClassNames;
+		private final List<String> mappingFileNames;
 
 		public TestingPersistenceUnitDescriptorImpl(String name) {
+			this( name, List.of(), List.of() );
+		}
+
+		public TestingPersistenceUnitDescriptorImpl(
+				String name,
+				List<String> managedClassNames,
+				List<String> mappingFileNames) {
 			this.name = name;
+			this.managedClassNames = List.copyOf( managedClassNames );
+			this.mappingFileNames = List.copyOf( mappingFileNames );
 		}
 
 		@Override
@@ -233,7 +231,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 		@Override
 		public List<String> getManagedClassNames() {
-			return List.of();
+			return managedClassNames;
 		}
 
 		@Override
@@ -243,7 +241,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 		@Override
 		public List<String> getMappingFileNames() {
-			return List.of();
+			return mappingFileNames;
 		}
 
 		@Override

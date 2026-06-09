@@ -8,12 +8,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.junit.jupiter.api.Test;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,12 +47,15 @@ public class DefaultToOneFetchTypeTests {
 
 	private static void check(String unitName, boolean expectation) {
 		final URL xml = Thread.currentThread().getContextClassLoader().getResource( "units/to-one-fetch-type/persistence.xml" );
-		final EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder(
-				xml,
-				unitName,
+		final var persistenceUnitDescriptor = PersistenceXmlParser.create( (Map) Environment.getProperties() )
+				.parse( List.of( xml ) )
+				.get( unitName );
+		try (var metadataBootstrap = SessionFactoryBootstrap.resolveMetadata(
+				persistenceUnitDescriptor,
 				(Map) Environment.getProperties()
-		);
-		verify( builder.metadata(), expectation );
+		)) {
+			verify( metadataBootstrap.metadata(), expectation );
+		}
 	}
 
 	private static void verify(MetadataImplementor metadata, boolean expectation) {

@@ -8,7 +8,6 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -64,10 +63,6 @@ import static org.assertj.core.api.Assertions.fail;
 @ServiceRegistry(
 		settingProviders = {
 				@SettingProvider(
-						settingName = AvailableSettings.DEFAULT_LIST_SEMANTICS,
-						provider = ManyToManyTest.ListSemanticProvider.class
-				),
-				@SettingProvider(
 						settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
 						provider = ManyToManyTest.ImplicitNamingStrategyProvider.class
 				)
@@ -75,12 +70,6 @@ import static org.assertj.core.api.Assertions.fail;
 )
 public class ManyToManyTest {
 
-	public static class ListSemanticProvider implements SettingProvider.Provider<CollectionClassification> {
-		@Override
-		public CollectionClassification getSetting() {
-			return CollectionClassification.BAG;
-		}
-	}
 
 	public static class ImplicitNamingStrategyProvider
 			implements SettingProvider.Provider<ImplicitNamingStrategyLegacyJpaImpl> {

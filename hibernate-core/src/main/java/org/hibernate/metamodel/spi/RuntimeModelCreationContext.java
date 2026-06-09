@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.Remove;
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -57,7 +58,10 @@ public interface RuntimeModelCreationContext {
 		return getBootModel();
 	}
 
-	@Nonnull
+	default BootBindingModel getBootBindingModel() {
+		return null;
+	}
+
 	SqmFunctionRegistry getFunctionRegistry();
 
 	@Nonnull

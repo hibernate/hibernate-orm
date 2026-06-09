@@ -1,9 +1,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
-import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.jpa.SpecHints;
 
 /**
@@ -80,7 +78,6 @@ public interface CacheSettings {
 	 * specified; {@code false} otherwise.
 	 *
 	 * @see #CACHE_REGION_FACTORY
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applySecondLevelCacheSupport(boolean)
 	 */
 	String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";
 
@@ -88,15 +85,12 @@ public interface CacheSettings {
 	 * Enable the query results cache
 	 *
 	 * @settingDefault {@code false}
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyQueryCacheSupport(boolean)
 	 */
 	String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
 
 	/**
 	 * Specifies the default {@link org.hibernate.annotations.CacheLayout} to use for the query cache.
 	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyQueryCacheLayout(CacheLayout)
 	 * @see org.hibernate.annotations.QueryCacheLayout
 	 * @since 6.5
 	 */
@@ -126,15 +120,11 @@ public interface CacheSettings {
 
 	/**
 	 * Specifies the {@link org.hibernate.cache.spi.TimestampsCacheFactory} to use.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTimestampsCacheFactory(TimestampsCacheFactory)
 	 */
 	String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
 
 	/**
 	 * The {@code CacheProvider} region name prefix
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCacheRegionPrefix(String)
 	 */
 	String CACHE_REGION_PREFIX = "hibernate.cache.region_prefix";
 
@@ -160,13 +150,11 @@ public interface CacheSettings {
 	 * cache are much more expensive than reads from the cache, for example, if the cache
 	 * is a distributed cache.
 	 * <p>
-	 * It's not usually necessary to set this explicitly because, by default, it's set
-	 * to a {@linkplain org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
-	 * sensible value} by the second-level cache implementation.
+	 * It's not usually necessary to set this explicitly because, by default, the
+	 * second-level cache implementation selects a sensible value.
 	 *
 	 * @settingDefault The cache provider's default
 	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 * @see RegionFactory#isMinimalPutsEnabledByDefault()
 	 */
 	String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
@@ -176,8 +164,6 @@ public interface CacheSettings {
 	 * entries human-readable, but carries a performance cost.
 	 *
 	 * @settingDefault {@code false}
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStructuredCacheEntries(boolean)
 	 */
 	String USE_STRUCTURED_CACHE = "hibernate.cache.use_structured_entries";
 
@@ -188,8 +174,6 @@ public interface CacheSettings {
 	 * {@link jakarta.persistence.OneToMany} side.
 	 *
 	 * @settingDefault {@code false}
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyAutomaticEvictionOfCollectionCaches(boolean)
 	 */
 	String AUTO_EVICT_COLLECTION_CACHE = "hibernate.cache.auto_evict_collection_cache";
 
@@ -201,8 +185,6 @@ public interface CacheSettings {
 	 * a tuple of attribute values.
 	 *
 	 * @settingDefault {@code false}
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDirectReferenceCaching(boolean)
 	 */
 	String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
 

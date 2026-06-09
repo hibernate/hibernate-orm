@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.OneToOneType;
@@ -15,6 +17,8 @@ import org.hibernate.type.SpecialOneToOneType;
  * @author Gavin King
  */
 public final class OneToOne extends ToOne {
+	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
+			new UniqueKeyMappingMaterializer();
 
 	private boolean constrained;
 	private ForeignKeyDirection foreignKeyType;
@@ -87,10 +91,20 @@ public final class OneToOne extends ToOne {
 		}
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
+	 * with an explicit resolved unique-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( !hasFormula() && hasColumns()  ) {
-			getTable().createUniqueKey( getConstraintColumns(), context );
+			UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
+					ResolvedUniqueKey.from( this, context, getPropertyName() )
+			);
 		}
 	}
 

@@ -4,6 +4,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,6 +55,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -195,6 +197,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				concreteEmbeddableByDiscriminator.put( discriminatorEntry.getKey(), concreteEmbeddableType );
 				concreteEmbeddableBySubclass.put( discriminatorEntry.getValue(), concreteEmbeddableType );
 			}
+			registerSubclassAliases( bootDescriptor );
 		}
 		else {
 			this.concreteEmbeddableByDiscriminator = null;
@@ -262,7 +265,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		final var aggregateColumn = bootDescriptor.getAggregateColumn();
 		final var basicValue = (BasicValue) aggregateColumn.getValue();
 		final var resolution = basicValue.getResolution();
-		final int aggregateColumnSqlTypeCode = resolution.getJdbcType().getDefaultSqlTypeCode();
+		final int aggregateColumnSqlTypeCode = aggregateColumn.getTypeCode();
 		final int aggregateSqlTypeCode;
 		boolean isArray = false;
 		String structTypeName = null;
@@ -310,16 +313,21 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			if ( arrayConstructor == null ) {
 				throw new IllegalArgumentException( "No JdbcTypeConstructor registered for SqlTypes." + JdbcTypeNameMapper.getTypeName( aggregateColumnSqlTypeCode ) );
 			}
+			final var arrayJavaType = resolveAggregateArrayJavaType( basicValue, resolution, typeConfiguration );
+			if ( !( arrayJavaType instanceof BasicPluralJavaType<?> pluralJavaType ) ) {
+				throw new MappingException(
+						"Unable to determine aggregate array JavaType for " + aggregateColumn.getName()
+								+ "; resolved JavaType was " + arrayJavaType
+				);
+			}
 			//noinspection rawtypes,unchecked
-			final BasicType<?> arrayType =
-					( (BasicPluralJavaType) resolution.getDomainJavaType() )
-							.resolveType(
-									typeConfiguration,
-									creationContext.getDialect(),
-									basicType,
-									aggregateColumn,
-									typeConfiguration.getCurrentBaseSqlTypeIndicators()
-							);
+			final BasicType<?> arrayType = ( (BasicPluralJavaType) pluralJavaType ).resolveType(
+					typeConfiguration,
+					creationContext.getDialect(),
+					basicType,
+					aggregateColumn,
+					typeConfiguration.getCurrentBaseSqlTypeIndicators()
+			);
 			basicTypeRegistry.register( arrayType );
 			resolvedJdbcMapping = arrayType;
 		}
@@ -330,7 +338,32 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return resolvedJdbcMapping;
 	}
 
-	@Nullable
+	private static JavaType<?> resolveAggregateArrayJavaType(
+			BasicValue basicValue,
+			BasicValue.Resolution<?> resolution,
+			org.hibernate.type.spi.TypeConfiguration typeConfiguration) {
+		final var domainJavaType = resolution.getDomainJavaType();
+		if ( domainJavaType instanceof BasicPluralJavaType<?> ) {
+			return domainJavaType;
+		}
+		final var impliedJavaType = basicValue.impliedJavaType( typeConfiguration );
+		if ( impliedJavaType instanceof Class<?> javaClass && javaClass.isArray() ) {
+			final var elementJavaType = typeConfiguration.getJavaTypeRegistry().getDescriptor( javaClass.getComponentType() );
+			final var arrayJavaType = new ArrayJavaType<>( elementJavaType );
+			typeConfiguration.getJavaTypeRegistry().addDescriptor( arrayJavaType );
+			return arrayJavaType;
+		}
+		if ( impliedJavaType instanceof ParameterizedType parameterizedType
+				&& parameterizedType.getRawType() instanceof Class<?> rawType
+				&& Collection.class.isAssignableFrom( rawType ) ) {
+			final var rawJavaType = typeConfiguration.getJavaTypeRegistry().findDescriptor( rawType );
+			if ( rawJavaType != null ) {
+				return rawJavaType.createJavaType( parameterizedType, typeConfiguration );
+			}
+		}
+		return impliedJavaType == null ? domainJavaType : typeConfiguration.getJavaTypeRegistry().getDescriptor( impliedJavaType );
+	}
+
 	private static String structTypeName(Component bootDescriptor, BasicValue.Resolution<?> resolution) {
 		final var structName = bootDescriptor.getStructName();
 		if ( structName != null ) {
@@ -682,6 +715,39 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return false;
 	}
 
+	private void registerSubclassAliases(Component bootDescriptor) {
+		final Map<String, String> subclassToSuperclass = bootDescriptor.getSubclassToSuperclass();
+		if ( subclassToSuperclass == null ) {
+			return;
+		}
+		for ( String subclass : subclassToSuperclass.keySet() ) {
+			if ( concreteEmbeddableBySubclass.containsKey( subclass ) ) {
+				continue;
+			}
+			final ConcreteEmbeddableTypeImpl concreteEmbeddableType = resolveConcreteSuperclass(
+					subclass,
+					subclassToSuperclass
+			);
+			if ( concreteEmbeddableType != null ) {
+				concreteEmbeddableBySubclass.put( subclass, concreteEmbeddableType );
+			}
+		}
+	}
+
+	private ConcreteEmbeddableTypeImpl resolveConcreteSuperclass(
+			String subclass,
+			Map<String, String> subclassToSuperclass) {
+		String superclass = subclassToSuperclass.get( subclass );
+		while ( superclass != null ) {
+			final ConcreteEmbeddableTypeImpl concreteEmbeddableType = concreteEmbeddableBySubclass.get( superclass );
+			if ( concreteEmbeddableType != null ) {
+				return concreteEmbeddableType;
+			}
+			superclass = subclassToSuperclass.get( superclass );
+		}
+		return null;
+	}
+
 	private static MutabilityPlan<?> getMutabilityPlan(boolean updatable) {
 		if ( updatable ) {
 			return new MutabilityPlan<>() {
@@ -874,7 +940,20 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return concreteEmbeddableBySubclass == null ? this : concreteEmbeddableBySubclass.get( subclassName );
 	}
 
-	@Nonnull
+	private ConcreteEmbeddableType findSubtypeByClass(Class<?> subclass) {
+		if ( concreteEmbeddableBySubclass == null ) {
+			return this;
+		}
+		for ( Class<?> candidate = subclass; candidate != null; candidate = candidate.getSuperclass() ) {
+			final ConcreteEmbeddableTypeImpl concreteEmbeddableType =
+					concreteEmbeddableBySubclass.get( candidate.getName() );
+			if ( concreteEmbeddableType != null ) {
+				return concreteEmbeddableType;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public Collection<ConcreteEmbeddableType> getConcreteEmbeddableTypes() {
 		//noinspection unchecked
@@ -891,7 +970,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		else {
 			final int numberOfAttributes = getNumberOfAttributeMappings();
 			final var results = new Object[numberOfAttributes + 1];
-			final var concreteEmbeddableType = findSubtypeBySubclass( compositeInstance.getClass().getName() );
+			final var concreteEmbeddableType = findSubtypeByClass( compositeInstance.getClass() );
 			int i = 0;
 			for ( ; i < numberOfAttributes; i++ ) {
 				results[i] =
@@ -971,7 +1050,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final var concreteEmbeddableType =
 					domainValue == null
 							? null
-							: findSubtypeBySubclass( domainValue.getClass().getName() );
+							: findSubtypeByClass( domainValue.getClass() );
 			for ( int i = 0; i < size; i++ ) {
 				final var attributeMapping = attributeMappings.get( i );
 				if ( !attributeMapping.isPluralAttributeMapping() ) {
@@ -1019,7 +1098,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			}
 		}
 		else {
-			final var concreteEmbeddableType = value instanceof Object[] ? null : findSubtypeBySubclass( value.getClass().getName() );
+			final var concreteEmbeddableType = findSubtypeByClass( value.getClass() );
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final var attributeMapping = attributeMappings.get( i );
 				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
@@ -1070,7 +1149,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final var concreteEmbeddableType =
 					domainValue == null
 							? null
-							: findSubtypeBySubclass( domainValue.getClass().getName() );
+							: findSubtypeByClass( domainValue.getClass() );
 			for ( int i = 0; i < size; i++ ) {
 				final var attributeMapping = attributeMappings.get( i );
 				if ( !attributeMapping.isPluralAttributeMapping() ) {

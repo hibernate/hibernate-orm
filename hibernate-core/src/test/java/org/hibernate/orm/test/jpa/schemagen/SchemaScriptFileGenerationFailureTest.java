@@ -10,8 +10,7 @@ import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -19,14 +18,12 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -39,24 +36,16 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 public class SchemaScriptFileGenerationFailureTest {
 	private Writer writer;
-	private EntityManagerFactoryBuilder entityManagerFactoryBuilder;
+	private PersistenceUnitDescriptor persistenceUnitDescriptor;
+	private Map<String, Object> config;
 
 
 	@BeforeEach
 	public void setUp() {
 		writer = new FailingWriter();
 
-		entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				getConfig()
-		);
-	}
-
-	@AfterEach
-	public void destroy() {
-		if ( entityManagerFactoryBuilder != null ) {
-			entityManagerFactoryBuilder.cancel();
-		}
+		persistenceUnitDescriptor = buildPersistenceUnitDescriptor();
+		config = getConfig();
 	}
 
 	@Test
@@ -68,7 +57,7 @@ public class SchemaScriptFileGenerationFailureTest {
 	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "on gauss we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
-			entityManagerFactoryBuilder.generateSchema();
+			SessionFactoryBootstrap.generateSchema( persistenceUnitDescriptor, config );
 			fail( "Should have thrown IOException" );
 		}
 		catch (Exception e) {
@@ -109,7 +98,12 @@ public class SchemaScriptFileGenerationFailureTest {
 	}
 
 	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+			@Override
+			public List<String> getManagedClassNames() {
+				return List.of( TestEntity.class.getName() );
+			}
+		};
 	}
 
 	private Map<String, Object> getConfig() {
@@ -118,10 +112,6 @@ public class SchemaScriptFileGenerationFailureTest {
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" );
-		ArrayList<Class<?>> classes = new ArrayList<>();
-
-		classes.addAll( Arrays.asList( new Class<?>[] { TestEntity.class } ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
 

@@ -1,9 +1,8 @@
 package org.hibernate.orm.test.jpa.metagen.mappedsuperclass.embeddedid;
 
 import jakarta.persistence.EntityManagerFactory;
-import java.util.Arrays;
+import java.util.List;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.TestingEntityManagerFactoryGenerator;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -21,9 +20,8 @@ public class MappedSuperclassWithEmbeddedIdTest {
 	@Test
 	@JiraKey( value = "HHH-5024" )
 	public void testStaticMetamodel() {
-		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
-				AvailableSettings.LOADED_CLASSES,
-				Arrays.asList( Product.class )
+		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactoryForClasses(
+				List.of( Product.class )
 		);
 
 		try {

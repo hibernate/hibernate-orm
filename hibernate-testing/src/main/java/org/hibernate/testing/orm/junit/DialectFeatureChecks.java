@@ -12,7 +12,6 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.FunctionContributions;
@@ -33,7 +32,7 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -2292,13 +2291,6 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		@Nonnull
-		public SessionFactoryBuilder getSessionFactoryBuilder() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		@Nonnull
 		public SessionFactoryImplementor buildSessionFactory() {
 			throw new UnsupportedOperationException();
 		}

@@ -6,7 +6,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
-import jakarta.persistence.OrderBy;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -63,7 +62,6 @@ public class ElementCollectionOfRecordsTest {
 
 		@OrderColumn
 		@ElementCollection(fetch = FetchType.EAGER)
-		@OrderBy("longField")
 		List<Record> records = new ArrayList<>();
 
 		public void setId(Long id) {

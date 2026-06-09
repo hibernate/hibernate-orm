@@ -1,7 +1,5 @@
 package org.hibernate.boot.model.process.internal;
 
-import java.util.function.Function;
-
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.TemporalType;
 
@@ -27,11 +25,11 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 	public static VersionResolution<?> from(
-			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
+			BasicValue basicValue,
 			TimeZoneStorageType timeZoneStorageType,
 			MetadataBuildingContext context) {
 		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-		final var implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
+		final var implicitJavaType = basicValue.impliedJavaType( typeConfiguration );
 		final var registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
 		return resolve( timeZoneStorageType, context, (BasicJavaType<?>) registered );
 	}

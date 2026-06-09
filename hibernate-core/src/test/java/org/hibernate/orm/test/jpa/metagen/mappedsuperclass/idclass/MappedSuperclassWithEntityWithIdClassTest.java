@@ -1,10 +1,9 @@
 package org.hibernate.orm.test.jpa.metagen.mappedsuperclass.idclass;
 
 import jakarta.persistence.EntityManagerFactory;
-import java.util.Arrays;
+import java.util.List;
 
 import org.hibernate.orm.test.jpa.TestingEntityManagerFactoryGenerator;
-import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -22,9 +21,8 @@ public class MappedSuperclassWithEntityWithIdClassTest {
 	@Test
 	@JiraKey( value = "HHH-5024" )
 	public void testStaticMetamodel() {
-		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
-				AvailableSettings.LOADED_CLASSES,
-				Arrays.asList( ProductAttribute.class )
+		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactoryForClasses(
+				List.of( ProductAttribute.class )
 		);
 
 		try {

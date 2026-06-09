@@ -1,0 +1,981 @@
+= Applied Contribution Model Design
+:toc:
+
+This note pulls together the overlapping design threads from
+link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`],
+link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`],
+link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`],
+link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`],
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`],
+and link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`].
+
+Those focused documents are still useful.  This document is the integration
+design: how the declaration/application/contribution ideas fit together, what
+implementation products should exist, how they are projected into
+`org.hibernate.mapping`, and what concrete triggers should move the ORM 9 work
+from one phase to the next.
+
+== Executive Summary
+
+The same modeling problem appears in generic inheritance, mapped superclasses,
+embeddables, identifiers, aggregate components, static metamodel creation, and
+runtime materialization:
+
+* a type or member declaration is not the same thing as a concrete usage;
+* an applied usage is scoped by an entity hierarchy, embedded path, collection
+  role, identifier role, table context, override/converter scope, and generic
+  type-variable resolution;
+* legacy `org.hibernate.mapping` objects still need to expose flattened closure
+  views for runtime and schema consumers;
+* current bridge fixes work by carrying a few missing facts on `Property`,
+  `Value`, `Component`, or side registries, but the facts belong to one shared
+  model.
+
+The target model is therefore:
+
+[source]
+----
+source annotations / XML
+        -> declarations
+        -> applied contributions
+        -> resolved contribution views
+        -> compatibility materialization to org.hibernate.mapping
+        -> runtime/domain/schema consumers
+----
+
+During the `MetadataBuildingProcess` transition, the resolved contribution
+model is an internal new-pipeline product and `org.hibernate.mapping` remains
+the shared compatibility contract.  The model becomes authoritative only when
+all supported boot paths either populate it or no longer need to share the same
+legacy mapping objects.
+
+== Shared Vocabulary
+
+=== Declaration
+
+A declaration is source-level state that is true independent of a consuming
+hierarchy or path.
+
+Examples:
+
+* an entity class declaration;
+* a mapped-superclass class declaration;
+* an embeddable class declaration;
+* an IdClass or embedded-id class declaration;
+* a persistent member declaration, including its hibernate-models
+  `MemberDetails` and declared `TypeDetails`;
+* declared annotations, XML overlay facts, callbacks, listeners, access type,
+  and type-level options.
+
+Declarations do not own table context, path overrides, concrete generic
+substitution, or flattened runtime ordering.
+
+=== Contribution
+
+A contribution is one application of a declaration to a concrete consumer.
+
+Examples:
+
+* a mapped superclass applied to one entity hierarchy;
+* an embeddable applied to one embedded attribute, nested component,
+  collection element, map key, aggregate value, or identifier role;
+* an identifier contribution that applies entity id members, IdClass members,
+  target identifier parts, and local selectables to one entity identifier;
+* a generic superclass member applied to one concrete subtype.
+
+Contributions own application facts:
+
+* consuming container and role;
+* owner-relative and full attribute path;
+* resolved `TypeVariableScope` and applied member `TypeDetails`;
+* effective override and converter lookup result;
+* implicit naming context;
+* table and secondary-table resolution;
+* identifier, version, natural-id, discriminator, and callback origin;
+* applied member order before any legacy compatibility sort.
+
+=== Correspondence
+
+Correspondence links related semantic parts that are not necessarily the same
+object and should not be matched only by position.
+
+Examples:
+
+* virtual entity id part to IdClass member;
+* embedded-id member to target id part through `@MapsId`;
+* local selectable to referenced selectable;
+* public generic JPA-domain attribute to concrete resolved SQM/runtime
+  attribute;
+* declaration member to applied copied `Property`;
+* aggregate storage value to aggregate element component.
+
+Correspondence products are how late materialization can derive compatible
+closures and ordering without treating copied legacy objects as the semantic
+source.
+
+=== Compatibility View
+
+A compatibility view is the shape expected by existing consumers:
+
+* `PersistentClass#getPropertyClosure()`;
+* copied mapped-superclass properties on entities;
+* `Component#getProperties()`;
+* `Property#isGeneric()` / `Property#isGenericSpecialization()`;
+* `MetadataContext#addConcreteGenericAttribute(...)`;
+* sorted identifier/component/selectable lists;
+* legacy runtime construction code that reads `PersistentClass`, `Component`,
+  `Property`, and `Value`.
+
+Compatibility views remain valid during migration, but they should be derived
+from declarations, contributions, and correspondence, not treated as primary
+state by new code.
+
+== Cross-Cutting Rules
+
+=== Use Hibernate Models For Source Type Facts
+
+Generic-aware binding and materialization code must use hibernate-models
+metadata:
+
+* `MemberDetails`;
+* `TypeDetails`;
+* `TypeVariableScope`;
+* `ClassDetails`;
+* `MemberDetails#resolveRelativeType(...)`;
+* `TypeDetails#determineRelativeType(...)`;
+* `TypeDetails#determineRawClass()`.
+
+Do not introduce new generic behavior by inspecting `Field`, `Method`,
+`ParameterizedType`, `TypeVariable`, or other reflection generic APIs.
+
+Reflection remains acceptable as a compatibility output where legacy APIs
+require `java.lang.reflect.Member`, `Class<?>`, or dynamic user-type parameters.
+Those calls should sit at boundaries such as `MemberDetails#toJavaMember()` or
+`ClassDetails#toJavaClass()`, after the model decision has already been made
+using hibernate-models.
+
+=== Declaration Type And Usage Type Are Both Real
+
+For a member declared as `T id` and applied as `Integer id`, both facts matter:
+
+* the declaration type drives public generic JPA-domain compatibility in some
+  paths;
+* the usage type drives concrete mapping, schema, converter, runtime, and SQM
+  resolution.
+
+The model must carry both facts explicitly rather than letting one overwrite
+the other in copied `Property` or `Value` instances.
+
+=== Table Context Belongs To Contributions
+
+Mapped-superclass and embeddable declarations do not own tables.
+
+Table, secondary-table, aggregate storage, collection-table, join-table, and
+identifier table context are resolved at the consuming hierarchy or path.  This
+is why mapped-superclass and embeddable contribution products are central to
+generic inheritance instead of separate from it.
+
+=== Materialization Is A Projection
+
+`org.hibernate.mapping` materialization should become a projection from
+resolved contribution views:
+
+* it may create `PersistentClass`, `MappedSuperclass`, `Component`, `Property`,
+  `Value`, `Column`, `AggregateColumn`, and table-key objects;
+* it may populate compatibility fields and copied properties;
+* it may register side-car metadata while legacy consumers still need it;
+* it should not rediscover declaration, application, generic, or correspondence
+  facts by inspecting partially built mapping objects.
+
+=== Runtime Consumers Move Gradually
+
+Runtime, schema, and domain-model consumers should not be forced to consume a
+new model all at once.
+
+The migration rule is:
+
+* new boot pipeline records the semantic facts;
+* materialization writes every fact needed by current runtime consumers into
+  existing mapping slots or a lookup adapter;
+* touched runtime consumers may move from direct legacy closure interpretation
+  to contribution-aware adapters;
+* compatibility views remain until all supported consumers can derive the same
+  answers from resolved contribution state.
+
+== Target Products
+
+Names are provisional.  The important part is the responsibility boundary.
+
+=== Managed Type Declaration
+
+`ManagedTypeDeclaration` describes source-level managed types:
+
+* entity declarations;
+* mapped-superclass declarations;
+* embeddable declarations;
+* dynamic/XML class declarations;
+* source members and access strategy;
+* source annotations/XML overlays;
+* declared lifecycle state;
+* generic type parameters.
+
+This can initially be represented by existing categorization and binding nodes
+such as entity, mapped-superclass, and embeddable bindings.
+
+=== Attribute Declaration
+
+`AttributeDeclaration` describes one persistent member declaration:
+
+* declaring managed type;
+* source `MemberDetails`;
+* declared `TypeDetails`;
+* source annotations/XML facts;
+* declaration role hints such as id, version, tenant id, discriminator,
+  natural id, basic, embedded, association, any, or plural;
+* declaration-level access, mutability, custom type, and converter facts.
+
+It does not own resolved table, column, override, or generic usage state.
+
+=== Applied Type Contribution
+
+`AppliedTypeContribution` applies one managed-type declaration to one consumer:
+
+* mapped superclass to entity hierarchy;
+* embeddable to embedded path;
+* embeddable to collection element/map key;
+* embeddable to aggregate value;
+* mapped superclass to embeddable contribution;
+* entity superclass generic contribution to subtype.
+
+It carries:
+
+* contribution owner;
+* contribution role;
+* resolved `TypeVariableScope`;
+* effective table/storage context;
+* override/converter lookup context;
+* applied member descriptors;
+* origin and ownership metadata for every produced compatibility property.
+
+=== Applied Attribute
+
+`AppliedAttribute` is the attribute usage after all consuming-context decisions:
+
+* declaration member;
+* applied member type after generic substitution;
+* value kind and source role;
+* resolved conversion/custom type;
+* table/selectable context;
+* identifier/version/natural-id role in the consuming container;
+* materialized compatibility `Property` and `Value`, when produced.
+
+This is the object binders and materializers should prefer over raw
+`MemberDetails` plus local helper methods.
+
+=== Correspondence Products
+
+Useful correspondence products include:
+
+`AttributeCorrespondence`::
+Links declaration, applied attribute, compatibility `Property`, public
+JPA-domain attribute, and concrete resolved SQM/runtime attribute.
+
+`IdentifierPartCorrespondence`::
+Links virtual id parts, IdClass or embedded-id parts, target id parts, local
+selectables, referenced selectables, and runtime JDBC positions.
+
+`SelectableCorrespondence`::
+Links local selectables to referenced selectables, including source role and
+ordering intent.
+
+`RelationalModelCorrespondences`::
+Owns binding-time relational correspondences produced while projecting resolved
+contributions into compatibility `org.hibernate.mapping` objects.  The first
+implemented product is `ColumnNameCorrespondence`, which links a table-local
+logical column identifier to the physical `Column` created by materialization
+and supports reverse lookup from physical column to logical source name.
+Materializers should register this metadata beside the mapping objects they
+create.  New-pipeline consumers should consult the correspondence first and
+project to, or fall back to, legacy collector lookups only for compatibility.
+
+`GenericTypeCorrespondence`::
+Links declaration type variables to applied `TypeDetails`, including nested
+parameterized, wildcard, array, collection element, and map key/value types.
+
+`StorageCorrespondence`::
+Links aggregate or basic-plural storage values to element components,
+aggregate columns, JSON/XML/STRUCT storage descriptors, and runtime basic or
+embeddable mapping choices.
+
+Relational correspondence should grow by trigger, not by sweeping every database
+object into a registry.  Add a new product when the pipeline has already
+resolved a relational fact and later code would otherwise rediscover it from
+`Table`, `Column`, constraints, or `InFlightMetadataCollector` side maps.  The
+likely next candidates are table logical/physical name correspondence,
+selectable correspondence registry attachment, constraint-name correspondence,
+and foreign-key/key correspondence.  Defer sequences, auxiliary database
+objects, namespaces, and plain registrations unless they need bidirectional
+source-to-materialized-object lookup.
+
+=== Runtime Handoff Adapter
+
+`RuntimeMappingPreparation` or `ContributionRuntimeView` is a transitional
+adapter over `org.hibernate.mapping` plus contribution metadata.
+
+It should answer questions that current runtime/domain consumers now infer
+from flattened objects:
+
+* where was this property declared?
+* which contribution applied it?
+* what is its declaration member type?
+* what is its usage member type?
+* which table/storage context owns its selectables?
+* which public JPA-domain attribute should be exposed?
+* which concrete attribute should SQM/runtime use?
+* which identifier/selectable correspondence controls ordering?
+* which component contribution owns this subtype or aggregate state?
+
+The adapter can start as a new-pipeline side registry keyed by
+`PersistentClass`, `MappedSuperclass`, `Component`, `Property`, and `Value`.
+It should not become authoritative for legacy boot until legacy boot can
+populate equivalent data.
+
+== Implementation Design
+
+=== Source And Categorization
+
+Source collection and categorization should produce declaration facts without
+materializing final mapping objects.
+
+Required implementation direction:
+
+* keep hibernate-models `ClassDetails`, `MemberDetails`, and `TypeDetails` as
+  the source type vocabulary;
+* apply XML overlays before binding creates applied attributes;
+* record declaration-level annotations and XML facts once;
+* avoid resolving generic type variables in categorization unless the consumer
+  type is already known;
+* keep dynamic/XML class details representable without forcing Java reflection.
+
+Trigger to advance:
+
+* focused XML overlay, dynamic XML, annotation coverage, and generic source
+  tests are green while using hibernate-models for all new generic decisions;
+* no new binder code needs reflection generic inspection to classify inherited
+  generic members.
+
+=== Binding
+
+Binding should create declarations and applied contributions.
+
+Required implementation direction:
+
+* entity hierarchy binding creates entity declarations and hierarchy
+  contribution roots;
+* mapped-superclass binding creates hierarchy-scoped contributions, not just
+  global class-keyed mapping nodes;
+* embeddable binding creates path-scoped contributions with source role,
+  path, overrides, table/storage context, and type-variable scope;
+* identifier binding creates explicit identifier contribution and
+  correspondence products;
+* collection binding carries element/key/index source roles and type scopes;
+* generic type-variable resolution is centralized around `TypeDetails` and
+  `TypeVariableScope`.
+
+Near-term bridge:
+
+* existing `AttributeDeclarationBinding`, `StandardAttributeUsageBinding`,
+  `ComponentMemberBinding`, `MappedSuperclassContribution`, `ComponentSource`,
+  and `CollectionSource` are acceptable transitional products;
+* add source facts to these products before creating new parallel objects;
+* keep `Property#isGeneric()` and `Property#isGenericSpecialization()` as the
+  legacy compatibility bridge for JPA-domain/SQM behavior.
+
+Trigger to advance:
+
+* mapped-superclass generic id/basic/association guardrails are green;
+* generic embeddable member and nested generic embeddable guardrails are green;
+* identifier/derived-id correspondence guardrails are green;
+* future regressions in this area are fixed by adding facts to applied bindings
+  rather than by reinterpreting copied `Property` or `Value` instances.
+
+=== Finalization And Views
+
+Finalization should turn mutable binding state into stable resolved views.
+
+Required implementation direction:
+
+* resolve contribution traversal order;
+* resolve applied member lists in compatibility order and semantic order;
+* resolve generic declaration-to-usage correspondence;
+* resolve table/selectable correspondence;
+* resolve identifier part correspondence;
+* resolve public JPA-domain attributes and concrete resolved attributes;
+* freeze the view before materialization mutates legacy mapping objects.
+
+Near-term bridge:
+
+* current binding views and materializer sources may act as partial views;
+* avoid direct consumers walking raw mutable binding collections once a view
+  exists for the same question.
+
+Trigger to advance:
+
+* at least two consumers use the same view for the same fact, for example
+  mapping materialization and JPA metamodel preparation;
+* finalization can answer declaration origin, usage type, table context, and
+  ordering without reading back from materialized `Property`/`Value` state.
+
+=== Materialization To `org.hibernate.mapping`
+
+Materialization should project resolved views into compatibility objects.
+
+Required implementation direction:
+
+* materializers create and mutate `PersistentClass`, `MappedSuperclass`,
+  `Component`, `Property`, `Value`, `Column`, `AggregateColumn`, table keys,
+  and FKs;
+* materializers populate compatibility slots such as
+  `Property#getMemberDetails()`, generic flags, returned class names, aggregate
+  column state, declared version/id state, and property-declaring-class state;
+* materializers register correspondence metadata beside mapping objects when
+  no stable mapping slot exists;
+* materializers should not contain local type-variable resolution logic when
+  the applied binding/view already knows the usage type.
+
+Near-term bridge:
+
+* `Property#getMemberDetails()` is a valid compatibility handoff for source
+  member facts;
+* `BasicValue` and `Component` may still carry selected generic/aggregate
+  state needed by current runtime consumers;
+* flattened property copies remain, but their origin should be recoverable.
+
+Trigger to advance:
+
+* materialized mapping objects can satisfy legacy runtime/schema consumers
+  while contribution metadata can answer origin/type/ownership questions for
+  new consumers;
+* focused tests prove copied properties do not lose source `MemberDetails`,
+  declaration type, usage type, table context, or identifier correspondence.
+
+=== JPA Domain And SQM Model
+
+JPA domain and SQM model creation is the first runtime-adjacent consumer that
+should move toward contribution-aware data.
+
+Required implementation direction:
+
+* `MetadataContext` should consume declaration/usage facts when available;
+* public generic attributes and concrete resolved attributes should come from
+  the same correspondence product;
+* `Path#getJavaType()` and `SqmPath#getResolvedModel()` should not require
+  copied `BasicValue` or reflection-based member inspection to recover generic
+  declaration shape;
+* static metamodel injection should use resolved public attribute views rather
+  than guessing from flattened id/component closures.
+
+Near-term bridge:
+
+* keep `MetadataContext#addConcreteGenericAttribute(...)` until a
+  contribution-aware generic view replaces it;
+* use `Property#getMemberDetails()` and hibernate-models type details for
+  generic source facts;
+* keep legacy fallbacks for mappings produced by legacy boot.
+
+Trigger to advance:
+
+* the generic guardrail set is green using hibernate-models source facts;
+* static metamodel id/generic tests are green;
+* JPA-domain generic public behavior and concrete SQM resolution can be
+  described from correspondence metadata rather than property flags alone.
+
+=== Runtime Mapping And Persister Construction
+
+Runtime mapping should move after materialization and JPA-domain/SQM handoff
+are stable.
+
+Required implementation direction:
+
+* entity persister construction should eventually consume a prepared runtime
+  mapping plan instead of rediscovering property closure semantics;
+* embeddable runtime mapping should consume component contribution facts for
+  subtype ownership, instantiation, aggregate storage, and generic usage types;
+* identifier runtime conversion should consume identifier correspondence;
+* schema/exportable generation should consume explicit table/selectable/key
+  correspondence.
+
+Near-term bridge:
+
+* runtime consumers may continue to read `PersistentClass`, `Component`,
+  `Property`, and `Value`;
+* when a runtime bug appears, prefer adding a missing handoff fact or adapter
+  answer before changing SQL AST/runtime semantics;
+* crossing runtime boundaries is acceptable only when the compatibility handoff
+  cannot express the needed fact or when a consumer is being deliberately moved
+  to the adapter.
+
+Trigger to advance:
+
+* the runtime handoff adapter can be populated by the new pipeline for the
+  target feature area;
+* legacy mapping objects and adapter answers agree in focused comparison tests;
+* a runtime consumer has a clear local replacement for direct flattened
+  closure interpretation.
+
+== Phased Migration Plan
+
+=== Phase 0: Bridge Discipline
+
+Goal: stop adding unstructured generic/contribution hacks.
+
+Implementation:
+
+* keep current compatibility mapping objects;
+* require hibernate-models for new generic decisions;
+* use `Property#getMemberDetails()` as the source-member bridge;
+* centralize type-variable detection/resolution in binding/source helpers;
+* document every new compatibility slot as declaration, usage, or
+  correspondence state.
+
+Status as of the current ORM 9 worktree:
+
+* the JPA-domain/SQM metamodel bridge has an explicit
+  `AttributeTypeCorrespondence` product linking compatibility `Property`,
+  source `MemberDetails`, declared `TypeDetails`, owner-relative usage
+  `TypeDetails`, and materialized attribute metadata;
+* singular and plural metamodel metadata resolve declaration, collection
+  element, and map key/value Java types through hibernate-models
+  `TypeDetails` and `TypeVariableScope` before falling back to compatibility
+  mapping value types;
+* concrete generic plural attributes are visible through normal JPA metamodel
+  plural lookup, including inherited `List<T>` and `Map<K,T>` attributes;
+* focused guardrails cover inherited generic id/basic behavior, inherited
+  generic list element metamodel lookup, and generic map key/value metamodel
+  lookup, including owner-relative reuse of the same inherited
+  `Map<String,T>` declaration across two concrete entity owners.
+
+Plural metamodel metadata no longer parses reflection generic signatures for
+element or map-key typing.  New generic behavior should continue to be
+expressed through hibernate-models and the correspondence bridge.
+
+Triggers to enter:
+
+* immediately, for all new work touching generics, mapped superclasses,
+  embeddables, identifiers, aggregates, or materialization parity.
+
+Triggers to leave:
+
+* new generic/materialization fixes no longer need ad hoc reflection or copied
+  value reinterpretation;
+* focused guardrails for current known buckets are green.
+
+=== Phase 1: Contribution Metadata Sidecars
+
+Goal: record semantic facts beside compatibility mapping objects.
+
+Implementation:
+
+* add side registries keyed by mapping objects where no stable field exists;
+* record declaration origin, applied contribution, declaration type, usage
+  type, source role, path, table context, and correspondence;
+* for record embeddables, record-component-to-field/accessor correspondence and
+  an effective annotation/member view before changing source-member selection;
+* populate sidecars from the new boot pipeline only;
+* keep legacy boot fallbacks.
+
+Initial slice in the current ORM 9 worktree:
+
+* `AttributeTypeCorrespondenceRegistry` is the first narrow sidecar.  It is
+  keyed by compatibility `Property` identity plus owner `ManagedDomainType`
+  identity and stores `AttributeTypeCorrespondence` for JPA-domain/SQM
+  metamodel creation.
+* `MetadataContext` owns the registry for metamodel construction, and
+  `AttributeFactory` resolves correspondence once per property before building
+  singular or plural attribute metadata.
+* Attribute metadata now consumes registered correspondence instead of
+  constructing declaration/usage type facts locally.
+* Plural element and map-key Java-type resolution now lives on
+  `AttributeTypeCorrespondence`: hibernate-models type facts are authoritative,
+  and legacy `org.hibernate.mapping` value types are only the compatibility
+  fallback for mappings without source `MemberDetails`.
+* `MappedSuperclassPropertyHandoff` is the second narrow sidecar.  It is owned
+  by binding state, keyed by materialized compatibility `Property` identity,
+  and links each copied mapped-superclass property to the
+  `MappedSuperclassContributionView` and nearest entity owner that produced it.
+  Binding state also exposes contribution-scoped and owner-scoped lookup so
+  later consumers can start from the semantic contribution instead of
+  rediscovering copied properties through flattened closures.
+* `EmbeddableComponentHandoff` is the third narrow sidecar.  It is owned by
+  binding state, keyed by materialized compatibility `Component` identity, and
+  links each component to the `EmbeddableContributionView` and entity owner
+  that produced it.  Binding state also exposes contribution-scoped and
+  owner-scoped lookup in materialization order for consumers moving from
+  component closure interpretation to contribution-aware traversal.
+* `EntityIdentifierHandoff` is the fourth narrow sidecar.  It is owned by
+  binding state, keyed by materialized `RootClass` and identifier `KeyValue`
+  identity, and links the semantic `EntityIdentifierBindingView` to the
+  compatibility `IdentifierBinding` produced for later boot consumers.  The
+  handoff exposes the materialized root, identifier value, optional identifier
+  property, optional identifier mapper, table, and ordered identifier columns.
+* The existing `TableReference` products are now also indexed by materialized
+  `org.hibernate.mapping.Table` identity in binding state.  Primary and
+  secondary tables keep their named-table registration behavior; collection,
+  owned, and association physical tables use an identity-only handoff so later
+  consumers can resolve the originating `TableReference` without changing
+  `getTableCount()`, `forEachTable(...)`, or logical-name table lookup
+  semantics.
+* `NaturalIdPropertyHandoff` and `CollationPropertyHandoff` are property-level
+  contribution handoffs owned by binding state.  They link the existing
+  `NaturalIdContributionView` and `CollationContributionView` products to the
+  compatibility `Property` mutated by materialization, with property-keyed and
+  contribution-scoped lookup.  They are intentionally narrow: the legacy
+  natural-id flags, updatability, and column collation remain the compatibility
+  projection, while the semantic contribution remains queryable beside it.
+* `TenantIdPropertyHandoff` is the entity-scoped property handoff for
+  `TenantIdBindingView`.  It links the semantic tenant-id binding to the
+  materialized root entity and contributed compatibility `Property`, with
+  root-keyed, property-keyed, and binding-view lookup.  The tenant filter,
+  row-level-security table initialization, updateability, and nullability
+  remain compatibility projections.
+* `VersionPropertyHandoff` is the root-scoped property handoff for
+  `VersionBindingView`.  It links the semantic version binding to the
+  materialized root entity and version `Property`, with root-keyed,
+  property-keyed, and binding-view lookup.  The `RootClass` version and
+  declared-version slots and version basic value remain compatibility
+  projections.
+* The sidecar shape is now proven in both metamodel construction and
+  mapped-superclass, embeddable, identifier, table-reference, and property-level
+  attribute-contribution materialization.  Runtime facts should move into
+  similarly scoped registries only when a focused consumer needs them.
+
+Triggers to enter:
+
+* at least one consumer needs a fact that does not belong cleanly on existing
+  mapping objects;
+* the fact can be populated during binding/materialization without changing
+  runtime semantics.
+
+Triggers to leave:
+
+* materialization and at least one runtime-adjacent consumer can use the same
+  sidecar/view for the same fact;
+* focused comparison tests prove the sidecar agrees with legacy mapping
+  behavior for supported paths.
+
+=== Phase 2: Stable Resolved Views
+
+Goal: expose stable read APIs over applied contribution state.
+
+Implementation:
+
+* define view interfaces for mapped-superclass contributions, embeddable
+  contributions, generic correspondence, identifier correspondence, and
+  storage correspondence;
+* make materializers consume views instead of mutable binding nodes;
+* move JPA-domain/static-metamodel preparation to views where practical.
+
+Triggers to enter:
+
+* sidecar metadata is being read from more than one place;
+* duplicate local logic appears in binders, materializers, and MetadataContext.
+
+Triggers to leave:
+
+* materialization can be described as a projection from resolved views;
+* common ordering/correspondence questions have one view-backed answer.
+
+=== Phase 3: Runtime Handoff Adapter
+
+Goal: let touched runtime/domain/schema consumers stop reverse-engineering
+source facts from flattened mapping objects.
+
+Implementation:
+
+* build a contribution-aware adapter over `PersistentClass`, `Component`,
+  `Property`, `Value`, and sidecar/view metadata;
+* move `MetadataContext` first, then targeted embeddable/identifier/aggregate
+  runtime consumers;
+* keep legacy fallbacks until legacy boot can populate equivalent facts or is
+  removed.
+
+Triggers to enter:
+
+* a runtime/domain/schema failure needs declaration/application information
+  that cannot be safely represented by another compatibility field;
+* the adapter can be populated for the relevant feature and has focused parity
+  tests.
+
+Triggers to leave:
+
+* the target consumer no longer directly interprets copied flattened closures
+  for the moved fact;
+* compatibility views still pass legacy-style focused tests.
+
+=== Phase 4: Reshape `org.hibernate.mapping`
+
+Goal: make mapping objects represent the resolved boot mapping model more
+honestly.
+
+Implementation:
+
+* introduce or repurpose managed mapping type abstractions for entity,
+  mapped-superclass, and embeddable shapes;
+* make mapped-superclass and embeddable contribution ownership explicit;
+* derive flattened property closures from contributions;
+* move stable correspondence facts onto mapping objects when all boot paths can
+  populate them;
+* remove compatibility copies only after runtime consumers no longer depend on
+  them as primary state.
+
+Triggers to enter:
+
+* `MetadataBuildingProcess` has been removed, or legacy boot can populate the
+  same contribution/correspondence facts;
+* runtime handoff adapter coverage exists for the area being reshaped;
+* a mapping-object change removes real ambiguity rather than just renaming a
+  sidecar.
+
+Triggers to leave:
+
+* the reshaped mapping API is the source consumed by runtime/domain/schema
+  creation for the target area;
+* legacy compatibility APIs are derived views.
+
+=== Phase 5: Remove Transitional Bridges
+
+Goal: eliminate copied-state compatibility code that no longer owns facts.
+
+Implementation:
+
+* remove redundant generic flags or reinterpretation paths after replacement
+  views are authoritative;
+* remove eager mapped-superclass property copying where closures can derive
+  inherited properties;
+* remove component compatibility fields superseded by embeddable contribution
+  views;
+* simplify `MetadataContext` generic/concrete split around explicit
+  correspondence.
+
+Triggers to enter:
+
+* all supported boot paths produce the resolved contribution model;
+* broad runtime/schema/domain guardrails are green using the new path;
+* no remaining consumer treats the transitional bridge as authoritative.
+
+Triggers to leave:
+
+* the bridge is deleted and broad guardrails remain green.
+
+== Area-Specific Integration
+
+=== Generic Inheritance
+
+Generic inheritance should be modeled as declaration/usage correspondence on
+applied attributes.
+
+Implementation direction:
+
+* declaration type lives on `AttributeDeclaration` from
+  `MemberDetails#getType()`;
+* usage type lives on `AppliedAttribute` from
+  `MemberDetails#resolveRelativeType(...)` or equivalent contribution scope;
+* generic public JPA attributes and concrete resolved attributes are linked by
+  `GenericTypeCorrespondence` / `AttributeCorrespondence`;
+* compatibility flags remain only as projections for legacy consumers.
+
+Do now:
+
+* keep hibernate-models-only generic fixes;
+* centralize type-variable detection;
+* preserve `Property#getMemberDetails()` across copies;
+* add focused guardrails for generic ids, mapped-superclass attributes,
+  entity-superclass attributes, generic embeddables, and generic plural
+  members.
+
+Do later:
+
+* replace `MetadataContext#addConcreteGenericAttribute(...)` with an explicit
+  generic correspondence view;
+* make public generic path behavior a view-backed decision instead of a
+  copied-property side effect.
+
+=== Mapped Superclasses
+
+Mapped-superclass declarations are shared source facts; contributions are
+hierarchy-scoped applications.
+
+Implementation direction:
+
+* one mapped-superclass Java declaration may produce multiple hierarchy-scoped
+  applications;
+* table context, identifier/version application, callbacks, overrides, and
+  generic substitution belong to contributions;
+* copied properties on `PersistentClass` are compatibility views;
+* origin should be recoverable from every copied property.
+
+Do now:
+
+* continue treating current `MappedSuperclass` mapping nodes as contribution-
+  like where the branch already does so;
+* keep direct managed-type supertype graph work;
+* add origin and source member metadata to copied properties.
+
+Do later:
+
+* introduce a true descriptor/contribution split only when runtime consumers
+  can derive flattened closures from contributions.
+
+=== Embeddables And Components
+
+Embeddable declarations are type-level; component mappings are path-specific
+applications.
+
+Implementation direction:
+
+* `ComponentSource` and related products should become an embeddable
+  contribution/component-mapping product;
+* source role, path, type-variable scope, overrides, table/storage context,
+  discriminator state, and aggregate strategy belong to the contribution;
+* `Component` remains a compatibility carrier until runtime embeddable mapping
+  can consume contribution views.
+
+Do now:
+
+* keep moving generic member resolution into `ComponentSource` /
+  applied-member descriptors;
+* preserve source member and applied type metadata through nested components;
+* keep aggregate storage facts explicit on `AggregateColumn` and component
+  metadata where runtime still needs them.
+
+Do later:
+
+* move `EmbeddableMappingTypeImpl` and related runtime consumers to a
+  contribution-backed runtime view for subtype ownership, aggregate storage,
+  and generic usage types.
+
+=== Identifiers
+
+Identifier handling is a correspondence problem, not a sorted-list problem.
+
+Implementation direction:
+
+* virtual id attributes, IdClass members, embedded-id members, target id parts,
+  local selectables, and referenced selectables should be linked explicitly;
+* ordering for PK/FK/runtime JDBC positions should be derived from
+  correspondence;
+* declaration source member and public id representation should stay distinct.
+
+Do now:
+
+* keep bridge materializers for simple, embedded, IdClass, association-id, and
+  derived-id shapes;
+* add correspondence metadata where list sorting or copied components still
+  hide semantic ownership.
+
+Do later:
+
+* move runtime id conversion and static metamodel id exposure to identifier
+  correspondence views.
+
+=== Aggregates
+
+Aggregates are storage-specific contributions of embeddable/component state.
+
+Implementation direction:
+
+* aggregate storage strategy belongs to the applied embeddable contribution;
+* scalar aggregate embeddables and aggregate arrays may have different runtime
+  mapping routes but should share source contribution facts;
+* storage correspondence should link aggregate column, aggregate value,
+  element component, and runtime basic/plural/embeddable mapping choices.
+
+Do now:
+
+* keep focused aggregate array and JSON/XML/STRUCT guardrails;
+* express aggregate facts in materialization handoff metadata before changing
+  SQL AST/runtime behavior.
+
+Do later:
+
+* remove reliance on second-pass aggregate component setup when contribution
+  finalization can resolve dialect support and aggregate read/write/extraction
+  facts.
+
+== Test Strategy
+
+Each phase should have small focused tests before broad slices.
+
+Generic tests:
+
+* mapped-superclass generic id;
+* entity-superclass generic id;
+* generic basic inherited attribute;
+* generic embedded-id attribute;
+* generic embeddable member;
+* nested generic embeddable member;
+* generic plural element/map key/member.
+
+Mapped-superclass tests:
+
+* shared mapped superclass applied to multiple roots;
+* mapped superclass above root table;
+* mapped superclass between entity types;
+* mapped-superclass id/version declaration;
+* secondary-table and override routing;
+* static metamodel inherited attribute exposure.
+
+Embeddable tests:
+
+* same embeddable embedded twice with different overrides;
+* generic embeddable applied with different type arguments;
+* mapped superclass above embeddable root;
+* polymorphic embeddable subtype ownership;
+* nested component path overrides;
+* aggregate scalar and aggregate array variants.
+
+Identifier tests:
+
+* IdClass basic/to-one/component parts;
+* association-valued id attributes;
+* `@MapsId` whole-id and nested-id forms;
+* embedded id with inherited generic members;
+* non-PK property-ref target correspondence.
+
+Runtime/domain/schema tests:
+
+* JPA metamodel public generic type versus concrete SQM resolution;
+* static metamodel injection for inherited/generic/id attributes;
+* schema/exportables for inherited and aggregate columns;
+* runtime fetch/domain-result paths for aggregate and identifier shapes.
+
+== Decision Checklist For New Fixes
+
+Before adding a local fix, answer:
+
+* Is this a declaration fact or a usage/contribution fact?
+* Is the type fact coming from hibernate-models?
+* Which consuming role/path/hierarchy owns the fact?
+* Does a compatibility `Property`, `Value`, or `Component` need the fact?
+* Does a sidecar/view need the fact because no stable mapping slot exists?
+* Which focused guardrail proves the fact survives materialization?
+* Is this safe for legacy boot fallback?
+* Does the fix move us closer to a resolved contribution view, or does it add
+  another copied-object inference?
+
+If the answer is copied-object inference, prefer adding source/contribution
+metadata first.
+
+== Open Questions
+
+* Should the first stable view be a single `AppliedAttribute` API, or separate
+  mapped-superclass, embeddable, identifier, and generic views?
+* Should contribution metadata sidecars live in `BindingState`, `Metadata`, or
+  a runtime preparation product?
+* How much of `Property#getMemberDetails()` should be generalized into a
+  source-member contract on mapping objects?
+* Which runtime consumer should move first after `MetadataContext`: identifier
+  runtime conversion, embeddable runtime mapping, schema/exportable generation,
+  or entity persister property closure handling?
+* When legacy boot is removed, which compatibility flags become derived data
+  and which remain useful public mapping metadata?

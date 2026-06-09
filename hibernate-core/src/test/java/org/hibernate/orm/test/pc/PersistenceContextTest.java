@@ -14,10 +14,9 @@ import org.hibernate.Hibernate;
 import org.hibernate.KeyType;
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Statement;
@@ -27,7 +26,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
  * @author Vlad Mihalcea
@@ -36,20 +34,9 @@ import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 		annotatedClasses = {
 				PersistenceContextTest.Person.class,
 				PersistenceContextTest.Book.class,
-		},
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = PersistenceContextTest.CollectionClassificationProvider.class
-		)
-)
+		})
 public class PersistenceContextTest {
 
-	public static class CollectionClassificationProvider implements SettingProvider.Provider<CollectionClassification> {
-		@Override
-		public CollectionClassification getSetting() {
-			return CollectionClassification.BAG;
-		}
-	}
 
 	@Test
 	void missingEntityLookups(EntityManagerFactoryScope scope) {

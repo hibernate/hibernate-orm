@@ -9,7 +9,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
@@ -256,8 +255,7 @@ public class DatabaseTimeZoneMultiTenancyTest {
 				)
 		);
 
-		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
-		return sessionFactoryBuilder.build();
+		return metadata.buildSessionFactory();
 	}
 
 	protected Class<?>[] getAnnotatedClasses() {

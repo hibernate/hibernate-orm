@@ -25,7 +25,6 @@ public interface BatchSettings {
 	 *
 	 * @see java.sql.PreparedStatement#executeBatch
 	 * @see java.sql.PreparedStatement#addBatch
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 *
 	 * @settingDefault 0
 	 */
@@ -42,8 +41,6 @@ public interface BatchSettings {
 	 * by executing collection updates involving removals before collection
 	 * updates which don't involve removals.
 	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfUpdates
-	 *
 	 * @settingDefault {@code false}
 	 */
 	String ORDER_UPDATES = "hibernate.order_updates";
@@ -54,8 +51,6 @@ public interface BatchSettings {
 	 * <p>
 	 * The sort order respects foreign key dependencies between entities, and
 	 * therefore does not increase the chance of a foreign key violation.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyOrderingOfInserts
 	 *
 	 * @settingDefault {@code false}
 	 */

@@ -5,7 +5,8 @@ import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -80,8 +81,8 @@ public class TenantIdTest implements SessionFactoryProducer {
 
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-		sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<String>() {
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
+		optionsCollector.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<String>() {
 			@Override
 			public String resolveCurrentTenantIdentifier() {
 				return currentTenant;
@@ -96,7 +97,7 @@ public class TenantIdTest implements SessionFactoryProducer {
 				return "root".equals( tenantId );
 			}
 		} );
-		return (SessionFactoryImplementor) sessionFactoryBuilder.build();
+		return SessionFactoryPipeline.build( model, optionsCollector );
 	}
 
 	@Test

@@ -57,7 +57,6 @@ import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -733,16 +732,10 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public AccessType getImplicitCacheAccessType() {
-			return null;
+			public AccessType getImplicitCacheAccessType() {
+				return null;
+			}
 		}
-
-		@Override
-		@Deprecated(since = "8.0", forRemoval = true)
-		public CollectionClassification getImplicitListClassification() {
-			return null;
-		}
-	}
 
 	@Override
 	@Nonnull

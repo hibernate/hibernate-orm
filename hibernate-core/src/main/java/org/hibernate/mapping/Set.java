@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -25,6 +27,9 @@ import org.hibernate.usertype.UserCollectionType;
  * @author Gavin King
  */
 public non-sealed class Set extends Collection {
+	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
+			new UniqueKeyMappingMaterializer();
+
 	/**
 	 * Used by hbm.xml binding
 	 */
@@ -77,6 +82,15 @@ public non-sealed class Set extends Collection {
 		}
 	}
 
+	/**
+	 * Compatibility-only implementation of the hidden collection key hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
 			final var collectionTable = getCollectionTable();
@@ -98,15 +112,29 @@ public non-sealed class Set extends Collection {
 						}
 					}
 				}
-				final Constraint key;
 				if ( useUniqueKey ) {
-					final var uniqueKey = new UniqueKey( collectionTable );
-					uniqueKey.setNullsNotDistinct( true );
-					key = uniqueKey;
+					final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( getKey().getColumnSpan() );
+					uniqueKeyColumns.addAll( getKey().getColumns() );
+					for ( var selectable : getElement().getSelectables() ) {
+						if ( selectable instanceof Column column ) {
+							uniqueKeyColumns.add( column );
+						}
+					}
+					if ( uniqueKeyColumns.size() > getKey().getColumnSpan() ) {
+						UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
+								ResolvedUniqueKey.internal(
+										collectionTable,
+										uniqueKeyColumns,
+										getBuildingContext(),
+										true,
+										getRole()
+								)
+						);
+					}
+					return;
 				}
-				else {
-					key = new PrimaryKey( collectionTable );
-				}
+
+				final Constraint key = new PrimaryKey( collectionTable );
 				key.addColumns( getKey() );
 				for ( var selectable : getElement().getSelectables() ) {
 					if ( selectable instanceof Column column ) {
@@ -141,12 +169,7 @@ public non-sealed class Set extends Collection {
 						} )
 						.render( getMetadata().getDatabase().getDialect() ) );
 				if ( key.getColumnSpan() > getKey().getColumnSpan() ) {
-					if ( useUniqueKey ) {
-						collectionTable.addUniqueKey( (UniqueKey) key );
-					}
-					else {
-						collectionTable.setPrimaryKey( (PrimaryKey) key );
-					}
+					collectionTable.setPrimaryKey( (PrimaryKey) key );
 				}
 //				else {
 					//for backward compatibility, allow a set with no not-null

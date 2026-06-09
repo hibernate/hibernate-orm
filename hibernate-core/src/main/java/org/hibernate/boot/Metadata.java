@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Remove;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -35,22 +34,11 @@ import org.hibernate.type.MappingContext;
  */
 public interface Metadata extends MappingContext {
 	/**
-	 * Get the builder for {@link SessionFactory} instances based on this metamodel.
-	 *
-	 * @return The builder for {@link SessionFactory} instances.
-	 */
-	@Remove
-	@Nonnull
-	SessionFactoryBuilder getSessionFactoryBuilder();
-
-	/**
-	 * Shorthand form of building a {@link SessionFactory} through the builder without any additional
-	 * option overrides.
+	 * Short-hand form of building a {@link SessionFactory}
+	 * without any additional option overrides.
 	 *
 	 * @return THe built SessionFactory.
 	 */
-	@Remove
-	@Nonnull
 	SessionFactory buildSessionFactory();
 
 	/**

@@ -35,7 +35,6 @@ public interface MultiTenancySettings {
 	 *
 	 * @see CurrentTenantIdentifierResolver
 	 * @see MultiTenancy#getTenantIdentifierResolver()
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyCurrentTenantIdentifierResolver
 	 *
 	 * @since 4.1
 	 */
@@ -63,7 +62,6 @@ public interface MultiTenancySettings {
 	 *
 	 * @see org.hibernate.context.spi.TenantSchemaMapper
 	 * @see MultiTenancy#getTenantSchemaMapper()
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantSchemaMapper
 	 *
 	 * @since 7.1
 	 */
@@ -89,7 +87,6 @@ public interface MultiTenancySettings {
 	 *
 	 * @see org.hibernate.context.spi.TenantCredentialsMapper
 	 * @see MultiTenancy#getTenantCredentialsMapper()
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyTenantCredentialsMapper
 	 *
 	 * @since 7.3
 	 */

@@ -2,7 +2,6 @@ package org.hibernate.cfg;
 
 import java.util.function.Supplier;
 
-import org.hibernate.Interceptor;
 
 /**
  * @author Steve Ebersole
@@ -30,9 +29,6 @@ public interface SessionEventSettings {
 	 * applied; the same instance will be passed to each {@code Session}. If there
 	 * should be a separate instance of {@code Interceptor} for each {@code Session},
 	 * use {@link #SESSION_SCOPED_INTERCEPTOR} instead.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyInterceptor(Interceptor)
-	 *
 	 * @since 5.0
 	 */
 	String INTERCEPTOR = "hibernate.session_factory.interceptor";
@@ -52,10 +48,6 @@ public interface SessionEventSettings {
 	 * This setting identifies an {@code Interceptor} implementation that is to be
 	 * applied to every {@code Session} opened from the {@code SessionFactory}, but
 	 * unlike {@link #INTERCEPTOR}, a separate instance created for each {@code Session}.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(Class)
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(Supplier)
-	 *
 	 * @since 5.2
 	 */
 	String SESSION_SCOPED_INTERCEPTOR = "hibernate.session_factory.session_scoped_interceptor";

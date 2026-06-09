@@ -99,6 +99,7 @@ public abstract class AbstractFlushingEventListener {
 		session.runInterceptorCallback(
 				() -> session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() ) );
 		prepareEntityFlushes( session, persistenceContext );
+		BidirectionalAssociationSynchronizer.synchronize( session );
 		// we could move this inside if we wanted to
 		// tolerate collection initializations during
 		// collection dirty checking:
@@ -414,7 +415,6 @@ public abstract class AbstractFlushingEventListener {
 				true
 		);
 
-		BidirectionalAssociationSynchronizer.synchronize( session );
 	}
 
 	protected void postPostFlush(SessionImplementor session) {

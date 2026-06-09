@@ -7,16 +7,12 @@ package org.hibernate.engine.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-import org.hibernate.Hibernate;
-import org.hibernate.cfg.BidirectionalAssociationManagementLazyPolicy;
-import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -29,18 +25,14 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.jboss.logging.Logger;
 
-import static org.hibernate.engine.internal.ManagedTypeHelper.asSelfDirtinessTracker;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
-
-/// Repairs managed bidirectional associations after flush execution.
+/// Manages loaded bidirectional associations during flush preparation.
 ///
 /// This synchronizer is runtime-only: it treats the owning side of each mapping
-/// as the authoritative representation of the database result and updates only
-/// managed in-memory inverse attributes and managed persistent collections. The
-/// repair work must not enqueue persistence actions or make a following flush
-/// produce SQL by itself.
+/// as authoritative and updates managed in-memory inverse attributes and loaded
+/// managed persistent collections before dirty checking and action scheduling.
+/// The inverse-side changes are treated the same way as if user code had made
+/// those changes manually.
 ///
 /// The synchronization is driven by the [AssociationPlan] derived from the SessionFactory
 /// mapping model.  The [AssociationPlan] is cached here in a weak map keyed by the
@@ -50,7 +42,6 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTra
 /// @since 8.0
 /// @author Steve Ebersole
 public final class BidirectionalAssociationSynchronizer {
-	private static final Logger LOG = Logger.getLogger( BidirectionalAssociationSynchronizer.class );
 	private static final Map<SessionFactoryImplementor, AssociationPlan> ASSOCIATION_PLANS = new WeakHashMap<>();
 
 	private BidirectionalAssociationSynchronizer() {
@@ -61,7 +52,6 @@ public final class BidirectionalAssociationSynchronizer {
 		if ( options.isBidirectionalAssociationManagementEnabled() ) {
 			new Synchronization(
 					session,
-					options.getBidirectionalAssociationManagementLazyPolicy(),
 					getAssociationPlan( session.getFactory() )
 			).run();
 		}
@@ -200,16 +190,12 @@ public final class BidirectionalAssociationSynchronizer {
 
 	private static final class Synchronization {
 		private final PersistenceContext persistenceContext;
-		private final BidirectionalAssociationManagementLazyPolicy lazyPolicy;
 		private final AssociationPlan associationPlan;
-		private final Set<String> warnedRoles = new HashSet<>();
 
 		private Synchronization(
 				SessionImplementor session,
-				BidirectionalAssociationManagementLazyPolicy lazyPolicy,
 				AssociationPlan associationPlan) {
 			this.persistenceContext = session.getPersistenceContextInternal();
-			this.lazyPolicy = lazyPolicy;
 			this.associationPlan = associationPlan;
 		}
 
@@ -276,7 +262,7 @@ public final class BidirectionalAssociationSynchronizer {
 					if ( !( inverseValue instanceof Collection<?> inverseCollection ) ) {
 						continue;
 					}
-					if ( !prepareCollection( inverseCollection, descriptor.inverseRole ) ) {
+					if ( !prepareCollection( inverseCollection ) ) {
 						continue;
 					}
 
@@ -294,7 +280,6 @@ public final class BidirectionalAssociationSynchronizer {
 							changed = add( inverseCollection, child ) || changed;
 						}
 					}
-					clearCollectionRepairDirtiness( inverseCollection, changed );
 				}
 			}
 		}
@@ -360,7 +345,7 @@ public final class BidirectionalAssociationSynchronizer {
 					if ( !( inverseValue instanceof Collection<?> inverseCollection ) ) {
 						continue;
 					}
-					if ( !prepareCollection( inverseCollection, descriptor.inverseRole ) ) {
+					if ( !prepareCollection( inverseCollection ) ) {
 						continue;
 					}
 
@@ -378,7 +363,6 @@ public final class BidirectionalAssociationSynchronizer {
 							changed = add( inverseCollection, owner ) || changed;
 						}
 					}
-					clearCollectionRepairDirtiness( inverseCollection, changed );
 				}
 			}
 		}
@@ -407,19 +391,9 @@ public final class BidirectionalAssociationSynchronizer {
 			return elements;
 		}
 
-		private boolean prepareCollection(Collection<?> collection, String role) {
+		private boolean prepareCollection(Collection<?> collection) {
 			if ( collection instanceof PersistentCollection<?> persistentCollection
 					&& !persistentCollection.wasInitialized() ) {
-				if ( lazyPolicy == BidirectionalAssociationManagementLazyPolicy.INITIALIZE ) {
-					Hibernate.initialize( persistentCollection );
-					return true;
-				}
-				if ( lazyPolicy == BidirectionalAssociationManagementLazyPolicy.WARN && warnedRoles.add( role ) ) {
-					LOG.warnf(
-							"Skipping post-flush bidirectional association repair for unloaded inverse collection [%s]",
-							role
-					);
-				}
 				return false;
 			}
 			return true;
@@ -430,32 +404,11 @@ public final class BidirectionalAssociationSynchronizer {
 			return collection.add( value );
 		}
 
-		private void clearCollectionRepairDirtiness(Collection<?> collection, boolean changed) {
-			if ( changed && collection instanceof PersistentCollection<?> persistentCollection ) {
-				persistentCollection.clearDirty();
-				if ( persistentCollection instanceof AbstractPersistentCollection<?> abstractPersistentCollection ) {
-					abstractPersistentCollection.clearOperationQueue();
-				}
-			}
-		}
-
 		private void setInverseProperty(
 				ToOneAttributeMapping inverseAttribute,
 				Object inverse,
 				Object expectedOwner) {
-			if ( isSelfDirtinessTracker( inverse ) ) {
-				final var tracker = asSelfDirtinessTracker( inverse );
-				tracker.$$_hibernate_suspendDirtyTracking( true );
-				try {
-					inverseAttribute.setValue( inverse, expectedOwner );
-				}
-				finally {
-					tracker.$$_hibernate_suspendDirtyTracking( false );
-				}
-			}
-			else {
-				inverseAttribute.setValue( inverse, expectedOwner );
-			}
+			inverseAttribute.setValue( inverse, expectedOwner );
 		}
 
 		private boolean isManagedEntity(Object entity) {
@@ -475,11 +428,7 @@ public final class BidirectionalAssociationSynchronizer {
 
 	private record OneToManyDescriptor(
 			ToOneAttributeMapping owningAttribute,
-			PluralAttributeMapping inverseAttribute,
-			String inverseRole) {
-		private OneToManyDescriptor(ToOneAttributeMapping owningAttribute, PluralAttributeMapping inverseAttribute) {
-			this( owningAttribute, inverseAttribute, inverseAttribute.getCollectionDescriptor().getRole() );
-		}
+			PluralAttributeMapping inverseAttribute) {
 
 		private EntityPersister owningPersister() {
 			return owningAttribute.findContainingEntityMapping().getEntityPersister();
@@ -508,11 +457,7 @@ public final class BidirectionalAssociationSynchronizer {
 
 	private record ManyToManyDescriptor(
 			PluralAttributeMapping owningAttribute,
-			PluralAttributeMapping inverseAttribute,
-			String inverseRole) {
-		private ManyToManyDescriptor(PluralAttributeMapping owningAttribute, PluralAttributeMapping inverseAttribute) {
-			this( owningAttribute, inverseAttribute, inverseAttribute.getCollectionDescriptor().getRole() );
-		}
+			PluralAttributeMapping inverseAttribute) {
 
 		private EntityPersister owningPersister() {
 			return owningAttribute.findContainingEntityMapping().getEntityPersister();

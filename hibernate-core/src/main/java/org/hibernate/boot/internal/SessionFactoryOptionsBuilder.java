@@ -51,7 +51,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.BidirectionalAssociationManagementLazyPolicy;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -172,7 +171,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
 	private boolean bidirectionalAssociationManagementEnabled;
-	private BidirectionalAssociationManagementLazyPolicy bidirectionalAssociationManagementLazyPolicy;
 	private TemporalTableStrategy temporalTableStrategy;
 	private AuditStrategy auditStrategy;
 	private int defaultBatchFetchSize;
@@ -388,11 +386,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			bidirectionalAssociationManagementEnabled =
 					getBoolean( BIDIRECTIONALITY_MANAGEMENT, settings, false );
 		}
-		bidirectionalAssociationManagementLazyPolicy =
-				BidirectionalAssociationManagementLazyPolicy.interpret(
-						settings.get( BIDIRECTIONALITY_MANAGEMENT_LAZY_POLICY )
-				);
-
 		temporalTableStrategy = TemporalHelper.determineTemporalTableStrategy( settings );
 		if ( temporalTableStrategy == TemporalTableStrategy.AUTO ) {
 			temporalTableStrategy = dialect.getTemporalTableSupport().getDefaultTemporalTableStrategy();
@@ -1200,11 +1193,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isBidirectionalAssociationManagementEnabled() {
 		return bidirectionalAssociationManagementEnabled;
-	}
-
-	@Override
-	public BidirectionalAssociationManagementLazyPolicy getBidirectionalAssociationManagementLazyPolicy() {
-		return bidirectionalAssociationManagementLazyPolicy;
 	}
 
 	@Override

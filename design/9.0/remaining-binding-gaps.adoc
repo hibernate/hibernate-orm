@@ -1,0 +1,167 @@
+= Still Missing From Model Building
+:toc:
+
+This document tracks known remaining gaps in the ORM 9 model-building prototype:
+source discovery, annotation/XML categorization, phased binding, and production
+of `org.hibernate.mapping` metadata.
+
+The intent is to keep model-building implementation gaps separate from broader
+ORM integration notes.  Some items here may eventually imply mapping-model API
+changes, but they first need a clear local prototype story.
+
+NOTE: This gap analysis is based on an older version of ORM code, probably even pre-8.0.  The analysis will need to be performed again.
+
+== Association Identifiers and Derived Identifiers
+
+Known remaining gaps:
+
+* `@MapsId` targeting a to-one attribute inside the owner embedded id.
++
+For example, an embedded id containing a `@ManyToOne` part, with a separate
+entity attribute using `@MapsId("thatToOnePart")`.
++
+The current binder fails before the derived-identifier phase because the
+embedded-id component binder tries to bind the nested to-one during the
+`Identifiers` phase.  That nested to-one requires the target entity identifier
+binding, but root identifiers for all entity hierarchies are not guaranteed to be
+available yet.
++
+This needs a deeper deferral than ordinary component binding currently provides:
++
+** embedded-id component binding should be able to create the nested to-one
+   value shape without resolving target identifier columns immediately, or
+** identifier binding should get a sub-phase for association-valued component id
+   parts after all root identifier shells exist, similar in spirit to the current
+   `AssociationIdentifiers` phase for `IdClass` to-one attributes.
++
+Prototype touchpoints:
++
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/IdentifierBinder.java[`IdentifierBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ComponentBinder.java[`ComponentBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/DerivedIdentifierBinder.java[`DerivedIdentifierBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ToOneAttributeBinder.java[`ToOneAttributeBinder`]
+* link:../../hibernate-core/src/test/java/org/hibernate/models/orm/bind/id/SimpleIdTests.java[`SimpleIdTests`]
+
+* Inverse `@OneToOne` association identifiers.
++
+`IdClass` association identifiers currently support owning to-one attributes.
+The inverse `@OneToOne(mappedBy = ...)` case still fails explicitly.  This likely
+belongs near the inverse to-one association phase, because the identifier value
+needs to be reconciled with the owning-side property after members and table keys
+exist.
++
+Prototype touchpoints:
++
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/IdentifierBinder.java[`IdentifierBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/InverseToOneAssociationBinder.java[`InverseToOneAssociationBinder`]
+* link:../../hibernate-core/src/test/java/org/hibernate/models/orm/bind/id/SimpleIdTests.java[`SimpleIdTests`]
+
+
+
+== Any and Many-To-Any
+
+Known remaining gaps:
+
+* Implicit `@Any @JoinTable` naming without a single target entity.
+* `@Any` key Java type inference when `@AnyKeyJavaClass` is absent.
+* `@Any` discriminator mappings without explicit discriminator values or
+  `@AnyDiscriminatorImplicitValues`.
+
+Prototype touchpoints:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/AnyAttributeBinder.java[`AnyAttributeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/AnyValueBinder.java[`AnyValueBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/PluralAssociationAttributeBinder.java[`PluralAssociationAttributeBinder`]
+* link:../../hibernate-core/src/test/java/org/hibernate/models/orm/bind/associations/AnyAssociationTests.java[`AnyAssociationTests`]
+
+
+== Collection Long Tail
+
+Known remaining gaps:
+
+* `@CollectionId#generatorImplementation`.
+* `@CollectionIdType` and `@CollectionIdMutability`.
+* Local member-level generator declarations for id-bags, if categorization does
+  not already expose them as global registrations.
+* Inverse `ID_BAG` plural associations, if upstream considers them valid source
+  mappings.
+
+Prototype touchpoints:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/CollectionIdBinder.java[`CollectionIdBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ElementCollectionAttributeBinder.java[`ElementCollectionAttributeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/PluralAssociationAttributeBinder.java[`PluralAssociationAttributeBinder`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/CollectionShapeBinder.java[`CollectionShapeBinder`]
+
+
+== Global Registrations and Named Objects
+
+Known remaining gaps:
+
+* XML entity graph collection/binding should distinguish two cases:
++
+Entity-level XML graphs are processed into annotation usages on `ClassDetails`.
+Those annotation usages are collected, but the collected graph definition still
+uses a placeholder runtime creator.  If XML ever grows root-level graph
+declarations, they would need the same explicit root-level collection path as
+named queries.
+* Runtime graph creator integration for collected named entity graphs.
+
+Prototype touchpoints:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/DomainModelCategorizationCollector.java[`DomainModelCategorizationCollector`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/GlobalRegistrations.java[`GlobalRegistrations`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/NamedQueryRegistration.java[`NamedQueryRegistration`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingCoordinator.java[`BindingCoordinator`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/MetadataCollector.java[`MetadataCollector`]
+
+
+== Annotation and XML Coverage
+
+These are annotation and XML coverage items that have not yet been promoted into
+a focused implementation note, an explicit binder gap above, or focused tests.
+
+Parity-required annotation support:
+
+* `@OnDelete`
+* `@Parent`
+* `@PartitionKey`
+* `@RowId`
+* `@TimeZoneStorage`
+* `@TimeZoneColumn`
+* `@CreationTimestamp`
+* `@UpdateTimestamp`
+* generated values
+
+ORM 9 nice-to-have annotation support:
+
+* `@Struct`
+* `@View`
+* hierarchical package metadata
++
+Open question: should mappings defined on package `com.acme` apply to
+`com.acme.model`?  If so, should `PackageDetails` expose its parent package?
+
+XML parity and XSD coverage:
+
+* `@LazyGroup` in XSD
+* `@ListIndexBase` in XSD
+* `@Mutability` in XSD
+* `@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` for secondary tables in XSD
+
+XML/dynamic-model-only vocabulary:
+
+* `<mapped-superclass/>` support in dynamic models
+* `@Abstract`
+* `@Extends`
+* `@CollectionClassification`
+* `@Target`
++
+`org.hibernate.annotations.Target` exists, but is deprecated.  We need to decide
+whether to repurpose it for XML/dynamic-model use or define a replacement.
+
+Resolved or covered locally:
+
+* `@SecondaryRow`
+* `@SoftDelete`
+* `@TenantId`

@@ -1,0 +1,2380 @@
+= SessionFactory Bootstrap Plan
+:toc:
+
+This note sketches the next PoC direction: use the boot-model pipeline to build
+enough ORM boot state to instantiate a `SessionFactoryImpl` / `EntityManagerFactory`.
+
+This document is the ongoing PoC work log and gap tracker.  The intended
+end-state design is captured separately in
+link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`].
+
+The plan works backward from `org.hibernate.internal.SessionFactoryImpl` because
+that constructor is the current runtime boundary.
+
+== Constructor Boundary
+
+`SessionFactoryImpl` currently accepts three inputs:
+
+[source,java]
+----
+SessionFactoryImpl(
+        MetadataImplementor bootMetamodel,
+        SessionFactoryOptions options,
+        BootstrapContext bootstrapContext)
+----
+
+Those inputs are not independent.  They are all products of bootstrap settings,
+service-registry construction, source discovery, model categorization, and boot
+model binding.
+
+The PoC should make those products explicit rather than recreating the current
+inline flow from `EntityManagerFactoryBuilderImpl` and `MetadataBuildingProcess`.
+
+== Some Assumptions
+
+First, a few assumptions we will be working under...
+
+* We no longer need the split in building the EMF from JPA container.  This was something we did for Wild Fly to address a gap in the EE and JPA spec which should no longer be an issue.
+* We will need to come back and address other Hibernate projects concerns.  Some of them contributor specialized builders, and we need to make sure those needs are addressed.
+* Limit set of bootstrap entries -
+** JPA "SE boostrap" - `Persistence`
+** JPA "SE boostrap" - `(Hibernate)PersistenceConfiguration`
+** JPA "EE bootstrap" - Ultimately `PeristenceUnitDescriptor`
+** Legacy `Configuration`, but deprecated in favor of `HibernatePersistenceConfiguration`
+** Maybe some form that accepts `AvailableResources` + settings?
+
+
+== Current Constructor Responsibilities
+
+The constructor still orchestrates a large amount of factory assembly:
+
+* builds the `SessionFactoryServiceRegistry`
+* creates the `EventEngine`
+* initializes the boot metamodel with the factory
+* resolves factory name, JNDI name, UUID, and masked settings
+* creates `SqlStringGenerationContext`
+* registers integrators and applies integration callbacks
+* orders columns and validates the boot metamodel
+* primes second-level cache regions
+* creates `RuntimeMetamodelsImpl`
+* creates `QueryEngineImpl` before runtime metamodel initialization
+* creates `SqlTranslationEngine`
+* creates and initializes `MappingMetamodelImpl`
+* applies fetch profiles after mapping metamodel creation
+* creates default session and stateless-session builders
+* resolves current-session context
+* extracts frequently used services
+* scopes `TypeConfiguration` to the completed factory
+
+That sequence is delicate.  The PoC should avoid changing all of it at once, but
+it should use named bootstrap products so the handoff into this constructor is
+clear.
+
+== Proposed Flow
+
+[source]
+----
+Bootstrap inputs
+    -> ResolvedBootstrapSettings
+    -> AvailableResources
+    -> CategorizedDomainModel
+    -> MetadataImplementor
+    -> ResolvedSessionFactorySettings
+    -> SessionFactoryBuildContext
+    -> SessionFactoryImpl
+----
+
+The immediate goal is not to replace `SessionFactoryImpl`.  The immediate goal
+is to produce its three required inputs through the new pipeline.
+
+== Phase Products
+
+=== ResolvedBootstrapSettings
+
+Already prototyped.
+
+Owns early boot settings that affect source collection and mapping processing.
+It should not be a dumping ground for all session-factory behavior.
+
+=== AvailableResources
+
+Already prototyped.
+
+Owns normalized source inventory:
+
+* managed class details
+* package-info class details
+* already-bound XML mapping documents
+
+It should not own XML interpretation, categorization, binding, or settings
+resolution.
+
+=== CategorizedDomainModel
+
+Already prototyped.
+
+Owns interpreted domain metadata before binding to ORM's boot mapping model.
+This is currently where XML source interpretation lives because there is no
+standalone prepared-source artifact.
+
+=== MetadataImplementor
+
+This is the first major bridge into existing ORM runtime bootstrap.
+
+The PoC binder should produce a normal ORM boot mapping model that can satisfy
+`SessionFactoryImpl` expectations:
+
+* persistent classes
+* collections
+* database / namespace / table state
+* type registrations and converter registrations
+* filters, fetch profiles, named queries, imports, and global registrations
+* cache region configuration
+
+This is the main proving ground for the binding work.
+
+=== ResolvedSessionFactorySettings
+
+This is now prototyped as
+link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/ResolvedSessionFactorySettings.java[`ResolvedSessionFactorySettings`]
+and
+link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/SessionFactorySettingsResolver.java[`SessionFactorySettingsResolver`].
+
+`SessionFactoryOptions` is very large and mixes resolved values, service
+references, JPA/native defaults, and raw setting interpretation.  A resolver
+similar to `BootstrapSettingsResolver` makes the factory-build handoff more
+explicit without immediately copying ORM's full options surface.
+
+Potential responsibilities:
+
+* apply JPA-vs-native defaults
+* resolve factory name, UUID, observer list, interceptor, statement observer,
+  statement inspector, and session defaults
+* resolve tenant, cache, JDBC, transaction, statistics, query, and compliance
+  options
+* preserve a raw settings map for components that still require one
+* expose the `StandardServiceRegistry` used for factory construction
+
+The current prototype carries configuration values, JPA bootstrap mode, and the
+first constructor-facing values needed by `SessionFactoryImpl`: standard service
+registry, UUID, factory name/JNDI-name flag, statement observer, interceptor,
+factory observers, Bean Validation `ValidatorFactory` reference, multi-tenancy
+flag, current-tenant resolver, cache settings, default tenant id Java type,
+default catalog, and default schema.  It should continue to grow one setting at
+a time as `SessionFactoryBuilder` needs them.
+
+The PoC also has a temporary
+link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/internal/SessionFactoryOptionsAdapter.java[`SessionFactoryOptionsAdapter`].
+It adapts `ResolvedSessionFactorySettings` to ORM's existing
+`SessionFactoryOptions` interface, but only for audited methods.  Unsupported
+methods throw immediately so new dependencies are documented before being added.
+The design point is to move option resolution out of the final constructor path
+without quietly copying the full legacy options builder.
+
+=== SessionFactoryBuildContext
+
+This is proposed, not yet prototyped.
+
+`BootstrapContext` currently spans early source collection, model building, and
+runtime metamodel creation.  That makes it easy for early bootstrap concepts to
+leak into late factory construction.
+
+A later build context could hold only the values needed after boot model binding:
+
+* `BootstrapContext` or a narrowed replacement for runtime model creation
+* `MetadataImplementor`
+* resolved session-factory options
+* service registry
+* `TypeConfiguration`
+* resolved settings map
+* `SqlStringGenerationContext`
+
+This does not need to replace ORM's `BootstrapContext` immediately.  It can
+start as a local planning object used by the PoC factory bootstrap.
+
+== Improvements Worth Prototyping
+
+=== Resolve SessionFactoryOptions Explicitly
+
+Build a resolver that produces an adapter implementing ORM's
+`SessionFactoryOptions` from resolved settings and services.
+
+This makes the PoC path testable without forcing all option interpretation to
+remain hidden in existing builders.
+
+=== Split Early BootstrapContext From Late Build Context
+
+Keep `BootstrapContext` for early model-building concerns.  Introduce a late
+`SessionFactoryBuildContext` only when preparing to instantiate the factory.
+
+The aim is to make the handoff visible:
+
+[source]
+----
+MetadataImplementor + ResolvedSessionFactorySettings + BootstrapContext
+    -> SessionFactoryBuildContext
+    -> SessionFactoryImpl
+----
+
+=== Make Runtime Model Creation a Named Phase
+
+`SessionFactoryImpl` currently performs runtime metamodel creation inline.  The
+sequence is constrained by query-engine and SQL-translation dependencies.
+
+For now, leave that logic in `SessionFactoryImpl`, but document it as a future
+phase:
+
+[source]
+----
+validated MetadataImplementor
+    -> RuntimeMetamodels
+    -> QueryEngine / SqlTranslationEngine
+    -> fetch profile application
+----
+
+=== Treat Integrators as an Explicit Phase
+
+Integrators currently run inside `SessionFactoryImpl` before boot metamodel
+ordering, validation, cache priming, and runtime metamodel creation.
+
+That phase should eventually be visible:
+
+[source]
+----
+bound boot model
+    -> integrators applied
+    -> boot model ordered and validated
+    -> runtime model created
+----
+
+=== Avoid Requiring an Incomplete SessionFactory
+
+`SessionFactoryImpl` builds the session-factory service registry by passing
+`this` before the factory is fully initialized.
+
+That may remain unavoidable in the short term, but it is a useful design smell.
+An eventual factory-build handle could allow services that need factory identity
+to avoid depending on a partially initialized `SessionFactoryImpl`.
+
+== Constructor Dependency Audit
+
+Before adding more resolvers or compatibility adapters, audit each legacy
+constructor dependency as an individual need.  The goal is to avoid preserving a
+large contract simply because the current constructor happens to accept it.
+
+[cols="1,2,2,1,2,2", options="header"]
+|===
+| Legacy contract
+| Current consumers to inspect
+| Actual values needed
+| Phase
+| Replacement candidate
+| Status / notes
+
+| `BootstrapContext`
+| `SessionFactoryImpl`, runtime metamodel creation, type/configuration access,
+  integrator callbacks
+| Class-loading, bean access, `TypeConfiguration`, function registry, SQL
+  functions, auxiliary objects, converters, cache region definitions, JPA
+  bootstrap flags, and legacy integrator/runtime-model compatibility views.
+| Early boot and late factory construction are currently mixed.
+| Split into narrower early model-building context and late
+  `SessionFactoryBuildContext`; keep an adapter only where ORM still requires
+  `BootstrapContext`.
+| Audit complete for the constructor path.  Treat as a compatibility view, not a
+  primary product; split observed uses into early boot-only, runtime model
+  creation, and integrator compatibility buckets.
+
+| `SessionFactoryOptions`
+| `SessionFactoryImpl`, services, runtime model/query infrastructure, session
+  builders
+| Many setting-derived factory decisions: naming, observers, tenant/cache/JDBC,
+  transaction, statistics, query, compliance, default session behavior, raw
+  settings map.
+| Factory construction and runtime behavior.
+| `ResolvedSessionFactorySettings` plus adapter to ORM's interface if needed.
+| Audit complete for the constructor path.  This remains a runtime SPI view, so
+  the PoC keeps a narrow resolver plus adapter while upstream consumers are
+  split into smaller settings/context contracts.
+
+| `MetadataImplementor`
+| `SessionFactoryImpl`, runtime metamodel creation, cache priming, query/import
+  registration, schema/database access
+| Boot mapping model: entity/collection bindings, database model, type
+  configuration, filters, fetch profiles, named queries, imports, cache regions.
+| Handoff from boot-model binding to factory construction.
+| Probably remains a bridge initially.  Longer term, consider whether a narrower
+  immutable boot model can replace direct collector-style access.
+| Audit complete for the constructor path.  It remains the key compatibility target, but it bundles
+  several separable products: finalized mapping bindings, database/schema model,
+  named-object definitions, cache-region inputs, runtime-model inputs, and
+  lifecycle/finalization hooks.
+
+| `InFlightMetadataCollector`
+| Binding internals, second passes, table/database registration, metadata
+  validation/order, named objects, imports, type/converter registrations
+| Mutable collector responsibilities split across binder working state,
+  completed metadata writes, legacy finalization, and the current
+  `MetadataImplementor` bridge.
+| Boot-model binding.
+| Prefer `BindingState` as the mutable binding target if it can own the missing
+  responsibilities.
+| Audit complete at the constructor boundary.  Follow-up is implementation:
+  continue routing completed metadata writes through `MetadataCollector` and
+  keep the `InFlightMetadataCollectorAdapter` as the compatibility layer.
+
+| `MetadataBuildingContext`
+| Binders, naming/default resolution, table/column creation, access to bootstrap
+  context and metadata collector
+| Services, naming/options/defaults, type configuration, binding state, current
+  contributor, temporal/audit defaults.
+| Boot-model binding.
+| Narrow binding context composed from services, resolved settings/defaults, and
+  `BindingState`.
+| Audit complete enough for the constructor path.  Current PoC still uses ORM's
+  root implementation where mapping constructors or collector APIs require it;
+  remaining work is to hide those touchpoints behind `BindingState`,
+  `BindingContext`, or local factory methods.
+
+| `MetadataBuildingOptions`
+| `MetadataBuildingContext`, metadata collector, naming strategies, column
+  ordering, cache defaults, XML mapping flag, type options
+| Mapping defaults and strategy choices used during binding and metadata
+  validation.
+| Boot-model binding.
+| Resolved mapping options, possibly derived from `ResolvedBootstrapSettings`
+  plus service-registry settings.
+| Audit complete for the constructor path.  Continue moving observed mapping
+  behavior into `ResolvedMappingSettings`; keep ORM options as a compatibility
+  source where `MetadataBuilderImpl` remains coupled.
+
+| `SessionFactoryServiceRegistry`
+| Constructed by `SessionFactoryImpl`; consumed by runtime services and
+  integrators
+| Service instances that may need factory identity, factory options,
+  configuration settings, class-loading access, and contributor-provided
+  services.
+| Factory construction.
+| Factory-build handle or late service-registry creation phase.
+| Audit complete for the constructor path.  The current registry is created with a partially
+  initialized `SessionFactoryImpl`, but the standard initiators mostly need a
+  narrower context of factory identity, options, service access, and
+  class-loading.
+|===
+
+Audit process for each row:
+
+. Find concrete consumers in ORM.
+. List the accessed methods/values rather than the nominal type.
+. Assign each accessed value to source discovery, binding, factory option
+  resolution, runtime model creation, or service construction.
+. Decide whether the PoC should use the legacy contract, provide a narrow local
+  replacement, or create a temporary adapter.
+. Record required upstream follow-up in
+  link:orm-integration-notes.adoc[`orm-integration-notes.adoc`] when a local
+  copy or narrowed replacement is introduced.
+
+=== BootstrapContext
+
+Initial inspection target: `SessionFactoryImpl` and the first pass-through level
+(`Integrator` and `RuntimeModelCreationContext` consumers).
+
+Direct `SessionFactoryImpl` usage:
+
+* `bootstrapContext.getTypeConfiguration()` is read at constructor start and
+  stored as the factory `TypeConfiguration`.
+* the full `BootstrapContext` is passed to `Integrator#integrate`.
+* the full `BootstrapContext` is passed through
+  `RuntimeModelCreationContext#getBootstrapContext()` during mapping/JPA
+  runtime model creation.
+
+This means the constructor itself does not appear to need the whole contract.
+The broad need comes from extension and runtime-model pass-through.
+
+[cols="1,2,2,2", options="header"]
+|===
+| Consumer area
+| Observed access
+| Likely narrower dependency
+| Notes
+
+| `SessionFactoryImpl`
+| `getTypeConfiguration()`
+| `TypeConfiguration`
+| Direct constructor need.  This can be made explicit in a later
+  `SessionFactoryBuildContext`.
+
+| Integrators
+| `Integrator#integrate(Metadata, BootstrapContext, SessionFactoryImplementor)`
+| Compatibility adapter for existing `Integrator` contract
+| This is an extension compatibility concern.  Existing integrators may use any
+  `BootstrapContext` method, so narrowing probably requires a staged SPI change
+  or adapter.
+
+| Runtime model creation
+| `RuntimeModelCreationContext#getBootstrapContext()`
+| Runtime model creation context with explicit values
+| Known downstream uses include class-loading access, bean registry/access,
+  representation strategy selection, metadata building options, service registry,
+  and type/configuration access.
+
+| Runtime JPA metamodel
+| `runtimeModelCreationContext.getBootstrapContext().getClassLoaderService()`
+| `ClassLoaderService` or class-loading access
+| Example direct use in `JpaMetamodelImpl`.
+
+| Runtime representation strategies
+| `getClassLoaderAccess()`, `getManagedBeanRegistry()`,
+  `getRepresentationStrategySelector()`
+| representation strategy creation services
+| Examples include POJO/entity/embeddable representation strategy construction.
+
+| Persister/runtime mapping construction
+| `getMetadataBuildingOptions()`, `getServiceRegistry()`
+| mapping/runtime creation options and service access
+| Examples include collection/entity persister initialization and multi-table
+  strategy support.
+|===
+
+Preliminary conclusion:
+
+`BootstrapContext` should not be treated as a single required constructor
+dependency.  For the PoC, keeping it as an adapter may be acceptable for
+integrator compatibility and current runtime model creation, but the design
+target should be to split it into:
+
+* explicit direct constructor inputs such as `TypeConfiguration`;
+* a narrower runtime model creation context;
+* an integrator compatibility adapter until the extension SPI can be revisited;
+* early boot-only services that should not reach `SessionFactoryImpl`.
+
+==== Usage Buckets
+
+The constructor-path audit classifies observed `BootstrapContext` uses into
+three buckets:
+
+Early boot only::
+Should not reach `SessionFactoryImpl`.
++
+Likely examples include source discovery, XML processing, metadata binding
+helpers, `ModelsContext`, temporary classloader access, and scanning artifacts.
+
+Runtime model creation::
+Should move onto, or remain available through, a narrower
+`RuntimeModelCreationContext`.
++
+Likely examples include `ClassLoaderService`, `ManagedBeanRegistry`,
+representation strategy selection, and any mapping/runtime options that are
+still proven necessary.
+
+Integrator compatibility::
+May require a legacy `BootstrapContext` adapter in the short term.
++
+`Integrator#integrate(Metadata, BootstrapContext, SessionFactoryImplementor)` is
+the strongest compatibility reason to preserve a `BootstrapContext` view until a
+new extension SPI exists.
+
+Future upstream integration work should assign any newly discovered
+`BootstrapContext` use to one of these buckets before introducing or widening a
+replacement contract.
+
+==== PoC Decision
+
+The PoC should not treat `BootstrapContext` as a primary bootstrap product.
+Where existing ORM integration points still require the legacy contract, the PoC
+may create or carry an adapter.  New PoC phases should request explicit values
+instead of accepting `BootstrapContext`.
+
+==== Next Slice Guardrails
+
+The next SessionFactory bootstrap slice may introduce a temporary
+`BootstrapContext` adapter in order to call ORM's current `SessionFactoryImpl`.
+That adapter is a compatibility device, not the target architecture.
+
+Rules for that slice:
+
+* support a `BootstrapContext` method only after identifying the concrete
+  consumer that asked for it;
+* keep unsupported methods failing loudly so new dependencies become audit
+  items instead of accidental design;
+* prefer explicit values or a narrower `SessionFactoryBuildContext` for new PoC
+  code;
+* preserve a compatibility view for existing ORM extension points such as
+  `Integrator#integrate(Metadata, BootstrapContext, SessionFactoryImplementor)`;
+* document every supported adapter method in this audit section.
+
+The desired upstream shape is still expected to be narrower than
+`BootstrapContext`: likely explicit factory-build inputs plus a runtime model
+creation context, with a legacy adapter only where extension compatibility
+requires it.
+
+==== Existing Context Reuse
+
+The first attempt did not need a new `BootstrapContext` adapter.  The
+`MetadataImplementor` produced by the PoC is currently still an
+`InFlightMetadataCollector`, and that collector exposes the ORM
+`BootstrapContext` that was used during metadata binding.  Reusing that existing
+context is a better compatibility step than inventing a second context view.
+
+The next boundary was therefore not `BootstrapContext` construction.  It was the
+handoff from in-flight metadata to finalized metadata:
+
+* `SessionFactoryBuilder` can create the minimal `SessionFactoryOptions` adapter.
+* `SessionFactoryBuilder` can locate the existing `BootstrapContext` from the
+  in-flight metadata collector.
+* `SessionFactoryImpl` should not be called with the in-flight collector because
+  `InFlightMetadataCollectorImpl#initSessionFactory` deliberately rejects that
+  path.
+* `MetadataResolver#finalizeMetadata` now builds the finalized `MetadataImpl`
+  using `InFlightMetadataCollectorImpl#buildMetadataInstance`.
+* Finalized metadata runs ORM second-pass/exportable processing and can change
+  finalized property/column ordering compared to the earlier in-flight collector
+  view.
+
+With finalized metadata in place, the current SessionFactory construction
+boundary moved into runtime service creation.  The first newly observed
+unsupported options method was `SessionFactoryOptions#isQueryCacheEnabled`,
+asked for while creating cache services.  The cache-related options bucket has
+now been added to `ResolvedSessionFactorySettings` and
+`SessionFactoryOptionsAdapter`.
+
+The next boundary after cache was `SessionFactoryOptions#getInterceptor`, which
+belongs to the session defaults / integration hooks bucket rather than cache.
+That method is now resolved from `SessionEventSettings.INTERCEPTOR`.
+
+With the interceptor hack in place, `SessionFactoryImpl` reached metadata
+validation and exposed a duplicate identifier-column binding gap.  The PoC fixed
+that for basic identifiers by keeping the basic id as the identifier property
+only, rather than also adding it to the normal declared-property list.
+
+The query-engine and runtime-default options needed by the simple
+SessionFactory smoke test are now resolved.  The old
+`SessionFactoryOptions#getCustomSqlFunctionMap` boundary has been crossed.
+
+The binding test helper now finalizes the in-flight collector with
+`InFlightMetadataCollectorImpl#buildMetadataInstance`, then runs
+`MetadataImplementor#orderColumns(false)` and `MetadataImplementor#validate()`
+before invoking test assertions.  This makes the binder suite exercise the same
+mapping validation pressure that exposed the duplicate identifier-column bug.
+Tests for known unsupported validated shapes, such as composite-key `@Any` and
+association-id join-table mappings, assert the validation failure explicitly.
+
+Follow-up questions:
+
+* Can `RuntimeModelCreationContext` expose the needed values directly and
+  deprecate `getBootstrapContext()`?
+* Does runtime model creation still need `MetadataBuildingOptions`, or only a
+  smaller set of resolved mapping/runtime options?
+* Can `TypeConfiguration` be produced/scoped without retaining an early
+  `BootstrapContext` reference?
+* Should a replacement integrator SPI receive a factory-integration context
+  instead of `BootstrapContext` and a partially initialized
+  `SessionFactoryImplementor`?
+
+
+==== RuntimeModelCreationContext Usages
+
+Runtime model creation is the phase where finalized boot metadata becomes the
+runtime mapping/JPA metamodel used by the `SessionFactory`.  In current ORM this
+phase is driven from `SessionFactoryImpl` by creating a
+`MappingMetamodelImpl`, then calling `MappingMetamodelImpl#finishInitialization`
+with an inner `ModelCreationContext`.
+
+The existing `RuntimeModelCreationContext` is a useful phase boundary, but it is
+also very broad.  It exposes:
+
+* the partially initialized `SessionFactoryImplementor`;
+* the legacy `BootstrapContext`;
+* the finalized `MetadataImplementor` boot model;
+* the `MappingMetamodelImplementor` being initialized;
+* `TypeConfiguration` and the derived `JavaTypeRegistry`;
+* graph planning options;
+* function registry, raw settings, dialect, cache, JDBC services, SQL string
+  generation context, service registry, session-factory options, and generator
+  state.
+
+`SessionFactoryImpl.ModelCreationContext#getSessionFactory()` explicitly notes
+that returning the enclosing factory is "bad" because the factory is not fully
+initialized yet.  That makes this phase an important target for a narrower build
+handle or runtime-model context that can supply the few factory-like services
+needed before the factory is complete.
+
+[cols="1,2,2,2", options="header"]
+|===
+| Consumer area
+| Observed access
+| Likely narrower dependency
+| Notes
+
+| `MappingMetamodelImpl#finishInitialization`
+| boot entity/collection/component/mapped-superclass bindings, cache, graph
+  planning options, SQL string generation context, raw settings, named entity
+  graphs
+| finalized mapping metadata, cache-region access, graph planning options,
+  SQL generation context, JPA metamodel settings
+| This is the primary runtime-model orchestration point.  It creates persisters,
+  runs `MappingModelCreationProcess`, builds the constraint model, initializes
+  loaders, registers embeddables, and builds the JPA metamodel.
+
+| Entity persister construction
+| session-factory options, service registry, partially initialized factory,
+  representation strategy selector from `BootstrapContext`, dialect, boot
+  metadata
+| entity-persister creation context with callbacks/options, service access,
+  representation strategy resolver, dialect, SQL generation, boot entity model
+| `AbstractEntityPersister` is one of the clearest consumers of both valid phase
+  inputs and legacy pass-throughs.
+
+| Collection persister construction
+| partially initialized factory, session-factory options, persistent collection
+  representation resolver via
+  `BootstrapContext#getMetadataBuildingOptions()`, dialect, JDBC services,
+  runtime domain model, type configuration, boot metadata, generator settings
+| collection-persister creation context plus collection representation resolver
+  or resolved mapping/runtime option
+| The collection semantics access is a good candidate to move off
+  `MetadataBuildingOptions` and onto resolved mapping/runtime settings.
+
+| Mapping model creation helpers
+| function registry, boot metadata, partially initialized factory, dialect,
+  domain model, SQL string generation context
+| mapping-model creation context with query/function, metadata, SQL, and domain
+  model access
+| `MappingModelCreationProcess` mostly preserves the context and offers
+  narrower accessors.  Some helpers still reach the factory directly.
+
+| Runtime JPA metamodel
+| `ClassLoaderService` through `BootstrapContext`
+| class-loading access
+| `JpaMetamodelImpl` and `AttributeFactory` use class loading while building the
+  runtime JPA metamodel.
+
+| Runtime representation strategies
+| class-loader access, `ManagedBeanRegistry`, `ServiceRegistry`, bytecode
+  provider, representation strategy selector
+| representation strategy creation services
+| POJO entity/embeddable strategies and composite-user-type handling use these
+  services.  They do not need the whole `BootstrapContext`.
+
+| ClassDetails / Models access during runtime mapping
+| `ModelsContext` from `BootstrapContext`
+| `ModelsContext` or narrower class-details/class-loading access
+| Examples include natural-id value normalizer creation and plural-attribute
+  declaring-type lookup.  These are late consumers of source-model metadata.
+
+| Generator creation
+| generator map, `GeneratorSettings`, default catalog/schema,
+  service registry, SQL string generation context
+| generator creation context
+| `RuntimeModelCreationContext` already exposes generator state directly, but
+  `PropertyGeneratorCreationContext` still resolves services through
+  `BootstrapContext`.
+
+| Temporary-table and mutation support
+| SQL generation context, boot metadata, metadata-building options such as
+  column-ordering strategy, service registry for mutation strategies
+| runtime mutation/table strategy context plus resolved mapping options
+| This is another place where current code reaches back into boot-building
+  options after metadata should already be finalized.
+
+| JSON/XML format mapper integration
+| `BootstrapContext` passed to format mapper creation paths
+| format-mapper creation context with class loading, bean access, services, and
+  options
+| This appears to be an extension/customization edge rather than a reason to keep
+  exposing all bootstrap state.
+|===
+
+Conclusion:
+
+`RuntimeModelCreationContext` is worth keeping as a named phase concept, but the
+current contract should be treated as a compatibility bridge.  The first
+upstream pressure point is `getBootstrapContext()`: the observed runtime
+consumers can be described with explicit dependencies such as `ModelsContext`,
+class-loading access, managed-bean access, service access, representation
+strategy selection, persistent-collection representation resolution, and resolved
+mapping/runtime options.
+
+The second pressure point is `getSessionFactory()`.  Runtime model creation
+currently needs a factory-like handle for SQL/filter/helper construction, but the
+actual `SessionFactoryImpl` is not yet complete.  A later design pass should
+separate the pieces that genuinely require a completed factory from the pieces
+that only need SQL generation, wrapper options, services, query/function access,
+or mapping lookup.
+
+
+==== BeanValidationIntegrator Usages
+
+`BeanValidationIntegrator` does not use the `BootstrapContext` argument
+directly.  It reads the `SessionFactoryServiceRegistry` from the partially
+constructed `SessionFactoryImplementor`, resolves validation modes from
+`ConfigurationService`, checks `ClassLoaderService` for the Bean Validation API,
+and passes an internal `ActivationContext` to `TypeSafeActivator`.
+
+The `ActivationContext` exposes:
+
+* validation modes;
+* `Metadata`;
+* the partially constructed `SessionFactoryImplementor`;
+* the `SessionFactoryServiceRegistry`.
+
+`TypeSafeActivator` then uses that context to:
+
+* apply DDL constraints from `Metadata#getEntityBindings()`;
+* resolve settings, `JdbcServices`, and `ClassLoaderService` from the
+  `SessionFactoryServiceRegistry`;
+* register validation event listeners through
+  `sessionFactory.getEventListenerRegistry()`;
+* add the validation listener as a `SessionFactoryObserver`;
+* call `SessionFactoryOptions#setCheckNullability(false)` when Bean Validation
+  callback validation replaces core nullability checking.
+
+This means Bean Validation is not a strong reason to keep
+`BootstrapContext` in the integrator signature, but it is a strong example of
+integrators needing a late build/integration context that can still mutate event
+listeners, observers, and a few runtime settings before the factory is fully
+usable.
+
+==== CollectionCacheInvalidator Usages
+
+`CollectionCacheInvalidator` also ignores the `BootstrapContext` argument.  It
+checks `SessionFactoryOptions#isSecondLevelCacheEnabled()` and
+`SessionFactoryOptions#isAutoEvictCollectionCache()`, then appends itself to the
+factory event listener registry for post-insert, post-delete, and post-update
+events when needed.
+
+This is another signal that the current `Integrator` signature is broader than
+the built-in integrators require.  The real dependency is a factory integration
+context with options and event-listener registration access.
+
+=== SessionFactoryOptions
+
+Initial inspection target: `SessionFactoryImpl`,
+`org.hibernate.boot.SessionFactoryBuilder`, `SessionFactoryOptionsBuilder`,
+`SessionFactorySettings`, and the runtime session/JDBC contexts that read
+options through `SessionFactoryImplementor`.
+
+`SessionFactoryOptions` is different from the earlier constructor dependencies.
+It is accepted by the `SessionFactoryImpl` constructor, but it is also stored and
+returned by `SessionFactoryImplementor#getSessionFactoryOptions()`.  That means
+the PoC cannot treat it purely as a temporary construction object unless the
+runtime SPI is also changed upstream.
+
+Direct `SessionFactoryImpl` constructor usage:
+
+* stores the full options reference as the factory's runtime options view;
+* resolves `StatementObserver`, `uuid`, `SessionFactoryObserver[]`, factory
+  name/JNDI name, tenant id Java type, default catalog/schema, and
+  multi-tenancy enablement;
+* obtains the `StandardServiceRegistry` from the options to build the
+  `SessionFactoryServiceRegistry`;
+* passes the options to `QueryEngineImpl`;
+* passes the options through `RuntimeModelCreationContext` during runtime model
+  creation.
+
+The constructor itself only dereferences a modest subset, but retaining the
+object makes the full SPI available after construction.  Runtime consumers still
+read many individual settings through the factory, including session defaults,
+JDBC behavior, query/cache behavior, JPA compliance, dirty checking, tenant
+resolution, JSON/XML format mappers, and graph parser behavior.
+
+[cols="1,2,2,2", options="header"]
+|===
+| Consumer area
+| Observed access
+| Likely narrower dependency
+| Notes
+
+| `SessionFactoryImpl` identity and registration
+| `getUuid()`, `getSessionFactoryName()`,
+  `isSessionFactoryNameAlsoJndiName()`
+| factory identity settings
+| Used for registry, serialization, and optional JNDI naming.  These are good
+  candidates for named fields on `ResolvedSessionFactorySettings`.
+
+| Service-registry creation
+| `getServiceRegistry()`, then
+  `SessionFactoryServiceRegistryFactory#buildServiceRegistry(factory, options)`
+| late factory service-registry creation input
+| This is the strongest reason a compatibility adapter may be needed first.
+  The service-registry builder receives both the incompletely constructed
+  factory and the options object.
+
+| Constructor-local behavior
+| `getStatementObserver()`, `getSessionFactoryObservers()`,
+  `isMultiTenancyEnabled()`, `getDefaultTenantIdentifierJavaType()`,
+  `getDefaultCatalog()`, `getDefaultSchema()`
+| explicit construction settings
+| These could be direct fields on `ResolvedSessionFactorySettings` or part of a
+  narrower `SessionFactoryBuildContext`.
+
+| Runtime model/query creation
+| `QueryEngineImpl(..., options, ...)` and
+  `RuntimeModelCreationContext#getSessionFactoryOptions()`
+| query/runtime model settings
+| `SessionFactoryOptions` extends `QueryEngineOptions`, so query engine
+  settings may deserve their own later slice rather than being mixed into the
+  whole factory settings contract immediately.
+
+| Session defaults
+| `getInterceptor()`, session-scoped interceptor supplier,
+  `getStatementInspector()`, default event listeners, default cache/flush/lock
+  modes, default session properties, default batch/subselect/fetch settings,
+  auto-close/flush-before-completion/JTA flags
+| session-creation defaults
+| These are runtime defaults used by `SessionBuilderImpl`,
+  `StatelessSessionBuilderImpl`, `AbstractSharedSessionContract`, and
+  `JdbcSessionContextImpl`.
+
+| JDBC/runtime SQL behavior
+| scrollable results, generated keys, JDBC fetch size, batch size, connection
+  handling, provider autocommit behavior, SQL comments, JDBC time zone,
+  default null precedence, parameter padding
+| JDBC/runtime SQL settings
+| Some values depend on `JdbcServices`, dialect defaults, and extracted JDBC
+  metadata, so resolution is not just a raw map projection.
+
+| Cache behavior
+| second-level cache, query cache, query cache layout, timestamps cache factory,
+  region prefix, minimal puts, structured/direct entries, collection cache
+  auto-eviction
+| cache settings plus cache service capabilities
+| Resolution currently branches on the configured `RegionFactory`, so this
+  belongs in the SessionFactory settings slice rather than pure bootstrap
+  settings.
+
+| Multi-tenancy
+| enabled flag, tenant identifier resolver, tenant schema mapper, tenant
+  credentials mapper, default tenant id Java type
+| tenant runtime settings
+| Enablement is service-driven in ORM today.  The resolver probably needs both
+  resolved configuration values and the service registry.
+
+| Integration hooks
+| CDI BeanManager reference, ValidatorFactory reference, custom entity dirtiness
+  strategy, entity name resolvers, entity-not-found delegate, observers
+| integration/runtime extension settings
+| These are user-provided objects or strategy-resolved services.  They are a
+  good reason to keep the raw configuration map available even while promoting
+  commonly used values to named fields.
+
+| Mapping/type format settings used at runtime
+| preferred SQL type codes, Java time/native enum/locale handling,
+  timezone storage, JSON/XML format mappers, XML legacy format flag
+| resolved type/format settings shared with mapping/runtime
+| Some of these overlap conceptually with `ResolvedMappingSettings`.  Keep them
+  in the raw settings root until a concrete consumer forces a split.
+|===
+
+Preliminary conclusion:
+
+The closest conceptual corollary to `SessionFactorySettingsResolver` is ORM's
+`org.hibernate.boot.SessionFactoryBuilder`: it represents the factory-build
+customization surface.  That distinction is not very helpful mechanically,
+however, because ORM's builder currently delegates most of that state into
+`SessionFactoryOptionsBuilder`.  For the audit, treat the two together:
+`SessionFactoryBuilder` identifies externally supported customization points,
+while `SessionFactoryOptionsBuilder` shows how those points are currently
+resolved and accumulated.
+
+`SessionFactoryOptionsBuilder` should still not become the design target.  It
+mixes several concerns:
+
+* normalized raw configuration values;
+* service/dialect/JDBC-metadata-derived decisions;
+* query engine options;
+* cache options;
+* session defaults;
+* integration object references;
+* the legacy runtime `SessionFactoryOptions` SPI view.
+
+The practical first step is still likely an adapter implementing ORM's
+`SessionFactoryOptions`, backed by `ResolvedSessionFactorySettings`.  The
+important design point is that `ResolvedSessionFactorySettings` should grow by
+consumer bucket, not by blindly mirroring every method in the legacy interface.
+
+That first adapter slice now exists as
+link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/internal/SessionFactoryOptionsAdapter.java[`SessionFactoryOptionsAdapter`].
+It supports only the methods used by the direct `SessionFactoryImpl`
+constructor path identified above.  The PoC `SessionFactoryBuilder` creates the
+adapter and can find the existing `BootstrapContext` from the in-flight metadata
+collector.  It still stops before constructing the factory because the metadata
+product must be finalized first.
+
+==== PoC Decision
+
+For the next factory-bootstrap slice:
+
+* keep the PoC `SessionFactoryBuilder` returning `SessionFactoryImplementor`;
+* have `SessionFactorySettingsResolver` produce `ResolvedSessionFactorySettings`
+  from `ResolvedBootstrapSettings` and a `ServiceRegistry`;
+* keep the raw immutable configuration map on `ResolvedSessionFactorySettings`;
+* add named fields only for values required by the immediate
+  `SessionFactoryImpl` construction path;
+* compare the growing settings surface against ORM's
+  `org.hibernate.boot.SessionFactoryBuilder` customization methods, while also
+  checking the delegated `SessionFactoryOptionsBuilder` behavior;
+* introduce a temporary `SessionFactoryOptions` adapter if needed to instantiate
+  ORM's current `SessionFactoryImpl`;
+* avoid copying query/cache/session-default resolution until a real consumer
+  requires it.
+
+==== Minimal Adapter Slice
+
+Implemented in the PoC:
+
+* `SessionFactorySettingsResolver#resolve(ResolvedBootstrapSettings,
+  ServiceRegistry)` requires a `StandardServiceRegistry` and resolves the
+  constructor-facing settings listed above.
+* `ResolvedSessionFactorySettings` keeps those values as named immutable fields
+  alongside the raw configuration map.
+* `SessionFactoryOptionsAdapter` exposes the audited subset through ORM's
+  `SessionFactoryOptions` SPI.
+* `SessionFactoryBuilder` now creates that adapter, verifies that an existing
+  `BootstrapContext` is reachable from the current metadata product, and can
+  build a `SessionFactoryImplementor` for the current simple-entity smoke test.
+
+==== Cache Options Slice
+
+Implemented in the PoC:
+
+* `SessionFactorySettingsResolver` resolves cache settings using the configured
+  `RegionFactory`, `CacheSettings`, and `StrategySelector`.
+* `ResolvedSessionFactorySettings` now carries second-level cache enablement,
+  query cache enablement, query cache layout, timestamps cache factory, cache
+  region prefix, minimal puts, structured entries, direct-reference entries, and
+  collection-cache auto-eviction.
+* `SessionFactoryOptionsAdapter` exposes those values through the corresponding
+  `SessionFactoryOptions` cache methods.
+
+This moved the SessionFactory construction boundary past cache service creation
+to the session-defaults/integration-hooks and query-engine options buckets,
+which are now represented as named values in `ResolvedSessionFactorySettings`.
+The subsequent duplicate identifier-column validation failure was fixed in the
+basic-id binder.
+
+==== Runtime Defaults and Query Options Slice
+
+Implemented in the PoC:
+
+* `ResolvedSessionFactorySettings` now carries the query-engine options needed
+  by `QueryEngineImpl`, including custom function/translator hooks, JPA
+  compliance, criteria value handling, immutable-entity update handling, JSON/XML
+  function flags, portable integer division, and native JDBC parameter handling.
+* `ResolvedSessionFactorySettings` also carries runtime default options needed
+  while creating persisters, loaders, and default session builders, including
+  statement inspector, session cache mode, connection handling, JDBC time zone,
+  auto-close/flush-before-completion, identifier rollback, SQL comments, batch
+  and subselect fetch defaults, maximum fetch depth, temporal table strategy,
+  audit strategy, JPA callbacks, and collections-in-default-fetch-group.
+* `MetadataResolver` now performs the dialect type-contribution step before
+  binding so the bootstrap `TypeConfiguration` has DDL type descriptors needed by
+  temporary table strategy creation.
+* `SessionFactoryBuilder` re-scopes `TypeConfiguration` to the metadata building
+  context before calling `SessionFactoryImpl`, preserving the boot-time access
+  expected by dialect function registration.
+
+The simple `SessionFactoryBuilderTests` smoke test now builds and closes a real
+`SessionFactoryImplementor` and verifies that the runtime mapping metamodel
+contains the simple entity descriptor.
+
+The adapter is intentionally incomplete.  A failure from an unsupported
+`SessionFactoryOptions` method is not just a missing implementation; it is a
+prompt to classify that method into one of the buckets above before growing
+`ResolvedSessionFactorySettings`.
+
+Follow-up questions:
+
+* Should `QueryEngineOptions` become a separate resolved slice before building
+  `QueryEngineImpl`?
+* Which runtime users truly need access through
+  `SessionFactoryImplementor#getSessionFactoryOptions()` and which could use
+  narrower factory methods?
+* Should Bean Validation's mutation of `setCheckNullability` be replaced by a
+  build-time validation decision rather than a mutable options setter?
+* Can `SessionFactoryServiceRegistryFactory#buildServiceRegistry` and
+  `SessionFactoryServiceInitiatorContext` accept a narrower build context
+  instead of full `SessionFactoryOptions` plus a partially constructed factory?
+
+==== Service Registry and Integrator Slice
+
+Audited construction order:
+
+. `SessionFactoryImpl` stores `sessionFactoryOptions` and obtains
+  `TypeConfiguration` from `BootstrapContext`.
+. It creates the `SessionFactoryServiceRegistry` by calling
+  `options.getServiceRegistry().requireService(SessionFactoryServiceRegistryFactory.class)
+  .buildServiceRegistry(this, options)`.  The `this` reference is not fully
+  initialized yet.
+. The factory service registry is available before `bootMetamodel.initSessionFactory(this)`.
+. `EventEngine`, `SchemaManager`, class-loading service, JDBC-values mapping
+  producer provider, and changeset coordinator are initialized before
+  integrators run.
+. Integrators run before boot metadata column ordering, metadata validation,
+  second-level cache region priming, runtime metamodel creation, query-engine
+  creation, SQL-translation engine creation, default session builders, and final
+  `TypeConfiguration#scope(SessionFactory)`.
+. On successful construction, `IntegratorObserver` calls
+  `Integrator#disintegrate` during `sessionFactoryClosed`.
+. On construction failure, already-run integrators are disintegrated immediately,
+  and disintegration failures are suppressed onto the startup exception.
+
+`SessionFactoryServiceRegistryFactoryImpl` currently:
+
+* obtains `ClassLoaderService` from `options.getServiceRegistry()`;
+* creates `SessionFactoryServiceRegistryBuilderImpl` with the standard service
+  registry as parent;
+* loads `SessionFactoryServiceContributor` implementations via Java
+  `ServiceLoader`;
+* lets contributors add factory-scoped initiators or provided services;
+* builds `SessionFactoryServiceRegistryImpl` with the partially initialized
+  factory and the full `SessionFactoryOptions`.
+
+`SessionFactoryServiceRegistryBuilderImpl` starts with the standard
+session-factory service initiators:
+
+* `StatisticsInitiator`;
+* `CacheInitiator`;
+* `NativeQueryInterpreterInitiator`;
+* `ExtensionIntegrationServiceInitiator`.
+
+Parent service bindings take precedence over these standard initiators.  The
+factory-scoped registry also configures `Configurable` services with
+`ConfigurationService#getSettings()`.
+
+The standard factory-scoped initiators currently need:
+
+[cols="1,2,2", options="header"]
+|===
+| Initiator
+| Observed needs
+| Narrower dependency
+
+| `StatisticsInitiator`
+| `ConfigurationService`, `ClassLoaderService`, `SessionFactoryImplementor`,
+  `SessionFactoryOptions#isStatisticsEnabled()`
+| statistics settings, class-loading access, factory identity/build handle
+
+| `CacheInitiator`
+| `RegionFactory`, `SessionFactoryImplementor`
+| cache services plus factory identity/build handle
+
+| `NativeQueryInterpreterInitiator`
+| `SessionFactoryOptions#getNativeJdbcParametersIgnored()`
+| native-query option
+
+| `ExtensionIntegrationServiceInitiator`
+| `SessionFactoryImplementor#getClassLoaderService()`
+| class-loading access
+|===
+
+Preliminary conclusion:
+
+`SessionFactoryServiceRegistry` itself can remain a compatibility boundary for
+now, but upstream should consider splitting service-registry creation into a
+named late construction phase with a narrower context:
+
+* parent service registry;
+* class-loading access;
+* resolved factory/query/cache/statistics settings;
+* factory identity or a factory-build handle;
+* integration/event-listener registration access where needed.
+
+The full `SessionFactoryOptions` SPI is mainly required because the existing
+`SessionFactoryServiceInitiatorContext` exposes it wholesale.  The full
+`SessionFactoryImplementor` is mainly required because the registry is built
+inside the constructor with `this`.  Neither shape is clearly the desired
+long-term contract.
+
+== Compatibility Pressure Points
+
+This section tracks every adapter, hack, or legacy contract dependency exposed
+by the PoC.  Each item should identify the upstream pressure rather than
+normalizing the workaround as the target design.
+
+[cols="1,2,2,2", options="header"]
+|===
+| Pressure point
+| What forced it
+| PoC response
+| Upstream direction
+
+| `SessionFactoryOptionsAdapter`
+| `SessionFactoryImpl`, `QueryEngineImpl`, service-registry creation, runtime
+  model creation, and later runtime access all expect ORM's broad
+  `SessionFactoryOptions` SPI.
+| A dynamic proxy adapts `ResolvedSessionFactorySettings` to
+  `SessionFactoryOptions`.  It invokes interface default methods directly and
+  otherwise supports only audited methods.  Unsupported methods throw
+  immediately so each new method is classified before the resolved settings
+  surface grows.
+| Keep `SessionFactoryOptions` as a compatibility/runtime view for now, but
+  drive factory construction from narrower resolved products such as query,
+  cache, session-default, tenant, and integration settings.
+
+| Session open / persist runtime defaults
+| A real `SessionFactory#inTransaction` smoke test reaches option consumers that
+  simple factory construction does not: stateless interceptor supplier, session
+  event listeners, statistics enablement and query-statistics size, initial
+  flush mode, default lock options, default session properties, JTA behavior,
+  custom dirtiness strategy, entity-name resolvers, nullability checking, JDBC
+  batch/fetch/generated-key/scrollability defaults, insert/update ordering, and
+  connection-provider autocommit behavior.
+| The adapter supplies neutral ORM defaults for these methods.  Some are
+  currently hard-coded rather than named on `ResolvedSessionFactorySettings`
+  because the PoC has only proven the default runtime path.
+| Split the runtime defaults into named settings buckets before expanding
+  customization support: session defaults, transaction defaults, statistics,
+  integration hooks, and JDBC execution options.
+
+| Existing `BootstrapContext` reuse
+| `SessionFactoryImpl` requires a `BootstrapContext`; integrators receive it;
+  runtime model creation still exposes it through `RuntimeModelCreationContext`.
+| The PoC reuses the `BootstrapContext` reachable from the finalized metadata's
+  original in-flight collector instead of creating a second adapter.
+| Split the current broad contract into explicit factory-build inputs, a runtime
+  model creation context, and a legacy integrator compatibility view.
+
+| Broad `RuntimeModelCreationContext`
+| Runtime metamodel creation currently exposes finalized metadata, the runtime
+  mapping model under construction, raw settings, `SessionFactoryOptions`,
+  `BootstrapContext`, service registry, generator state, and the partially
+  initialized `SessionFactoryImpl`.
+| The PoC still relies on ORM's existing runtime-model construction path through
+  `SessionFactoryImpl`.
+| Keep runtime model creation as a named phase, but narrow the context by
+  replacing `getBootstrapContext()` with explicit services/settings and
+  replacing `getSessionFactory()` with a completed-safe factory build handle.
+
+| Current `Integrator` SPI
+| `SessionFactoryImpl` calls
+  `Integrator#integrate(Metadata, BootstrapContext, SessionFactoryImplementor)`
+  from inside its constructor and later calls `disintegrate` from observer
+  callbacks or startup-failure cleanup.
+| The PoC uses ORM's existing integration flow.  The audit shows the built-in
+  Bean Validation and collection-cache integrators do not use the
+  `BootstrapContext` argument directly, but they do need options, metadata,
+  event-listener registration, observers, class-loading, settings, services, and
+  a factory reference/build handle.
+| Introduce a narrower factory-integration context for new SPI while preserving
+  the legacy `Integrator` signature through an adapter during migration.
+
+| Metadata finalization through
+  `InFlightMetadataCollectorImpl#buildMetadataInstance`
+| `SessionFactoryImpl` cannot be called with the in-flight collector because
+  `InFlightMetadataCollectorImpl#initSessionFactory` rejects that path.
+| `MetadataResolver#finalizeMetadata` creates finalized `MetadataImpl`, then the
+  binding tests run ordering and validation against that finalized product.
+| Make finalized metadata production a first-class metadata-resolution phase,
+  ideally without depending on implementation-specific collector APIs.
+
+| Split between `BindingState` and `InFlightMetadataCollector`
+| The PoC needs typed binding-phase state, but ORM still expects its mutable
+  collector as the metadata sink and mid-bind side-effect registry.
+| `BindingState` owns binder coordination state; `MetadataCollector` owns completed
+  metadata writes; `InFlightMetadataCollectorAdapter` adapts those writes to the collector
+  while table/query machinery still bridges to legacy ORM APIs.
+| Introduce separate upstream contracts for binding phase state and metadata
+  target writes.  Avoid growing `BindingState` into a clone of the collector.
+
+| Broad `MetadataImplementor` factory input
+| `SessionFactoryImpl`, runtime metamodel creation, query engine, schema tooling,
+  cache priming, fetch-profile conversion, and integrators all consume the ORM
+  metadata bridge.
+| The PoC continues producing `MetadataImplementor`, but the audit classifies
+  the pieces it carries: finalized mapping bindings, database/schema model,
+  named-object definitions, fetch/filter definitions, cache-region inputs, and
+  type/function registries.
+| Keep `MetadataImplementor` as the compatibility target for now while exposing
+  narrower `ResolvedMetadata` sub-products where consumers can be split without
+  disrupting persister/runtime model construction.
+
+| Dialect type-contribution replay
+| Runtime factory construction needs DDL/JDBC type descriptors that ORM normally
+  contributes during legacy bootstrap.
+| `MetadataResolver` performs dialect type contribution before binding.
+| Expose type contribution as an explicit metadata-resolution step rather than
+  relying on side effects hidden in legacy builders.
+
+| `TypeConfiguration` re-scoping before factory construction
+| Runtime construction expects the metadata `TypeConfiguration` to remain scoped
+  to the metadata-building context until `SessionFactoryImpl` can scope it to
+  the completed factory.
+| `SessionFactoryBuilder` re-scopes the metadata `TypeConfiguration` to the
+  metadata-building context immediately before calling `SessionFactoryImpl`.
+| Clarify ownership/lifecycle of `TypeConfiguration` across metadata resolution
+  and runtime factory construction.
+
+| Bean Validation nullability mutation
+| Current Bean Validation integration can mutate
+  `SessionFactoryOptions#setCheckNullability`.
+| Not yet addressed by the PoC; recorded as a follow-up from the
+  `SessionFactoryOptions` audit.
+| Resolve nullability/check behavior before factory construction instead of
+  exposing mutable options state to integrators.
+
+| `SessionFactoryServiceRegistryFactory#buildServiceRegistry`
+| The factory service registry is built with the partially initialized
+  `SessionFactoryImpl` and the full `SessionFactoryOptions`.  Factory-scoped
+  service contributors are also loaded through the parent registry's
+  `ClassLoaderService`.
+| The PoC still uses the current constructor path.  The audit identified the
+  standard factory-scoped initiator needs: statistics settings, cache services,
+  native-query options, class-loading access, and factory identity/build handle.
+| Investigate a narrower service-registry build input that does not require the
+  full options SPI and reduces reliance on a partially initialized factory.
+
+| ORM mapping constructors and `MetadataBuildingContext`
+| Several ORM mapping objects still require `MetadataBuildingContext` even when
+  the PoC binder has explicit access to the concrete values it needs.
+| `BindingState` and binder-local context hide some usage, while remaining
+  constructor requirements continue to use the legacy context.
+| Isolate mapping-object construction behind local factories or adjust upstream
+  constructors to accept narrower dependencies.
+
+| Schema export for the runtime smoke entity
+| Calling `SchemaManager#exportMappedObjects(true)` for the minimal runtime
+  smoke entity generated an empty table column list, even though the runtime
+  persister could persist/query the manually created table.
+| The smoke test creates and drops the tiny table manually through JDBC so it
+  can focus on SessionFactory runtime behavior.
+| Track this as a binding/schema-export gap.  Runtime smoke tests should
+  eventually use Hibernate schema tooling once the exported table columns are
+  correct.
+|===
+
+=== MetadataImplementor
+
+Initial inspection target: `SessionFactoryImpl` and first-order collaborators
+which receive the boot metadata during factory construction:
+
+* `EventEngine`
+* `SchemaManagerImpl`
+* `Integrator#integrate`
+* `QueryEngineImpl`
+* `MappingMetamodelImpl`
+* `FetchProfileHelper`
+* `SchemaManagementToolCoordinator`
+* `NamedObjectRepositoryImpl`
+
+Direct `SessionFactoryImpl` usage:
+
+* passes metadata to `EventEngine`;
+* calls `bootMetamodel.initSessionFactory(this)`;
+* uses `getDatabase()` to create `SqlStringGenerationContext`;
+* copies `getFilterDefinitions()` into the factory filter map;
+* creates `SchemaManagerImpl(this, bootMetamodel)`;
+* passes metadata to integrators;
+* calls `orderColumns(false)` and `validate()`;
+* primes second-level cache regions from `getEntityBindings()` and
+  `getCollectionBindings()`;
+* passes metadata to `QueryEngineImpl`;
+* passes metadata through `RuntimeModelCreationContext#getBootModel()` to
+  runtime mapping/JPA metamodel creation;
+* passes metadata to `FetchProfileHelper`.
+
+[cols="1,2,2,2", options="header"]
+|===
+| Consumer area
+| Observed access
+| Likely narrower dependency
+| Notes
+
+| Constructor-local factory state
+| `getDatabase()`, `getFilterDefinitions()`, `initSessionFactory()`
+| database model, filter definitions, event-listener initialization hook
+| `initSessionFactory()` is not pure metadata access.  It reads event-listener
+  settings and mutates the factory event listener registry.
+
+| Metadata finalization
+| `orderColumns(false)`, `validate()`
+| finalization/validation phase over database, entities, and collections
+| These should eventually be an explicit metadata-resolution phase rather than
+  constructor work.
+
+| Cache priming
+| `getEntityBindings()`, `getCollectionBindings()`, cache strategy/region/natural-id
+  values from `PersistentClass` and `Collection`
+| cache region build descriptors derived from finalized mapping metadata
+| This is runtime factory construction data, but it need not require the whole
+  `MetadataImplementor` contract.
+
+| Query engine
+| `getTypeConfiguration()`, `getFunctionRegistry()`,
+  `buildNamedQueryRepository()`
+| query type configuration, function registry, named-object definitions
+| `QueryEngineImpl` also contributes functions from services and dialect.  The
+  named repository is built from metadata definitions but then resolves lazily
+  against the factory.
+
+| Named object repository
+| `visitNamedHqlQueryDefinitions`, `visitNamedNativeQueryDefinitions`,
+  `visitNamedProcedureCallDefinition`,
+  `visitNamedResultSetMappingDefinition`, and fallback direct lookup methods
+| named query/mutation/procedure/result-set definitions
+| This can become a named metadata product independent of entity/table binding.
+
+| Runtime mapping model
+| `visitRegisteredComponents`, `getMappedSuperclassMappingsCopy()`,
+  `getEntityBindings()`, `getCollectionBindings()`, `getNamedEntityGraphs()`
+| finalized boot mapping bindings, components, mapped superclasses, named entity
+  graphs
+| This is the strongest compatibility reason to keep producing ORM
+  `PersistentClass`, `Collection`, and `Component` mappings for now.
+
+| Fetch profiles
+| `getFetchProfiles()`
+| fetch profile definitions plus runtime mapping metamodel for validation
+| Fetch profiles are converted after runtime persisters exist, so this is a late
+  factory construction step.
+
+| Schema tooling
+| `SchemaManagerImpl` stores the metadata and passes it to
+  `SchemaManagementToolCoordinator`; schema action grouping uses
+  `Metadata#getContributors()`.
+| database/schema model, contributors, entity/collection/table/sequence state
+| The runtime smoke test exposed that this path is sensitive to table/column
+  completeness.
+
+| Integrators
+| full `Metadata`/`MetadataImplementor` view through the legacy
+  `Integrator#integrate` signature
+| compatibility metadata view
+| Built-in integrators use narrower pieces, but third-party integrators may use
+  any public metadata method.
+|===
+
+`MetadataImpl` itself contains the following distinct groups of state:
+
+* metadata-building options and `BootstrapContext`-derived type/function
+  registries;
+* entity, collection, component, mapped-superclass, type, and identifier
+  mappings;
+* filter, fetch-profile, import, named query/native query/procedure/result-set,
+  and named entity-graph definitions;
+* SQL function definitions;
+* the database/namespace/table/sequence model;
+* helper maps used by copying and generic/embeddable discriminator resolution.
+
+Preliminary conclusion:
+
+`MetadataImplementor` should remain the PoC's factory-construction
+compatibility target.  It is the current handoff accepted by ORM's runtime
+metamodel, query engine, schema tooling, cache priming, and integrator SPI.
+
+However, the audit makes it clear that the target design should not treat one
+large `MetadataImplementor` as the only long-term product.  `ResolvedMetadata`
+should be allowed to expose named sub-products as they become useful:
+
+* finalized boot mapping model;
+* database/schema model;
+* named object definitions;
+* filter and fetch-profile definitions;
+* cache-region descriptors;
+* type/function registries;
+* metadata finalization/validation result.
+
+The likely upstream path is incremental:
+
+* keep producing ORM `MetadataImplementor` until runtime metamodel creation and
+  schema tooling can consume narrower products;
+* move `orderColumns(false)` and `validate()` out of `SessionFactoryImpl` and
+  into metadata resolution/finalization;
+* keep `PersistentClass`, `Collection`, and `Component` as the runtime mapping
+  model inputs until upstream mapping creation APIs are changed;
+* introduce narrower consumers first around query named objects, cache-region
+  descriptors, fetch profiles, and schema tooling because those are easier to
+  isolate than persister construction.
+
+Follow-up questions:
+
+* Can `MetadataResolver#finalizeMetadata` own `orderColumns(false)` and
+  `validate()` permanently, leaving `SessionFactoryImpl` to consume already
+  finalized metadata?
+* Should `ResolvedMetadata` expose named-object definitions separately from the
+  ORM `MetadataImplementor` bridge?
+* Should cache-region priming consume cache descriptors produced during binding
+  instead of re-reading `PersistentClass` / `Collection` cache settings?
+* Can schema tooling consume a narrower schema/database model, or is
+  `MetadataImplementor` still the right boundary there until upstream changes?
+* Which third-party integrator use cases require the full metadata view?
+
+=== InFlightMetadataCollector
+
+Initial inspection target: PoC orchestration and binding code.
+
+`InFlightMetadataCollector` is currently the mutable ORM metadata collector.  The
+PoC uses it both directly and indirectly through `MetadataBuildingContext`.
+Unlike `MetadataBuildingContext`, most collector uses are not merely accidental
+service access; many are real writes to the ORM boot metadata model that is
+returned as `MetadataImplementor`.
+
+Observed usage in the PoC:
+
+[cols="1,2,2,2", options="header"]
+|===
+| Consumer area
+| Observed access
+| Likely narrower dependency
+| Notes
+
+| `MetadataResolver`
+| creates `InFlightMetadataCollectorImpl`; after binding calls
+  `orderColumns(false)` and `validate()` on the metadata result
+| metadata collector factory plus finalization step
+| This is the clearest orchestration-level dependency.  Longer term this could
+  become a `MetadataBuildTarget` / finalizer pair, but for now it is the bridge
+  that proves the PoC can produce ORM metadata.
+
+| `DomainModelCategorizer`
+| reads `getPersistenceUnitMetadata()`, `getConverterRegistry()`, and
+  `getDatabase()` from the collector before constructing `CategorizationContext`
+| persistence-unit metadata, converter registry, database
+| The categorization model no longer sees the collector.  Remaining reads are
+  entry-point plumbing while `DomainModelCategorizer` still accepts
+  `MetadataBuildingContext`.
+
+| `BindingStateImpl`
+| reads `getDatabase()` during construction; writes `addEntityBinding`,
+  `addMappedSuperclass`, and `addFilterDefinition`
+| database, managed-type registration target, filter-definition target
+| Partly done: `BindingState` now localizes these writes.  Entity bindings still
+  publish immediately because property-reference binding validates against the
+  collector during the same binding run; mapped-superclass, collection, import,
+  filter, and global-registration writes use the explicit final bridge.
+
+| `BindingCoordinator` global registrations
+| writes identifier generators, named entity graphs, converters, Java/JDBC type
+  registrations, user/composite user types, collection type registrations, and
+  embeddable instantiators
+| global-registration target
+| Done for non-query registrations: these now write to `BindingState` and are
+  applied to the collector by the final bridge.  Query registrations still use
+  ORM's legacy query binders.
+
+| Query binding
+| `QueryBinder.bindQuery`, `bindNativeQuery`, and
+  `bindNamedStoredProcedureQuery` require `MetadataBuildingContext`
+| query registration adapter
+| This likely waits for upstream integration.  ORM's query binders currently
+  consume the legacy context and write to the collector internally.
+
+| Table binding
+| `addTable` and `addDenormalizedTable`; table naming callbacks also expose
+  `MetadataBuildingContext`
+| database namespace/table factory
+| This is a core collector responsibility today.  A narrow table factory would
+  be cleaner, but ORM's `Table` creation and namespace registration currently
+  live on the collector.
+
+| Collection binding
+| `addCollectionBinding`
+| collection metadata collector
+| Done: collection binders now record collection bindings in `BindingState`;
+  the collector remains the final storage target.
+
+| Entity and mapped-superclass imports
+| `addImport`
+| import registration target
+| Done: imports now record in `BindingState` and publish during the final bridge.
+
+| Unique property references
+| `addUniquePropertyReference`
+| property-reference registration target
+| Still an immediate collector side channel, but now localized behind
+  `BindingState#addUniquePropertyReference`.  It cannot wait for the final
+  bridge because later binding phases consume it during the same binding run.
+  Upstream should ideally grow a typed property-reference API.
+
+| Tenant-id binding
+| reads `getTypeConfiguration()` and `getFilterDefinition()`; may write
+  `addFilterDefinition`
+| type configuration plus filter-definition registry
+| Partly done: type configuration and filter lookup/write now go through
+  `BindingState` so tenant-id validation sees pending filter definitions.
+
+| `BindingOptionsImpl`
+| reads `getDatabase().getJdbcEnvironment()`
+| JDBC environment
+| This is settings/defaults support, not a conceptual collector dependency.
+|===
+
+Preliminary conclusion:
+
+`InFlightMetadataCollector` is not just an overly broad service locator.  In the
+current bridge it is the mutable ORM metadata product.  The healthier split is:
+
+* keep the collector as the short-term implementation behind a metadata collector
+  adapter;
+* keep completed metadata writes behind `MetadataCollector`
+  (`addEntityBinding`, `addMappedSuperclass`, `addCollectionBinding`,
+  `addImport`, filter definitions, global registrations);
+* isolate table/namespace creation separately if upstream ORM is changed;
+* leave query binding and mapping-object construction on the legacy adapter until
+  those upstream APIs can be changed;
+* keep final ordering/validation as an explicit orchestration step.
+
+This audit suggests that removing collector exposure locally is useful only when
+it improves binder shape without fighting ORM's mapping constructors.  The PoC
+now uses `MetadataCollector` as the explicit metadata-product write boundary.  The
+current `InFlightMetadataCollectorAdapter` implementation writes through to ORM's
+collector immediately, which preserves mid-bind side effects while separating
+metadata output from `BindingState` working memory.  Table creation and query
+binding still need upstream work before a local rewrite is worthwhile.
+
+==== InFlightMetadataCollector versus BindingState
+
+`BindingState` should not be viewed as a local clone of
+`InFlightMetadataCollector`.  The clean design separates three jobs:
+
+* `BindingState` is the PoC's typed binding-phase state, used to coordinate
+  binders and remember local decisions.
+* `MetadataCollector` is the structured write target for completed metadata
+  contributions.
+* `InFlightMetadataCollectorAdapter` is the current compatibility implementation behind
+  `MetadataCollector`, not a long-term peer of `BindingState`.
+
+The clean target is therefore not immediate collector removal.  The clean target
+is to make every collector touchpoint fall into one of a few explicit buckets.
+
+[cols="1,2,2,2", options="header"]
+|===
+| Responsibility
+| Best current owner
+| Why
+| Possible upstream direction
+
+| Creating/finalizing ORM metadata
+| `InFlightMetadataCollector`
+| ORM's `MetadataImpl` is still built from
+  `InFlightMetadataCollectorImpl#buildMetadataInstance`, and the current
+  runtime factory constructor still accepts `MetadataImplementor`.
+| Create a first-class metadata collector/finalizer contract.  Until then, keep the
+  collector as the compatibility sink.
+
+| Binder-local registries
+| `BindingState`
+| Type binders, table references, identifier bindings, association targets,
+  derived identifiers, inverse associations, foreign keys, and property map keys
+  are PoC phase state, not global ORM metadata.
+| Keep these as typed queues or registries.  This is the shape we would want
+  upstream instead of broad second-pass callback lists where possible.
+
+| Completed metadata writes
+| `MetadataCollector`
+| Mapped superclasses, collections, imports, identifier generators, named entity
+  graphs, converters, Java/JDBC/user/composite types, collection type
+  registrations, embeddable instantiators, and filter definitions are metadata
+  product contributions, not binding working memory.
+| Done locally as a first slice: `MetadataCollector` exists and
+  `InFlightMetadataCollectorAdapter` adapts it to the collector.  The long-term collector can
+  replace the adapter implementation.
+
+| Immediate entity visibility
+| `MetadataCollector` adapter over immediate collector write
+| Entity binders register through `BindingState`, but `BindingStateImpl`
+  delegates the completed entity binding to `MetadataCollector`.  The current
+  collector-backed target writes immediately because later binding logic and ORM
+  property-reference validation expect the entity map to be visible during the
+  same bind run.
+| Add an explicit entity-binding registry that can satisfy mid-bind lookups and
+  publish to final metadata without relying on collector side effects.
+
+| Unique property references
+| `MetadataCollector` adapter over immediate collector side channel
+| `BindingState#addUniquePropertyReference` delegates to `MetadataCollector`, and
+  the collector-backed target preserves the immediate side effect needed by ORM
+  association/property-ref handling.
+| Replace collector side channels with typed property-reference registrations
+  consumed by the association binding phase.
+
+| Table and namespace creation
+| `InFlightMetadataCollector`
+| `TableBinder` still uses `addTable` / `addDenormalizedTable`; ORM table
+  creation, namespace registration, logical/physical name bindings, and
+  duplicate handling are collector/database concerns today.
+| Split out a narrow table/namespace factory backed by `Database`.  `BindingState`
+  should keep table references, not necessarily create all ORM `Table` objects.
+
+| Query, result-set, and procedure bindings
+| ORM collector through legacy query binders
+| ORM query binders still require `MetadataBuildingContext` and write named
+  query/native query/result-set/procedure definitions internally.
+| Introduce a query-definition binding target or make query binding produce
+  named-object definitions that `ResolvedMetadata` can expose directly.
+
+| Second-pass callback machinery
+| Mostly collector/upstream, selectively `BindingState`
+| ORM's collector owns broad second-pass lists.  The PoC has already replaced
+  many local second-pass needs with typed lists on `BindingState`, but upstream
+  mapping/query code still schedules collector second passes.
+| Prefer named typed phases in new boot-model binding.  Keep collector second
+  passes only as an adapter for legacy ORM binders.
+
+| Database, type configuration, JDBC services
+| Explicit services via `BindingState`, `BindingOptions`, or binding context
+| These are real inputs, but they do not justify exposing the full collector.
+  `BindingStateImpl` currently caches `Database` and `JdbcServices`; some code
+  still reaches through `MetadataBuildingContext`.
+| Pass these as explicit binding services/settings and leave collector access for
+  metadata writes only.
+|===
+
+Practical rule for the PoC:
+
+* if the state is needed to coordinate PoC binding phases, put it on
+  `BindingState`;
+* if the write contributes completed metadata, send it through `MetadataCollector`;
+* if ORM needs the side effect during the same bind run, let the current
+  `MetadataCollector` adapter write through immediately and document why;
+* if ORM owns object creation or second-pass/query machinery, avoid local
+  rewrites unless we are ready to change the upstream API.
+
+The likely eventual shape is a pair of first-class contracts plus a compatibility
+adapter:
+
+Binding phase state::
+Typed, phase-local state like today's `BindingState`.  It coordinates binders
+and exposes explicit services/options, but does not pretend to be
+`MetadataImplementor`.
+
+Metadata collector::
+A narrow target for finalized ORM boot metadata contributions.  Initially this is an
+adapter over `InFlightMetadataCollector`; longer term it can replace the broad
+collector exposure with named operations for entity, collection, table, type,
+query, filter, fetch-profile, and cache metadata.
+
+Collector compatibility adapter::
+`InFlightMetadataCollectorAdapter` is the current adapter from `MetadataCollector` to
+`InFlightMetadataCollector`.  It exists to keep using ORM's metadata finalizer
+while the PoC proves the cleaner boundary.
+
+=== MetadataBuildingContext
+
+Initial inspection target: PoC categorization, binding, and orchestration code.
+
+`MetadataBuildingContext` is not currently part of the `SessionFactoryImpl`
+constructor boundary, but it is a major reason the PoC still creates an ORM
+`BootstrapContext`, `MetadataBuildingOptions`, and `InFlightMetadataCollector`.
+It is also passed into many ORM mapping model constructors.
+
+Observed usage in the PoC:
+
+[cols="1,2,2,2", options="header"]
+|===
+| Consumer area
+| Observed access
+| Likely narrower dependency
+| Notes
+
+| `MetadataResolver`
+| Creates `AvailableResourcesContext` from
+  `metadataBuildingContext.getBootstrapContext().getModelsContext()` and
+  `getServiceRegistry()`; reads `getMetadataCollector()` after binding.
+| `ModelsContext`, `ServiceRegistry`, final metadata result
+| Source collection no longer needs the whole context.  This is already mostly a
+  convenience leak from current orchestration.
+
+| `DomainModelCategorizer`
+| `getBootstrapContext()`, `getMetadataCollector().getPersistenceUnitMetadata()`,
+  `getEffectiveDefaults()`, `getBuildingOptions().getMappingDefaults()`
+| models context, XML persistence-unit metadata, effective mapping defaults,
+  converter/global registration/database access, shared cache mode
+| Categorization still receives `MetadataBuildingContext` at its entry point for
+  now, but `CategorizationContext` no longer exposes it to the categorization
+  model.
+
+| `CategorizationContextImpl`
+| direct constructor inputs: persistence-unit metadata, effective defaults,
+  class details registry, shared cache mode, global registrations, converter
+  registry, database
+| explicit categorization collaborators
+| Done: this no longer adapts or exposes `MetadataBuildingContext` or
+  `BootstrapContext`.
+
+| `BindingStateImpl`
+| Stores the full context; initializes `Database` from
+  `getMetadataCollector().getDatabase()` and `JdbcServices` from
+  `getBootstrapContext().getServiceRegistry()`
+| database, JDBC services, mutable binding target
+| `BindingState` already owns much of the real binding state, but still exposes
+  `getMetadataBuildingContext()` as an escape hatch.
+
+| Binding coordinator/global registration binding
+| Frequent `getMetadataCollector()` calls to add named queries, result-set
+  mappings, fetch profiles, filters, imports, named entity graphs, and other
+  global metadata.
+| typed global-registration appliers on `BindingState` or a boot metadata collector
+| This is one of the main places where `BindingState` could absorb collector
+  side effects.
+
+| Mapping object construction
+| `new RootClass(context)`, `new BasicValue(context)`, `new Component(context)`,
+  `new ManyToOne(context, table)`, collection mappings, `Join`, `Table`
+  creation through collector APIs
+| legacy ORM mapping-construction context or local adapter
+| This is the strongest short-term reason to keep an ORM-compatible
+  `MetadataBuildingContext`.
+
+| `BindingOptionsImpl`
+| `getBuildingOptions().getMappingDefaults()`,
+  `getBootstrapContext().getServiceRegistry().getService(ConfigurationService)`,
+  `getMetadataCollector().getDatabase().getJdbcEnvironment()`
+| resolved mapping defaults, configuration values, JDBC environment
+| Can become independent of `MetadataBuildingContext`.
+
+| `BindingContextImpl`
+| currently constructed from `BootstrapContext` to extract metadata-building
+  options and expose bootstrap services
+| global registrations, naming strategies, shared cache mode, models/services
+| This should likely depend on explicit values or a narrower binding services
+  contract.
+
+| Default cascade and naming/default lookups
+| `getEffectiveDefaults().getDefaultCascadeTypes()`,
+  `getObjectNameNormalizer()`, mapping defaults from `getBuildingOptions()`
+| effective mapping defaults and name normalization
+| Some of this may belong in resolved mapping options; object-name normalization
+  may require a small adapter while ORM mapping objects remain in use.
+|===
+
+Methods not yet observed as central in the PoC audit:
+
+* `getTypeDefinitionRegistry()`
+* `getCurrentContributorName()`
+* `getTemporalTableStrategy()`
+* `getAuditStrategy()`
+
+They may still be used indirectly by ORM mapping objects during validation or
+runtime model creation, so this is not a final removal claim.
+
+Preliminary conclusion:
+
+`MetadataBuildingContext` is mainly a legacy aggregation point for three
+different concerns:
+
+* services/options/defaults needed during categorization and binding;
+* the mutable metadata collector / binding target;
+* ORM mapping object construction APIs that require the legacy context type.
+
+The PoC should not treat it as the conceptual binding contract.  The likely
+direction is:
+
+* `CategorizationContext` is now independent of `MetadataBuildingContext`;
+* continue growing `BindingState` into the typed mutable binding target;
+* make `BindingOptions` / `BindingContext` consume explicit values;
+* retain a small ORM-compatible `MetadataBuildingContext` adapter only where
+  mapping object constructors or collector APIs still require it.
+
+The constructor-path audit is complete enough to establish the direction.  The
+remaining work is implementation triage: as
+`BindingState#getMetadataBuildingContext()` callers are touched, decide whether
+each one is:
+
+* a real ORM mapping-constructor requirement;
+* a collector side effect that should move to `BindingState`;
+* a settings/defaults lookup that should move to `BindingOptions` or
+  `BindingContext`;
+* or a categorization concern that should move earlier.
+
+Follow-up questions:
+
+* Can `BindingState` hide `MetadataBuildingContext` from most binders?
+* Which collector writes are missing typed methods on `BindingState`?
+* Can ORM mapping constructors be isolated behind local factory methods so the
+  legacy context dependency is contained?
+* Can `CategorizationContext` be built directly from resolved settings,
+  `AvailableResources`, and metadata collector services?
+
+=== MetadataBuildingOptions
+
+Initial inspection target: PoC orchestration and binding code.
+
+`MetadataBuildingOptions` is still created by ORM's `MetadataBuilderImpl` and
+threaded through `MetadataBuildingContext`.  In the PoC it acts mostly as a
+container for resolved mapping options and naming strategies, not as a mutable
+metadata collector.
+
+Observed usage in the PoC:
+
+[cols="1,2,2,2", options="header"]
+|===
+| Consumer area
+| Observed access
+| Likely narrower dependency
+| Notes
+
+| `MetadataResolver`
+| obtains `metadataBuilder.getMetadataBuildingOptions()`; passes it to
+  `InFlightMetadataCollectorImpl` and `MetadataBuildingContextRootImpl`; uses
+  `getMappingDefaults()` to create `RootMappingDefaults`
+| ORM bootstrap adapter inputs, mapping defaults
+| This remains part of the temporary ORM bridge while we reuse
+  `MetadataBuilderImpl`, `InFlightMetadataCollectorImpl`, and
+  `MetadataBuildingContextRootImpl`.
+
+| `BindingOptionsImpl`
+| reads `getMappingDefaults().shouldImplicitlyQuoteIdentifiers()`,
+  `getImplicitCatalogName()`, and `getImplicitSchemaName()`
+| resolved mapping defaults plus quoting policy
+| Good candidate for a narrow `ResolvedMappingSettings` or richer
+  `BindingOptions` constructor.  It also reads skip-column-definition quoting
+  from `ConfigurationService`, so the real input is settings plus mapping
+  defaults plus `JdbcEnvironment`.
+
+| `BindingContextImpl`
+| reads `getImplicitNamingStrategy()`, `getPhysicalNamingStrategy()`, and
+  `getSharedCacheMode()`
+| naming strategies and shared cache mode
+| These are stable binding services/options.  They can be passed explicitly once
+  `BindingContextImpl` stops adapting `BootstrapContext`.
+
+| `TableBinder`
+| reads implicit and physical naming strategies through
+  `bindingContext.getBootstrapContext().getMetadataBuildingOptions()`
+| naming strategies
+| This is redundant with `BindingContext`, which already exposes both
+  strategies.  This can be cleaned locally without upstream API changes.
+
+| `EntityTypeBinder` cache handling
+| reads `getSharedCacheMode()`
+| shared cache mode
+| `BindingContext` already exposes shared cache mode, so this can be cleaned
+  locally.
+
+| `EntityTypeBinder` joined inheritance discriminator handling
+| reads `ignoreExplicitDiscriminatorsForJoinedInheritance()` and
+  `createImplicitDiscriminatorsForJoinedInheritance()`
+| joined-inheritance discriminator settings
+| Done locally: these are resolved onto `ResolvedMappingSettings`, copied into
+  `BindingOptions`, and consumed by `EntityTypeBinder` from there.
+
+| Soft-delete column naming
+| reads `getPhysicalNamingStrategy()`
+| physical naming strategy
+| This can use `BindingContext#getPhysicalNamingStrategy()` locally.
+
+| `DomainModelCategorizer`
+| reads `getSharedCacheMode()` and `getMappingDefaults()` for
+  `RootMappingDefaults`
+| shared cache mode, mapping defaults
+| Categorization already passes shared cache mode through
+  `CategorizationContext`; the remaining mapping defaults are for XML processing
+  and root mapping defaults construction.
+|===
+
+Preliminary conclusion:
+
+`MetadataBuildingOptions` is less problematic than `MetadataBuildingContext` and
+less central than `InFlightMetadataCollector`: it mostly contains values we do
+need, but under a broad legacy container.
+
+The likely direction is:
+
+* keep creating it while the PoC reuses ORM's metadata builder/collector/context
+  bridge;
+* move local consumers toward explicit values already available from
+  `BindingContext` and `BindingOptions`;
+* grow a named mapping-settings contract for joined-inheritance discriminator
+  behavior, implicit catalog/schema, global quoting, naming strategies, and
+  shared cache mode;
+* keep `MetadataBuildingOptions` as an adapter detail until ORM mapping
+  constructors and XML/query processors no longer require the legacy context.
+
+Near-term local cleanup candidates:
+
+* have `TableBinder` use `BindingContext#getImplicitNamingStrategy()` and
+  `getPhysicalNamingStrategy()`;
+* have `EntityTypeBinder` use `BindingContext#getSharedCacheMode()` and
+  `getPhysicalNamingStrategy()`;
+* continue expanding `ResolvedMappingSettings` / `BindingOptions` only for
+  settings that are actually consumed during model processing.
+
+=== SessionFactoryServiceRegistry
+
+Initial audit done as part of the SessionFactory construction path.
+
+The registry is not just a service map.  It is a late construction product that
+currently carries three broad values through
+`SessionFactoryServiceInitiatorContext`:
+
+* the partially initialized `SessionFactoryImplementor`;
+* the full `SessionFactoryOptions`;
+* the factory-scoped service registry itself.
+
+That shape is sufficient for compatibility, but it should not be treated as the
+target architecture.  The standard initiators only prove narrower needs:
+
+* factory identity/build handle;
+* settings and class-loading access;
+* cache and region services;
+* statistics settings;
+* native-query settings;
+* extension-integration class-loading.
+
+The likely upstream direction is a named service-registry creation phase that
+receives a narrower build context and returns the `SessionFactoryServiceRegistry`
+before runtime factory assembly continues.  Existing
+`SessionFactoryServiceContributor` and `SessionFactoryServiceInitiator`
+contracts may need a compatibility adapter if their current context remains too
+broad for the new pipeline.
+
+=== RuntimeModelCreationContext
+
+Initial audit done against ORM's `RuntimeModelCreationContext`,
+`SessionFactoryImpl.ModelCreationContext`, `MappingMetamodelImpl`, entity and
+collection persisters, JPA metamodel creation, representation strategies, and
+mapping-model creation helpers.
+
+This contract is both a good concept and currently too broad.  It represents a
+real construction phase, but the values it exposes fall into several different
+ownership buckets:
+
+* finalized boot metadata: `MetadataImplementor`, entity/collection bindings,
+  components, mapped superclasses, named entity graphs, metadata-building
+  options still reachable from metadata;
+* runtime model under construction: `MappingMetamodelImplementor`, persisters,
+  JPA metamodel, constraint model, loaders, embeddable mappings;
+* factory-like runtime services: dialect, JDBC services, SQL string generation,
+  function registry, cache, graph planning options, type configuration;
+* broad compatibility views: `SessionFactoryOptions`, raw settings,
+  `BootstrapContext`, service registry, and the partially initialized
+  `SessionFactoryImplementor`;
+* generator state: generator cache plus `GeneratorSettings`.
+
+The most important observation is that current ORM explicitly passes a
+partially initialized `SessionFactoryImpl` into this phase.  The inner
+`ModelCreationContext#getSessionFactory()` comment calls out that this is bad
+because the factory is not fully initialized.  Several runtime model helpers use
+that factory handle for SQL generation, wrapper options, filter helpers, mapping
+lookups, or service access, but those needs are narrower than the completed
+factory contract.
+
+[cols="1,2,2,2", options="header"]
+|===
+| Current access
+| Main consumers
+| Narrower target
+| Notes
+
+| `getBootModel()`
+| `MappingMetamodelImpl`, persisters, mapping-model helpers, temporary-table
+  support, JPA metamodel processing
+| finalized mapping metadata / `ResolvedMetadata` sub-products
+| This is expected for now.  Runtime model creation still strongly depends on
+  ORM `PersistentClass`, `Collection`, `Component`, and named graph structures.
+
+| `getDomainModel()`
+| collection persisters and mapping-model helpers
+| runtime mapping registry under construction
+| This is legitimate phase state, but the name probably wants to be clarified as
+  runtime mapping metamodel rather than source/domain model.
+
+| `getSessionFactory()`
+| entity/collection persisters, filter helpers, mapping helpers, cache/format
+  paths
+| factory build handle exposing only completed-safe services
+| This is the riskiest dependency because the factory is incomplete.  Do not
+  normalize this as the target design.
+
+| `getSessionFactoryOptions()`
+| entity/collection persisters, cache behavior, callbacks, batch/fetch/default
+  runtime choices
+| resolved session-factory/runtime settings
+| The current PoC adapter is a compatibility bridge.  Audited option consumers
+  should migrate into named resolved settings buckets only as they are proven.
+
+| `getBootstrapContext()`
+| representation strategies, JPA metamodel, natural-id helpers,
+  plural-attribute mapping, generator adapters, format mappers, collection
+  representation lookup
+| explicit runtime-model services: `ModelsContext`, class-loading access,
+  managed-bean access, service access, representation strategy selection,
+  collection representation resolver, resolved mapping options
+| This should be the first runtime-model narrowing target.  Observed consumers
+  do not justify exposing the whole bootstrap context.
+
+| `getServiceRegistry()`
+| callbacks and general runtime service lookup
+| service access or specific services
+| Prefer direct services where the dependency is stable; keep service-registry
+  access as a compatibility fallback.
+
+| `getDialect()`, `getJdbcServices()`,
+  `getSqlStringGenerationContext()`, `getFunctionRegistry()`
+| persisters, mapping-model helpers, temporary tables, constraint model, query
+  and SQL rendering support
+| runtime SQL/query services
+| These are legitimate runtime-model inputs and should remain explicit.
+
+| `getTypeConfiguration()`
+| collection persisters, SQL/formula rendering, Java type registry access
+| type configuration scoped for runtime model creation
+| Ownership and scoping across metadata resolution and factory completion remain
+  a separate pressure point.
+
+| `getGraphPlanningOptions()`
+| constraint model builder
+| graph planning settings
+| This is already narrow enough.
+
+| raw `getSettings()`
+| JPA metamodel population settings
+| named resolved JPA/metamodel settings
+| Current use should move to resolved settings rather than a raw map read.
+
+| generator map / `GeneratorSettings` /
+  `getOrCreateIdGenerator`
+| identifier and collection generator creation
+| generator creation context
+| This is phase-specific state and is reasonable as a separate context slice.
+|===
+
+Audit conclusion:
+
+Keep `RuntimeModelCreationContext` as the named runtime-model phase boundary,
+but treat the current interface as a migration shape.  The immediate upstream
+direction is to replace `getBootstrapContext()` access with explicit services
+and to replace the incomplete `SessionFactoryImplementor` exposure with a
+factory-build/runtime-model handle.  Full removal of `MetadataImplementor` is a
+larger follow-up because runtime persister construction still consumes ORM boot
+mapping objects directly.
+
+== Initial Prototype Target
+
+The first implementation target should be deliberately narrow:
+
+.Initial prototype SessionFactory construction
+[source]
+----
+AvailableResources
+    -> DomainModelCategorizer
+    -> BindingCoordinator
+    -> MetadataImplementor
+    -> existing SessionFactoryOptions adapter
+    -> existing BootstrapContext
+    -> new SessionFactoryImpl(...)
+----
+
+Success criteria:
+
+* a small annotated model can bootstrap a usable `SessionFactory`
+* the PoC binder produces a `MetadataImplementor` accepted by the constructor
+* option resolution is explicit enough to see which settings are still missing
+* no new abstraction is added unless it removes an actual handoff ambiguity
+
+== Current PoC Slice
+
+The current metadata collector resolver is:
+
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/BootstrapSettingsResolver.java[`BootstrapSettingsResolver`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/MetadataResolver.java[`MetadataResolver`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/ResolvedMetadata.java[`ResolvedMetadata`]
+
+Settings resolution is a separate target:
+
+.BootstrapSettingsResolver
+[source]
+----
+configuration values / JPA inputs
+    -> BootstrapSettingsResolver
+    -> ResolvedBootstrapSettings
+----
+
+`MetadataResolver#resolve` owns only the metadata collector phase order:
+
+.MetadataResolver
+[source]
+----
+ResolvedBootstrapSettings + BootstrapSourceContributions + ServiceRegistry
+    -> MetadataBuildingContext
+    -> AvailableResources
+    -> CategorizedDomainModel (*)
+    -> BindingState (*)
+    -> MetadataCollector
+    -> MetadataImplementor (*)
+    -> ResolvedMetadata
+----
+
+See
+link:session-factory-bootstrap-design.adoc#_flow_notation[`session-factory-bootstrap-design.adoc`]
+for the notation used by these pipeline sketches.  In short, the settings,
+source contributions, and service registry are peer inputs to the resolver; the
+arrowed lines are the ordered products/steps owned by that resolver.  A `(*)`
+marker means the product is retained by the final product.  Inputs and unmarked
+intermediate products do not automatically become part of the final product.
+
+`ResolvedMetadata` carries the finalized `MetadataImplementor`, the
+`CategorizedDomainModel`, and the `BindingState` used as local binding-phase
+state.  It intentionally does not carry `ResolvedBootstrapSettings`; settings
+remain input to metadata resolution and to later settings resolvers, not part of
+the metadata result.
+
+At the moment `MetadataResolver#finalizeMetadata` builds ORM's finalized
+`MetadataImpl` through `InFlightMetadataCollectorImpl#buildMetadataInstance`.
+Column ordering and validation are exercised by binding tests, but they are not
+yet permanently owned by `MetadataResolver`; that remains one of the follow-up
+questions above.
+
+Later slices should add one resolver per gross target rather than growing a
+single SessionFactory-wide orchestrator.
+
+`SessionFactoryBuilder` is the next target shell.  It accepts
+`ResolvedSessionFactorySettings`, `ResolvedMetadata`, and a `ServiceRegistry`,
+and its intended return type is the runtime `SessionFactoryImplementor` itself.
+There is no separate build-result object unless the factory construction path
+proves it needs additional materialized products.
+
+== Concrete Forward Plan
+
+The constructor audit is complete enough to move from discovery to incremental
+prototype slices.  The next work should keep the current compatibility path
+running while externalizing one constructor responsibility at a time.
+
+This plan is not limited to local PoC adapters.  Because the target is upstream
+ORM integration, each slice should explicitly decide whether the better move is:
+
+* a local compatibility adapter to keep the PoC moving;
+* an upstream ORM signature/context change that directly supports the design;
+* both, with the adapter serving only as the migration bridge.
+
+Adapters should therefore be treated as pressure-point markers.  When an
+upstream change is small, clarifies ownership, and avoids preserving a broad
+legacy contract, prefer making that upstream change over layering another local
+bridge.
+
+=== 1. Remove Legacy hbm.xml Support Upstream
+
+Goal: simplify the upstream boot surface before carrying the PoC design deeper
+into ORM.
+
+Legacy `hbm.xml` support is a major source of bootstrap coupling.  It pushes ORM
+toward source-neutral XML preprocessing, broad mapping defaults, legacy mapping
+constructors, second-pass style coordination, and equivalence paths that are not
+part of the ORM 9 target.  Removing it should make several current dependencies
+disappear or become easier to narrow.
+
+Tasks:
+
+* remove `hbm.xml` as an accepted mapping source in upstream ORM 9 bootstrap;
+* keep JPA `orm.xml` support as the remaining XML mapping source;
+* remove or quarantine settings that exist only for `hbm.xml` compatibility,
+  such as explicit legacy HBM resource lists and HBM-specific XML assumptions;
+* revisit XML preprocessing and processing after the removal, because some
+  currently necessary abstractions may only exist to preserve HBM behavior;
+* document any temporary migration guardrails or failure messages needed for
+  users attempting to configure HBM mappings.
+
+Success criteria:
+
+* source discovery no longer needs an HBM source bucket;
+* `AvailableResources` XML handling clearly means JPA `orm.xml`;
+* categorization and binding no longer preserve behavior solely for HBM parity;
+* follow-up bootstrap slices can treat removed HBM dependencies as gone rather
+  than adapting around them.
+
+=== 2. Stabilize the Current Handoff
+
+Goal: make the current metadata-to-factory path intentional and well tested.
+
+Tasks:
+
+* keep `MetadataResolver` producing `ResolvedMetadata`;
+* keep `ResolvedMetadata` limited to the products it actually retains:
+  `MetadataImplementor`, `CategorizedDomainModel`, and `BindingState`;
+* keep `ResolvedBootstrapSettings` and `ResolvedSessionFactorySettings` as
+  separate inputs to later phases;
+* keep `MetadataCollector` as the explicit completed-metadata write target;
+* add smoke tests which prove the same `ResolvedMetadata` can support both
+  metadata inspection and `SessionFactoryBuilder`.
+
+Success criteria:
+
+* a simple model, a model with composite identifiers/values, and at least one
+  cache/named-query-oriented model can build metadata and bootstrap a usable
+  `SessionFactory`;
+* column ordering and metadata validation always run through
+  `MetadataResolver`;
+* tests do not reach through `ResolvedMetadata` to recover bootstrap settings.
+
+=== 3. Make SessionFactoryBuilder Own the Compatibility Adapter Boundary
+
+Goal: keep `SessionFactoryBuilder` returning `SessionFactoryImplementor`, while
+making the current adapter work explicit.
+
+.SessionFactoryBuilder
+[source]
+----
+ResolvedSessionFactorySettings
+ResolvedMetadata
+ServiceRegistry
+    -> SessionFactoryOptions adapter
+    -> existing BootstrapContext adapter/reuse
+    -> SessionFactoryImplementor
+----
+
+Tasks:
+
+* document every supported `SessionFactoryOptionsAdapter` method in the audit;
+* add named fields to `ResolvedSessionFactorySettings` only when the builder or
+  constructor path needs them;
+* keep unsupported adapter methods failing loudly;
+* for each unsupported method encountered, decide whether to add a named
+  resolved setting, keep a documented compatibility default, or change the
+  upstream consumer to request a narrower contract;
+* keep reusing ORM's current `BootstrapContext` from the metadata product until
+  a concrete replacement slice needs otherwise.
+
+Success criteria:
+
+* every newly supported option method maps to either
+  `ResolvedSessionFactorySettings`, `ResolvedBootstrapSettings`, or a documented
+  compatibility default;
+* no broad `SessionFactoryOptionsBuilder` dependency returns as the design
+  target;
+* the builder remains a small runtime factory target, not a second metadata
+  resolver.
+
+=== 4. Externalize Factory-Scoped Service Registry Creation
+
+Goal: identify whether `SessionFactoryServiceRegistry` can be built from a
+narrow factory-build context instead of a partially initialized
+`SessionFactoryImpl`.
+
+.Factory service registry slice
+[source]
+----
+ResolvedSessionFactorySettings
+ResolvedMetadata
+ServiceRegistry
+Factory build handle
+    -> SessionFactoryServiceRegistry
+----
+
+Tasks:
+
+* prototype a narrow factory-build handle with factory identity, parent service
+  access, class-loading access, resolved settings, and metadata access;
+* compare that handle to what `SessionFactoryServiceRegistryFactoryImpl` and its
+  initiators actually consume;
+* decide whether to adapt the existing service-registry implementation or change
+  ORM's service-registry factory signature to accept the narrow build handle;
+* keep any adapter local and temporary if the upstream signature change is not
+  part of the current slice.
+
+Success criteria:
+
+* the service-registry creation inputs are named and testable outside the
+  `SessionFactoryImpl` constructor;
+* any need for the partially initialized factory is either removed or documented
+  as a specific upstream pressure point.
+
+=== 5. Make Integrator Execution an Explicit Compatibility Phase
+
+Goal: keep legacy `Integrator` behavior working while making the callback shape
+visible.
+
+.Integrator compatibility slice
+[source]
+----
+ResolvedMetadata
+SessionFactoryServiceRegistry
+SessionFactoryImplementor / factory build handle
+BootstrapContext adapter
+    -> legacy Integrator callbacks
+----
+
+Tasks:
+
+* isolate creation/reuse of the `BootstrapContext` view passed to legacy
+  integrators;
+* document which built-in integrators use the context, options, service
+  registry, or metadata;
+* identify a narrower future integration callback shape;
+* decide whether built-in ORM integrators can move to the narrower shape before
+  the public `Integrator` SPI changes.
+
+Success criteria:
+
+* existing integrators still run;
+* the legacy `BootstrapContext` argument is clearly treated as adapter state;
+* built-in integrator needs are captured as candidates for a future SPI.
+
+=== 6. Name Runtime Model Creation as a Builder Subphase
+
+Goal: stop treating runtime model creation as incidental constructor work.
+
+.Runtime model creation slice
+[source]
+----
+ResolvedMetadata
+ResolvedSessionFactorySettings
+SessionFactoryServiceRegistry
+Factory build handle
+    -> RuntimeModelCreationContext
+    -> runtime mapping/model products
+----
+
+Tasks:
+
+* keep `RuntimeModelCreationContext` as the named phase boundary;
+* replace observed `getBootstrapContext()` use with explicit services/settings
+  where possible;
+* avoid exposing a partially initialized `SessionFactoryImplementor` to new code;
+* change upstream runtime-model consumers where reasonable so they request
+  explicit services/settings instead of `BootstrapContext`;
+* keep `MetadataImplementor` as the compatibility metadata input only until
+  persister construction can consume narrower metadata products upstream.
+
+Success criteria:
+
+* runtime model creation can be described as inputs plus products, not just as
+  constructor side effects;
+* new code asks for explicit services/settings instead of the broad
+  `BootstrapContext`;
+* any remaining need for `MetadataImplementor` is documented as a persister or
+  runtime-model dependency.
+
+=== 7. Revisit ResolvedMetadata Shape After Factory Construction Works
+
+Goal: replace transitional retained products with narrower products only after
+their consumers are known.
+
+Tasks:
+
+* keep `BindingState` on `ResolvedMetadata` while it is useful for proving the
+  handoff and auditing consumers;
+* when a later phase reads `BindingState`, decide whether that value should
+  become a named immutable `ResolvedMetadata` sub-product;
+* avoid making `ResolvedMetadata` a general bag of bootstrap state.
+
+Success criteria:
+
+* `ResolvedMetadata` remains a metadata result, not a settings or entry-point
+  carrier;
+* `BindingState` either proves its long-term value or is replaced by narrower
+  retained products.
+
+=== Suggested Immediate Next Slice
+
+Start with slice 1 in upstream ORM if practical: remove legacy `hbm.xml` support
+before preserving abstractions that only exist for it.  In parallel or
+immediately after that, tighten `SessionFactoryBuilder` around the compatibility
+adapter boundary.  That keeps the PoC booting a real `SessionFactory` while
+forcing each remaining constructor dependency to be named, adapted, documented,
+or replaced by a targeted upstream ORM change.
+
+== Open Questions
+
+* Should `ResolvedSessionFactorySettings` later produce an adapter implementing
+  ORM's `SessionFactoryOptions`, or should the adapter itself be the resolved
+  object?
+* Which settings belong in `ResolvedBootstrapSettings` versus
+  `ResolvedSessionFactorySettings`?
+* Can `BootstrapContext` be narrowed before integration, or should the PoC simply
+  reuse ORM's current implementation until the factory path works?
+* Should JPA `orm.xml` source interpretation remain in categorization internals,
+  or should a prepared-source phase emerge if more source interpretation steps
+  appear?
+* Can service-registry creation be moved before `SessionFactoryImpl` without
+  breaking services that expect a concrete factory reference?

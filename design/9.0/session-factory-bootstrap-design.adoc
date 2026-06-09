@@ -1,0 +1,336 @@
+= SessionFactory Bootstrap Design
+:toc:
+
+This note describes the intended end-state design for building a
+`SessionFactory` / `EntityManagerFactory` with the boot-model pipeline.
+
+It is deliberately separate from
+link:session-factory-bootstrap-plan.adoc[`session-factory-bootstrap-plan.adoc`],
+which is now the ongoing PoC work log and gap tracker.
+
+== Design Goal
+
+SessionFactory bootstrap should be an explicit pipeline of named products rather
+than a long inline flow hidden behind one entry point.
+
+The immediate compatibility target is still ORM's current
+`SessionFactoryImpl` constructor:
+
+[source,java]
+----
+SessionFactoryImpl(
+        MetadataImplementor bootMetamodel,
+        SessionFactoryOptions options,
+        BootstrapContext bootstrapContext)
+----
+
+The design goal is not necessarily to preserve these constructor inputs forever.
+The goal is to make the products represented by these inputs explicit, testable,
+and replaceable one slice at a time.
+
+However, at the moment there is so much entanglement and technical debt involved in each of these
+inputs that a new design has not yet shaken lose.
+See link:session-factory-bootstrap-plan.adoc[`session-factory-bootstrap-plan.adoc`] as mentioned above for
+explanations of why.
+
+
+== Top-Level Flow
+
+.Top-level bootstrap pipeline
+[source]
+----
+Entry point
+    -> ResolvedBootstrapSettings
+    -> BootstrapSourceContributions
+    -> AvailableResources
+    -> CategorizedDomainModel
+    -> ResolvedMetadata
+    -> ResolvedSessionFactorySettings
+    -> SessionFactoryImplementor
+----
+
+Each arrow should be owned by a small resolver or builder with one gross target.
+The entry point chooses or creates the inputs, but should not perform all
+bootstrap work itself.
+
+=== Flow Notation
+
+Pipeline sketches in this document use a simple convention:
+
+.Resolver or builder slice
+[source]
+----
+InputA
+InputB
+InputC
+    -> Product1
+    -> Product2 (*)
+    -> Product3
+----
+
+The unindented names are inputs to the resolver or builder that owns the slice.
+They are peers, not an ordered pipeline.  The indented `->` lines are the
+ordered products or steps created within that slice.  The final arrow is the
+gross target returned by that resolver or builder.
+
+A `(*)` marker means the product is retained by, or aggregated into, the final
+gross product.  Unmarked intermediate products are phase-local, consumed while
+producing later steps, or represented only indirectly.
+
+For example:
+
+.MetadataResolver
+[source]
+----
+ResolvedBootstrapSettings
+BootstrapSourceContributions
+ServiceRegistry
+    -> AvailableResources
+    -> CategorizedDomainModel (*)
+    -> BindingState (*)
+    -> MetadataCollector
+    -> MetadataImplementor (*)
+    -> ResolvedMetadata
+----
+
+means that `MetadataResolver` receives already-resolved settings, normalized
+source contributions, and a service registry.  It then builds available source
+resources, categorizes the domain model, binds that model through
+`BindingState`, writes completed metadata contributions through
+`MetadataCollector`, finalizes ORM's current `MetadataImplementor`, and returns
+`ResolvedMetadata`.
+
+The notation does not mean every intermediate product belongs in the final
+result.  Some products are phase-local implementation details.  For instance,
+`ResolvedBootstrapSettings` is an input to metadata resolution, not part of
+`ResolvedMetadata`; `MetadataCollector` is used to produce the finalized
+metadata, but is not itself retained by `ResolvedMetadata`.
+
+== Entry Points
+
+Supported entry points should converge quickly on the same pipeline:
+
+* JPA SE bootstrap via `Persistence`
+* JPA SE bootstrap via `HibernatePersistenceConfiguration`
+* JPA EE bootstrap via persistence-unit descriptor style input
+* legacy `Configuration`, preferably as a compatibility layer
+* possible SPI entry accepting settings plus already-normalized source
+  contributions
+
+Entry points are responsible for collecting user intent:
+
+* raw configuration values
+* explicit managed classes, packages, mapping XML, and query imports
+* persistence-unit identity and JPA bootstrap mode
+* service-registry choices
+
+Entry points should not own categorization, binding, metadata finalization, or
+runtime factory construction.
+
+== Settings Model
+
+`ResolvedBootstrapSettings` is the root resolved settings product.  It owns the
+immutable raw configuration map plus named values needed early in bootstrap.
+
+Specialized settings products may be derived from it:
+
+* `ResolvedMappingSettings` for source interpretation and mapping processing
+* `ResolvedSessionFactorySettings` for runtime factory construction
+
+This keeps shared setting interpretation centralized while avoiding one
+monolithic settings object where every phase sees every option.
+
+Named settings should be added only when a concrete phase needs them.  The raw
+map remains available for compatibility, integration code, and settings that
+have not yet earned a named slot.
+
+== Source Products
+
+`BootstrapSourceContributions` represents entry-point source contributions after
+entry-point-specific discovery has run.
+
+`AvailableResources` represents source material that can be categorized:
+
+* managed class details
+* package-info class details
+* JPA `orm.xml` mapping bindings
+* extra query imports or equivalent source-level contributions
+
+Scanning belongs before or inside source-contribution creation, depending on the
+entry point.  Categorization should receive available source material, not an
+entry-point object.
+
+Legacy `hbm.xml` support should not be treated as part of the target ORM 9 boot
+model pipeline.  Removing it upstream is an enabling cleanup: it lets source
+discovery, XML preprocessing, mapping defaults, and metadata binding focus on
+the annotation/JPA XML model instead of preserving legacy mapping equivalence.
+
+== Domain Model Products
+
+`CategorizedDomainModel` is the interpreted domain model before ORM boot mapping
+binding.
+
+It owns higher-level decisions such as entity hierarchies, attributes, access
+type, identifiers, callbacks, filters, and global registrations.  It should not
+write to ORM's `PersistentClass` or `Collection` model directly.
+
+XML preprocessing and XML interpretation currently live on the categorization
+side.  A separate prepared-source phase can emerge later if XML or other sources
+need enough interpretation to justify a dedicated product between
+`AvailableResources` and `CategorizedDomainModel`.
+
+That XML path means JPA `orm.xml`.  Legacy `hbm.xml` should be removed upstream
+rather than carried forward as a permanent source kind in this design.
+
+== Metadata Target
+
+`MetadataResolver` owns the metadata collector:
+
+.MetadataResolver
+[source]
+----
+ResolvedBootstrapSettings
+BootstrapSourceContributions
+ServiceRegistry
+    -> AvailableResources
+    -> CategorizedDomainModel (*)
+    -> BindingState (*)
+    -> MetadataCollector
+    -> MetadataImplementor (*)
+    -> ResolvedMetadata
+----
+
+`ResolvedMetadata` should preserve both the finalized ORM metadata and the
+important intermediate boot-model products:
+
+* finalized `MetadataImplementor`
+* `CategorizedDomainModel`
+* `BindingState`
+
+The binder should use `BindingState` for phase-local working state and
+`MetadataCollector` for completed metadata contributions.  The current
+`MetadataCollector` implementation is an adapter over ORM's
+`InFlightMetadataCollector`, but that collector should be treated as a
+compatibility implementation, not as a design peer of `BindingState`.  Where
+upstream contracts force direct table/database creation, query binding, second
+passes, or mapping constructors through ORM's legacy collector/context APIs,
+those touchpoints should remain localized and documented.
+
+Metadata finalization must include the type-contribution work normally performed
+by ORM bootstrap so the `TypeConfiguration`, JDBC type registry, and DDL type
+registry are usable by runtime factory construction.
+
+== SessionFactory Target
+
+`SessionFactoryBuilder` owns only the runtime factory target:
+
+.SessionFactoryBuilder
+[source]
+----
+ResolvedSessionFactorySettings
+ResolvedMetadata
+ServiceRegistry
+    -> SessionFactoryImplementor
+----
+
+The PoC currently adapts `ResolvedSessionFactorySettings` to ORM's
+`SessionFactoryOptions` because `SessionFactoryImpl` still requires that SPI.
+That adapter is a compatibility boundary, not the desired long-term shape.
+
+The long-term direction is to classify `SessionFactoryOptions` consumers into
+smaller contracts:
+
+* query-engine options
+* cache options
+* session defaults
+* integration hooks
+* service-registry build inputs
+* SQL generation defaults
+* state-management and temporal/audit options
+
+As those consumers are audited, `SessionFactoryImpl` and its collaborators can
+accept narrower resolved products instead of the whole options SPI.
+
+Factory-scoped service-registry creation should become an explicit late
+construction phase.  The current ORM path builds the
+`SessionFactoryServiceRegistry` from inside `SessionFactoryImpl` with a
+partially initialized factory and the full `SessionFactoryOptions` SPI.  The
+target design should instead pass a narrower service-registry build context:
+parent services, class-loading access, resolved settings needed by
+factory-scoped services, and a factory identity/build handle.
+
+Integrator execution should likewise be visible as a factory-integration phase.
+The legacy `Integrator` SPI may need to remain as a compatibility adapter, but
+new integration code should not require a broad `BootstrapContext` or a fully
+exposed partially initialized `SessionFactoryImplementor`.
+
+Runtime model creation should also be an explicit named factory-construction
+phase.  The current ORM `RuntimeModelCreationContext` usefully identifies that
+phase, but it exposes too much: finalized metadata, raw settings, the legacy
+`BootstrapContext`, session-factory options, service registry, generator state,
+and a partially initialized factory.  The target shape should keep the phase but
+narrow the context to explicit runtime-model inputs:
+
+* finalized metadata products needed for persister construction;
+* the runtime mapping registry under construction;
+* runtime SQL/query services;
+* class-loading, model, bean, and representation-strategy services;
+* resolved mapping/runtime settings;
+* generator creation state;
+* a completed-safe factory build handle instead of the incomplete factory.
+
+== Bootstrap Context
+
+`BootstrapContext` is still useful as a compatibility bridge, but it is too broad
+as a permanent contract.
+
+The end-state should split its responsibilities into narrower products where
+that makes integration clearer:
+
+* model/class-loading context
+* type configuration and type contribution context
+* bean/container access
+* service access
+* integration callbacks
+* mapping defaults
+
+Until those splits are proven, the PoC should reuse ORM's existing
+`BootstrapContext` rather than inventing parallel infrastructure.
+
+== Ownership Rules
+
+The intended ownership boundaries are:
+
+* entry points gather input and choose the initial services/settings
+* settings resolvers interpret settings
+* source contribution factories gather and normalize source inputs
+* categorization interprets source metadata into boot-model metadata
+* binding writes categorized metadata to the metadata collector
+* metadata resolution finalizes ORM boot metadata
+* SessionFactory building constructs the runtime factory
+
+No phase should reach backward into entry-point-specific APIs once its inputs
+have been normalized.
+
+== Integration Direction
+
+For upstream integration, the likely path is incremental:
+
+* keep current ORM boot contracts only where they are still useful as temporary
+  constructor boundaries
+* replace source discovery and categorization in isolated slices
+* bind to ORM boot metadata with localized compatibility bridges
+* move settings interpretation into named resolved settings products
+* narrow `BootstrapContext`, `MetadataBuildingContext`, and
+  `SessionFactoryOptions` consumers as each use is audited
+* apply upstream ORM changes whenever a narrow contract is clearer than another
+  local compatibility adapter
+* use deeper constructor or service-registry changes as deliberate integration
+  slices, not as last-resort work
+
+The design should stay friendly to Hibernate integrations which currently depend
+on builder customization hooks.  Compatibility adapters are acceptable during
+the transition, but they should not become artificial constraints on the design.
+When an upstream ORM change removes a broad dependency cleanly, prefer that
+change and document the migration pressure it addresses.  New long-term APIs
+should expose named products rather than one all-purpose bootstrap object.

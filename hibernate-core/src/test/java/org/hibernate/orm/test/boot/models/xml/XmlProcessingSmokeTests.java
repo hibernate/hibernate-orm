@@ -10,19 +10,26 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.boot.models.categorize.spi.DomainModelCategorizer;
+import org.hibernate.boot.models.categorize.spi.FetchProfileRegistration;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
+import org.hibernate.boot.models.source.AvailableResources;
+import org.hibernate.boot.models.source.AvailableResourcesContext;
 import org.hibernate.boot.models.spi.FilterDefRegistration;
 import org.hibernate.boot.models.xml.internal.XmlDocumentContextImpl;
 import org.hibernate.boot.models.xml.internal.XmlDocumentImpl;
 import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.models.internal.StringTypeDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 import org.hibernate.orm.test.boot.models.XmlHelper;
 import org.hibernate.testing.boot.BootstrapContextImpl;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -30,6 +37,11 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.SqlResultSetMapping;
 
 import static jakarta.persistence.AccessType.FIELD;
 import static jakarta.persistence.CascadeType.PERSIST;
@@ -166,6 +178,82 @@ public class XmlProcessingSmokeTests {
 				.isEqualTo( org.hibernate.type.YesNoConverter.class );
 
 		validateFilterDefs( globalRegistrations.getFilterDefRegistrations() );
+	}
+
+	@Test
+	@ServiceRegistry
+	void testRootGlobalXmlProcessing(ServiceRegistryScope scope) {
+		final MetadataBuildingContextTestingImpl metadataBuildingContext = new MetadataBuildingContextTestingImpl( scope.getRegistry() );
+		final HibernatePersistenceConfiguration persistenceConfiguration = new HibernatePersistenceConfiguration( "test" );
+		persistenceConfiguration.mappingFile( "mappings/models/xml-global-objects.xml" );
+		final AvailableResources availableResources = AvailableResources.from(
+				persistenceConfiguration,
+				new AvailableResourcesContext(
+						metadataBuildingContext.getBootstrapContext().getModelsContext(),
+						metadataBuildingContext.getBootstrapContext().getServiceRegistry()
+				)
+		);
+		final CategorizedDomainModel categorizedDomainModel = DomainModelCategorizer.categorize(
+				availableResources,
+				metadataBuildingContext
+		);
+
+		final org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl globalRegistrations =
+				(org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl) categorizedDomainModel.getGlobalRegistrations();
+
+		assertThat( globalRegistrations.getConverterRegistrations() ).hasSize( 2 );
+		assertThat( globalRegistrations.getImportedRenames() )
+				.containsEntry( "XmlSimpleEntity", "org.hibernate.orm.test.boot.models.xml.SimpleEntity" );
+
+		final FetchProfileRegistration fetchProfile = globalRegistrations.getFetchProfileRegistrations().get( 0 );
+		assertThat( fetchProfile.getName() ).isEqualTo( "customer-with-orders" );
+		assertThat( fetchProfile.getFetchOverrides() ).singleElement().satisfies( (fetchOverride) -> {
+			assertThat( fetchOverride.entityName() ).isEqualTo( "Customer" );
+			assertThat( fetchOverride.association() ).isEqualTo( "orders" );
+			assertThat( fetchOverride.style() ).isEqualTo( "join" );
+		} );
+
+		final NamedQuery namedQuery = (NamedQuery) globalRegistrations.getNamedQueryRegistrations()
+				.get( "rootHqlQuery" )
+				.getConfiguration();
+		assertThat( namedQuery.query() ).isEqualTo( "from Customer" );
+		assertThat( namedQuery.hints() ).singleElement().satisfies( (hint) -> {
+			assertThat( hint.name() ).isEqualTo( "root.hint" );
+			assertThat( hint.value() ).isEqualTo( "root-value" );
+		} );
+
+		final NamedNativeQuery nativeQuery = (NamedNativeQuery) globalRegistrations.getNamedNativeQueryRegistrations()
+				.get( "rootNativeQuery" )
+				.getConfiguration();
+		assertThat( nativeQuery.query() ).isEqualTo( "select id, name from customers" );
+		assertThat( nativeQuery.columns() ).singleElement().satisfies( (columnResult) -> {
+			assertThat( columnResult.name() ).isEqualTo( "id" );
+			assertThat( columnResult.type() ).isEqualTo( Long.class );
+		} );
+
+		final NamedStoredProcedureQuery storedProcedureQuery = (NamedStoredProcedureQuery) globalRegistrations
+				.getNamedStoredProcedureQueryRegistrations()
+				.get( "rootStoredProcedure" )
+				.getConfiguration();
+		assertThat( storedProcedureQuery.procedureName() ).isEqualTo( "sp_customers" );
+		assertThat( storedProcedureQuery.parameters() ).singleElement().satisfies( (parameter) -> {
+			assertThat( parameter.name() ).isEqualTo( "name" );
+			assertThat( parameter.type() ).isEqualTo( String.class );
+		} );
+
+		final SqlResultSetMapping sqlResultSetMapping = globalRegistrations.getSqlResultSetMappingRegistrations()
+				.get( "rootResultSetMapping" )
+				.configuration();
+		assertThat( sqlResultSetMapping.columns() ).singleElement().satisfies( (columnResult) -> {
+			assertThat( columnResult.name() ).isEqualTo( "name" );
+			assertThat( columnResult.type() ).isEqualTo( String.class );
+		} );
+
+		final var databaseObject = globalRegistrations.getDatabaseObjectRegistrations().get( 0 );
+		assertThat( databaseObject.create() ).isEqualTo( "create sequence xml_global_sequence" );
+		assertThat( databaseObject.drop() ).isEqualTo( "drop sequence xml_global_sequence" );
+		final var dialectScope = databaseObject.dialectScopes().get( 0 );
+		assertThat( dialectScope.name() ).isEqualTo( "org.hibernate.dialect.H2Dialect" );
 	}
 
 	private void validateFilterDefs(Map<String, FilterDefRegistration> filterDefRegistrations) {

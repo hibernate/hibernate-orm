@@ -93,14 +93,10 @@ public abstract sealed class Collection
 	private final List<FilterConfiguration> manyToManyFilters = new ArrayList<>();
 	private final java.util.Set<String> synchronizedTables = new HashSet<>();
 
-	private String customSQLInsert;
-	private boolean customInsertCallable;
-	private String customSQLUpdate;
-	private boolean customUpdateCallable;
-	private String customSQLDelete;
-	private boolean customDeleteCallable;
-	private String customSQLDeleteAll;
-	private boolean customDeleteAllCallable;
+	private CustomSqlMapping customSqlInsert;
+	private CustomSqlMapping customSqlUpdate;
+	private CustomSqlMapping customSqlDelete;
+	private CustomSqlMapping customSqlDeleteAll;
 
 	private SoftDeleteType softDeleteStrategy;
 
@@ -112,11 +108,6 @@ public abstract sealed class Collection
 	private boolean primaryKeyDisabled;
 
 	private String loaderName;
-
-	private Supplier<? extends Expectation> insertExpectation;
-	private Supplier<? extends Expectation> updateExpectation;
-	private Supplier<? extends Expectation> deleteExpectation;
-	private Supplier<? extends Expectation> deleteAllExpectation;
 
 	/**
 	 * hbm.xml binding
@@ -171,18 +162,10 @@ public abstract sealed class Collection
 		this.filters.addAll( original.filters );
 		this.manyToManyFilters.addAll( original.manyToManyFilters );
 		this.synchronizedTables.addAll( original.synchronizedTables );
-		this.customSQLInsert = original.customSQLInsert;
-		this.customInsertCallable = original.customInsertCallable;
-		this.customSQLUpdate = original.customSQLUpdate;
-		this.customUpdateCallable = original.customUpdateCallable;
-		this.customSQLDelete = original.customSQLDelete;
-		this.customDeleteCallable = original.customDeleteCallable;
-		this.customSQLDeleteAll = original.customSQLDeleteAll;
-		this.customDeleteAllCallable = original.customDeleteAllCallable;
-		this.insertExpectation = original.insertExpectation;
-		this.updateExpectation = original.updateExpectation;
-		this.deleteExpectation = original.deleteExpectation;
-		this.deleteAllExpectation = original.deleteAllExpectation;
+		this.customSqlInsert = original.customSqlInsert;
+		this.customSqlUpdate = original.customSqlUpdate;
+		this.customSqlDelete = original.customSqlDelete;
+		this.customSqlDeleteAll = original.customSqlDeleteAll;
 		this.loaderName = original.loaderName;
 		this.auxiliaryTable = original.auxiliaryTable;
 		this.auxiliaryColumns = original.auxiliaryColumns == null ? null : new HashMap<>( original.auxiliaryColumns );
@@ -657,55 +640,83 @@ public abstract sealed class Collection
 	}
 
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
-		this.customSQLInsert = customSQLInsert;
-		this.customInsertCallable = callable;
+		setCustomSqlInsert( new CustomSqlMapping( customSQLInsert, callable, null ) );
+	}
+
+	public void setCustomSqlInsert(CustomSqlMapping customSqlInsert) {
+		this.customSqlInsert = customSqlInsert;
+	}
+
+	public CustomSqlMapping getCustomSqlInsert() {
+		return customSqlInsert;
 	}
 
 	public String getCustomSQLInsert() {
-		return customSQLInsert;
+		return customSqlInsert == null ? null : customSqlInsert.sql();
 	}
 
 	public boolean isCustomInsertCallable() {
-		return customInsertCallable;
+		return customSqlInsert != null && customSqlInsert.callable();
 	}
 
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
-		this.customSQLUpdate = customSQLUpdate;
-		this.customUpdateCallable = callable;
+		setCustomSqlUpdate( new CustomSqlMapping( customSQLUpdate, callable, null ) );
+	}
+
+	public void setCustomSqlUpdate(CustomSqlMapping customSqlUpdate) {
+		this.customSqlUpdate = customSqlUpdate;
+	}
+
+	public CustomSqlMapping getCustomSqlUpdate() {
+		return customSqlUpdate;
 	}
 
 	public String getCustomSQLUpdate() {
-		return customSQLUpdate;
+		return customSqlUpdate == null ? null : customSqlUpdate.sql();
 	}
 
 	public boolean isCustomUpdateCallable() {
-		return customUpdateCallable;
+		return customSqlUpdate != null && customSqlUpdate.callable();
 	}
 
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
-		this.customSQLDelete = customSQLDelete;
-		this.customDeleteCallable = callable;
+		setCustomSqlDelete( new CustomSqlMapping( customSQLDelete, callable, null ) );
+	}
+
+	public void setCustomSqlDelete(CustomSqlMapping customSqlDelete) {
+		this.customSqlDelete = customSqlDelete;
+	}
+
+	public CustomSqlMapping getCustomSqlDelete() {
+		return customSqlDelete;
 	}
 
 	public String getCustomSQLDelete() {
-		return customSQLDelete;
+		return customSqlDelete == null ? null : customSqlDelete.sql();
 	}
 
 	public boolean isCustomDeleteCallable() {
-		return customDeleteCallable;
+		return customSqlDelete != null && customSqlDelete.callable();
 	}
 
 	public void setCustomSQLDeleteAll(String customSQLDeleteAll, boolean callable) {
-		this.customSQLDeleteAll = customSQLDeleteAll;
-		this.customDeleteAllCallable = callable;
+		setCustomSqlDeleteAll( new CustomSqlMapping( customSQLDeleteAll, callable, null ) );
+	}
+
+	public void setCustomSqlDeleteAll(CustomSqlMapping customSqlDeleteAll) {
+		this.customSqlDeleteAll = customSqlDeleteAll;
+	}
+
+	public CustomSqlMapping getCustomSqlDeleteAll() {
+		return customSqlDeleteAll;
 	}
 
 	public String getCustomSQLDeleteAll() {
-		return customSQLDeleteAll;
+		return customSqlDeleteAll == null ? null : customSqlDeleteAll.sql();
 	}
 
 	public boolean isCustomDeleteAllCallable() {
-		return customDeleteAllCallable;
+		return customSqlDeleteAll != null && customSqlDeleteAll.callable();
 	}
 
 	@Override
@@ -913,35 +924,51 @@ public abstract sealed class Collection
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {
-		return insertExpectation;
+		return customSqlInsert == null ? null : customSqlInsert.expectation();
 	}
 
 	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
-		this.insertExpectation = insertExpectation;
+		this.customSqlInsert = new CustomSqlMapping(
+				getCustomSQLInsert(),
+				isCustomInsertCallable(),
+				insertExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getUpdateExpectation() {
-		return updateExpectation;
+		return customSqlUpdate == null ? null : customSqlUpdate.expectation();
 	}
 
 	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
-		this.updateExpectation = updateExpectation;
+		this.customSqlUpdate = new CustomSqlMapping(
+				getCustomSQLUpdate(),
+				isCustomUpdateCallable(),
+				updateExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getDeleteExpectation() {
-		return deleteExpectation;
+		return customSqlDelete == null ? null : customSqlDelete.expectation();
 	}
 
 	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
-		this.deleteExpectation = deleteExpectation;
+		this.customSqlDelete = new CustomSqlMapping(
+				getCustomSQLDelete(),
+				isCustomDeleteCallable(),
+				deleteExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getDeleteAllExpectation() {
-		return deleteAllExpectation;
+		return customSqlDeleteAll == null ? null : customSqlDeleteAll.expectation();
 	}
 
 	public void setDeleteAllExpectation(Supplier<? extends Expectation> deleteAllExpectation) {
-		this.deleteAllExpectation = deleteAllExpectation;
+		this.customSqlDeleteAll = new CustomSqlMapping(
+				getCustomSQLDeleteAll(),
+				isCustomDeleteAllCallable(),
+				deleteAllExpectation
+		);
 	}
 
 	@Override

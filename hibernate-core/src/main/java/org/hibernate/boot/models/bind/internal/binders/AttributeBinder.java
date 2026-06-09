@@ -1,0 +1,321 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.boot.models.bind.internal.binders;
+
+import java.lang.reflect.InvocationTargetException;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Mutability;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.models.AnnotationPlacementException;
+import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
+import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
+import org.hibernate.boot.models.bind.spi.BindingContext;
+import org.hibernate.boot.models.bind.spi.BindingOptions;
+import org.hibernate.boot.models.bind.spi.BindingState;
+import org.hibernate.boot.models.bind.spi.TableReference;
+import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
+import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Table;
+import org.hibernate.models.ModelsException;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+
+import jakarta.persistence.Column;
+
+import static org.hibernate.boot.models.AttributeNature.ANY;
+import static org.hibernate.boot.models.AttributeNature.BASIC;
+import static org.hibernate.boot.models.AttributeNature.EMBEDDED;
+import static org.hibernate.boot.models.AttributeNature.ELEMENT_COLLECTION;
+import static org.hibernate.boot.models.AttributeNature.MANY_TO_ANY;
+import static org.hibernate.boot.models.AttributeNature.MANY_TO_MANY;
+import static org.hibernate.boot.models.AttributeNature.ONE_TO_MANY;
+import static org.hibernate.boot.models.AttributeNature.TO_ONE;
+
+/// Binds one persistent attribute into a Hibernate [Property].
+///
+/// This class is the dispatch point from categorized attribute metadata to the
+/// value-specific binders.  It owns the common `Property` setup and delegates the
+/// value shape to basic, to-one, component, element-collection, or plural
+/// association binders.
+///
+/// The attribute's physical table is recorded from the bound value rather than
+/// assumed from the owner's primary table.  That matters for secondary-table
+/// attributes and for collection attributes whose value table is the collection
+/// table.
+///
+/// @since 9.0
+/// @author Steve Ebersole
+public class AttributeBinder {
+	private final AttributeMetadata attributeMetadata;
+	private final BindingState bindingState;
+	private final BindingOptions bindingOptions;
+	private final BindingContext bindingContext;
+
+	private final Property binding;
+	private final Table attributeTable;
+
+	public AttributeBinder(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			AttributeMetadata attributeMetadata,
+			Table primaryTable,
+			ModelBinders modelBinders,
+			BindingState bindingState,
+			BindingOptions bindingOptions,
+			BindingContext bindingContext) {
+		this.attributeMetadata = attributeMetadata;
+		this.bindingState = bindingState;
+		this.bindingOptions = bindingOptions;
+		this.bindingContext = bindingContext;
+
+		this.binding = new Property();
+		binding.setName( attributeMetadata.getName() );
+		bindPropertyAccessor( attributeMetadata.getMember(), binding );
+
+		if ( attributeMetadata.getNature() == BASIC ) {
+			final var basicValue = createBasicValue( primaryTable );
+			binding.setValue( basicValue );
+			attributeTable = basicValue.getTable();
+		}
+		else if ( attributeMetadata.getNature() == TO_ONE ) {
+			final var toOneValue = new ToOneAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					primaryTable,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			).bind( binding );
+			binding.setValue( toOneValue );
+			attributeTable = toOneValue.getTable();
+		}
+		else if ( attributeMetadata.getNature() == EMBEDDED ) {
+			final var componentValue = new EmbeddableAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					primaryTable,
+					modelBinders,
+					bindingState,
+					bindingOptions,
+					bindingContext
+			).bind( binding );
+			binding.setValue( componentValue );
+			attributeTable = componentValue.getTable();
+		}
+		else if ( attributeMetadata.getNature() == ELEMENT_COLLECTION ) {
+			final var collectionValue = new ElementCollectionAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			).bind( binding );
+			binding.setValue( collectionValue );
+			attributeTable = collectionValue.getCollectionTable();
+		}
+		else if ( attributeMetadata.getNature() == MANY_TO_MANY ) {
+			final var collectionValue = new PluralAssociationAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			).bindManyToMany( binding );
+			binding.setValue( collectionValue );
+			attributeTable = collectionValue.getCollectionTable();
+		}
+		else if ( attributeMetadata.getNature() == ONE_TO_MANY ) {
+			final var collectionValue = new PluralAssociationAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			).bindOneToMany( binding );
+			binding.setValue( collectionValue );
+			attributeTable = collectionValue.getCollectionTable();
+		}
+		else if ( attributeMetadata.getNature() == ANY ) {
+			final var anyValue = new AnyAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			).bind( binding, primaryTable );
+			binding.setValue( anyValue );
+			attributeTable = anyValue.getTable();
+		}
+		else if ( attributeMetadata.getNature() == MANY_TO_ANY ) {
+			final var collectionValue = new PluralAssociationAttributeBinder(
+					ownerType,
+					ownerBinding,
+					attributeMetadata,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			).bindManyToAny( binding );
+			binding.setValue( collectionValue );
+			attributeTable = collectionValue.getCollectionTable();
+		}
+		else {
+			throw new UnsupportedOperationException( "Not yet implemented" );
+		}
+
+		applyNaturalId( attributeMetadata, binding );
+	}
+
+	public Property getBinding() {
+		return binding;
+	}
+
+	public static void bindPropertyAccessor(MemberDetails member, Property property) {
+		property.setPropertyAccessorName( member.isField() ? "field" : "property" );
+	}
+
+	public Table getTable() {
+		return attributeTable;
+	}
+
+	private void applyNaturalId(AttributeMetadata attributeMetadata, Property property) {
+		final var naturalIdAnn = attributeMetadata.getMember().getDirectAnnotationUsage( NaturalId.class );
+		if ( naturalIdAnn == null ) {
+			return;
+		}
+		property.setNaturalIdentifier( true );
+		property.setUpdatable( naturalIdAnn.mutable() );
+	}
+
+	private BasicValue createBasicValue(Table primaryTable) {
+		final BasicValue basicValue = new BasicValue( bindingState.getMetadataBuildingContext() );
+
+		final MemberDetails member = attributeMetadata.getMember();
+		bindMutability( member, binding, basicValue, bindingOptions, bindingState, bindingContext );
+		bindOptimisticLocking( member, binding, basicValue, bindingOptions, bindingState, bindingContext );
+
+		processColumn( member, binding, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
+
+		BasicValueBinder.bindBasicValue(
+				BasicValueSource.attribute( member ),
+				binding,
+				basicValue,
+				bindingOptions,
+				bindingState,
+				bindingContext
+		);
+
+		return basicValue;
+	}
+
+	public static void bindImplicitJavaType(
+			MemberDetails member,
+			@SuppressWarnings("unused") Property property,
+			BasicValue basicValue,
+			@SuppressWarnings("unused") BindingOptions bindingOptions,
+			@SuppressWarnings("unused") BindingState bindingState,
+			@SuppressWarnings("unused") BindingContext bindingContext) {
+		basicValue.setImplicitJavaTypeAccess( (typeConfiguration) -> member.getType().determineRawClass().toJavaClass() );
+	}
+
+	public static void bindOptimisticLocking(
+			MemberDetails member,
+			Property property,
+			@SuppressWarnings("unused") BasicValue basicValue,
+			@SuppressWarnings("unused") BindingOptions bindingOptions,
+			@SuppressWarnings("unused") BindingState bindingState,
+			@SuppressWarnings("unused") BindingContext bindingContext) {
+		final var annotationUsage = member.getDirectAnnotationUsage( OptimisticLock.class );
+		if ( annotationUsage != null ) {
+			if ( annotationUsage.excluded() ) {
+				property.setOptimisticLocked( false );
+				return;
+			}
+		}
+
+		property.setOptimisticLocked( true );
+	}
+
+	public static void bindMutability(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			@SuppressWarnings("unused") BindingOptions bindingOptions,
+			@SuppressWarnings("unused") BindingState bindingState,
+			@SuppressWarnings("unused") BindingContext bindingContext) {
+		final var mutabilityAnn = member.getDirectAnnotationUsage( Mutability.class );
+		final var immutableAnn = member.getDirectAnnotationUsage( Immutable.class );
+
+		if ( immutableAnn != null ) {
+			if ( mutabilityAnn != null ) {
+				throw new AnnotationPlacementException(
+						"Illegal combination of @Mutability and @Immutable - " + member.getName()
+				);
+			}
+
+			property.setUpdatable( false );
+		}
+		else if ( mutabilityAnn != null ) {
+			basicValue.setExplicitMutabilityPlanAccess( (typeConfiguration) -> {
+				//noinspection unchecked
+				final Class<MutabilityPlan<?>> javaClass = (Class<MutabilityPlan<?>>) mutabilityAnn.value();
+				try {
+					return javaClass.getConstructor().newInstance();
+				}
+				catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+					final ModelsException modelsException = new ModelsException( "Error instantiating local @MutabilityPlan - " + member.getName() );
+					modelsException.addSuppressed( e );
+					throw modelsException;
+				}
+			} );
+		}
+	}
+
+
+	public static org.hibernate.mapping.Column processColumn(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			Table primaryTable,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			@SuppressWarnings("unused") BindingContext bindingContext) {
+		// todo : implicit column
+		final var columnAnn = member.getDirectAnnotationUsage( Column.class );
+		final var column = ColumnBinder.bindColumn( ColumnSource.from( columnAnn ), property::getName );
+
+		var tableName = columnAnn == null ? "" : columnAnn.table();
+		if ( "".equals( tableName ) || tableName == null ) {
+			basicValue.setTable( primaryTable );
+		}
+		else {
+			final Identifier identifier = Identifier.toIdentifier( tableName );
+			final TableReference tableByName = bindingState.getTableByName( identifier.getCanonicalName() );
+			basicValue.setTable( tableByName.binding() );
+		}
+
+		basicValue.addColumn( column );
+		basicValue.getTable().addColumn( column );
+
+		return column;
+	}
+
+}

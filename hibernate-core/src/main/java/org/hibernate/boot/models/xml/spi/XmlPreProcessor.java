@@ -4,9 +4,8 @@
  */
 package org.hibernate.boot.models.xml.spi;
 
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.process.spi.ManagedResources;
+import org.hibernate.boot.models.source.AvailableResources;
 import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
 
 /**
@@ -25,11 +24,17 @@ public class XmlPreProcessor {
 			PersistenceUnitMetadata persistenceUnitMetadata) {
 		final var collected = new XmlPreProcessingResultImpl( persistenceUnitMetadata );
 		for ( var mappingXmlBinding : managedResources.getXmlMappingBindings() ) {
-			// skip hbm.xml
-			if ( mappingXmlBinding.getRoot() instanceof JaxbEntityMappingsImpl ) {
-				//noinspection unchecked
-				collected.addDocument( (Binding<JaxbEntityMappingsImpl>) mappingXmlBinding );
-			}
+			collected.addDocument( mappingXmlBinding );
+		}
+		return collected;
+	}
+
+	public static XmlPreProcessingResult preProcessXmlResources(
+			AvailableResources availableResources,
+			PersistenceUnitMetadata persistenceUnitMetadata) {
+		final var collected = new XmlPreProcessingResultImpl( persistenceUnitMetadata );
+		for ( var mappingXmlBinding : availableResources.xmlMappings() ) {
+			collected.addDocument( mappingXmlBinding );
 		}
 		return collected;
 	}

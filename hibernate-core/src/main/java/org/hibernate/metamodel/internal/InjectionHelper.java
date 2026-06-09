@@ -93,10 +93,11 @@ public class InjectionHelper {
 			throws NoSuchFieldException {
 		final Field field =
 				allowNonDeclaredFieldReference
-						? metamodelClass.getField( name )
+						? findFieldInHierarchy( metamodelClass, name )
 						: metamodelClass.getDeclaredField( name );
 		try {
-			if ( !isPublic( metamodelClass.getModifiers() ) ) {
+			if ( !isPublic( field.getDeclaringClass().getModifiers() )
+					|| !isPublic( field.getModifiers() ) ) {
 				ensureAccessibility( field );
 			}
 			field.set( null, model);
@@ -128,6 +129,19 @@ public class InjectionHelper {
 					field.getType().getName()
 			);
 		}
+	}
+
+	private static Field findFieldInHierarchy(Class<?> metamodelClass, String name) throws NoSuchFieldException {
+		Class<?> currentType = metamodelClass;
+		while ( currentType != null ) {
+			try {
+				return currentType.getDeclaredField( name );
+			}
+			catch (NoSuchFieldException ignored) {
+				currentType = currentType.getSuperclass();
+			}
+		}
+		throw new NoSuchFieldException( name );
 	}
 
 }

@@ -66,6 +66,7 @@ public abstract class AbstractIdentifiableType<J>
 
 	private final boolean isVersioned;
 	private SqmSingularPersistentAttribute<J, ?> versionAttribute;
+	private boolean declaredVersionAttribute;
 	private List<SqmPersistentAttribute<J,?>> naturalIdAttributes;
 
 	public AbstractIdentifiableType(
@@ -254,7 +255,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	public boolean hasDeclaredVersionAttribute() {
-		return isVersioned && versionAttribute != null;
+		return isVersioned && declaredVersionAttribute;
 	}
 
 	@Override
@@ -313,7 +314,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	private void checkDeclaredVersion() {
-		if ( versionAttribute == null || supertypeDeclaresVersion() ) {
+		if ( versionAttribute == null || !declaredVersionAttribute || supertypeDeclaresVersion() ) {
 			throw new IllegalArgumentException(
 					"The version attribute is not declared by this type [" + getJavaType() + "]"
 			);
@@ -400,7 +401,15 @@ public abstract class AbstractIdentifiableType<J>
 		public void applyVersionAttribute(SingularPersistentAttribute<J, ?> versionAttribute) {
 			AbstractIdentifiableType.this.versionAttribute =
 					(SqmSingularPersistentAttribute<J, ?>) versionAttribute;
+			AbstractIdentifiableType.this.declaredVersionAttribute = true;
 			managedTypeAccess.addAttribute( versionAttribute );
+		}
+
+		@Override
+		public void applyInheritedVersionAttribute(SingularPersistentAttribute<J, ?> versionAttribute) {
+			AbstractIdentifiableType.this.versionAttribute =
+					(SqmSingularPersistentAttribute<J, ?>) versionAttribute;
+			AbstractIdentifiableType.this.declaredVersionAttribute = false;
 		}
 
 		@Override

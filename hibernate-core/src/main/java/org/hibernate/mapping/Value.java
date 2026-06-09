@@ -139,11 +139,27 @@ public interface Value extends Serializable {
 
 	boolean isNullable();
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createForeignKey();
 
 	// called when this is the foreign key of a
 	// @OneToOne with a FK, or a @OneToMany with
 	// a join table
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
+	 * with an explicit resolved unique-key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createUniqueKey(MetadataBuildingContext context);
 
 	boolean isSimpleValue();

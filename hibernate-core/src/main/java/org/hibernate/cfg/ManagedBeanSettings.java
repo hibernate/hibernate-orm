@@ -36,8 +36,6 @@ public interface ManagedBeanSettings {
 	 * This setting is used to configure access to the {@code BeanManager},
 	 * either directly, or via
 	 * {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager}.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyBeanManager(Object)
 	 */
 	String JAKARTA_CDI_BEAN_MANAGER = "jakarta.persistence.bean.manager";
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

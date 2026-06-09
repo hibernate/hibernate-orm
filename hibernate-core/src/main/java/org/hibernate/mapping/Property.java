@@ -77,6 +77,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean lob;
 	private java.util.List<CallbackDefinition> callbackDefinitions;
 	private String returnedClassName;
+	private MemberDetails memberDetails;
 
 	public boolean isBackRef() {
 		return false;
@@ -131,6 +132,19 @@ public class Property implements Serializable, MetaAttributable {
 
 	public Value getValue() {
 		return value;
+	}
+
+	public MemberDetails getMemberDetails() {
+		if ( memberDetails != null ) {
+			return memberDetails;
+		}
+		return value instanceof SimpleValue simpleValue
+				? simpleValue.getMemberDetails()
+				: null;
+	}
+
+	public void setMemberDetails(MemberDetails memberDetails) {
+		this.memberDetails = memberDetails;
 	}
 
 	public void resetInsertable(boolean insertable) {
@@ -545,6 +559,17 @@ public class Property implements Serializable, MetaAttributable {
 				this instanceof SyntheticProperty
 						? new SyntheticProperty()
 						: new Property();
+		copyTo( property );
+		return property;
+	}
+
+	public SyntheticProperty syntheticCopy() {
+		final var property = new SyntheticProperty();
+		copyTo( property );
+		return property;
+	}
+
+	private void copyTo(Property property) {
 		property.setName( getName() );
 		property.setValue( getValue() );
 		property.setCascade( getCascade() );
@@ -568,7 +593,7 @@ public class Property implements Serializable, MetaAttributable {
 		property.setGenericSpecialization( isGenericSpecialization() );
 		property.setLob( isLob() );
 		property.setReturnedClassName( getReturnedClassName() );
-		return property;
+		property.setMemberDetails( getMemberDetails() );
 	}
 
 	public void setMutable(boolean mutable) {
@@ -628,9 +653,7 @@ public class Property implements Serializable, MetaAttributable {
 
 		@Override
 		public MemberDetails getMemberDetails() {
-			return value instanceof SimpleValue simpleValue
-					? simpleValue.getMemberDetails()
-					: null; // TODO: Give Property a reference to the MemberDetails
+			return Property.this.getMemberDetails();
 		}
 
 		@Override

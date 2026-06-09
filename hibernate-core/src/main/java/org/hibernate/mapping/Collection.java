@@ -70,9 +70,13 @@ public abstract sealed class Collection
 	private String cacheRegionName;
 	private CacheLayout queryCacheLayout;
 	private String orderBy;
+	private String jpaOrderBy;
+	private String sqlOrderBy;
 	private String where;
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
+	private String manyToManyJpaOrderBy;
+	private String manyToManySqlOrderBy;
 	private String referencedPropertyName;
 	private String mappedByProperty;
 	private boolean sorted;
@@ -93,14 +97,10 @@ public abstract sealed class Collection
 	private final List<FilterConfiguration> manyToManyFilters = new ArrayList<>();
 	private final java.util.Set<String> synchronizedTables = new HashSet<>();
 
-	private String customSQLInsert;
-	private boolean customInsertCallable;
-	private String customSQLUpdate;
-	private boolean customUpdateCallable;
-	private String customSQLDelete;
-	private boolean customDeleteCallable;
-	private String customSQLDeleteAll;
-	private boolean customDeleteAllCallable;
+	private CustomSqlMapping customSqlInsert;
+	private CustomSqlMapping customSqlUpdate;
+	private CustomSqlMapping customSqlDelete;
+	private CustomSqlMapping customSqlDeleteAll;
 
 	private SoftDeleteType softDeleteStrategy;
 
@@ -112,11 +112,6 @@ public abstract sealed class Collection
 	private boolean primaryKeyDisabled;
 
 	private String loaderName;
-
-	private Supplier<? extends Expectation> insertExpectation;
-	private Supplier<? extends Expectation> updateExpectation;
-	private Supplier<? extends Expectation> deleteExpectation;
-	private Supplier<? extends Expectation> deleteAllExpectation;
 
 	/**
 	 * hbm.xml binding
@@ -153,9 +148,13 @@ public abstract sealed class Collection
 		this.cacheConcurrencyStrategy = original.cacheConcurrencyStrategy;
 		this.cacheRegionName = original.cacheRegionName;
 		this.orderBy = original.orderBy;
+		this.jpaOrderBy = original.jpaOrderBy;
+		this.sqlOrderBy = original.sqlOrderBy;
 		this.where = original.where;
 		this.manyToManyWhere = original.manyToManyWhere;
 		this.manyToManyOrderBy = original.manyToManyOrderBy;
+		this.manyToManyJpaOrderBy = original.manyToManyJpaOrderBy;
+		this.manyToManySqlOrderBy = original.manyToManySqlOrderBy;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.mappedByProperty = original.mappedByProperty;
 		this.sorted = original.sorted;
@@ -171,18 +170,10 @@ public abstract sealed class Collection
 		this.filters.addAll( original.filters );
 		this.manyToManyFilters.addAll( original.manyToManyFilters );
 		this.synchronizedTables.addAll( original.synchronizedTables );
-		this.customSQLInsert = original.customSQLInsert;
-		this.customInsertCallable = original.customInsertCallable;
-		this.customSQLUpdate = original.customSQLUpdate;
-		this.customUpdateCallable = original.customUpdateCallable;
-		this.customSQLDelete = original.customSQLDelete;
-		this.customDeleteCallable = original.customDeleteCallable;
-		this.customSQLDeleteAll = original.customSQLDeleteAll;
-		this.customDeleteAllCallable = original.customDeleteAllCallable;
-		this.insertExpectation = original.insertExpectation;
-		this.updateExpectation = original.updateExpectation;
-		this.deleteExpectation = original.deleteExpectation;
-		this.deleteAllExpectation = original.deleteAllExpectation;
+		this.customSqlInsert = original.customSqlInsert;
+		this.customSqlUpdate = original.customSqlUpdate;
+		this.customSqlDelete = original.customSqlDelete;
+		this.customSqlDeleteAll = original.customSqlDeleteAll;
 		this.loaderName = original.loaderName;
 		this.auxiliaryTable = original.auxiliaryTable;
 		this.auxiliaryColumns = original.auxiliaryColumns == null ? null : new HashMap<>( original.auxiliaryColumns );
@@ -301,6 +292,14 @@ public abstract sealed class Collection
 		return orderBy;
 	}
 
+	public String getJpaOrderBy() {
+		return jpaOrderBy;
+	}
+
+	public String getSqlOrderBy() {
+		return sqlOrderBy;
+	}
+
 	public void setComparator(@SuppressWarnings("rawtypes") Comparator comparator) {
 		this.comparator = comparator;
 	}
@@ -315,6 +314,16 @@ public abstract sealed class Collection
 
 	public void setOrderBy(String orderBy) {
 		this.orderBy = orderBy;
+	}
+
+	public void setJpaOrderBy(String jpaOrderBy) {
+		this.jpaOrderBy = jpaOrderBy;
+		this.orderBy = jpaOrderBy;
+	}
+
+	public void setSqlOrderBy(String sqlOrderBy) {
+		this.sqlOrderBy = sqlOrderBy;
+		this.orderBy = sqlOrderBy;
 	}
 
 	public void setRole(String role) {
@@ -353,7 +362,25 @@ public abstract sealed class Collection
 		return manyToManyOrderBy;
 	}
 
+	public String getManyToManyJpaOrdering() {
+		return manyToManyJpaOrderBy;
+	}
+
+	public String getManyToManySqlOrdering() {
+		return manyToManySqlOrderBy;
+	}
+
 	public void setManyToManyOrdering(String orderFragment) {
+		this.manyToManyOrderBy = orderFragment;
+	}
+
+	public void setManyToManyJpaOrdering(String orderFragment) {
+		this.manyToManyJpaOrderBy = orderFragment;
+		this.manyToManyOrderBy = orderFragment;
+	}
+
+	public void setManyToManySqlOrdering(String orderFragment) {
+		this.manyToManySqlOrderBy = orderFragment;
 		this.manyToManyOrderBy = orderFragment;
 	}
 
@@ -519,11 +546,27 @@ public abstract sealed class Collection
 		return owner.getTable();
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
+	 * with an explicit resolved unique-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 
@@ -559,6 +602,14 @@ public abstract sealed class Collection
 			&& Objects.equals( typeParameters, other.typeParameters );
 	}
 
+	/**
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * and
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with explicit resolved key products instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	private void createForeignKeys() throws MappingException {
 		// if ( !isInverse() ) { // for inverse collections, let the "other end" handle it
 		final String entityName = getOwner().getEntityName();
@@ -575,14 +626,40 @@ public abstract sealed class Collection
 		// }
 	}
 
+	/**
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	abstract void createPrimaryKey();
 
-	public void createAllKeys() throws MappingException {
-		createForeignKeys();
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
+	public void createPrimaryKeyIfNeeded() {
 		if ( !isInverse() && !isPrimaryKeyDisabled() ) {
 			createPrimaryKey();
 			adjustTemporalPrimaryKey();
 		}
+	}
+
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
+	public void createAllKeys() throws MappingException {
+		createForeignKeys();
+		createPrimaryKeyIfNeeded();
 	}
 
 	private void adjustTemporalPrimaryKey() {
@@ -628,6 +705,10 @@ public abstract sealed class Collection
 		return auxiliaryColumnInPrimaryKey != null;
 	}
 
+	public String getAuxiliaryColumnInPrimaryKey() {
+		return auxiliaryColumnInPrimaryKey;
+	}
+
 	public String getCacheConcurrencyStrategy() {
 		return cacheConcurrencyStrategy;
 	}
@@ -657,55 +738,83 @@ public abstract sealed class Collection
 	}
 
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
-		this.customSQLInsert = customSQLInsert;
-		this.customInsertCallable = callable;
+		setCustomSqlInsert( new CustomSqlMapping( customSQLInsert, callable, null ) );
+	}
+
+	public void setCustomSqlInsert(CustomSqlMapping customSqlInsert) {
+		this.customSqlInsert = customSqlInsert;
+	}
+
+	public CustomSqlMapping getCustomSqlInsert() {
+		return customSqlInsert;
 	}
 
 	public String getCustomSQLInsert() {
-		return customSQLInsert;
+		return customSqlInsert == null ? null : customSqlInsert.sql();
 	}
 
 	public boolean isCustomInsertCallable() {
-		return customInsertCallable;
+		return customSqlInsert != null && customSqlInsert.callable();
 	}
 
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
-		this.customSQLUpdate = customSQLUpdate;
-		this.customUpdateCallable = callable;
+		setCustomSqlUpdate( new CustomSqlMapping( customSQLUpdate, callable, null ) );
+	}
+
+	public void setCustomSqlUpdate(CustomSqlMapping customSqlUpdate) {
+		this.customSqlUpdate = customSqlUpdate;
+	}
+
+	public CustomSqlMapping getCustomSqlUpdate() {
+		return customSqlUpdate;
 	}
 
 	public String getCustomSQLUpdate() {
-		return customSQLUpdate;
+		return customSqlUpdate == null ? null : customSqlUpdate.sql();
 	}
 
 	public boolean isCustomUpdateCallable() {
-		return customUpdateCallable;
+		return customSqlUpdate != null && customSqlUpdate.callable();
 	}
 
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
-		this.customSQLDelete = customSQLDelete;
-		this.customDeleteCallable = callable;
+		setCustomSqlDelete( new CustomSqlMapping( customSQLDelete, callable, null ) );
+	}
+
+	public void setCustomSqlDelete(CustomSqlMapping customSqlDelete) {
+		this.customSqlDelete = customSqlDelete;
+	}
+
+	public CustomSqlMapping getCustomSqlDelete() {
+		return customSqlDelete;
 	}
 
 	public String getCustomSQLDelete() {
-		return customSQLDelete;
+		return customSqlDelete == null ? null : customSqlDelete.sql();
 	}
 
 	public boolean isCustomDeleteCallable() {
-		return customDeleteCallable;
+		return customSqlDelete != null && customSqlDelete.callable();
 	}
 
 	public void setCustomSQLDeleteAll(String customSQLDeleteAll, boolean callable) {
-		this.customSQLDeleteAll = customSQLDeleteAll;
-		this.customDeleteAllCallable = callable;
+		setCustomSqlDeleteAll( new CustomSqlMapping( customSQLDeleteAll, callable, null ) );
+	}
+
+	public void setCustomSqlDeleteAll(CustomSqlMapping customSqlDeleteAll) {
+		this.customSqlDeleteAll = customSqlDeleteAll;
+	}
+
+	public CustomSqlMapping getCustomSqlDeleteAll() {
+		return customSqlDeleteAll;
 	}
 
 	public String getCustomSQLDeleteAll() {
-		return customSQLDeleteAll;
+		return customSqlDeleteAll == null ? null : customSqlDeleteAll.sql();
 	}
 
 	public boolean isCustomDeleteAllCallable() {
-		return customDeleteAllCallable;
+		return customSqlDeleteAll != null && customSqlDeleteAll.callable();
 	}
 
 	@Override
@@ -913,35 +1022,51 @@ public abstract sealed class Collection
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {
-		return insertExpectation;
+		return customSqlInsert == null ? null : customSqlInsert.expectation();
 	}
 
 	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
-		this.insertExpectation = insertExpectation;
+		this.customSqlInsert = new CustomSqlMapping(
+				getCustomSQLInsert(),
+				isCustomInsertCallable(),
+				insertExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getUpdateExpectation() {
-		return updateExpectation;
+		return customSqlUpdate == null ? null : customSqlUpdate.expectation();
 	}
 
 	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
-		this.updateExpectation = updateExpectation;
+		this.customSqlUpdate = new CustomSqlMapping(
+				getCustomSQLUpdate(),
+				isCustomUpdateCallable(),
+				updateExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getDeleteExpectation() {
-		return deleteExpectation;
+		return customSqlDelete == null ? null : customSqlDelete.expectation();
 	}
 
 	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
-		this.deleteExpectation = deleteExpectation;
+		this.customSqlDelete = new CustomSqlMapping(
+				getCustomSQLDelete(),
+				isCustomDeleteCallable(),
+				deleteExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getDeleteAllExpectation() {
-		return deleteAllExpectation;
+		return customSqlDeleteAll == null ? null : customSqlDeleteAll.expectation();
 	}
 
 	public void setDeleteAllExpectation(Supplier<? extends Expectation> deleteAllExpectation) {
-		this.deleteAllExpectation = deleteAllExpectation;
+		this.customSqlDeleteAll = new CustomSqlMapping(
+				getCustomSQLDeleteAll(),
+				isCustomDeleteAllCallable(),
+				deleteAllExpectation
+		);
 	}
 
 	@Override

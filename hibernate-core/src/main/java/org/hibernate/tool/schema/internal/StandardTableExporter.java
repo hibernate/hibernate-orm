@@ -16,7 +16,6 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -25,7 +24,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.SqlTypes;
 
 import static java.util.Collections.addAll;
 import static java.util.Comparator.comparing;
@@ -263,22 +261,13 @@ public class StandardTableExporter implements Exporter<Table> {
 			if ( aggregateSupport != null && aggregateSupport.supportsComponentCheckConstraints() ) {
 				for ( var column : table.getColumns() ) {
 					if ( column instanceof AggregateColumn aggregateColumn ) {
-						if ( !isArray( aggregateColumn ) ) {
+						if ( !aggregateColumn.isAggregateArray() ) {
 							applyAggregateColumnCheck( buf, aggregateColumn );
 						}
 					}
 				}
 			}
 		}
-	}
-
-	private boolean isArray(AggregateColumn aggregateColumn) {
-		final var value = (BasicValue) aggregateColumn.getValue();
-		return switch ( value.getResolution().getJdbcType().getDefaultSqlTypeCode() ) {
-			case SqlTypes.STRUCT_ARRAY, SqlTypes.STRUCT_TABLE, SqlTypes.JSON_ARRAY, SqlTypes.XML_ARRAY, SqlTypes.ARRAY
-					-> true;
-			default -> false;
-		};
 	}
 
 	protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
@@ -314,7 +303,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			Value value) {
 		if ( value instanceof Component component ) {
 			final var subAggregateColumn = component.getAggregateColumn();
-			if ( subAggregateColumn != null && !isArray( subAggregateColumn )  ) {
+			if ( subAggregateColumn != null && !subAggregateColumn.isAggregateArray()  ) {
 				final String subAggregatePath =
 						subAggregateColumn.getAggregateReadExpressionTemplate( dialect )
 								.replace( Template.TEMPLATE + ".", "" );

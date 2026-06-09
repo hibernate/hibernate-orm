@@ -1,0 +1,34 @@
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="9.0">
+    <entity class="org.hibernate.orm.test.boot.models.xml.complete.XmlSourceParityEntity"
+            metadata-complete="true"
+            access="FIELD">
+        <table name="xml_source_entity"/>
+        <secondary-table name="xml_source_details">
+            <sql-insert>insert into xml_source_details (details, id) values (?, ?)</sql-insert>
+            <sql-update>update xml_source_details set details = ? where id = ?</sql-update>
+            <sql-delete>delete from xml_source_details where id = ?</sql-delete>
+        </secondary-table>
+
+        <attributes>
+            <id name="id"/>
+            <basic name="name" lazy-group="name-group">
+                <column name="name"/>
+            </basic>
+            <basic name="details">
+                <column name="details" table="xml_source_details"/>
+                <mutability>org.hibernate.orm.test.boot.models.xml.complete.XmlSourceParityMutabilityPlan</mutability>
+            </basic>
+            <element-collection name="tags" classification="LIST" target-class="java.lang.String" lazy-group="tag-group">
+                <collection-table name="xml_source_tags"/>
+                <list-index-base>3</list-index-base>
+                <column name="tag_name"/>
+            </element-collection>
+        </attributes>
+    </entity>
+</entity-mappings>

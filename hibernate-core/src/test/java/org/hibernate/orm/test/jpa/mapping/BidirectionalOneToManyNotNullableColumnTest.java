@@ -14,50 +14,33 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.AnnotationException;
+import org.hibernate.boot.MetadataSources;
 
-import org.junit.jupiter.api.AfterEach;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @JiraKey(value = "HHH-13287")
-@Jpa(annotatedClasses = {
-		BidirectionalOneToManyNotNullableColumnTest.ParentData.class,
-		BidirectionalOneToManyNotNullableColumnTest.ChildData.class
-})
 public class BidirectionalOneToManyNotNullableColumnTest {
 
-	@AfterEach
-	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.getEntityManagerFactory().getSchemaManager().truncate();
-	}
-
-
 	@Test
-	@FailureExpected( jiraKey = "HHH-13287" )
-	public void test(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					ParentData parent = new ParentData();
-					parent.setId( 1L );
-					parent.addChildData( new ChildData() );
-					parent.addChildData( new ChildData() );
-
-					entityManager.persist( parent );
-				}
+	@ServiceRegistry
+	public void test(ServiceRegistryScope scope) {
+		final AnnotationException exception = assertThrows(
+				AnnotationException.class,
+				() -> new MetadataSources( scope.getRegistry() )
+						.addAnnotatedClass( ParentData.class )
+						.addAnnotatedClass( ChildData.class )
+						.buildMetadata()
 		);
-
-		scope.inTransaction(
-				entityManager -> {
-					ParentData parent = entityManager.find( ParentData.class, 1L );
-
-					assertSame( 2, parent.getChildren().size() );
-				}
-		);
+		assertThat( exception.getMessage() )
+				.contains( "may not specify '@OrderColumn(nullable=false)'" );
 	}
 
 	@Entity(name = "ParentData")

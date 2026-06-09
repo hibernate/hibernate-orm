@@ -6,9 +6,9 @@ package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
-import org.hibernate.SessionFactoryObserver;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
+import org.hibernate.boot.pipeline.spi.SessionFactoryProducer;
 import org.hibernate.boot.scan.spi.Scanner;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 
@@ -67,7 +67,6 @@ public interface PersistenceSettings {
 	 *
 	 * @see #SESSION_FACTORY_JNDI_NAME
 	 * @see org.hibernate.internal.SessionFactoryRegistry
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
 	 */
 	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
 
@@ -79,7 +78,6 @@ public interface PersistenceSettings {
 	 *
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 * @see org.hibernate.internal.SessionFactoryRegistry
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
 	 *
 	 * @since 7.0
 	 */
@@ -96,7 +94,6 @@ public interface PersistenceSettings {
 	 * not want JNDI to be used.
 	 *
 	 * @see #SESSION_FACTORY_NAME
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNameAsJndiName(boolean)
 	 *
 	 * @settingDefault {@code true} if {@link SessionFactory#getName()} comes from
 	 * {@value #SESSION_FACTORY_NAME}; {@code false} if there is no {@link SessionFactory#getName()}
@@ -190,10 +187,23 @@ public interface PersistenceSettings {
 	/**
 	 * Specifies a class which implements {@link org.hibernate.SessionFactoryObserver} and has
 	 * a constructor with no parameters.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#addSessionFactoryObservers(SessionFactoryObserver...)
 	 */
 	String SESSION_FACTORY_OBSERVER = "hibernate.session_factory_observer";
+
+	/**
+	 * Names the service-loaded {@link SessionFactoryProducer} to use when creating
+	 * the {@link SessionFactory}.
+	 * <p>
+	 * When this setting is not specified, Hibernate uses its default factory
+	 * producer if no custom producers are discovered, uses the single custom
+	 * producer if exactly one is discovered, and fails if multiple custom
+	 * producers are discovered.
+	 *
+	 * @see SessionFactoryProducer#getProducerName()
+	 *
+	 * @since 9.0
+	 */
+	String SESSION_FACTORY_PRODUCER = "hibernate.session_factory_producer";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

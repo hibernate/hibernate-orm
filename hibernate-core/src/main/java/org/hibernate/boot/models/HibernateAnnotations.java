@@ -559,7 +559,7 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<MapKeyCompositeType, MapKeyCompositeTypeAnnotation> MAP_KEY_COMPOSITE_TYPE = new OrmAnnotationDescriptor<>(
 			MapKeyCompositeType.class,
 			MapKeyCompositeTypeAnnotation.class,
-			EnumSet.allOf( Kind.class ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
 	OrmAnnotationDescriptor<MapKeyJavaType, MapKeyJavaTypeAnnotation> MAP_KEY_JAVA_TYPE = new OrmAnnotationDescriptor<>(

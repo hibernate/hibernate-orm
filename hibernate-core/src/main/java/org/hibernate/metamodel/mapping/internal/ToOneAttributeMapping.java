@@ -29,6 +29,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -163,6 +164,7 @@ public class ToOneAttributeMapping
 
 	private final Cardinality cardinality;
 	private final boolean hasJoinTable;
+	private final boolean isMappedByOneToOne;
 	/*
 	Capture the other side's name of a possibly bidirectional association to allow resolving circular fetches.
 	It may be null if the referenced property is a non-entity.
@@ -192,6 +194,7 @@ public class ToOneAttributeMapping
 		targetKeyPropertyName = original.targetKeyPropertyName;
 		cardinality = original.cardinality;
 		hasJoinTable = original.hasJoinTable;
+		isMappedByOneToOne = original.isMappedByOneToOne;
 		bidirectionalAttributePath = original.bidirectionalAttributePath;
 		declaringTableGroupProducer = original.declaringTableGroupProducer;
 		isKeyTableNullable = original.isKeyTableNullable;
@@ -300,6 +303,7 @@ public class ToOneAttributeMapping
 		);
 		if ( bootValue instanceof ManyToOne manyToOne ) {
 			notFoundAction = manyToOne.getNotFoundAction();
+			isMappedByOneToOne = false;
 			cardinality =
 					manyToOne.isLogicalOneToOne()
 							? LOGICAL_ONE_TO_ONE
@@ -444,10 +448,13 @@ public class ToOneAttributeMapping
 			 */
 			final var oneToOne = (OneToOne) bootValue;
 			final String mappedByProperty = oneToOne.getMappedByProperty();
+			isMappedByOneToOne = mappedByProperty != null;
 			bidirectionalAttributePath =
-					mappedByProperty == null
-							? SelectablePath.parse( referencedPropertyName )
-							: SelectablePath.parse( mappedByProperty );
+					mappedByProperty != null
+							? SelectablePath.parse( mappedByProperty )
+							: referencedPropertyName == null
+									? null
+									: SelectablePath.parse( referencedPropertyName );
 			notFoundAction = null;
 			isKeyTableNullable = isNullable();
 			isOptional = !bootValue.isConstrained();
@@ -725,6 +732,7 @@ public class ToOneAttributeMapping
 		this.targetKeyPropertyNames = original.targetKeyPropertyNames;
 		this.cardinality = original.cardinality;
 		this.hasJoinTable = original.hasJoinTable;
+		this.isMappedByOneToOne = original.isMappedByOneToOne;
 		this.bidirectionalAttributePath = original.bidirectionalAttributePath;
 		this.declaringTableGroupProducer = declaringTableGroupProducer;
 		this.isInternalLoadNullable = original.isInternalLoadNullable;
@@ -860,7 +868,7 @@ public class ToOneAttributeMapping
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
 		assert identifyingColumnsTableExpression != null;
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
-		if ( cardinality == ONE_TO_ONE && bidirectionalAttributePath != null ) {
+		if ( isMappedByOneToOne ) {
 			sideNature = ForeignKeyDescriptor.Nature.TARGET;
 		}
 		else {
@@ -1938,7 +1946,8 @@ public class ToOneAttributeMapping
 		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
 			// case 1.2
 			return !foreignKeyDescriptor.getNavigableRole()
-					.equals( identifierMapping.getNavigableRole() );
+					.equals( identifierMapping.getNavigableRole() )
+				&& !targetPartMatchesIdentifier( identifierMapping );
 		}
 		else {
 			// case 1.1
@@ -1948,6 +1957,16 @@ public class ToOneAttributeMapping
 				&& !( identifierMapping instanceof SingleAttributeIdentifierMapping
 						&& targetKeyPropertyNames.contains( identifierMapping.getAttributeName() ) );
 		}
+	}
+
+	private boolean targetPartMatchesIdentifier(EntityIdentifierMapping identifierMapping) {
+		if ( foreignKeyDescriptor.getTargetPart().getNavigableRole().equals( identifierMapping.getNavigableRole() ) ) {
+			return true;
+		}
+		return foreignKeyDescriptor.getTargetPart() instanceof BasicValuedModelPart targetPart
+			&& identifierMapping instanceof BasicValuedModelPart identifierPart
+			&& targetPart.getContainingTableExpression().equals( identifierPart.getContainingTableExpression() )
+			&& targetPart.getSelectionExpression().equals( identifierPart.getSelectionExpression() );
 	}
 
 	@Override
@@ -2041,7 +2060,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
-		if ( isKeyTableNullable || isNullable ) {
+		if ( isKeyTableNullable || isNullable || isIgnoreNotFound() ) {
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( parentTableGroup.getModelPart() instanceof CollectionPart ) {

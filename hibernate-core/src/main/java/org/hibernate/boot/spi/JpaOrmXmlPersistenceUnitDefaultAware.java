@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 
 /**
  * Contract for things that need to be aware of JPA {@code orm.xml}-defined persistence-unit-defaults.

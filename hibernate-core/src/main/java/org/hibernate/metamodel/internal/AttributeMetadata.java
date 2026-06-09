@@ -9,6 +9,7 @@ import java.lang.reflect.Member;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.models.spi.MemberDetails;
 
 /**
  * Basic contract for describing an attribute.
@@ -30,6 +31,17 @@ public interface AttributeMetadata<X, Y> {
 	 * @return The attribute member
 	 */
 	Member getMember();
+
+	/**
+	 * Retrieve the hibernate-models member defining the attribute.
+	 */
+	MemberDetails getMemberDetails();
+
+	/**
+	 * Retrieve the internal declaration/usage type correspondence for this
+	 * attribute.
+	 */
+	AttributeTypeCorrespondence getTypeCorrespondence();
 
 	/**
 	 * Retrieve the attribute java type.

@@ -1,0 +1,272 @@
+= ORM 9 Current Work Handoff
+
+Read this first when picking up the ORM 9 boot-model / binding-model branch.
+This file is intentionally compact: it describes the current branch direction,
+the green-suite close-out state, the next design-led work phase, and the
+guardrails to use before reopening any old failure bucket.
+
+Historical refresh notes, retired failure narratives, and old census buckets
+were removed after the suite went green.  Use git history if that archaeology
+is needed.
+
+== Current Branch Theme
+
+The branch moves ORM bootstrap away from direct, side-effect-heavy
+`org.hibernate.mapping` construction and toward an explicit boot/mapping
+pipeline:
+
+* source discovery, XML overlay, categorization, binding, views, and
+  materialization are separate phases;
+* semantic binding facts are recorded before compatibility
+  `org.hibernate.mapping` objects are populated;
+* binding captures source-aware facts and resolved intents, while
+  materialization owns `org.hibernate.mapping` creation and mutation;
+* views over the binding model support mapping-object materialization and JPA
+  static metamodel planning;
+* hidden key creation and ordering side effects are being replaced by explicit
+  materializers and correspondence products.
+
+Key orientation documents:
+
+* link:resolved-model-proposal.adoc[`resolved-model-proposal.adoc`]
+* link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
+* link:applied-contribution-model-design.adoc[`applied-contribution-model-design.adoc`]
+* link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
+* link:mapping-finalization-design.adoc[`mapping-finalization-design.adoc`]
+* link:deterministic-attribute-ordering-design.adoc[`deterministic-attribute-ordering-design.adoc`]
+* link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
+* link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+* link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
+* link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
+* link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
+* link:state-management-design.adoc[`state-management-design.adoc`]
+* link:additional-mapping-contributor-design.adoc[`additional-mapping-contributor-design.adoc`]
+* link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
+
+== Current Status
+
+The complete `hibernate-orm` test suite is green in the current worktree as of
+2026-07-02, after the final `LazyOneToOneRemoveFlushAccessTest` fix.
+
+There is no active failure bucket selected from the old binding-gap tracker or
+the 2026-06-30 full-suite census.  Those files were removed after the suite
+went green so they no longer drive bucket selection.
+
+The last red bucket was the inverse self-referential one-to-one tail.  The
+branch had already restored boot-model parity for the relevant `Property`,
+`ToOne`, and `EntityType` state.  The final regression was the runtime
+one-to-one unique-key selection predicate introduced around `c816c106`: the
+inverse TARGET side must still use unique-key loading even when the FK target
+selectable physically matches the identifier selectable.  The focused
+`LazyOneToOneRemoveFlushAccessTest` runtime-model guardrail now captures that
+shape.
+
+== Next Phase
+
+The next pass should shift from failure-bucket triage to implementing the
+design work captured in the 9.0 design documents.  Treat the green suite as the
+baseline and use focused tests as guardrails for intentional design changes, not
+as a stale backlog-mining source.
+
+Prefer work that reduces transitional bridges and makes the pipeline shape more
+explicit:
+
+* move sidecar facts toward the applied/resolved contribution model;
+* advance mapped-superclass, embeddable contribution, and generic-inheritance
+  modeling as one coordinated design surface;
+* keep extracting finalization responsibilities from legacy second-pass names
+  into explicit binding/materialization/finalization phases;
+* clarify aggregate, state-management, and additional-mapping-contributor
+  handoffs using the documented designs;
+* replace positional assumptions with correspondence products where they make a
+  real handoff safer or clearer.
+
+Do not restart the old binding-gap or full-suite census workflow unless a fresh
+suite run produces new failures.  If a regression appears, reproduce it
+directly, fix the boot/model or settings deviation, and return to the design-led
+queue.
+
+== Active Selection Rules
+
+Use these rules before choosing any new work:
+
+* Prefer selecting work from the design documents listed above.  Use old
+  failure-bucket language only as historical context.
+* Do not choose work from archived refresh notes or old census buckets unless a
+  fresh focused test or current XML report reproduces the failure.
+* Treat closed buckets as closed.  Reopen one only with a current failing test
+  name, stack, or boot-model assertion.
+* Prefer direct boot/model signals: source overlay, categorization, binding,
+  materialization, settings normalization, metadata finalization, and
+  compatibility handoff.
+* Keep criteria, proxy, bytecode, mutation, and SQL-AST/runtime symptoms behind
+  boot/model failures unless the mapping handoff is clearly missing a fact.
+* For generics, use hibernate-models metadata.  Do not add Java reflection
+  generic parsing.
+* Keep fixes in source/categorization, binding, materialization, settings
+  resolution, or handoff metadata unless the legacy mapping handoff cannot
+  express the needed fact.
+
+== Compatibility Handoffs To Keep Visible
+
+* `Property#getMemberDetails()` is the source-member bridge.
+* `AttributeTypeCorrespondence` centralizes hibernate-models declaration/usage
+  type facts for JPA-domain/SQM metamodel creation.
+* `RelationalModelCorrespondences` owns new-pipeline relational correspondence
+  facts.  Its first product, `ColumnNameCorrespondence`, records table-local
+  logical-to-physical column pairs and is projected to legacy collector column
+  bindings for compatibility.
+* Phase 1 sidecars currently exist for attribute type correspondence,
+  mapped-superclass properties, embeddable components, entity identifiers,
+  table references, natural-id, collation, tenant-id, and version properties.
+* State-management binding has an early root phase and late compatibility
+  projection for property/collection temporal metadata.
+* Aggregate work has `AggregateMappingIntent`, `AggregateValuePlan`,
+  `AggregateMemberContainer`, and `ComponentMemberTarget` as binding-side
+  handoff points before projection into `Component`, `AggregateColumn`, and
+  compatibility second-pass structures.
+
+== Closed Broad Buckets
+
+These broad buckets are closed in the current worktree.  Do not retry them from
+old notes without a fresh reproducer.
+
+[cols="1,3", options="header"]
+|===
+| Bucket
+| Close-out signal
+
+| Schema/exportables
+| Secondary-table and collection-table keys, joined-subclass/table validation,
+check/unique/index/comment/options metadata, derived-id column metadata, quoted
+names, time-zone columns, and broad schema/exportables guardrails are green.
+
+| Generics and JPA metamodel
+| hibernate-models-backed generic singular/plural metamodel typing,
+mapped-superclass type-variable handling, generic embeddable inheritance, and
+static metamodel guardrails are green.
+
+| Aggregates / JSON / SQLXML / STRUCT
+| Aggregate embeddable binding and materialization guardrails are green,
+including JSON arrays, SQLXML aggregate coverage, STRUCT/UDT probes, and
+collection-valued aggregate boundary cases.
+
+| Association FK / mappedBy / property-ref / IdClass / derived-id
+| Focused association and identifier guardrails are green, including inverse
+one-to-one, shared-PK one-to-one, entity map keys, nested IdClass,
+association-valued ids, `@MapsId`, FK export suppression, and referenced-column
+handoff.
+
+| LIST/BAG/order-column parity
+| The agreed classification split is implemented and covered: explicit
+list-index metadata makes a `List` indexed; `@OrderBy` / `@SQLOrder` are
+BAG-style ordered collections; unowned `mappedBy` to-many and unidirectional
+`@OneToMany` without explicit list-index metadata are BAG; otherwise Java
+`List` keeps the legacy LIST classification.
+
+| Settings / JPA bootstrap normalization
+| Recovered normalization covers transaction type, JPA compliance,
+criteria-copy-tree, connection-provider auto-commit, shared-cache mode,
+validation mode, duration storage, time-zone storage, and related
+SessionFactory settings handoff through the resolver and adapter.
+
+| Cache / natural-id / version / state metadata
+| Representative cache, query-cache, natural-id, version, tenant-id, collation,
+temporal, callback, listener, and state-management guardrails are green.
+
+| Source/XML/categorization/binding sweep
+| Source collection, XML overlay, annotation coverage samples, categorization,
+binding, and boot-model source guardrails are green.
+
+| Inheritance / discriminator / table finalization
+| Joined/single/union inheritance, subclass closure, discriminator column and
+formula handoff, force-discriminator settings, table finalization, and
+additional mapping contributor samples are green.
+
+| Full-suite census
+| The old 2026-06-30 census and later rolling baselines are superseded by the
+green complete `hibernate-orm` suite reported on 2026-07-02.
+|===
+
+== Guardrail Commands
+
+Focused fixes should still run the relevant focused bucket first.  For broad
+pipeline changes, use the boot-model sweep and the generics guardrail set.
+
+Boot-model source/XML/categorization/binding sweep:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.boot.models.annotation.*' \
+  --tests 'org.hibernate.orm.test.boot.models.source.*' \
+  --tests 'org.hibernate.orm.test.boot.models.SourceModelTestHelperSmokeTests' \
+  --tests 'org.hibernate.orm.test.boot.models.categorize.*' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.*' \
+  --tests 'org.hibernate.orm.test.boot.models.bind.*.*' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.*' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.*.*' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.*.*.*' \
+  --tests 'org.hibernate.orm.test.boot.models.xml.*.*.*.*' \
+  --tests 'org.hibernate.orm.test.boot.models.foreigngenerator.*' \
+  --console=plain
+----
+
+Generics guardrail set:
+
+[source,bash]
+----
+./gradlew :hibernate-core:test -x :hibernate-testing:test \
+  --tests 'org.hibernate.orm.test.annotations.generics.EmbeddedIdGenericsSuperclassTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericAssociationOrderColumnTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericMapElementCollectionMetamodelTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericEmbeddedSuperclassParameterTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericMappedSuperclassPropertyTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericSuperclassAssociationTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericSuperclassEmbeddedTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericSuperclassPropertyTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.GenericsTest' \
+  --tests 'org.hibernate.orm.test.annotations.generics.MappedSuperclassTypeVariableTest' \
+  --console=plain
+----
+
+Always run after fixes:
+
+[source,bash]
+----
+git diff --check
+----
+
+== Suggested Fresh-Conversation Request
+
+[source,text]
+----
+Please read design/9.0/current-work-handoff.adoc first.  The complete
+hibernate-orm suite was green on 2026-07-02, and the old binding-gap tracker
+and full-suite census were removed so they do not drive stale bucket selection.
+The next phase is design-led work from the 9.0 design docs, especially the
+applied/resolved contribution model, mapped-superclass/generic/embeddable
+modeling, aggregate/state-management/additional-contributor handoffs, and
+explicit finalization/correspondence products.  Choose the next highest-signal
+design slice, add or update focused guardrails for the intended behavior, keep
+implementation scoped to source/categorization/binding/materialization/settings
+or documented compatibility handoff metadata, and finish with the focused
+guardrails, generics guardrails when relevant, and git diff --check.  If a fresh
+regression appears, reproduce it directly, fix the boot/model or settings
+handoff deviation, then return to the design-led queue.
+----
+
+== Fresh-Context Cautions
+
+* Do not "fix" runtime entity-key, SQM, SQL-AST, or initializer behavior to
+  compensate for mapping shapes that the boot model should express.
+* Be careful with quoted identifiers.  Use `Identifier#matches(...)` semantics
+  where identifier-aware comparison is needed.
+* Quoted JPA entity names are illegal in this branch.  Use `@Table`, `@Column`,
+  and other database-identifier annotations for quoted database names.
+* Avoid reintroducing builder surfaces.  The design direction is explicit
+  pipeline products, construction requests, producers, views, and
+  materializers.
+* Keep new binding-model contracts free of `org.hibernate.mapping` types unless
+  the contract is explicitly a materializer or compatibility bridge.
+* When adding new Java files, include `@author Steve Ebersole`.

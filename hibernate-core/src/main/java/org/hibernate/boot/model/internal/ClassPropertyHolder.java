@@ -228,32 +228,51 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 					&& collector.getGenericComponent( component.getComponentClass() ) == null ) {
 				// If we didn't already, register the generic component to use it later
 				// as the metamodel type for generic embeddable attributes
-				final Component copy = component.copy();
-				copy.setGeneric( false );
-				copy.getProperties().clear();
-				final var declaredMembers = getDeclaredAttributeMembers(
-						memberDetails.getType().determineRawClass(),
-						component.getProperty( 0 ).getPropertyAccessorName()
-				);
-				for ( var prop : component.getProperties() ) {
-					final var declaredMember = declaredMembers.get( prop.getName() );
-					if ( declaredMember == null ) {
-						// This can happen for generic custom composite user types
-						copy.addProperty( prop );
-					}
-					else {
-						prepareActualProperty(
-								prop,
-								declaredMember,
-								true,
-								context,
-								copy::addProperty
-						);
-					}
-				}
+				final Component copy = genericComponentCopy( component, memberDetails, context, true );
 				collector.registerGenericComponent( copy );
 			}
 		}
+	}
+
+	public static Component genericComponentCopy(
+			Component component,
+			MemberDetails memberDetails,
+			MetadataBuildingContext context) {
+		return genericComponentCopy( component, memberDetails, context, true );
+	}
+
+	public static Component genericComponentCopy(
+			Component component,
+			MemberDetails memberDetails,
+			MetadataBuildingContext context,
+			boolean includeUndeclaredProperties) {
+		final Component copy = component.copy();
+		copy.setComponentClassName( memberDetails.getType().determineRawClass().getName() );
+		copy.setGeneric( false );
+		copy.getProperties().clear();
+		final var declaredMembers = getDeclaredAttributeMembers(
+				memberDetails.getType().determineRawClass(),
+				component.getProperty( 0 ).getPropertyAccessorName()
+		);
+		for ( var prop : component.getProperties() ) {
+			final var declaredMember = declaredMembers.get( prop.getName() );
+			if ( declaredMember == null ) {
+				// This can happen for generic custom composite user types
+				if ( includeUndeclaredProperties ) {
+					copy.addProperty( prop );
+				}
+			}
+			else {
+				prepareActualProperty(
+						prop,
+						declaredMember,
+						true,
+						context,
+						copy::addProperty
+				);
+			}
+		}
+		return copy;
 	}
 
 	private void addPropertyToPersistentClass(Property property, MemberDetails memberDetails, ClassDetails declaringClass) {

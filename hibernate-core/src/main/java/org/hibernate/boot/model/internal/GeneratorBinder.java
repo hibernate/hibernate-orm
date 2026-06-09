@@ -11,10 +11,12 @@ import jakarta.persistence.TableGenerator;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.spi.GlobalRegistrar;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -43,6 +45,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
@@ -68,6 +71,7 @@ import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isGlobalGeneratorNameGlobal;
 import static org.hibernate.boot.model.internal.Constructors.construct;
+import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.findLocalizedMatch;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.initializeGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.collectParameters;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
@@ -163,7 +167,12 @@ public class GeneratorBinder {
 				determineImpliedGenerator( strategy, strategyGeneratorClassName, localGenerators );
 		if ( impliedGenerator != null ) {
 			configuration.putAll( impliedGenerator.getParameters() );
-			instantiateNamedStrategyGenerator( identifierValue, strategyGeneratorClassName, configuration, context );
+			instantiateNamedStrategyGenerator(
+					identifierValue,
+					generatorStrategy( strategyGeneratorClassName, impliedGenerator ),
+					configuration,
+					context
+			);
 			return true;
 		}
 		else {
@@ -174,11 +183,86 @@ public class GeneratorBinder {
 	private static Map<String, Object> initializeGeneratorSettings(SimpleValue identifierValue, String generatorName) {
 		final Map<String,Object> configuration = new HashMap<>();
 		configuration.put( GENERATOR_NAME, generatorName );
-		configuration.put( PersistentIdentifierGenerator.TABLE, identifierValue.getTable().getName() );
+		applyTableDetails( identifierValue, configuration );
 		if ( identifierValue.getColumnSpan() == 1 ) {
 			configuration.put( PersistentIdentifierGenerator.PK, identifierValue.getColumns().get(0).getName() );
 		}
 		return configuration;
+	}
+
+	private static void applyTableDetails(Value value, Map<String, Object> configuration) {
+		final Table table = value.getTable();
+		configuration.put( PersistentIdentifierGenerator.TABLE, table.getName() );
+		final String catalog = implicitNamespaceCatalog( value, table.getCatalog() )
+				? defaultCatalog( value )
+				: table.getCatalog();
+		if ( isNotEmpty( catalog ) ) {
+			configuration.put( PersistentIdentifierGenerator.CATALOG, catalog );
+		}
+		final String schema = implicitNamespaceSchema( value, table.getSchema() )
+				? defaultSchema( value )
+				: table.getSchema();
+		if ( isNotEmpty( schema ) ) {
+			configuration.put( PersistentIdentifierGenerator.SCHEMA, schema );
+		}
+	}
+
+	private static boolean implicitNamespaceCatalog(Value value, String catalog) {
+		if ( !isNotEmpty( catalog ) ) {
+			return true;
+		}
+		final String defaultCatalog = defaultCatalog( value );
+		if ( isNotEmpty( defaultCatalog ) && catalog.equalsIgnoreCase( defaultCatalog ) ) {
+			return true;
+		}
+		final var implicitCatalog = value.getBuildingContext()
+				.getMetadataCollector()
+				.getDatabase()
+				.getPhysicalImplicitNamespaceName()
+				.catalog();
+		return implicitCatalog != null && catalog.equals( implicitCatalog.getText() );
+	}
+
+	private static boolean implicitNamespaceSchema(Value value, String schema) {
+		if ( !isNotEmpty( schema ) ) {
+			return true;
+		}
+		final String defaultSchema = defaultSchema( value );
+		if ( isNotEmpty( defaultSchema ) && schema.equalsIgnoreCase( defaultSchema ) ) {
+			return true;
+		}
+		final var implicitSchema = value.getBuildingContext()
+				.getMetadataCollector()
+				.getDatabase()
+				.getPhysicalImplicitNamespaceName()
+				.schema();
+		return implicitSchema != null && schema.equals( implicitSchema.getText() );
+	}
+
+	private static String defaultCatalog(Value value) {
+		final String mappingDefault = value.getBuildingContext()
+				.getBuildingOptions()
+				.getMappingDefaults()
+				.getImplicitCatalogName();
+		return isNotEmpty( mappingDefault )
+				? mappingDefault
+				: value.getBuildingContext()
+						.getMetadataCollector()
+						.getPersistenceUnitMetadata()
+						.getDefaultCatalog();
+	}
+
+	private static String defaultSchema(Value value) {
+		final String mappingDefault = value.getBuildingContext()
+				.getBuildingOptions()
+				.getMappingDefaults()
+				.getImplicitSchemaName();
+		return isNotEmpty( mappingDefault )
+				? mappingDefault
+				: value.getBuildingContext()
+						.getMetadataCollector()
+						.getPersistenceUnitMetadata()
+						.getDefaultSchema();
 	}
 
 	private static IdentifierGeneratorDefinition determineImpliedGenerator(
@@ -424,7 +508,8 @@ public class GeneratorBinder {
 			MemberDetails idAttributeMember,
 			A annotation,
 			SimpleValue identifierValue,
-			BeanContainer beanContainer) {
+			BeanContainer beanContainer,
+			MetadataBuildingContext buildingContext) {
 		@SuppressWarnings("unchecked") // totally fine
 		final var annotationType = (Class<A>) annotation.annotationType();
 		final var idGeneratorAnnotation = annotationType.getAnnotation( IdGeneratorType.class );
@@ -432,10 +517,16 @@ public class GeneratorBinder {
 		final var generatorClass = idGeneratorAnnotation.value();
 		checkGeneratorClass( generatorClass );
 		return creationContext -> {
+			final var localizedAnnotation = localizedIdentifierGeneratorAnnotation(
+					annotation,
+					idAttributeMember,
+					creationContext,
+					buildingContext
+			);
 			final var generator =
 					instantiateAndInitializeGenerator(
 							identifierValue,
-							annotation,
+							localizedAnnotation,
 							beanContainer,
 							creationContext,
 							generatorClass,
@@ -448,6 +539,36 @@ public class GeneratorBinder {
 			}
 			return generator;
 		};
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <A extends Annotation> A localizedIdentifierGeneratorAnnotation(
+			A annotation,
+			MemberDetails idAttributeMember,
+			GeneratorCreationContext creationContext,
+			MetadataBuildingContext buildingContext) {
+		if ( annotation.annotationType() != GenericGenerator.class ) {
+			return annotation;
+		}
+
+		final var rootClass = creationContext.getRootClass();
+		final String rootClassName = rootClass.getClassName();
+		if ( rootClassName == null || rootClassName.equals( idAttributeMember.getDeclaringType().getName() ) ) {
+			return annotation;
+		}
+
+		final var entityType = buildingContext.getMetadataCollector()
+				.getClassDetailsRegistry()
+				.getClassDetails( rootClassName );
+		final var localized = findLocalizedMatch(
+				HibernateAnnotations.GENERIC_GENERATOR,
+				idAttributeMember,
+				entityType,
+				null,
+				null,
+				buildingContext
+		);
+		return localized == null ? annotation : (A) localized;
 	}
 
 	/**
@@ -715,6 +836,36 @@ public class GeneratorBinder {
 		}
 	}
 
+	public static void resolveGeneratedValueGenerator(
+			PersistentClass persistentClass,
+			SimpleValue idValue,
+			MemberDetails idMember,
+			GeneratedValue generatedValue,
+			MetadataBuildingContext context) {
+		if ( isGlobalGeneratorNameGlobal( context ) ) {
+			context.getMetadataCollector()
+					.getGlobalRegistrations()
+					.as( GlobalRegistrar.class )
+					.collectIdGenerators( idMember );
+			new StrictIdGeneratorResolverSecondPass(
+					persistentClass,
+					idValue,
+					idMember,
+					generatedValue,
+					context
+			).doSecondPass( emptyMap() );
+		}
+		else {
+			new IdGeneratorResolverSecondPass(
+					persistentClass,
+					idValue,
+					idMember,
+					generatedValue,
+					context
+			).doSecondPass( emptyMap() );
+		}
+	}
+
 	public static void createGeneratorFrom(
 			IdentifierGeneratorDefinition defaultedGenerator,
 			SimpleValue idValue,
@@ -734,7 +885,7 @@ public class GeneratorBinder {
 
 	private static Map<String, Object> buildConfigurationMap(KeyValue idValue) {
 		final Map<String,Object> configuration = new HashMap<>();
-		configuration.put( PersistentIdentifierGenerator.TABLE, idValue.getTable().getName() );
+		applyTableDetails( idValue, configuration );
 		if ( idValue.getColumnSpan() == 1 ) {
 			configuration.put( PersistentIdentifierGenerator.PK, idValue.getColumns().get(0).getName() );
 		}
@@ -796,10 +947,43 @@ public class GeneratorBinder {
 			PropertyData inferredData,
 			SimpleValue idValue,
 			MetadataBuildingContext buildingContext) {
-		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final var idMemberDetails = inferredData.getAttributeMember();
-		final var idGeneratorAnnotations = idMemberDetails.getMetaAnnotated( IdGeneratorType.class, modelsContext );
-		final var generatorAnnotations = idMemberDetails.getMetaAnnotated( ValueGenerationType.class, modelsContext );
+		if ( createIdGeneratorFromGeneratorAnnotation(
+				idValue,
+				idMemberDetails,
+				buildingContext,
+				getPath( propertyHolder, inferredData )
+		) ) {
+			return;
+		}
+		if ( idMemberDetails.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
+			createIdGenerator( idMemberDetails, idValue, propertyHolder.getPersistentClass(), buildingContext );
+		}
+	}
+
+	public static boolean createIdGeneratorFromGeneratorAnnotation(
+			SimpleValue idValue,
+			MemberDetails idMemberDetails,
+			MetadataBuildingContext buildingContext,
+			String attributePath) {
+		return createIdGeneratorFromGeneratorAnnotation(
+				idValue,
+				idMemberDetails,
+				idMemberDetails,
+				buildingContext,
+				attributePath
+		);
+	}
+
+	public static boolean createIdGeneratorFromGeneratorAnnotation(
+			SimpleValue idValue,
+			MemberDetails idMemberDetails,
+			AnnotationTarget generatorAnnotationTarget,
+			MetadataBuildingContext buildingContext,
+			String attributePath) {
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var idGeneratorAnnotations = generatorAnnotationTarget.getMetaAnnotated( IdGeneratorType.class, modelsContext );
+		final var generatorAnnotations = generatorAnnotationTarget.getMetaAnnotated( ValueGenerationType.class, modelsContext );
 		// Since these collections may contain proxies created by common-annotations module, we cannot reliably use
 		// simple remove/removeAll collection methods as those proxies do not implement hashcode/equals and even a
 		// simple 'a.equals(a)' will return 'false'. Instead, we will check the annotation types. Since generator
@@ -812,7 +996,7 @@ public class GeneratorBinder {
 			throw new AnnotationException( String.format(
 					Locale.ROOT,
 					"Identifier attribute '%s' has too many generator annotations: %s",
-					getPath( propertyHolder, inferredData ),
+					attributePath,
 					combineUntyped( idGeneratorAnnotations, generatorAnnotations )
 			) );
 		}
@@ -821,21 +1005,21 @@ public class GeneratorBinder {
 					idMemberDetails,
 					idGeneratorAnnotations.get(0),
 					idValue,
-					beanContainer( buildingContext )
+					beanContainer( buildingContext ),
+					buildingContext
 			) );
+			return true;
 		}
 		else if ( !generatorAnnotations.isEmpty() ) {
 //			idValue.setCustomGeneratorCreator( generatorCreator( idMemberDetails, generatorAnnotation ) );
 			throw new AnnotationException( String.format(
 					Locale.ROOT,
 					"Identifier attribute '%s' is annotated '%s' which is not an '@IdGeneratorType'",
-					getPath( propertyHolder, inferredData ),
+					attributePath,
 					generatorAnnotations.get(0).annotationType().getName()
 			) );
 		}
-		else if ( idMemberDetails.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
-			createIdGenerator( idMemberDetails, idValue, propertyHolder.getPersistentClass(), buildingContext );
-		}
+		return false;
 	}
 
 	/**

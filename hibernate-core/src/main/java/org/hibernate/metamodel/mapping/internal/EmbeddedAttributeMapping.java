@@ -12,13 +12,20 @@ import java.util.function.Consumer;
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
@@ -38,13 +45,18 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.embeddable.internal.AggregateArrayFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.AggregateEmbeddableResultImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.annotation.Nullable;
 
@@ -201,6 +213,17 @@ public class EmbeddedAttributeMapping
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		if ( isAggregateArrayMapping() ) {
+			final var sqlSelection = resolveAggregateArraySqlSelection( navigablePath, tableGroup, null, creationState );
+			return new BasicResult<>(
+					sqlSelection.getValuesArrayPosition(),
+					resultVariable,
+					embeddableMappingType.getAggregateMapping().getJdbcMapping(),
+					navigablePath,
+					false,
+					!sqlSelection.isVirtual()
+			);
+		}
 		if ( embeddableMappingType.shouldSelectAggregateMapping() ) {
 			return new AggregateEmbeddableResultImpl<>(
 					navigablePath,
@@ -222,6 +245,10 @@ public class EmbeddedAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
+		if ( isAggregateArrayMapping() ) {
+			resolveAggregateArraySqlSelection( navigablePath, tableGroup, null, creationState );
+			return;
+		}
 		embeddableMappingType.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
@@ -231,6 +258,13 @@ public class EmbeddedAttributeMapping
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		if ( isAggregateArrayMapping() ) {
+			selectionConsumer.accept(
+					resolveAggregateArraySqlSelection( navigablePath, tableGroup, null, creationState ),
+					embeddableMappingType.getAggregateMapping().getJdbcMapping()
+			);
+			return;
+		}
 		embeddableMappingType.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
@@ -247,6 +281,28 @@ public class EmbeddedAttributeMapping
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		if ( isAggregateArrayMapping() ) {
+			final var sqlAstCreationState = creationState.getSqlAstCreationState();
+			final var tableGroup =
+					sqlAstCreationState.getFromClauseAccess()
+							.getTableGroup( fetchParent.getNavigablePath() );
+			assert tableGroup != null;
+			final var sqlSelection = resolveAggregateArraySqlSelection(
+					fetchablePath,
+					tableGroup,
+					fetchParent,
+					creationState
+			);
+			return new AggregateArrayFetchImpl(
+					sqlSelection.getValuesArrayPosition(),
+					fetchParent,
+					fetchablePath,
+					this,
+					embeddableMappingType.getAggregateMapping().getJdbcMapping(),
+					fetchTiming,
+					!sqlSelection.isVirtual()
+			);
+		}
 		if ( embeddableMappingType.shouldSelectAggregateMapping() ) {
 			return new AggregateEmbeddableFetchImpl(
 					fetchablePath,
@@ -264,6 +320,32 @@ public class EmbeddedAttributeMapping
 				fetchTiming,
 				selected,
 				creationState
+		);
+	}
+
+	private boolean isAggregateArrayMapping() {
+		final var aggregateMapping = embeddableMappingType.getAggregateMapping();
+		return aggregateMapping != null
+				&& aggregateMapping.getJdbcMapping().getJdbcJavaType() instanceof BasicPluralJavaType<?>;
+	}
+
+	private SqlSelection resolveAggregateArraySqlSelection(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			FetchParent fetchParent,
+			DomainResultCreationState creationState) {
+		final var aggregateMapping = embeddableMappingType.getAggregateMapping();
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var tableReference = tableGroup.resolveTableReference(
+				navigablePath,
+				aggregateMapping.getContainingTableExpression()
+		);
+		return expressionResolver.resolveSqlSelection(
+				expressionResolver.resolveSqlExpression( tableReference, aggregateMapping ),
+				aggregateMapping.getJdbcMapping().getJdbcJavaType(),
+				fetchParent,
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 
@@ -363,6 +445,232 @@ public class EmbeddedAttributeMapping
 	@Override
 	public boolean isEmbeddedAttributeMapping() {
 		return true;
+	}
+
+	@Override
+	public BasicValuedModelPart asBasicValuedModelPart() {
+		return isAggregateArrayMapping() ? new AggregateArrayBasicValuedModelPart() : null;
+	}
+
+	private class AggregateArrayBasicValuedModelPart implements BasicValuedModelPart {
+		private SelectableMapping aggregateMapping() {
+			return embeddableMappingType.getAggregateMapping();
+		}
+
+		@Override
+		public JdbcMapping getJdbcMapping() {
+			return aggregateMapping().getJdbcMapping();
+		}
+
+		@Override
+		public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+			action.accept( offset, getJdbcMapping() );
+			return 1;
+		}
+
+		@Override
+		public MappingType getMappedType() {
+			return getJdbcMapping();
+		}
+
+		@Override
+		public NavigableRole getNavigableRole() {
+			return EmbeddedAttributeMapping.this.getNavigableRole();
+		}
+
+		@Override
+		public String getPartName() {
+			return EmbeddedAttributeMapping.this.getPartName();
+		}
+
+		@Override
+		public JavaType<?> getJavaType() {
+			return getJdbcMapping().getJavaTypeDescriptor();
+		}
+
+		@Override
+		public boolean hasPartitionedSelectionMapping() {
+			return aggregateMapping().isPartitioned();
+		}
+
+		@Override
+		public <T> DomainResult<T> createDomainResult(
+				NavigablePath navigablePath,
+				TableGroup tableGroup,
+				String resultVariable,
+				DomainResultCreationState creationState) {
+			return EmbeddedAttributeMapping.this.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
+		}
+
+		@Override
+		public void applySqlSelections(
+				NavigablePath navigablePath,
+				TableGroup tableGroup,
+				DomainResultCreationState creationState) {
+			EmbeddedAttributeMapping.this.applySqlSelections( navigablePath, tableGroup, creationState );
+		}
+
+		@Override
+		public void applySqlSelections(
+				NavigablePath navigablePath,
+				TableGroup tableGroup,
+				DomainResultCreationState creationState,
+				BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+			EmbeddedAttributeMapping.this.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
+		}
+
+		@Override
+		public <X, Y> int breakDownJdbcValues(
+				Object domainValue,
+				int offset,
+				X x,
+				Y y,
+				JdbcValueBiConsumer<X, Y> valueConsumer,
+				SharedSessionContractImplementor session) {
+			valueConsumer.consume( offset, x, y, getJdbcMapping().convertToRelationalValue( domainValue ), this );
+			return 1;
+		}
+
+		@Override
+		public <X, Y> int forEachDisassembledJdbcValue(
+				Object value,
+				int offset,
+				X x,
+				Y y,
+				JdbcValuesBiConsumer<X, Y> valuesConsumer,
+				SharedSessionContractImplementor session) {
+			valuesConsumer.consume( offset, x, y, value, getJdbcMapping() );
+			return 1;
+		}
+
+		@Override
+		public <X, Y> int decompose(
+				Object domainValue,
+				int offset,
+				X x,
+				Y y,
+				JdbcValueBiConsumer<X, Y> valueConsumer,
+				SharedSessionContractImplementor session) {
+			return breakDownJdbcValues( domainValue, offset, x, y, valueConsumer, session );
+		}
+
+		@Override
+		public EntityMappingType findContainingEntityMapping() {
+			return EmbeddedAttributeMapping.this.findContainingEntityMapping();
+		}
+
+		@Override
+		public String getFetchableName() {
+			return EmbeddedAttributeMapping.this.getFetchableName();
+		}
+
+		@Override
+		public int getFetchableKey() {
+			return EmbeddedAttributeMapping.this.getFetchableKey();
+		}
+
+		@Override
+		public FetchOptions getMappedFetchOptions() {
+			return EmbeddedAttributeMapping.this.getMappedFetchOptions();
+		}
+
+		@Override
+		public Fetch generateFetch(
+				FetchParent fetchParent,
+				NavigablePath fetchablePath,
+				FetchTiming fetchTiming,
+				boolean selected,
+				String resultVariable,
+				DomainResultCreationState creationState) {
+			return EmbeddedAttributeMapping.this.generateFetch(
+					fetchParent,
+					fetchablePath,
+					fetchTiming,
+					selected,
+					resultVariable,
+					creationState
+			);
+		}
+
+		@Override
+		public String getContainingTableExpression() {
+			return aggregateMapping().getContainingTableExpression();
+		}
+
+		@Override
+		public String getSelectionExpression() {
+			return aggregateMapping().getSelectionExpression();
+		}
+
+		@Override
+		public String getSelectableName() {
+			return aggregateMapping().getSelectableName();
+		}
+
+		@Override
+		public SelectablePath getSelectablePath() {
+			return aggregateMapping().getSelectablePath();
+		}
+
+		@Override
+		public String getCustomReadExpression() {
+			return aggregateMapping().getCustomReadExpression();
+		}
+
+		@Override
+		public String getCustomWriteExpression() {
+			return aggregateMapping().getCustomWriteExpression();
+		}
+
+		@Override
+		public boolean isFormula() {
+			return aggregateMapping().isFormula();
+		}
+
+		@Override
+		public boolean isNullable() {
+			return aggregateMapping().isNullable();
+		}
+
+		@Override
+		public boolean isInsertable() {
+			return aggregateMapping().isInsertable();
+		}
+
+		@Override
+		public boolean isUpdateable() {
+			return aggregateMapping().isUpdateable();
+		}
+
+		@Override
+		public boolean isPartitioned() {
+			return aggregateMapping().isPartitioned();
+		}
+
+		@Override
+		public Long getLength() {
+			return aggregateMapping().getLength();
+		}
+
+		@Override
+		public Integer getArrayLength() {
+			return aggregateMapping().getArrayLength();
+		}
+
+		@Override
+		public Integer getPrecision() {
+			return aggregateMapping().getPrecision();
+		}
+
+		@Override
+		public Integer getScale() {
+			return aggregateMapping().getScale();
+		}
+
+		@Override
+		public Integer getTemporalPrecision() {
+			return aggregateMapping().getTemporalPrecision();
+		}
 	}
 
 	@Override

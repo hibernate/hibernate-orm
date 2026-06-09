@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -184,6 +185,7 @@ public class LazyOneToManyNonUniqueIdWhereTest {
 
 		@OneToMany
 		@JoinColumn( name = "MATERIAL_OWNER_ID")
+		@Bag
 		@SQLRestriction( "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatingsFromCombined() {

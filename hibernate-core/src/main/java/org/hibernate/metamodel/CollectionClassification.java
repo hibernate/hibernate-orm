@@ -40,8 +40,6 @@ public enum CollectionClassification {
 
 	/**
 	 * A non-unique, ordered collection following the requirements of {@link java.util.List}
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
 	 */
 	LIST,
 

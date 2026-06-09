@@ -34,6 +34,7 @@ public abstract sealed class ToOne
 	private boolean unwrapProxy;
 	private boolean unwrapProxyImplicit;
 	private boolean referenceToPrimaryKey = true;
+	private ForeignKeyColumnMappings foreignKeyColumnMappings;
 
 	protected ToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -50,6 +51,7 @@ public abstract sealed class ToOne
 		this.unwrapProxy = original.unwrapProxy;
 		this.unwrapProxyImplicit = original.unwrapProxyImplicit;
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
+		this.foreignKeyColumnMappings = original.foreignKeyColumnMappings;
 	}
 
 	@Override
@@ -158,6 +160,14 @@ public abstract sealed class ToOne
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
 
+	public ForeignKeyColumnMappings getForeignKeyColumnMappings() {
+		return foreignKeyColumnMappings;
+	}
+
+	public void setForeignKeyColumnMappings(ForeignKeyColumnMappings foreignKeyColumnMappings) {
+		this.foreignKeyColumnMappings = foreignKeyColumnMappings;
+	}
+
 	@Override
 	public boolean isSorted() {
 		return sorted;
@@ -196,7 +206,15 @@ public abstract sealed class ToOne
 		return isConstrained();
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();
@@ -226,7 +244,15 @@ public abstract sealed class ToOne
 		}
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();

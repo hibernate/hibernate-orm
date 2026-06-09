@@ -103,6 +103,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 				instantiatorsByDiscriminator.put( discriminator.getKey(), instantiator );
 				instantiatorsByClass.put( className, instantiator );
 			}
+			registerInstantiatorAliases( bootDescriptor );
 			instantiator = null;
 		}
 		else {
@@ -288,5 +289,38 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 		}
 		assert instantiatorsByClass != null;
 		return instantiatorsByClass.get( className );
+	}
+
+	private void registerInstantiatorAliases(Component bootDescriptor) {
+		final Map<String, String> subclassToSuperclass = bootDescriptor.getSubclassToSuperclass();
+		if ( subclassToSuperclass == null ) {
+			return;
+		}
+		for ( String subclass : subclassToSuperclass.keySet() ) {
+			if ( instantiatorsByClass.containsKey( subclass ) ) {
+				continue;
+			}
+			final EmbeddableInstantiator instantiator = resolveSuperclassInstantiator(
+					subclass,
+					subclassToSuperclass
+			);
+			if ( instantiator != null ) {
+				instantiatorsByClass.put( subclass, instantiator );
+			}
+		}
+	}
+
+	private EmbeddableInstantiator resolveSuperclassInstantiator(
+			String subclass,
+			Map<String, String> subclassToSuperclass) {
+		String superclass = subclassToSuperclass.get( subclass );
+		while ( superclass != null ) {
+			final EmbeddableInstantiator instantiator = instantiatorsByClass.get( superclass );
+			if ( instantiator != null ) {
+				return instantiator;
+			}
+			superclass = subclassToSuperclass.get( superclass );
+		}
+		return null;
 	}
 }

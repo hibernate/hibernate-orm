@@ -15,8 +15,6 @@ public interface StatisticsSettings {
 	 * should be collected.
 	 *
 	 * @settingDefault {@code false}
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatisticsSupport(boolean)
 	 */
 	String GENERATE_STATISTICS = "hibernate.generate_statistics";
 

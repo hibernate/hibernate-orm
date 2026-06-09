@@ -5,12 +5,17 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.mapping.internal.materialize.IndexMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedIndex;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -21,17 +26,14 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
-import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 
 import jakarta.persistence.UniqueConstraint;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -43,6 +45,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 class IndexBinder {
 
 	private final MetadataBuildingContext context;
+	private final IndexMappingMaterializer indexMappingMaterializer = new IndexMappingMaterializer();
+	private final UniqueKeyMappingMaterializer uniqueKeyMappingMaterializer = new UniqueKeyMappingMaterializer();
 
 	IndexBinder(MetadataBuildingContext context) {
 		this.context = context;
@@ -177,33 +181,45 @@ class IndexBinder {
 		if ( unique && !hasFormula && dialect.supportsUniqueConstraints()
 				&& isEmpty( type ) && isEmpty( using ) ) {
 			final String keyName = getImplicitNamingStrategy().determineUniqueKeyName( source ).render( dialect );
-			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
-			uniqueKey.setExplicit( true );
-			uniqueKey.setNameExplicit( nameExplicit );
-			uniqueKey.setOptions( options );
+			final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( columns.length );
 			for ( int i = 0; i < columns.length; i++ ) {
 				if ( columns[i] instanceof Column column) {
-					uniqueKey.addColumn( column, orderings != null ? orderings[i] : null );
+					uniqueKeyColumns.add( column );
 				}
 				else {
 					throw new AssertionFailure( "Not a column" );
 				}
 			}
+			uniqueKeyMappingMaterializer.materializeUniqueKey(
+					ResolvedUniqueKey.explicit(
+							table,
+							uniqueKeyColumns,
+							context,
+							keyName,
+							nameExplicit,
+							options,
+							orderings == null ? null : Arrays.asList( orderings ),
+							declaredAsIndex ? "index" : "unique-constraint"
+					)
+			);
 		}
 		else {
 			final String keyName = getImplicitNamingStrategy().determineIndexName( source ).render( dialect );
-			final Index index = table.getOrCreateIndex( keyName );
-			index.setUnique( unique );
-			if ( isNotEmpty( type ) ) {
-				index.setType( type );
-			}
-			if ( isNotEmpty( using ) ) {
-				index.setUsing( using );
-			}
-			index.setOptions( options );
-			for ( int i = 0; i < columns.length; i++ ) {
-				index.addColumn( columns[i], orderings != null ? orderings[i] : null );
-			}
+			indexMappingMaterializer.materializeIndex(
+					ResolvedIndex.explicit(
+							table,
+							Arrays.asList( columns ),
+							Arrays.asList( columnNames ),
+							context,
+							keyName,
+							unique,
+							type,
+							using,
+							options,
+							orderings == null ? null : Arrays.asList( orderings ),
+							declaredAsIndex ? "index" : "unique-constraint"
+					)
+			);
 		}
 	}
 

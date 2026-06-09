@@ -1,0 +1,496 @@
+= Embeddable Contribution Model Design
+:toc:
+
+This note captures the ORM 9 design direction for representing embeddable
+inheritance, generic embeddables, and embedding-site-specific component state.
+
+It intentionally mirrors the declaration-versus-application split described in
+link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`].
+The same pressure appears in embeddables: a Java type declaration is not the same
+thing as the mapping contributed by that type at a particular embedded attribute,
+collection element, map key, or identifier location.
+
+== Problem Statement
+
+The current `org.hibernate.mapping.Component` shape is doing too much work.
+
+One `Component` currently has to represent several different concepts:
+
+* the embeddable Java type declaration;
+* the concrete embedded value mapping at one consuming path;
+* inherited embeddable and mapped-superclass members;
+* generic type-variable substitution for that consuming path;
+* path-based `@AttributeOverride`, `@AssociationOverride`, and
+  `@Convert(attributeName = ...)` resolution;
+* implicit naming inputs for nested members;
+* table and storage context;
+* polymorphic embeddable discriminator state;
+* subtype property ownership used by runtime decomposition and instantiation.
+
+That is workable as a legacy flattened mapping artifact, but it is not a clean
+primary model.  It causes the same ambiguity identified for mapped superclasses:
+one object represents both a type-level declaration and each hierarchy-specific
+or path-specific application of that declaration.
+
+The ambiguity is especially visible in these cases:
+
+* `Range<Integer>` and `Range<BigDecimal>` use the same embeddable declaration
+  but require different resolved member types;
+* the same embeddable class may be embedded twice with different overrides,
+  table routing, converter declarations, or naming patterns;
+* a mapped superclass above an embeddable root contributes state to the nearest
+  consuming embeddable, not to one global mapped-superclass-owned component;
+* polymorphic embeddables need discriminator mappings and subtype-local members
+  scoped to the embedded value mapping;
+* collection elements, map keys, embedded identifiers, and nested embeddables all
+  consume the same embeddable declaration through different source roles.
+
+== Design Goals
+
+The ORM 9 mapping model should:
+
+* distinguish embeddable type declarations from embedding-site applications;
+* make generic type substitution part of the application, not the declaration;
+* keep path overrides, conversions, implicit naming, and table/storage context
+  with the consuming path;
+* model embeddable inheritance and mapped-superclass contribution consistently;
+* avoid treating copied inherited properties as the primary ownership model;
+* preserve `Component` as a compatibility artifact while new binding code moves
+  toward explicit contribution products;
+* make polymorphic embeddable discriminator and subtype-member state explicit;
+* support flattened, aggregate, collection-element, map-key, and identifier
+  embeddables through the same conceptual model.
+
+== Proposed Model
+
+Split embeddable handling into declaration and application concepts.
+
+[source]
+----
+EmbeddableDescriptor
+    -> describes the embeddable type declaration
+
+EmbeddableContribution
+    -> applies one descriptor to one consuming component path
+
+ComponentMapping
+    -> materialization-facing binding product for one applied contribution
+----
+
+The names are intentionally parallel to:
+
+[source]
+----
+MappedSuperclassDescriptor
+MappedSuperclassContribution
+----
+
+=== EmbeddableDescriptor
+
+`EmbeddableDescriptor` is the type-level declaration.
+
+It should describe facts that are true independent of any consuming path:
+
+* Java class / class name;
+* declared persistent members;
+* resolved local access strategy;
+* super embeddable declaration, if any;
+* mapped-superclass declaration chain, if any;
+* declared `@DiscriminatorValue`;
+* declared lifecycle callbacks/listeners, if supported for the embeddable shape;
+* declared custom instantiator, custom type, mutability, and other type-level
+  customizations;
+* record-component correspondence, when the embeddable Java type is a record;
+* source-level annotation facts that may later be applied through a concrete
+  contribution.
+
+The descriptor should not own table, column, converter, override, generic
+substitution, or embedding-path state.
+
+=== EmbeddableContribution
+
+`EmbeddableContribution` is the path-specific application.
+
+It should describe how one descriptor contributes mapping state to one concrete
+component path:
+
+* descriptor being applied;
+* source role, such as embedded attribute, nested embeddable, collection element,
+  map key, or embedded identifier;
+* source member and owner-relative attribute path;
+* resolved type-variable scope for generic members;
+* effective access strategy for each participating declaration;
+* effective member view for record embeddables, including merged annotation
+  visibility across record component, generated accessor, and backing field;
+* effective attribute, association, and converter overrides;
+* implicit naming inputs, including full nested attribute path;
+* table and storage context;
+* applied mapped-superclass contributions;
+* applied super-embeddable contribution;
+* applied local members and subtype-local members;
+* discriminator column/value mapping for polymorphic embeddables;
+* legacy `Component` materialization state.
+
+This contribution may be duplicated for the same descriptor when the same
+embeddable Java type is consumed at multiple paths.
+
+=== ComponentMapping
+
+`ComponentMapping` is a placeholder name for the product sitting between an
+applied contribution and the legacy `org.hibernate.mapping.Component`.
+
+It may become `Component` itself if `Component` is reshaped enough, but the safer
+design assumption is that it starts as a binding product or compatibility view.
+The important point is ownership: source/path decisions should be represented by
+one component-mapping object before individual binders create `Property`,
+`Value`, table, column, discriminator, and runtime compatibility state.
+
+The component mapping should directly retain:
+
+* source `MemberDetails`, when the component is declared by a member;
+* component `ClassDetails`;
+* source role/kind;
+* resolved `TypeVariableScope` for this component use;
+* path-aware override and conversion model;
+* owner-relative and full component paths used for override lookup and implicit
+  naming;
+* ordered applied-member descriptors, including inherited embeddable and
+  mapped-superclass members;
+* nested component source facts, so nested generic embeddables are not resolved
+  from erased reflection types;
+* storage/table context;
+* subtype and discriminator source facts for polymorphic embeddables;
+* enough state to materialize the legacy `Component` without binder-specific
+  override/conversion lambdas.
+
+This is the design-level version of the current `ComponentSource` direction.
+`ComponentSource` is already accumulating these facts for the boot-model binder,
+but it should be treated as a transitional source/context object rather than the
+final public or runtime mapping model.
+
+== MappedSuperclass Relationship
+
+Mapped-superclass declarations above embeddables should use the same
+declaration-versus-contribution split as mapped superclasses above entities.
+
+[source]
+----
+EmbeddableContribution
+    descriptor : EmbeddableDescriptor
+    superEmbeddableContribution : EmbeddableContribution?
+    mappedSuperclassContributions : List<MappedSuperclassContribution>
+----
+
+A mapped superclass above an embeddable does not globally own the columns of its
+declared members.  Those members are applied to the nearest consuming embeddable
+contribution, where table context, generic substitution, overrides, and subtype
+ownership are known.
+
+This matches the tactical bridge currently used by the boot-model binder: mapped
+superclass members inherited into an embeddable are treated as declared by the
+nearest embeddable consumer for runtime polymorphic decomposition.
+
+The long-term model should make that rule explicit instead of encoding it as a
+`Component` property-declaring-class adjustment.
+
+== Component Relationship
+
+`Component` should remain as the compatibility mapping artifact during
+migration, but not as the primary source-context object.
+
+The target flow is:
+
+[source]
+----
+source annotations / XML
+        -> EmbeddableDescriptor
+        -> EmbeddableContribution
+        -> ComponentMapping
+        -> Component
+        -> runtime embeddable mapping
+----
+
+During migration, `Component` may still carry:
+
+* properties;
+* discriminator value mappings;
+* subtype-to-supertype links;
+* property declaring class metadata;
+* aggregate storage state.
+
+But new binding code should prefer to derive those details from an
+`EmbeddableContribution` or `ComponentMapping` and then materialize the legacy
+`Component`.
+
+This distinction matters because `Component` is still consumed by a broad legacy
+surface.  Pushing every new source fact directly into `Component` keeps the
+model ambiguous.  A component-mapping product lets binding code centralize
+source, path, generic, and override decisions while keeping `Component` as a
+stable compatibility carrier.
+
+== Runtime Model Handoff
+
+The contribution model should also describe the handoff from boot-time
+`Component` state into the runtime embeddable model.
+
+Today runtime metamodel creation mostly consumes `Component` as the authoritative
+source.  The important consumers include:
+
+* `AttributeFactory`, which creates JPA/domain embeddable types from a
+  `Component`;
+* `MetadataContext`, which processes `Component#getProperties()` into
+  embeddable attributes;
+* `EmbeddableRepresentationStrategyPojo`, which resolves instantiators and
+  property access from `Component` and property-declaring-class state;
+* `EmbeddableMappingTypeImpl`, which turns `Component` properties,
+  discriminator mappings, subtype declarations, and aggregate state into the
+  runtime `EmbeddableMappingType`.
+
+That conversion currently forces runtime code to reverse-engineer source facts
+from a flattened `Component`:
+
+* which path consumed the embeddable;
+* which generic type-variable substitutions were applied;
+* which attributes came from mapped superclasses versus embeddable supertypes;
+* which attributes are declared by which concrete polymorphic subtype;
+* which discriminator values and subtype-supertype links are visible;
+* which overrides and converters produced the final `Property`/`Value` shape;
+* which storage model, flattened or aggregate, owns the runtime selectables.
+
+The target handoff should make the contribution the semantic input and
+`Component` a compatibility carrier:
+
+[source]
+----
+EmbeddableContribution
+        -> ComponentCompatibilityView
+        -> RuntimeEmbeddableMappingPlan
+        -> EmbeddableMappingType
+----
+
+`RuntimeEmbeddableMappingPlan` is a placeholder name.  The important point is
+the boundary: runtime model creation should eventually receive already-resolved
+contribution facts instead of rediscovering them from `Component`.
+
+In the short term, the plan can be implemented as an adapter over `Component`
+plus contribution metadata.  For example, the adapter can answer:
+
+* the applied member list in runtime state-array order;
+* the declaring contribution or concrete subtype for each member;
+* resolved Java/member type after generic substitution;
+* discriminator selectable and value mapping;
+* concrete subtype instantiator and property-access inputs;
+* aggregate or flattened storage descriptor.
+
+This allows runtime classes to migrate one piece at a time.  `Component` can
+continue to satisfy legacy consumers, while new runtime paths consume the
+contribution-backed view.
+
+=== Runtime Ownership Rules
+
+The runtime handoff should preserve these ownership rules:
+
+* declaration facts, such as Java class and declared local members, come from
+  `EmbeddableDescriptor`;
+* application facts, such as columns, tables, type substitutions, overrides, and
+  discriminator selectables, come from `EmbeddableContribution`;
+* subtype-local runtime attributes are owned by the contribution for the
+  polymorphic embedded value, not by one global embeddable class mapping;
+* mapped-superclass members inherited by an embeddable are applied to the
+  nearest consuming embeddable contribution before runtime state-array layout is
+  finalized;
+* aggregate storage is a storage strategy of the contribution, not a special
+  post-processing repair of a generic `Component`.
+
+These rules should make runtime decomposition, dirty checking, instantiation,
+query path resolution, and schema/exportable generation consume the same applied
+model.
+
+=== Transitional Runtime Shape
+
+During migration, `Component` remains the object passed into most runtime
+creation code.
+
+The transitional requirement is that every contribution fact needed by runtime
+creation must either:
+
+* be materialized onto `Component` in a well-defined compatibility slot; or
+* be available through a side-car adapter keyed by the `Component`.
+
+Materializing everything onto `Component` is simple but risks continuing the
+current overloading.  A side-car adapter is more explicit, but requires runtime
+entry points to accept or locate it.  The preferred direction is:
+
+1. keep existing `Component` fields for stable legacy facts;
+2. add a contribution-backed runtime adapter for new source/path facts;
+3. migrate runtime consumers from `Component` to the adapter when touching them;
+4. remove compatibility fields only after no runtime consumer depends on them.
+
+== Polymorphic Embeddables
+
+Polymorphic embeddable state is application-specific.
+
+The root embeddable descriptor can declare its discriminator value, but the
+actual discriminator column belongs to the consuming contribution because:
+
+* different embedding paths may use different column names or table contexts;
+* aggregate and flattened storage may place the discriminator differently;
+* the visible subtype set is resolved from the consuming root descriptor;
+* subtype-local properties are part of the applied flattened mapping for that
+  contribution.
+
+The contribution should therefore own:
+
+* discriminator column source and resolved `BasicValue`;
+* discriminator value to embeddable class mapping;
+* subtype to direct-supertype mapping;
+* property-to-declaring-subtype state for runtime decomposition.
+
+== Generic Embeddables
+
+Generic type resolution belongs to the contribution.
+
+For example:
+
+[source,java]
+----
+@Embedded Range<Integer> integerRange;
+@Embedded Range<BigDecimal> decimalRange;
+----
+
+Both attributes consume the same `Range<T>` descriptor, but their member types
+are different.  The descriptor should retain the generic declaration.  Each
+contribution should carry the resolved `TypeVariableScope` and expose applied
+member descriptors with substituted `TypeDetails`.
+
+Recent binder fixes reinforced two specific rules:
+
+* member classification must use the applied member `TypeDetails`, not
+  `MemberDetails#getType()` alone, because a generic embeddable member may erase
+  to `Object` while the consuming contribution resolves it to an embeddable or
+  association target;
+* nested component creation must carry the resolved member type into the nested
+  component source, otherwise nested generic embeddables are resolved from the
+  raw declaration instead of the applied usage.
+
+Those rules belong in the contribution/component-mapping product.  Binders
+should consume already-resolved applied member descriptors and should not repeat
+generic type-variable interpretation locally.
+
+== Source Roles
+
+The same embeddable declaration may be applied through different source roles.
+
+The contribution model should make the role explicit:
+
+* embedded entity attribute;
+* nested embeddable member;
+* embedded identifier;
+* identifier-class component;
+* element-collection value;
+* map key;
+* aggregate embeddable;
+* future XML-defined component source.
+
+Role belongs on the contribution because it changes path interpretation,
+override lookup, table selection, column naming, and lifecycle of the produced
+mapping objects.
+
+== Binder Direction
+
+The boot-model binder should move source/categorization work out of
+`ComponentBinder` and into contribution products.
+
+Current transitional behavior:
+
+* `ComponentSource` records component role, source member, component type,
+  generic type scope, path adjustments, and member descriptors;
+* `ComponentSource` also performs superclass-first member discovery for
+  embeddable and mapped-superclass members and resolves member `TypeDetails`
+  against the component-use `TypeVariableScope`;
+* `ComponentBinder` consumes `ComponentSource` and materializes `Property`,
+  `BasicValue`, `Component`, to-one, and collection mappings;
+* `EmbeddableAttributeBinder` creates discriminator state directly on
+  `Component` for polymorphic embeddables.
+
+Record embeddables are still transitional.  In field-access cases the current
+pipeline may bind record component properties through their backing
+`FieldDetails`, then recover record-component semantics by name where needed.
+That is a useful compatibility bridge, but not the target model.  The target
+model should prefer record components as the semantic member while exposing a
+merged annotation view over the record component, generated accessor, and
+backing field.  A naive switch to `ClassDetails#getRecordComponents()` is not
+enough: `MergeRecordPropertyTestCase` shows that an association annotation such
+as `@ManyToOne` may be visible to the backing field/accessor path but not as a
+direct annotation on the record-component `MemberDetails`, causing the member to
+be misclassified as basic.  The contribution product should carry the
+record-component/member correspondence explicitly before changing default
+member selection.
+
+Target behavior:
+
+* categorization builds embeddable descriptors and inheritance links;
+* binding creates an embeddable contribution for each consuming path;
+* mapped-superclass and super-embeddable members are applied through
+  contribution traversal;
+* generic substitution, path overrides, implicit naming inputs, and source role
+  are resolved by the contribution;
+* component-mapping/application state retains the source member, component type,
+  role, path-aware override/conversion model, path state, and applied member
+  descriptors;
+* a materializer turns the contribution into a legacy `Component`;
+* runtime metamodel creation can later consume contribution data directly.
+
+== Short-Term Migration
+
+A full split does not have to happen in one slice.
+
+A conservative migration path:
+
+1. Rename or wrap `ComponentSource` as an internal embeddable contribution-like
+   product.
+2. Introduce a `ComponentMapping`-like materialization product, or explicitly
+   make the wrapped `ComponentSource` play that role, before reshaping
+   `org.hibernate.mapping.Component`.
+3. Move polymorphic discriminator source resolution from
+   `EmbeddableAttributeBinder` into that product.
+4. Move subtype discovery and subtype-local member descriptors into the product.
+5. Move mapped-superclass-above-embeddable application into an explicit applied
+   contribution step.
+6. Keep `ComponentBinder` focused on materializing legacy mapping objects.
+7. Add a `Component` materializer or factory that accepts the contribution and
+   owns the `Component` compatibility shape.
+8. Add a runtime adapter over `Component` plus contribution metadata so
+   `EmbeddableMappingTypeImpl` and related classes can consume applied
+   contribution facts directly.
+9. Later introduce a true `EmbeddableDescriptor` if categorization needs to
+   retain declaration-level embeddable state independently from contributions.
+10. Later teach runtime metamodel creation to consume contribution data directly
+   where it currently reverse-engineers subtype, discriminator, and declaring
+   class state from `Component`.
+
+During the `MetadataBuildingProcess` transition, these contribution and
+component-mapping products should remain internal to the new pipeline or be
+projected into the legacy-compatible `Component` shape.  Do not attach new
+descriptor state to shared `org.hibernate.mapping` contracts as authoritative
+state unless legacy boot also populates that same state, or until legacy boot no
+longer exposes the same mapping objects to runtime consumers.
+
+== Open Questions
+
+* Should `ComponentSource` evolve directly into `EmbeddableContribution`, or
+  should a new type wrap it first?
+* Should mapped-superclass contributions be shared between entity and embeddable
+  consumers, or should embeddable consumers have a narrower applied contribution
+  type?
+* Where should embeddable descriptor creation live: categorization, binding
+  source preparation, or a dedicated descriptor resolver?
+* How should XML-defined embeddables feed the same descriptor/contribution
+  model?
+* How should aggregate embeddables represent discriminator and subtype-local
+  state?
+* Which runtime metamodel consumers can move away from `Component` first?
+* Should the runtime adapter be stored on `Component`, registered in
+  `MetadataContext`, or produced by a separate runtime-model preparation phase?
+* Can `EmbeddableMappingTypeImpl` consume an applied-member plan before
+  `AttributeFactory` and JPA-domain embeddable type creation are migrated?

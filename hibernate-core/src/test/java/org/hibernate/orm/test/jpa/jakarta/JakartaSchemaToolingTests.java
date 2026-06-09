@@ -9,13 +9,11 @@ import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
@@ -170,12 +168,6 @@ public class JakartaSchemaToolingTests {
 		};
 
 
-		final EntityManagerFactoryBuilder emfBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-				puDescriptor,
-				PropertiesHelper.map( settings ),
-				(mergedSettings) -> mergedSettings.getConfigurationValues().clear()
-		);
-
-		return emfBuilder.build().unwrap( SessionFactoryImplementor.class );
+		return SessionFactoryBootstrap.build( puDescriptor, settings ).unwrap( SessionFactoryImplementor.class );
 	}
 }

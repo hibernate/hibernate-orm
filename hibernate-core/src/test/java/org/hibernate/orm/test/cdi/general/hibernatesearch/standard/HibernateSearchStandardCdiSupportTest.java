@@ -192,9 +192,8 @@ public class HibernateSearchStandardCdiSupportTest {
 			return (SessionFactoryImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( TheEntity.class )
 					.buildMetadata()
-					.getSessionFactoryBuilder()
-					.build();
-		}
+					.buildSessionFactory();
+	}
 		catch ( Exception e ) {
 			StandardServiceRegistryBuilder.destroy( ssr );
 			throw e;

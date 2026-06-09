@@ -5,12 +5,12 @@
 package org.hibernate.orm.test.jpa.persistenceunit;
 
 import java.util.Collections;
+import java.util.Map;
 
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LogInspectionHelper;
@@ -59,8 +59,7 @@ public class SharedCacheModeDeprecatedWarningTest {
 				return SharedCacheMode.UNSPECIFIED;
 			}
 		};
-		EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder( adapter, null );
-		builder.cancel();
+		resolveMetadata( adapter, null );
 		assertFalse( trigger.wasTriggered(), "Log message was triggered" );
 	}
 
@@ -72,8 +71,7 @@ public class SharedCacheModeDeprecatedWarningTest {
 				return ValidationMode.NONE;
 			}
 		};
-		EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder( adapter, null );
-		builder.cancel();
+		resolveMetadata( adapter, null );
 		assertFalse( trigger.wasTriggered(), "Log message was triggered" );
 	}
 
@@ -103,11 +101,17 @@ public class SharedCacheModeDeprecatedWarningTest {
 
 	private void verifyCacheSetting(String settingName, Object value) {
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
-		EntityManagerFactoryBuilderImpl builder;
-		builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+		resolveMetadata(
 				empty,
 				Collections.singletonMap( settingName, value )
 		);
-		builder.cancel();
+	}
+
+	private static void resolveMetadata(PersistenceUnitInfoAdapter adapter, Map<?, ?> settings) {
+		try (var ignored = SessionFactoryBootstrap.resolveMetadata(
+				new PersistenceUnitInfoDescriptor( adapter ),
+				settings
+		)) {
+		}
 	}
 }

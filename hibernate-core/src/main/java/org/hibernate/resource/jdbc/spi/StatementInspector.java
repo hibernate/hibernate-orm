@@ -27,7 +27,6 @@ import java.io.Serializable;
  *
  * @see org.hibernate.cfg.JdbcSettings#STATEMENT_INSPECTOR
  * @see org.hibernate.cfg.Configuration#setStatementInspector(StatementInspector)
- * @see org.hibernate.boot.SessionFactoryBuilder#applyStatementInspector(StatementInspector)
  * @see SessionBuilderImplementor#statementInspector(StatementInspector)
  *
  * @author Steve Ebersole

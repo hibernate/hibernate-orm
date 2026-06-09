@@ -15,7 +15,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.internal.GeneratorParameters;
-import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -28,12 +27,9 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.beans.internal.Helper;
-
-import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorClass;
 
 /**
  * Generator backing {@link GenericGenerator}.
@@ -73,11 +69,6 @@ public class GenericGeneratorGeneration
 		final var type = annotation.type();
 		if ( type != null ) {
 			return type;
-		}
-		else if ( annotation instanceof GenericGeneratorAnnotation generatorAnnotation
-				&& generatorAnnotation.strategy() != null
-				&& context.getValue() instanceof SimpleValue idValue ) {
-			return generatorClass( generatorAnnotation.strategy(), idValue );
 		}
 		else {
 			throw new MappingException( "No generator type specified by @GenericGenerator" );

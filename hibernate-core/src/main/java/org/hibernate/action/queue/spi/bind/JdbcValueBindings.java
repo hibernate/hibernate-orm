@@ -150,6 +150,13 @@ public class JdbcValueBindings {
 		return bindingGroup.findBinding( columnName, usage ) != null;
 	}
 
+	public boolean hasValueDescriptor(String columnName, ParameterUsage usage) {
+		if ( bindTemplate != null ) {
+			return bindTemplate.findSlot( columnName, usage ) != null;
+		}
+		return jdbcValueDescriptorAccess.resolveValueDescriptor( tableDescriptor.name(), columnName, usage ) != null;
+	}
+
 	public BindingGroup getBindingGroup() {
 		if ( bindTemplate != null ) {
 			final BindingGroup compatibilityGroup = new BindingGroup( tableDescriptor.name() );

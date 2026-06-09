@@ -22,6 +22,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ListAttribute;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -64,6 +66,19 @@ public class GenericAssociationOrderColumnTest {
 			final ParentEntity parent = session.find( ParentEntity.class, 1L );
 			assertThat( parent.getChildren().stream().map( ChildEntity::getId ) ).containsExactly( 2L, 3L, 4L );
 		} );
+	}
+
+	@Test
+	public void testMetamodelSpecializesListElementType(SessionFactoryScope scope) {
+		final EntityType<ParentEntity> parentType = scope.getSessionFactory().getMetamodel().entity( ParentEntity.class );
+		final ListAttribute<? super ParentEntity, ?> untypedChildren = parentType.getList( "children" );
+		assertThat( untypedChildren.getBindableJavaType() ).isEqualTo( ChildEntity.class );
+
+		final ListAttribute<? super ParentEntity, ChildEntity> children =
+				parentType.getList( "children", ChildEntity.class );
+
+		assertThat( children.getJavaType() ).isEqualTo( List.class );
+		assertThat( children.getElementType().getJavaType() ).isEqualTo( ChildEntity.class );
 	}
 
 	@MappedSuperclass

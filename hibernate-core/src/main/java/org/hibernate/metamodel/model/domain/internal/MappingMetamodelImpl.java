@@ -214,15 +214,22 @@ public class MappingMetamodelImpl
 				determineJpaStaticMetaModelPopulationSetting( settings ),
 				determineJpaMetaModelPopulationSetting( settings ),
 				bootModel.getNamedEntityGraphs().values(),
-				context
+				context,
+				context.getBootBindingModel()
 		);
 	}
 
 	private void registerEmbeddableMappingType(MetadataImplementor bootModel) {
 		bootModel.visitRegisteredComponents(
 				composite -> {
+					if ( composite.isGeneric() ) {
+						return;
+					}
 					final var compositeType = (ComponentType) composite.getType();
 					final var mappingModelPart = compositeType.getMappingModelPart();
+					if ( mappingModelPart == null ) {
+						return;
+					}
 					embeddableValuedModelPart.put( mappingModelPart.getNavigableRole(), mappingModelPart );
 				}
 		);

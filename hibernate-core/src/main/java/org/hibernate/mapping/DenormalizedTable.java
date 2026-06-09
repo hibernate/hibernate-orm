@@ -78,7 +78,7 @@ public class DenormalizedTable extends Table {
 					foreignKey.getReferencedEntityName(),
 					foreignKey.getKeyDefinition(),
 					foreignKey.getOptions(),
-					foreignKey.getReferencedColumns()
+					foreignKey.getReferencedColumns().isEmpty() ? null : foreignKey.getReferencedColumns()
 			);
 		}
 	}

@@ -977,7 +977,14 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		final var identifierMapping = elementDescriptor.getAssociatedEntityMappingType().getIdentifierMapping();
 		identifierMapping.decompose(
 				identifierMapping.getIdentifier( elementValue ),
-				jdbcValueBindings::bindRestriction,
+				(valueIndex, jdbcValue, jdbcValueMapping) -> {
+					if ( jdbcValueBindings.hasValueDescriptor(
+							jdbcValueMapping.getSelectionExpression(),
+							ParameterUsage.RESTRICT
+					) ) {
+						jdbcValueBindings.bindRestriction( valueIndex, jdbcValue, jdbcValueMapping );
+					}
+				},
 				session
 		);
 	}

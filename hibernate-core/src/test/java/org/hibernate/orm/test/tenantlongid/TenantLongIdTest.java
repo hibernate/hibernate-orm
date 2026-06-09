@@ -5,7 +5,8 @@
 package org.hibernate.orm.test.tenantlongid;
 
 import org.hibernate.PropertyValueException;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -45,8 +46,8 @@ public class TenantLongIdTest implements SessionFactoryProducer {
 
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-		sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<Long>() {
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
+		optionsCollector.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<Long>() {
 			@Override
 			public Long resolveCurrentTenantIdentifier() {
 				return currentTenant;
@@ -56,7 +57,7 @@ public class TenantLongIdTest implements SessionFactoryProducer {
 				return false;
 			}
 		} );
-		return (SessionFactoryImplementor) sessionFactoryBuilder.build();
+		return SessionFactoryPipeline.build( model, optionsCollector );
 	}
 
 	@Test

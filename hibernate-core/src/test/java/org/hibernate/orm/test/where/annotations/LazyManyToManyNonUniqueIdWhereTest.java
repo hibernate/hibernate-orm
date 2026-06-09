@@ -12,6 +12,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLRestriction;
@@ -259,6 +260,7 @@ public class LazyManyToManyNonUniqueIdWhereTest {
 				inverseJoinColumns = { @JoinColumn( name = "ASSOCIATION_ID" ) }
 		)
 		@SQLJoinTableRestriction( "MAIN_CODE='MATERIAL' AND ASSOCIATION_CODE='RATING'" )
+		@Bag
 		@SQLRestriction( "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatingsFromCombined() {
@@ -346,6 +348,7 @@ public class LazyManyToManyNonUniqueIdWhereTest {
 				joinColumns = { @JoinColumn( name = "BUILDING_ID") },
 				inverseJoinColumns = { @JoinColumn( name = "RATING_ID" ) }
 		)
+		@Bag
 		@SQLRestriction( "NAME = 'high' or NAME = 'medium'" )
 		@Immutable
 		public List<Rating> getMediumOrHighRatings() {

@@ -104,8 +104,8 @@ public class GenericToManyAssociationTest {
 			final CriteriaQuery<Long> query = cb.createQuery( Long.class );
 			final Root<Parent> root = query.from( Parent.class );
 			final Join<Parent, Child> join = root.join( "children" );
-			// generic attributes are always reported as Object java type
-			assertThat( join.getJavaType() ).isEqualTo( Object.class );
+			// generic plural attributes expose their specialized element type
+			assertThat( join.getJavaType() ).isEqualTo( Child.class );
 			assertThat( join.getModel() ).isSameAs( root.getModel().getAttribute( "children" ) );
 			assertThat( ( (SqmPath<?>) join ).getResolvedModel().getBindableJavaType() ).isEqualTo( Child.class );
 			final Long result = session.createQuery( query.select( join.get( "id" ) ) ).getSingleResult();

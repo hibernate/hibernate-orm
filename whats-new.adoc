@@ -177,3 +177,14 @@ var entityManager = entityManagerFactory.createEntityManager(
 );
 
 ----
+
+
+
+[[bidir-mgmt]]
+== Post-Flush Bidirectionality Management
+
+Hibernate can now optionally repair bidirectional associations in the managed in-memory object graph after a successful flush. When enabled with `hibernate.bidirectionality_management=true`, Hibernate treats the owning side as authoritative and synchronizes inverse-side references and collections for managed entities, without scheduling additional SQL or making inverse-side-only changes persistent in the same flush.
+
+Handling of lazy inverse state is controlled by `hibernate.bidirectionality_management.lazy_policy`, with `skip`, `warn` (default), and `initialize` options.
+
+NOTE: The deprecated bytecode-enhancement setting `hibernate.enhancer.enableAssociationManagement=true` is also recognized as an alias when the new setting is not specified, making migration to the runtime model straightforward.

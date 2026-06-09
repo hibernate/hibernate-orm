@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.BidirectionalAssociationSynchronizer;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.FlushProcessingContext;
@@ -412,6 +413,8 @@ public abstract class AbstractFlushingEventListener {
 				},
 				true
 		);
+
+		BidirectionalAssociationSynchronizer.synchronize( session );
 	}
 
 	protected void postPostFlush(SessionImplementor session) {

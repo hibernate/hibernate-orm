@@ -22,6 +22,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
+import org.hibernate.cfg.BidirectionalAssociationManagementLazyPolicy;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
@@ -184,6 +185,16 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isInitializeLazyStateOutsideTransactionsEnabled() {
 		return delegate.isInitializeLazyStateOutsideTransactionsEnabled();
+	}
+
+	@Override
+	public boolean isBidirectionalAssociationManagementEnabled() {
+		return delegate.isBidirectionalAssociationManagementEnabled();
+	}
+
+	@Override
+	public BidirectionalAssociationManagementLazyPolicy getBidirectionalAssociationManagementLazyPolicy() {
+		return delegate.getBidirectionalAssociationManagementLazyPolicy();
 	}
 
 	@Override

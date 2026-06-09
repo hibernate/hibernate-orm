@@ -51,6 +51,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.BidirectionalAssociationManagementLazyPolicy;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -170,6 +171,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean identifierRollbackEnabled;
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
+	private boolean bidirectionalAssociationManagementEnabled;
+	private BidirectionalAssociationManagementLazyPolicy bidirectionalAssociationManagementLazyPolicy;
 	private TemporalTableStrategy temporalTableStrategy;
 	private AuditStrategy auditStrategy;
 	private int defaultBatchFetchSize;
@@ -369,6 +372,26 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
 		initializeLazyStateOutsideTransactions =
 				configurationService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
+		final Object bidirectionalAssociationManagementSetting =
+				settings.get( BIDIRECTIONALITY_MANAGEMENT );
+		if ( bidirectionalAssociationManagementSetting == null ) {
+			bidirectionalAssociationManagementEnabled =
+					getBoolean( ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT, settings, false );
+			if ( settings.containsKey( ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT ) ) {
+				DEPRECATION_LOGGER.deprecatedSetting(
+						ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT,
+						BIDIRECTIONALITY_MANAGEMENT
+				);
+			}
+		}
+		else {
+			bidirectionalAssociationManagementEnabled =
+					getBoolean( BIDIRECTIONALITY_MANAGEMENT, settings, false );
+		}
+		bidirectionalAssociationManagementLazyPolicy =
+				BidirectionalAssociationManagementLazyPolicy.interpret(
+						settings.get( BIDIRECTIONALITY_MANAGEMENT_LAZY_POLICY )
+				);
 
 		temporalTableStrategy = TemporalHelper.determineTemporalTableStrategy( settings );
 		if ( temporalTableStrategy == TemporalTableStrategy.AUTO ) {
@@ -1172,6 +1195,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isInitializeLazyStateOutsideTransactionsEnabled() {
 		return initializeLazyStateOutsideTransactions;
+	}
+
+	@Override
+	public boolean isBidirectionalAssociationManagementEnabled() {
+		return bidirectionalAssociationManagementEnabled;
+	}
+
+	@Override
+	public BidirectionalAssociationManagementLazyPolicy getBidirectionalAssociationManagementLazyPolicy() {
+		return bidirectionalAssociationManagementLazyPolicy;
 	}
 
 	@Override

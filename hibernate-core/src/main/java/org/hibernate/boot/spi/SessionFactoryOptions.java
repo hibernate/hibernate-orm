@@ -25,6 +25,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
+import org.hibernate.cfg.BidirectionalAssociationManagementLazyPolicy;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
@@ -235,6 +236,20 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#ENABLE_LAZY_LOAD_NO_TRANS
 	 */
 	boolean isInitializeLazyStateOutsideTransactionsEnabled();
+
+	/**
+	 * Is post-flush bidirectional association management enabled?
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#BIDIRECTIONALITY_MANAGEMENT
+	 */
+	boolean isBidirectionalAssociationManagementEnabled();
+
+	/**
+	 * The lazy-state handling policy for post-flush bidirectional association management.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#BIDIRECTIONALITY_MANAGEMENT_LAZY_POLICY
+	 */
+	BidirectionalAssociationManagementLazyPolicy getBidirectionalAssociationManagementLazyPolicy();
 
 	/**
 	 * The default batch size for batch fetching in new sessions.

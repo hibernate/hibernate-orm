@@ -1967,6 +1967,17 @@ class StatefulPersistenceContext implements PersistenceContext {
 							}
 						}
 					}
+					if ( isPersistentAttributeInterceptable( entity ) ) {
+						final var enhancementMetadata = persister.getBytecodeEnhancementMetadata();
+						if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
+							if ( state == EntityHolderState.ENHANCED_PROXY ) {
+								enhancementMetadata.injectEnhancedEntityAsProxyInterceptor( entity, entityKey, session );
+							}
+							else {
+								enhancementMetadata.injectInterceptor( entity, entityKey.getIdentifier(), session );
+							}
+						}
+					}
 					holder.setEntityEntry( context.entityEntryContext.getEntityEntry( entity ) );
 					context.entitiesByKey.put( entityKey, holder );
 				}

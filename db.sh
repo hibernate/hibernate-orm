@@ -875,6 +875,74 @@ oracle_23() {
     oracle_free_setup
 }
 
+oracle_dds_wait() {
+  local max_retries="${1:-120}"
+  local retries=0
+  local output
+
+  echo "Waiting for Oracle DDS to accept SQL connections (retries: $max_retries, interval: 5s)..."
+  while [[ $retries -lt $max_retries ]]; do
+    output=$($CONTAINER_CLI exec -i oracle_dds bash -lc "sqlplus -s \"sys/free@localhost/freepdb1 as sysdba\"" 2>/dev/null <<'EOF'
+set heading off feedback off pagesize 0
+select 1 from dual;
+exit
+EOF
+)
+    if echo "$output" | grep -q '^[[:space:]]*1[[:space:]]*$'; then
+      echo "Oracle DDS accepts SQL connections"
+      return
+    fi
+    sleep 5
+    retries=$((retries + 1))
+  done
+
+  echo "Error: Oracle DDS did not accept SQL connections after $((max_retries * 5))s"
+  $CONTAINER_CLI logs --tail=200 oracle_dds
+  exit 1
+}
+
+oracle_dds_setup() {
+  echo "Creating Oracle DDS bootstrap end user and roles..."
+  $CONTAINER_CLI exec -i oracle_dds bash -lc "sqlplus -s \"sys/free@localhost/freepdb1 as sysdba\"" <<'EOF'
+whenever sqlerror exit sql.sqlcode
+create role hibernate_dds_database_role;
+grant create session,
+      create any table, alter any table, drop any table,
+      create any index, drop any index,
+      create any procedure, drop any procedure,
+      grant any object privilege,
+      create any data grant, administer any data grant,
+      create any end user context, drop any end user context,
+      set use data grants only
+  to hibernate_dds_database_role;
+create or replace data role hibernate_dds_role;
+grant hibernate_dds_database_role to hibernate_dds_role;
+create end user hibernate identified by "free";
+grant data role hibernate_dds_role to hibernate;
+exit
+EOF
+}
+
+oracle_dds() {
+    disable_userland_proxy
+
+    local image="${ORACLE_DDS_IMAGE:-docker.io/gvenzl/oracle-free:23.26.2}"
+    local host_port="${ORACLE_DDS_PORT:-1521}"
+
+    echo "Starting Oracle DDS using $image on host port $host_port"
+    $CONTAINER_CLI rm -f oracle_dds 2>/dev/null || true
+    $CONTAINER_CLI run -d --name oracle_dds \
+        -p "${host_port}:1521" \
+        -e ORACLE_PASSWORD=free \
+        -e APP_USER=developer \
+        -e APP_USER_PASSWORD=free \
+        "$image"
+
+    oracle_dds_wait
+    oracle_dds_setup
+    echo "Oracle DDS successfully started"
+}
+
 ###############################################################################
 
 hana() {
@@ -1208,6 +1276,7 @@ if [ -z ${1} ]; then
     echo -e "\tmysql_8_1"
     echo -e "\tmysql_8_0"
     echo -e "\toracle"
+    echo -e "\toracle_dds"
     echo -e "\toracle_23"
     echo -e "\toracle_21"
     echo -e "\toracle_18"

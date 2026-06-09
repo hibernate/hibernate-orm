@@ -5,11 +5,18 @@
 package org.hibernate.orm.test.boot.database.metadata;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_TENANT_DATABASE_ROLE;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -28,12 +35,14 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.OracleServerConfiguration;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
@@ -227,6 +236,82 @@ public class MetadataAccessTests {
 					.isInstanceOf( HibernateException.class )
 					.withMessage( "Unable to access JDBC metadata" );
 		}
+	}
+
+	@Test
+	void testDatabaseMetaDataAdapterDeterminesMicroVersion() throws SQLException {
+		final DatabaseMetaData databaseMetaData = mock( DatabaseMetaData.class );
+		when( databaseMetaData.getDatabaseProductVersion() )
+				.thenReturn( "Oracle AI Database 26ai Free Release 23.26.2.0.0 - Develop, Learn, and Run for Free" );
+		when( databaseMetaData.getDatabaseMajorVersion() ).thenReturn( 23 );
+		when( databaseMetaData.getDatabaseMinorVersion() ).thenReturn( 26 );
+
+		final DialectResolutionInfo resolutionInfo =
+				new DatabaseMetaDataDialectResolutionInfoAdapter( databaseMetaData );
+
+		assertThat( resolutionInfo.getDatabaseMicroVersion() ).isEqualTo( 2 );
+	}
+
+	@Test
+	void testOracleDialectDeterminesMicroVersionFromProductVersion() {
+		final DialectResolutionInfo resolutionInfo = new DialectResolutionInfo() {
+			@Override
+			public String getDatabaseName() {
+				return "Oracle";
+			}
+
+			@Override
+			public String getDatabaseVersion() {
+				return "Oracle AI Database 26ai Free Release 23.26.2.0.0 - Develop, Learn, and Run for Free";
+			}
+
+			@Override
+			public int getDatabaseMajorVersion() {
+				return 23;
+			}
+
+			@Override
+			public int getDatabaseMinorVersion() {
+				return 26;
+			}
+
+			@Override
+			public String getDriverName() {
+				return "Oracle JDBC driver";
+			}
+
+			@Override
+			public int getDriverMajorVersion() {
+				return 23;
+			}
+
+			@Override
+			public int getDriverMinorVersion() {
+				return 26;
+			}
+
+			@Override
+			public String getSQLKeywords() {
+				return "";
+			}
+
+			@Override
+			public Map<String, Object> getConfigurationValues() {
+				return Map.of(
+						ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME, "DEVELOPER.HIBERNATE_TENANCY",
+						ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE, "orders_role",
+						ORACLE_DEEP_DATA_SECURITY_TENANT_DATABASE_ROLE, "database_role"
+				);
+			}
+		};
+
+		final OracleDialect dialect = new OracleDialect(
+				resolutionInfo,
+				new OracleServerConfiguration( false, false, false, 23, 26 )
+		);
+
+		assertThat( dialect.getVersion() ).isEqualTo( DatabaseVersion.make( 23, 26, 2 ) );
+		assertThat( dialect.getRowLevelSecurity().supportsRowLevelSecurity() ).isTrue();
 	}
 
 	@Test

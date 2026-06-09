@@ -4,27 +4,22 @@
  */
 package org.hibernate.dialect.rowsecurity;
 
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 
-import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_CONTEXT_PROVIDER;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_ROOT_TENANT_IDENTIFIER_ATTRIBUTE;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_TENANT_DATABASE_ROLE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_DEEP_DATA_SECURITY_TENANT_IDENTIFIER_ATTRIBUTE;
@@ -42,32 +37,43 @@ public class OracleDeepDataSecurityRowLevelSecurity implements RowLevelSecurity 
 	public static final String DEFAULT_TENANT_IDENTIFIER_ATTRIBUTE = "tenant_id";
 	public static final String DEFAULT_ROOT_TENANT_IDENTIFIER_ATTRIBUTE = "tenant_id_root";
 	public static final String TENANT_ISOLATION_DATA_GRANT = "hibernate_tenant_isolation";
+	public static final String CONTEXT_ACCESS_DATA_GRANT = "hibernate_tenant_context";
+	public static final String CONTEXT_PACKAGE = "hibernate_tenant_context";
 
 	private final String tenantContextName;
+	private final String tenantContextOwner;
+	private final String tenantContextSimpleName;
 	private final String tenantIdentifierAttributeName;
 	private final String rootTenantIdentifierAttributeName;
 	private final String tenantDataGrantee;
+	private final String tenantDatabaseRole;
+	private final String contextPackageName;
 	private final boolean useDataGrantsOnly;
 
 	public static RowLevelSecurity fromSettings(Map<?, ?> settings) {
-		final String tenantContextName = trimToNull(
-				getString( ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME, settings )
-		);
-		final String tenantDataGrantee = trimToNull(
-				getString( ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE, settings )
-		);
-		if ( tenantContextName == null && tenantDataGrantee == null ) {
-			return NoRowLevelSecurity.INSTANCE;
-		}
-		if ( tenantContextName == null || tenantDataGrantee == null ) {
-			throw new ConfigurationException(
-					"Oracle Deep Data Security row-level security requires both '"
-							+ ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME
-							+ "' and '"
-							+ ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE
-							+ "'"
-			);
-		}
+		final String tenantContextName =
+				getString( ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME,
+						settings, "DEVELOPER.HIBERNATE_TENANCY" );
+		final String tenantDataGrantee =
+				getString( ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE,
+						settings, "hibernate_dds_role" );
+		final String tenantDatabaseRole =
+				getString( ORACLE_DEEP_DATA_SECURITY_TENANT_DATABASE_ROLE,
+						settings, "hibernate_dds_database_role" );
+//		if ( tenantContextName == null && tenantDataGrantee == null && tenantDatabaseRole == null ) {
+//			return NoRowLevelSecurity.INSTANCE;
+//		}
+//		if ( tenantContextName == null || tenantDataGrantee == null || tenantDatabaseRole == null ) {
+//			throw new ConfigurationException(
+//					"Oracle Deep Data Security row-level security requires '"
+//							+ ORACLE_DEEP_DATA_SECURITY_TENANT_CONTEXT_NAME
+//							+ "', '"
+//							+ ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE
+//							+ "', and '"
+//							+ ORACLE_DEEP_DATA_SECURITY_TENANT_DATABASE_ROLE
+//							+ "'"
+//			);
+//		}
 		return new OracleDeepDataSecurityRowLevelSecurity(
 				tenantContextName,
 				getString(
@@ -81,6 +87,7 @@ public class OracleDeepDataSecurityRowLevelSecurity implements RowLevelSecurity 
 						DEFAULT_ROOT_TENANT_IDENTIFIER_ATTRIBUTE
 				),
 				tenantDataGrantee,
+				tenantDatabaseRole,
 				getBoolean( ORACLE_DEEP_DATA_SECURITY_USE_DATA_GRANTS_ONLY, settings, true )
 		);
 	}
@@ -90,11 +97,17 @@ public class OracleDeepDataSecurityRowLevelSecurity implements RowLevelSecurity 
 			String tenantIdentifierAttributeName,
 			String rootTenantIdentifierAttributeName,
 			String tenantDataGrantee,
+			String tenantDatabaseRole,
 			boolean useDataGrantsOnly) {
+		final var contextName = parseContextName( tenantContextName );
 		this.tenantContextName = tenantContextName;
+		this.tenantContextOwner = contextName.owner();
+		this.tenantContextSimpleName = contextName.name();
 		this.tenantIdentifierAttributeName = tenantIdentifierAttributeName;
 		this.rootTenantIdentifierAttributeName = rootTenantIdentifierAttributeName;
 		this.tenantDataGrantee = tenantDataGrantee;
+		this.tenantDatabaseRole = tenantDatabaseRole;
+		this.contextPackageName = tenantContextOwner + "." + contextPackageName( tenantContextName );
 		this.useDataGrantsOnly = useDataGrantsOnly;
 	}
 
@@ -109,17 +122,24 @@ public class OracleDeepDataSecurityRowLevelSecurity implements RowLevelSecurity 
 			Table table,
 			Column tenantIdentifierColumn,
 			String tenantIdentifierColumnType) {
-		if ( supportsRowLevelSecurity() ) {
-			collector.getDatabase().addAuxiliaryDatabaseObject( new TenantContext( this ) );
-			table.addInitCommand( context -> new InitCommand(
-					getTenantIdTableCreateStrings(
-							table,
-							tenantIdentifierColumn,
-							tenantIdentifierColumnType,
-							context
-					)
-			) );
-		}
+		collector.getDatabase().addAuxiliaryDatabaseObject(
+				new EndUserContext(
+						tenantContextName,
+						tenantContextOwner,
+						tenantContextSimpleName,
+						tenantIdentifierAttributeName,
+						rootTenantIdentifierAttributeName,
+						tenantDataGrantee,
+						tenantDatabaseRole,
+						contextPackageName
+				)
+		);
+		RowLevelSecurity.super.addTenantIdTableInitCommands(
+				collector,
+				table,
+				tenantIdentifierColumn,
+				tenantIdentifierColumnType
+		);
 	}
 
 	@Override
@@ -132,7 +152,7 @@ public class OracleDeepDataSecurityRowLevelSecurity implements RowLevelSecurity 
 		final String grantName = dataGrantName( table );
 		final String dataGrant = "create or replace data grant " + grantName
 				+ " as select, insert, update, delete on " + tableName
-				+ " where " + tenantPredicateWithRoot( tenantIdentifierColumn, tenantIdentifierColumnType, context )
+				+ " where " + tenantDiscriminatorPredicate( tenantIdentifierColumn, context )
 				+ " to " + tenantDataGrantee;
 		if ( useDataGrantsOnly ) {
 			return new String[] {
@@ -141,41 +161,6 @@ public class OracleDeepDataSecurityRowLevelSecurity implements RowLevelSecurity 
 			};
 		}
 		return new String[] { dataGrant };
-	}
-
-	@Override
-	public void setTenantIdentifier(
-			Connection connection,
-			String tenantIdentifier,
-			boolean root,
-			ServiceRegistry serviceRegistry) throws SQLException {
-		final Object baseContext = getContextProvider( serviceRegistry ).getEndUserSecurityContext();
-		if ( baseContext == null ) {
-			throw new SQLException( "Oracle Deep Data Security context provider returned null" );
-		}
-
-		final var oracleJdbc = OracleJdbcTypes.load();
-		if ( !oracleJdbc.endUserSecurityContextClass.isInstance( baseContext ) ) {
-			throw new SQLException(
-					"Oracle Deep Data Security context provider must return an oracle.jdbc.EndUserSecurityContext"
-			);
-		}
-		final Object oracleConnection = unwrapOracleConnection( connection, oracleJdbc.oracleConnectionClass );
-		final Object tenantContext = tenantContext( oracleJdbc, baseContext, tenantIdentifier, root );
-		invoke(
-				oracleJdbc.oracleConnectionClass,
-				oracleConnection,
-				"setEndUserSecurityContext",
-				new Class<?>[] { oracleJdbc.endUserSecurityContextClass },
-				new Object[] { tenantContext }
-		);
-	}
-
-	@Override
-	public void clearTenantIdentifier(Connection connection, ServiceRegistry serviceRegistry) throws SQLException {
-		final var oracleJdbc = OracleJdbcTypes.load();
-		final Object oracleConnection = unwrapOracleConnection( connection, oracleJdbc.oracleConnectionClass );
-		invoke( oracleJdbc.oracleConnectionClass, oracleConnection, "clearEndUserSecurityContext" );
 	}
 
 	@Override
@@ -188,109 +173,30 @@ public class OracleDeepDataSecurityRowLevelSecurity implements RowLevelSecurity 
 		return tenantContextName + "." + rootTenantIdentifierAttributeName;
 	}
 
-	String getTenantContextName() {
-		return tenantContextName;
-	}
-
-	String getTenantIdentifierAttributeName() {
-		return tenantIdentifierAttributeName;
-	}
-
-	String getRootTenantIdentifierAttributeName() {
-		return rootTenantIdentifierAttributeName;
-	}
-
-	private OracleDeepDataSecurityContextProvider getContextProvider(ServiceRegistry serviceRegistry) throws SQLException {
-		final Object providerReference = serviceRegistry.requireService( ConfigurationService.class )
-				.getSettings()
-				.get( ORACLE_DEEP_DATA_SECURITY_CONTEXT_PROVIDER );
-		if ( providerReference == null ) {
-			throw new SQLException(
-					"Oracle Deep Data Security row-level security requires setting '"
-							+ ORACLE_DEEP_DATA_SECURITY_CONTEXT_PROVIDER
-							+ "' to an OracleDeepDataSecurityContextProvider"
-			);
-		}
-		return serviceRegistry.requireService( StrategySelector.class )
-				.resolveStrategy( OracleDeepDataSecurityContextProvider.class, providerReference );
-	}
-
-	private Object tenantContext(
-			OracleJdbcTypes oracleJdbc,
-			Object baseContext,
-			String tenantIdentifier,
-			boolean root) throws SQLException {
-		final Object existingAttributes = invoke(
-				oracleJdbc.endUserSecurityContextClass,
-				baseContext,
-				"attributes"
-		);
-		final Map<Object, Object> attributes = new HashMap<>();
-		if ( existingAttributes instanceof Map<?, ?> existingAttributesMap ) {
-			attributes.putAll( existingAttributesMap );
-		}
-
-		final Object factory = newInstance( oracleJdbc.oracleJsonFactoryClass );
-		final Object existingTenantAttributes = attributes.get( tenantContextName );
-		final Object tenantAttributes = existingTenantAttributes == null
-				? invoke( oracleJdbc.oracleJsonFactoryClass, factory, "createObject" )
-				: invoke(
-						oracleJdbc.oracleJsonFactoryClass,
-						factory,
-						"createObject",
-						new Class<?>[] { oracleJdbc.oracleJsonObjectClass },
-						new Object[] { existingTenantAttributes }
-				);
-		invoke(
-				oracleJdbc.oracleJsonObjectClass,
-				tenantAttributes,
-				"put",
-				new Class<?>[] { String.class, String.class },
-				new Object[] { tenantIdentifierAttributeName, tenantIdentifier }
-		);
-		invoke(
-				oracleJdbc.oracleJsonObjectClass,
-				tenantAttributes,
-				"put",
-				new Class<?>[] { String.class, String.class },
-				new Object[] { rootTenantIdentifierAttributeName, root ? "true" : "false" }
-		);
-		attributes.put( tenantContextName, tenantAttributes );
-		return invoke(
-				oracleJdbc.endUserSecurityContextClass,
-				baseContext,
-				"withAttributes",
-				new Class<?>[] { Map.class },
-				new Object[] { attributes }
-		);
-	}
-
-	private String tenantPredicateWithRoot(
-			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType,
-			SqlStringGenerationContext context) {
-		return tenantDiscriminatorPredicate( tenantIdentifierColumn, tenantIdentifierColumnType, context )
-				+ " or " + endUserContextAttribute( rootTenantIdentifierAttributeName ) + " = 'true'";
-	}
-
 	private String tenantDiscriminatorPredicate(
 			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType,
 			SqlStringGenerationContext context) {
 		return tenantIdentifierColumn.getQuotedName( context.getDialect() )
-				+ " = cast(" + endUserContextAttribute( tenantIdentifierAttributeName )
-				+ " as " + tenantIdentifierColumnType + ")";
+				+ " = " + endUserContextAttribute( tenantIdentifierAttributeName )
+				+ " or " + endUserContextAttribute( rootTenantIdentifierAttributeName ) + " = 'true'";
 	}
 
 	private String endUserContextAttribute(String attributeName) {
 		return "ORA_END_USER_CONTEXT." + tenantContextName + "." + attributeName;
 	}
 
-	private String jsonSchema() {
-		return "{\"type\":\"object\",\"properties\":{"
-				+ "\"" + tenantIdentifierAttributeName + "\":{\"type\":\"string\"},"
-				+ "\"" + rootTenantIdentifierAttributeName + "\":{\"type\":\"string\",\"default\":\"false\"}"
-				+ "}}";
+	@Override
+	public void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root) throws SQLException {
+		try ( var statement = connection.prepareCall( "begin " + contextPackageName + ".set_tenant(?, ?); end;" ) ) {
+			statement.setString( 1, tenantIdentifier );
+			statement.setString( 2, Boolean.toString( root ) );
+			statement.execute();
+		}
+	}
+
+	@Override
+	public void clearTenantIdentifier(Connection connection, ServiceRegistry serviceRegistry) throws SQLException {
+		setTenantIdentifier( connection, "", false );
 	}
 
 	private static String dataGrantName(Table table) {
@@ -300,61 +206,53 @@ public class OracleDeepDataSecurityRowLevelSecurity implements RowLevelSecurity 
 		);
 	}
 
+	private static String contextDataGrantName(String tenantContextName) {
+		return CONTEXT_ACCESS_DATA_GRANT + "_" + hash( tenantContextName );
+	}
+
+	private static String contextPackageName(String tenantContextName) {
+		return CONTEXT_PACKAGE + "_" + hash( tenantContextName );
+	}
+
+	private static String hash(String value) {
+		return Integer.toUnsignedString( value.hashCode(), 36 );
+	}
+
+	private static ContextName parseContextName(String tenantContextName) {
+		final int separator = tenantContextName.indexOf( '.' );
+		if ( separator < 1 || separator == tenantContextName.length() - 1 || tenantContextName.indexOf( '.', separator + 1 ) > 0 ) {
+			throw new ConfigurationException(
+					"Oracle Deep Data Security tenant context name must be qualified as OWNER.NAME: "
+							+ tenantContextName
+			);
+		}
+		return new ContextName( tenantContextName.substring( 0, separator ), tenantContextName.substring( separator + 1 ) );
+	}
+
 	private static String trimToNull(String value) {
 		return isBlank( value ) ? null : value.trim();
 	}
 
-	private static String sqlStringLiteral(String value) {
+	private static String sqlLiteral(String value) {
 		return "'" + value.replace( "'", "''" ) + "'";
 	}
 
-	private static Object unwrapOracleConnection(Connection connection, Class<?> oracleConnectionClass)
-			throws SQLException {
-		return oracleConnectionClass.isInstance( connection )
-				? connection
-				: connection.unwrap( oracleConnectionClass );
+	private static String jsonString(String value) {
+		return value.replace( "\\", "\\\\" ).replace( "\"", "\\\"" );
 	}
 
-	private static Object newInstance(Class<?> type) throws SQLException {
-		try {
-			return type.getConstructor().newInstance();
-		}
-		catch (ReflectiveOperationException e) {
-			throw toSQLException( "Unable to instantiate " + type.getName(), e );
-		}
+	private record ContextName(String owner, String name) {
 	}
 
-	private static Object invoke(Class<?> type, Object target, String methodName) throws SQLException {
-		return invoke( type, target, methodName, new Class<?>[0], new Object[0] );
-	}
-
-	private static Object invoke(
-			Class<?> type,
-			Object target,
-			String methodName,
-			Class<?>[] parameterTypes,
-			Object[] arguments) throws SQLException {
-		try {
-			return type.getMethod( methodName, parameterTypes ).invoke( target, arguments );
-		}
-		catch (ReflectiveOperationException e) {
-			throw toSQLException( "Unable to invoke " + type.getName() + "." + methodName, e );
-		}
-	}
-
-	private static SQLException toSQLException(String message, ReflectiveOperationException exception) {
-		if ( exception instanceof InvocationTargetException invocationTargetException ) {
-			final Throwable targetException = invocationTargetException.getTargetException();
-			if ( targetException instanceof SQLException sqlException ) {
-				return sqlException;
-			}
-			return new SQLException( message, targetException );
-		}
-		return new SQLException( message, exception );
-	}
-
-	private record TenantContext(OracleDeepDataSecurityRowLevelSecurity rowLevelSecurity)
-			implements AuxiliaryDatabaseObject {
+	private record EndUserContext(
+			String tenantContextName,
+			String tenantContextOwner,
+			String tenantContextSimpleName,
+			String tenantIdentifierAttributeName,
+			String rootTenantIdentifierAttributeName,
+			String tenantDataGrantee,
+			String tenantDatabaseRole,
+			String contextPackageName) implements AuxiliaryDatabaseObject {
 
 		@Override
 		public boolean appliesToDialect(Dialect dialect) {
@@ -368,47 +266,53 @@ public class OracleDeepDataSecurityRowLevelSecurity implements RowLevelSecurity 
 
 		@Override
 		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
+			final String contextDataGrantName = tenantContextOwner + "."
+					+ contextDataGrantName( tenantContextName );
 			return new String[] {
-					"create or replace end user context " + rowLevelSecurity.getTenantContextName()
-							+ " using json schema "
-							+ sqlStringLiteral( rowLevelSecurity.jsonSchema() )
+					"create or replace end user context " + tenantContextName
+							+ " using json schema '" + jsonSchema() + "'",
+					"create or replace package " + contextPackageName
+							+ " authid current_user as"
+							+ " procedure set_tenant(p_tenant_id varchar2, p_tenant_id_root varchar2); end;",
+					"create or replace package body " + contextPackageName
+							+ " as procedure set_tenant(p_tenant_id varchar2, p_tenant_id_root varchar2) is"
+							+ " begin execute immediate "
+							+ sqlLiteral(
+									"update sys.end_user_context t"
+											+ " set t.context." + tenantIdentifierAttributeName + " = :tenant_id,"
+											+ " t.context." + rootTenantIdentifierAttributeName + " = :tenant_id_root"
+											+ " where owner = '" + tenantContextOwner + "'"
+											+ " and name = '" + tenantContextSimpleName + "'"
+							)
+							+ " using p_tenant_id, p_tenant_id_root; end; end;",
+					"grant execute on " + contextPackageName + " to " + tenantDatabaseRole,
+					"create or replace data grant " + contextDataGrantName
+							+ " as select, update on sys.end_user_context"
+							+ " where owner = " + sqlLiteral( tenantContextOwner )
+							+ " and name = " + sqlLiteral( tenantContextSimpleName )
+							+ " to " + tenantDataGrantee
 			};
+		}
+
+		private String jsonSchema() {
+			return "{\"type\":\"object\",\"properties\":{"
+					+ "\"" + jsonString( tenantIdentifierAttributeName ) + "\":{\"type\":[\"string\",\"null\"],\"default\":null},"
+					+ "\"" + jsonString( rootTenantIdentifierAttributeName ) + "\":{\"type\":\"string\",\"default\":\"false\"}"
+					+ "}}";
 		}
 
 		@Override
 		public String[] sqlDropStrings(SqlStringGenerationContext context) {
 			return new String[] {
-					"drop end user context " + rowLevelSecurity.getTenantContextName()
+					"drop data grant if exists " + tenantContextOwner + "." + contextDataGrantName( tenantContextName ),
+					"drop package if exists " + contextPackageName,
+					"drop end user context if exists " + tenantContextName
 			};
 		}
 
 		@Override
 		public String getExportIdentifier() {
-			return "hibernate-row-level-security-oracle-deep-data-security-context-"
-					+ rowLevelSecurity.getTenantContextName();
-		}
-	}
-
-	private record OracleJdbcTypes(
-			Class<?> oracleConnectionClass,
-			Class<?> endUserSecurityContextClass,
-			Class<?> oracleJsonFactoryClass,
-			Class<?> oracleJsonObjectClass) {
-		static OracleJdbcTypes load() throws SQLException {
-			try {
-				return new OracleJdbcTypes(
-						Class.forName( "oracle.jdbc.OracleConnection" ),
-						Class.forName( "oracle.jdbc.EndUserSecurityContext" ),
-						Class.forName( "oracle.sql.json.OracleJsonFactory" ),
-						Class.forName( "oracle.sql.json.OracleJsonObject" )
-				);
-			}
-			catch (ClassNotFoundException e) {
-				throw new SQLException(
-						"Oracle Deep Data Security row-level security requires the Oracle JDBC driver",
-						e
-				);
-			}
+			return "hibernate-row-level-security-oracle-context-" + tenantContextName;
 		}
 	}
 }

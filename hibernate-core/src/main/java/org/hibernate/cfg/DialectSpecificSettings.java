@@ -80,6 +80,8 @@ public interface DialectSpecificSettings {
 	 * Specifies the fully-qualified Oracle Deep Data Security end-user context
 	 * name used for discriminator-based multitenancy with {@code @TenantId}.
 	 * <p>
+	 * Hibernate creates and initializes this context during schema export.
+	 * <p>
 	 * This setting enables Oracle Deep Data Security row-level security when it
 	 * is configured together with {@link #ORACLE_DEEP_DATA_SECURITY_TENANT_DATA_GRANTEE}.
 	 *
@@ -121,14 +123,16 @@ public interface DialectSpecificSettings {
 			"hibernate.dialect.oracle.deep_data_security.tenant_data_grantee";
 
 	/**
-	 * Specifies an {@link org.hibernate.dialect.rowsecurity.OracleDeepDataSecurityContextProvider}
-	 * which supplies the base Oracle JDBC end-user security context for the current
-	 * request. Hibernate adds {@code @TenantId} attributes to the supplied context.
+	 * Specifies the Oracle database role used as the backing database role for
+	 * the configured Oracle Deep Data Security data role.
+	 * <p>
+	 * Hibernate grants execute privilege on its generated context helper
+	 * package to this database role.
 	 *
 	 * @since 8.0
 	 */
-	String ORACLE_DEEP_DATA_SECURITY_CONTEXT_PROVIDER =
-			"hibernate.dialect.oracle.deep_data_security.context_provider";
+	String ORACLE_DEEP_DATA_SECURITY_TENANT_DATABASE_ROLE =
+			"hibernate.dialect.oracle.deep_data_security.tenant_database_role";
 
 	/**
 	 * Specifies whether Hibernate should emit {@code SET USE DATA GRANTS ONLY}

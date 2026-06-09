@@ -35,8 +35,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DomainModel( annotatedClasses = RowLevelSecurityEndToEndTest.Document.class )
 @SessionFactory
 @ServiceRegistry( settings =
-	@Setting(name= MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER,
-			value = "org.hibernate.orm.test.multitenancy.rowsecurity.RowLevelSecurityEndToEndTest$TenantResolver"))
+		{@Setting(name = MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER,
+				value = "org.hibernate.orm.test.multitenancy.rowsecurity.RowLevelSecurityEndToEndTest$TenantResolver"),
+				@Setting( name = "hibernate.dialect.oracle.deep_data_security.tenant_context_name", value = "DEVELOPER.HIBERNATE_TENANCY"),
+				@Setting( name ="hibernate.dialect.oracle.deep_data_security.tenant_data_grantee", value = "hibernate_dds_role"),
+				@Setting( name = "hibernate.dialect.oracle.deep_data_security.tenant_database_role", value = "hibernate_dds_database_role")})
 @RequiresDialectFeature( feature = DialectFeatureChecks.RowLevelSecurity.class )
 class RowLevelSecurityEndToEndTest {
 	private static final String RLS_TEST_ROLE = "hibernate_rls_test";

@@ -263,12 +263,12 @@ public class OracleDialect extends Dialect {
 		autonomous = serverConfiguration.isAutonomous();
 		extended = serverConfiguration.isExtended();
 		applicationContinuity = serverConfiguration.isApplicationContinuity();
-		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
-		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
+		driverMinorVersion = serverConfiguration.getDriverMinorVersion();
+		driverMajorVersion = serverConfiguration.getDriverMajorVersion();
 		rowLevelSecurity =
-				getVersion().isSameOrAfter( 23, 26, 2 )
-						? OracleDeepDataSecurityRowLevelSecurity.fromSettings( info.getConfigurationValues() )
-						: NoRowLevelSecurity.INSTANCE;
+				getVersion().isSameOrAfter( 23, 26 )
+							? OracleDeepDataSecurityRowLevelSecurity.fromSettings( info.getConfigurationValues() )
+							: NoRowLevelSecurity.INSTANCE;
 	}
 
 	public boolean isAutonomous() {

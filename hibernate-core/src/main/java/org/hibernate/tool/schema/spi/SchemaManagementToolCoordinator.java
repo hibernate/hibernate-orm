@@ -778,12 +778,25 @@ public class SchemaManagementToolCoordinator {
 
 		public static Set<ActionGrouping> interpret(Metadata metadata, Map<?, ?> configuration) {
 			Set<String> contributors = metadata.getContributors();
-			if ( contributors.isEmpty() ) {
-				// even with no contributors (e.g. no entities), schema actions
-				// such as import.sql execution should still be processed
-				contributors = Set.of( "orm" );
+			if ( !contributors.isEmpty() ) {
+				return interpret( contributors, configuration );
 			}
-			return interpret( contributors, configuration );
+
+			final Action rootDatabaseAction =
+					determineJpaDbActionSetting( configuration, null, null );
+			final Action rootScriptAction =
+					determineJpaScriptActionSetting( configuration, null, null );
+			final Action rootAutoAction =
+					determineAutoSettingImpliedAction( configuration, null, null );
+
+			if ( rootDatabaseAction == null && rootScriptAction == null && rootAutoAction == null ) {
+				// no entities and no schema actions configured, skip DDL pipeline
+				return Set.of();
+			}
+
+			// even with no contributors (e.g. no entities), configured schema actions
+			// such as import.sql execution should still be processed
+			return interpret( Set.of( "orm" ), configuration );
 		}
 	}
 }

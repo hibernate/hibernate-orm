@@ -7,6 +7,9 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 import org.hibernate.TransientObjectException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -33,6 +36,33 @@ import static org.assertj.core.api.Assertions.fail;
 @BytecodeEnhanced( runNotEnhancedAsWell = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18212" )
 public class LazyOneToOneRemoveFlushAccessTest {
+
+	@Test
+	@SessionFactory
+	public void testSelfReferentialOneToOneRuntimeModel(SessionFactoryScope scope) {
+		final EntityPersister descriptor = scope.getSessionFactory()
+				.getMappingMetamodel()
+				.findEntityDescriptor( ContainingEntity.class );
+		final ToOneAttributeMapping parent = (ToOneAttributeMapping) descriptor.findSubPart( "parent" );
+		final ToOneAttributeMapping child = (ToOneAttributeMapping) descriptor.findSubPart( "child" );
+
+		assertThat( parent.getSideNature() ).isEqualTo( ForeignKeyDescriptor.Nature.KEY );
+		assertThat( child.getSideNature() ).isEqualTo( ForeignKeyDescriptor.Nature.TARGET );
+		assertThat( parent.getForeignKeyDescriptor() ).isSameAs( child.getForeignKeyDescriptor() );
+		parent.getForeignKeyDescriptor().visitKeySelectables(
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression() ).isEqualTo( "ContainingEntity" );
+					assertThat( selection.getSelectionExpression() ).isEqualTo( "parent_id" );
+				}
+		);
+		parent.getForeignKeyDescriptor().visitTargetSelectables(
+				(columnIndex, selection) -> {
+					assertThat( selection.getContainingTableExpression() ).isEqualTo( "ContainingEntity" );
+					assertThat( selection.getSelectionExpression() ).isEqualTo( "id" );
+				}
+		);
+	}
+
 	@Test
 	@SessionFactory
 	@ServiceRegistry( settings = @Setting( name = AvailableSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK, value = "true" ) )

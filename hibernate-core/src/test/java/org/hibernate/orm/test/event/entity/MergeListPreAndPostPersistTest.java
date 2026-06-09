@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import jakarta.persistence.Table;
 import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.event.service.spi.EventListenerRegistry;

@@ -4,14 +4,12 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
 
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.internal.MapMember;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -20,7 +18,7 @@ import org.hibernate.type.CollectionType;
 public abstract class BaseAttributeMetadata<X, Y> implements AttributeMetadata<X, Y> {
 	private final Property propertyMapping;
 	private final ManagedDomainType<X> ownerType;
-	private final Member member;
+	private final AttributeTypeCorrespondence typeCorrespondence;
 	private final Class<Y> javaType;
 	private final AttributeClassification attributeClassification;
 
@@ -28,32 +26,14 @@ public abstract class BaseAttributeMetadata<X, Y> implements AttributeMetadata<X
 			Property propertyMapping,
 			ManagedDomainType<X> ownerType,
 			Member member,
-			AttributeClassification attributeClassification) {
+			AttributeClassification attributeClassification,
+			AttributeTypeCorrespondence typeCorrespondence) {
 		this.propertyMapping = propertyMapping;
 		this.ownerType = ownerType;
-		this.member = member;
+		this.typeCorrespondence = typeCorrespondence;
 		this.attributeClassification = attributeClassification;
 		//noinspection unchecked
-		javaType = (Class<Y>) declaredType( propertyMapping, member );
-	}
-
-	private static Class<?> declaredType(Property propertyMapping, Member member) {
-		if ( member == null ) {
-			// assume we have a MAP entity-mode "class"
-			return propertyMapping.getType().getReturnedClass();
-		}
-		else if ( member instanceof Field field ) {
-			return field.getType();
-		}
-		else if ( member instanceof Method method ) {
-			return method.getReturnType();
-		}
-		else if ( member instanceof MapMember mapMember ) {
-			return mapMember.getType();
-		}
-		else {
-			throw new IllegalArgumentException( "Cannot determine java-type from given member [" + member + "]" );
-		}
+		javaType = (Class<Y>) typeCorrespondence.declaredJavaType();
 	}
 
 	public String getName() {
@@ -61,7 +41,17 @@ public abstract class BaseAttributeMetadata<X, Y> implements AttributeMetadata<X
 	}
 
 	public Member getMember() {
-		return member;
+		return typeCorrespondence.member();
+	}
+
+	@Override
+	public MemberDetails getMemberDetails() {
+		return typeCorrespondence.memberDetails();
+	}
+
+	@Override
+	public AttributeTypeCorrespondence getTypeCorrespondence() {
+		return typeCorrespondence;
 	}
 
 	public String getMemberDescription() {

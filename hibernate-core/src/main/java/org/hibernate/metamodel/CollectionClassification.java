@@ -40,8 +40,6 @@ public enum CollectionClassification {
 
 	/**
 	 * A non-unique, ordered collection following the requirements of {@link java.util.List}
-	 *
-	 * @see org.hibernate.annotations.DefaultListSemantics
 	 */
 	LIST,
 
@@ -140,12 +138,7 @@ public enum CollectionClassification {
 	 *     <li>{@link org.hibernate.metamodel.CollectionClassification} name (case insensitive)</li>
 	 *     <li>{@link Class} reference for either {@link java.util.List} or {@link java.util.Collection}</li>
 	 * </ul>
-	 *
-	 * @deprecated Used to interpret the deprecated default list semantics setting.
-	 * Use {@link org.hibernate.annotations.DefaultListSemantics} on a package or module.
-	 * Scheduled for removal in 9.0.
 	 */
-	@Deprecated(since = "8.0", forRemoval = true)
 	public static CollectionClassification interpretSetting(Object value) {
 		if ( value == null ) {
 			return null;

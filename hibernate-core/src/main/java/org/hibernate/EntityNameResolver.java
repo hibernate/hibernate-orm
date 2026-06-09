@@ -23,7 +23,6 @@ package org.hibernate;
  *     from the entity instance.
  * </ul>
  *
- * @see org.hibernate.boot.SessionFactoryBuilder#addEntityNameResolver(EntityNameResolver...)
  * @see org.hibernate.cfg.Configuration#addEntityNameResolver(EntityNameResolver)
  *
  * @author Steve Ebersole

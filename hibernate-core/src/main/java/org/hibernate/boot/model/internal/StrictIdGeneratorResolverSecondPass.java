@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
@@ -19,6 +20,8 @@ import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handle
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleSequenceGenerator;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleTableGenerator;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleUuidStrategy;
+import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.findLocalizedMatch;
+import static org.hibernate.boot.model.internal.GeneratorBinder.createGeneratorFrom;
 
 /**
  * SecondPass implementing delayed resolution of id-generators associated with an entity
@@ -161,6 +164,26 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 	}
 
 	private void handleAutoGenerator(String globalRegistrationName) {
+		final var localizedGenericMatch = findLocalizedMatch(
+				HibernateAnnotations.GENERIC_GENERATOR,
+				idMember,
+				buildingContext.getMetadataCollector()
+						.getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
+				null,
+				null,
+				buildingContext
+		);
+		if ( localizedGenericMatch != null ) {
+			handleGenericGenerator(
+					globalRegistrationName,
+					localizedGenericMatch,
+					entityMapping,
+					idValue,
+					buildingContext
+			);
+			return;
+		}
 
 		final var globalSequenceMatch =
 				getGlobalRegistrations().getSequenceGeneratorRegistrations()
@@ -201,6 +224,13 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 					idValue,
 					buildingContext
 			);
+			return;
+		}
+
+		final var identifierGenerator =
+				buildingContext.getMetadataCollector().getIdentifierGenerator( globalRegistrationName );
+		if ( identifierGenerator != null ) {
+			createGeneratorFrom( identifierGenerator, idValue, buildingContext );
 			return;
 		}
 

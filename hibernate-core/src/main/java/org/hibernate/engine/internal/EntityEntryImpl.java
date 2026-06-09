@@ -364,7 +364,10 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		if ( getStatus() != READ_ONLY ) {
 			assert propertyName != null;
 			assert loadedState != null;
-			loadedState[ propertyIndex( propertyName ) ] = collection;
+			final int propertyIndex = propertyIndex( propertyName );
+			if ( propertyIndex >= 0 ) {
+				loadedState[ propertyIndex ] = collection;
+			}
 		}
 	}
 

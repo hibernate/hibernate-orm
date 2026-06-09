@@ -28,18 +28,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -52,12 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				@Setting(name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true"),
 				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "true"),
 				@Setting(name = Environment.USE_QUERY_CACHE, value = "true")
-		},
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ImplicitListAsBagProvider.class
-		)
-)
+		})
 @DomainModel(
 		annotatedClasses = {
 				CacheLazyLoadNoTransTest.Application.class,

@@ -4,13 +4,15 @@
  */
 package org.hibernate.tool.reveng.internal.metadata;
 
-import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.boot.spi.ProviderChecker;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 
+import java.util.Collection;
 import java.util.Properties;
 
 public class JpaMetadataDescriptor implements MetadataDescriptor {
@@ -21,12 +23,11 @@ public class JpaMetadataDescriptor implements MetadataDescriptor {
 	public JpaMetadataDescriptor(
 			final String persistenceUnit,
 			final Properties properties) {
-		EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder =
-				createEntityManagerFactoryBuilder(persistenceUnit, properties);
-		EntityManagerFactory entityManagerFactory =
-				entityManagerFactoryBuilder.build();
-		metadata = entityManagerFactoryBuilder.getMetadata();
-		properties.putAll(entityManagerFactory.getProperties());
+		final var integrationSettings = properties == null ? new Properties() : properties;
+		final var persistenceUnitDescriptor = locatePersistenceUnit( persistenceUnit, integrationSettings );
+		final var metadataBootstrap = SessionFactoryBootstrap.resolveMetadata( persistenceUnitDescriptor, integrationSettings );
+		metadata = metadataBootstrap.metadata();
+		this.properties.putAll( metadataBootstrap.configurationValues() );
 	}
 
 	public Metadata createMetadata() {
@@ -38,25 +39,28 @@ public class JpaMetadataDescriptor implements MetadataDescriptor {
 	}
 
 	private static class PersistenceProvider extends HibernatePersistenceProvider {
-		public EntityManagerFactoryBuilderImpl getEntityManagerFactoryBuilder(
+		public PersistenceUnitDescriptor getPersistenceUnitDescriptor(
 				String persistenceUnit,
 				Properties properties) {
-			EntityManagerFactoryBuilderImpl result = (EntityManagerFactoryBuilderImpl)getEntityManagerFactoryBuilderOrNull(
-					persistenceUnit,
-					properties);
-			if (result == null) {
-				throw new HibernateException(
-						"Persistence unit not found: '" + persistenceUnit + "'."
-					);
+			final Collection<PersistenceUnitDescriptor> persistenceUnitDescriptors =
+					locatePersistenceUnits( properties, null, null );
+			if ( persistenceUnit == null && persistenceUnitDescriptors.size() > 1 ) {
+				throw new HibernateException( "No persistence unit name provided and multiple persistence units found." );
 			}
-			return result;
+			for ( var persistenceUnitDescriptor : persistenceUnitDescriptors ) {
+				if ( ( persistenceUnit == null || persistenceUnitDescriptor.getName().equals( persistenceUnit ) )
+						&& ProviderChecker.isProvider( persistenceUnitDescriptor, properties ) ) {
+					return persistenceUnitDescriptor;
+				}
+			}
+			throw new HibernateException( "Persistence unit not found: '" + persistenceUnit + "'." );
 		}
 	}
 
-	private static EntityManagerFactoryBuilderImpl createEntityManagerFactoryBuilder(
+	private static PersistenceUnitDescriptor locatePersistenceUnit(
 			final String persistenceUnit,
 			final Properties properties) {
-		return new PersistenceProvider().getEntityManagerFactoryBuilder(
+		return new PersistenceProvider().getPersistenceUnitDescriptor(
 				persistenceUnit,
 				properties);
 	}

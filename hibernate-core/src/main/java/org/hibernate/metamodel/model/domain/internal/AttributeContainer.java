@@ -59,6 +59,10 @@ public interface AttributeContainer<J> extends ManagedDomainType<J> {
 			);
 		}
 
+		default void applyInheritedVersionAttribute(SingularPersistentAttribute<J, ?> versionAttribute) {
+			applyVersionAttribute( versionAttribute );
+		}
+
 		default void applyNaturalIdAttribute(PersistentAttribute<J, ?> versionAttribute) {
 			throw new UnsupportedMappingException(
 					"AttributeContainer [" + getClass().getName() + "] does not support natural ids"

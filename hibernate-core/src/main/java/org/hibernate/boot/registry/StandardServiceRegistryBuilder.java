@@ -41,10 +41,9 @@ public class StandardServiceRegistryBuilder {
 	 * Creates a {@code StandardServiceRegistryBuilder} specific to the needs
 	 * of bootstrapping JPA.
 	 * <p>
-	 * Intended only for use from
-	 * {@link org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl}.
+	 * Intended only for use from Hibernate's JPA bootstrap pipeline.
 	 *
-	 * @see org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl
+	 * @see org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
 	 */
 	public static StandardServiceRegistryBuilder forJpa(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		return new StandardServiceRegistryBuilder(

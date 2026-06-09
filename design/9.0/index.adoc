@@ -1,0 +1,291 @@
+= ORM 9 Boot Model Design Notes
+:toc:
+
+This directory collects design notes for the ORM 9 boot-model work.
+The documents are intentionally not all the same kind of artifact: some describe
+the desired end state, some record the current implementation plan, and some
+track follow-up work discovered while integrating the prototype into ORM.
+
+Use this index as the starting point when deciding which document to read or
+update.
+
+link:current-work-handoff.adoc[`current-work-handoff.adoc`]
+
+This is the compact handoff note for continuing the current branch in a fresh
+context.  It records the branch theme, recently completed direction,
+transitional bridges, green-suite close-out state, and guardrails for reopening
+old failure buckets.
+
+Read this first when picking up an existing worktree or starting a new chat
+without the old conversation context.
+
+== Bootstrap Design and Plan
+
+link:flow-notation.adoc[`flow-notation.adoc`]
+
+This is the shared syntax reference for compact resolver and pipeline sketches
+used by the bootstrap design notes.
+
+link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`]
+
+This is the main end-state design note for building a `SessionFactory` /
+`EntityManagerFactory` through an explicit pipeline of named products.  Read this
+when you want the intended architecture: entry points, settings, source products,
+domain-model products, metadata production, and the eventual SessionFactory
+handoff.
+
+Update this document when the target design changes.  Avoid using it as a work
+log; current implementation notes belong in the status document.
+
+link:session-factory-bootstrap-status.adoc[`session-factory-bootstrap-status.adoc`]
+
+This is the compact current-status note for the SessionFactory bootstrap slice.
+It records the active entry points, removed surfaces, compatibility bridges,
+green-suite status, and longer-term follow-up slices.
+
+Update this document when a concrete slice is started, completed, or reshaped,
+but keep it short.  Detailed constructor and compatibility audits should be
+recreated only when a new migration slice needs them.
+
+link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`]
+
+This is the focused design note for the final factory-construction phase.  It
+describes the target split between public builder customization, a service-loaded
+custom factory producer, prepared runtime construction products, and a slimmer
+`SessionFactoryImpl` constructor.
+
+Use this document when reasoning about custom `SessionFactory` implementations,
+the replacement for builder-factory extension points, and which work should move
+out of the `SessionFactoryImpl` constructor.
+
+link:orm-bootstrap-direction.adoc[`orm-bootstrap-direction.adoc`]
+
+This is a historical direction note from the early PoC.  It explains why the
+work moved toward a normalized source model, explicit settings resolution,
+`AvailableResources`, categorization, and phased binding.
+
+Read it for background and rationale.  Prefer the design and plan documents
+above for the current target.
+
+== Model Binding and Integration
+
+link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
+
+This is the orientation guide for people changing the boot-model pipeline.  It
+explains the source-to-categorization-to-binding flow, package layout, binding
+phases, pending state, source descriptors, and common traps.
+
+Read this first when making binder, categorizer, XML preprocessing, or source
+collection changes.  Update it when package structure, phase ordering, or the
+mental model for new contributors changes.
+
+link:orm-integration-notes.adoc[`orm-integration-notes.adoc`]
+
+This tracks concrete `org.hibernate.mapping` and ORM-internal API changes
+suggested by the phased binder.  These are not merely missing annotation
+features; they are integration pressure points where the prototype exposed a
+better shape for ORM proper.
+
+Use this document when work crosses the boundary between the boot-model binder
+and existing ORM mapping structures.  Examples include custom SQL mutation
+storage, collection key / primary-key / foreign-key creation, table-key FK
+metadata, source-model facts on mapping values, property-ref target resolution,
+and derived identifier phase ordering.
+
+link:mapping-key-creation-design.adoc[`mapping-key-creation-design.adoc`]
+
+This is the focused design note for making primary-key, foreign-key, unique-key,
+and index creation explicit instead of hiding it behind `Value`, `Collection`,
+`Join`, or `Table` side effects.
+
+Use this document when changing `Collection#createPrimaryKeyIfNeeded()`,
+`Value#createUniqueKey()`, `Value#createForeignKey()`, table-key creation,
+correspondence-backed FK creation, or uniqueness/constraint materialization.
+
+link:mapping-finalization-design.adoc[`mapping-finalization-design.adoc`]
+
+This is the focused design note for replacing new-pipeline legacy `SecondPass`
+callbacks with named boot mapping finalization work.  Use it when moving
+discriminator, aggregate, constraint, or similar all-facts-known mapping side
+effects out of the legacy second-pass queue.
+
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
+
+This is the umbrella design note for the shared declaration/contribution/
+correspondence model behind identifiers, mapped superclasses, and embeddables.
+It records the common rule that binding preserves semantic contributions while
+flattened/sorted `org.hibernate.mapping` objects are compatibility views.
+
+Use this document when a change crosses more than one of the identifier,
+mapped-superclass, or embeddable designs, or when reasoning about delaying
+property/column sorting until a resolved compatibility-ordering phase.
+
+link:deterministic-attribute-ordering-design.adoc[`deterministic-attribute-ordering-design.adoc`]
+
+This is the focused design note for replacing early alphabetical member
+collection with explicit deterministic ordering products.  It records the
+preferred split where hibernate-models exposes stable source member order while
+ORM owns persistent-attribute selection, contribution order, compatibility
+property order, runtime fetchable/state-array order, and selectable/key order.
+
+Use this document when changing `PropertyContainer`, hibernate-models member
+ordering, attribute collection maps, root subclass property/fetchable ordering,
+or any code that sorts model members only to make traversal deterministic.
+
+link:applied-contribution-model-design.adoc[`applied-contribution-model-design.adoc`]
+
+This is the implementation-oriented integration design for applying the shared
+declaration/contribution/correspondence model across generic inheritance,
+mapped superclasses, embeddables, identifiers, aggregates, JPA-domain model
+creation, and runtime handoff.  It records both the target products and the
+phase triggers for moving from compatibility bridges to resolved views and
+eventual mapping-model reshaping.
+
+Use this document when a fix touches more than one of the focused model areas,
+or when deciding whether to add a bridge fact, sidecar metadata, a resolved
+view, a runtime handoff adapter, or a mapping-model API change.
+
+link:mapped-superclass-model-design.adoc[`mapped-superclass-model-design.adoc`]
+
+This is the design note for reshaping `@MappedSuperclass` in the Hibernate
+mapping model.  It separates mapped-superclass declarations from
+hierarchy-specific contributions, avoids copied inherited properties as the
+primary model, and makes table context explicit on the consuming hierarchy.
+
+Use this document when changing mapped-superclass binding, `PersistentClass`
+inheritance links, property closure behavior, or table/override handling for
+mapped-superclass attributes.
+
+link:generic-inheritance-model-design.adoc[`generic-inheritance-model-design.adoc`]
+
+This is the focused design note for generic persistent attributes inherited
+through entity, mapped-superclass, and embeddable hierarchies.  It audits the
+current bridge based on `Property#isGeneric()`,
+`Property#isGenericSpecialization()`, copied values, and
+`MetadataContext#addConcreteGenericAttribute(...)`, and records why the
+authoritative model should use declaration/usage/contribution facts instead.
+
+Use this document when changing generic type-variable handling, inherited
+generic basic attributes or ids, generic public JPA-domain path behavior,
+concrete generic SQM resolution, or the bridge between generic binding products
+and legacy `org.hibernate.mapping` values.
+
+link:embeddable-contribution-model-design.adoc[`embeddable-contribution-model-design.adoc`]
+
+This is the design note for reshaping embeddable inheritance and generic
+embeddable binding around declaration-versus-application products.  It extends
+the mapped-superclass contribution idea to `Component`/embeddable mappings,
+where source role, type-variable substitution, path overrides, table/storage
+context, and polymorphic discriminator state belong to the consuming path.
+
+Use this document when changing `ComponentSource`, `ComponentBinder`,
+polymorphic embeddable discriminator handling, generic embeddable type
+resolution, or mapped-superclass members inherited by embeddables.
+
+link:identifier-correspondence-model-design.adoc[`identifier-correspondence-model-design.adoc`]
+
+This is the follow-up design note for making non-aggregated identifier
+correspondence explicit across virtual id attributes, IdClass/embedded-id
+representations, target identifier parts, and selectable order.  It is motivated
+by derived identity cases where one association-valued id attribute corresponds
+to the whole target identifier shape.
+
+Use this document when changing `@IdClass`, association-valued id attributes,
+`@MapsId`, derived identity runtime conversion, or the boot/runtime handoff for
+non-aggregated identifiers.
+
+link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
+
+This is the design note for making aggregate-valued embeddables such as SQL
+`STRUCT` / UDT, JSON, XML, and aggregate arrays explicit in the mapping model,
+runtime model, binder, and extractor architecture.
+
+Use this document when aggregate support exposes pressure on `Component`,
+`AggregateColumn`, `AggregateComponentSecondPass`, runtime embeddable mappings,
+or dialect aggregate read/write/extraction handling.
+
+link:annotation-coverage.adoc[`annotation-coverage.adoc`]
+
+This is the annotation coverage audit for the boot-model pipeline.  It tracks
+runtime annotation descriptors, categorization and binding support, XML/source
+support, focused tests, and known gaps for `jakarta.persistence` and
+`org.hibernate.annotations`.
+
+Use this document when checking whether an annotation is visible to the new
+pipeline and whether binding support has been proven with mapping-state tests.
+
+link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
+
+This is the design note for replacing the current mapping-object-mutating
+`AttributeBinder` and `TypeBinder` extension contracts with a supported,
+capability/facet-based binding SPI.
+
+Use this document when reasoning about public extension points for custom
+annotation binding, the boundary between supported SPI and internal binding
+model products, or how built-in annotation proofs such as `@TenantId`,
+`@NaturalId`, and `@Collate` inform the eventual public contract.
+
+link:jpa-metamodel-view-materialization-design.adoc[`jpa-metamodel-view-materialization-design.adoc`]
+
+This is the design note for deriving JPA static metamodel injection work while
+the boot/mapping model is materialized from finalized binding views.  It records
+the target of a boot-time injection plan that is later consumed when runtime
+`ManagedDomainType` / `Attribute` values exist.
+
+Use this document when changing `JpaMetamodelImpl`, `MetadataContext`, static
+metamodel injection, or when deciding how the binding view layer should serve
+runtime-domain consumers in addition to `org.hibernate.mapping` materializers.
+
+link:boot-model-snapshot-design.adoc[`boot-model-snapshot-design.adoc`]
+
+This is the design note for storing and restoring boot-time model state.  It
+compares source/categorization snapshots, finalized binding snapshots, resolved
+`org.hibernate.mapping` snapshots, and side products such as static metamodel
+injection plans.
+
+Use this document when deciding whether a new binding or mapping product should
+be durable, how it should be keyed, or which bootstrap phases a future restored
+snapshot might skip.
+
+== How To Choose
+
+If the question is "what should the final bootstrap architecture look like?",
+start with `session-factory-bootstrap-design.adoc`.
+
+If the question is "what are we doing next in this branch?", start with
+`session-factory-bootstrap-status.adoc`.
+
+If the question is "why did the PoC take this shape?", read
+`orm-bootstrap-direction.adoc`.
+
+If the question is "how does the model-binding pipeline work?", read
+`new-contributor-model-binding-guide.adoc`.
+
+If the question is "what ORM mapping API change would make this cleaner?", use
+`orm-integration-notes.adoc`.
+
+If the question is "how do identifier correspondence, mapped-superclass
+contributions, and embeddable contributions fit together?", use
+`resolved-contribution-model-design.adoc`.
+
+If the question is "how should mapped superclasses be represented in the mapping
+model?", use `mapped-superclass-model-design.adoc`.
+
+If the question is "how should derived identity and IdClass representations
+correspond?", use `identifier-correspondence-model-design.adoc`.
+
+If the question is "how should aggregate embeddables be modeled long-term?", use
+`aggregate-mapping-design.adoc`.
+
+If the question is "is this annotation covered by the new pipeline?", use
+`annotation-coverage.adoc`.
+
+If the question is "what should replace AttributeBinder or TypeBinder?", use
+`binding-extension-spi-design.adoc`.
+
+If the question is "can static metamodel field selection be captured while
+building the boot/mapping model?", use
+`jpa-metamodel-view-materialization-design.adoc`.
+
+If the question is "can boot-time model state be stored and restored?", use
+`boot-model-snapshot-design.adoc`.

@@ -1,0 +1,41 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="3.2">
+    <conversion converter="org.hibernate.type.YesNoConverter" class="boolean" auto-apply="true"/>
+    <converter class="org.hibernate.type.NumericBooleanConverter" auto-apply="false"/>
+
+    <fetch-profile name="customer-with-orders">
+        <fetch entity="Customer" association="orders" style="join"/>
+    </fetch-profile>
+
+    <named-query name="rootHqlQuery">
+        <query>from Customer</query>
+        <hint name="root.hint" value="root-value"/>
+    </named-query>
+
+    <named-native-query name="rootNativeQuery">
+        <query>select id, name from customers</query>
+        <column-result name="id" class="java.lang.Long"/>
+    </named-native-query>
+
+    <named-stored-procedure-query name="rootStoredProcedure" procedure-name="sp_customers">
+        <parameter name="name" class="java.lang.String" mode="IN"/>
+    </named-stored-procedure-query>
+
+    <sql-result-set-mapping name="rootResultSetMapping">
+        <column-result name="name" class="java.lang.String"/>
+    </sql-result-set-mapping>
+
+    <import class="org.hibernate.orm.test.boot.models.xml.SimpleEntity" rename="XmlSimpleEntity"/>
+
+    <database-object>
+        <create>create sequence xml_global_sequence</create>
+        <drop>drop sequence xml_global_sequence</drop>
+        <dialect-scope name="org.hibernate.dialect.H2Dialect"/>
+    </database-object>
+</entity-mappings>

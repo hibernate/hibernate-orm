@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
@@ -37,7 +38,10 @@ public abstract class CollectionSecondPass implements SecondPass {
 		}
 
 		secondPass( persistentClasses );
-		collection.createAllKeys();
+		final var collectionKeyMappingMaterializer = new CollectionKeyMappingMaterializer( persistentClasses::get );
+		collectionKeyMappingMaterializer.materializeAllKeys(
+				collectionKeyMappingMaterializer.resolveTableKey( collection )
+		);
 
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
 			String msg = "Mapped collection key: " + columns( collection.getKey() );

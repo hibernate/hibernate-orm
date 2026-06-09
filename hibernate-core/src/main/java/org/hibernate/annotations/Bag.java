@@ -16,11 +16,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// [bag][org.hibernate.metamodel.CollectionClassification#BAG] - that the order of
 /// the list elements is not significant, and should not be persistent.
 ///
-/// This annotation is not necessary unless the default list semantics are
-/// [LIST][DefaultListSemantics.Classification#LIST], for example via
-/// [DefaultListSemantics] on the declaring package or module.
-/// However, its use is still encouraged, since the explicit annotation serves
-/// as useful documentation.
+/// Use this annotation when a Java [java.util.List] should be mapped as a bag
+/// instead of the default list semantics.
 ///
 /// @apiNote This annotation causes an exception if the attribute is also annotated
 /// [jakarta.persistence.OrderColumn] or [ListIndexBase].

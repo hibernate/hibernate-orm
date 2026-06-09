@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import jakarta.persistence.Table;
 import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;

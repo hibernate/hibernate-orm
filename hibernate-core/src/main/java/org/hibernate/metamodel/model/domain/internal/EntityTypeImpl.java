@@ -179,7 +179,13 @@ public class EntityTypeImpl<J>
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}
-		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+		else {
+			final var concreteGeneric = findConcreteGenericAttribute( name );
+			if ( concreteGeneric != null ) {
+				return (SqmPathSource<?>) concreteGeneric;
+			}
+		}
+		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 			return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
 		}
 		else if ( EntityVersionMapping.matchesRoleName( name ) ) {
@@ -211,6 +217,10 @@ public class EntityTypeImpl<J>
 			return (SqmPathSource<?>) attribute;
 		}
 		else {
+			final var concreteGeneric = findConcreteGenericAttribute( name );
+			if ( concreteGeneric != null ) {
+				return (SqmPathSource<?>) concreteGeneric;
+			}
 			if ( includeSubtypes ) {
 				final var subtypeAttribute = findSubtypeAttribute( name );
 				if ( subtypeAttribute != null ) {
@@ -259,7 +269,13 @@ public class EntityTypeImpl<J>
 		if ( attribute != null ) {
 			return attribute;
 		}
-		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+		else {
+			final var concreteGeneric = findConcreteGenericAttribute( name );
+			if ( concreteGeneric != null ) {
+				return concreteGeneric;
+			}
+		}
+		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 			return findIdAttribute();
 		}
 		else {

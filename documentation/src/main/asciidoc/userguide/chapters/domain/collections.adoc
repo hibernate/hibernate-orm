@@ -80,50 +80,18 @@ include::{example-dir-collection}/classification/list/EntityWithList.java[tags=c
 ----
 ====
 
-By default, the ordering of a list is not maintained.
-Use `@OrderColumn` to explicitly persist element positions, or declare `@DefaultListSemantics(LIST)`
-on a package or module to use an implicit order column for eligible list attributes.
+Hibernate maps a `List` as a persistent list by default.
+When no explicit `jakarta.persistence.OrderColumn` is specified, Hibernate uses an implicit order column.
 
-[source,java]
-----
-@DefaultListSemantics(LIST)
-package org.example.domain;
-
-import org.hibernate.annotations.DefaultListSemantics;
-import static org.hibernate.annotations.DefaultListSemantics.Classification.LIST;
-----
-
-For ordinary `List` mappings, Hibernate determines the classification in this order:
-
-. `@Bag` means `BAG`.
-. Collection-identifier metadata such as `@CollectionId` means `ID_BAG`.
-. Explicit list-index metadata such as `@OrderColumn` or `@ListIndexBase` means `LIST`.
-. `@OrderBy` or `@SQLOrder` means `BAG`.
-. Unowned to-many associations without explicit list-index metadata mean `BAG`.
-. Otherwise, consult `@DefaultListSemantics`, falling back to the existing configured default, or `BAG`.
-
-Existing validation of incompatible annotations still applies. For example, `@Bag` cannot be combined
-with `@OrderColumn` or `@ListIndexBase`. Custom collection types retain their own classification.
-
-The package annotation takes precedence over the module annotation, and both override the configured default.
-A package annotation applies only to that exact package, not to subpackages.
-Inherited attributes use their declaring type's package and module; attributes of embeddables use the
-embeddable's package and module, even when embedded in an entity in another package.
-Use `@DefaultListSemantics(BAG)` to select bag semantics in a scope whose surrounding default is `LIST`.
-
-The `hibernate.mapping.default_list_semantics` setting is deprecated in favor of this annotation and is
-scheduled for removal in ORM 9.0. Explicit use of the setting logs a deprecation warning, even when an
-annotation overrides it. Until removal, the setting remains a fallback for scopes without the annotation.
-The programmatic `MetadataBuilder.applyImplicitListSemantics()` default also remains supported.
-
-[NOTE]
+[[NOTE]]
 ====
-Default `LIST` semantics only affect owned collection mappings.
+Implicit list semantics only affect owned collection mappings.
 Unowned mappings like `@ManyToMany(mappedBy = "...")` and `@OneToMany(mappedBy = "...")` do not retain the element
 order by default, and explicitly annotating `@OrderColumn` for `@ManyToMany(mappedBy = "...")` mappings is illegal.
 
 To retain the order of elements of a `@OneToMany(mappedBy = "...")` the `@OrderColumn` annotation must be applied
-explicitly. Both sides of the relationship must be kept in sync for element positions to be updated correctly.
+explicitly. In addition to that, it is important that both sides of the relationship, the `@OneToMany(mappedBy = "...")`
+and the `@ManyToOne`, must be kept in sync. Otherwise, the element position will not be updated accordingly.
 
 The default column name that stores the index is derived from the attribute name, by suffixing `_ORDER`.
 ====
@@ -306,9 +274,6 @@ include::{example-dir-collection}/classification/bag/EntityWithBagAsList.java[ta
 
 Specifically, the usage of `@Bag` forces the classification as BAG.  Even though the `names` attribute is defined
 as `List`, Hibernate will treat it using the BAG semantics.
-
-As discussed in <<collection-list>>, `@DefaultListSemantics(BAG)` on a package or module selects
-bag semantics for eligible lists. An attribute-level `@Bag` overrides a scoped `LIST` default.
 
 
 An ID_BAG is similar to a BAG, except that it maps a generated, per-row identifier into the collection
@@ -645,15 +610,10 @@ When rerunning the previous example, the child will get removed because the pare
 ==== Ordered Lists
 
 Although they use the `List` interface on the Java side, bags don't retain element order.
-Ordering may be defined in the following ways:
+To preserve the collection element order, there are two possibilities:
 
-`@OrderBy`:: the collection is ordered upon retrieval using element state
-`@SQLOrder`:: the collection is ordered upon retrieval using a SQL expression
-`@OrderColumn`:: the collection uses a dedicated column to persist element positions
-
-Without explicit list-index metadata, `@OrderBy` and `@SQLOrder` retain bag classification
-and do not consult `@DefaultListSemantics`.
-For eligible lists without explicit ordering metadata, `@DefaultListSemantics(LIST)` supplies an implicit order column.
+`@OrderBy`:: the collection is ordered upon retrieval using a child entity property
+`@OrderColumn`:: the collection uses a dedicated order column in the collection link table
 
 [[collections-unidirectional-ordered-list]]
 ===== Unidirectional ordered lists
@@ -1138,5 +1098,4 @@ include::{example-dir-collection}/asbasic/CommaDelimitedStringsConverter.java[ta
 include::{example-dir-collection}/asbasic/CommaDelimitedStringsConverterTests.java[tags=ex-csv-converter-model,indent=0]
 ----
 ====
-
 

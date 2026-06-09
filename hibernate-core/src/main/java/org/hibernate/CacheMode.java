@@ -79,8 +79,6 @@ public enum CacheMode
 	 * It's not usually necessary to specify this setting explicitly because,
 	 * by default, it's set to a sensible value by the second-level cache
 	 * implementation.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 */
 	PUT( CacheStoreMode.USE, CacheRetrieveMode.BYPASS ),
 
@@ -91,8 +89,6 @@ public enum CacheMode
 	 * {@value org.hibernate.cfg.AvailableSettings#USE_MINIMAL_PUTS} is
 	 * bypassed, in order to <em>force</em> a refresh of a cached item,
 	 * even when an entry with the same key already exists in the cache.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 */
 	REFRESH( CacheStoreMode.REFRESH, CacheRetrieveMode.BYPASS ),
 

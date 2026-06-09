@@ -15,7 +15,6 @@ import jakarta.annotation.Nullable;
  * {@value org.hibernate.cfg.AvailableSettings#MULTI_TENANT_IDENTIFIER_RESOLVER}.
  *
  * @see org.hibernate.cfg.Configuration#setCurrentTenantIdentifierResolver
- * @see org.hibernate.boot.SessionFactoryBuilder#applyCurrentTenantIdentifierResolver
  * @see org.hibernate.annotations.TenantId
  * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_IDENTIFIER_RESOLVER
  *

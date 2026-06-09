@@ -26,10 +26,8 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.internal.MetadataImpl;
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -293,28 +291,19 @@ public class DefaultCatalogAndSchemaTest
 
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		SessionFactoryBuilder sfb;
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
 		switch ( options.settingsMode ) {
 			case METADATA_SERVICE_REGISTRY:
-				sfb = model.getSessionFactoryBuilder();
-				break;
+				return SessionFactoryPipeline.build( model, optionsCollector );
 			case SESSION_FACTORY_SERVICE_REGISTRY:
 				var srb = ServiceRegistryUtil.serviceRegistryBuilder();
 				configureServiceRegistry( options.defaultCatalog, options.defaultSchema, srb );
 				final StandardServiceRegistry sr = srb.build();
 				autoCloseables.add( sr );
-				var bootstrapContext = ((MetadataImpl) model).getBootstrapContext();
-				sfb = new SessionFactoryBuilderImpl(
-						model,
-						new SessionFactoryOptionsBuilder( sr, bootstrapContext ),
-						bootstrapContext
-				);
-				break;
+				return SessionFactoryPipeline.build( model, sr, optionsCollector );
 			default:
 				throw new IllegalStateException( "Unknown settings mode: " + options.settingsMode );
 		}
-
-		return (SessionFactoryImplementor) sfb.build();
 	}
 
 	@Override

@@ -39,17 +39,9 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 	private boolean optional;
 	private boolean disableForeignKeyCreation;
 
-	// Custom SQL
-	private String customSQLInsert;
-	private boolean customInsertCallable;
-	private String customSQLUpdate;
-	private boolean customUpdateCallable;
-	private String customSQLDelete;
-	private boolean customDeleteCallable;
-
-	private Supplier<? extends Expectation> insertExpectation;
-	private Supplier<? extends Expectation> updateExpectation;
-	private Supplier<? extends Expectation> deleteExpectation;
+	private CustomSqlMapping customSqlInsert;
+	private CustomSqlMapping customSqlUpdate;
+	private CustomSqlMapping customSqlDelete;
 
 	@Override
 	public void addProperty(Property property) {
@@ -137,6 +129,18 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 		disableForeignKeyCreation = true;
 	}
 
+	public boolean isForeignKeyCreationDisabled() {
+		return disableForeignKeyCreation;
+	}
+
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createForeignKey() {
 		final var foreignKey = getKey().createForeignKeyOfEntity( persistentClass.getEntityName() );
 		if ( foreignKey != null && disableForeignKeyCreation ) {
@@ -144,6 +148,14 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 		}
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.DependentTableKeyMappingMaterializer}
+	 * with an explicit resolved dependent-table key product instead.
+	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPrimaryKey() {
 		//Primary key constraint
 		final var primaryKey = new PrimaryKey( table );
@@ -157,42 +169,63 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 	}
 
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
-		this.customSQLInsert = customSQLInsert;
-		this.customInsertCallable = callable;
+		setCustomSqlInsert( new CustomSqlMapping( customSQLInsert, callable, null ) );
+	}
+
+	public void setCustomSqlInsert(CustomSqlMapping customSqlInsert) {
+		this.customSqlInsert = customSqlInsert;
+	}
+
+	public CustomSqlMapping getCustomSqlInsert() {
+		return customSqlInsert;
 	}
 
 	public String getCustomSQLInsert() {
-		return customSQLInsert;
+		return customSqlInsert == null ? null : customSqlInsert.sql();
 	}
 
 	public boolean isCustomInsertCallable() {
-		return customInsertCallable;
+		return customSqlInsert != null && customSqlInsert.callable();
 	}
 
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
-		this.customSQLUpdate = customSQLUpdate;
-		this.customUpdateCallable = callable;
+		setCustomSqlUpdate( new CustomSqlMapping( customSQLUpdate, callable, null ) );
+	}
+
+	public void setCustomSqlUpdate(CustomSqlMapping customSqlUpdate) {
+		this.customSqlUpdate = customSqlUpdate;
+	}
+
+	public CustomSqlMapping getCustomSqlUpdate() {
+		return customSqlUpdate;
 	}
 
 	public String getCustomSQLUpdate() {
-		return customSQLUpdate;
+		return customSqlUpdate == null ? null : customSqlUpdate.sql();
 	}
 
 	public boolean isCustomUpdateCallable() {
-		return customUpdateCallable;
+		return customSqlUpdate != null && customSqlUpdate.callable();
 	}
 
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
-		this.customSQLDelete = customSQLDelete;
-		this.customDeleteCallable = callable;
+		setCustomSqlDelete( new CustomSqlMapping( customSQLDelete, callable, null ) );
+	}
+
+	public void setCustomSqlDelete(CustomSqlMapping customSqlDelete) {
+		this.customSqlDelete = customSqlDelete;
+	}
+
+	public CustomSqlMapping getCustomSqlDelete() {
+		return customSqlDelete;
 	}
 
 	public String getCustomSQLDelete() {
-		return customSQLDelete;
+		return customSqlDelete == null ? null : customSqlDelete.sql();
 	}
 
 	public boolean isCustomDeleteCallable() {
-		return customDeleteCallable;
+		return customSqlDelete != null && customSqlDelete.callable();
 	}
 
 	public boolean isInverse() {
@@ -225,26 +258,38 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 	}
 
 	public Supplier<? extends Expectation> getInsertExpectation() {
-		return insertExpectation;
+		return customSqlInsert == null ? null : customSqlInsert.expectation();
 	}
 
 	public void setInsertExpectation(Supplier<? extends Expectation> insertExpectation) {
-		this.insertExpectation = insertExpectation;
+		this.customSqlInsert = new CustomSqlMapping(
+				getCustomSQLInsert(),
+				isCustomInsertCallable(),
+				insertExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getUpdateExpectation() {
-		return updateExpectation;
+		return customSqlUpdate == null ? null : customSqlUpdate.expectation();
 	}
 
 	public void setUpdateExpectation(Supplier<? extends Expectation> updateExpectation) {
-		this.updateExpectation = updateExpectation;
+		this.customSqlUpdate = new CustomSqlMapping(
+				getCustomSQLUpdate(),
+				isCustomUpdateCallable(),
+				updateExpectation
+		);
 	}
 
 	public Supplier<? extends Expectation> getDeleteExpectation() {
-		return deleteExpectation;
+		return customSqlDelete == null ? null : customSqlDelete.expectation();
 	}
 
 	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
-		this.deleteExpectation = deleteExpectation;
+		this.customSqlDelete = new CustomSqlMapping(
+				getCustomSQLDelete(),
+				isCustomDeleteCallable(),
+				deleteExpectation
+		);
 	}
 }

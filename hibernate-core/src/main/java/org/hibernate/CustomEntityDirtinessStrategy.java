@@ -52,8 +52,6 @@ import org.hibernate.type.Type;
  *
  * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
  * @see org.hibernate.cfg.Configuration#setCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)
- * @see org.hibernate.boot.SessionFactoryBuilder#applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy)
- *
  * @author Steve Ebersole
  */
 public interface CustomEntityDirtinessStrategy {

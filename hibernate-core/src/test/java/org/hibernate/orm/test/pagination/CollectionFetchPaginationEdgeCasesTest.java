@@ -18,6 +18,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.QuerySettings;
 
@@ -426,6 +427,7 @@ public class CollectionFetchPaginationEdgeCasesTest {
 		private Long id;
 		private String title;
 		@OneToMany(mappedBy = "article", cascade = CascadeType.ALL)
+		@Bag
 		@SQLRestriction("approved = true")
 		private List<ArticleComment> comments = new ArrayList<>();
 

@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
@@ -36,7 +37,6 @@ import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.jpa.boot.spi.Bootstrap.getEntityManagerFactoryBuilder;
 import static org.junit.platform.commons.support.AnnotationSupport.findAnnotation;
 
 /**
@@ -289,7 +289,7 @@ public class EntityManagerFactoryExtension
 
 		protected jakarta.persistence.EntityManagerFactory createEntityManagerFactory() {
 			final PersistenceUnitInfoDescriptor descriptor = new PersistenceUnitInfoDescriptor( persistenceUnitInfo );
-			return getEntityManagerFactoryBuilder( descriptor, integrationSettings ).build();
+			return SessionFactoryBootstrap.build( descriptor, integrationSettings );
 		}
 	}
 }

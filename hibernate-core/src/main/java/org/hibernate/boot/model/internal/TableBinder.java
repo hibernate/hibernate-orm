@@ -4,11 +4,18 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.binders.SelectableCorrespondence;
+import org.hibernate.boot.mapping.internal.binders.SelectableOrderResolution;
+import org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedForeignKey;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
@@ -24,8 +31,10 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -39,6 +48,7 @@ import org.hibernate.mapping.Value;
 import jakarta.persistence.Index;
 import jakarta.persistence.UniqueConstraint;
 
+import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
@@ -53,6 +63,10 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Emmanuel Bernard
  */
 public class TableBinder {
+	private static final ForeignKeyMappingMaterializer FOREIGN_KEY_MAPPING_MATERIALIZER =
+			new ForeignKeyMappingMaterializer();
+	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
+			new UniqueKeyMappingMaterializer();
 
 	private MetadataBuildingContext buildingContext;
 
@@ -598,10 +612,79 @@ public class TableBinder {
 		else {
 			bindExplicitColumns( referencedEntity, joinColumns, value, buildingContext, associatedClass );
 		}
-		value.createForeignKey( referencedEntity, joinColumns );
+		materializeForeignKey( referencedEntity, joinColumns, value );
 		if ( unique ) {
-			value.createUniqueKey( buildingContext );
+			UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
+					ResolvedUniqueKey.from( value, buildingContext, joinColumns.getPropertyName() )
+			);
 		}
+	}
+
+	private static void materializeForeignKey(
+			PersistentClass referencedEntity,
+			AnnotatedJoinColumns joinColumns,
+			SimpleValue value) {
+		if ( !(value instanceof ToOne toOne)
+				|| toOne.getReferencedPropertyName() != null
+				|| !isConstrainedForeignKey( toOne ) ) {
+			return;
+		}
+
+		final Object referencedColumnOwner = findReferencedColumnOwner(
+				referencedEntity,
+				joinColumns.getJoinColumns().get( 0 ),
+				value.getBuildingContext()
+		);
+		final List<Column> referencedColumns;
+		final Table referencedTable;
+		if ( referencedColumnOwner instanceof Join join ) {
+			referencedColumns = join.getKey().getColumns();
+			referencedTable = join.getTable();
+		}
+		else {
+			referencedColumns = referencedEntity.getKey().getColumns();
+			referencedTable = null;
+		}
+
+		FOREIGN_KEY_MAPPING_MATERIALIZER.materializeForeignKey(
+				ResolvedForeignKey.from(
+						value,
+						referencedEntity.getEntityName(),
+						resolveForeignKeyColumnOrder( value, referencedColumns, joinColumns.getPropertyName() ),
+						referencedTable
+				),
+				referencedEntity
+		);
+	}
+
+	private static boolean isConstrainedForeignKey(ToOne value) {
+		return value instanceof OneToOne oneToOne
+				? oneToOne.isConstrained() && oneToOne.isForeignKeyEnabled() && !oneToOne.hasFormula()
+				: value.isConstrained();
+	}
+
+	private static SelectableOrderResolution resolveForeignKeyColumnOrder(
+			SimpleValue value,
+			List<Column> referencedColumns,
+			String sourceRole) {
+		final List<Column> localColumns = value.getConstraintColumns();
+		if ( localColumns.size() != referencedColumns.size() ) {
+			throw new MappingException(
+					"Foreign key column count did not match referenced column count for " + sourceRole
+			);
+		}
+
+		final ArrayList<SelectableCorrespondence> correspondences = new ArrayList<>( localColumns.size() );
+		for ( int i = 0; i < localColumns.size(); i++ ) {
+			correspondences.add( new SelectableCorrespondence(
+					localColumns.get( i ),
+					referencedColumns.get( i ),
+					i,
+					i,
+					sourceRole == null ? value.getTable().getName() : sourceRole
+			) );
+		}
+		return new SelectableOrderResolution( correspondences );
 	}
 
 	private static void bindExplicitColumns(

@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +33,8 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.sqm.tree.spi.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
@@ -125,6 +128,26 @@ public class ComponentType extends AbstractType
 		return isAggregate;
 	}
 
+	private boolean isAggregateArrayValue(Object value) {
+		if ( value == null || !value.getClass().isArray() && !( value instanceof Collection<?> ) ) {
+			return false;
+		}
+		if ( !isAggregate() && mappingModelPart == null ) {
+			return false;
+		}
+		final var aggregateMapping = embeddableTypeDescriptor().getAggregateMapping();
+		return aggregateMapping != null
+				&& aggregateMapping.getJdbcMapping().getMappedJavaType() instanceof BasicPluralJavaType<?>;
+	}
+
+	@SuppressWarnings("unchecked")
+	private JavaType<Object> aggregateJavaType() {
+		return (JavaType<Object>) embeddableTypeDescriptor()
+				.getAggregateMapping()
+				.getJdbcMapping()
+				.getMappedJavaType();
+	}
+
 	public boolean isKey() {
 		return isKey;
 	}
@@ -173,6 +196,9 @@ public class ComponentType extends AbstractType
 		if ( x == y ) {
 			return true;
 		}
+		if ( isAggregateArrayValue( x ) || isAggregateArrayValue( y ) ) {
+			return aggregateJavaType().areEqual( x, y );
+		}
 		// null value and empty component are considered equivalent
 		final var xvalues = getPropertyValues( x );
 		final var yvalues = getPropertyValues( y );
@@ -189,6 +215,9 @@ public class ComponentType extends AbstractType
 		if ( x == y ) {
 			return true;
 		}
+		if ( isAggregateArrayValue( x ) || isAggregateArrayValue( y ) ) {
+			return aggregateJavaType().areEqual( x, y );
+		}
 		// null value and empty component are considered equivalent
 		for ( int i = 0; i < propertySpan; i++ ) {
 			if ( !propertyTypes[i].isEqual( getPropertyValue( x, i ), getPropertyValue( y, i ) ) ) {
@@ -204,6 +233,9 @@ public class ComponentType extends AbstractType
 		if ( x == y ) {
 			return true;
 		}
+		if ( isAggregateArrayValue( x ) || isAggregateArrayValue( y ) ) {
+			return aggregateJavaType().areEqual( x, y );
+		}
 		// null value and empty component are considered equivalent
 		for ( int i = 0; i < propertySpan; i++ ) {
 			if ( !propertyTypes[i].isEqual( getPropertyValue( x, i ), getPropertyValue( y, i ), factory ) ) {
@@ -217,6 +249,9 @@ public class ComponentType extends AbstractType
 	public int compare(final Object x, final Object y) {
 		if ( x == y ) {
 			return 0;
+		}
+		if ( isAggregateArrayValue( x ) || isAggregateArrayValue( y ) ) {
+			return aggregateJavaType().getComparator().compare( x, y );
 		}
 		for ( int i = 0; i < propertySpan; i++ ) {
 			final int propertyCompare =
@@ -232,6 +267,9 @@ public class ComponentType extends AbstractType
 	public int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
 		if ( x == y ) {
 			return 0;
+		}
+		if ( isAggregateArrayValue( x ) || isAggregateArrayValue( y ) ) {
+			return aggregateJavaType().getComparator().compare( x, y );
 		}
 		for ( int i = 0; i < propertySpan; i++ ) {
 			final int propertyCompare =
@@ -249,6 +287,9 @@ public class ComponentType extends AbstractType
 
 	@Override
 	public int getHashCode(final Object x) {
+		if ( isAggregateArrayValue( x ) ) {
+			return aggregateJavaType().extractHashCode( x );
+		}
 		int result = 17;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			final Object y = getPropertyValue( x, i );
@@ -262,6 +303,9 @@ public class ComponentType extends AbstractType
 
 	@Override
 	public int getHashCode(final Object x, final SessionFactoryImplementor factory) {
+		if ( isAggregateArrayValue( x ) ) {
+			return aggregateJavaType().extractHashCode( x );
+		}
 		int result = 17;
 		for ( int i = 0; i < propertySpan; i++ ) {
 			final Object y = getPropertyValue( x, i );
@@ -279,6 +323,9 @@ public class ComponentType extends AbstractType
 		if ( x == y ) {
 			return false;
 		}
+		if ( isAggregateArrayValue( x ) || isAggregateArrayValue( y ) ) {
+			return !aggregateJavaType().areEqual( x, y );
+		}
 		// null value and empty component are considered equivalent
 		for ( int i = 0; i < propertySpan; i++ ) {
 			if ( propertyTypes[i].isDirty( getPropertyValue( x, i ), getPropertyValue( y, i ), session ) ) {
@@ -292,6 +339,9 @@ public class ComponentType extends AbstractType
 			throws HibernateException {
 		if ( x == y ) {
 			return false;
+		}
+		if ( isAggregateArrayValue( x ) || isAggregateArrayValue( y ) ) {
+			return !aggregateJavaType().areEqual( x, y );
 		}
 		// null value and empty component are considered equivalent
 		final var context = session.getFactory().getRuntimeMetamodels();
@@ -331,6 +381,9 @@ public class ComponentType extends AbstractType
 			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( old == current ) {
 			return false;
+		}
+		if ( isAggregateArrayValue( old ) || isAggregateArrayValue( current ) ) {
+			return !aggregateJavaType().areEqual( old, current );
 		}
 		// null value and empty components are considered equivalent
 		final var context = session.getFactory().getRuntimeMetamodels();
@@ -420,7 +473,7 @@ public class ComponentType extends AbstractType
 			final var embeddableMappingType = embeddableTypeDescriptor();
 			if ( embeddableMappingType.isPolymorphic() ) {
 				final var concreteEmbeddableType =
-						embeddableMappingType.findSubtypeBySubclass( component.getClass().getName() );
+						findSubtypeByClass( embeddableMappingType, component.getClass() );
 				return concreteEmbeddableType.declaresAttribute( i )
 						? embeddableMappingType.getValue( component, i )
 						: null;
@@ -440,6 +493,9 @@ public class ComponentType extends AbstractType
 	public Object[] getPropertyValues(Object component) {
 		if (component == null) {
 			return new Object[propertySpan + discriminatorColumnSpan];
+		}
+		else if ( isAggregateArrayValue( component ) ) {
+			return ArrayHelper.EMPTY_OBJECT_ARRAY;
 		}
 		else if ( component instanceof Object[] array ) {
 			// A few calls to hashCode pass the property values already in an
@@ -499,6 +555,9 @@ public class ComponentType extends AbstractType
 		if ( component == null ) {
 			return null;
 		}
+		else if ( isAggregateArrayValue( component ) ) {
+			return aggregateJavaType().getMutabilityPlan().deepCopy( component );
+		}
 		else {
 			final var values = getPropertyValues( component );
 			for ( int i = 0; i < propertySpan; i++ ) {
@@ -527,6 +586,9 @@ public class ComponentType extends AbstractType
 			Map<Object, Object> copyCache) {
 		if ( original == null ) {
 			return null;
+		}
+		else if ( isAggregateArrayValue( original ) ) {
+			return deepCopy( original, session.getFactory() );
 		}
 		else {
 			final Object[] originalValues = getPropertyValues( original );
@@ -560,6 +622,9 @@ public class ComponentType extends AbstractType
 			ForeignKeyDirection foreignKeyDirection) {
 		if ( original == null ) {
 			return null;
+		}
+		else if ( isAggregateArrayValue( original ) ) {
+			return deepCopy( original, session.getFactory() );
 		}
 		else {
 			final Object[] originalValues = getPropertyValues( original );
@@ -830,15 +895,37 @@ public class ComponentType extends AbstractType
 		final var mappingType = embeddableTypeDescriptor();
 		final var representationStrategy = mappingType.getRepresentationStrategy();
 		if ( mappingType.isPolymorphic() ) {
-			final String compositeClassName =
-					compositeInstance != null
-							? compositeInstance.getClass().getName()
-							: componentClass.getName();
-			return representationStrategy.getInstantiatorForClass( compositeClassName );
+			return compositeInstance == null
+					? representationStrategy.getInstantiatorForClass( componentClass.getName() )
+					: instantiatorForClass( representationStrategy, compositeInstance.getClass() );
 		}
 		else {
 			return representationStrategy.getInstantiator();
 		}
+	}
+
+	private EmbeddableMappingType.ConcreteEmbeddableType findSubtypeByClass(
+			EmbeddableMappingType embeddableMappingType,
+			Class<?> subclass) {
+		for ( Class<?> candidate = subclass; candidate != null; candidate = candidate.getSuperclass() ) {
+			final var concreteEmbeddableType = embeddableMappingType.findSubtypeBySubclass( candidate.getName() );
+			if ( concreteEmbeddableType != null ) {
+				return concreteEmbeddableType;
+			}
+		}
+		return null;
+	}
+
+	private EmbeddableInstantiator instantiatorForClass(
+			org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy representationStrategy,
+			Class<?> subclass) {
+		for ( Class<?> candidate = subclass; candidate != null; candidate = candidate.getSuperclass() ) {
+			final EmbeddableInstantiator instantiator = representationStrategy.getInstantiatorForClass( candidate.getName() );
+			if ( instantiator != null ) {
+				return instantiator;
+			}
+		}
+		return null;
 	}
 
 	@Override

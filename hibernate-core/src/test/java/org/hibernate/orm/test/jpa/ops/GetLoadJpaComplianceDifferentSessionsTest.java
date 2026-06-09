@@ -4,11 +4,12 @@
  */
 package org.hibernate.orm.test.jpa.ops;
 
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.spi.Bootstrap;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -58,12 +59,14 @@ public class GetLoadJpaComplianceDifferentSessionsTest extends EntityManagerFact
 		settings.put( AvailableSettings.JPA_PROXY_COMPLIANCE, Boolean.TRUE.toString() );
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 
-		EntityManagerFactory newEntityManagerFactory = Bootstrap
-				.getEntityManagerFactoryBuilder(
-						new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
-						settings
-				)
-				.build();
+		EntityManagerFactory newEntityManagerFactory = SessionFactoryBootstrap.build(
+				new TestingPersistenceUnitDescriptorImpl(
+						getClass().getSimpleName(),
+						List.of(Workload.class.getName()),
+						List.of()
+				),
+				settings
+		);
 
 		Workload merged;
 		try {

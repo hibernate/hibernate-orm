@@ -4,10 +4,9 @@
  */
 package org.hibernate.orm.test.jpa.metagen.mappedsuperclass.overridden;
 
-import java.util.Arrays;
+import java.util.List;
 import jakarta.persistence.EntityManagerFactory;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.TestingEntityManagerFactoryGenerator;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -28,9 +27,8 @@ public class MappedSuperclassWithOverriddenAttributeTest {
 	@Test
 	@FailureExpected(jiraKey = "HHH-11078")
 	public void testStaticMetamodelOverridden() {
-		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
-				AvailableSettings.LOADED_CLASSES,
-				Arrays.asList( Product2.class )
+		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactoryForClasses(
+				List.of( Product2.class )
 		);
 		try {
 			assertNotNull(

@@ -331,9 +331,6 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * with some other operations, in the interest of performance.
 	 *
 	 * @settingDefault {@code false}
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyConnectionProviderDisablesAutoCommit(boolean)
-	 *
 	 * @since 5.2.10
 	 */
 	String CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT = "hibernate.connection.provider_disables_autocommit";
@@ -361,9 +358,6 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 *     <li>a {@link Class} representing a class that implements {@code StatementInspector}, or
 	 *     <li>the name of a class that implements {@code StatementInspector}.
 	 * </ul>
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyStatementInspector(StatementInspector)
-	 *
 	 * @since 5.0
 	 */
 	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
@@ -417,8 +411,6 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * Specifies that comments should be added to the generated SQL.
 	 *
 	 * @settingDefault {@code false}
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applySqlComments(boolean)
 	 */
 	String USE_SQL_COMMENTS = "hibernate.use_sql_comments";
 
@@ -428,7 +420,6 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * default settings will be used.
 	 *
 	 * @see java.sql.PreparedStatement#setFetchSize(int)
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcFetchSize(int)
 	 * @see org.hibernate.ScrollableResults#setFetchSize(int)
 	 *
 	 * @settingDefault {@code 0}
@@ -447,7 +438,6 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * @settingDefault {@code true} if the underlying driver supports scrollable results,
 	 *                 {@code false} otherwise
 	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyScrollableResultsSupport(boolean)
 	 * @see Query#scroll
 	 * @see ExtractedDatabaseMetaData#supportsScrollableResults()
 	 *
@@ -544,7 +534,6 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 *                 {@code getGeneratedKeys()}, {@code false} otherwise
 	 *
 	 * @see java.sql.PreparedStatement#getGeneratedKeys
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyGetGeneratedKeysSupport(boolean)
 	 */
 	String USE_GET_GENERATED_KEYS = "hibernate.jdbc.use_get_generated_keys";
 
@@ -561,7 +550,6 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * The default is {@code DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION}.
 	 *
 	 * @see org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyConnectionHandlingMode(PhysicalConnectionHandlingMode)
 	 *
 	 * @since 5.2
 	 */

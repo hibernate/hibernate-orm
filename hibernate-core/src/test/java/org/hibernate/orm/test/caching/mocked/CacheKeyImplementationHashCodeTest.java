@@ -12,7 +12,6 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cache.internal.CacheKeyImplementation;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -37,8 +36,7 @@ public class CacheKeyImplementationHashCodeTest {
 			MetadataSources ms = new MetadataSources( serviceRegistry );
 			ms.addAnnotatedClass( AnEntity.class ).addAnnotatedClass( AnotherEntity.class );
 			Metadata metadata = ms.buildMetadata();
-			final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
-			try ( SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sfb.build()) {
+			try ( SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory()) {
 				CacheKeyImplementation anEntityCacheKey = createCacheKeyImplementation(
 						1,
 						sessionFactory.getRuntimeMetamodels()

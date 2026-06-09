@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.internal;
 
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -35,7 +36,7 @@ public class ForeignKeyNameSource implements ImplicitForeignKeyNameSource {
 
 	@Override
 	public Identifier getTableName() {
-		return table.getNameIdentifier();
+		return logicalTableName( table );
 	}
 
 	@Override
@@ -45,7 +46,7 @@ public class ForeignKeyNameSource implements ImplicitForeignKeyNameSource {
 
 	@Override
 	public Identifier getReferencedTableName() {
-		return foreignKey.getReferencedTable().getNameIdentifier();
+		return logicalTableName( foreignKey.getReferencedTable() );
 	}
 
 	@Override
@@ -77,5 +78,16 @@ public class ForeignKeyNameSource implements ImplicitForeignKeyNameSource {
 			columnNames.add( column.getNameIdentifier( buildingContext ) );
 		}
 		return columnNames;
+	}
+
+	private Identifier logicalTableName(Table table) {
+		try {
+			return buildingContext.getMetadataCollector()
+					.getDatabase()
+					.toIdentifier( buildingContext.getMetadataCollector().getLogicalTableName( table ) );
+		}
+		catch (MappingException ignored) {
+			return table.getNameIdentifier();
+		}
 	}
 }

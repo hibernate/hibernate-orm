@@ -6,7 +6,7 @@ package org.hibernate.orm.test.jpa.integrationprovider;
 
 import java.util.List;
 
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.JpaSettings;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 		annotatedClasses = {
 				Person.class
 		},
-		integrationSettings = { @Setting(name = EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER, value = "org.hibernate.orm.test.jpa.integrationprovider.DtoIntegratorProvider") }
+		integrationSettings = { @Setting(name = JpaSettings.INTEGRATOR_PROVIDER, value = "org.hibernate.orm.test.jpa.integrationprovider.DtoIntegratorProvider") }
 )
 public class IntegrationProviderSettingByClassTest {
 

@@ -40,8 +40,7 @@ public class BidirectionalOneToOneWithIdClassesUnownedAssociationTest {
 					.addAnnotatedClass( Product.class )
 					.addAnnotatedClass( Operator.class )
 					.buildMetadata()
-					.getSessionFactoryBuilder()
-					.build();
+					.buildSessionFactory();
 			fail( "Unowned association should not be allowed as an entity identifier" );
 			// See JPA spec: https://jakarta.ee/specifications/persistence/3.1/jakarta-persistence-spec-3.1.html#a149
 			// > The identity of an entity may be derived from the identity of another entity (the “parent” entity) when

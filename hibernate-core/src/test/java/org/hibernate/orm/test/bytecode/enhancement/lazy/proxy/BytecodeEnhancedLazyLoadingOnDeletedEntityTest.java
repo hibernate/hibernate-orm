@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.BytecodeEnhancedLazyLoadingOnDeletedEntityTest.*;
 
 import java.util.ArrayList;
@@ -26,7 +25,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +36,6 @@ import org.junit.jupiter.api.Test;
 )
 @ServiceRegistry(
 		settings = {
-				@Setting( name = DEFAULT_LIST_SEMANTICS, value = "BAG" ),
 		}
 )
 @SessionFactory(

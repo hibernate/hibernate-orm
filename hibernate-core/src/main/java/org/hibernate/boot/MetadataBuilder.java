@@ -17,7 +17,6 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
@@ -184,18 +183,6 @@ public interface MetadataBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#SCANNER_ARCHIVE_INTERPRETER
 	 */
 	MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory);
-
-	/**
-	 * Specify the default classification for eligible list attributes.
-	 *
-	 * @param classification The implicit list classification
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated Use {@link org.hibernate.annotations.DefaultListSemantics} on a package or module.
-	 * Scheduled for removal in 9.0.
-	 */
-	@Deprecated(since = "8.0", forRemoval = true)
-	MetadataBuilder applyImplicitListSemantics(CollectionClassification classification);
 
 	/**
 	 * Should we process or ignore explicitly defined discriminators in the case

@@ -33,7 +33,7 @@ public class InetAddressJavaType extends AbstractClassJavaType<InetAddress> {
 
 	@Override
 	public String toString(InetAddress value) {
-		return value == null ? null : value.toString();
+		return value == null ? null : value.getHostAddress();
 	}
 
 	@Override

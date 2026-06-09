@@ -73,8 +73,6 @@ public interface QuerySettings {
 	 * Mainly intended for use in test environments.
 	 *
 	 * @settingDefault {@code true} (enabled) - named queries are checked at startup.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyNamedQueryCheckingOnStartup(boolean)
 	 */
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
@@ -124,7 +122,6 @@ public interface QuerySettings {
 	 * @settingDefault {@code none}.
 	 *
 	 * @see jakarta.persistence.criteria.Nulls
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(jakarta.persistence.criteria.Nulls)
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
 

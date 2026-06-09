@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
@@ -59,6 +60,7 @@ public class SqlSelectTest {
 		Long id;
 		String name;
 		@ElementCollection
+		@Bag
 		@CollectionTable(name = "With_Uuids",
 				joinColumns = @JoinColumn(name = "sql_select_id", referencedColumnName = "sql_select_id"))
 		@SQLSelect(sql = "select Random_Uuids as uuid from With_Uuids where sql_select_id = ?",

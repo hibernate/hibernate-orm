@@ -7,8 +7,8 @@ package org.hibernate.boot.models.annotations.internal;
 import jakarta.persistence.NamedNativeStatement;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeStatementImpl;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.xml.internal.QueryProcessing;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.QueryProcessing;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;

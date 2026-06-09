@@ -9,12 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -52,11 +51,10 @@ public class PersistenceUnitNameTests {
 		var descriptors = PersistenceXmlParser.create().parse( List.of( puFile ) );
 		assertThat( descriptors ).containsKey( name );
 		final PersistenceUnitDescriptor descriptor = descriptors.get( name );
-		final EntityManagerFactoryBuilder emfBuilder = Bootstrap.getEntityManagerFactoryBuilder(
+		return SessionFactoryBootstrap.build(
 				descriptor,
 				buildSettings( scope )
 		);
-		return emfBuilder.build();
 	}
 
 	@SuppressWarnings("deprecation")

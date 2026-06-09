@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				@Setting(name = Environment.AUTO_EVICT_COLLECTION_CACHE, value = "true"),
 				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "true"),
 				@Setting(name = Environment.USE_QUERY_CACHE, value = "true"),
-				@Setting(name = Environment.DEFAULT_LIST_SEMANTICS, value = "bag"), // CollectionClassification.BAG
+// CollectionClassification.BAG
 		}
 )
 @SessionFactory(generateStatistics = true)

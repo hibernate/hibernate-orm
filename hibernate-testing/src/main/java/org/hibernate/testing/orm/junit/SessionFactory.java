@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 import java.util.function.Consumer;
 
 import org.hibernate.Interceptor;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.jdbc.CollectingStatementObserver;
@@ -85,12 +85,12 @@ public @interface SessionFactory {
 
 	boolean applyCollectionsInDefaultFetchGroup() default true;
 
-	Class<? extends Consumer<SessionFactoryBuilder>> sessionFactoryConfigurer() default NoOpConfigurer.class;
+	Class<? extends Consumer<SessionFactoryOptionsCollector>> sessionFactoryConfigurer() default NoOpConfigurer.class;
 
-	class NoOpConfigurer implements Consumer<SessionFactoryBuilder> {
+	class NoOpConfigurer implements Consumer<SessionFactoryOptionsCollector> {
 
 		@Override
-		public void accept(SessionFactoryBuilder sessionFactoryBuilder) {
+		public void accept(SessionFactoryOptionsCollector optionsCollector) {
 		}
 	}
 }

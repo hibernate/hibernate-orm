@@ -11,9 +11,11 @@ import org.hibernate.dialect.aggregate.spi.AggregateComponentReadRequest;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.Template;
 
+import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.STRUCT_ARRAY;
 import static org.hibernate.type.SqlTypes.STRUCT_TABLE;
+import static org.hibernate.type.SqlTypes.TABLE;
 import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
 /**
@@ -61,6 +63,13 @@ public final class AggregateColumn extends Column {
 		return getSelectablePath( component );
 	}
 
+	public boolean isAggregateArray() {
+		return switch ( getTypeCode() ) {
+			case ARRAY, TABLE, JSON_ARRAY, XML_ARRAY, STRUCT_ARRAY, STRUCT_TABLE -> true;
+			default -> false;
+		};
+	}
+
 	private static SelectablePath getSelectablePath(Component component) {
 		final var aggregateColumn = component.getAggregateColumn();
 		final var parent = component.getParentAggregateColumn();
@@ -80,7 +89,7 @@ public final class AggregateColumn extends Column {
 		final String simpleAggregateName = aggregateColumn.getQuotedName( dialect );
 		// If the aggregate column is an array, drop the parent read expression, because this is a NestedColumnReference
 		// and will require special rendering
-		return parent == null || isArray( aggregateColumn )
+		return parent == null || aggregateColumn.isAggregateArray()
 				? getRootAggregateSelectableExpression( aggregateColumn, simpleAggregateName )
 				: dialect.getAggregateSupport()
 						.aggregateComponentCustomReadExpression(
@@ -97,14 +106,7 @@ public final class AggregateColumn extends Column {
 	}
 
 	private static String getRootAggregateSelectableExpression(AggregateColumn aggregateColumn, String simpleAggregateName) {
-		return isArray( aggregateColumn ) ? Template.TEMPLATE : Template.TEMPLATE + "." + simpleAggregateName;
-	}
-
-	private static boolean isArray(AggregateColumn aggregateColumn) {
-		return switch ( aggregateColumn.getTypeCode() ) {
-			case JSON_ARRAY, XML_ARRAY, STRUCT_ARRAY, STRUCT_TABLE -> true;
-			default -> false;
-		};
+		return aggregateColumn.isAggregateArray() ? Template.TEMPLATE : Template.TEMPLATE + "." + simpleAggregateName;
 	}
 
 	public String getAggregateAssignmentExpressionTemplate(Dialect dialect) {

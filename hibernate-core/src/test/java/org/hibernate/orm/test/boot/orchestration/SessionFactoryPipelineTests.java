@@ -1,0 +1,251 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.orm.test.boot.orchestration;
+
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.hibernate.boot.HibernateBootstrap;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
+import org.hibernate.boot.pipeline.internal.MetadataResolver;
+import org.hibernate.boot.pipeline.internal.ResolvedMetadata;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
+import org.hibernate.boot.pipeline.internal.ResolvedMetadataImplementor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
+import org.hibernate.orm.test.boot.models.source.SimpleEntity;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * @author Steve Ebersole
+ */
+@ServiceRegistry
+public class SessionFactoryPipelineTests {
+	@Test
+	void hibernateBootstrapBuildsSessionFactoryWithProvidedRegistry(ServiceRegistryScope registryScope) {
+		try (var sessionFactory = HibernateBootstrap.create( registryScope.getRegistry() )
+				.addManagedClass( SimpleEntity.class )
+				.buildSessionFactory()) {
+			assertThat( ( (SessionFactoryImplementor) sessionFactory ).getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( SimpleEntity.class ) ).isNotNull();
+		}
+	}
+
+	@Test
+	void hibernateBootstrapBuildsSessionFactoryWithOwnedRegistry() {
+		try (var sessionFactory = HibernateBootstrap.create()
+				.applySetting( JdbcSettings.URL, "jdbc:h2:mem:hibernate-bootstrap-owned;DB_CLOSE_DELAY=-1" )
+				.applySetting( JdbcSettings.USER, "sa" )
+				.applySetting( JdbcSettings.PASS, "" )
+				.addManagedClass( SimpleEntity.class )
+				.buildSessionFactory()) {
+			assertThat( ( (SessionFactoryImplementor) sessionFactory ).getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( SimpleEntity.class ) ).isNotNull();
+		}
+	}
+
+	@Test
+	void hibernateBootstrapAppliesNativeContributors(ServiceRegistryScope registryScope) {
+		final var typeContributorApplied = new AtomicBoolean();
+		final var functionContributorApplied = new AtomicBoolean();
+
+		try (var sessionFactory = HibernateBootstrap.create( registryScope.getRegistry() )
+				.addManagedClass( SimpleEntity.class )
+				.applyTypeContributor( (typeContributions, serviceRegistry) -> typeContributorApplied.set( true ) )
+				.applyFunctionContributor( functionContributions -> functionContributorApplied.set( true ) )
+				.buildSessionFactory()) {
+			assertThat( sessionFactory ).isNotNull();
+		}
+
+		assertThat( typeContributorApplied ).isTrue();
+		assertThat( functionContributorApplied ).isTrue();
+	}
+
+	@Test
+	void hibernateBootstrapGeneratesSchemaWithOwnedRegistry() {
+		HibernateBootstrap.create()
+				.applySetting( JdbcSettings.URL, "jdbc:h2:mem:hibernate-bootstrap-schema;DB_CLOSE_DELAY=-1" )
+				.applySetting( JdbcSettings.USER, "sa" )
+				.applySetting( JdbcSettings.PASS, "" )
+				.applySetting( SchemaToolingSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop-and-create" )
+				.addManagedClass( SimpleEntity.class )
+				.generateSchema();
+	}
+
+	@Test
+	void sessionFactoryBuildTargetIsDefined(ServiceRegistryScope registryScope) {
+		final var persistenceConfiguration = new HibernatePersistenceConfiguration( "test" )
+				.managedClass( SimpleEntity.class );
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration, Map.of() );
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				persistenceConfiguration.defaultToOneFetchType()
+		);
+		final var resolvedMetadata = resolveMetadata(
+				registryScope,
+				persistenceConfiguration,
+				bootstrapSettings,
+				mappingSettings
+		);
+		final var sessionFactorySettings = SettingsResolver.resolveSessionFactorySettings(
+				bootstrapSettings,
+				registryScope.getRegistry()
+		);
+
+		try (var sessionFactory = SessionFactoryPipeline.build(
+				sessionFactorySettings,
+				resolvedMetadata,
+				registryScope.getRegistry()
+		)) {
+			assertThat( sessionFactory ).isNotNull();
+			assertThat( sessionFactory.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( SimpleEntity.class ) ).isNotNull();
+		}
+	}
+
+	@Test
+	@ServiceRegistry(settings = {
+			@Setting(name = JdbcSettings.URL, value = "jdbc:h2:mem:session-factory-smoke;DB_CLOSE_DELAY=-1"),
+			@Setting(name = JdbcSettings.USER, value = "sa"),
+			@Setting(name = JdbcSettings.PASS, value = "")
+	})
+	void sessionFactorySupportsBasicPersistAndQuery(ServiceRegistryScope registryScope) {
+		final var persistenceConfiguration = new HibernatePersistenceConfiguration( "test" )
+				.managedClass( RuntimeSmokeEntity.class );
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration, Map.of() );
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				persistenceConfiguration.defaultToOneFetchType()
+		);
+		final var resolvedMetadata = resolveMetadata(
+				registryScope,
+				persistenceConfiguration,
+				bootstrapSettings,
+				mappingSettings
+		);
+		final var sessionFactorySettings = SettingsResolver.resolveSessionFactorySettings(
+				bootstrapSettings,
+				registryScope.getRegistry()
+		);
+
+		try (var sessionFactory = SessionFactoryPipeline.build(
+				sessionFactorySettings,
+				resolvedMetadata,
+				registryScope.getRegistry()
+		)) {
+			sessionFactory.inSession( (session) -> session.doWork( (connection) -> {
+				try (var statement = connection.createStatement()) {
+					statement.execute( "drop table if exists runtime_smoke_entity" );
+					statement.execute(
+							"create table runtime_smoke_entity (id integer not null, name varchar(255), primary key (id))"
+					);
+				}
+			} ) );
+			try {
+				sessionFactory.inTransaction( (session) -> session.persist( new RuntimeSmokeEntity( 1, "first" ) ) );
+
+				final String name = sessionFactory.fromTransaction( (session) ->
+						session.createQuery(
+								"select e.name from RuntimeSmokeEntity e where e.id = :id",
+								String.class
+						)
+								.setParameter( "id", 1 )
+								.getSingleResult()
+				);
+
+				assertThat( name ).isEqualTo( "first" );
+			}
+			finally {
+				sessionFactory.inSession( (session) -> session.doWork( (connection) -> {
+					try (var statement = connection.createStatement()) {
+						statement.execute( "drop table if exists runtime_smoke_entity" );
+					}
+				} ) );
+			}
+		}
+	}
+
+	@Test
+	@ServiceRegistry(settings = {
+			@Setting(name = JdbcSettings.URL, value = "jdbc:h2:mem:native-metadata-session-factory;DB_CLOSE_DELAY=-1"),
+			@Setting(name = JdbcSettings.USER, value = "sa"),
+			@Setting(name = JdbcSettings.PASS, value = "")
+	})
+	void nativeMetadataBuildPreservesResolvedMetadataForSessionFactoryBuild(ServiceRegistryScope registryScope) {
+		final var metadata = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClass( RuntimeSmokeEntity.class )
+				.getMetadataBuilder()
+				.build();
+
+		assertThat( metadata ).isInstanceOf( ResolvedMetadataImplementor.class );
+		final var resolvedMetadata = ( (ResolvedMetadataImplementor) metadata ).getResolvedMetadata();
+		assertThat( resolvedMetadata.categorizedDomainModel() ).isNotNull();
+		assertThat( resolvedMetadata.bindingState() ).isNotNull();
+
+		try (var sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory()) {
+			assertThat( sessionFactory.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( RuntimeSmokeEntity.class ) ).isNotNull();
+		}
+	}
+
+	private static ResolvedMetadata resolveMetadata(
+			ServiceRegistryScope registryScope,
+			HibernatePersistenceConfiguration persistenceConfiguration,
+			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings) {
+		final var sourceContributions = MappingSourceContributions.from(
+				persistenceConfiguration,
+				bootstrapSettings,
+				mappingSettings,
+				registryScope.getRegistry().requireService( ClassLoaderService.class )
+		);
+		return MetadataResolver.resolve(
+				bootstrapSettings,
+				mappingSettings,
+				sourceContributions,
+				registryScope.getRegistry()
+		);
+	}
+
+	@Entity(name = "RuntimeSmokeEntity")
+	@Table(name = "runtime_smoke_entity")
+	public static class RuntimeSmokeEntity {
+		@Id
+		private Integer id;
+
+		@Basic
+		private String name;
+
+		protected RuntimeSmokeEntity() {
+		}
+
+		public RuntimeSmokeEntity(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
+}

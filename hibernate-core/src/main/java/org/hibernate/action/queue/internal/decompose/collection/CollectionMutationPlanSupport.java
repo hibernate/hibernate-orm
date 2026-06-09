@@ -76,10 +76,10 @@ final class CollectionMutationPlanSupport {
 			if ( elementDescriptor instanceof ManyToManyCollectionPart manyToMany ) {
 				manyToMany.getForeignKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
 					if ( updateBuilder != null ) {
-						updateBuilder.addKeyRestriction( jdbcMapping );
+						updateBuilder.addKeyRestrictionLeniently( jdbcMapping );
 					}
 					else {
-						deleteBuilder.addKeyRestriction( jdbcMapping );
+						deleteBuilder.addKeyRestrictionLeniently( jdbcMapping );
 					}
 				} );
 			}

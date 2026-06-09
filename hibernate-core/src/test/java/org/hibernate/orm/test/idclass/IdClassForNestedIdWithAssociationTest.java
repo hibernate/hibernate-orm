@@ -33,7 +33,7 @@ import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
  * at org.hibernate.mapping.RootClass.validate(RootClass.java:273)
  * at org.hibernate.boot.internal.MetadataImpl.validate(MetadataImpl.java:359)
  * at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:307)
- * at org.hibernate.boot.internal.SessionFactoryBuilderImpl.build(SessionFactoryBuilderImpl.java:471)
+ * at org.hibernate.boot.pipeline.internal.SessionFactoryPipeline.build(SessionFactoryPipeline.java:52)
  * at org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase.buildResources(BaseNonConfigCoreFunctionalTestCase.java:165)
  * at org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase.startUp(BaseNonConfigCoreFunctionalTestCase.java:141)
  * at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)

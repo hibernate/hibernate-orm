@@ -60,7 +60,6 @@ public @interface DomainModel {
 	String[] annotatedPackageNames() default {};
 	String[] xmlMappings() default {};
 	ExtraQueryImport[] extraQueryImports() default {};
-	Class<?>[] extraQueryImportClasses() default {};
 
 	SharedCacheMode sharedCacheMode() default SharedCacheMode.ENABLE_SELECTIVE;
 

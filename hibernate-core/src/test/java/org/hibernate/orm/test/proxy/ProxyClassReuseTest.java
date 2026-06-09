@@ -102,8 +102,7 @@ public class ProxyClassReuseTest {
 			try (final SessionFactoryImplementor sf = (SessionFactoryImplementor) new MetadataSources( ssr )
 					.addAnnotatedClassName( ProxyClassReuseTest.class.getName() + "$MyEntity" )
 					.buildMetadata()
-					.getSessionFactoryBuilder()
-					.build()) {
+					.buildSessionFactory()) {
 				return consumer.apply( sf );
 			}
 			catch (Exception e) {

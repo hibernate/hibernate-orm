@@ -11,11 +11,11 @@ import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedRes
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
-import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
-import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
-import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
-import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
-import org.hibernate.boot.models.xml.spi.XmlProcessor;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadataImpl;
+import org.hibernate.boot.mapping.internal.xml.XmlPreProcessingResult;
+import org.hibernate.boot.mapping.internal.xml.XmlPreProcessor;
+import org.hibernate.boot.mapping.internal.xml.XmlProcessingResult;
+import org.hibernate.boot.mapping.internal.xml.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.models.internal.BasicModelsContextImpl;

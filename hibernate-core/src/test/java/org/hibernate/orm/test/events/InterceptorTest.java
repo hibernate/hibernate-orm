@@ -76,16 +76,18 @@ public class InterceptorTest {
 		SessionFactory sessionFactory = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 		/*
 		//tag::events-interceptors-session-factory-scope-example[]
-		SessionFactory sessionFactory = new MetadataSources(new StandardServiceRegistryBuilder().build())
+		SessionFactory sessionFactory = new MetadataSources(
+				new StandardServiceRegistryBuilder()
+						.applySetting( AvailableSettings.INTERCEPTOR, new LoggingInterceptor() )
+						.build()
+		)
 		//end::events-interceptors-session-factory-scope-example[]
 		*/
 		//tag::events-interceptors-session-factory-scope-example[]
 			.addAnnotatedClass(Customer.class)
 			.getMetadataBuilder()
 			.build()
-			.getSessionFactoryBuilder()
-			.applyInterceptor(new LoggingInterceptor())
-			.build();
+			.buildSessionFactory();
 		//end::events-interceptors-session-factory-scope-example[]
 		Session session = sessionFactory.openSession();
 		session.getTransaction().begin();

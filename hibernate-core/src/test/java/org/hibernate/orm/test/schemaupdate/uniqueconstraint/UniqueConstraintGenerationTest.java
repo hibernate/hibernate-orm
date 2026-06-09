@@ -89,7 +89,7 @@ public class UniqueConstraintGenerationTest {
 			regex = DialectTestSupport.createIndexCommand( dialect, true ) + " .* on " + tableName + " \\(" + columnName +"\\);";
 		}
 		else if ( dialect.getUniqueDelegate() instanceof CreateTableUniqueDelegate ) {
-			regex = DialectTestSupport.createTableCommand( dialect ) + " " + tableName + " .* " + columnName + " .+ unique.*\\)"
+			regex = DialectTestSupport.createTableCommand( dialect ) + " " + tableName + " \\(.*\\b" + columnName + "\\b .+ unique.*\\)"
 					+ DialectTestSupport.tableCreationOptions( dialect ).toLowerCase() + ";";
 		}
 		else if ( dialect.getUniqueDelegate() instanceof AlterTableUniqueDelegate) {

@@ -30,6 +30,7 @@ import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
@@ -69,7 +70,7 @@ public final class AuditHelper {
 	private AuditHelper() {
 	}
 
-	static void bindAuditTable(
+	public static void bindAuditTable(
 			@Nullable Audited.Table auditTable,
 			RootClass rootClass,
 			ClassDetails classDetails,
@@ -79,7 +80,7 @@ public final class AuditHelper {
 		bindSubclassAuditTables( auditTable, rootClass, context );
 	}
 
-	static void bindAuditTable(
+	public static void bindAuditTable(
 			@Nullable Audited.Table auditTable,
 			Collection collection,
 			MetadataBuildingContext context) {
@@ -302,7 +303,7 @@ public final class AuditHelper {
 	 * The child entity's FK column is on the child table, but from an entity model
 	 * perspective the collection is part of the parent entity's state.
 	 */
-	static void bindOneToManyAuditTable(
+	public static void bindOneToManyAuditTable(
 			@Nullable Audited.Table auditTable,
 			Collection collection,
 			String referencedEntityName,
@@ -359,6 +360,13 @@ public final class AuditHelper {
 			for ( var column : referencedEntity.getKey().getColumns() ) {
 				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
 			}
+			if ( collection instanceof IndexedCollection indexedCollection && indexedCollection.getIndex() != null ) {
+				for ( var selectable : indexedCollection.getIndex().getSelectables() ) {
+					if ( selectable instanceof Column column ) {
+						keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
+					}
+				}
+			}
 			// Audit columns
 			final var changesetIdColumn = createAuditColumn(
 					csIdColumnName,
@@ -396,7 +404,7 @@ public final class AuditHelper {
 		}
 	}
 
-	static void bindChangelog(
+	public static void bindChangelog(
 			Changelog changelog,
 			RootClass rootClass,
 			ClassDetails classDetails,

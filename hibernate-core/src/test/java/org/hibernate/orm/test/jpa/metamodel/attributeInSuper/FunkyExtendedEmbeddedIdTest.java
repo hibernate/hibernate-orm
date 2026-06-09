@@ -6,9 +6,11 @@ package org.hibernate.orm.test.jpa.metamodel.attributeInSuper;
 
 import jakarta.persistence.metamodel.EmbeddableType;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		WorkOrder.class,
 		WorkOrderComponentId.class,
 		WorkOrderComponent.class
-})
+}, integrationSettings = @Setting(name = AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, value = "false"))
 public class FunkyExtendedEmbeddedIdTest {
 
 	@Test

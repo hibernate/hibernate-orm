@@ -8,7 +8,6 @@ import java.util.Collections;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -29,10 +28,9 @@ public class ClosedFactoryTests {
 	@Test
 	public void testClosedChecks(ServiceRegistryScope scope) {
 
-			final SessionFactoryBuilderImplementor factoryBuilder = (SessionFactoryBuilderImplementor) new MetadataSources( scope.getRegistry() )
+			final SessionFactory sf = new MetadataSources( scope.getRegistry() )
 					.buildMetadata()
-					.getSessionFactoryBuilder();
-			final SessionFactory sf = factoryBuilder.build();
+					.buildSessionFactory();
 
 			sf.close();
 

@@ -1,0 +1,409 @@
+= Deterministic Attribute Ordering Design
+:toc:
+
+This note captures the ORM 9 direction for replacing early alphabetical
+attribute ordering with explicit deterministic ordering products.
+
+It is motivated by the same family of problems described in
+link:resolved-contribution-model-design.adoc[`resolved-contribution-model-design.adoc`]
+and link:applied-contribution-model-design.adoc[`applied-contribution-model-design.adoc`]:
+ordering is real metadata, but one sorted list is not a semantic model.
+
+== Problem Statement
+
+Hibernate needs deterministic model traversal.  Historically, an easy way to
+achieve determinism was to alphabetize persistent attributes while collecting
+class members.  For example, legacy annotation binding uses
+`PropertyContainer` to collect persistent members into a name-keyed map that is
+usually a `TreeMap`, except for record-component cases where declaration order
+must be preserved.
+
+That made some output stable, but it also moved an ordering decision too early.
+Once attribute collection is alphabetized, every later consumer is forced to
+interpret alphabetical order as if it were declaration order, contribution
+order, runtime state-array order, native-query alias order, component property
+order, or key-column order.
+
+That breaks down for cases such as:
+
+* single-table inheritance where root native result processing indexes runtime
+  fetchables against `PersistentClass#getSubclassPropertyClosure()`;
+* sibling subtype attributes with the same name but different mapping shape;
+* generic and mapped-superclass contributions where declaration and applied
+  usage are distinct facts;
+* embeddable and aggregate materialization where source member order, component
+  property order, aggregate member order, and JDBC order may differ;
+* identifier correspondence where IdClass member order, target identifier
+  order, and local physical key order are different questions.
+
+The underlying requirement is determinism.  Alphabetical ordering is only one
+possible deterministic projection, and it is often the wrong projection to make
+authoritative.
+
+== Design Goals
+
+* Preserve source member order as early source metadata.
+* Make every later ordering decision explicit and named.
+* Keep deterministic behavior even when JVM reflection, bytecode indexes, build
+  tools, or source kinds expose members in different orders.
+* Do not treat Java reflection iteration order as a stable source order.
+* Avoid using attribute name sort as an implicit correspondence mechanism.
+* Allow compatibility projections to sort where legacy behavior requires it.
+* Keep hibernate-models as the source of member/type metadata; do not add
+  reflection-based generic or member-order logic in ORM binding code.
+
+== Non-Goals
+
+* Do not remove every existing compatibility sort immediately.
+* Do not promise that public runtime traversal order is source declaration
+  order in every existing API.
+* Do not make hibernate-models decide ORM-specific runtime, schema, identifier,
+  or component order.
+* Do not infer semantic correspondence from list position when an explicit
+  correspondence product exists.  Today the concrete precedent is selectable
+  correspondence; other correspondence products should be added only when a
+  focused need appears.
+
+== Ordering Vocabulary
+
+The model should distinguish at least these orders:
+
+Source declaration order::
+The order in which a source-specific reader can prove members are declared or
+contributed.  For records, this is record-component order.  For class files,
+this is class-file member order.  Reflection iteration order is not a source
+declaration order because it is not specified by the Java API and has changed
+across JVM versions.
+
+Persistent member selection order::
+The deterministic order after access-type rules, `@Transient`, duplicate
+getter detection, XML overlays, and local `@Access` decisions select which
+member backs a persistent attribute.
+
+Contribution order::
+The order in which declarations are applied to a concrete hierarchy, mapped
+superclass application, embeddable path, collection role, aggregate value, or
+identifier role.
+
+Compatibility property order::
+The order exposed through `PersistentClass`, `Subclass`, `Component`, and
+legacy `Property` lists.
+
+Runtime fetchable/state-array order::
+The order used by runtime metamodel construction, entity state arrays, native
+query `{alias.*}` expansion, dirty checking, and result assembly.
+
+Selectable/key order::
+The order used by primary keys, foreign keys, unique keys, indexes, aggregate
+members, and JDBC decomposition/recomposition.
+
+Static metamodel/domain order::
+The order used by JPA-domain model and static metamodel views.  This may need
+classification or legacy compatibility behavior that differs from runtime
+storage order.
+
+== Proposed Architecture
+
+The high-level flow should be:
+
+[source]
+----
+hibernate-models source model
+        -> SourceMemberOrder
+        -> PersistentAttributeSelection
+        -> AppliedContributionOrder
+        -> CompatibilityOrderingPlan
+        -> materialized org.hibernate.mapping views
+        -> RuntimeMappingPlan / schema / domain views
+----
+
+`SourceMemberOrder` should be available as soon as a `ClassDetails` is built or
+first normalized for ORM.  ORM should then select persistent attributes without
+destroying that order.
+
+Later phases should create named projections:
+
+* compatibility `Property` order for `PersistentClass` / `Component`;
+* subclass-property closure order for root entity compatibility;
+* runtime fetchable key order;
+* identifier/selectable correspondence order;
+* component/aggregate member order;
+* JPA metamodel view order.
+
+When two projections differ, both should exist.  One should not be recreated by
+sorting another in place.
+
+== Hibernate Models Role
+
+hibernate-models is one possible place to expose early member-order metadata
+because it already abstracts over reflection, class files, Jandex, dynamic
+classes, and contributed `ClassDetails`.  That does not mean hibernate-models
+should decide ORM persistent-attribute order, and it especially does not mean
+that reflection iteration order should be treated as stable.
+
+The useful hibernate-models-level product is not "ORM persistent attribute
+order".  It is a stable source-member sequence with enough provenance to let
+ORM make later decisions.
+
+Possible hibernate-models additions, if ORM cannot get equivalent information
+from an earlier ORM source-discovery product:
+
+* `ClassDetails#getDeclaredFieldsInSourceOrder()`;
+* `ClassDetails#getDeclaredMethodsInSourceOrder()`;
+* `ClassDetails#getDeclaredRecordComponentsInSourceOrder()`;
+* or a unified `ClassDetails#getDeclaredMembers(MemberKind...)` returning
+  members with stable ordinal metadata.
+
+An even more flexible shape is an ordinal API:
+
+[source,java]
+----
+interface MemberDetails {
+    OptionalInt getSourceOrdinal();
+    MemberKind getMemberKind();
+}
+----
+
+ORM could then preserve order with a `LinkedHashMap` while still performing
+name-based duplicate detection and access-type replacement.
+
+The ordinal must be stable within one `ClassDetails` source, not globally
+unique.  Cross-class order remains an ORM hierarchy/contribution decision.
+
+For reflection-backed `ClassDetails`, such an ordinal should come from a
+stable reader such as class-file metadata or a prebuilt index, not from
+`Class#getDeclaredFields()` or `Class#getDeclaredMethods()` iteration order.
+For Jandex, Byte Buddy, generated, and contributed models, the ordinal should
+come from that source's explicit contract or insertion order.  If a source
+cannot provide such a contract, ORM should mark the order as fallback-stable
+rather than source-order-preserving.
+
+=== Why Not Just Alphabetize In Hibernate Models?
+
+Alphabetizing in hibernate-models would make the current problem earlier and
+harder to undo.  It would make source order unavailable to ORM and to any other
+consumer that needs declaration order.
+
+hibernate-models should provide deterministic source facts.  ORM should decide
+which deterministic projection each downstream consumer needs.
+
+Alphabetizing in hibernate-models is also over-aggressive.  At that layer, a
+field or method is only a member.  ORM has not yet applied access-type rules,
+`@Transient`, XML overlays, local `@Access`, duplicate getter handling,
+record-component fallback, mapped-superclass contribution rules, or embeddable
+application context.  Sorting all fields and methods there would impose an ORM
+attribute-order decision before ORM knows which members are attributes.
+
+== Alternative Determinism Sources
+
+If stable source order is not supplied by hibernate-models, ORM can still get
+determinism through an ORM-owned source-discovery product.
+
+Possible approaches:
+
+* use bytecode/class-file member order during ORM source discovery when a
+  physical class is available;
+* preserve the explicit order from Jandex, Byte Buddy, or another index/source
+  provider only when that provider defines a stable order contract;
+* require dynamic/contributed `ClassDetails` providers to contribute members in
+  stable insertion order;
+* assign ORM-local discovery ordinals as members are first seen, after choosing
+  one deterministic source-reader strategy;
+* use alphabetical order only as a fallback projection when no source order is
+  available and when the consumer only requires stable, not source-like, order.
+
+The ORM-owned part is the normalization contract: every source must either
+provide a stable ordered member stream or be normalized into an explicitly
+fallback-stable order.  ORM should not silently inherit whatever order a source
+happens to return.
+
+The key distinction is that these approaches preserve or create deterministic
+member facts before persistent-attribute selection, without turning
+alphabetical attribute order into the semantic model.
+
+== ORM Binding Changes
+
+Near-term ORM changes should be small and bridge-friendly:
+
+1. Replace persistent-attribute collection maps that use `TreeMap` for
+   determinism with source-order-preserving maps plus explicit duplicate
+   detection.
+2. Carry an ordinal or selection-order field on binding declarations/usages.
+3. Record which ordering each materializer is projecting.
+4. Use the existing selectable correspondence pattern instead of positional
+   list matching where it already applies.  Consider new correspondence
+   products for identifiers, components, aggregate members, or subclass
+   closures only when independent materialization, copied compatibility
+   objects, or multiple ordering projections make positional matching fragile.
+
+For legacy annotation binding, `PropertyContainer` is the key pressure point.
+Its current `TreeMap` fallback should eventually become:
+
+* collect fields, methods, and record components in hibernate-models source
+  order;
+* select persistent members using a `LinkedHashMap`;
+* preserve the selected-member order;
+* produce explicit compatibility sorted views only where a downstream legacy
+  consumer requires them.
+
+For the new boot pipeline, the binding model should keep member order on:
+
+* `AttributeDeclarationBinding`;
+* `StandardAttributeUsageBinding`;
+* mapped-superclass contributions;
+* embeddable-site contributions;
+* identifier and aggregate member plans.
+
+== Materialization And Runtime Handoff
+
+Materialization should not read a sorted compatibility list and infer semantics
+from it.  It should receive an ordering plan.
+
+Examples:
+
+* `PersistentClass#getSubclassPropertyClosure()` should be projected from the
+  entity hierarchy's compatibility property order.
+* Runtime root fetchables and fetchable keys should use the same subclass
+  closure order when they index into legacy subclass property type/alias arrays.
+* `Component` property order should be explicit about whether it is declaration
+  order, aggregate-member order, or legacy component sort order.
+* Identifier and FK column order should come from the existing selectable
+  correspondence pattern, not from independently sorted local and referenced
+  columns.
+
+The current implemented precedent is `SelectableCorrespondence`.  This design
+does not assume a generalized correspondence framework already exists for
+attributes, components, aggregate members, or subclass closures.  Those areas
+should add correspondence products only when they need to match independently
+materialized structures, preserve origin across copied compatibility objects,
+or support multiple safe ordering projections.
+
+For relational objects, the new pipeline now has a narrow
+`RelationalModelCorrespondences` registry.  Its first product,
+`ColumnNameCorrespondence`, records table-local logical column identifiers and
+physical `Column` objects.  This is not an ordering mechanism by itself; it is
+the correspondence record that lets later naming or finalization code avoid
+guessing a logical source name from a physical column list.  Future relational
+correspondences should follow the same rule as ordering correspondences: add
+one only when the alternative would be positional matching, independently sorted
+lists, mutable mapping-object inspection, or a legacy collector side channel.
+
+The recent `SingleTableNativeQueryTest` failure is the canonical example:
+runtime static fetchables drifted from boot subclass-property closure.  The fix
+was not to make native result processing smarter; it was to make the runtime
+mapping-model handoff use the boot closure order and matching fetchable keys.
+
+== Compatibility Policy
+
+Alphabetical order may remain as a compatibility projection where legacy APIs
+or tests require it.  The important rule is that alphabetical order must be
+named and local.
+
+Allowed:
+
+* produce a sorted compatibility view for a legacy consumer that historically
+  expects sorted component property names;
+* sort generated schema exportables when the schema contract requires stable
+  lexical output;
+* sort annotation descriptors for diagnostics or reports.
+
+Avoid:
+
+* collecting source members into a sorted map before persistent attributes are
+  selected;
+* sorting `Property` or `Column` lists to communicate correspondence;
+* relying on alphabetical order to align runtime fetchables with subclass
+  property type arrays;
+* letting one mutable list be both semantic order and compatibility order.
+
+== Phased Plan
+
+=== Phase 0: Document And Characterize
+
+* Keep current behavior where changing it would be risky.
+* Add focused characterization tests for cases where source/contribution order
+  differs from alphabetical order.
+* Use test names and assertions that identify the specific order in play:
+  subclass closure, component property order, aggregate member order, runtime
+  fetchable key order, identifier selectable order.
+
+Trigger to leave Phase 0:
+
+* The major order-sensitive failure clusters are represented by focused tests,
+  and at least one bridge fix demonstrates a named ordering source rather than
+  an incidental sort.
+
+=== Phase 1: Deterministic Member Capture
+
+* Choose the first deterministic member-order source: hibernate-models source
+  ordinals, an ORM source-discovery product, or a class-file/Jandex-backed
+  reader.
+* Update ORM source collection to preserve that order while still using
+  name-based duplicate detection.
+* Replace local alphabetical collection in new-pipeline categorization/binding
+  code where the ordering is only for determinism.
+
+Trigger to leave Phase 1:
+
+* ORM can select persistent attributes deterministically without relying on
+  attribute-name sort as the primary collection structure.
+
+=== Phase 2: Ordering Products
+
+* Introduce explicit ordering products in resolved contribution views.
+* Store ordering metadata alongside declaration/usage sidecars and existing
+  correspondence products such as selectable correspondence.
+* Make compatibility materializers consume these products.
+* Audit remaining `sortProperties()`, `TreeMap`, and name-sort sites and
+  classify each as source collection, compatibility projection, diagnostics, or
+  schema/export ordering.
+
+Trigger to leave Phase 2:
+
+* The common runtime/schema/domain consumers no longer infer semantic
+  correspondence from sorted mutable mapping lists.
+
+=== Phase 3: Compatibility Sort Isolation
+
+* Move remaining required alphabetical order into named compatibility adapters.
+* Prevent new binder/materializer code from using alphabetical collection as a
+  deterministic shortcut.
+* Add assertions or debug validation that paired lists share the same ordering
+  source when they are consumed by index.
+
+Trigger to leave Phase 3:
+
+* Alphabetical order exists only as an explicit projection, not as a hidden
+  source-model or contribution-model mutation.
+
+== Open Questions
+
+* Should hibernate-models expose source ordinals on all `MemberDetails`, or
+  separate source-order accessors on `ClassDetails`?
+* For reflection-backed models, should ORM or hibernate-models read class-file
+  metadata directly to avoid JVM-version-dependent reflection order?
+* How should dynamic, Byte Buddy, Jandex, and contributed `ClassDetails`
+  declare member order, and how should they expose whether that order is a
+  source order or just a fallback-stable order?
+* Which legacy APIs truly require alphabetical order, and which only require
+  deterministic order?
+* Should `PropertyContainer` change before or after the new boot pipeline has
+  its own source-order selection product?
+* Do we need a shared `OrderingPlan` abstraction, or are focused products such
+  as `AttributeOrder`, `SelectableOrder`, and `FetchableOrder` clearer?
+
+== Immediate Recommendation
+
+Start by proving an ORM-owned deterministic member-capture path.  A
+hibernate-models source-order product may be the cleanest shared input, but it
+should not alphabetize members or decide persistent-attribute order.
+
+The first implementation slice should not globally remove sorting.  It should:
+
+* add or consume stable member ordinals from hibernate-models, ORM source
+  discovery, or a class-file/Jandex-backed reader;
+* preserve selected persistent attribute order in one focused pipeline path;
+* add a focused non-alphabetical test where declaration order matters;
+* project any needed alphabetical compatibility order explicitly.
+
+That gives determinism without confusing "stable" with "alphabetical".

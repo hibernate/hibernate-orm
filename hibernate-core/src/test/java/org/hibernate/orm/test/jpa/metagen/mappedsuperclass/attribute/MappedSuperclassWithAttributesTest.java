@@ -4,10 +4,9 @@
  */
 package org.hibernate.orm.test.jpa.metagen.mappedsuperclass.attribute;
 
-import java.util.Arrays;
+import java.util.List;
 import jakarta.persistence.EntityManagerFactory;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.TestingEntityManagerFactoryGenerator;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -24,9 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class MappedSuperclassWithAttributesTest {
 	@Test
 	public void testStaticMetamodel() {
-		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
-				AvailableSettings.LOADED_CLASSES,
-				Arrays.asList( Product.class )
+		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactoryForClasses(
+				List.of( Product.class )
 		);
 		try {
 			assertNotNull( Product_.id, "'Product_.id' should not be null)" );

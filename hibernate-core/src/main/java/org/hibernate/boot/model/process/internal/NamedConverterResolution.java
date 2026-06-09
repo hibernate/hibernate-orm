@@ -5,16 +5,19 @@
 package org.hibernate.boot.model.process.internal;
 
 import java.lang.reflect.Type;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Mutability;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.models.ModelsException;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BasicType;
@@ -156,6 +159,9 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		if ( explicitMutabilityPlan != null ) {
 			return explicitMutabilityPlan;
 		}
+		else if ( converter.getConverterJavaType().getJavaTypeClass().isAnnotationPresent( Mutability.class ) ) {
+			return instantiateMutabilityPlan( converter.getConverterJavaType().getJavaTypeClass().getAnnotation( Mutability.class ) );
+		}
 		else if ( converter.getConverterJavaType().getJavaTypeClass().isAnnotationPresent( Immutable.class ) ) {
 			return ImmutableMutabilityPlan.instance();
 		}
@@ -167,6 +173,20 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		}
 		else {
 			return new AttributeConverterMutabilityPlan<>( converter, true );
+		}
+	}
+
+	private static <T> MutabilityPlan<T> instantiateMutabilityPlan(Mutability mutability) {
+		try {
+			//noinspection unchecked
+			return (MutabilityPlan<T>) mutability.value().getConstructor().newInstance();
+		}
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			final ModelsException modelsException = new ModelsException(
+					"Error instantiating converter @Mutability plan - " + mutability.value().getName()
+			);
+			modelsException.addSuppressed( e );
+			throw modelsException;
 		}
 	}
 

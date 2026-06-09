@@ -7,7 +7,6 @@ package org.hibernate.orm.test.multitenancy.discriminator;
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.H2Dialect;
@@ -100,8 +99,7 @@ public class DiscriminatorMultiTenancyTest {
 					target
 			);
 
-			final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
-			sessionFactory = (SessionFactoryImplementor) sfb.build();
+			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 			currentTenantResolver.setHibernateBooted();
 		}
 		catch (Throwable t) {

@@ -445,6 +445,7 @@ public class PropertyBinder {
 		Property property = new Property();
 		property.setName( name );
 		property.setValue( value );
+		property.setMemberDetails( memberDetails );
 		property.setLazy( lazy );
 		property.setLazyGroup( lazyGroup );
 		property.setCascade( cascadeTypes, orphanRemoval );

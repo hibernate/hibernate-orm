@@ -120,6 +120,14 @@ public class GeneratorParameters {
 		//TODO: would it be better to simply pass the qualified table name,
 		//      instead of splitting it up into schema/catalog/table names
 		parameterCollector.accept( TABLE, identifierValue.getTable().getQuotedName( dialect ) );
+		final String catalog = catalog( identifierValue );
+		if ( org.hibernate.internal.util.StringHelper.isNotEmpty( catalog ) ) {
+			parameterCollector.accept( CATALOG, catalog );
+		}
+		final String schema = schema( identifierValue );
+		if ( org.hibernate.internal.util.StringHelper.isNotEmpty( schema ) ) {
+			parameterCollector.accept( SCHEMA, schema );
+		}
 
 		//pass the column name (a generated id almost always has a single column)
 		if ( identifierValue.getColumnSpan() == 1 ) {
@@ -155,6 +163,104 @@ public class GeneratorParameters {
 			parameterCollector.accept( PREFERRED_POOLED_OPTIMIZER,
 					optimizerClassName( settings.get( PREFERRED_POOLED_OPTIMIZER ) ) );
 		}
+	}
+
+	private static String catalog(Value identifierValue) {
+		final String tableCatalog = identifierValue.getTable().getCatalog();
+		return isImplicitNamespaceCatalog( identifierValue, tableCatalog ) ? defaultCatalog( identifierValue ) : tableCatalog;
+	}
+
+	private static String schema(Value identifierValue) {
+		final String tableSchema = identifierValue.getTable().getSchema();
+		return isImplicitNamespaceSchema( identifierValue, tableSchema ) ? defaultSchema( identifierValue ) : tableSchema;
+	}
+
+	private static boolean isImplicitNamespaceCatalog(Value identifierValue, String catalog) {
+		if ( org.hibernate.internal.util.StringHelper.isEmpty( catalog ) ) {
+			return true;
+		}
+		final String defaultCatalog = defaultCatalog( identifierValue );
+		if ( org.hibernate.internal.util.StringHelper.isNotEmpty( defaultCatalog ) ) {
+			if ( catalog.equalsIgnoreCase( defaultCatalog ) ) {
+				return true;
+			}
+			final var physicalCatalog = identifierValue.getBuildingContext()
+					.getBuildingOptions()
+					.getPhysicalNamingStrategy()
+					.toPhysicalCatalogName(
+							org.hibernate.boot.model.naming.Identifier.toIdentifier( defaultCatalog ),
+							identifierValue.getBuildingContext()
+									.getMetadataCollector()
+									.getDatabase()
+									.getJdbcEnvironment()
+					);
+			if ( physicalCatalog != null && catalog.equals( physicalCatalog.getText() ) ) {
+				return true;
+			}
+		}
+		final var implicitCatalog = identifierValue.getBuildingContext()
+				.getMetadataCollector()
+				.getDatabase()
+				.getPhysicalImplicitNamespaceName()
+				.catalog();
+		return implicitCatalog != null && catalog.equals( implicitCatalog.getText() );
+	}
+
+	private static boolean isImplicitNamespaceSchema(Value identifierValue, String schema) {
+		if ( org.hibernate.internal.util.StringHelper.isEmpty( schema ) ) {
+			return true;
+		}
+		final String defaultSchema = defaultSchema( identifierValue );
+		if ( org.hibernate.internal.util.StringHelper.isNotEmpty( defaultSchema ) ) {
+			if ( schema.equalsIgnoreCase( defaultSchema ) ) {
+				return true;
+			}
+			final var physicalSchema = identifierValue.getBuildingContext()
+					.getBuildingOptions()
+					.getPhysicalNamingStrategy()
+					.toPhysicalSchemaName(
+							org.hibernate.boot.model.naming.Identifier.toIdentifier( defaultSchema ),
+							identifierValue.getBuildingContext()
+									.getMetadataCollector()
+									.getDatabase()
+									.getJdbcEnvironment()
+					);
+			if ( physicalSchema != null && schema.equals( physicalSchema.getText() ) ) {
+				return true;
+			}
+		}
+		final var implicitSchema = identifierValue.getBuildingContext()
+				.getMetadataCollector()
+				.getDatabase()
+				.getPhysicalImplicitNamespaceName()
+				.schema();
+		return implicitSchema != null && schema.equals( implicitSchema.getText() );
+	}
+
+	private static String defaultCatalog(Value identifierValue) {
+		final String mappingDefault = identifierValue.getBuildingContext()
+				.getBuildingOptions()
+				.getMappingDefaults()
+				.getImplicitCatalogName();
+		return org.hibernate.internal.util.StringHelper.isNotEmpty( mappingDefault )
+				? mappingDefault
+				: identifierValue.getBuildingContext()
+						.getMetadataCollector()
+						.getPersistenceUnitMetadata()
+						.getDefaultCatalog();
+	}
+
+	private static String defaultSchema(Value identifierValue) {
+		final String mappingDefault = identifierValue.getBuildingContext()
+				.getBuildingOptions()
+				.getMappingDefaults()
+				.getImplicitSchemaName();
+		return org.hibernate.internal.util.StringHelper.isNotEmpty( mappingDefault )
+				? mappingDefault
+				: identifierValue.getBuildingContext()
+						.getMetadataCollector()
+						.getPersistenceUnitMetadata()
+						.getDefaultSchema();
 	}
 
 	private static String optimizerClassName(Object optimizerSetting) {

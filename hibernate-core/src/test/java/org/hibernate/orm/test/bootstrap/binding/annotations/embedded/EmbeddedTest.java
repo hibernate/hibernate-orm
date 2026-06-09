@@ -54,9 +54,9 @@ import static org.junit.Assert.assertTrue;
 		}
 )
 @SessionFactory
-@ServiceRegistry(settings = {
-		@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "jpa")
-})
+	@ServiceRegistry(settings = {
+			@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "component-path")
+	})
 public class EmbeddedTest {
 
 	@AfterEach

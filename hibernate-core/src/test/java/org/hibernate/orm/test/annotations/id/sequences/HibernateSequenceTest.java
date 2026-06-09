@@ -20,6 +20,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.orm.test.annotations.id.sequences.entities.HibernateSequenceEntity;
 import org.junit.jupiter.api.Test;
 
+import java.util.Locale;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,7 +47,7 @@ public class HibernateSequenceTest {
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		SqlStringGenerationContext sqlStringGenerationContext = scope.getSessionFactory().getSqlStringGenerationContext();
 		assertEquals(
-				Table.qualify( null, SCHEMA_NAME, "HibernateSequenceEntity_SEQ" ),
+				Table.qualify( null, SCHEMA_NAME.toLowerCase( Locale.ROOT ), "HibernateSequenceEntity_SEQ" ),
 				sqlStringGenerationContext.format( seqGenerator.getDatabaseStructure().getPhysicalName() )
 		);
 	}

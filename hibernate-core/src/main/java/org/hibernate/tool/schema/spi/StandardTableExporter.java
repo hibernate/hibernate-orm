@@ -25,7 +25,6 @@ import org.hibernate.dialect.schema.spi.CommentRequest;
 import org.hibernate.dialect.schema.spi.CommentTarget;
 import org.hibernate.dialect.schema.spi.TableCreationKind;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -288,7 +287,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			if ( aggregateSupport != null && aggregateSupport.supportsComponentCheckConstraints() ) {
 				for ( var column : table.getColumns() ) {
 					if ( column instanceof AggregateColumn aggregateColumn ) {
-						if ( !isArray( aggregateColumn ) ) {
+						if ( !aggregateColumn.isAggregateArray() ) {
 							applyAggregateColumnCheck( buf, aggregateColumn );
 						}
 					}
@@ -304,15 +303,6 @@ public class StandardTableExporter implements Exporter<Table> {
 				constraint.getConstraint(),
 				constraint.getOptions()
 		) );
-	}
-
-	private boolean isArray(AggregateColumn aggregateColumn) {
-		final var value = (BasicValue) aggregateColumn.getValue();
-		return switch ( value.getResolution().getJdbcType().getDefaultSqlTypeCode() ) {
-			case SqlTypes.STRUCT_ARRAY, SqlTypes.STRUCT_TABLE, SqlTypes.JSON_ARRAY, SqlTypes.XML_ARRAY, SqlTypes.ARRAY
-					-> true;
-			default -> false;
-		};
 	}
 
 	/// Append the standard aggregate-column check constraint.
@@ -352,7 +342,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			Value value) {
 		if ( value instanceof Component component ) {
 			final var subAggregateColumn = component.getAggregateColumn();
-			if ( subAggregateColumn != null && !isArray( subAggregateColumn )  ) {
+			if ( subAggregateColumn != null && !subAggregateColumn.isAggregateArray()  ) {
 				final String subAggregatePath =
 						subAggregateColumn.getAggregateReadExpressionTemplate( dialect )
 								.replace( Template.TEMPLATE + ".", "" );

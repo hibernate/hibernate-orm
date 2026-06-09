@@ -62,11 +62,6 @@ import org.hibernate.type.Type;
  * @see SharedStatelessSessionBuilder#interceptor()
  * @see SharedSessionBuilder#interceptor()
  * @see org.hibernate.cfg.Configuration#setInterceptor(Interceptor)
- *
- * @see org.hibernate.boot.SessionFactoryBuilder#applyInterceptor(Interceptor)
- * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(Class)
- * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(java.util.function.Supplier)
- *
  * @author Gavin King
  */
 @SPI(value = {SPI.Role.IMPLEMENT, SPI.Role.SUPPLY})

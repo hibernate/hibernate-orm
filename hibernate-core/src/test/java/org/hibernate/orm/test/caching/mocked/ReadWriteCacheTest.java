@@ -12,7 +12,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.CockroachDialect;
@@ -293,13 +293,13 @@ public class ReadWriteCacheTest {
 		}
 	}
 
-	public static class Configurer implements Consumer<SessionFactoryBuilder> {
+	public static class Configurer implements Consumer<SessionFactoryOptionsCollector> {
 
 		@Override
-		public void accept(SessionFactoryBuilder sessionFactoryBuilder) {
+		public void accept(SessionFactoryOptionsCollector optionsCollector) {
 			TransactionInterceptor transactionInterceptor = new TransactionInterceptor();
-			sessionFactoryBuilder.addSessionFactoryObservers( transactionInterceptor );
-			sessionFactoryBuilder.applyInterceptor( transactionInterceptor );
+			optionsCollector.addSessionFactoryObservers( transactionInterceptor );
+			optionsCollector.applyInterceptor( transactionInterceptor );
 		}
 	}
 

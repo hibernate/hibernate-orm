@@ -4,6 +4,7 @@
  */
 package org.hibernate.stat.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -28,12 +29,14 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 	public static final StatisticsInitiator INSTANCE = new StatisticsInitiator();
 
 	@Override
+	@Nonnull
 	public Class<StatisticsImplementor> getServiceInitiated() {
 		return StatisticsImplementor.class;
 	}
 
 	@Override
-	public StatisticsImplementor initiateService(SessionFactoryServiceInitiatorContext context) {
+	@Nonnull
+	public StatisticsImplementor initiateService(@Nonnull SessionFactoryServiceInitiatorContext context) {
 		final Object configValue =
 				context.getServiceRegistry().requireService( ConfigurationService.class )
 						.getSettings().get( STATS_BUILDER );
@@ -45,8 +48,10 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		return statistics;
 	}
 
+	@Nonnull
 	private static StatisticsFactory statisticsFactory(
-			@Nullable Object configValue, ServiceRegistryImplementor registry) {
+			@Nullable Object configValue,
+			@Nonnull ServiceRegistryImplementor registry) {
 		final var classLoaderService = registry.requireService( ClassLoaderService.class );
 		if ( configValue == null ) {
 			final var discovered = discover( classLoaderService );
@@ -74,11 +79,11 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		}
 	}
 
-	private static @Nullable StatisticsFactory discover(ClassLoaderService classLoaderService) {
+	private static @Nullable StatisticsFactory discover(@Nonnull ClassLoaderService classLoaderService) {
 		final var discovered = classLoaderService.loadJavaServices( StatisticsFactory.class );
 		final var iterator = discovered.iterator();
 		if ( iterator.hasNext() ) {
-			final StatisticsFactory selected = iterator.next();
+			final var selected = iterator.next();
 			if ( iterator.hasNext() ) {
 				throw new HibernateException(
 						"Multiple StatisticsFactory service registrations found via ServiceLoader; "

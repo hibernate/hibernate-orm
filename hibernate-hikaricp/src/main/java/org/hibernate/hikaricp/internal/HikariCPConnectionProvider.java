@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
@@ -67,7 +68,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	// *************************************************************************
 
 	@Override
-	public void configure(Map<String, Object> configuration) throws HibernateException {
+	public void configure(@Nonnull Map<String, Object> configuration) throws HibernateException {
 		try {
 			CONNECTION_INFO_LOGGER.configureConnectionPool( "HikariCP" );
 			hikariConfig = loadConfiguration( configuration );
@@ -144,7 +145,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@Nonnull Class<?> unwrapType) {
 		return unwrapType.isAssignableFrom( HikariCPConnectionProvider.class )
 			|| unwrapType.isAssignableFrom( HikariDataSource.class )
 			|| unwrapType.isAssignableFrom( HikariConfig.class );
@@ -152,7 +153,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@Nonnull Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( HikariCPConnectionProvider.class ) ) {
 			return (T) this;
 		}

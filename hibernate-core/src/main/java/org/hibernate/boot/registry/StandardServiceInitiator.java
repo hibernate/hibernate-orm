@@ -6,6 +6,7 @@ package org.hibernate.boot.registry;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -28,5 +29,8 @@ public interface StandardServiceInitiator<R extends Service> extends ServiceInit
 	 *
 	 * @return The initiated service.
 	 */
-	@Nullable R initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry);
+	@Nullable
+	R initiateService(
+			@Nonnull Map<String, Object> configurationValues,
+			@Nonnull ServiceRegistryImplementor registry);
 }

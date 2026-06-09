@@ -63,6 +63,7 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
+import org.jspecify.annotations.NonNull;
 
 /**
  * A {@link ConnectionProvider} implementation intended for testing Hibernate/JTA interaction.  In that limited scope we
@@ -81,12 +82,12 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	private final List<Connection> nonEnlistedConnections = new ArrayList<>();
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@NonNull ServiceRegistryImplementor serviceRegistry) {
 		delegate.injectServices( serviceRegistry );
 	}
 
 	@Override
-	public void configure(Map<String, Object> configurationValues) {
+	public void configure(@NonNull Map<String, Object> configurationValues) {
 		Map<String, Object> connectionSettings = new HashMap<>();
 		transferSetting( Environment.DRIVER, configurationValues, connectionSettings );
 		transferSetting( Environment.URL, configurationValues, connectionSettings );
@@ -200,12 +201,12 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@NonNull Class<?> unwrapType) {
 		return delegate.isUnwrappableAs( unwrapType );
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@NonNull Class<T> unwrapType) {
 		return delegate.unwrap( unwrapType );
 	}
 

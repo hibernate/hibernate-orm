@@ -6,6 +6,7 @@ package org.hibernate.resource.transaction.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
@@ -30,7 +31,7 @@ public class TransactionCoordinatorBuilderInitiator implements StandardServiceIn
 	public static final TransactionCoordinatorBuilderInitiator INSTANCE = new TransactionCoordinatorBuilderInitiator();
 
 	@Override
-	public TransactionCoordinatorBuilder initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public TransactionCoordinatorBuilder initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return registry.requireService( StrategySelector.class )
 				.resolveDefaultableStrategy( TransactionCoordinatorBuilder.class,
 						determineStrategySelection( configurationValues ),
@@ -56,6 +57,7 @@ public class TransactionCoordinatorBuilderInitiator implements StandardServiceIn
 		return null;
 	}
 
+	@Nonnull
 	@Override
 	public Class<TransactionCoordinatorBuilder> getServiceInitiated() {
 		return TransactionCoordinatorBuilder.class;

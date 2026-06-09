@@ -5,6 +5,7 @@
 package org.hibernate.c3p0.internal;
 
 import com.mchange.v2.c3p0.DataSources;
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.JdbcSettings;
@@ -126,14 +127,14 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@Nonnull Class<?> unwrapType) {
 		return unwrapType.isAssignableFrom( C3P0ConnectionProvider.class )
 			|| unwrapType.isAssignableFrom( DataSource.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@Nonnull Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( C3P0ConnectionProvider.class ) ) {
 			return (T) this;
 		}
@@ -146,7 +147,7 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	public void configure(Map<String, Object> properties) {
+	public void configure(@Nonnull Map<String, Object> properties) {
 		CONNECTION_INFO_LOGGER.configureConnectionPool( "c3p0" );
 
 		final String jdbcDriverClass = extractSetting(
@@ -345,7 +346,7 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 }

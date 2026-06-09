@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -30,7 +31,7 @@ public class SqlStatementLoggerInitiator implements StandardServiceInitiator<Sql
 	public static final SqlStatementLoggerInitiator INSTANCE = new SqlStatementLoggerInitiator();
 
 	@Override
-	public SqlStatementLogger initiateService(Map<String, Object> configValues, ServiceRegistryImplementor registry) {
+	public SqlStatementLogger initiateService(@Nonnull Map<String, Object> configValues, @Nonnull ServiceRegistryImplementor registry) {
 		final boolean showSQL = getBoolean( SHOW_SQL, configValues );
 		final boolean formatSQL = getBoolean( FORMAT_SQL, configValues );
 		final boolean highlightSQL = getBoolean( HIGHLIGHT_SQL, configValues );
@@ -43,6 +44,7 @@ public class SqlStatementLoggerInitiator implements StandardServiceInitiator<Sql
 		return new SqlStatementLogger( showSQL, formatSQL, highlightSQL, logSlowQuery );
 	}
 
+	@Nonnull
 	@Override
 	public Class<SqlStatementLogger> getServiceInitiated() {
 		return SqlStatementLogger.class;

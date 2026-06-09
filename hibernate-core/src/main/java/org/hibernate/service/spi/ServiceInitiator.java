@@ -4,6 +4,7 @@
  */
 package org.hibernate.service.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.service.Service;
 
 /**
@@ -17,5 +18,6 @@ public interface ServiceInitiator<R extends Service> {
 	 *
 	 * @return The service role.
 	 */
+	@Nonnull
 	Class<R> getServiceInitiated();
 }

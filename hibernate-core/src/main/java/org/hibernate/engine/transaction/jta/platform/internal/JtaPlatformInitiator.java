@@ -6,6 +6,7 @@ package org.hibernate.engine.transaction.jta.platform.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
@@ -26,13 +27,14 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 public class JtaPlatformInitiator implements StandardServiceInitiator<JtaPlatform> {
 	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
 
+	@Nonnull
 	@Override
 	public Class<JtaPlatform> getServiceInitiated() {
 		return JtaPlatform.class;
 	}
 
 	@Override
-	public @Nullable JtaPlatform initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public @Nullable JtaPlatform initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final Object setting = configurationValues.get( AvailableSettings.JTA_PLATFORM );
 		JtaPlatform platform =
 				registry.requireService( StrategySelector.class )

@@ -4,6 +4,7 @@
  */
 package org.hibernate.service.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,14 +22,15 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryServiceRegistryFactory {
 	private final ServiceRegistryImplementor theBasicServiceRegistry;
 
-	public SessionFactoryServiceRegistryFactoryImpl(ServiceRegistryImplementor theBasicServiceRegistry) {
+	public SessionFactoryServiceRegistryFactoryImpl(@Nonnull ServiceRegistryImplementor theBasicServiceRegistry) {
 		this.theBasicServiceRegistry = theBasicServiceRegistry;
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryServiceRegistry buildServiceRegistry(
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryOptions options) {
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nonnull SessionFactoryOptions options) {
 		final var classLoaderService = options.getServiceRegistry().requireService( ClassLoaderService.class );
 		final var builder = new SessionFactoryServiceRegistryBuilderImpl( theBasicServiceRegistry );
 		for ( var contributor : classLoaderService.loadJavaServices( SessionFactoryServiceContributor.class ) ) {

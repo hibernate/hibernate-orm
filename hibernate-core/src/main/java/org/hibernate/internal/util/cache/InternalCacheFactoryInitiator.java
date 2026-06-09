@@ -4,6 +4,7 @@
  */
 package org.hibernate.internal.util.cache;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -19,10 +20,11 @@ public class InternalCacheFactoryInitiator implements StandardServiceInitiator<I
 	private InternalCacheFactoryInitiator() {}
 
 	@Override
-	public InternalCacheFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public InternalCacheFactory initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return new InternalCacheFactoryImpl();
 	}
 
+	@Nonnull
 	@Override
 	public Class<InternalCacheFactory> getServiceInitiated() {
 		return InternalCacheFactory.class;

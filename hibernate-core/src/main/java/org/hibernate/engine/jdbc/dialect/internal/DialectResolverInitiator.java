@@ -7,6 +7,7 @@ package org.hibernate.engine.jdbc.dialect.internal;
 import java.util.Collection;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -27,13 +28,14 @@ public class DialectResolverInitiator implements StandardServiceInitiator<Dialec
 	 */
 	public static final DialectResolverInitiator INSTANCE = new DialectResolverInitiator();
 
+	@Nonnull
 	@Override
 	public Class<DialectResolver> getServiceInitiated() {
 		return DialectResolver.class;
 	}
 
 	@Override
-	public DialectResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public DialectResolver initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final DialectResolverSet resolverSet = new DialectResolverSet();
 
 		applyCustomerResolvers( resolverSet, registry, configurationValues );

@@ -7,6 +7,8 @@ package org.hibernate.service.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
@@ -26,7 +28,7 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 	private final List<SessionFactoryServiceInitiator<?>> initiators = buildStandardServiceInitiatorList();
 	private final List<ProvidedService<? extends Service>> providedServices = new ArrayList<>();
 
-	public SessionFactoryServiceRegistryBuilderImpl(ServiceRegistryImplementor parent) {
+	public SessionFactoryServiceRegistryBuilderImpl(@Nullable ServiceRegistryImplementor parent) {
 		this.parent = parent;
 		if ( parent != null ) {
 			// Parent takes precedence over the standard service initiators
@@ -42,7 +44,8 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 	 * @return this, for method chaining
 	 */
 	@Override
-	public SessionFactoryServiceRegistryBuilder addInitiator(SessionFactoryServiceInitiator<?> initiator) {
+	@Nonnull
+	public SessionFactoryServiceRegistryBuilder addInitiator(@Nonnull SessionFactoryServiceInitiator<?> initiator) {
 		initiators.add( initiator );
 		return this;
 	}
@@ -56,11 +59,13 @@ public class SessionFactoryServiceRegistryBuilderImpl implements SessionFactoryS
 	 * @return this, for method chaining
 	 */
 	@Override
-	public <R extends Service> SessionFactoryServiceRegistryBuilder addService(final Class<R> serviceRole, final R service) {
+	@Nonnull
+	public <R extends Service> SessionFactoryServiceRegistryBuilder addService(@Nonnull final Class<R> serviceRole, final R service) {
 		providedServices.add( new ProvidedService<>( serviceRole, service ) );
 		return this;
 	}
 
+	@Nonnull
 	public SessionFactoryServiceRegistry buildSessionFactoryServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions options) {

@@ -6,6 +6,7 @@ package org.hibernate.boot.cfgxml.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -20,10 +21,11 @@ public class CfgXmlAccessServiceInitiator implements StandardServiceInitiator<Cf
 	public static final CfgXmlAccessServiceInitiator INSTANCE = new CfgXmlAccessServiceInitiator();
 
 	@Override
-	public CfgXmlAccessService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public CfgXmlAccessService initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return new CfgXmlAccessServiceImpl( configurationValues );
 	}
 
+	@Nonnull
 	@Override
 	public Class<CfgXmlAccessService> getServiceInitiated() {
 		return CfgXmlAccessService.class;

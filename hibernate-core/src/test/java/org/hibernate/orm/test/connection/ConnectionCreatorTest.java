@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.connection;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -83,7 +84,7 @@ public class ConnectionCreatorTest {
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public <R extends Service> R getService(Class<R> serviceRole) {
+		public <R extends Service> R getService(@Nonnull Class<R> serviceRole) {
 			if ( JdbcServices.class.equals( serviceRole ) ) {
 				// return a new, not fully initialized JdbcServicesImpl
 				JdbcServicesImpl jdbcServices = new JdbcServicesImpl( this );

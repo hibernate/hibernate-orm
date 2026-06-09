@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -144,7 +145,7 @@ public class EventEngineContributionsTests {
 
 	public static class TestingClassLoaderService extends ClassLoaderServiceImpl {
 		@Override
-		public <S> Collection<S> loadJavaServices(Class<S> serviceContract) {
+		public <S> @NonNull Collection<S> loadJavaServices(@NonNull Class<S> serviceContract) {
 			if ( serviceContract.equals( EventEngineContributor.class ) ) {
 				//noinspection unchecked
 				return (Collection<S>) Collections.singleton( TheContributor.INSTANCE );

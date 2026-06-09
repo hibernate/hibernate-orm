@@ -22,6 +22,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
@@ -124,7 +125,7 @@ class LeakingStatementCachingTest {
 	public static class ConnectionProviderServiceContributor implements ServiceContributor {
 
 		@Override
-		public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		public void contribute(@NonNull StandardServiceRegistryBuilder serviceRegistryBuilder) {
 			serviceRegistryBuilder.applySetting( AvailableSettings.DATASOURCE, SINGLE_CONNECTION_DATASOURCE );
 
 			serviceRegistryBuilder.getSettings().remove( AvailableSettings.USER );

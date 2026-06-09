@@ -6,6 +6,7 @@ package org.hibernate.property.access.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -19,13 +20,14 @@ public class PropertyAccessStrategyResolverInitiator implements StandardServiceI
 	 */
 	public static final PropertyAccessStrategyResolverInitiator INSTANCE = new PropertyAccessStrategyResolverInitiator();
 
+	@Nonnull
 	@Override
 	public Class<PropertyAccessStrategyResolver> getServiceInitiated() {
 		return PropertyAccessStrategyResolver.class;
 	}
 
 	@Override
-	public PropertyAccessStrategyResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public PropertyAccessStrategyResolver initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return new PropertyAccessStrategyResolverStandardImpl( registry );
 	}
 }

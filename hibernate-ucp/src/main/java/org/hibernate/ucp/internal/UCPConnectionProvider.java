@@ -4,6 +4,7 @@
  */
 package org.hibernate.ucp.internal;
 
+import jakarta.annotation.Nonnull;
 import oracle.ucp.UniversalConnectionPool;
 import oracle.ucp.UniversalConnectionPoolAdapter;
 import oracle.ucp.UniversalConnectionPoolException;
@@ -69,7 +70,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	private Integer isolation;
 
 	@Override
-	public void configure(Map<String, Object> props) throws HibernateException {
+	public void configure(@Nonnull Map<String, Object> props) throws HibernateException {
 		try {
 			CONNECTION_INFO_LOGGER.configureConnectionPool( "UCP" );
 
@@ -256,7 +257,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 
 	@Override
 	@SuppressWarnings("rawtypes")
-	public boolean isUnwrappableAs(Class unwrapType) {
+	public boolean isUnwrappableAs(@Nonnull Class unwrapType) {
 		return ConnectionProvider.class.equals( unwrapType )
 			|| UCPConnectionProvider.class.isAssignableFrom( unwrapType )
 			|| DataSource.class.isAssignableFrom( unwrapType );
@@ -264,7 +265,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@Nonnull Class<T> unwrapType) {
 		if ( ConnectionProvider.class.equals( unwrapType ) ||
 			UCPConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
 			return (T) this;

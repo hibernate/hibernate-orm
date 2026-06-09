@@ -6,6 +6,7 @@ package org.hibernate.bytecode.spi;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -32,6 +33,7 @@ public interface BytecodeProvider extends Service {
 	 *
 	 * @return The provider specific factory.
 	 */
+	@Nonnull
 	ProxyFactoryFactory getProxyFactoryFactory();
 
 	/**
@@ -46,7 +48,8 @@ public interface BytecodeProvider extends Service {
 	 * @deprecated Use {@link #getReflectionOptimizer(Class, Map)} insstead
 	 */
 	@Deprecated(forRemoval = true)
-	ReflectionOptimizer getReflectionOptimizer(Class clazz, String[] getterNames, String[] setterNames, Class[] types);
+	@Nullable
+	ReflectionOptimizer getReflectionOptimizer(@Nonnull Class<?> clazz, @Nonnull String[] getterNames, @Nonnull String[] setterNames, @Nonnull Class<?>[] types);
 
 	/**
 	 * Retrieve the ReflectionOptimizer delegate for this provider
@@ -56,7 +59,8 @@ public interface BytecodeProvider extends Service {
 	 * @param propertyAccessMap The ordered property access map
 	 * @return The reflection optimization delegate.
 	 */
-	@Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap);
+	@Nullable
+	ReflectionOptimizer getReflectionOptimizer(@Nonnull Class<?> clazz, @Nonnull Map<String, PropertyAccess> propertyAccessMap);
 
 	/**
 	 * Returns a byte code enhancer that implements the enhancements described in the supplied enhancement context.
@@ -65,7 +69,7 @@ public interface BytecodeProvider extends Service {
 	 *
 	 * @return An enhancer to perform byte code manipulations.
 	 */
-	@Nullable Enhancer getEnhancer(EnhancementContext enhancementContext);
+	@Nullable Enhancer getEnhancer(@Nonnull EnhancementContext enhancementContext);
 
 	/**
 	 * Some BytecodeProvider implementations will have classloader specific caching.

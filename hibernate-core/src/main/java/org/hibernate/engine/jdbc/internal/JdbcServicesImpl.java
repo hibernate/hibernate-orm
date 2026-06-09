@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -41,12 +42,12 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
-	public void configure(Map<String, Object> configValues) {
+	public void configure(@Nonnull Map<String, Object> configValues) {
 		this.jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		this.sqlStatementLogger = serviceRegistry.getService( SqlStatementLogger.class );
 		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );

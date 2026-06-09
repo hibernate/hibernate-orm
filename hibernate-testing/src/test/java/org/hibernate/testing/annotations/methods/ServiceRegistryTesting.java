@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,14 +72,14 @@ public class ServiceRegistryTesting {
 
 	public static class ServiceContributor1 implements ServiceContributor {
 		@Override
-		public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		public void contribute(@NonNull StandardServiceRegistryBuilder serviceRegistryBuilder) {
 			serviceRegistryBuilder.getSettings().put( "contributed", "contributed-1" );
 		}
 	}
 
 	public static class ServiceContributor2 implements ServiceContributor {
 		@Override
-		public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		public void contribute(@NonNull StandardServiceRegistryBuilder serviceRegistryBuilder) {
 			serviceRegistryBuilder.getSettings().put( "contributed", "contributed-2" );
 		}
 	}

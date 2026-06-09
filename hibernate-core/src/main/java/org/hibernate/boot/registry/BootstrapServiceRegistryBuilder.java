@@ -185,7 +185,7 @@ public class BootstrapServiceRegistryBuilder {
 			if ( providedClassLoaders != null )  {
 				classLoaders.addAll( providedClassLoaders );
 			}
-			return new ClassLoaderServiceImpl( classLoaders,tcclLookupPrecedence );
+			return new ClassLoaderServiceImpl( classLoaders, tcclLookupPrecedence );
 		}
 		else {
 			return providedClassLoaderService;

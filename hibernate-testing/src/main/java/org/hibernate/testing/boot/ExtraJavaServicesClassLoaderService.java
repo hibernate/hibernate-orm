@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.jspecify.annotations.NonNull;
 
 /**
  * @author Steve Ebersole
@@ -22,18 +23,16 @@ public class ExtraJavaServicesClassLoaderService extends ClassLoaderServiceImpl 
 	}
 
 	@Override
-	public <S> Collection<S> loadJavaServices(Class<S> serviceContract) {
-		final Collection<S> baseServices = super.loadJavaServices( serviceContract );
+	public <S> @NonNull Collection<S> loadJavaServices(@NonNull Class<S> serviceContract) {
+		final var baseServices = super.loadJavaServices( serviceContract );
 		final List<S> services = new ArrayList<>( baseServices );
-
 		applyExtraJavaServices( serviceContract, services );
-
 		return services;
 	}
 
 	private <S> void applyExtraJavaServices(Class<S> serviceContract, List<S> services) {
 		extraJavaServices.forEach(
-				(javaServiceDescriptor) -> {
+				javaServiceDescriptor -> {
 					if ( serviceContract.isAssignableFrom( javaServiceDescriptor.role ) ) {
 						try {
 							final Object serviceInstance = javaServiceDescriptor.impl.getDeclaredConstructor().newInstance();
@@ -51,21 +50,6 @@ public class ExtraJavaServicesClassLoaderService extends ClassLoaderServiceImpl 
 		);
 	}
 
-	public static class JavaServiceDescriptor<ROLE> {
-		private final Class<ROLE> role;
-		private final Class<? extends ROLE> impl;
-
-		public JavaServiceDescriptor(Class<ROLE> role, Class<? extends ROLE> impl) {
-			this.role = role;
-			this.impl = impl;
-		}
-
-		public Class<ROLE> getRole() {
-			return role;
-		}
-
-		public Class<? extends ROLE> getImpl() {
-			return impl;
-		}
+	public record JavaServiceDescriptor<ROLE>(Class<ROLE> role, Class<? extends ROLE> impl) {
 	}
 }

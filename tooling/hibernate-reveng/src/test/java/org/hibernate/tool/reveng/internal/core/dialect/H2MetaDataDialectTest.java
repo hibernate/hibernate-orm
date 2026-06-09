@@ -5,6 +5,7 @@
 package org.hibernate.tool.reveng.internal.core.dialect;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,11 +51,11 @@ public class H2MetaDataDialectTest {
 				return false;
 			}
 			@Override
-			public boolean isUnwrappableAs(Class<?> unwrapType) {
+			public boolean isUnwrappableAs(@NonNull Class<?> unwrapType) {
 				return false;
 			}
 			@Override
-			public <T> T unwrap(Class<T> unwrapType) {
+			public <T> T unwrap(@NonNull Class<T> unwrapType) {
 				return null;
 			}
 		};
@@ -151,9 +152,9 @@ public class H2MetaDataDialectTest {
 			@Override
 			public boolean supportsAggressiveRelease() { return false; }
 			@Override
-			public boolean isUnwrappableAs(Class<?> unwrapType) { return false; }
+			public boolean isUnwrappableAs(@NonNull Class<?> unwrapType) { return false; }
 			@Override
-			public <T> T unwrap(Class<T> unwrapType) { return null; }
+			public <T> T unwrap(@NonNull Class<T> unwrapType) { return null; }
 		};
 		freshDialect.configure(cp);
 		// Close without having called any query method — exercises the connection==null branch

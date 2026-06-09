@@ -22,6 +22,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -117,12 +118,12 @@ public class QualifiedTableNamingTest {
 
 
 		@Override
-		public boolean isUnwrappableAs(Class<?> unwrapType) {
+		public boolean isUnwrappableAs(@NonNull Class<?> unwrapType) {
 			return false;
 		}
 
 		@Override
-		public <T> T unwrap(Class<T> unwrapType) {
+		public <T> T unwrap(@NonNull Class<T> unwrapType) {
 			return null;
 		}
 	}

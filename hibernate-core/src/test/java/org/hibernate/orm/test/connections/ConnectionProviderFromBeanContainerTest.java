@@ -15,6 +15,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -103,12 +104,12 @@ public class ConnectionProviderFromBeanContainerTest {
 	public static class DummyConnectionProvider implements ConnectionProvider {
 
 		@Override
-		public boolean isUnwrappableAs(Class<?> unwrapType) {
+		public boolean isUnwrappableAs(@NonNull Class<?> unwrapType) {
 			return false;
 		}
 
 		@Override
-		public <T> T unwrap(Class<T> unwrapType) {
+		public <T> T unwrap(@NonNull Class<T> unwrapType) {
 			return null;
 		}
 

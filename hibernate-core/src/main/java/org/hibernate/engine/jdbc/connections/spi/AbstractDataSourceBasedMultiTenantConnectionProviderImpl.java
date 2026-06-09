@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import javax.sql.DataSource;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
@@ -46,13 +47,13 @@ public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@Nonnull Class<?> unwrapType) {
 		return unwrapType.isInstance( this )
 			|| unwrapType.isAssignableFrom( DataSource.class );
 	}
 
 	@Override
-	public <X> X unwrap(Class<X> unwrapType) {
+	public <X> X unwrap(@Nonnull Class<X> unwrapType) {
 		if ( unwrapType.isInstance( this ) ) {
 			return unwrapType.cast( this );
 		}

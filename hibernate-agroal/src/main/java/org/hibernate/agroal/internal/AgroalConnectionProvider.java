@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import io.agroal.api.configuration.AgroalConnectionFactoryConfiguration.TransactionIsolation;
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AgroalSettings;
 import org.hibernate.cfg.AvailableSettings;
@@ -105,7 +106,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	}
 
 	@Override
-	public void configure(Map<String, Object> properties) throws HibernateException {
+	public void configure(@Nonnull Map<String, Object> properties) throws HibernateException {
 		CONNECTION_INFO_LOGGER.configureConnectionPool( "Agroal" );
 		try {
 			final var config = toStringValuedProperties( properties );
@@ -205,14 +206,14 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@Nonnull Class<?> unwrapType) {
 		return unwrapType.isAssignableFrom( AgroalConnectionProvider.class )
 			|| unwrapType.isAssignableFrom( AgroalDataSource.class );
 	}
 
 	@Override
 	@SuppressWarnings( "unchecked" )
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@Nonnull Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( AgroalConnectionProvider.class ) ) {
 			return (T) this;
 		}

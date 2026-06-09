@@ -4,6 +4,7 @@
  */
 package org.hibernate.service.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.temporal.internal.ChangesetCoordinatorImpl;
@@ -19,13 +20,14 @@ import java.util.Map;
 public class ChangesetCoordinatorInitiator implements StandardServiceInitiator<ChangesetCoordinator> {
 	public static final ChangesetCoordinatorInitiator INSTANCE = new ChangesetCoordinatorInitiator();
 
+	@Nonnull
 	@Override
 	public Class<ChangesetCoordinator> getServiceInitiated() {
 		return ChangesetCoordinator.class;
 	}
 
 	@Override
-	public ChangesetCoordinator initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public ChangesetCoordinator initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return new ChangesetCoordinatorImpl(registry);
 	}
 }

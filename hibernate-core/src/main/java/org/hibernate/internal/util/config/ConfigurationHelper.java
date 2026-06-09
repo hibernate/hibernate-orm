@@ -477,7 +477,7 @@ public final class ConfigurationHelper {
 
 		@Override
 		@Nonnull
-		public Integer convert(Object value) {
+		public Integer convert(@Nonnull Object value) {
 			if ( value instanceof Number number ) {
 				return number.intValue();
 			}

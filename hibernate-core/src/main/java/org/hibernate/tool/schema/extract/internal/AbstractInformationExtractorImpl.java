@@ -79,7 +79,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		useJdbcMetadataDefaultsSetting = configService.getSetting(
 				"hibernate.temp.use_jdbc_metadata_defaults",
 				StandardConverters.BOOLEAN,
-				Boolean.TRUE
+				true
 		);
 		final String extraPhysicalTableTypesConfig = configService.getSetting(
 				EXTRA_PHYSICAL_TABLE_TYPES,

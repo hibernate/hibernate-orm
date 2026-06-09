@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.cursor.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -23,7 +24,7 @@ public class RefCursorSupportInitiator implements StandardServiceInitiator<RefCu
 	public static final RefCursorSupportInitiator INSTANCE = new RefCursorSupportInitiator();
 
 	@Override
-	public RefCursorSupport initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public RefCursorSupport initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final JdbcServices jdbcServices = registry.requireService( JdbcServices.class );
 		final boolean supportsRefCursors = useRefCursorSupport( jdbcServices );
 		return supportsRefCursors
@@ -39,6 +40,7 @@ public class RefCursorSupportInitiator implements StandardServiceInitiator<RefCu
 		return jdbcServices.getJdbcEnvironment().getExtractedDatabaseMetaData().supportsRefCursors();
 	}
 
+	@Nonnull
 	@Override
 	public Class<RefCursorSupport> getServiceInitiated() {
 		return RefCursorSupport.class;

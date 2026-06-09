@@ -6,6 +6,7 @@ package org.hibernate.service.internal;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -82,22 +83,25 @@ public class SessionFactoryServiceRegistryImpl
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryOptions getSessionFactoryOptions() {
 		return sessionFactoryOptions;
 	}
 
 	@Override
+	@Nonnull
 	public ServiceRegistryImplementor getServiceRegistry() {
 		return this;
 	}
 
 	@Override
-	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
+	public <R extends Service> @Nullable R getService(@Nonnull Class<R> serviceRole) {
 		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
 			SERVICE_LOGGER.eventListenerRegistryAccessDeprecated();
 			//noinspection unchecked

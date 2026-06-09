@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.extension.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.extension.spi.ExtensionIntegration;
 import org.hibernate.engine.extension.spi.ExtensionIntegrationService;
@@ -21,18 +22,16 @@ public class ExtensionIntegrationServiceImpl implements ExtensionIntegrationServ
 	private ExtensionIntegrationServiceImpl() {
 	}
 
-	public static ExtensionIntegrationServiceImpl create(Set<ExtensionIntegration<?>> integrations, ClassLoaderService classLoaderService) {
-		ExtensionIntegrationServiceImpl instance = new ExtensionIntegrationServiceImpl();
-
+	@Nonnull
+	public static ExtensionIntegrationServiceImpl create(@Nonnull Set<ExtensionIntegration<?>> integrations, @Nonnull ClassLoaderService classLoaderService) {
+		final var instance = new ExtensionIntegrationServiceImpl();
 		// register provided integrators
-		for ( ExtensionIntegration<?> integration : integrations ) {
+		for ( var integration : integrations ) {
 			instance.addExtensionIntegration( integration );
 		}
-		for ( ExtensionIntegration<?> integration : classLoaderService.loadJavaServices(
-				ExtensionIntegration.class ) ) {
+		for ( var integration : classLoaderService.loadJavaServices( ExtensionIntegration.class ) ) {
 			instance.addExtensionIntegration( integration );
 		}
-
 		return instance;
 	}
 

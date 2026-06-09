@@ -6,6 +6,7 @@ package org.hibernate.test.hikaricp.util;
 
 import org.hibernate.HibernateException;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Map;
 
@@ -16,7 +17,7 @@ import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFr
  */
 public class GradleParallelTestingHikariCPConnectionProvider extends HikariCPConnectionProvider {
 	@Override
-	public void configure(Map<String, Object> properties) throws HibernateException {
+	public void configure(@NonNull Map<String, Object> properties) throws HibernateException {
 		resolveFromSettings( properties );
 		super.configure( properties );
 	}

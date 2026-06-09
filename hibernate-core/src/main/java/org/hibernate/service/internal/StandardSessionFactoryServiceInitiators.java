@@ -22,7 +22,8 @@ import org.hibernate.stat.internal.StatisticsInitiator;
 public final class StandardSessionFactoryServiceInitiators {
 
 	public static List<SessionFactoryServiceInitiator<?>> buildStandardServiceInitiatorList() {
-		final ArrayList<SessionFactoryServiceInitiator<?>> serviceInitiators = new ArrayList<>();
+		// List must be mutable because SessionFactoryServiceRegistryBuilderImpl mutates it
+		final List<SessionFactoryServiceInitiator<?>> serviceInitiators = new ArrayList<>();
 		serviceInitiators.add( StatisticsInitiator.INSTANCE );
 		serviceInitiators.add( CacheInitiator.INSTANCE );
 		serviceInitiators.add( NativeQueryInterpreterInitiator.INSTANCE );

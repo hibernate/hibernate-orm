@@ -3,6 +3,9 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.spi;
+
+import jakarta.annotation.Nonnull;
+
 import java.util.Map;
 
 /**
@@ -16,5 +19,5 @@ public interface Configurable {
 	 *
 	 * @param configurationValues The configuration properties.
 	 */
-	void configure(Map<String, Object> configurationValues);
+	void configure(@Nonnull Map<String, Object> configurationValues);
 }

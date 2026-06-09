@@ -5,6 +5,8 @@
 package org.hibernate.engine.transaction.jta.platform.internal;
 
 import java.util.Map;
+
+import jakarta.annotation.Nonnull;
 import jakarta.transaction.Synchronization;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
@@ -36,7 +38,7 @@ public abstract class AbstractJtaPlatform
 	private final JtaSynchronizationStrategy tmSynchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy();
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 
@@ -69,7 +71,7 @@ public abstract class AbstractJtaPlatform
 	protected abstract TransactionManager locateTransactionManager();
 	protected abstract UserTransaction locateUserTransaction();
 
-	public void configure(Map<String, Object> configValues) {
+	public void configure(@Nonnull Map<String, Object> configValues) {
 		cacheTransactionManager = getBoolean( JTA_CACHE_TM, configValues, canCacheTransactionManagerByDefault() );
 		cacheUserTransaction = getBoolean( JTA_CACHE_UT, configValues, canCacheUserTransactionByDefault() );
 	}

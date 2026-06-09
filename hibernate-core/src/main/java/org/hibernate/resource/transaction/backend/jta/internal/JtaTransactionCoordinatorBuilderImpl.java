@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
@@ -54,7 +55,7 @@ public class JtaTransactionCoordinatorBuilderImpl implements TransactionCoordina
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
 	}
 

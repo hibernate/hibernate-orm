@@ -7,6 +7,7 @@ package org.hibernate.cache.internal;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.CacheException;
@@ -34,13 +35,14 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	 */
 	public static final RegionFactoryInitiator INSTANCE = new RegionFactoryInitiator();
 
+	@Nonnull
 	@Override
 	public Class<RegionFactory> getServiceInitiated() {
 		return RegionFactory.class;
 	}
 
 	@Override
-	public RegionFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public RegionFactory initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final var regionFactory = resolveRegionFactory( configurationValues, registry );
 		if ( regionFactory instanceof NoCachingRegionFactory ) {
 			L2CACHE_LOGGER.noRegionFactory();

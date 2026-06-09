@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.integration;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.service.spi.ServiceContributor;
 
@@ -16,7 +17,7 @@ import org.hibernate.service.spi.ServiceContributor;
 public class SpatialInitializer implements ServiceContributor {
 
 	@Override
-	public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void contribute(@Nonnull StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		final SpatialService spatialService = new SpatialService( serviceRegistryBuilder );
 		serviceRegistryBuilder.addService( SpatialService.class, spatialService );
 	}

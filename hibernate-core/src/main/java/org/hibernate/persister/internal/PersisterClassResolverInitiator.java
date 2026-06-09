@@ -6,6 +6,7 @@ package org.hibernate.persister.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.persister.spi.PersisterClassResolver;
@@ -19,13 +20,14 @@ public class PersisterClassResolverInitiator implements StandardServiceInitiator
 	public static final PersisterClassResolverInitiator INSTANCE = new PersisterClassResolverInitiator();
 	public static final String IMPL_NAME = "hibernate.persister.resolver";
 
+	@Nonnull
 	@Override
 	public Class<PersisterClassResolver> getServiceInitiated() {
 		return PersisterClassResolver.class;
 	}
 
 	@Override
-	public PersisterClassResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public PersisterClassResolver initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
 		if ( customImpl == null ) {
 			return new StandardPersisterClassResolver();

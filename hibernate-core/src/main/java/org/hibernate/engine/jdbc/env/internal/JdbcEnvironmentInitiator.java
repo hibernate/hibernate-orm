@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.StatementObserver;
 import org.hibernate.boot.registry.StandardServiceInitiator;
@@ -82,13 +83,14 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	public static final JdbcEnvironmentInitiator INSTANCE = new JdbcEnvironmentInitiator();
 
+	@Nonnull
 	@Override
 	public Class<JdbcEnvironment> getServiceInitiated() {
 		return JdbcEnvironment.class;
 	}
 
 	@Override
-	public JdbcEnvironment initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public JdbcEnvironment initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final String explicitDatabaseName = getExplicitDatabaseName( configurationValues );
 		Integer explicitDatabaseMajorVersion = getExplicitDatabaseMajorVersion( configurationValues );
 		Integer explicitDatabaseMinorVersion = getExplicitDatabaseMinorVersion( configurationValues );
@@ -131,7 +133,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 		final JdbcEnvironment jdbcEnvironment;
 		final DatabaseConnectionInfo databaseConnectionInfo;
-		final JdbcMetadataOnBoot jdbcMetadataAccess = jdbcMetadataAccess( configurationValues );
+		final var jdbcMetadataAccess = jdbcMetadataAccess( configurationValues );
 		if ( jdbcMetadataAccess != JdbcMetadataOnBoot.DISALLOW ) {
 			jdbcEnvironment = getJdbcEnvironmentUsingJdbcMetadata(
 					jdbcMetadataAccess,

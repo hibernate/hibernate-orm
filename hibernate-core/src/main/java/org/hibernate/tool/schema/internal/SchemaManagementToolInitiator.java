@@ -6,6 +6,7 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -23,7 +24,7 @@ public class SchemaManagementToolInitiator implements StandardServiceInitiator<S
 	public static final SchemaManagementToolInitiator INSTANCE = new SchemaManagementToolInitiator();
 
 	public SchemaManagementTool initiateService(
-			Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+			@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return registry.requireService( StrategySelector.class )
 				.<SchemaManagementTool>resolveDefaultableStrategy( SchemaManagementTool.class,
 						configurationValues.get( SCHEMA_MANAGEMENT_TOOL ),
@@ -54,6 +55,7 @@ public class SchemaManagementToolInitiator implements StandardServiceInitiator<S
 		}
 	}
 
+	@Nonnull
 	@Override
 	public Class<SchemaManagementTool> getServiceInitiated() {
 		return SchemaManagementTool.class;

@@ -18,6 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.jspecify.annotations.NonNull;
 
 /**
  * A special connection provider that is shared across test runs for better performance.
@@ -78,7 +79,7 @@ public class SharedDriverManagerConnectionProvider extends DriverManagerConnecti
 	private Boolean supportsIsValid;
 
 	@Override
-	public void configure(Map<String, Object> configurationValues) {
+	public void configure(@NonNull Map<String, Object> configurationValues) {
 		final Config c = new Config( configurationValues );
 		if ( !c.isCompatible( config ) ) {
 			if ( config != null ) {

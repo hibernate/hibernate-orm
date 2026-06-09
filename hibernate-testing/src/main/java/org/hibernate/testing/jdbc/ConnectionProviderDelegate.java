@@ -19,6 +19,7 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.jspecify.annotations.NonNull;
 
 import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFromSettings;
 
@@ -62,12 +63,12 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@NonNull ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
-	public void configure(Map<String, Object> configurationValues) {
+	public void configure(@NonNull Map<String, Object> configurationValues) {
 		if ( !configured ) {
 			if ( connectionProvider == null ) {
 				resolveFromSettings( configurationValues );
@@ -116,12 +117,12 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@NonNull Class<?> unwrapType) {
 		return connectionProvider.isUnwrappableAs( unwrapType );
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@NonNull Class<T> unwrapType) {
 		return connectionProvider.unwrap( unwrapType );
 	}
 

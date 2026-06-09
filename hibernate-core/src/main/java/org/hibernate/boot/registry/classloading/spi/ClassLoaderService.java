@@ -10,6 +10,8 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.ResourceLocator;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.service.Service;
@@ -31,10 +33,12 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 	 *
 	 * @throws ClassLoadingException Indicates the class could not be found
 	 */
-	<T> Class<T> classForName(String className);
+	@Nonnull
+	<T> Class<T> classForName(@Nonnull String className);
 
 	@SuppressWarnings("unchecked")
-	default <T> Class<T> classForTypeName(String className) {
+	@Nonnull
+	default <T> Class<T> classForTypeName(@Nonnull String className) {
 		return (Class<T>) switch ( className ) {
 			case "boolean" -> boolean.class;
 			case "byte" -> byte.class;
@@ -55,7 +59,7 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 	 *
 	 * @return The located URL; may return {@code null} to indicate the resource was not found
 	 */
-	URL locateResource(String name);
+	@Nullable URL locateResource(@Nonnull String name);
 
 	/**
 	 * Locate a resource by name (classpath lookup) and gets its stream.
@@ -64,16 +68,16 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 	 *
 	 * @return The stream of the located resource; may return {@code null} to indicate the resource was not found
 	 */
-	InputStream locateResourceStream(String name);
+	@Nullable InputStream locateResourceStream(@Nonnull String name);
 
 	/**
 	 * Locate a series of resource by name (classpath lookup).
 	 *
 	 * @param name The resource name.
 	 *
-	 * @return The list of URL matching; may return {@code null} to indicate the resource was not found
+	 * @return The list of URL matching; may return an empty list to indicate the resource was not found
 	 */
-	List<URL> locateResources(String name);
+	@Nonnull  List<URL> locateResources(@Nonnull String name);
 
 	/**
 	 * Discovers and instantiates implementations of the named service contract.
@@ -88,9 +92,11 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 	 *
 	 * @see org.hibernate.service.JavaServiceLoadable
 	 */
-	<S> Collection<S> loadJavaServices(Class<S> serviceContract);
+	@Nonnull
+	<S> Collection<S> loadJavaServices(@Nonnull Class<S> serviceContract);
 
-	<T> T generateProxy(InvocationHandler handler, Class<?>... interfaces);
+	@Nonnull
+	<T> T generateProxy(@Nonnull InvocationHandler handler, @Nonnull Class<?>... interfaces);
 
 	/**
 	 * Loading a Package from the ClassLoader.
@@ -98,11 +104,12 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 	 * @return The Package.  {@code null} if no such Package is found, or if the
 	 * ClassLoader call leads to an exception ({@link LinkageError}, e.g.).
 	 */
-	Package packageForNameOrNull(String packageName);
+	@Nullable
+	Package packageForNameOrNull(@Nonnull String packageName);
 
 	interface Work<T> {
-		T doWork(ClassLoader classLoader);
+		T doWork(@Nonnull ClassLoader classLoader);
 	}
 
-	<T> T workWithClassLoader(Work<T> work);
+	<T> T workWithClassLoader(@Nonnull Work<T> work);
 }

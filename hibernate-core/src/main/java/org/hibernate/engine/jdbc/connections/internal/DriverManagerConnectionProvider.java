@@ -10,6 +10,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Database;
 import org.hibernate.dialect.Dialect;
@@ -77,12 +78,12 @@ public class DriverManagerConnectionProvider
 	private volatile ServiceRegistry serviceRegistry;
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
-	public void configure(Map<String, Object> configurationValues) {
+	public void configure(@Nonnull Map<String, Object> configurationValues) {
 		CONNECTION_INFO_LOGGER.usingHibernateBuiltInConnectionPool();
 		final var pool = buildPool( configurationValues, serviceRegistry );
 		final long validationInterval = getLong( VALIDATION_INTERVAL, configurationValues, 30 );
@@ -323,12 +324,12 @@ public class DriverManagerConnectionProvider
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@Nonnull Class<?> unwrapType) {
 		return unwrapType.isAssignableFrom( DriverManagerConnectionProvider.class );
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@Nonnull Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( DriverManagerConnectionProvider.class ) ) {
 			return unwrapType.cast( this );
 		}

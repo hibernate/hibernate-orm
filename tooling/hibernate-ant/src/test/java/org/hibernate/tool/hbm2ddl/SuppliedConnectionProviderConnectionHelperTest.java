@@ -6,6 +6,7 @@ package org.hibernate.tool.hbm2ddl;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,11 +52,11 @@ public class SuppliedConnectionProviderConnectionHelperTest {
 				return false;
 			}
 			@Override
-			public boolean isUnwrappableAs(Class<?> unwrapType) {
+			public boolean isUnwrappableAs(@NonNull Class<?> unwrapType) {
 				return false;
 			}
 			@Override
-			public <T> T unwrap(Class<T> unwrapType) {
+			public <T> T unwrap(@NonNull Class<T> unwrapType) {
 				return null;
 			}
 		};

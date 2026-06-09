@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.internal.support;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.boot.registry.StandardServiceInitiator;
@@ -19,11 +20,12 @@ public class ActionQueueFactoryServiceInitiator implements StandardServiceInitia
 
 	@Override
 	public @Nullable ActionQueueFactoryService initiateService(
-			Map<String, Object> configurationValues,
-			ServiceRegistryImplementor registry) {
+			@Nonnull Map<String, Object> configurationValues,
+			@Nonnull ServiceRegistryImplementor registry) {
 		return new ActionQueueFactoryService( QueueType.fromSetting( configurationValues.get( FLUSH_QUEUE_TYPE ) ) );
 	}
 
+	@Nonnull
 	@Override
 	public Class<ActionQueueFactoryService> getServiceInitiated() {
 		return ActionQueueFactoryService.class;

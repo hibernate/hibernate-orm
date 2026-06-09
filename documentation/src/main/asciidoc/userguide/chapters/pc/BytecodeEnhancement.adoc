@@ -50,7 +50,7 @@ Historically Hibernate only supported diff-based dirty calculation for determini
 This essentially means that Hibernate would keep track of the last known state of an entity in regards to the database (typically the last read or write).
 Then, as part of flushing the persistence context, Hibernate would walk every entity associated with the persistence context and check its current state against that "last known database state".
 This is by far the most thorough approach to dirty checking because it accounts for data-types that can change their internal state (`java.util.Date` is the prime example of this).
-However, in a persistence context with a large number of associated entities, it can also be a performance-inhibiting approach.
+However, in a persistence context with lots of managed state, it can also be a performance-inhibiting approach.
 
 If your application does not need to care about "internal state changing data-type" use cases, bytecode-enhanced dirty tracking might be a worthwhile alternative to consider, especially in terms of performance.
 In this approach Hibernate will manipulate the bytecode of your classes to add "dirty tracking" directly to the entity, allowing the entity itself to keep track of which of its attributes have changed.
@@ -98,7 +98,12 @@ include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnh
 Bytecode-enhanced bidirectional association management makes that first example work by managing the "other side" of a bidirectional association whenever one side is manipulated.
 
 [IMPORTANT]
+====
 Hibernate's bidirectional association management bytecode enhancement feature has been deprecated.  Users should instead manage both sides of such associations directly.
+
+See <<auto-bidir-mgmt>> for an alternative, non-bytecode-enhancement option introduced in version 8.0.
+====
+
 
 [[BytecodeEnhancement-dirty-tracking-optimizations]]
 ==== Internal performance optimizations

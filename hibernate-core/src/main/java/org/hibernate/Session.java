@@ -952,11 +952,16 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Nonnull
 	<T> T getReference(@Nonnull T object);
 
-	/// Return a reference to the persistent instance of the given `entityType` with the
-	/// given `key` using the specified `options`.
+	/// Return a reference to the persistent instance of the given entity type with
+	/// the given key, which is interpreted according to the given {@link KeyType},
+	/// making the assumption that the instance is still persistent in the database.
 	///
-	/// @param keyType Whether the given `key` should be treated as an [identifier][KeyType#IDENTIFIER]
-	///  or [natural-identifier][KeyType#NATURAL].
+	/// @param entityType the entity type
+	/// @param key the id or natural id of a persistent instance that exists in the
+	///            database
+	/// @param keyType Whether the given `key` should be treated as an
+	///                [id][KeyType#IDENTIFIER] or as a [natural id][KeyType#NATURAL]
+	/// @since 8.0
 	@Nonnull
 	<T> T getReference(@Nonnull Class<T> entityType, @Nonnull Object key, @Nonnull KeyType keyType);
 

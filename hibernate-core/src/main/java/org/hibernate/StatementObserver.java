@@ -4,6 +4,9 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityAgent;
+import jakarta.persistence.EntityManager;
+
 /// Observation of (almost) all JDBC [statements][java.sql.Statement] performed by Hibernate.
 ///
 /// Generally "performed" means calls to [java.sql.Statement#execute], [java.sql.Statement#executeQuery]
@@ -13,13 +16,11 @@ package org.hibernate;
 /// In JDBC batching cases, [#performingSql] is called for each [java.sql.Statement#addBatch] call.  In these
 /// cases, `batchPosition` is the addition's position within the current batch.
 ///
-/// @apiNote Also provides [#swallowSql(String, int)] as a simple npo-op reference.
-///
 /// @since 8.0
 ///
 /// @author Steve Ebersole
 @Incubating
-public interface StatementObserver {
+public interface StatementObserver extends EntityManager.CreationOption, EntityAgent.CreationOption {
 	/// Callback that the given `sql` is about to be performed.
 	///
 	/// @apiNote "Performed" here could mean immediately executed, or added to a JDBC batch.
@@ -27,8 +28,4 @@ public interface StatementObserver {
 	/// @param sql The SQL which is being performed.
 	/// @param batchPosition The position within a batch; `-1` if not batched.
 	void performingSql(String sql, int batchPosition);
-
-	/// Simple "black hole" for "no observer".
-	static void swallowSql(String sql, int batchPosition) {
-	}
 }

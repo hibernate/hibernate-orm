@@ -45,7 +45,7 @@ Hibernate Data Repositories now implements Jakarta Data 1.1, including support f
 
 
 [[graph-flushing]]
-=== Graph-based Flushing
+== Graph-based Flushing
 
 8.0 introduces graph-based flush coordination that plans insert, update, delete, and collection work using the mapped relational constraints of the domain model.  Instead of relying primarily on operation ordering heuristics, the graph queue builds a dependency model for each flush and executes work in an order that better reflects foreign keys, uniqueness constraints, optional tables, secondary tables, and other mapping relationships.
 
@@ -138,3 +138,42 @@ var book = session.getReference(Book.class, isbn, NATURAL);
 == Discriminator-Based Multi-Tenancy and Row-Level Security
 
 On databases with built-in support for row-level security, Hibernate now uses row-level security to enforce the visibility rules implied by discriminator-based multi-tenancy.
+
+
+
+[[session-open]]
+== Session and StatelessSession Options
+
+One use of <<jpa4>> features is the ability to open and configure a `Session` or `StatelessSession` with Hibernate-specific options directly from the Jakarta Persistence API.
+
+`EntityManager.CreationOption` and `EntityAgent.CreationOption` define options which are applicable during creation of the `Session` or `StatelessSession` and which are in effect for its lifecycle.  Hibernate supports the following creation options -
+
+* `org.hibernate.SessionCreationOption.TenantId`
+* `org.hibernate.SessionCreationOption.EffectiveChangeset`
+* `org.hibernate.SessionCreationOption.EffectiveAt`
+* `org.hibernate.StatementObserver` (see <<StatementObserver>>)
+* `org.hibernate.Interceptor`
+
+NOTE: `Session` may also be created with a `org.hibernate.SessionCreationOption.SubselectFetchMode`.
+
+`EntityManager.Option` and `EntityAgent.Option` define configuration values which are mutable throughout the `Session` or `StatelessSession` lifecycle, though they may also be used as creation options -
+
+* `org.hibernate.CacheMode`
+* `jakarta.persistence.CacheStoreMode`
+* `jakarta.persistence.CacheRetrieveMode`
+* `org.hibernate.FlushMode`
+* `jakarta.persistence.FlushModeType`
+* `org.hibernate.BatchSize`
+* `org.hibernate.ReadOnlyMode`
+
+E.g.
+
+[source,java]
+----
+var entityManager = entityManagerFactory.createEntityManager(
+		new TenantId("acme"),
+		new EffectiveAt(now().minus(1,YEARS)),
+		ReadOnlyMode.READ_ONLY
+);
+
+----

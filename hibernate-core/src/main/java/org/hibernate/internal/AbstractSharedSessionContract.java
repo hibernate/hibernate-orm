@@ -26,6 +26,7 @@ import jakarta.persistence.sql.EntityMapping;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.StatementObserver;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.spi.ChangelogSupplier;
 import org.hibernate.audit.spi.AuditWorkQueue;
@@ -288,17 +289,17 @@ abstract class AbstractSharedSessionContract
 			currentHibernateTransaction = sharedOptions.getTransaction();
 			connectionHandlingMode = jdbcCoordinator.getLogicalConnection().getConnectionHandlingMode();
 			autoJoinTransactions = false;
-			jdbcSessionContext = createJdbcSessionContext( statementInspector );
+			jdbcSessionContext = createJdbcSessionContext( options.getStatementObserver(), statementInspector );
 			logInconsistentOptions( sharedOptions );
 			addSharedSessionTransactionObserver( transactionCoordinator );
 			sharedOptions.registerParentSessionObserver( new ParentSessionObserver() {
 				@Override
-	public void onParentFlush() {
+				public void onParentFlush() {
 					propagateFlush();
 				}
 
 				@Override
-	public void onParentClose() {
+				public void onParentClose() {
 					propagateClose();
 				}
 			} );
@@ -307,7 +308,7 @@ abstract class AbstractSharedSessionContract
 			isTransactionCoordinatorShared = false;
 			autoJoinTransactions = options.shouldAutoJoinTransactions();
 			connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
-			jdbcSessionContext = createJdbcSessionContext( statementInspector );
+			jdbcSessionContext = createJdbcSessionContext( options.getStatementObserver(), statementInspector );
 			// This must happen *after* the JdbcSessionContext was initialized,
 			// because some calls retrieve this context indirectly via Session getters.
 			jdbcCoordinator = createJdbcCoordinator( options );
@@ -771,9 +772,12 @@ abstract class AbstractSharedSessionContract
 		return new JdbcCoordinatorImpl( options.getConnection(), this, getJdbcServices() );
 	}
 
-	private JdbcSessionContextImpl createJdbcSessionContext(StatementInspector statementInspector) {
+	private JdbcSessionContextImpl createJdbcSessionContext(
+			StatementObserver statementObserver,
+			StatementInspector statementInspector) {
 		return new JdbcSessionContextImpl(
 				factory,
+				statementObserver,
 				statementInspector,
 				connectionHandlingMode,
 				getJdbcServices(),
@@ -2522,6 +2526,7 @@ abstract class AbstractSharedSessionContract
 		// 		-- see concurrent access discussion
 
 		factory.serialize( oos );
+		oos.writeObject( jdbcSessionContext.getStatementObserver() );
 		oos.writeObject( jdbcSessionContext.getStatementInspector() );
 		jdbcCoordinator.serialize( oos );
 	}
@@ -2545,7 +2550,7 @@ abstract class AbstractSharedSessionContract
 		final var baseline = factoryOptions.buildSessionEventListeners();
 		sessionEventsManager = new SessionEventListenerManagerImpl( baseline );
 
-		jdbcSessionContext = createJdbcSessionContext( (StatementInspector) ois.readObject() );
+		jdbcSessionContext = createJdbcSessionContext( (StatementObserver) ois.readObject(), (StatementInspector) ois.readObject() );
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
 		cacheTransactionSynchronization =

@@ -6,6 +6,8 @@ package org.hibernate;
 
 import java.util.Iterator;
 
+import jakarta.persistence.EntityAgent;
+import jakarta.persistence.EntityManager;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.type.Type;
@@ -60,7 +62,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public interface Interceptor {
+public interface Interceptor extends EntityManager.CreationOption, EntityAgent.CreationOption {
 	/**
 	 * Called just before an object is initialized. The interceptor may change the {@code state}, which will
 	 * be propagated to the persistent object. Note that when this method is called, {@code entity} will be

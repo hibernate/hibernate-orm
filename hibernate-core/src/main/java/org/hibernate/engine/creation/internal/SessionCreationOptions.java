@@ -12,6 +12,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
+import org.hibernate.StatementObserver;
 import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -42,6 +43,8 @@ public interface SessionCreationOptions {
 	Connection getConnection();
 
 	Interceptor resolveInterceptor(SessionFactoryImplementor sessionFactory);
+
+	StatementObserver getStatementObserver();
 
 	StatementInspector getStatementInspector();
 

@@ -91,7 +91,7 @@ public interface DialectResolutionInfo extends DatabaseVersion {
 	}
 
 	/**
-	 * Obtain access to the complete {@link ConfigurationService#getSettings() map of config settings}.
+	 * Obtain access to the {@linkplain ConfigurationService#getSettings configuration settings}.
 	 *
 	 * @return The immutable map of config settings.
 	 */

@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -31,6 +32,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 	 */
 	public static final MultiTenantConnectionProviderInitiator INSTANCE = new MultiTenantConnectionProviderInitiator();
 
+	@Nonnull
 	@Override
 	public Class<MultiTenantConnectionProvider<?>> getServiceInitiated() {
 		//noinspection unchecked
@@ -38,7 +40,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 	}
 
 	@Override
-	public MultiTenantConnectionProvider<?> initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public MultiTenantConnectionProvider<?> initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		if ( !configurationValues.containsKey( MULTI_TENANT_CONNECTION_PROVIDER ) ) {
 			return Helper.getBean(
 				Helper.getBeanContainer( registry ),

@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.dialect.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -21,13 +22,14 @@ public class DialectFactoryInitiator implements StandardServiceInitiator<Dialect
 	 */
 	public static final DialectFactoryInitiator INSTANCE = new DialectFactoryInitiator();
 
+	@Nonnull
 	@Override
 	public Class<DialectFactory> getServiceInitiated() {
 		return DialectFactory.class;
 	}
 
 	@Override
-	public DialectFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public DialectFactory initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return new DialectFactoryImpl();
 	}
 }

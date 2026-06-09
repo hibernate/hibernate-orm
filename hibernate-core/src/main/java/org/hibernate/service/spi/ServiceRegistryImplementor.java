@@ -4,6 +4,7 @@
  */
 package org.hibernate.service.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 
@@ -23,7 +24,7 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 *
 	 * @return The located binding; may be {@code null}
 	 */
-	<R extends Service> @Nullable ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
+	<R extends Service> @Nullable ServiceBinding<R> locateServiceBinding(@Nonnull Class<R> serviceRole);
 
 	@Override
 	default void close() {
@@ -41,13 +42,13 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 * When a registry is created with a parent, the parent is notified of the child
 	 * via this callback.
 	 */
-	void registerChild(ServiceRegistryImplementor child);
+	void registerChild(@Nonnull ServiceRegistryImplementor child);
 
 	/**
 	 * When a registry is created with a parent, the parent is notified of the child
 	 * via this callback.
 	 */
-	void deRegisterChild(ServiceRegistryImplementor child);
+	void deRegisterChild(@Nonnull ServiceRegistryImplementor child);
 
-	<T extends Service> @Nullable T fromRegistryOrChildren(Class<T> serviceRole);
+	<T extends Service> @Nullable T fromRegistryOrChildren(@Nonnull Class<T> serviceRole);
 }

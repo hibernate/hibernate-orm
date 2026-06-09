@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.cache.internal.DisabledCaching;
 import org.hibernate.cache.internal.EnabledCaching;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
@@ -22,14 +23,16 @@ public class CacheInitiator implements SessionFactoryServiceInitiator<CacheImple
 	public static final CacheInitiator INSTANCE = new CacheInitiator();
 
 	@Override
-	public CacheImplementor initiateService(SessionFactoryServiceInitiatorContext context) {
-		final var regionFactory = context.getServiceRegistry().getService( RegionFactory.class );
+	@Nonnull
+	public CacheImplementor initiateService(@Nonnull SessionFactoryServiceInitiatorContext context) {
+		final var regionFactory = context.getServiceRegistry().requireService( RegionFactory.class );
 		return regionFactory instanceof NoCachingRegionFactory
 				? new DisabledCaching( context.getSessionFactory() )
 				: new EnabledCaching( context.getSessionFactory() );
 	}
 
 	@Override
+	@Nonnull
 	public Class<CacheImplementor> getServiceInitiated() {
 		return CacheImplementor.class;
 	}

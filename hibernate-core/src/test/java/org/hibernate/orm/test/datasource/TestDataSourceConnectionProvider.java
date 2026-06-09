@@ -8,6 +8,7 @@ import org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvid
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.jspecify.annotations.NonNull;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -25,7 +26,7 @@ public class TestDataSourceConnectionProvider
 	final DriverManagerConnectionProvider delegate = new DriverManagerConnectionProvider();
 
 	@Override
-	public void configure(Map<String, Object> configuration) {
+	public void configure(@NonNull Map<String, Object> configuration) {
 		delegate.configure( configuration );
 		setDataSource( new DataSource() {
 			PrintWriter logWriter = new PrintWriter( System.out );
@@ -78,7 +79,7 @@ public class TestDataSourceConnectionProvider
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@NonNull ServiceRegistryImplementor serviceRegistry) {
 		delegate.injectServices( serviceRegistry );
 	}
 }

@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -81,6 +82,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 */
 	public static final String UCP_STRATEGY = "ucp";
 
+	@Nonnull
 	@Override
 	public Class<ConnectionProvider> getServiceInitiated() {
 		return ConnectionProvider.class;
@@ -88,8 +90,8 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	@Override
 	public ConnectionProvider initiateService(
-			Map<String, Object> configurationValues,
-			ServiceRegistryImplementor registry) {
+			@Nonnull Map<String, Object> configurationValues,
+			@Nonnull ServiceRegistryImplementor registry) {
 		if ( isMultiTenancyEnabled( registry ) ) {
 			// nothing to do, but given the separate hierarchies have to handle this here.
 			return null;

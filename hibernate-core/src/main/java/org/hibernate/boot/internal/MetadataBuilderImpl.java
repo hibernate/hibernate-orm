@@ -702,8 +702,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			schemaCharset = configService.getSetting(
 					HBM2DDL_CHARSET_NAME,
-					STRING,
-					null
+					STRING
 			);
 
 			allowExtensionsInCdi = configService.getSetting(
@@ -717,8 +716,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return ConstraintMode.NO_CONSTRAINT.name()
 					.equalsIgnoreCase( configService.getSetting(
 							HBM2DDL_DEFAULT_CONSTRAINT_MODE,
-							STRING,
-							null
+							STRING
 					) );
 		}
 
@@ -762,10 +760,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return configService.getSetting(
 					DEFAULT_CACHE_CONCURRENCY_STRATEGY,
 					value -> {
-						if ( value == null ) {
-							return null;
-						}
-						else if ( value instanceof CacheConcurrencyStrategy cacheConcurrencyStrategy ) {
+						if ( value instanceof CacheConcurrencyStrategy cacheConcurrencyStrategy ) {
 							return cacheConcurrencyStrategy.toAccessType();
 						}
 						else if ( value instanceof AccessType accessType ) {
@@ -789,9 +784,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					configService.getSetting(
 							JPA_SHARED_CACHE_MODE,
 							value -> {
-								if ( value == null ) {
-									return null;
-								}
 								DEPRECATION_LOGGER.deprecatedSetting(
 										JPA_SHARED_CACHE_MODE,
 										JAKARTA_SHARED_CACHE_MODE

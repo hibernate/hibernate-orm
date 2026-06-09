@@ -4,6 +4,7 @@
  */
 package org.hibernate.service.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.service.JavaServiceLoadable;
 
@@ -22,5 +23,5 @@ public interface ServiceContributor {
 	 *
 	 * @param serviceRegistryBuilder The builder to which services (or initiators) should be contributed.
 	 */
-	void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder);
+	void contribute(@Nonnull StandardServiceRegistryBuilder serviceRegistryBuilder);
 }

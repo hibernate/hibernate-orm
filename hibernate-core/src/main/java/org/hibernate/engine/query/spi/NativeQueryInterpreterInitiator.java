@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.query.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
@@ -18,11 +19,13 @@ public class NativeQueryInterpreterInitiator implements SessionFactoryServiceIni
 	public static final NativeQueryInterpreterInitiator INSTANCE = new NativeQueryInterpreterInitiator();
 
 	@Override
-	public NativeQueryInterpreter initiateService(SessionFactoryServiceInitiatorContext context) {
+	@Nonnull
+	public NativeQueryInterpreter initiateService(@Nonnull SessionFactoryServiceInitiatorContext context) {
 		return new NativeQueryInterpreterStandardImpl( context.getSessionFactoryOptions().getNativeJdbcParametersIgnored() );
 	}
 
 	@Override
+	@Nonnull
 	public Class<NativeQueryInterpreter> getServiceInitiated() {
 		return NativeQueryInterpreter.class;
 	}

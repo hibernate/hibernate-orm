@@ -14,6 +14,7 @@ import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 
 import org.hibernate.testing.util.ReflectionUtil;
 
+import org.jspecify.annotations.NonNull;
 import org.mockito.Answers;
 import org.mockito.Mockito;
 
@@ -25,7 +26,7 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 	private final Map<Connection, Connection> connectionSpyMap = new HashMap<>();
 
 	@Override
-	public void configure(Map<String, Object> props) {
+	public void configure(@NonNull Map<String, Object> props) {
 		super.configure( props );
 		DataSource ds = unwrap( DataSource.class );
 		DataSource dataSource = Mockito.mock(

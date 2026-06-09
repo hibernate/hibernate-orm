@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.BridgeMembersClassInfo;
@@ -52,6 +53,9 @@ import net.bytebuddy.implementation.MethodCall;
 import net.bytebuddy.jar.asm.Opcodes;
 import jakarta.annotation.Nullable;
 
+import static java.lang.reflect.Modifier.isAbstract;
+import static java.lang.reflect.Modifier.isPrivate;
+import static java.lang.reflect.Modifier.isPublic;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 public class BytecodeProviderImpl implements BytecodeProvider {
@@ -105,6 +109,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		this.constants = byteBuddyState.getEnhancerConstants();
 	}
 
+	@Nonnull
 	@Override
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new ProxyFactoryFactoryImpl( byteBuddyState, byteBuddyProxyHelper );
@@ -112,36 +117,13 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	@Override
 	public ReflectionOptimizer getReflectionOptimizer(
-			final Class clazz,
-			final String[] getterNames,
-			final String[] setterNames,
-			final Class[] types) {
-		final Class<?> fastClass;
-		if ( !clazz.isInterface() && !Modifier.isAbstract( clazz.getModifiers() ) ) {
-			// we only provide a fast class instantiator if the class can be instantiated
-			final Constructor<?> constructor = findConstructor( clazz );
-
-			if ( constructor == null || Modifier.isPrivate( constructor.getModifiers() ) ) {
-				// In the current implementation of the ReflectionOptimizer contract, we can't call private constructors
-				// To support that, we have to inject a static factory method into the class during enhancement
-				fastClass = null;
-			}
-			else {
-				final String className = clazz.getName() + INSTANTIATOR_PROXY_NAMING_SUFFIX;
-				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
-						.with( namingStrategy )
-						.subclass( constants.TypeInstantiationOptimizer )
-						.method( constants.newInstanceMethodName )
-						.intercept( MethodCall.construct( constructor ) )
-				);
-			}
-		}
-		else {
-			fastClass = null;
-		}
-
-		final Method[] getters = new Method[getterNames.length];
-		final Method[] setters = new Method[setterNames.length];
+			@Nonnull final Class<?> clazz,
+			@Nonnull final String[] getterNames,
+			@Nonnull final String[] setterNames,
+			@Nonnull final Class<?>[] types) {
+		final var fastClass = getFastClass( clazz );
+		final var getters = new Method[getterNames.length];
+		final var setters = new Method[setterNames.length];
 		try {
 			findAccessors( clazz, getterNames, setterNames, types, getters, setters );
 		}
@@ -150,7 +132,22 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			return null;
 		}
 
-		final Class<?> bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
+		final var bulkAccessor = getBulkAccessor( clazz, getterNames, getters, setters );
+
+		try {
+			return new ReflectionOptimizerImpl(
+					fastClass == null ? null : (ReflectionOptimizer.InstantiationOptimizer) fastClass.newInstance(),
+					(ReflectionOptimizer.AccessOptimizer) bulkAccessor.newInstance()
+			);
+		}
+		catch (Exception exception) {
+			throw new HibernateException( exception );
+		}
+	}
+
+	@Nonnull
+	private Class<?> getBulkAccessor(@Nonnull Class<?> clazz, @Nonnull String[] getterNames, Method[] getters, Method[] setters) {
+		return byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 				.with( new NamingStrategy.SuffixingRandom(
 						OPTIMIZER_PROXY_NAMING_SUFFIX,
 						new NamingStrategy.Suffixing.BaseNameResolver.ForFixedValue( clazz.getName() )
@@ -164,7 +161,25 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				.method( constants.getPropertyNamesMethodName )
 				.intercept( new Implementation.Simple( new GetPropertyNames( getterNames, constants ) ) )
 		);
+	}
 
+	@Override
+	public @Nullable ReflectionOptimizer getReflectionOptimizer(@Nonnull Class<?> clazz, @Nonnull Map<String, PropertyAccess> propertyAccessMap) {
+		final var fastClass = getFastClass( clazz );
+
+		final var getters = new Member[propertyAccessMap.size()];
+		final var setters = new Member[propertyAccessMap.size()];
+		try {
+			findAccessors( clazz, propertyAccessMap, getters, setters );
+		}
+		catch (InvalidPropertyAccessorException ex) {
+			CORE_LOGGER.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
+			return null;
+		}
+
+		final var propertyNames = propertyAccessMap.keySet().toArray( new String[0] );
+		final var superClass = determineAccessOptimizerSuperClass( clazz, propertyNames, getters, setters );
+		final var bulkAccessor = getBulkAccessor( clazz, superClass, propertyNames, getters, setters );
 		try {
 			return new ReflectionOptimizerImpl(
 					fastClass != null ? (ReflectionOptimizer.InstantiationOptimizer) fastClass.newInstance() : null,
@@ -176,50 +191,14 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 	}
 
-	@Override
-	public @Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap) {
-		final Class<?> fastClass;
-		if ( !clazz.isInterface() && !Modifier.isAbstract( clazz.getModifiers() ) ) {
-			// we only provide a fast class instantiator if the class can be instantiated
-			final Constructor<?> constructor = findConstructor( clazz );
-
-			if ( constructor == null || Modifier.isPrivate( constructor.getModifiers() ) ) {
-				// In the current implementation of the ReflectionOptimizer contract, we can't call private constructors
-				// To support that, we have to inject a static factory method into the class during enhancement
-				fastClass = null;
-			}
-			else {
-				final String className = clazz.getName() + INSTANTIATOR_PROXY_NAMING_SUFFIX;
-				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
-						.with( namingStrategy )
-						.subclass( constants.TypeInstantiationOptimizer )
-						.method( constants.newInstanceMethodName )
-						.intercept( MethodCall.construct( constructor ) )
-				);
-			}
-		}
-		else {
-			fastClass = null;
-		}
-
-		final Member[] getters = new Member[propertyAccessMap.size()];
-		final Member[] setters = new Member[propertyAccessMap.size()];
-		try {
-			findAccessors( clazz, propertyAccessMap, getters, setters );
-		}
-		catch (InvalidPropertyAccessorException ex) {
-			CORE_LOGGER.unableToGenerateReflectionOptimizer( clazz.getName(), ex.getMessage() );
-			return null;
-		}
-
-		final String[] propertyNames = propertyAccessMap.keySet().toArray( new String[0] );
-		final Class<?> superClass = determineAccessOptimizerSuperClass( clazz, propertyNames, getters, setters );
-
-		final String className = clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + NameEncodeHelper.encodeName( propertyNames, getters, setters );
-		final Class<?> bulkAccessor;
+	private Class<?> getBulkAccessor(@Nonnull Class<?> clazz, Class<?> superClass, String[] propertyNames, Member[] getters, Member[] setters) {
+		final String className =
+				clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX
+					+ NameEncodeHelper.encodeName( propertyNames, getters, setters );
 		if ( className.getBytes( StandardCharsets.UTF_8 ).length >= 0x10000 ) {
-			// The JVM has a 64K byte limit on class name length, so fallback to random name if encoding exceeds that
-			bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
+			// The JVM has a 64K byte limit on class name length,
+			// so fallback to random name if encoding exceeds that
+			return byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 					.with( new NamingStrategy.SuffixingRandom(
 							OPTIMIZER_PROXY_NAMING_SUFFIX,
 							new NamingStrategy.Suffixing.BaseNameResolver.ForFixedValue( clazz.getName() )
@@ -235,7 +214,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			);
 		}
 		else {
-			bulkAccessor = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
+			return byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
 					.with( namingStrategy )
 					.subclass( superClass )
 					.implement( constants.INTERFACES_for_AccessOptimizer )
@@ -247,15 +226,30 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					.intercept( new Implementation.Simple( new GetPropertyNames( propertyNames, constants ) ) )
 			);
 		}
+	}
 
-		try {
-			return new ReflectionOptimizerImpl(
-					fastClass != null ? (ReflectionOptimizer.InstantiationOptimizer) fastClass.newInstance() : null,
-					(ReflectionOptimizer.AccessOptimizer) bulkAccessor.newInstance()
-			);
+	@Nullable
+	private Class<?> getFastClass(@Nonnull Class<?> clazz) {
+		if ( !clazz.isInterface() && !isAbstract( clazz.getModifiers() ) ) {
+			// we only provide a fast class instantiator if the class can be instantiated
+			final var constructor = findConstructor( clazz );
+			if ( constructor == null || isPrivate( constructor.getModifiers() ) ) {
+				// In the current implementation of the ReflectionOptimizer contract, we can't call private constructors
+				// To support that, we have to inject a static factory method into the class during enhancement
+				return null;
+			}
+			else {
+				final String className = clazz.getName() + INSTANTIATOR_PROXY_NAMING_SUFFIX;
+				return byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
+						.with( namingStrategy )
+						.subclass( constants.TypeInstantiationOptimizer )
+						.method( constants.newInstanceMethodName )
+						.intercept( MethodCall.construct( constructor ) )
+				);
+			}
 		}
-		catch (Exception exception) {
-			throw new HibernateException( exception );
+		else {
+			return null;
 		}
 	}
 
@@ -280,8 +274,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					className,
 					(byteBuddy, namingStrategy) -> {
 						DynamicType.Builder<?> builder = byteBuddy.with( namingStrategy ).subclass( newSuperClass );
-						for ( Member getter : bridgeMembersClassInfo.gettersIterable() ) {
-							if ( !Modifier.isPublic( getter.getModifiers() ) ) {
+						for ( var getter : bridgeMembersClassInfo.gettersIterable() ) {
+							if ( !isPublic( getter.getModifiers() ) ) {
 								final Class<?> getterType;
 								if ( getter instanceof Field field ) {
 									getterType = field.getType();
@@ -289,29 +283,21 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 								else if ( getter instanceof Method method ) {
 									getterType = method.getReturnType();
 								}
-							else {
-								throw new AssertionFailure( "Unexpected member" + getter );
-							}
+								else {
+									throw new AssertionFailure( "Unexpected member" + getter );
+								}
 
 								builder = builder.defineMethod(
 												"get_" + getter.getName(),
-												TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
-														getterType
-												),
+												TypeDescription.Generic.OfNonGenericType.ForLoadedType.of( getterType ),
 												Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
 										)
 										.withParameter( bridgeMembersClassInfo.getClazz() )
-										.intercept(
-												new Implementation.Simple(
-														new GetFieldOnArgument(
-																getter
-														)
-												)
-										);
+										.intercept( new Implementation.Simple( new GetFieldOnArgument( getter ) ) );
 							}
 						}
 						for ( Member setter : bridgeMembersClassInfo.settersIterable() ) {
-							if ( !Modifier.isPublic( setter.getModifiers() ) ) {
+							if ( !isPublic( setter.getModifiers() ) ) {
 								final Class<?> setterType;
 								if ( setter instanceof Field field ) {
 									setterType = field.getType();
@@ -330,13 +316,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 										)
 										.withParameter( bridgeMembersClassInfo.getClazz() )
 										.withParameter( setterType )
-										.intercept(
-												new Implementation.Simple(
-														new SetFieldOnArgument(
-																setter
-														)
-												)
-										);
+										.intercept( new Implementation.Simple( new SetFieldOnArgument( setter ) ) );
 							}
 						}
 
@@ -347,10 +327,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			for ( int j = 0; j < getters.length; j++ ) {
 				final Member getter = getters[j];
 				final Member setter = setters[j];
-				if ( bridgeMembersClassInfo.containsGetter( getter ) && !Modifier.isPublic( getter.getModifiers() ) ) {
+				if ( bridgeMembersClassInfo.containsGetter( getter ) && !isPublic( getter.getModifiers() ) ) {
 					getters[j] = new ForeignPackageMember( superClass, getter );
 				}
-				if ( bridgeMembersClassInfo.containsSetter( setter ) && !Modifier.isPublic( setter.getModifiers() ) ) {
+				if ( bridgeMembersClassInfo.containsSetter( setter ) && !isPublic( setter.getModifiers() ) ) {
 					setters[j] = new ForeignPackageMember( superClass, setter );
 				}
 			}
@@ -371,8 +351,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			for ( int i = 0; i < getters.length; i++ ) {
 				final Member getter = getters[i];
 				final Member setter = setters[i];
-				if ( getter.getDeclaringClass() == c && !Modifier.isPublic( getter.getModifiers() )
-						|| setter.getDeclaringClass() == c && !Modifier.isPublic( setter.getModifiers() ) ) {
+				if ( getter.getDeclaringClass() == c && !isPublic( getter.getModifiers() )
+						|| setter.getDeclaringClass() == c && !isPublic( setter.getModifiers() ) ) {
 					bridgeMemberClassInfo.addGetter( getter );
 					bridgeMemberClassInfo.addSetter( setter );
 					bridgeMemberClassInfo.addProperty( propertyNames[i] );
@@ -424,7 +404,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 							)
 					);
 				}
-				else if ( Modifier.isPrivate( setters[i].getModifiers() ) ) {
+				else if ( isPrivate( setters[i].getModifiers() ) ) {
 					throw new PrivateAccessorException( "private accessor [" + setterNames[i] + "]" );
 				}
 			}
@@ -494,10 +474,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						)
 				);
 			}
-			if ( Modifier.isPrivate( getterMember.getModifiers() ) ) {
+			if ( isPrivate( getterMember.getModifiers() ) ) {
 				throw new PrivateAccessorException( "private accessor [" + getterMember.getName() + "]" );
 			}
-			if ( Modifier.isPrivate( setterMember.getModifiers() ) ) {
+			if ( isPrivate( setterMember.getModifiers() ) ) {
 				throw new PrivateAccessorException( "private accessor [" + setterMember.getName() + "]" );
 			}
 			getters[i] = getterMember;
@@ -517,8 +497,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 		do {
 			try {
-				final Method method = clazz.getDeclaredMethod( name, params );
-				if ( Modifier.isPrivate( method.getModifiers() ) ) {
+				final var method = clazz.getDeclaredMethod( name, params );
+				if ( isPrivate( method.getModifiers() ) ) {
 					throw new PrivateAccessorException( "private accessor [" + name + "]" );
 				}
 
@@ -547,7 +527,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	}
 
 	@Override
-	public @Nullable Enhancer getEnhancer(EnhancementContext enhancementContext) {
+	public @Nullable Enhancer getEnhancer(@Nonnull EnhancementContext enhancementContext) {
 		return new EnhancerImpl( enhancementContext, byteBuddyState );
 	}
 
@@ -555,11 +535,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	 * Similar to {@link #getEnhancer(EnhancementContext)} but intended for advanced users who wish
 	 * to customize how ByteBuddy is locating the class files and caching the types.
 	 * Used in Quarkus.
-	 * @param enhancementContext
-	 * @param classLocator
-	 * @return
 	 */
-	public @Nullable Enhancer getEnhancer(EnhancementContext enhancementContext, EnhancerClassLocator classLocator) {
+	public @Nullable Enhancer getEnhancer(
+			@Nonnull EnhancementContext enhancementContext,
+			@Nonnull EnhancerClassLocator classLocator) {
 		return new EnhancerImpl( enhancementContext, byteBuddyState, classLocator );
 	}
 

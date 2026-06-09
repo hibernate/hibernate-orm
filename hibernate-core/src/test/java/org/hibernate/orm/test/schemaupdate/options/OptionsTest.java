@@ -25,6 +25,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -107,7 +108,7 @@ public class OptionsTest {
 
 	public static class CollectingSqlStatementLoggerServiceContributor implements ServiceContributor {
 		@Override
-		public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		public void contribute(@NonNull StandardServiceRegistryBuilder serviceRegistryBuilder) {
 			final Map<String, Object> configValues = serviceRegistryBuilder.getSettings();
 			final boolean showSQL = getBoolean( SHOW_SQL, configValues );
 			final boolean formatSQL = getBoolean( FORMAT_SQL, configValues );

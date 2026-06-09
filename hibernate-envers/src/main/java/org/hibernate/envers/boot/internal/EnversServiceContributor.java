@@ -4,6 +4,7 @@
  */
 package org.hibernate.envers.boot.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.service.spi.ServiceContributor;
 
@@ -19,7 +20,7 @@ public class EnversServiceContributor implements ServiceContributor {
 	}
 
 	@Override
-	public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void contribute(@Nonnull StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.addInitiator( EnversServiceInitiator.INSTANCE );
 	}
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.service.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
@@ -22,7 +23,7 @@ public interface Wrapped {
 	 *
 	 * @return True/false.
 	 */
-	boolean isUnwrappableAs(Class<?> unwrapType);
+	boolean isUnwrappableAs(@Nonnull Class<?> unwrapType);
 
 	/**
 	 * Unproxy the service proxy
@@ -33,5 +34,5 @@ public interface Wrapped {
 	 *
 	 * @throws UnknownUnwrapTypeException if the service cannot be unwrapped as the indicated type
 	 */
-	<T> T unwrap(Class<T> unwrapType);
+	<T> T unwrap(@Nonnull Class<T> unwrapType);
 }

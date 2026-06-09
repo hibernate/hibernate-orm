@@ -4,6 +4,7 @@
  */
 package org.hibernate.service.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
@@ -26,8 +27,9 @@ public interface SessionFactoryServiceRegistryFactory extends Service {
 	 *
 	 * @return The registry
 	 */
+	@Nonnull
 	SessionFactoryServiceRegistry buildServiceRegistry(
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryOptions sessionFactoryOptions);
+			@Nonnull SessionFactoryImplementor sessionFactory,
+			@Nonnull SessionFactoryOptions sessionFactoryOptions);
 
 }

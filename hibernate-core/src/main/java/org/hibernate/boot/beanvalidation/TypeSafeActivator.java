@@ -64,6 +64,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 import static org.hibernate.cfg.ValidationSettings.CHECK_NULLABILITY;
 import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.ValidationSettings.JPA_VALIDATION_FACTORY;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
@@ -707,15 +708,22 @@ class TypeSafeActivator {
 	}
 
 	private static ValidatorFactory resolveProvidedFactory(ConfigurationService cfgService) {
-		return cfgService.getSetting(
-				JPA_VALIDATION_FACTORY,
-				value -> validatorFactory( value, JPA_VALIDATION_FACTORY ),
-				cfgService.getSetting(
-						JAKARTA_VALIDATION_FACTORY,
-						value -> validatorFactory( value, JAKARTA_VALIDATION_FACTORY ),
-						null
-				)
+		final var jakartaValidationFactory = cfgService.getSetting(
+				JAKARTA_VALIDATION_FACTORY,
+				value -> validatorFactory( value, JAKARTA_VALIDATION_FACTORY )
 		);
+		if ( jakartaValidationFactory != null ) {
+			return jakartaValidationFactory;
+		}
+		final var jpaValidationFactory = cfgService.getSetting(
+				JPA_VALIDATION_FACTORY,
+				value -> validatorFactory( value, JPA_VALIDATION_FACTORY )
+		);
+		if ( jpaValidationFactory != null ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_VALIDATION_FACTORY, JAKARTA_VALIDATION_FACTORY );
+			return null;
+		}
+		return null;
 	}
 
 	private static ValidatorFactory validatorFactory(Object value, String setting) {

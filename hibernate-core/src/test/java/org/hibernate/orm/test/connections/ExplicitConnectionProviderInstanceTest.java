@@ -10,6 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -55,12 +56,12 @@ public class ExplicitConnectionProviderInstanceTest  {
 		}
 
 		@Override
-		public boolean isUnwrappableAs(Class<?> unwrapType) {
+		public boolean isUnwrappableAs(@NonNull Class<?> unwrapType) {
 			return false;
 		}
 
 		@Override
-		public <T> T unwrap(Class<T> unwrapType) {
+		public <T> T unwrap(@NonNull Class<T> unwrapType) {
 			return null;
 		}
 	}

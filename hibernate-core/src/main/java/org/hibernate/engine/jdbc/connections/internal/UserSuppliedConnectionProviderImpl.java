@@ -7,6 +7,7 @@ package org.hibernate.engine.jdbc.connections.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.UnknownUnwrapTypeException;
 
@@ -20,12 +21,12 @@ import org.hibernate.service.UnknownUnwrapTypeException;
  */
 public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@Nonnull Class<?> unwrapType) {
 		return unwrapType.isAssignableFrom( UserSuppliedConnectionProviderImpl.class );
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@Nonnull Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( UserSuppliedConnectionProviderImpl.class ) ) {
 			return unwrapType.cast( this );
 		}

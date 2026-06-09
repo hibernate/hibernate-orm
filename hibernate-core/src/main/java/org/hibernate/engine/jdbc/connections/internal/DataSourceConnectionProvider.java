@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import javax.sql.DataSource;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
@@ -69,13 +70,13 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@Nonnull Class<?> unwrapType) {
 		return unwrapType.isAssignableFrom( DataSourceConnectionProvider.class )
 			|| unwrapType.isAssignableFrom( DataSource.class);
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@Nonnull Class<T> unwrapType) {
 		if ( unwrapType.isAssignableFrom( DataSourceConnectionProvider.class ) ) {
 			return unwrapType.cast( this );
 		}
@@ -88,7 +89,7 @@ public class DataSourceConnectionProvider
 	}
 
 	@Override
-	public void configure(Map<String, Object> configuration) {
+	public void configure(@Nonnull Map<String, Object> configuration) {
 		if ( dataSource == null ) {
 			final Object dataSourceSetting = configuration.get( DATASOURCE );
 			if ( dataSourceSetting instanceof DataSource instance ) {

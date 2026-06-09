@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.Context;
 import javax.sql.DataSource;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MultiTenancySettings;
@@ -69,7 +70,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final Object dataSourceConfigValue = configurationService.getSettings().get( DATASOURCE );
 		if ( !(dataSourceConfigValue instanceof String configuredJndiName) ) {

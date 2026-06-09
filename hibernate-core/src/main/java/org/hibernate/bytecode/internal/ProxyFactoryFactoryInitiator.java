@@ -6,6 +6,7 @@ package org.hibernate.bytecode.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
@@ -25,10 +26,11 @@ public final class ProxyFactoryFactoryInitiator implements StandardServiceInitia
 	public static final StandardServiceInitiator<ProxyFactoryFactory> INSTANCE = new ProxyFactoryFactoryInitiator();
 
 	@Override
-	public ProxyFactoryFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public ProxyFactoryFactory initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return registry.requireService( BytecodeProvider.class ).getProxyFactoryFactory();
 	}
 
+	@Nonnull
 	@Override
 	public Class<ProxyFactoryFactory> getServiceInitiated() {
 		return ProxyFactoryFactory.class;

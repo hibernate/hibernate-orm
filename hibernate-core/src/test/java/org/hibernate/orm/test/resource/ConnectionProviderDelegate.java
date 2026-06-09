@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.resource;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -13,6 +12,7 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.jspecify.annotations.NonNull;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -46,6 +46,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER;
 
 public class ConnectionProviderDelegate implements
 		ConnectionProvider,
@@ -81,26 +83,23 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@NonNull ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
-	public void configure(Map<String, Object> configurationValues) {
+	public void configure(@NonNull Map<String, Object> configurationValues) {
 		if ( !configured ) {
 			if ( connectionProvider == null ) {
-				Map<String, Object> settings = new HashMap<>( configurationValues );
-				settings.remove( AvailableSettings.CONNECTION_PROVIDER );
-				connectionProvider = ConnectionProviderInitiator.INSTANCE.initiateService(
-						settings,
-						serviceRegistry
-				);
+				final var settings = new HashMap<>( configurationValues );
+				settings.remove( CONNECTION_PROVIDER );
+				connectionProvider =
+						ConnectionProviderInitiator.INSTANCE.initiateService( settings, serviceRegistry );
 			}
-			if ( connectionProvider instanceof ServiceRegistryAwareService ) {
-				( (ServiceRegistryAwareService) connectionProvider ).injectServices( serviceRegistry );
+			if ( connectionProvider instanceof ServiceRegistryAwareService serviceRegistryAware ) {
+				serviceRegistryAware.injectServices( serviceRegistry );
 			}
-			if ( connectionProvider instanceof Configurable ) {
-				Configurable configurableConnectionProvider = (Configurable) connectionProvider;
+			if ( connectionProvider instanceof Configurable configurableConnectionProvider ) {
 				configurableConnectionProvider.configure( configurationValues );
 			}
 			configured = true;
@@ -111,7 +110,7 @@ public class ConnectionProviderDelegate implements
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		Connection connection = connectionProvider.getConnection();
+		final var connection = connectionProvider.getConnection();
 		ConnectionWrapper connectionWrapper = xref.get( connection );
 		if ( connectionWrapper == null ) {
 			connectionWrapper = new ConnectionWrapper( connection );
@@ -137,22 +136,23 @@ public class ConnectionProviderDelegate implements
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@NonNull Class<?> unwrapType) {
 		return connectionProvider.isUnwrappableAs( unwrapType );
 	}
 
 	@Override
-	public <T> T unwrap(Class<T> unwrapType) {
+	public <T> T unwrap(@NonNull Class<T> unwrapType) {
 		return connectionProvider.unwrap( unwrapType );
 	}
 
 	@Override
 	public void stop() {
-		if ( connectionProvider instanceof Stoppable ) {
-			( (Stoppable) connectionProvider ).stop();
+		if ( connectionProvider instanceof Stoppable stoppable ) {
+			stoppable.stop();
 		}
 	}
 
+	@SuppressWarnings("SqlSourceToSinkFlow")
 	static class StatementWrapper implements Statement {
 
 		protected final Statement statement;
@@ -475,6 +475,7 @@ public class ConnectionProviderDelegate implements
 			delegate.setAsciiStream( parameterIndex, x, length );
 		}
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
 			delegate.setUnicodeStream( parameterIndex, x, length );
@@ -730,6 +731,7 @@ public class ConnectionProviderDelegate implements
 			return delegate.getDouble( parameterIndex );
 		}
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
 			return delegate.getBigDecimal( parameterIndex, scale );
@@ -1241,6 +1243,7 @@ public class ConnectionProviderDelegate implements
 		}
 	}
 
+	@SuppressWarnings("SqlSourceToSinkFlow")
 	static class ConnectionWrapper implements Connection {
 
 		private final Connection delegate;

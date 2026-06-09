@@ -6,6 +6,7 @@ package org.hibernate.event.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -30,7 +31,7 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 	public static final EntityCopyObserverFactoryInitiator INSTANCE = new EntityCopyObserverFactoryInitiator();
 
 	@Override
-	public EntityCopyObserverFactory initiateService(final Map<String, Object> configurationValues, final ServiceRegistryImplementor registry) {
+	public EntityCopyObserverFactory initiateService(@Nonnull final Map<String, Object> configurationValues, @Nonnull final ServiceRegistryImplementor registry) {
 		final Object value = getConfigurationValue( configurationValues );
 		if ( value instanceof EntityCopyObserverFactory factory ) {
 			return factory;
@@ -77,6 +78,7 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 		}
 	}
 
+	@Nonnull
 	@Override
 	public Class<EntityCopyObserverFactory> getServiceInitiated() {
 		return EntityCopyObserverFactory.class;

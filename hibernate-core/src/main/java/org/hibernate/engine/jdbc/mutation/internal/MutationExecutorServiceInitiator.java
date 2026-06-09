@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.mutation.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -28,13 +29,14 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 	 */
 	public static final String EXECUTOR_KEY = "hibernate.jdbc.mutation.executor";
 
+	@Nonnull
 	@Override
 	public Class<MutationExecutorService> getServiceInitiated() {
 		return MutationExecutorService.class;
 	}
 
 	@Override
-	public MutationExecutorService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public MutationExecutorService initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final Object custom = configurationValues.get( EXECUTOR_KEY );
 		final var classLoaderService = registry.requireService( ClassLoaderService.class );
 

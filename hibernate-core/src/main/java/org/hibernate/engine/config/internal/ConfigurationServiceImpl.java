@@ -4,9 +4,9 @@
  */
 package org.hibernate.engine.config.internal;
 
-import java.util.Collections;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -16,6 +16,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import jakarta.annotation.Nullable;
 
+import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
 /**
@@ -33,33 +34,35 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	 *
 	 * @param settings The map of settings
 	 */
-	public ConfigurationServiceImpl(Map<String, Object> settings) {
-		this.settings = Collections.unmodifiableMap( settings );
+	public ConfigurationServiceImpl(@Nonnull Map<String, Object> settings) {
+		this.settings = unmodifiableMap( settings );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getSettings() {
 		return settings;
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
 	public <T> @Nullable T getSetting(String name, Converter<T> converter) {
-		return getSetting( name, converter, null );
+		final Object value = settings.get( name );
+		return value == null ? null : converter.convert( value );
 	}
 
 	@Override
-	public <T> @Nullable T getSetting(String name, Converter<T> converter, @Nullable T defaultValue) {
+	public <T> @Nonnull T getSetting(String name, Converter<T> converter, @Nonnull T defaultValue) {
 		final Object value = settings.get( name );
 		return value == null ? defaultValue : converter.convert( value );
 	}
 
 	@Override
-	public <T> @Nullable T getSetting(String name, Class<T> expected, @Nullable T defaultValue) {
+	public <T> @Nonnull T getSetting(String name, Class<T> expected, @Nonnull T defaultValue) {
 		final Object value = settings.get( name );
 		final T target = cast( expected, value );
 		return target !=null ? target : defaultValue;

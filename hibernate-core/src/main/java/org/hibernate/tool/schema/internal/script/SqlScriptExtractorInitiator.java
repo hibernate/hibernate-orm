@@ -6,6 +6,7 @@ package org.hibernate.tool.schema.internal.script;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -20,13 +21,14 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_IMPORT_FILES_SQL_E
 public class SqlScriptExtractorInitiator implements StandardServiceInitiator<SqlScriptCommandExtractor> {
 	public static final SqlScriptExtractorInitiator INSTANCE = new SqlScriptExtractorInitiator();
 
+	@Nonnull
 	@Override
 	public Class<SqlScriptCommandExtractor> getServiceInitiated() {
 		return SqlScriptCommandExtractor.class;
 	}
 
 	@Override
-	public SqlScriptCommandExtractor initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public SqlScriptCommandExtractor initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final Object explicitSettingValue = configurationValues.get( HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR );
 		if ( explicitSettingValue == null ) {
 			return SingleLineSqlScriptExtractor.INSTANCE;

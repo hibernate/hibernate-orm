@@ -4,6 +4,7 @@
  */
 package org.hibernate.service.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.service.Service;
 
 /**
@@ -22,5 +23,6 @@ public interface SessionFactoryServiceInitiator<R extends Service> extends Servi
 	 *
 	 * @return The initiated service.
 	 */
-	R initiateService(SessionFactoryServiceInitiatorContext context);
+	@Nonnull
+	R initiateService(@Nonnull SessionFactoryServiceInitiatorContext context);
 }

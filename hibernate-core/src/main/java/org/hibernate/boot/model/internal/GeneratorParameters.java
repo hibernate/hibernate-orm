@@ -12,10 +12,8 @@ import java.util.function.BiConsumer;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.OptimizableGenerator;
@@ -31,6 +29,7 @@ import org.hibernate.mapping.Value;
 
 import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.cfg.MappingSettings.PREFERRED_POOLED_OPTIMIZER;
+import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.id.IdentifierGenerator.CONTRIBUTOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
@@ -99,7 +98,7 @@ public class GeneratorParameters {
 	public static int fallbackAllocationSize(Annotation generatorAnnotation, MetadataBuildingContext buildingContext) {
 		if ( generatorAnnotation == null ) {
 			final var configService = buildingContext.getBootstrapContext().getConfigurationService();
-			final String idNamingStrategy = configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, StandardConverters.STRING );
+			final String idNamingStrategy = configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, STRING );
 			if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 					|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
 					|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
@@ -183,8 +182,7 @@ public class GeneratorParameters {
 
 	public static int defaultIncrement(ConfigurationService configService) {
 		final String idNamingStrategy =
-				configService.getSetting( MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY,
-						StandardConverters.STRING, null );
+				configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, STRING );
 		if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 				|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
 				|| SingleNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )

@@ -25,6 +25,7 @@ import org.hibernate.service.spi.Stoppable;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.jspecify.annotations.NonNull;
 
 
 /**
@@ -114,7 +115,7 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@NonNull ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
 	}

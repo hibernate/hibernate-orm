@@ -28,6 +28,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The immutable map of config settings.
 	 */
+	@Nonnull
 	Map<String,Object> getSettings();
 
 	/**
@@ -53,7 +54,7 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  Will be the defaultValue if no such setting was defined.
 	 */
-	<T> @Nullable T getSetting(String name, Converter<T> converter, @Nullable T defaultValue);
+	<T> @Nonnull T getSetting(String name, Converter<T> converter, @Nonnull T defaultValue);
 
 	/**
 	 * Get the named setting.  Differs from the form taking a Converter in that here we expect to have a simple
@@ -70,7 +71,7 @@ public interface ConfigurationService extends Service {
 	 *             This method does not report errors correctly.
 	 */
 	@Deprecated(since = "7.2")
-	<T> @Nullable T getSetting(String name, Class<T> expected, @Nullable T defaultValue);
+	<T> @Nonnull T getSetting(String name, Class<T> expected, @Nonnull T defaultValue);
 
 	/**
 	 * Simple conversion contract for converting an untyped object to a specified type.
@@ -85,6 +86,6 @@ public interface ConfigurationService extends Service {
 		 *
 		 * @return The converted (typed) value.
 		 */
-		@Nonnull T convert(Object value);
+		@Nonnull T convert(@Nonnull Object value);
 	}
 }

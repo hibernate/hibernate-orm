@@ -7,6 +7,7 @@ package org.hibernate.engine.jdbc.connections.spi;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
@@ -48,13 +49,13 @@ public abstract class AbstractMultiTenantConnectionProvider<T> implements MultiT
 	}
 
 	@Override
-	public boolean isUnwrappableAs(Class<?> unwrapType) {
+	public boolean isUnwrappableAs(@Nonnull Class<?> unwrapType) {
 		return unwrapType.isInstance( this )
 			|| unwrapType.isAssignableFrom( ConnectionProvider.class );
 	}
 
 	@Override
-	public <X> X unwrap(Class<X> unwrapType) {
+	public <X> X unwrap(@Nonnull Class<X> unwrapType) {
 		if ( unwrapType.isInstance( this ) ) {
 			return unwrapType.cast( this );
 		}

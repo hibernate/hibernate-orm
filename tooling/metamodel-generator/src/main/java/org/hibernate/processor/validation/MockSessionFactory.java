@@ -172,7 +172,8 @@ public abstract class MockSessionFactory
 		classLoaderService = new ClassLoaderServiceImpl() {
 			@Override
 			@SuppressWarnings("unchecked")
-			public Class<?> classForName(String className) {
+			@Nonnull
+			public Class<?> classForName(@Nonnull String className) {
 				try {
 					return super.classForName( className );
 				}

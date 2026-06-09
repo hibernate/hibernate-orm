@@ -10,17 +10,19 @@ import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 
+import static java.util.Collections.singletonList;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 /**
@@ -48,8 +50,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	 *
 	 * @param classLoader The ClassLoader to use
 	 */
-	public ClassLoaderServiceImpl(ClassLoader classLoader) {
-		this( Collections.singletonList( classLoader ),TcclLookupPrecedence.AFTER );
+	public ClassLoaderServiceImpl(@Nonnull ClassLoader classLoader) {
+		this( singletonList( classLoader ),TcclLookupPrecedence.AFTER );
 	}
 
 	/**
@@ -58,7 +60,9 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	 * @param providedClassLoaders The ClassLoader instances to use
 	 * @param lookupPrecedence The lookup precedence of the thread context {@code ClassLoader}
 	 */
-	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders, TcclLookupPrecedence lookupPrecedence) {
+	public ClassLoaderServiceImpl(
+			@Nullable Collection<ClassLoader> providedClassLoaders,
+			@Nonnull TcclLookupPrecedence lookupPrecedence) {
 		final LinkedHashSet<ClassLoader> orderedClassLoaderSet = new LinkedHashSet<>();
 
 		// first, add all provided class loaders, if any
@@ -80,7 +84,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> Class<T> classForName(String className) {
+	@Nonnull
+	public <T> Class<T> classForName(@Nonnull String className) {
 		try {
 			return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
 		}
@@ -90,7 +95,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	@Override
-	public URL locateResource(String name) {
+	@Nullable
+	public URL locateResource(@Nonnull String name) {
 		// first we try name as a URL
 		try {
 			return new URL( name );
@@ -128,7 +134,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	@Override
-	public InputStream locateResourceStream(String name) {
+	@Nullable
+	public InputStream locateResourceStream(@Nonnull String name) {
 		// first we try name as a URL
 		try {
 			BOOT_LOGGER.tryingURL( name );
@@ -176,7 +183,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	@Override
-	public List<URL> locateResources(String name) {
+	@Nonnull
+	public List<URL> locateResources(@Nonnull String name) {
 		final ArrayList<URL> urls = new ArrayList<>();
 		try {
 			final Enumeration<URL> urlEnumeration = getAggregatedClassLoader().getResources( name );
@@ -192,10 +200,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		return urls;
 	}
 
+	@Nonnull
 	@Override
 	@SuppressWarnings("unchecked")
-	public <S> Collection<S> loadJavaServices(Class<S> serviceContract) {
-		AggregatedServiceLoader<S> serviceLoader = (AggregatedServiceLoader<S>) serviceLoaders.get( serviceContract );
+	public <S> Collection<S> loadJavaServices(@Nonnull Class<S> serviceContract) {
+		var serviceLoader = (AggregatedServiceLoader<S>) serviceLoaders.get( serviceContract );
 		if ( serviceLoader == null ) {
 			serviceLoader = AggregatedServiceLoader.create( getAggregatedClassLoader(), serviceContract );
 			serviceLoaders.put( serviceContract, serviceLoader );
@@ -205,7 +214,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T generateProxy(InvocationHandler handler, Class<?>... interfaces) {
+	@Nonnull
+	public <T> T generateProxy(@Nonnull InvocationHandler handler, @Nonnull Class<?>... interfaces) {
 		return (T) Proxy.newProxyInstance(
 				getAggregatedClassLoader(),
 				interfaces,
@@ -214,7 +224,8 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	@Override
-	public Package packageForNameOrNull(String packageName) {
+	@Nullable
+	public Package packageForNameOrNull(@Nonnull String packageName) {
 		try {
 			return Class.forName( packageName + ".package-info", true, getAggregatedClassLoader() )
 					.getPackage();
@@ -230,7 +241,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	@Override
-	public <T> T workWithClassLoader(Work<T> work) {
+	public <T> T workWithClassLoader(@Nonnull Work<T> work) {
 		return work.doWork( getAggregatedClassLoader() );
 	}
 

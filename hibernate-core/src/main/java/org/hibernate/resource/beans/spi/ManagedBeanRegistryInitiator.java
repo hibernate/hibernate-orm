@@ -7,6 +7,7 @@ package org.hibernate.resource.beans.spi;
 import java.util.Collection;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.InstantiationException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -37,6 +38,7 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 	 */
 	public static final ManagedBeanRegistryInitiator INSTANCE = new ManagedBeanRegistryInitiator();
 
+	@Nonnull
 	@Override
 	public Class<ManagedBeanRegistry> getServiceInitiated() {
 		return ManagedBeanRegistry.class;
@@ -44,8 +46,8 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 
 	@Override
 	public ManagedBeanRegistry initiateService(
-			Map<String, Object> configurationValues,
-			ServiceRegistryImplementor serviceRegistry) {
+			@Nonnull Map<String, Object> configurationValues,
+			@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		return new ManagedBeanRegistryImpl( resolveBeanContainer( configurationValues, serviceRegistry ) );
 	}
 

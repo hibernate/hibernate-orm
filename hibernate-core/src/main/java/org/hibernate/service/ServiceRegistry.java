@@ -4,6 +4,7 @@
  */
 package org.hibernate.service;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -45,7 +46,7 @@ public interface ServiceRegistry extends AutoCloseable {
 	 *
 	 * @throws UnknownServiceException Indicates the service was not known.
 	 */
-	<R extends Service> @Nullable R getService(Class<R> serviceRole);
+	<R extends Service> @Nullable R getService(@Nonnull Class<R> serviceRole);
 
 	/**
 	 * Retrieve a service by role, throwing an exception if there is no such service.

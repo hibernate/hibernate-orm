@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor.validation;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.annotations.processing.GenericDialect;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
@@ -68,7 +69,7 @@ class MockJdbcServicesInitiator extends JdbcServicesInitiator {
 	}
 
 	@Override
-	public JdbcServices initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	public JdbcServices initiateService(@Nonnull Map configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return jdbcServices;
 	}
 }

@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -23,13 +24,14 @@ public class JdbcServicesInitiator implements StandardServiceInitiator<JdbcServi
 	 */
 	public static final JdbcServicesInitiator INSTANCE = new JdbcServicesInitiator();
 
+	@Nonnull
 	@Override
 	public Class<JdbcServices> getServiceInitiated() {
 		return JdbcServices.class;
 	}
 
 	@Override
-	public JdbcServices initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public JdbcServices initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		return new JdbcServicesImpl();
 	}
 }

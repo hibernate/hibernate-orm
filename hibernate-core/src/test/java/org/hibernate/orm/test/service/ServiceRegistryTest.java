@@ -14,6 +14,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -144,7 +145,7 @@ public class ServiceRegistryTest {
 		}
 
 		@Override
-		public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		public void injectServices(@NonNull ServiceRegistryImplementor serviceRegistry) {
 			try {
 				Thread.sleep( TIME_TO_SLEEP );
 			}
@@ -155,7 +156,7 @@ public class ServiceRegistryTest {
 		}
 
 		@Override
-		public void configure(Map<String, Object> configurationValues) {
+		public void configure(@NonNull Map<String, Object> configurationValues) {
 			try {
 				Thread.sleep( TIME_TO_SLEEP );
 			}
@@ -192,12 +193,12 @@ public class ServiceRegistryTest {
 	public static class SlowServiceInitiator implements StandardServiceInitiator<SlowInitializationService> {
 
 		@Override
-		public Class<SlowInitializationService> getServiceInitiated() {
+		public @NonNull Class<SlowInitializationService> getServiceInitiated() {
 			return SlowInitializationService.class;
 		}
 
 		@Override
-		public SlowInitializationService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+		public SlowInitializationService initiateService(@NonNull Map<String, Object> configurationValues, @NonNull ServiceRegistryImplementor registry) {
 			return new SlowInitializationService();
 		}
 	}
@@ -205,12 +206,12 @@ public class ServiceRegistryTest {
 	public static class NullServiceInitiator implements StandardServiceInitiator<FakeService> {
 
 		@Override
-		public Class<FakeService> getServiceInitiated() {
+		public @NonNull Class<FakeService> getServiceInitiated() {
 			return FakeService.class;
 		}
 
 		@Override
-		public FakeService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+		public FakeService initiateService(@NonNull Map<String, Object> configurationValues, @NonNull ServiceRegistryImplementor registry) {
 			return null;
 		}
 	}
@@ -223,12 +224,12 @@ public class ServiceRegistryTest {
 		}
 
 		@Override
-		public void configure(Map<String, Object> configurationValues) {
+		public void configure(@NonNull Map<String, Object> configurationValues) {
 
 		}
 
 		@Override
-		public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		public void injectServices(@NonNull ServiceRegistryImplementor serviceRegistry) {
 
 		}
 	}

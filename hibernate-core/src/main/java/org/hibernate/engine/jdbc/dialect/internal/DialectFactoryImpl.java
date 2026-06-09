@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -65,7 +66,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 	private DialectResolver dialectResolver;
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		this.strategySelector = serviceRegistry.getService( StrategySelector.class );
 		this.dialectResolver = serviceRegistry.getService( DialectResolver.class );
 	}

@@ -6,6 +6,7 @@ package org.hibernate.sql.results.jdbc.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
@@ -24,11 +25,12 @@ public class JdbcValuesMappingProducerProviderInitiator
 
 	@Override
 	public JdbcValuesMappingProducerProvider initiateService(
-			Map<String, Object> configurationValues,
-			ServiceRegistryImplementor registry) {
+			@Nonnull Map<String, Object> configurationValues,
+			@Nonnull ServiceRegistryImplementor registry) {
 		return JdbcValuesMappingProducerProviderStandard.INSTANCE;
 	}
 
+	@Nonnull
 	@Override
 	public Class<JdbcValuesMappingProducerProvider> getServiceInitiated() {
 		return JdbcValuesMappingProducerProvider.class;

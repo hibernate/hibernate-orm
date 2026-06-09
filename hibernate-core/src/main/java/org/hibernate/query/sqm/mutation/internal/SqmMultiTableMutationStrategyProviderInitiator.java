@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.mutation.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -23,11 +24,12 @@ public class SqmMultiTableMutationStrategyProviderInitiator implements StandardS
 
 	@Override
 	public SqmMultiTableMutationStrategyProvider initiateService(
-			Map<String, Object> configurationValues,
-			ServiceRegistryImplementor registry) {
+			@Nonnull Map<String, Object> configurationValues,
+			@Nonnull ServiceRegistryImplementor registry) {
 		return new SqmMultiTableMutationStrategyProviderStandard();
 	}
 
+	@Nonnull
 	@Override
 	public Class<SqmMultiTableMutationStrategyProvider> getServiceInitiated() {
 		return SqmMultiTableMutationStrategyProvider.class;

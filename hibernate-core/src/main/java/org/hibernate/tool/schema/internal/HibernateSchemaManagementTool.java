@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Dialect;
@@ -81,7 +82,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	}
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 

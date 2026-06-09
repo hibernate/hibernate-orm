@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.batch.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
@@ -28,13 +29,14 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 	 */
 	public static final BatchBuilderInitiator INSTANCE = new BatchBuilderInitiator();
 
+	@Nonnull
 	@Override
 	public Class<BatchBuilder> getServiceInitiated() {
 		return BatchBuilder.class;
 	}
 
 	@Override
-	public BatchBuilder initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public BatchBuilder initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		Object builder = configurationValues.get( BUILDER );
 
 		if ( builder == null ) {

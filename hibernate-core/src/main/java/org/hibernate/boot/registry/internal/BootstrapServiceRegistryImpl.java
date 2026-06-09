@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -182,14 +183,14 @@ public class BootstrapServiceRegistryImpl
 
 
 	@Override
-	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
+	public <R extends Service> @Nullable R getService(@Nonnull Class<R> serviceRole) {
 		final var binding = locateServiceBinding( serviceRole );
 		return binding == null ? null : binding.getService();
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public <R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole) {
+	public <R extends Service> ServiceBinding<R> locateServiceBinding(@Nonnull Class<R> serviceRole) {
 		if ( ClassLoaderService.class.equals( serviceRole ) ) {
 			return (ServiceBinding<R>) classLoaderServiceBinding;
 		}
@@ -265,7 +266,7 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public synchronized void registerChild(ServiceRegistryImplementor child) {
+	public synchronized void registerChild(@Nonnull ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
 			childRegistries = new HashSet<>();
 		}
@@ -275,7 +276,7 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public synchronized void deRegisterChild(ServiceRegistryImplementor child) {
+	public synchronized void deRegisterChild(@Nonnull ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
 			throw new IllegalStateException( "No child ServiceRegistry registrations found" );
 		}
@@ -292,7 +293,7 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public <T extends Service> T fromRegistryOrChildren(Class<T> serviceRole) {
+	public <T extends Service> T fromRegistryOrChildren(@Nonnull Class<T> serviceRole) {
 		return AbstractServiceRegistryImpl.fromRegistryOrChildren( serviceRole, this, childRegistries );
 	}
 }

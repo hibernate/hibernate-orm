@@ -8,6 +8,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -54,7 +55,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	private PersisterClassResolver persisterClassResolver;
 
 	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+	public void injectServices(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		this.persisterClassResolver = serviceRegistry.getService( PersisterClassResolver.class );
 	}
 

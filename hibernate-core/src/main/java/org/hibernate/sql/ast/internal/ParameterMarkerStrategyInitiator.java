@@ -6,6 +6,7 @@ package org.hibernate.sql.ast.internal;
 
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -24,7 +25,7 @@ public class ParameterMarkerStrategyInitiator implements StandardServiceInitiato
 	public static final ParameterMarkerStrategyInitiator INSTANCE = new ParameterMarkerStrategyInitiator();
 
 	@Override
-	public ParameterMarkerStrategy initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public ParameterMarkerStrategy initiateService(@Nonnull Map<String, Object> configurationValues, @Nonnull ServiceRegistryImplementor registry) {
 		final boolean useNativeMarkers = ConfigurationHelper.getBoolean(
 				AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS,
 				configurationValues
@@ -42,6 +43,7 @@ public class ParameterMarkerStrategyInitiator implements StandardServiceInitiato
 		return ParameterMarkerStrategyStandard.INSTANCE;
 	}
 
+	@Nonnull
 	@Override
 	public Class<ParameterMarkerStrategy> getServiceInitiated() {
 		return ParameterMarkerStrategy.class;

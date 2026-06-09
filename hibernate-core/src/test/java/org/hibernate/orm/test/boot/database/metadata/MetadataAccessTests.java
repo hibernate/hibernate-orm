@@ -48,6 +48,7 @@ import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -290,13 +291,13 @@ public class MetadataAccessTests {
 	private static class CapturingDialectFactory extends DialectFactoryImpl {
 		static class Initiator implements StandardServiceInitiator<DialectFactory> {
 			@Override
-			public Class<DialectFactory> getServiceInitiated() {
+			public @NonNull Class<DialectFactory> getServiceInitiated() {
 				return DialectFactory.class;
 			}
 
 			@Override
-			public DialectFactory initiateService(Map<String, Object> configurationValues,
-					ServiceRegistryImplementor registry) {
+			public DialectFactory initiateService(@NonNull Map<String, Object> configurationValues,
+												@NonNull ServiceRegistryImplementor registry) {
 				return new CapturingDialectFactory();
 			}
 		}

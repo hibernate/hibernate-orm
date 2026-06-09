@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Internal;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -128,12 +129,12 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public <R extends Service> @Nullable ServiceBinding<R> locateServiceBinding(Class<R> serviceRole) {
+	public <R extends Service> @Nullable ServiceBinding<R> locateServiceBinding(@Nonnull Class<R> serviceRole) {
 		return locateServiceBinding( serviceRole, true );
 	}
 
 	@SuppressWarnings("unchecked")
-	protected <R extends Service> @Nullable ServiceBinding<R> locateServiceBinding(Class<R> serviceRole, boolean checkParent) {
+	protected <R extends Service> @Nullable ServiceBinding<R> locateServiceBinding(@Nonnull Class<R> serviceRole, boolean checkParent) {
 		var serviceBinding = (ServiceBinding<R>) serviceBindingMap.get( serviceRole );
 		if ( serviceBinding == null && checkParent && parent != null ) {
 			// look in parent
@@ -182,7 +183,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
+	public <R extends Service> @Nullable R getService(@Nonnull Class<R> serviceRole) {
 		// Fast-path for ClassLoaderService as it's extremely hot during bootstrap
 		// (and after bootstrap service loading performance is less interesting as it's
 		// ideally being cached by long-term consumers)
@@ -219,14 +220,14 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
-	protected <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
+	protected <R extends Service> void registerService(@Nonnull ServiceBinding<R> serviceBinding, R service) {
 		serviceBinding.setService( service );
 		synchronized ( serviceBindingList ) {
 			serviceBindingList.add( serviceBinding );
 		}
 	}
 
-	private <R extends Service> @Nullable R initializeService(ServiceBinding<R> serviceBinding) {
+	private <R extends Service> @Nullable R initializeService(@Nonnull ServiceBinding<R> serviceBinding) {
 		if ( SERVICE_LOGGER.isTraceEnabled() ) {
 			SERVICE_LOGGER.initializingService( serviceBinding.getServiceRole().getName() );
 		}
@@ -249,7 +250,7 @@ public abstract class AbstractServiceRegistryImpl
 		return service;
 	}
 
-	protected <R extends Service> @Nullable R createService(ServiceBinding<R> serviceBinding) {
+	protected <R extends Service> @Nullable R createService(@Nonnull ServiceBinding<R> serviceBinding) {
 		final var serviceInitiator = serviceBinding.getServiceInitiator();
 		if ( serviceInitiator == null ) {
 			// this condition should never ever occur
@@ -275,7 +276,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public <R extends Service> void injectDependencies(ServiceBinding<R> serviceBinding) {
+	public <R extends Service> void injectDependencies(@Nonnull ServiceBinding<R> serviceBinding) {
 		final R service = serviceBinding.getService();
 		applyInjections( service );
 		if ( service instanceof ServiceRegistryAwareService serviceRegistryAwareService ) {
@@ -283,7 +284,7 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
-	private <R extends Service> void applyInjections(R service) {
+	private <R extends Service> void applyInjections(@Nonnull R service) {
 		try {
 			for ( var method : service.getClass().getMethods() ) {
 				final var injectService = method.getAnnotation( InjectService.class );
@@ -297,12 +298,19 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
-	private <T extends Service> void processInjection(T service, Method injectionMethod, InjectService injectService) {
+	private <T extends Service> void processInjection(
+			@Nonnull T service,
+			@Nonnull Method injectionMethod,
+			@Nonnull InjectService injectService) {
 		injectDependentService( service, injectionMethod, injectService,
 				dependentServiceRole( injectionMethod, injectService ) );
 	}
 
-	private <T extends Service> void injectDependentService(T service, Method injectionMethod, InjectService injectService, Class<? extends Service> dependentServiceRole) {
+	private <T extends Service> void injectDependentService(
+			@Nonnull T service,
+			@Nonnull Method injectionMethod,
+			@Nonnull InjectService injectService,
+			@Nonnull Class<? extends Service> dependentServiceRole) {
 		// todo : because of the use of proxies, this is no longer returning null here...
 
 		final var dependantService = getService( dependentServiceRole );
@@ -323,7 +331,9 @@ public abstract class AbstractServiceRegistryImpl
 		}
 	}
 
-	private static Class<? extends Service> dependentServiceRole(Method injectionMethod, InjectService injectService) {
+	private static Class<? extends Service> dependentServiceRole(
+			@Nonnull Method injectionMethod,
+			@Nonnull InjectService injectService) {
 		final var parameterTypes = injectionMethod.getParameterTypes();
 		if ( injectionMethod.getParameterCount() != 1 ) {
 			throw new ServiceDependencyException(
@@ -381,7 +391,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
+	public synchronized <R extends Service> void stopService(@Nonnull ServiceBinding<R> binding) {
 		final var service = binding.getService();
 		if ( service instanceof Stoppable stoppable ) {
 			try {
@@ -394,7 +404,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public synchronized void registerChild(ServiceRegistryImplementor child) {
+	public synchronized void registerChild(@Nonnull ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
 			childRegistries = new HashSet<>();
 		}
@@ -404,7 +414,7 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public synchronized void deRegisterChild(ServiceRegistryImplementor child) {
+	public synchronized void deRegisterChild(@Nonnull ServiceRegistryImplementor child) {
 		if ( childRegistries == null ) {
 			throw new IllegalStateException( "No child ServiceRegistry registrations found" );
 		}
@@ -441,13 +451,13 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public <T extends Service> @Nullable T fromRegistryOrChildren(Class<T> serviceRole) {
+	public <T extends Service> @Nullable T fromRegistryOrChildren(@Nonnull Class<T> serviceRole) {
 		return fromRegistryOrChildren( serviceRole, this, childRegistries );
 	}
 
 	public static <T extends Service> @Nullable T fromRegistryOrChildren(
-			Class<T> serviceRole,
-			ServiceRegistryImplementor serviceRegistry,
+			@Nonnull Class<T> serviceRole,
+			@Nonnull ServiceRegistryImplementor serviceRegistry,
 			@Nullable Set<ServiceRegistryImplementor> childRegistries) {
 		// prefer `serviceRegistry`
 		final T localService = serviceRegistry.getService( serviceRole );

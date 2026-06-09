@@ -129,7 +129,7 @@ This causes a signature conflict with a few of Hibernate API methods; as part of
 [[graph-attr-node]]
 === AttributeNode Subgraphs
 
-As part of its support for "entity graphs", Hibernate's `org.hibernate.graph.AttributeNode` contract extends fropm the Jakarta Persistence `jakarta.persistence.AttributeNode`.
+As part of its support for "entity graphs", Hibernate's `org.hibernate.graph.AttributeNode` contract extends the Jakarta Persistence `jakarta.persistence.AttributeNode`.
 Starting in version 4.0, Jakarta Persistence has "fixed" the use of raw types for the `AttributeNode#getSubgraphs` and `AttributeNode#getKeySubgraphs` methods.
 Hibernate has therefore needed to do the same in its `org.hibernate.graph.AttributeNode`.
 
@@ -491,7 +491,7 @@ string, so `PESSIMISTIC_READ` and `PESSIMISTIC_WRITE` had no effect.
 
 This section describes changes in XML Schema Descriptors
 
-[[xsd-comments]
+[[xsd-comments]]
 === Table and Column Comments
 
 Previous versions of the `mapping.xsd` defined table and column comments (for schema export)

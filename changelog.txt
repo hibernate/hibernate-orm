@@ -1,6 +1,35 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.1.Final (June 09, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39004
+
+
+** Bug
+    * HHH-20537 XML embeddable mapping ignores access attribute when processing attributes
+    * HHH-20536  <read> and <write> element inside <attribute-override> are silently ignored in XML mappings
+    * HHH-20518 After updating from 7.3.6 to 7.4.0 hibernate enhance fails
+    * HHH-20517 FOR UPDATE ... SKIP LOCKED on Oracle 23+ fails if there's a lob column
+    * HHH-20514 XML mapping does not apply optimistic-lock attribute for <many-to-many> associations
+    * HHH-20513 XML entity mapping ignores `<mutable>false</mutable>` configuration
+    * HHH-20504 DataException (Parameter is not set) when updating only a collection of a versioned entity with with a @SQLUpdate
+    * HHH-20500 SchemaManager#truncate(String tableName) fails with UnsupportedOperationException
+    * HHH-20499 Ensure LONG32 JdbcType with LOB DDL type, bound via setString, are treated as LOBs
+    * HHH-20498 Unnest on HANA uses clob/nclob for xmltable that is not supported
+    * HHH-20484 HbmXmlTransformer Generates Invalid <generic-generator> for <generator class="native"/>
+    * HHH-20483 HbmXmlTransformer removes quotes from table names
+    * HHH-20481 HbmXmlTransformer should normalize <map-key> type attribute values to Java type names during XML Conversion 
+    * HHH-20477 HbmXmlTransformer Ignores Cascade Attributes for <many-to-many> Mappings
+    * HHH-20465 Full Stateless Session mutation support for @Audited entities
+    * HHH-20453 Combining @Temporal entity mappings and a @Changelog leads to CCE
+    * HHH-20386 Metamodel generator / Processor loses generic type parameter for Set<String> in Hibernate 7
+    * HHH-20159 Wrong aliases in tuple transformer
+
+** Improvement
+    * HHH-20495 Make sure we release resources (if needed) after stateless session operations
+
 Changes in 7.4.0.Final (May 26, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

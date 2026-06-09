@@ -16,6 +16,8 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.GeneratedColumn;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -62,6 +64,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Emmanuel Bernard
  */
 public class AnnotatedColumn {
+	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
+			new UniqueKeyMappingMaterializer();
 
 	private Column mappingColumn;
 	private boolean insertable = true;
@@ -309,7 +313,9 @@ public class AnnotatedColumn {
 		// from linkValueUsingDefaultColumnNaming() in second pass
 		if ( unique && nameDetermined ) {
 			// assign a unique key name to the column
-			getParent().getTable().createUniqueKey( mappingColumn, getBuildingContext() );
+			UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
+					ResolvedUniqueKey.from( mappingColumn, getParent().getTable(), getBuildingContext() )
+			);
 		}
 		for ( var constraint : checkConstraints ) {
 			mappingColumn.addCheckConstraint( constraint );

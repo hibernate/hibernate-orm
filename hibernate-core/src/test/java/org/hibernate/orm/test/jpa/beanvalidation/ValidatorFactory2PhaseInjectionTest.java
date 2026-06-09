@@ -5,15 +5,16 @@
 package org.hibernate.orm.test.jpa.beanvalidation;
 
 import java.net.URL;
+import java.util.Map;
 
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -51,19 +52,21 @@ public class ValidatorFactory2PhaseInjectionTest {
 
 	@Test
 	public void testInjectionAvailabilityFromEmf() {
-		EntityManagerFactoryBuilder emfb = Bootstrap.getEntityManagerFactoryBuilder(
-				new JpaXsdVersionsTest.PersistenceUnitInfoImpl( "my-test" ) {
-					@Override
-					public URL getPersistenceUnitRootUrl() {
-						// just get any known url...
-						return HibernatePersistenceProvider.class.getResource( "/org/hibernate/jpa/persistence_1_0.xsd" );
-					}
-				},
-				ServiceRegistryUtil.createBaseSettings()
-		);
-		emfb.withValidatorFactory( vf );
+		final Map<String,Object> settings = ServiceRegistryUtil.createBaseSettings();
+		settings.put( AvailableSettings.JPA_VALIDATION_FACTORY, vf );
 
-		EntityManagerFactory emf = emfb.build();
+		EntityManagerFactory emf = SessionFactoryBootstrap.build(
+				new PersistenceUnitInfoDescriptor(
+						new JpaXsdVersionsTest.PersistenceUnitInfoImpl( "my-test" ) {
+							@Override
+							public URL getPersistenceUnitRootUrl() {
+								// just get any known url...
+								return HibernatePersistenceProvider.class.getResource( "/org/hibernate/jpa/persistence_1_0.xsd" );
+							}
+						}
+				),
+				settings
+		);
 		try {
 			assertSame( vf, emf.getProperties().get( AvailableSettings.JPA_VALIDATION_FACTORY ) );
 		}

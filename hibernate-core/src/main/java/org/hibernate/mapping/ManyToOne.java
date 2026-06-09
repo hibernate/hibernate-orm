@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ManyToOneType;
@@ -18,8 +20,12 @@ import org.hibernate.type.ManyToOneType;
  * @author Gavin King
  */
 public final class ManyToOne extends ToOne {
+	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
+			new UniqueKeyMappingMaterializer();
+
 	private boolean isLogicalOneToOne;
 	private NotFoundAction notFoundAction;
+	private Boolean nullable;
 
 	private transient ManyToOneType resolvedType;
 
@@ -31,6 +37,7 @@ public final class ManyToOne extends ToOne {
 		super( original );
 		this.notFoundAction = original.notFoundAction;
 		this.isLogicalOneToOne = original.isLogicalOneToOne;
+		this.nullable = original.nullable;
 	}
 
 	@Override
@@ -55,10 +62,20 @@ public final class ManyToOne extends ToOne {
 		return resolvedType;
 	}
 
+	/**
+	 * Compatibility-only hidden key creation hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer}
+	 * with an explicit resolved unique-key product instead.
+	 */
 	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( !hasFormula() ) {
-			getTable().createUniqueKey( getConstraintColumns(), context );
+			UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
+					ResolvedUniqueKey.from( this, context, getPropertyName() )
+			);
 		}
 	}
 
@@ -71,7 +88,12 @@ public final class ManyToOne extends ToOne {
 	 * We depend here on having a property of the referenced entity
 	 * that does hold the referenced unique key. We might have created
 	 * a "synthetic" composite property for this purpose.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer}
+	 * with an explicit resolved foreign-key product instead.
 	 */
+	@Deprecated(since = "9.0", forRemoval = true)
 	public void createPropertyRefConstraints(Map<String, PersistentClass> persistentClasses) {
 		if ( referencedPropertyName != null ) {
 			// Ensure properties are sorted before we create a foreign key
@@ -141,8 +163,12 @@ public final class ManyToOne extends ToOne {
 		return isLogicalOneToOne;
 	}
 
+	public void setNullable(boolean nullable) {
+		this.nullable = nullable;
+	}
+
 	@Override
 	public boolean isNullable() {
-		return getReferencedPropertyName() != null || super.isNullable();
+		return nullable != null ? nullable : getReferencedPropertyName() != null || super.isNullable();
 	}
 }

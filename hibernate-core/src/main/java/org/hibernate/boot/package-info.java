@@ -14,7 +14,7 @@
  *     then
  * <li>{@link org.hibernate.boot.MetadataSources} and
  *     {@link org.hibernate.boot.MetadataBuilder}, and
- * <li>finally, with {@link org.hibernate.boot.SessionFactoryBuilder}.
+ * <li>finally, {@link org.hibernate.boot.Metadata#buildSessionFactory()}.
  * </ol>
  * <pre>
  * StandardServiceRegistry standardRegistry =
@@ -39,17 +39,8 @@
  *                 // add a TypeContributor
  *                 .applyTypes(new CustomTypeContributor())
  *                 .build();
- * SessionFactoryBuilder sessionFactoryBuilder =
- *         metadata.getSessionFactoryBuilder();
  * SessionFactory sessionFactory =
- *         sessionFactoryBuilder
- *                 // supply a factory-level Interceptor
- *                 .applyInterceptor(new CustomSessionFactoryInterceptor());
- *                 // add a custom observer
- *                 .addSessionFactoryObservers(new CustomSessionFactoryObserver());
- *                 // apply a CDI BeanManager (for JPA event listeners)
- *                 .applyBeanManager(getBeanManager());
- *                 .build();
+ *         metadata.buildSessionFactory();
  * </pre>
  * <p>
  * In more advanced scenarios,
@@ -64,8 +55,7 @@
  *     {@link org.hibernate.service.ServiceRegistry} used during
  *     the bootstrap process,
  * <li>implementations of {@link org.hibernate.boot.MetadataBuilder}
- *     and {@link org.hibernate.boot.Metadata}, and
- *     {@link org.hibernate.boot.SessionFactoryBuilder},
+ *     and {@link org.hibernate.boot.Metadata},
  * <li>{@linkplain org.hibernate.boot.model.naming support} for
  *     {@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}
  *     and {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy},

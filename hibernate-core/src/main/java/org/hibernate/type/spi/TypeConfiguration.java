@@ -757,9 +757,27 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	@Deprecated(since = "7.2", forRemoval = true) // no longer used
 	public <J> @Nullable BasicType<J> getBasicTypeForGenericJavaType(Class<? super J> javaType, Type... typeArguments) {
+		final Type parameterizedType = new ParameterizedTypeImpl( javaType, typeArguments, null );
+		final BasicType<?> existing = basicTypeByJavaType.get( parameterizedType );
+		if ( existing != null ) {
+			//noinspection unchecked
+			return (BasicType<J>) existing;
+		}
+		final BasicType<?> registeredType = basicTypeRegistry.getRegisteredType( parameterizedType );
+		if ( registeredType != null ) {
+			basicTypeByJavaType.put( parameterizedType, registeredType );
+			//noinspection unchecked
+			return (BasicType<J>) registeredType;
+		}
+		final JavaType<?> javaTypeDescriptor = javaTypeRegistry.resolveDescriptor( parameterizedType );
+		final JdbcType jdbcType = javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
+		if ( jdbcType == null ) {
+			return null;
+		}
+		final BasicType<?> resolvedType = basicTypeRegistry.resolve( javaTypeDescriptor, jdbcType );
+		basicTypeByJavaType.put( parameterizedType, resolvedType );
 		//noinspection unchecked
-		return (BasicType<J>)
-				getBasicTypeForJavaType( new ParameterizedTypeImpl( javaType, typeArguments, null ) );
+		return (BasicType<J>) resolvedType;
 	}
 
 	public <J> @Nullable BasicType<J> getBasicTypeForJavaType(Class<J> javaClass) {

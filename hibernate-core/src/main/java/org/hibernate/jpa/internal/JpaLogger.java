@@ -75,12 +75,12 @@ public interface JpaLogger extends BasicLogger {
 	void startingCreateEntityManagerFactory(String persistenceUnitName);
 
 	@LogMessage(level = TRACE)
-	@Message(id = 8523, value = "Could not obtain matching EntityManagerFactoryBuilder, returning %s")
-	void couldNotObtainEmfBuilder(String result);
+	@Message(id = 8523, value = "Could not obtain matching persistence unit, returning %s")
+	void couldNotObtainPersistenceUnit(String result);
 
 	@LogMessage(level = TRACE)
-	@Message(id = 8524, value = "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s")
-	void attemptingToObtainEmfBuilder(String persistenceUnitName);
+	@Message(id = 8524, value = "Attempting to locate persistence unit descriptor for persistenceUnitName : %s")
+	void attemptingToLocatePersistenceUnit(String persistenceUnitName);
 
 	@LogMessage(level = TRACE)
 	@Message(id = 8525, value = "Located and parsed %s persistence units; checking each")

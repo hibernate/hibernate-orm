@@ -13,6 +13,7 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
@@ -175,7 +176,8 @@ public class EmbeddedTableTests {
 		try ( var sf = persistenceConfiguration.createEntityManagerFactory() ) {
 			fail( "Should have failed with AnnotationPlacementException" );
 		}
-		catch (AnnotationPlacementException expected) {
+		catch (PersistenceException expected) {
+			assertThat( expected ).hasCauseInstanceOf( AnnotationPlacementException.class );
 		}
 	}
 
@@ -188,7 +190,8 @@ public class EmbeddedTableTests {
 		try ( var sf = persistenceConfiguration.createEntityManagerFactory() ) {
 			fail( "Should have failed with AnnotationPlacementException" );
 		}
-		catch (AnnotationPlacementException expected) {
+		catch (PersistenceException expected) {
+			assertThat( expected ).hasCauseInstanceOf( AnnotationPlacementException.class );
 		}
 	}
 

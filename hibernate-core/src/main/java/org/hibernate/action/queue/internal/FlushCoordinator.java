@@ -321,27 +321,38 @@ public class FlushCoordinator {
 
 		// For each foreign key, check if it creates a dependency between groups
 		for (var fk : constraintModel.foreignKeys()) {
-			final String keyTable = fk.keyTable();
-			final String targetTable = fk.targetTable();
-
 			// Check if this FK creates a dependency between two groups in this flush
 			if (kind == MutationKind.INSERT) {
 				// For INSERT: keyTable depends on targetTable (must insert target first)
 				// Even nullable FKs create dependencies because we don't know at this point
 				// whether the FK value will be null or not. The graph builder will handle
 				// breaking nullable FK edges if there's a cycle.
-				if (involvedTables.contains(keyTable) && involvedTables.contains(targetTable)) {
+				if ( containsTable( involvedTables, fk.keyTable(), fk.normalizedKeyTable() )
+						&& containsTable( involvedTables, fk.targetTable(), fk.normalizedTargetTable() ) ) {
 					return true;
 				}
 			}
 			else if (kind == MutationKind.DELETE) {
 				// For DELETE: targetTable depends on keyTable (must delete key holders first)
-				if (involvedTables.contains(keyTable) && involvedTables.contains(targetTable)) {
+				if ( containsTable( involvedTables, fk.keyTable(), fk.normalizedKeyTable() )
+						&& containsTable( involvedTables, fk.targetTable(), fk.normalizedTargetTable() ) ) {
 					return true;
 				}
 			}
 		}
 
+		return false;
+	}
+
+	private static boolean containsTable(java.util.Set<String> tables, String tableExpression, String normalizedTableExpression) {
+		if ( tables.contains( tableExpression ) || tables.contains( normalizedTableExpression ) ) {
+			return true;
+		}
+		for ( String table : tables ) {
+			if ( normalizedTableExpression.endsWith( "." + table ) ) {
+				return true;
+			}
+		}
 		return false;
 	}
 

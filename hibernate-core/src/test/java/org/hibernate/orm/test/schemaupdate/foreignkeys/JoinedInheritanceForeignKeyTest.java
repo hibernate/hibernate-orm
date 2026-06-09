@@ -35,6 +35,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.UnaryOperator;
 
 import static org.hamcrest.Matchers.containsString;
@@ -85,8 +86,11 @@ public class JoinedInheritanceForeignKeyTest {
 	}
 
 	private void checkAlterTableStatement(File scriptFile, AlterTableStatement alterTableStatement) throws Exception {
-		final String expectedAlterTableStatement = alterTableStatement.toSQL();
-		final List<String> sqlLines = Files.readAllLines( scriptFile.toPath(), Charset.defaultCharset() );
+		final String expectedAlterTableStatement = alterTableStatement.toSQL().toLowerCase( Locale.ROOT );
+		final List<String> sqlLines = Files.readAllLines( scriptFile.toPath(), Charset.defaultCharset() )
+				.stream()
+				.map( (sqlLine) -> sqlLine.toLowerCase( Locale.ROOT ) )
+				.toList();
 
 		MatcherAssert.assertThat( "Expected alter table statement not found", sqlLines,
 				hasItem( containsString( expectedAlterTableStatement ) ) );

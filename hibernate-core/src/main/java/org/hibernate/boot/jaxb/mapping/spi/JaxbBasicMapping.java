@@ -44,4 +44,8 @@ public interface JaxbBasicMapping {
 	Boolean isMutable();
 
 	void setMutable(Boolean value);
+
+	String getMutability();
+
+	void setMutability(String value);
 }

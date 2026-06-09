@@ -82,6 +82,8 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.ForeignKeyMappingMaterializer;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
@@ -98,11 +100,11 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.CustomSqlMapping;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
@@ -985,11 +987,6 @@ public abstract class CollectionBinder {
 				return CollectionClassification.LIST;
 			}
 
-			if ( property.hasDirectAnnotationUsage( jakarta.persistence.OrderBy.class )
-					|| property.hasDirectAnnotationUsage( org.hibernate.annotations.SQLOrder.class ) ) {
-				return CollectionClassification.BAG;
-			}
-
 			final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 			final var manyToMany = property.getAnnotationUsage( ManyToMany.class, modelsContext );
 			if ( manyToMany != null && !manyToMany.mappedBy().isBlank() ) {
@@ -1003,8 +1000,7 @@ public abstract class CollectionBinder {
 				return CollectionClassification.BAG;
 			}
 
-			// otherwise, return the implicit classification for List attributes
-			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
+			return CollectionClassification.LIST;
 		}
 
 		if ( java.util.SortedSet.class.isAssignableFrom( semanticJavaType ) ) {
@@ -1276,38 +1272,26 @@ public abstract class CollectionBinder {
 
 		final var sqlInsert = property.getDirectAnnotationUsage( SQLInsert.class );
 		if ( sqlInsert != null ) {
-			collection.setCustomSQLInsert( sqlInsert.sql().trim(), sqlInsert.callable() );
-			final var verifier = sqlInsert.verify();
-			if ( verifier != Expectation.class ) {
-				collection.setInsertExpectation( getDefaultSupplier( verifier ) );
-			}
+			collection.setCustomSqlInsert( customSqlMapping( sqlInsert.sql(), sqlInsert.callable(), sqlInsert.verify() ) );
 		}
 
 		final var sqlUpdate = property.getDirectAnnotationUsage( SQLUpdate.class );
 		if ( sqlUpdate != null ) {
-			collection.setCustomSQLUpdate( sqlUpdate.sql().trim(), sqlUpdate.callable() );
-			final var verifier = sqlUpdate.verify();
-			if ( verifier != Expectation.class ) {
-				collection.setUpdateExpectation( getDefaultSupplier( verifier ) );
-			}
+			collection.setCustomSqlUpdate( customSqlMapping( sqlUpdate.sql(), sqlUpdate.callable(), sqlUpdate.verify() ) );
 		}
 
 		final var sqlDelete = property.getDirectAnnotationUsage( SQLDelete.class );
 		if ( sqlDelete != null ) {
-			collection.setCustomSQLDelete( sqlDelete.sql().trim(), sqlDelete.callable() );
-			final var verifier = sqlDelete.verify();
-			if ( verifier != Expectation.class ) {
-				collection.setDeleteExpectation( getDefaultSupplier( verifier ) );
-			}
+			collection.setCustomSqlDelete( customSqlMapping( sqlDelete.sql(), sqlDelete.callable(), sqlDelete.verify() ) );
 		}
 
 		final var sqlDeleteAll = property.getDirectAnnotationUsage( SQLDeleteAll.class );
 		if ( sqlDeleteAll != null ) {
-			collection.setCustomSQLDeleteAll( sqlDeleteAll.sql().trim(), sqlDeleteAll.callable() );
-			final var verifier = sqlDeleteAll.verify();
-			if ( verifier != Expectation.class ) {
-				collection.setDeleteAllExpectation( getDefaultSupplier( verifier ) );
-			}
+			collection.setCustomSqlDeleteAll( customSqlMapping(
+					sqlDeleteAll.sql(),
+					sqlDeleteAll.callable(),
+					sqlDeleteAll.verify()
+			) );
 		}
 
 		final var sqlSelect = property.getDirectAnnotationUsage( SQLSelect.class );
@@ -1324,6 +1308,17 @@ public abstract class CollectionBinder {
 			collection.setLoaderName( loaderName );
 			bindQuery( loaderName, hqlSelect, buildingContext );
 		}
+	}
+
+	private static CustomSqlMapping customSqlMapping(
+			String sql,
+			boolean callable,
+			Class<? extends Expectation> expectationClass) {
+		return new CustomSqlMapping(
+				sql.trim(),
+				callable,
+				expectationClass == Expectation.class ? null : getDefaultSupplier( expectationClass )
+		);
 	}
 
 	private void applySortingAndOrdering() {
@@ -1706,7 +1701,7 @@ public abstract class CollectionBinder {
 		if ( hqlOrderBy != null ) {
 			final String orderByFragment = buildOrderByClauseFromHql( hqlOrderBy, associatedClass );
 			if ( isNotBlank( orderByFragment ) ) {
-				collection.setOrderBy( orderByFragment );
+				collection.setJpaOrderBy( orderByFragment );
 			}
 		}
 	}
@@ -2224,7 +2219,7 @@ public abstract class CollectionBinder {
 		collection.setElement( elementBinder.make() );
 		final String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 		if ( orderBy != null ) {
-			collection.setOrderBy( orderBy );
+			collection.setJpaOrderBy( orderBy );
 		}
 	}
 
@@ -2261,7 +2256,7 @@ public abstract class CollectionBinder {
 		if ( isNotBlank( hqlOrderBy ) ) {
 			final String orderBy = adjustUserSuppliedValueCollectionOrderingFragment( hqlOrderBy );
 			if ( orderBy != null ) {
-				collection.setOrderBy( orderBy );
+				collection.setJpaOrderBy( orderBy );
 			}
 		}
 	}
@@ -2363,7 +2358,7 @@ public abstract class CollectionBinder {
 		element.setNotFoundAction( notFoundAction );
 		// as per 11.1.38 of JPA 2.0 spec, default to primary key if no column is specified by @OrderBy.
 		if ( hqlOrderBy != null ) {
-			collection.setManyToManyOrdering( buildOrderByClauseFromHql( hqlOrderBy, collectionEntity ) );
+			collection.setManyToManyJpaOrdering( buildOrderByClauseFromHql( hqlOrderBy, collectionEntity ) );
 		}
 
 		final var joinTableAnn = property.getDirectAnnotationUsage( JoinTable.class );
@@ -2824,10 +2819,11 @@ public abstract class CollectionBinder {
 				buildingContext
 		);
 		if ( createPrimaryKey ) {
-			final var table = value.getTable();
-			final var primaryKey = new PrimaryKey( table );
-			primaryKey.addColumns( value );
-			table.setPrimaryKey( primaryKey );
+			new CollectionKeyMappingMaterializer().materializeValuePrimaryKey(
+					value.getTable(),
+					value,
+					collection.getRole() + ".inverse"
+			);
 		}
 	}
 
@@ -2844,7 +2840,7 @@ public abstract class CollectionBinder {
 		setReferencedProperty( targetEntity.getEntityName(), mappedBy, manyToOne );
 		// Ensure that we copy over the delete action from the owner side before creating the foreign key
 		setOnDeleteAction( mappedByProperty, manyToOne );
-		value.createForeignKey();
+		new ForeignKeyMappingMaterializer().materializeForeignKey( manyToOne, targetEntity, collection.getRole() + ".inverse" );
 	}
 
 	private void setReferencedProperty(String targetEntityName, String mappedBy, ManyToOne manyToOne) {

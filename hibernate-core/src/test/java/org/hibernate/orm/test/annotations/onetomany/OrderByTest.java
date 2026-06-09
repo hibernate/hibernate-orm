@@ -13,7 +13,6 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.sql.SimpleSelect;
@@ -37,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -62,10 +60,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 						settingName = AvailableSettings.DEFAULT_NULL_ORDERING,
 						provider = OrderByTest.DefaultNullOrderingSettingProvider.class
 				),
-				@SettingProvider(
-						settingName = DEFAULT_LIST_SEMANTICS,
-						provider = OrderByTest.DefaultListSemanticsProvider.class
-				)
 		}
 )
 public class OrderByTest {
@@ -77,12 +71,6 @@ public class OrderByTest {
 		}
 	}
 
-	public static class DefaultListSemanticsProvider implements SettingProvider.Provider<CollectionClassification> {
-		@Override
-		public CollectionClassification getSetting() {
-			return CollectionClassification.BAG;
-		}
-	}
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {

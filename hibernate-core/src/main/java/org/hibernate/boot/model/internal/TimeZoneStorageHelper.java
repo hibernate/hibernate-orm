@@ -27,7 +27,7 @@ public class TimeZoneStorageHelper {
 	private static final String OFFSET_DATETIME_CLASS = OffsetDateTime.class.getName();
 	private static final String ZONED_DATETIME_CLASS = ZonedDateTime.class.getName();
 
-	static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
+	public static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
 			MemberDetails attributeMember,
 			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
@@ -68,7 +68,7 @@ public class TimeZoneStorageHelper {
 		return OFFSET_TIME_CLASS.equals( returnedClassName );
 	}
 
-	static boolean useColumnForTimeZoneStorage(AnnotationTarget element, MetadataBuildingContext context) {
+	public static boolean useColumnForTimeZoneStorage(AnnotationTarget element, MetadataBuildingContext context) {
 		final var timeZoneStorage = element.getDirectAnnotationUsage( TimeZoneStorage.class );
 		if ( timeZoneStorage == null ) {
 			return element instanceof MemberDetails attributeMember

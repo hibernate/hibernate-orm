@@ -198,12 +198,36 @@ public class StandardGraphBuilder implements GraphBuilder {
 			final String parentTable = foreignKey.targetTable();
 
 			// Hoist all map lookups to avoid redundant lookups in multiple sections below
-			final List<GroupNode> parentInserts = insertNodeByTable.get( parentTable );
-			final List<GroupNode> childInserts = insertNodeByTable.get( childTable );
-			final List<GroupNode> parentDeletes = deleteNodeByTable.get( parentTable );
-			final List<GroupNode> childDeletes = deleteNodeByTable.get( childTable );
-			final List<GroupNode> parentUpdates = updateNodeByTable.get( parentTable );
-			final List<GroupNode> childUpdates = updateNodeByTable.get( childTable );
+			final List<GroupNode> parentInserts = getTableNodes(
+					insertNodeByTable,
+					parentTable,
+					foreignKey.normalizedTargetTable()
+			);
+			final List<GroupNode> childInserts = getTableNodes(
+					insertNodeByTable,
+					childTable,
+					foreignKey.normalizedKeyTable()
+			);
+			final List<GroupNode> parentDeletes = getTableNodes(
+					deleteNodeByTable,
+					parentTable,
+					foreignKey.normalizedTargetTable()
+			);
+			final List<GroupNode> childDeletes = getTableNodes(
+					deleteNodeByTable,
+					childTable,
+					foreignKey.normalizedKeyTable()
+			);
+			final List<GroupNode> parentUpdates = getTableNodes(
+					updateNodeByTable,
+					parentTable,
+					foreignKey.normalizedTargetTable()
+			);
+			final List<GroupNode> childUpdates = getTableNodes(
+					updateNodeByTable,
+					childTable,
+					foreignKey.normalizedKeyTable()
+			);
 
 			// Create all FK-based edges using helper methods
 			edgeId = createInsertToInsertEdges(
@@ -222,6 +246,26 @@ public class StandardGraphBuilder implements GraphBuilder {
 			edgeId = createUpdateToDeleteEdges( foreignKey, parentUpdates, childDeletes, outgoing, edgeId );
 		}
 		return edgeId;
+	}
+
+	private static List<GroupNode> getTableNodes(
+			Map<String, List<GroupNode>> nodesByTable,
+			String tableExpression,
+			String normalizedTableExpression) {
+		final List<GroupNode> nodes = nodesByTable.get( tableExpression );
+		if ( nodes != null ) {
+			return nodes;
+		}
+		final List<GroupNode> normalizedNodes = nodesByTable.get( normalizedTableExpression );
+		if ( normalizedNodes != null ) {
+			return normalizedNodes;
+		}
+		for ( Map.Entry<String, List<GroupNode>> entry : nodesByTable.entrySet() ) {
+			if ( normalizedTableExpression.endsWith( "." + entry.getKey() ) ) {
+				return entry.getValue();
+			}
+		}
+		return null;
 	}
 
 	private LinkedHashSet<ForeignKey> collectRelevantForeignKeys(ArrayList<FlushOperationGroup> sortedGroups) {

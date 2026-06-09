@@ -41,6 +41,7 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
+import org.hibernate.metamodel.mapping.ordering.SqlOrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
@@ -419,21 +420,38 @@ public class PluralAttributeMappingImpl
 			final TranslationContext context = collectionDescriptor::getFactory;
 
 			if ( hasOrder ) {
-				orderByFragment = OrderByFragmentTranslator.translate(
+				orderByFragment = translateOrderByFragment(
+						bootDescriptor.getJpaOrderBy(),
+						bootDescriptor.getSqlOrderBy(),
 						bootDescriptor.getOrderBy(),
-						this,
 						context
 				);
 			}
 
 			if ( hasManyToManyOrder ) {
-				manyToManyOrderByFragment = OrderByFragmentTranslator.translate(
+				manyToManyOrderByFragment = translateOrderByFragment(
+						bootDescriptor.getManyToManyJpaOrdering(),
+						bootDescriptor.getManyToManySqlOrdering(),
 						bootDescriptor.getManyToManyOrdering(),
-						this,
 						context
 				);
 			}
 		}
+	}
+
+	private OrderByFragment translateOrderByFragment(
+			String jpaOrderBy,
+			String sqlOrderBy,
+			String fallbackOrderBy,
+			TranslationContext context) {
+		if ( sqlOrderBy != null ) {
+			return new SqlOrderByFragment( sqlOrderBy );
+		}
+		return OrderByFragmentTranslator.translate(
+				jpaOrderBy != null ? jpaOrderBy : fallbackOrderBy,
+				this,
+				context
+		);
 	}
 
 	@Override

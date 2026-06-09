@@ -6,6 +6,8 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
+import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -23,6 +25,8 @@ import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
  * @author Gavin King
  */
 class NaturalIdBinder {
+	private static final UniqueKeyMappingMaterializer UNIQUE_KEY_MAPPING_MATERIALIZER =
+			new UniqueKeyMappingMaterializer();
 
 	static void addNaturalIds(
 			boolean inSecondPass,
@@ -54,20 +58,31 @@ class NaturalIdBinder {
 	private static void addColumnsToUniqueKey(AnnotatedColumns columns, Identifier name) {
 		final var collector = columns.getBuildingContext().getMetadataCollector();
 		final var table = columns.getTable();
-		final var uniqueKey = table.getOrCreateUniqueKey( name.render( collector.getDatabase().getDialect() ) );
+		final List<org.hibernate.mapping.Column> uniqueKeyColumns;
 		final var property = columns.resolveProperty();
 		if ( property.isComposite() ) {
+			uniqueKeyColumns = new java.util.ArrayList<>( property.getValue().getSelectables().size() );
 			for ( Selectable selectable : property.getValue().getSelectables() ) {
 				if ( selectable instanceof org.hibernate.mapping.Column column) {
-					uniqueKey.addColumn( tableColumn( column, table, collector ) );
+					uniqueKeyColumns.add( tableColumn( column, table, collector ) );
 				}
 			}
 		}
 		else {
+			uniqueKeyColumns = new java.util.ArrayList<>( columns.getColumns().size() );
 			for ( var column : columns.getColumns() ) {
-				uniqueKey.addColumn( tableColumn( column.getMappingColumn(), table, collector ) );
+				uniqueKeyColumns.add( tableColumn( column.getMappingColumn(), table, collector ) );
 			}
 		}
+		UNIQUE_KEY_MAPPING_MATERIALIZER.materializeUniqueKey(
+				ResolvedUniqueKey.named(
+						table,
+						uniqueKeyColumns,
+						columns.getBuildingContext(),
+						name.render( collector.getDatabase().getDialect() ),
+						"natural-id"
+				)
+		);
 	}
 
 	private static org.hibernate.mapping.Column tableColumn(

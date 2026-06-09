@@ -5,6 +5,8 @@
 package org.hibernate.orm.test.dynamicmap;
 
 import org.hibernate.EntityNameResolver;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -60,9 +62,9 @@ public class CustomEntityNameResolverTest implements SessionFactoryProducer {
 
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		return (SessionFactoryImplementor) model.getSessionFactoryBuilder()
-				.addEntityNameResolver( new HibernateEntityNameResolver() )
-				.build();
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
+		optionsCollector.addEntityNameResolvers( new HibernateEntityNameResolver() );
+		return SessionFactoryPipeline.build( model, optionsCollector );
 	}
 
 	static class HibernateEntityNameResolver implements EntityNameResolver {

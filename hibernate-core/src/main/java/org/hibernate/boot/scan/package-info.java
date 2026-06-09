@@ -8,9 +8,7 @@
 /// {@linkplain org.hibernate.jpa.HibernatePersistenceConfiguration}.
 /// Designed with use from integrations in mind as well.
 ///
-/// @see org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor
-///
-/// @todo (jpa4) : drop `org.hibernate.boot.archive` in favor of this.
+/// @see org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
 ///
 /// @author Steve Ebersole
 package org.hibernate.boot.scan;

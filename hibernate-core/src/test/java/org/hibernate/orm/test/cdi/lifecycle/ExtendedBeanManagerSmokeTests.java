@@ -6,8 +6,9 @@ package org.hibernate.orm.test.cdi.lifecycle;
 
 import java.util.Map;
 
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerExtendedAccessImpl;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -22,7 +23,6 @@ import jakarta.persistence.EntityManagerFactory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.AvailableSettings.CDI_BEAN_MANAGER;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_CDI_BEAN_MANAGER;
-import static org.hibernate.jpa.boot.spi.Bootstrap.getEntityManagerFactoryBuilder;
 
 /**
  * @author Steve Ebersole
@@ -39,12 +39,17 @@ public class ExtendedBeanManagerSmokeTests {
 		final ExtendedBeanManagerImpl ref = new ExtendedBeanManagerImpl();
 		assertThat( ref.lifecycleListener ).isNull();
 
-		final EntityManagerFactoryBuilder emfb = getEntityManagerFactoryBuilder(
-				new PersistenceUnitInfoAdapter(),
+		final EntityManagerFactory emf = SessionFactoryBootstrap.build(
+				new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ),
 				integrationSettings( settingName, ref )
 		);
 
-		assertApplied( ref, emfb.build() );
+		try {
+			assertApplied( ref, emf );
+		}
+		finally {
+			emf.close();
+		}
 	}
 
 	@Test
@@ -57,12 +62,17 @@ public class ExtendedBeanManagerSmokeTests {
 		final ExtendedBeanManagerImpl ref = new ExtendedBeanManagerImpl();
 		assertThat( ref.lifecycleListener ).isNull();
 
-		final EntityManagerFactoryBuilder emfb = getEntityManagerFactoryBuilder(
-				new PersistenceUnitInfoAdapter(),
+		final EntityManagerFactory emf = SessionFactoryBootstrap.build(
+				new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ),
 				integrationSettings( settingName, ref )
 		);
 
-		assertApplied( ref, emfb.build() );
+		try {
+			assertApplied( ref, emf );
+		}
+		finally {
+			emf.close();
+		}
 	}
 
 	private static Map<String, Object> integrationSettings(String settingName, Object value) {

@@ -6,21 +6,17 @@ package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
-import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
-import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OrderColumn;
 
 import java.util.Locale;
 
@@ -325,7 +321,6 @@ public interface MappingSettings {
 	 * used, according to the listing order.
 	 *
 	 * @since 6.0
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJsonFormatMapper(FormatMapper)
 	 */
 	@Incubating
 	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
@@ -344,7 +339,6 @@ public interface MappingSettings {
 	 * used, according to the listing order.
 	 *
 	 * @since 6.0.1
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyXmlFormatMapper(FormatMapper)
 	 */
 	@Incubating
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
@@ -480,26 +474,6 @@ public interface MappingSettings {
 	 * @since 5.4.1
 	 */
 	String XML_MAPPING_ENABLED = "hibernate.xml_mapping_enabled";
-
-	/**
-	 * Specifies the {@link CollectionClassification} to use for a plural attribute
-	 * typed as {@link java.util.List} with no explicit list index details
-	 * ({@link OrderColumn}, {@link ListIndexBase}, etc.).
-	 * <p>
-	 * Accepts any of:
-	 * <ul>
-	 *     <li>an instance of {@code CollectionClassification}
-	 *     <li>the (case-insensitive) name of a {@code CollectionClassification} (list e.g.)
-	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}
-	 * </ul>
-	 *
-	 * @settingDefault {@link CollectionClassification#BAG}
-	 *
-	 * @since 6.0
-	 *
-	 * @see org.hibernate.annotations.Bag
-	 */
-	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
 
 	/**
 	 * Whether XML should be validated against their schema as Hibernate reads them.

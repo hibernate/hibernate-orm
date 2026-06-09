@@ -5,11 +5,13 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.mapping.internal.model.AggregateMemberContainer;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
@@ -25,6 +27,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.Value;
@@ -41,10 +44,13 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 public class AggregateComponentSecondPass implements SecondPass {
 
 	private final PropertyHolder propertyHolder;
+	private final Table table;
+	private final String path;
 	private final Component component;
 	private final ClassDetails componentClassDetails;
 	private final String propertyName;
 	private final MetadataBuildingContext context;
+	private final AggregateMemberContainer memberContainer;
 
 	public AggregateComponentSecondPass(
 			PropertyHolder propertyHolder,
@@ -53,15 +59,46 @@ public class AggregateComponentSecondPass implements SecondPass {
 			String propertyName,
 			MetadataBuildingContext context) {
 		this.propertyHolder = propertyHolder;
+		this.table = propertyHolder.getTable();
+		this.path = propertyHolder.getPath();
 		this.component = component;
 		this.componentClassDetails = componentClassDetails;
 		this.propertyName = propertyName;
 		this.context = context;
+		this.memberContainer = null;
+	}
+
+	public AggregateComponentSecondPass(
+			Table table,
+			String path,
+			Component component,
+			ClassDetails componentClassDetails,
+			String propertyName,
+			MetadataBuildingContext context) {
+		this( table, path, component, componentClassDetails, propertyName, context, null );
+	}
+
+	public AggregateComponentSecondPass(
+			Table table,
+			String path,
+			Component component,
+			ClassDetails componentClassDetails,
+			String propertyName,
+			MetadataBuildingContext context,
+			AggregateMemberContainer memberContainer) {
+		this.propertyHolder = null;
+		this.table = table;
+		this.path = path;
+		this.component = component;
+		this.componentClassDetails = componentClassDetails;
+		this.propertyName = propertyName;
+		this.context = context;
+		this.memberContainer = memberContainer;
 	}
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		validateComponent( component, qualify( propertyHolder.getPath(), propertyName ), isAggregateArray() );
+		validateComponent( component, qualify( path, propertyName ), isAggregateArray() );
 
 		final var metadataCollector = context.getMetadataCollector();
 		final var typeConfiguration = metadataCollector.getTypeConfiguration();
@@ -73,11 +110,11 @@ public class AggregateComponentSecondPass implements SecondPass {
 		// columns respect the same order as the component's properties
 		final int[] originalOrder = component.sortProperties();
 		// Compute aggregated columns since we have to replace them in the table with the aggregate column
-		final List<Column> aggregatedColumns = component.getAggregatedColumns();
+		final List<Column> aggregatedColumns = aggregatedColumns();
 		final AggregateColumn aggregateColumn = component.getAggregateColumn();
 
 		ensureInitialized( metadataCollector, aggregateColumn );
-		validateSupportedColumnTypes( propertyHolder.getPath(), component );
+		validateSupportedColumnTypes( path, component );
 
 		final QualifiedName structName = component.getStructName();
 		final boolean addAuxiliaryObjects;
@@ -177,7 +214,21 @@ public class AggregateComponentSecondPass implements SecondPass {
 			subColumn.setCustomRead( customReadExpression );
 		}
 
-		propertyHolder.getTable().getColumns().removeAll( aggregatedColumns );
+		table.getColumns().removeAll( aggregatedColumns );
+	}
+
+	private List<Column> aggregatedColumns() {
+		final List<Column> componentColumns = component.getAggregatedColumns();
+		if ( memberContainer == null || memberContainer.memberColumns().isEmpty() ) {
+			return componentColumns;
+		}
+
+		final List<Column> memberColumns = new ArrayList<>( memberContainer.memberColumns() );
+		if ( memberColumns.size() != componentColumns.size() || !memberColumns.containsAll( componentColumns ) ) {
+			return componentColumns;
+		}
+		memberColumns.sort( Comparator.comparingInt( componentColumns::indexOf ) );
+		return memberColumns;
 	}
 
 	private static void validateComponent(Component component, String basePath, boolean inArray) {

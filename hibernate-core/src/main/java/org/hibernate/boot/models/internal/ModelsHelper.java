@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;

@@ -12,7 +12,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
@@ -255,8 +256,7 @@ public abstract class AbstractMultiTenancyTest {
 				)
 		);
 
-		final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
-		return sessionFactoryBuilder.build();
+		return SessionFactoryPipeline.build( metadata, new SessionFactoryOptionsCollector() );
 	}
 
 	protected Class<?>[] getAnnotatedClasses() {

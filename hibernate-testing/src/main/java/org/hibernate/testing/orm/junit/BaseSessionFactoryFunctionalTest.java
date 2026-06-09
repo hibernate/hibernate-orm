@@ -21,7 +21,8 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -189,14 +190,14 @@ public abstract class BaseSessionFactoryFunctionalTest
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
 		log.trace( "Producing SessionFactory" );
-		final SessionFactoryBuilder sfBuilder = model.getSessionFactoryBuilder();
-		configure( sfBuilder );
-		final SessionFactoryImplementor factory = (SessionFactoryImplementor) sfBuilder.build();
+		final var optionsCollector = new SessionFactoryOptionsCollector();
+		configure( optionsCollector );
+		final SessionFactoryImplementor factory = SessionFactoryPipeline.build( model, optionsCollector );
 		sessionFactoryBuilt( factory );
 		return factory;
 	}
 
-	protected void configure(SessionFactoryBuilder builder) {
+	protected void configure(SessionFactoryOptionsCollector optionsCollector) {
 	}
 
 	protected void sessionFactoryBuilt(SessionFactoryImplementor factory) {

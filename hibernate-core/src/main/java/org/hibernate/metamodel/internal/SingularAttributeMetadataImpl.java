@@ -23,8 +23,9 @@ public class SingularAttributeMetadataImpl<X, Y> extends BaseAttributeMetadata<X
 			Property propertyMapping,
 			ManagedDomainType<X> ownerType,
 			Member member,
-			AttributeClassification attributeClassification) {
-		super( propertyMapping, ownerType, member, attributeClassification );
+			AttributeClassification attributeClassification,
+			AttributeTypeCorrespondence typeCorrespondence) {
+		super( propertyMapping, ownerType, member, attributeClassification, typeCorrespondence );
 		valueContext = new ValueContext() {
 			@Override
 			public Value getHibernateValue() {

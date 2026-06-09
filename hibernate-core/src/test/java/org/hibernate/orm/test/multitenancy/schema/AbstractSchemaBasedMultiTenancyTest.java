@@ -7,7 +7,8 @@ package org.hibernate.orm.test.multitenancy.schema;
 import org.hibernate.SessionBuilder;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -116,12 +117,12 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 				)
 		);
 
-		final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
-		configure( sfb );
-		sessionFactory = (SessionFactoryImplementor) sfb.build();
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
+		configure( optionsCollector );
+		sessionFactory = SessionFactoryPipeline.build( metadata, optionsCollector );
 	}
 
-	protected void configure(SessionFactoryBuilder sfb) {
+	protected void configure(SessionFactoryOptionsCollector optionsCollector) {
 	}
 
 	protected abstract T buildMultiTenantConnectionProvider();

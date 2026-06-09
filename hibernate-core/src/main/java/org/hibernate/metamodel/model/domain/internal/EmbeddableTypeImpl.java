@@ -110,6 +110,11 @@ public class EmbeddableTypeImpl<J>
 
 	@Override
 	public @Nullable SqmPathSource<?> findSubPathSource(String name) {
+		final var concreteGeneric = findConcreteGenericAttribute( name );
+		if ( concreteGeneric != null ) {
+			return (SqmPathSource<?>) concreteGeneric;
+		}
+
 		final var attribute = getPathType().findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;

@@ -17,6 +17,7 @@ import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
@@ -33,6 +34,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.ForeignKeyColumnMapping;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Map;
@@ -869,8 +871,8 @@ public class MappingModelCreationHelper {
 		String referencedPropertyName;
 		boolean swapDirection = false;
 		if ( bootValueMapping instanceof OneToOne oneToOne ) {
-			swapDirection = oneToOne.getForeignKeyType() == ForeignKeyDirection.TO_PARENT;
 			referencedPropertyName = oneToOne.getMappedByProperty();
+			swapDirection = referencedPropertyName != null && oneToOne.getForeignKeyType() == ForeignKeyDirection.TO_PARENT;
 			if ( referencedPropertyName == null ) {
 				referencedPropertyName = oneToOne.getReferencedPropertyName();
 			}
@@ -1199,31 +1201,58 @@ public class MappingModelCreationHelper {
 		final var creationContext = creationProcess.getCreationContext();
 		final ComponentType componentType;
 		final boolean sorted;
+		final Value selectableSource;
+		final Component referencedComponent;
 		if ( bootValueMapping instanceof Collection collectionBootValueMapping ) {
-			componentType = (ComponentType) collectionBootValueMapping.getKey().getType();
-			final var key = (SortableValue) collectionBootValueMapping.getKey();
-			assert key.isSorted();
-			sorted = key.isSorted();
+			selectableSource = collectionBootValueMapping.getKey();
+			componentType = (ComponentType) selectableSource.getType();
+			sorted = selectableSource instanceof SortableValue key && key.isSorted();
+			referencedComponent = selectableSource instanceof DependantValue dependantValue
+					&& dependantValue.getWrappedValue() instanceof Component component
+							? component
+							: null;
 		}
 		else {
+			selectableSource = bootValueMapping;
 			final var entityType = (EntityType) bootValueMapping.getType();
 			final Type identifierOrUniqueKeyType =
 					entityType.getIdentifierOrUniqueKeyType( creationContext.getMetadata() );
 			if ( identifierOrUniqueKeyType instanceof ComponentType composite ) {
 				componentType = composite;
 				if ( bootValueMapping instanceof ToOne toOne ) {
-					assert toOne.isSorted();
 					sorted = toOne.isSorted();
 				}
 				else {
 					// Assume one-to-many is sorted, because it always uses the primary key value
 					sorted = true;
 				}
+				referencedComponent = resolveReferencedComponent( bootValueMapping, creationProcess );
 			}
 			else {
 				// This happens when we have a one-to-many with a mapped-by associations that has a basic FK
 				return new int[] { 0 };
 			}
+		}
+		if ( selectableSource instanceof ToOne toOne && referencedComponent != null ) {
+			final int[] selectableOrder = resolveForeignKeyColumnMappingOrder(
+					toOne,
+					referencedComponent,
+					componentType.getColumnSpan( creationContext.getBootModel() ),
+					creationContext.getBootModel().getDatabase()
+			);
+			if ( selectableOrder != null ) {
+				return selectableOrder;
+			}
+		}
+		final int[] selectableOrder = resolveSelectableOrder(
+				selectableSource,
+				referencedComponent,
+				componentType,
+				creationProcess,
+				selectableSource instanceof DependantValue
+		);
+		if ( selectableOrder != null ) {
+			return selectableOrder;
 		}
 		// Consider the reordering if available
 		if ( !sorted && componentType.getOriginalPropertyOrder() != null ) {
@@ -1239,6 +1268,202 @@ public class MappingModelCreationHelper {
 			}
 			return propertyReordering;
 		}
+	}
+
+	private static int[] resolveForeignKeyColumnMappingOrder(
+			ToOne toOne,
+			Component referencedComponent,
+			int columnSpan,
+			Database database) {
+		final var columnMappings = toOne.getForeignKeyColumnMappings();
+		if ( columnMappings == null || columnMappings.mappings().size() != columnSpan ) {
+			return null;
+		}
+		final List<Selectable> targetSelectables = new ArrayList<>( columnSpan );
+		collectComponentSelectables( referencedComponent, targetSelectables );
+		if ( targetSelectables.size() != columnSpan ) {
+			return null;
+		}
+		final int[] selectableOrder = new int[columnSpan];
+		for ( int i = 0; i < columnMappings.mappings().size(); i++ ) {
+			final ForeignKeyColumnMapping columnMapping = columnMappings.mappings().get( i );
+			if ( columnMapping.referencedColumn() == null ) {
+				return null;
+			}
+			final int selectableIndex = resolveReferencedSelectableIndex(
+					columnMapping.referencedColumn(),
+					targetSelectables,
+					database
+			);
+			if ( selectableIndex < 0 ) {
+				return null;
+			}
+			selectableOrder[i] = selectableIndex;
+		}
+		return selectableOrder;
+	}
+
+	private static Component resolveReferencedComponent(
+			Value bootValueMapping,
+			MappingModelCreationProcess creationProcess) {
+		final var entityType = (EntityType) bootValueMapping.getType();
+		final var entityBinding = creationProcess.getCreationContext()
+				.getBootModel()
+				.getEntityBinding( entityType.getAssociatedEntityName() );
+		if ( entityBinding == null ) {
+			return null;
+		}
+		final Value referencedValue = bootValueMapping instanceof ToOne toOne
+				&& toOne.getReferencedPropertyName() != null
+						? entityBinding.getRecursiveProperty( toOne.getReferencedPropertyName() ).getValue()
+						: entityBinding.getIdentifier();
+		return referencedValue instanceof Component component ? component : null;
+	}
+
+	private static int[] resolveSelectableOrder(
+			Value selectableSource,
+			Component referencedComponent,
+			ComponentType componentType,
+			MappingModelCreationProcess creationProcess,
+			boolean allowColumnTypeIndexMatch) {
+		if ( referencedComponent == null ) {
+			return null;
+		}
+		final int columnSpan = componentType.getColumnSpan( creationProcess.getCreationContext().getBootModel() );
+		final var sourceSelectables = selectableSource.getVirtualSelectables();
+		if ( sourceSelectables.size() != columnSpan ) {
+			return null;
+		}
+		final int[] selectableOrder = new int[columnSpan];
+		final boolean[] used = new boolean[columnSpan];
+		final List<Selectable> targetSelectables = new ArrayList<>( columnSpan );
+		collectComponentSelectables( referencedComponent, targetSelectables );
+		if ( targetSelectables.size() != columnSpan ) {
+			return null;
+		}
+		final Database database = creationProcess.getCreationContext().getBootModel().getDatabase();
+		int matchedSelectableCount = 0;
+		for ( int i = 0; i < sourceSelectables.size(); i++ ) {
+			final int selectableIndex = resolveSelectableIndex(
+					sourceSelectables.get( i ),
+					targetSelectables,
+					used,
+					database,
+					allowColumnTypeIndexMatch
+			);
+			if ( selectableIndex < 0 ) {
+				if ( ( selectableSource instanceof ToOne toOne
+						&& ( toOne.getReferencedPropertyName() != null || toOne.hasFormula() ) )
+						|| selectableSource instanceof DependantValue dependantValue && dependantValue.hasFormula() ) {
+					return identitySelectableOrder( columnSpan );
+				}
+				if ( matchedSelectableCount == 0 && noRemainingSelectableMatches(
+						sourceSelectables,
+						i + 1,
+						targetSelectables,
+						used,
+						database,
+						allowColumnTypeIndexMatch
+				) ) {
+					return null;
+				}
+				else {
+					throw new MappingException(
+							"Unable to match foreign-key selectable `" + sourceSelectables.get( i ).getText()
+									+ "` to target component `" + referencedComponent.getComponentClassName() + "`"
+					);
+				}
+			}
+			selectableOrder[i] = selectableIndex;
+			used[selectableIndex] = true;
+			matchedSelectableCount++;
+		}
+		return selectableOrder;
+	}
+
+	private static int[] identitySelectableOrder(int columnSpan) {
+		final int[] selectableOrder = new int[columnSpan];
+		for ( int i = 0; i < columnSpan; i++ ) {
+			selectableOrder[i] = i;
+		}
+		return selectableOrder;
+	}
+
+	private static boolean noRemainingSelectableMatches(
+			List<Selectable> sourceSelectables,
+			int start,
+			List<Selectable> targetSelectables,
+			boolean[] used,
+			Database database,
+			boolean allowColumnTypeIndexMatch) {
+		for ( int i = start; i < sourceSelectables.size(); i++ ) {
+			if ( resolveSelectableIndex(
+					sourceSelectables.get( i ),
+					targetSelectables,
+					used,
+					database,
+					allowColumnTypeIndexMatch
+			) >= 0 ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static void collectComponentSelectables(Component component, List<Selectable> selectables) {
+		for ( Property property : component.getProperties() ) {
+			if ( property.getValue() instanceof Component nestedComponent ) {
+				collectComponentSelectables( nestedComponent, selectables );
+			}
+			else {
+				selectables.addAll( property.getSelectables() );
+			}
+		}
+	}
+
+	private static int resolveSelectableIndex(
+			Selectable sourceSelectable,
+			List<Selectable> targetSelectables,
+			boolean[] used,
+			Database database,
+			boolean allowColumnTypeIndexMatch) {
+		if ( sourceSelectable instanceof Column sourceColumn ) {
+			for ( int i = 0; i < targetSelectables.size(); i++ ) {
+				if ( !used[i]
+						&& targetSelectables.get( i ) instanceof Column targetColumn
+						&& sourceColumn.getNameIdentifier( database ).matches( targetColumn.getNameIdentifier( database ) ) ) {
+					return i;
+				}
+			}
+		}
+		else {
+			for ( int i = 0; i < targetSelectables.size(); i++ ) {
+				if ( !used[i] && sourceSelectable.equals( targetSelectables.get( i ) ) ) {
+					return i;
+				}
+			}
+		}
+		if ( allowColumnTypeIndexMatch && sourceSelectable instanceof Column sourceColumn ) {
+			final int typeIndex = sourceColumn.getTypeIndex();
+			if ( typeIndex >= 0 && typeIndex < targetSelectables.size() && !used[typeIndex] ) {
+				return typeIndex;
+			}
+		}
+		return -1;
+	}
+
+	private static int resolveReferencedSelectableIndex(
+			Column referencedColumn,
+			List<Selectable> targetSelectables,
+			Database database) {
+		for ( int i = 0; i < targetSelectables.size(); i++ ) {
+			if ( targetSelectables.get( i ) instanceof Column targetColumn
+					&& referencedColumn.getNameIdentifier( database )
+							.matches( targetColumn.getNameIdentifier( database ) ) ) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	private static void setReferencedAttributeForeignKeyDescriptor(

@@ -6,7 +6,6 @@ package org.hibernate.boot.spi;
 
 import org.hibernate.Remove;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.metamodel.CollectionClassification;
 
 /**
  * Values to use as defaults in the absence of certain mapping information.
@@ -131,11 +130,4 @@ public interface MappingDefaults {
 	 */
 	AccessType getImplicitCacheAccessType();
 
-	/**
-	 * Collection semantics to be applied to {@link java.util.List} attributes
-	 * with no explicit configuration
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
-	 */
-	CollectionClassification getImplicitListClassification();
 }

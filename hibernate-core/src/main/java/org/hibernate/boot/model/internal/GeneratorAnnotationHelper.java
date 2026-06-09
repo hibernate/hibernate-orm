@@ -14,7 +14,6 @@ import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
-import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -53,6 +52,8 @@ import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
+import static org.hibernate.id.PersistentIdentifierGenerator.CATALOG;
+import static org.hibernate.id.PersistentIdentifierGenerator.SCHEMA;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 
 /**
@@ -199,11 +200,27 @@ public class GeneratorAnnotationHelper {
 					generatorAnnotation == null
 							? null
 							: (a, properties) ->
-									SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put ),
+									applySequenceGeneratorConfiguration( generatorAnnotation, properties ),
 					creationContext
 			);
 			return sequenceStyleGenerator;
 		} );
+	}
+
+	private static void applySequenceGeneratorConfiguration(
+			SequenceGenerator generatorAnnotation,
+			Properties properties) {
+		SequenceStyleGenerator.applyConfiguration( generatorAnnotation, properties::put );
+		if ( !generatorAnnotation.sequenceName().isEmpty()
+				&& !generatorAnnotation.sequenceName().contains( "." )
+				&& generatorAnnotation.schema().isEmpty() ) {
+			properties.remove( SCHEMA );
+		}
+		if ( !generatorAnnotation.sequenceName().isEmpty()
+				&& !generatorAnnotation.sequenceName().contains( "." )
+				&& generatorAnnotation.catalog().isEmpty() ) {
+			properties.remove( CATALOG );
+		}
 	}
 
 	public static void handleTableGenerator(
@@ -415,10 +432,6 @@ public class GeneratorAnnotationHelper {
 	}
 
 	private static String determineStrategyName(GenericGenerator generatorConfig) {
-		if ( generatorConfig instanceof GenericGeneratorAnnotation generatorAnnotation
-				&& generatorAnnotation.strategy() != null ) {
-			return generatorAnnotation.strategy();
-		}
 		return generatorConfig.type().getName();
 	}
 

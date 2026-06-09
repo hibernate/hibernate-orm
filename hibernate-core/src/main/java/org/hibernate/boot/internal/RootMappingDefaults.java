@@ -6,9 +6,10 @@ package org.hibernate.boot.internal;
 
 import java.util.EnumSet;
 
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadata;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 
 import jakarta.persistence.AccessType;
 import jakarta.persistence.CascadeType;
@@ -65,10 +66,13 @@ public class RootMappingDefaults implements EffectiveMappingDefaults {
 
 		this.cascadeTypes = persistenceUnitMetadata.getDefaultCascadeTypes();
 
-		this.propertyAccessType = persistenceUnitMetadata.getAccessType();
 		this.propertyAccessStrategyName = coalesceSuppliedValues(
 				mappingDefaults::getImplicitPropertyAccessorName,
 				persistenceUnitMetadata::getDefaultAccessStrategyName
+		);
+		this.propertyAccessType = coalesce(
+				persistenceUnitMetadata.getAccessType(),
+				accessTypeFromDefaultAccessor( propertyAccessStrategyName )
 		);
 
 		this.cacheAccessType = mappingDefaults.getImplicitCacheAccessType();
@@ -158,6 +162,23 @@ public class RootMappingDefaults implements EffectiveMappingDefaults {
 	@Override
 	public org.hibernate.cache.spi.access.AccessType getDefaultCacheAccessType() {
 		return cacheAccessType;
+	}
+
+	private static AccessType accessTypeFromDefaultAccessor(String defaultAccessStrategyName) {
+		if ( defaultAccessStrategyName == null ) {
+			return null;
+		}
+
+		final BuiltInPropertyAccessStrategies builtInStrategy =
+				BuiltInPropertyAccessStrategies.interpret( defaultAccessStrategyName );
+		if ( builtInStrategy == BuiltInPropertyAccessStrategies.BASIC ) {
+			return AccessType.PROPERTY;
+		}
+		if ( builtInStrategy == BuiltInPropertyAccessStrategies.FIELD ) {
+			return AccessType.FIELD;
+		}
+
+		return null;
 	}
 
 }

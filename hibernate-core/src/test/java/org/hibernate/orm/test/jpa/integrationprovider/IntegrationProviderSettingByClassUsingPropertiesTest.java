@@ -6,7 +6,7 @@ package org.hibernate.orm.test.jpa.integrationprovider;
 
 import java.util.List;
 
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.JpaSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 @JiraKey(value = "HHHH-13853")
 @Jpa(
 		annotatedClasses = Person.class,
-		properties = @Setting(name = EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER, value = "org.hibernate.orm.test.jpa.integrationprovider.DtoIntegratorProvider")
+		properties = @Setting(name = JpaSettings.INTEGRATOR_PROVIDER, value = "org.hibernate.orm.test.jpa.integrationprovider.DtoIntegratorProvider")
 )
 public class IntegrationProviderSettingByClassUsingPropertiesTest {
 

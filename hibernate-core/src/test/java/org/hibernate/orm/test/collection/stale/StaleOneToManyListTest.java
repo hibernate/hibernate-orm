@@ -10,11 +10,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.RollbackException;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Jpa(annotatedClasses = {StaleOneToManyListTest.StaleListTestParent.class,
 						StaleOneToManyListTest.StaleListTestChild.class},
@@ -65,7 +66,6 @@ public class StaleOneToManyListTest {
 			} );
 		} );
 	}
-	@FailureExpected(reason = "ConstraintViolationException")
 	@Test void test3(EntityManagerFactoryScope scope) {
 		var parent1 = new StaleListTestParent();
 		var parent2 = new StaleListTestParent();
@@ -81,11 +81,11 @@ public class StaleOneToManyListTest {
 			var p = session1.find( StaleListTestParent.class, parent1.id );
 			var c = session1.find( StaleListTestChild.class, child1.id );
 			p.childList.remove( c );
-			scope.inTransaction( session2 -> {
+			assertThrows( RollbackException.class, () -> scope.inTransaction( session2 -> {
 				var pp = session2.find( StaleListTestParent.class, parent2.id );
 				var cc = session2.find( StaleListTestChild.class, child1.id );
 				pp.childList.add( cc );
-			} );
+			} ) );
 		} );
 	}
 	@Test void test4(EntityManagerFactoryScope scope) {

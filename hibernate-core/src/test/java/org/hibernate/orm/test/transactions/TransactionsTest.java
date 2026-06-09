@@ -48,8 +48,7 @@ public class TransactionsTest {
 				.getMetadataBuilder()
 				.build();
 
-		SessionFactory sessionFactory = metadata.getSessionFactoryBuilder()
-				.build();
+		SessionFactory sessionFactory = metadata.buildSessionFactory();
 
 		Session session = sessionFactory.openSession();
 		try {
@@ -100,8 +99,7 @@ public class TransactionsTest {
 				.getMetadataBuilder()
 				.build();
 
-		SessionFactory sessionFactory = metadata.getSessionFactoryBuilder()
-				.build();
+		SessionFactory sessionFactory = metadata.buildSessionFactory();
 
 		// Note: depending on the JtaPlatform used and some optional settings,
 		// the underlying transactions here will be controlled through either
@@ -158,8 +156,7 @@ public class TransactionsTest {
 				.getMetadataBuilder()
 				.build();
 
-		SessionFactory sessionFactory = metadata.getSessionFactoryBuilder()
-				.build();
+		SessionFactory sessionFactory = metadata.buildSessionFactory();
 
 		// Note: depending on the JtaPlatform used and some optional settings,
 		// the underlying transactions here will be controlled through either

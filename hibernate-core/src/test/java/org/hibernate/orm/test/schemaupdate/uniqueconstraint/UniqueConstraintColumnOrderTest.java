@@ -10,11 +10,9 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.Metadata;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -26,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -48,20 +45,15 @@ class UniqueConstraintColumnOrderTest {
 		};
 
 		Map<String, Object> settings = Map.of( AvailableSettings.HBM2DDL_AUTO, "create" );
-		EntityManagerFactoryBuilder emfBuilder = Bootstrap.getEntityManagerFactoryBuilder( puDescriptor, settings );
 
 		Path ddlScript = tempDir.resolve( "ddl.sql" );
 
-		try (EntityManagerFactory entityManagerFactory = emfBuilder.build()) {
-			// we do not need the entityManagerFactory, but we need to build it in order to demonstrate the issue (HHH-16943)
-
-			Metadata metadata = emfBuilder.metadata();
-
+		try (var metadataBootstrap = SessionFactoryBootstrap.resolveMetadata( puDescriptor, settings )) {
 			new SchemaExport()
 					.setHaltOnError( true )
 					.setOutputFile( ddlScript.toString() )
 					.setFormat( true )
-					.create( EnumSet.of( TargetType.SCRIPT ), metadata );
+					.create( EnumSet.of( TargetType.SCRIPT ), metadataBootstrap.metadata() );
 		}
 
 		String ddl = Files.readString( ddlScript );

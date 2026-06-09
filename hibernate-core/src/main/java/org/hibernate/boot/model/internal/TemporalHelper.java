@@ -184,11 +184,18 @@ public class TemporalHelper {
 		if ( targetColumn == null ) {
 			final var columnCopy = column.clone();
 			columnCopy.copy( column );
+			removeUniqueConstraint( columnCopy );
 			targetTable.addColumn( columnCopy );
 		}
 		else {
 			targetColumn.copy( column );
+			removeUniqueConstraint( targetColumn );
 		}
+	}
+
+	private static void removeUniqueConstraint(Column column) {
+		column.setUnique( false );
+		column.setUniqueKeyName( null );
 	}
 
 	private static void createHistoryTablePrimaryKey(

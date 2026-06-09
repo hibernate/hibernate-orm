@@ -24,16 +24,15 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.SettingProvider;
+
+import org.hibernate.annotations.Bag;
 
 import org.jboss.logging.Logger;
 
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -44,12 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				MultiLevelCascadeCollectionIdClassTest.SubEntity.class,
 				MultiLevelCascadeCollectionIdClassTest.AnotherSubSubEntity.class,
 				MultiLevelCascadeCollectionIdClassTest.SubSubEntity.class
-		},
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ImplicitListAsBagProvider.class
-		)
-)
+		})
 public class MultiLevelCascadeCollectionIdClassTest {
 
 	private static final Logger log = Logger.getLogger( MultiLevelCascadeCollectionIdClassTest.class );
@@ -125,6 +119,7 @@ public class MultiLevelCascadeCollectionIdClassTest {
 		private Long idNum;
 
 		@OneToMany(mappedBy = "mainEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+		@Bag
 		private List<SubEntity> subEntities = new ArrayList<>();
 
 		public void addSubEntity(SubEntity subEntity) {
@@ -188,9 +183,11 @@ public class MultiLevelCascadeCollectionIdClassTest {
 		private MainEntity mainEntity;
 
 		@OneToMany(mappedBy = "subEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+		@Bag
 		private List<SubSubEntity> subSubEntities = new ArrayList<>();
 
 		@OneToMany(mappedBy = "subEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+		@Bag
 		private List<AnotherSubSubEntity> anotherSubSubEntities = new ArrayList<>();
 
 		public Long getSubIdNum() {

@@ -7,7 +7,6 @@ package org.hibernate.orm.test.collection.bag;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -19,26 +18,19 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.Bag;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
  * @author Gail Badner
  */
-@ServiceRegistry(
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ImplicitListAsBagProvider.class )
-)
 @DomainModel(annotatedClasses = {
 		BagElementNullBasicTest.AnEntity.class,
 		BagElementNullBasicTest.NullableElementsEntity.class
@@ -186,7 +178,9 @@ public class BagElementNullBasicTest {
 
 		@ElementCollection
 		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn(name = "AnEntity_id") })
+		@Column(name = "aCollection")
 		@OrderBy
+		@Bag
 		private List<String> aCollection = new ArrayList<>();
 	}
 
@@ -200,6 +194,7 @@ public class BagElementNullBasicTest {
 		@ElementCollection
 		@CollectionTable(name = "e_2_string", joinColumns = @JoinColumn(name = "e_id"))
 		@Column(name = "string_value", unique = false, nullable = true, insertable = true, updatable = true)
+		@Bag
 		private List<String> list = new ArrayList<>();
 	}
 }

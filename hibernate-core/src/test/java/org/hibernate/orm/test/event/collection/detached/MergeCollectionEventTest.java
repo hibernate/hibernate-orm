@@ -8,7 +8,6 @@ import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
@@ -48,7 +47,7 @@ import static org.junit.Assert.assertEquals;
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-jpa"),
-				@Setting(name = Environment.DEFAULT_LIST_SEMANTICS, value = "bag"), // CollectionClassification.BAG
+// CollectionClassification.BAG
 		}
 )
 @BootstrapServiceRegistry(integrators = MergeCollectionEventTest.ConfigurerIntegrator.class)

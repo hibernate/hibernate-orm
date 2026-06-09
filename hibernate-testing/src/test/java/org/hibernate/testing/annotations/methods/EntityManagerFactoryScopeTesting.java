@@ -6,6 +6,7 @@ package org.hibernate.testing.annotations.methods;
 
 import java.util.Set;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.dialect.H2Dialect;
 
@@ -25,6 +26,7 @@ import jakarta.persistence.metamodel.EntityType;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @RequiresDialect(H2Dialect.class)
@@ -56,6 +58,13 @@ public class EntityManagerFactoryScopeTesting {
 	public void testBasicUsage(EntityManagerFactoryScope scope) {
 		assertThat( scope, notNullValue() );
 		assertThat( scope.getEntityManagerFactory(), notNullValue() );
+		assertFalse(
+				scope.getEntityManagerFactory()
+						.unwrap( SessionFactory.class )
+						.getSessionFactoryOptions()
+						.getJpaCompliance()
+						.isJpaQueryComplianceEnabled()
+		);
 		// check we can use the EMF to create EMs
 		scope.inTransaction(
 				(session) -> session.createQuery( "select a from AnEntity a" ).getResultList()

@@ -1020,9 +1020,10 @@ public class OracleDialect extends Dialect {
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		useBinaryFloat = configurationService.getSetting( ORACLE_USE_BINARY_FLOATS, StandardConverters.BOOLEAN, true );
 		useValueLOB = configurationService.getSetting( ORACLE_VALUE_LOB_ENABLED, StandardConverters.BOOLEAN, true );
-		rowLevelSecurity = getVersion().isSameOrAfter( 26 )
-				? OracleDeepDataSecurityRowLevelSecurity.fromSettings( configurationService.getSettings() )
-				: NoRowLevelSecurity.INSTANCE;
+		rowLevelSecurity =
+				getVersion().isSameOrAfter( 23, 26, 2 )
+						? OracleDeepDataSecurityRowLevelSecurity.fromSettings( configurationService.getSettings() )
+						: NoRowLevelSecurity.INSTANCE;
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry, this ) == BIT ) {

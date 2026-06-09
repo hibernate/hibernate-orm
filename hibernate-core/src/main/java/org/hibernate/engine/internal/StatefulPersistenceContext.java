@@ -30,6 +30,7 @@ import org.hibernate.MappingException;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.AssociationKey;
 import org.hibernate.engine.spi.BatchFetchQueue;
@@ -1806,6 +1807,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			stream.writeObject( holder.entity );
 			stream.writeObject( holder.proxy );
 			stream.writeObject( holder.state );
+			writeLazyAttributeInterceptorState( holder, stream );
 		} );
 		writeMapToStream(
 				collectionsByKey,
@@ -1869,6 +1871,24 @@ class StatefulPersistenceContext implements PersistenceContext {
 			PERSISTENCE_CONTEXT_LOGGER.startingSerializationOfEntries( size, keysName );
 			for ( E entry : collection ) {
 				serializer.serialize( entry, oos );
+			}
+		}
+	}
+
+	private static void writeLazyAttributeInterceptorState(EntityHolderImpl holder, ObjectOutputStream stream)
+			throws IOException {
+		final var enhancementMetadata = holder.descriptor.getBytecodeEnhancementMetadata();
+		if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
+			if ( holder.state != EntityHolderState.ENHANCED_PROXY ) {
+				if ( isPersistentAttributeInterceptable( holder.entity )
+						&& asPersistentAttributeInterceptable( holder.entity ).$$_hibernate_getInterceptor()
+								instanceof LazyAttributeLoadingInterceptor interceptor ) {
+					stream.writeBoolean( true );
+					interceptor.serialize( stream );
+				}
+				else {
+					stream.writeBoolean( false );
+				}
 			}
 		}
 	}
@@ -1953,6 +1973,28 @@ class StatefulPersistenceContext implements PersistenceContext {
 							// otherwise, the proxy was pruned during the serialization process
 							if ( traceEnabled ) {
 								PERSISTENCE_CONTEXT_LOGGER.encounteredPrunedProxy();
+							}
+						}
+					}
+					final var enhancementMetadata = persister.getBytecodeEnhancementMetadata();
+					if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
+						if ( state == EntityHolderState.ENHANCED_PROXY ) {
+							if ( isPersistentAttributeInterceptable( entity ) ) {
+								enhancementMetadata.injectEnhancedEntityAsProxyInterceptor( entity, entityKey,
+										session );
+							}
+						}
+						else {
+							final var interceptor = ois.readBoolean()
+									? LazyAttributeLoadingInterceptor.deserialize( ois, holder, session )
+									: null;
+							if ( isPersistentAttributeInterceptable( entity ) ) {
+								if ( interceptor != null ) {
+									enhancementMetadata.injectInterceptor( entity, interceptor, session );
+								}
+								else {
+									enhancementMetadata.injectInterceptor( entity, entityKey.getIdentifier(), session );
+								}
 							}
 						}
 					}

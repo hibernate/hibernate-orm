@@ -349,28 +349,6 @@ List<Initiative> initiatives =  outputs.getCurrent()
 ----
 
 
-
-=== Collections belonging to read-only entities
-
-Previously, collections belonging to an entity loaded in read-only mode were not
-marked as read-only and could be modified. This behavior was surprising and
-significantly undermined the benefits of the read-only mode. A collection is now
-set to read-only when its owning entity is read-only, and modifications to the
-collection result in an error.
-
-=== Result deduplication
-
-In Hibernate 6.x query result lists with duplicate results were handled in an
-ad hoc and inconsistent way by `getSingleResult()` and `getSingleResultOrNull()`.
-As of Hibernate 7.3, these methods _always_ throw when the result list contains
-more than one element (which is faithful to the documented semantics of these
-methods). If automatic deduplication is required, use:
-
-[source,java]
-query.setResultListTransformer(ResultListTransformer.uniqueResultTransformer())
-
-which collapses duplicate results according to value equality.
-
 === Final fields of entities
 
 A `final` field of an entity is now treated as if it were annotated `@Immutable`,

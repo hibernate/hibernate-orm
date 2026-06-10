@@ -28,6 +28,7 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -630,7 +631,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	@Remove
-	public Configuration addXmlMapping(Binding<?> binding) {
+	public Configuration addXmlMapping(Binding<JaxbEntityMappingsImpl> binding) {
 		metadataSources.addXmlBinding( binding );
 		return this;
 	}

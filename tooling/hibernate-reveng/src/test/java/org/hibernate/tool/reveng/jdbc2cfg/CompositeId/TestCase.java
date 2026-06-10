@@ -4,8 +4,6 @@
  */
 package org.hibernate.tool.reveng.jdbc2cfg.CompositeId;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -14,37 +12,23 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.reveng.api.export.Exporter;
-import org.hibernate.tool.reveng.api.export.ExporterConstants;
-import org.hibernate.tool.reveng.api.export.ExporterFactory;
-import org.hibernate.tool.reveng.api.export.ExporterType;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.reveng.api.core.RevengStrategy;
 import org.hibernate.tool.reveng.api.core.TableIdentifier;
-import org.hibernate.tool.reveng.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.reveng.internal.core.strategy.DefaultStrategy;
 import org.hibernate.tool.reveng.test.utils.HibernateUtil;
-import org.hibernate.tool.reveng.test.utils.JavaUtil;
 import org.hibernate.tool.reveng.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Iterator;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author max
@@ -55,9 +39,6 @@ public class TestCase {
 
 	private MetadataDescriptor metadataDescriptor = null;
 	private RevengStrategy reverseEngineeringStrategy = null;
-
-	@TempDir
-	public File outputDir = new File("output");
 
 	@BeforeEach
 	public void setUp() {
@@ -175,56 +156,6 @@ public class TestCase {
 				extraId.getName() );
 		assertFalse(id.getValue() instanceof ManyToOne);
 		assertFalse(extraId.getValue() instanceof ManyToOne);
-	}
-
-	@Test
-	public void testGeneration() throws Exception {
-		Exporter exporter = new HbmExporter();
-		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		Exporter javaExp = ExporterFactory.createExporter(ExporterType.JAVA);
-		javaExp.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		javaExp.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		exporter.start();
-		javaExp.start();
-		JavaUtil.compile(outputDir);
-		URL[] urls = new URL[] { outputDir.toURI().toURL() };
-		URLClassLoader ucl = new URLClassLoader(
-				urls,
-				Thread.currentThread().getContextClassLoader());
-		File[] files = new File[6];
-		files[0] = new File(outputDir, "SimpleCustomerOrder.hbm.xml");
-		files[1] = new File(outputDir, "SimpleLineItem.hbm.xml");
-		files[2] = new File(outputDir, "Product.hbm.xml");
-		files[3] = new File(outputDir, "Customer.hbm.xml");
-		files[4] = new File(outputDir, "LineItem.hbm.xml");
-		files[5] = new File(outputDir, "CustomerOrder.hbm.xml");
-		Thread.currentThread().setContextClassLoader(ucl);
-		SessionFactory factory = MetadataDescriptorFactory
-				.createNativeDescriptor(null, files, null)
-				.createMetadata()
-				.buildSessionFactory();
-		Session session = factory.openSession();
-		JdbcUtil.populateDatabase(this);
-		session.createQuery("from LineItem").getResultList();
-		List<?> list = session.createQuery("from Product").getResultList();
-		assertEquals(2,list.size() );
-		list = session
-				.createQuery("select li.customerOrder.id from LineItem as li")
-				.getResultList();
-		assertFalse(list.isEmpty());
-		Class<?> productIdClass = ucl.loadClass("ProductId");
-		Constructor<?> productIdClassConstructor = productIdClass.getConstructor();
-		Object object = productIdClassConstructor.newInstance();
-		int hash = -1;
-		try {
-			hash = object.hashCode();
-		} catch(Throwable t) {
-			fail("Hashcode on new instance should not fail " + t);
-		}
-		assertNotEquals(hash, System.identityHashCode(object), "hashcode should be different from system");
-		factory.close();
-		Thread.currentThread().setContextClassLoader(ucl.getParent() );
 	}
 
 }

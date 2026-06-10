@@ -36,7 +36,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.bytecode.spi.BytecodeProvider;
@@ -445,22 +444,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private static void discoverTypesToTransform(
 			MetadataSources metadataSources, ClassTransformer classTransformer, ClassLoader classLoader) {
-		for ( var binding : metadataSources.getHbmXmlBindings() ) {
-			final var hibernateMapping = binding.getRoot();
-			final String packageName = hibernateMapping.getPackage();
-			for ( var clazz : hibernateMapping.getClazz() ) {
-				final String className =
-						packageName == null || packageName.isEmpty()
-								? clazz.getName()
-								: packageName + '.' + clazz.getName();
-				try {
-					classTransformer.discoverTypes(classLoader, className );
-				}
-				catch (EnhancementException ex) {
-					JPA_LOGGER.enhancementDiscoveryFailed( className, ex );
-				}
-			}
-		}
 		for ( String annotatedClassName : metadataSources.getAnnotatedClassNames() ) {
 			classTransformer.discoverTypes( classLoader, annotatedClassName );
 		}
@@ -1450,7 +1433,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		persistenceUnit.getAllClassNames().forEach( (name) -> {
 			if ( name.endsWith( "package-info" ) ) {
-				// this makes a difference for some reason in AnnotationMetadataSourceProcessorImpl
+				// this makes a difference for some reason in ManagedResourcesBinder
 				metadataSources.addPackage( StringHelper.qualifier( name ) );
 			}
 			else {

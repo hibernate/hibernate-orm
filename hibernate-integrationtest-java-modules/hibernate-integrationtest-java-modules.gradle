@@ -16,7 +16,6 @@ java.modularity.inferModulePath = true
 
 dependencies {
 	api project( ':hibernate-core' )
-	api project( ':hibernate-envers' )
 	implementation project( ':hibernate-scan-jandex' )
 
     testImplementation libs.test.junitJupiterApi

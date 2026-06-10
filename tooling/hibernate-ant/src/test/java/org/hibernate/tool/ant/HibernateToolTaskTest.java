@@ -114,9 +114,9 @@ public class HibernateToolTaskTest {
 	}
 
 	@Test
-	public void testCreateHbmLint() {
+	public void testCreateLint() {
 		HibernateToolTask task = new HibernateToolTask();
-		HbmLintExporterTask gen = task.createHbmLint();
+		LintExporterTask gen = task.createLint();
 		assertNotNull(gen);
 	}
 

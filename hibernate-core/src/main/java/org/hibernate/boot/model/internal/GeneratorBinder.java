@@ -15,7 +15,6 @@ import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
-import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.models.spi.GlobalRegistrar;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -740,38 +739,6 @@ public class GeneratorBinder {
 			configuration.put( PersistentIdentifierGenerator.PK, idValue.getColumns().get(0).getName() );
 		}
 		return configuration;
-	}
-
-	/**
-	 * Set up the identifier generator for an id defined in a {@code hbm.xml} mapping.
-	 *
-	 * @see org.hibernate.boot.model.source.internal.hbm.ModelBinder
-	 */
-	public static void makeIdGenerator(
-			final MappingDocument sourceDocument,
-			IdentifierGeneratorDefinition definition,
-			SimpleValue identifierValue,
-			MetadataBuildingContext context) {
-
-		if ( definition != null ) {
-			// see if the specified generator name matches a registered <identifier-generator/>
-			final var generatorDef =
-					sourceDocument.getMetadataCollector()
-							.getIdentifierGenerator( definition.getName() );
-			final Map<String,Object> configuration = new HashMap<>();
-			final String generatorStrategy;
-			if ( generatorDef != null ) {
-				generatorStrategy = generatorDef.getStrategy();
-				configuration.putAll( generatorDef.getParameters() );
-			}
-			else {
-				generatorStrategy = definition.getStrategy();
-			}
-
-			configuration.putAll( definition.getParameters() );
-
-			setGeneratorCreator( identifierValue, configuration, generatorStrategy, context );
-		}
 	}
 
 	/**

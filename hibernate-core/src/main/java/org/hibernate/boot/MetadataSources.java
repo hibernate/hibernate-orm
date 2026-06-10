@@ -9,7 +9,6 @@ import org.hibernate.Internal;
 import org.hibernate.Remove;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.CacheableFileXmlSource;
 import org.hibernate.boot.jaxb.internal.FileXmlSource;
 import org.hibernate.boot.jaxb.internal.InputStreamAccessXmlSource;
@@ -74,7 +73,6 @@ public class MetadataSources implements Serializable {
 	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
 	private List<Binding<JaxbEntityMappingsImpl>> mappingXmlBindings;
-	private List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings;
 
 	private LinkedHashSet<Class<?>> annotatedClasses;
 	private LinkedHashSet<String> annotatedClassNames;
@@ -129,10 +127,6 @@ public class MetadataSources implements Serializable {
 
 	public List<Binding<JaxbEntityMappingsImpl>> getMappingXmlBindings() {
 		return mappingXmlBindings == null ? emptyList() : mappingXmlBindings;
-	}
-
-	public List<Binding<JaxbHbmHibernateMapping>> getHbmXmlBindings() {
-		return hbmXmlBindings == null ? emptyList() : hbmXmlBindings;
 	}
 
 	public Collection<String> getAnnotatedPackages() {
@@ -377,17 +371,8 @@ public class MetadataSources implements Serializable {
 	 *
 	 * @return this (for method chaining purposes)
 	 */
-	public MetadataSources addXmlBinding(Binding<?> binding) {
-		if ( binding.getRoot() instanceof JaxbEntityMappingsImpl ) {
-			//noinspection unchecked
-			return addMappingXmlBinding( (Binding<JaxbEntityMappingsImpl>) binding );
-		}
-		else if ( binding.getRoot() instanceof JaxbHbmHibernateMapping ) {
-			//noinspection unchecked
-			return addHbmXmlBinding( (Binding<JaxbHbmHibernateMapping>) binding );
-		}
-
-		throw new UnsupportedOperationException( "Unknown type of binding : " + binding.getRoot() );
+	public MetadataSources addXmlBinding(Binding<JaxbEntityMappingsImpl> binding) {
+		return addMappingXmlBinding( binding );
 	}
 
 	/**
@@ -402,21 +387,6 @@ public class MetadataSources implements Serializable {
 			mappingXmlBindings = new ArrayList<>();
 		}
 		mappingXmlBindings.add( binding );
-		return this;
-	}
-
-	/**
-	 * Add a {@linkplain Binding binding} for {@linkplain JaxbHbmHibernateMapping hbm.xsd} document
-	 *
-	 * @param binding The binding
-	 *
-	 * @return this (for method chaining purposes)
-	 */
-	public MetadataSources addHbmXmlBinding(Binding<JaxbHbmHibernateMapping> binding) {
-		if ( hbmXmlBindings == null ) {
-			hbmXmlBindings = new ArrayList<>();
-		}
-		hbmXmlBindings.add( binding );
 		return this;
 	}
 

@@ -86,7 +86,7 @@ public class SchemaValidator {
 
 		String propertiesFile = null;
 		String cfgXmlFile = null;
-		List<String> hbmXmlFiles = new ArrayList<>();
+		List<String> mappingFiles = new ArrayList<>();
 		List<String> jarFiles = new ArrayList<>();
 
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
@@ -115,7 +115,7 @@ public class SchemaValidator {
 						parsedArgs.jarFiles.add( arg );
 					}
 					else {
-						parsedArgs.hbmXmlFiles.add( arg );
+						parsedArgs.mappingFiles.add( arg );
 					}
 				}
 			}
@@ -149,7 +149,7 @@ public class SchemaValidator {
 
 		final MetadataSources metadataSources = new MetadataSources(serviceRegistry);
 
-		for ( String filename : parsedArgs.hbmXmlFiles ) {
+		for ( String filename : parsedArgs.mappingFiles ) {
 			metadataSources.addFile( filename );
 		}
 

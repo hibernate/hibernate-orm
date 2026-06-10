@@ -28,8 +28,6 @@ public interface FilterSource {
 	 * further by a "filter def" which contains the condition text.
 	 *
 	 * @return The condition defined on the filter.
-	 *
-	 * @see org.hibernate.boot.model.source.internal.hbm.FilterSourceImpl#getCondition()
 	 */
 	String getCondition();
 

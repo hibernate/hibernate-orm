@@ -15,7 +15,7 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.internal.ConfigurationBinder;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.orm.test.boot.archive.OneEntity;
 import org.hibernate.orm.test.boot.archive.SecondEntity;
@@ -189,7 +189,7 @@ public class ArchiveHandlingTests {
 		var origin = new Origin( SourceType.INPUT_STREAM, "META-INF/orm.xml" );
 
 		try (var stream = ormXmlEntry.getStreamAccess().accessInputStream()) {
-			final JaxbBindableMappingDescriptor root = xmlBinder.bind( stream, origin ).getRoot();
+			final JaxbEntityMappingsImpl root = xmlBinder.bind( stream, origin ).getRoot();
 		}
 		catch (IOException e) {
 			throw new RuntimeException( e );

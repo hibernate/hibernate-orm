@@ -33,7 +33,7 @@ public class SchemaUpdateCommandLineTest {
 
 	@Test
 	public void testParseDefaults() throws Exception {
-		Object args = parseArgs(new String[]{"test.hbm.xml"});
+		Object args = parseArgs(new String[]{"test.mapping.xml"});
 		assertNull(getField(args, "propertiesFile"));
 		assertNull(getField(args, "cfgXmlFile"));
 		assertNull(getField(args, "outputFile"));
@@ -44,67 +44,67 @@ public class SchemaUpdateCommandLineTest {
 
 	@Test
 	public void testParsePropertiesFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--properties=hibernate.properties", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--properties=hibernate.properties", "test.mapping.xml"});
 		assertEquals("hibernate.properties", getField(args, "propertiesFile"));
 	}
 
 	@Test
 	public void testParseConfigFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--config=hibernate.cfg.xml", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--config=hibernate.cfg.xml", "test.mapping.xml"});
 		assertEquals("hibernate.cfg.xml", getField(args, "cfgXmlFile"));
 	}
 
 	@Test
 	public void testParseOutputFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--output=update.sql", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--output=update.sql", "test.mapping.xml"});
 		assertEquals("update.sql", getField(args, "outputFile"));
 	}
 
 	@Test
 	public void testParseDelimiterFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--delimiter=;", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--delimiter=;", "test.mapping.xml"});
 		assertEquals(";", getField(args, "delimiter"));
 	}
 
 	@Test
 	public void testParseImplicitNamingFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--implicit-naming=com.example.My", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--implicit-naming=com.example.My", "test.mapping.xml"});
 		assertEquals("com.example.My", getField(args, "implicitNamingStrategyImplName"));
 	}
 
 	@Test
 	public void testParsePhysicalNamingFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--physical-naming=com.example.My", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--physical-naming=com.example.My", "test.mapping.xml"});
 		assertEquals("com.example.My", getField(args, "physicalNamingStrategyImplName"));
 	}
 
 	@Test
 	public void testParseNamingDeprecated() throws Exception {
-		Object args = parseArgs(new String[]{"--naming=com.example.Old", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--naming=com.example.Old", "test.mapping.xml"});
 		assertNotNull(args);
 	}
 
 	@Test
 	public void testParseQuietFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--quiet", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--quiet", "test.mapping.xml"});
 		assertNotNull(args);
 	}
 
 	@Test
 	public void testParseTextFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--text", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--text", "test.mapping.xml"});
 		assertNotNull(args);
 	}
 
 	@Test
 	public void testParseTargetFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--target=database", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--target=database", "test.mapping.xml"});
 		assertNotNull(getField(args, "targetTypes"));
 	}
 
 	@Test
 	public void testParseTextAndTargetWarning() throws Exception {
-		Object args = parseArgs(new String[]{"--text", "--target=database", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--text", "--target=database", "test.mapping.xml"});
 		assertNotNull(getField(args, "targetTypes"));
 	}
 
@@ -118,12 +118,12 @@ public class SchemaUpdateCommandLineTest {
 
 	@Test
 	public void testParseMixedFiles() throws Exception {
-		Object args = parseArgs(new String[]{"Person.hbm.xml", "entities.jar"});
+		Object args = parseArgs(new String[]{"Person.mapping.xml", "entities.jar"});
 		@SuppressWarnings("unchecked")
-		java.util.List<String> hbmFiles = (java.util.List<String>) getField(args, "hbmXmlFiles");
+		java.util.List<String> mappingFiles = (java.util.List<String>) getField(args, "mappingFiles");
 		@SuppressWarnings("unchecked")
 		java.util.List<String> jarFiles = (java.util.List<String>) getField(args, "jarFiles");
-		assertEquals(1, hbmFiles.size());
+		assertEquals(1, mappingFiles.size());
 		assertEquals(1, jarFiles.size());
 	}
 }

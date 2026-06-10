@@ -4,42 +4,41 @@
  */
 package org.hibernate.tool.reveng.hbm2x.query.QueryExporterTest;
 
-import java.io.ObjectStreamClass;
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-public class User implements Serializable {
+@Entity
+@Table(name = "\"User\"")
+public class User {
 
-	@Serial
-	private static final long serialVersionUID =
-			ObjectStreamClass.lookup(User.class).getSerialVersionUID();
+	@Id
+	private String name;
 
-	private Set<Group> groups = new HashSet<>();
-	private UserID userId;
-
-	public User(String name, String org) {
-		this.setUserId(new UserID(name, org));
-	}
+	private String org;
 
 	public User() {
 	}
 
-	public void setUserId(UserID userId) {
-		this.userId = userId;
+	public User(String name, String org) {
+		this.name = name;
+		this.org = org;
 	}
 
-	public UserID getUserId() {
-		return userId;
+	public String getName() {
+		return name;
 	}
 
-	public Set<Group> getGroups() {
-		return groups;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public void setGroups(Set<Group> groups) {
-		this.groups = groups;
+	public String getOrg() {
+		return org;
+	}
+
+	public void setOrg(String org) {
+		this.org = org;
 	}
 
 }

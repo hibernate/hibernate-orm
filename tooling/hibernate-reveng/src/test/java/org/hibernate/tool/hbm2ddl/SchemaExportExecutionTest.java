@@ -26,6 +26,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SchemaExportExecutionTest {
 
+	private static final String ORM_XML = """
+			<?xml version="1.0" encoding="UTF-8"?>
+			<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="3.2">
+				<entity class="org.hibernate.tool.hbm2ddl.HelloWorld" metadata-complete="true" access="FIELD">
+					<table name="HELLO_WORLD"/>
+					<attributes>
+						<id name="id"><column length="10"/></id>
+						<basic name="hello"><column length="5"/></basic>
+						<basic name="world"/>
+					</attributes>
+				</entity>
+			</entity-mappings>
+			""";
+
 	private StandardServiceRegistry serviceRegistry;
 	private Metadata metadata;
 
@@ -41,7 +55,7 @@ public class SchemaExportExecutionTest {
 				.applySetting("hibernate.default_catalog", "")
 				.build();
 		metadata = new MetadataSources(serviceRegistry)
-				.addResource("org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")
+				.addAnnotatedClass(HelloWorld.class)
 				.buildMetadata();
 	}
 
@@ -163,7 +177,6 @@ public class SchemaExportExecutionTest {
 
 	@Test
 	public void testBuildMetadataFromMainArgs(@TempDir File tempDir) throws Exception {
-		// Create a properties file for H2
 		File propsFile = new File(tempDir, "hibernate.properties");
 		Files.writeString(propsFile.toPath(),
 				"hibernate.dialect=org.hibernate.dialect.H2Dialect\n" +
@@ -174,22 +187,18 @@ public class SchemaExportExecutionTest {
 				"hibernate.default_schema=\n" +
 				"hibernate.default_catalog=\n");
 
-		// Copy the HBM file to the temp dir
-		File hbmFile = new File(tempDir, "HelloWorld.hbm.xml");
-		try (var in = getClass().getResourceAsStream("/org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")) {
-			Files.copy(in, hbmFile.toPath());
-		}
+		File ormFile = new File(tempDir, "HelloWorld.orm.xml");
+		Files.writeString(ormFile.toPath(), ORM_XML);
 
 		MetadataImplementor md = SchemaExport.buildMetadataFromMainArgs(new String[]{
 				"--properties=" + propsFile.getAbsolutePath(),
-				hbmFile.getAbsolutePath()
+				ormFile.getAbsolutePath()
 		});
 		assertNotNull(md);
 	}
 
 	@Test
 	public void testMainWithCommandLineArgs(@TempDir File tempDir) throws Exception {
-		// Create a properties file for H2
 		File propsFile = new File(tempDir, "hibernate.properties");
 		Files.writeString(propsFile.toPath(),
 				"hibernate.dialect=org.hibernate.dialect.H2Dialect\n" +
@@ -200,14 +209,10 @@ public class SchemaExportExecutionTest {
 				"hibernate.default_schema=\n" +
 				"hibernate.default_catalog=\n");
 
-		File hbmFile = new File(tempDir, "HelloWorld.hbm.xml");
-		try (var in = getClass().getResourceAsStream("/org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")) {
-			Files.copy(in, hbmFile.toPath());
-		}
+		File ormFile = new File(tempDir, "HelloWorld.orm.xml");
+		Files.writeString(ormFile.toPath(), ORM_XML);
 
 		File outputFile = new File(tempDir, "output.sql");
-		// This exercises CommandLineArgs.parseCommandLineArgs with various flags
-		// This exercises CommandLineArgs.parseCommandLineArgs and execute() with various flags
 		SchemaExport.main(new String[]{
 				"--properties=" + propsFile.getAbsolutePath(),
 				"--output=" + outputFile.getAbsolutePath(),
@@ -215,7 +220,7 @@ public class SchemaExportExecutionTest {
 				"--delimiter=;",
 				"--action=drop-and-create",
 				"--target=script",
-				hbmFile.getAbsolutePath()
+				ormFile.getAbsolutePath()
 		});
 	}
 
@@ -231,13 +236,10 @@ public class SchemaExportExecutionTest {
 				"hibernate.default_schema=\n" +
 				"hibernate.default_catalog=\n");
 
-		File hbmFile = new File(tempDir, "HelloWorld.hbm.xml");
-		try (var in = getClass().getResourceAsStream("/org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")) {
-			Files.copy(in, hbmFile.toPath());
-		}
+		File ormFile = new File(tempDir, "HelloWorld.orm.xml");
+		Files.writeString(ormFile.toPath(), ORM_XML);
 
 		File outputFile = new File(tempDir, "output.sql");
-		// Test legacy flags: --text (no export), --drop, --create, --quiet
 		SchemaExport.main(new String[]{
 				"--properties=" + propsFile.getAbsolutePath(),
 				"--output=" + outputFile.getAbsolutePath(),
@@ -245,7 +247,7 @@ public class SchemaExportExecutionTest {
 				"--drop",
 				"--haltonerror",
 				"--schemas",
-				hbmFile.getAbsolutePath()
+				ormFile.getAbsolutePath()
 		});
 	}
 }

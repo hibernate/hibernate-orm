@@ -8,25 +8,15 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.tool.reveng.api.export.ExporterConstants;
-import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.reveng.api.core.RevengSettings;
-import org.hibernate.tool.reveng.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.reveng.internal.core.strategy.AbstractStrategy;
 import org.hibernate.tool.reveng.internal.core.strategy.DefaultStrategy;
-import org.hibernate.tool.reveng.test.utils.JUnitUtil;
 import org.hibernate.tool.reveng.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
-import java.io.File;
-import java.util.Objects;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -36,9 +26,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author koen
  */
 public class TestCase {
-
-	@TempDir
-	public File outputDir = new File("output");
 
 	@BeforeEach
 	public void setUp() {
@@ -129,42 +116,5 @@ public class TestCase {
 				.createMetadata();
 		assertNotNull(metadata);
 	}
-
-	@Test
-	public void testGenerateAndReadable() {
-
-		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(null, null);
-
-		assertNotNull(metadataDescriptor.createMetadata());
-
-		HbmExporter hme = new HbmExporter();
-		hme.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		hme.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		hme.start();
-
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "Employee.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "Project.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "WorksOnContext.hbm.xml") );
-
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "RightTable.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "LeftTable.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "NonMiddle.hbm.xml") ); //Must be there since it has a fkey that is not part of the pk
-
-		assertFalse(new File(outputDir, "WorksOn.hbm.xml").exists() );
-
-		assertEquals(6, Objects.requireNonNull(outputDir.listFiles()).length);
-
-		File[] files = new File[3];
-		files[0] = new File(outputDir, "Employee.hbm.xml");
-		files[1] = new File(outputDir, "Project.hbm.xml");
-		files[2] = new File(outputDir, "WorksOnContext.hbm.xml");
-
-		assertNotNull(MetadataDescriptorFactory
-				.createNativeDescriptor(null, files, null)
-				.createMetadata());
-
-	}
-
 
 }

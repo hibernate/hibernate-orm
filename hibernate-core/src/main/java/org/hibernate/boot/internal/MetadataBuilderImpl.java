@@ -24,8 +24,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.scan.spi.ScanningProvider;
-import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
-import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
@@ -90,8 +88,6 @@ import static org.hibernate.cfg.MappingSettings.IGNORE_EXPLICIT_DISCRIMINATOR_CO
 import static org.hibernate.cfg.MappingSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS;
 import static org.hibernate.cfg.MappingSettings.IMPLICIT_NAMING_STRATEGY;
 import static org.hibernate.cfg.MappingSettings.PHYSICAL_NAMING_STRATEGY;
-import static org.hibernate.cfg.MappingSettings.TRANSFORM_HBM_XML;
-import static org.hibernate.cfg.MappingSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING;
 import static org.hibernate.cfg.MappingSettings.USE_NATIONALIZED_CHARACTER_DATA;
 import static org.hibernate.cfg.MappingSettings.XML_FORMAT_MAPPER_LEGACY_FORMAT;
 import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
@@ -102,7 +98,6 @@ import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
-import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -431,51 +426,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		final var bootModel = MetadataBuildingProcess.build( sources, bootstrapContext, options );
-
-		if ( isNotEmpty( sources.getHbmXmlBindings() ) ) {
-			final var configurationService = bootstrapContext.getConfigurationService();
-			final boolean transformHbm = configurationService != null
-					&& configurationService.getSetting( TRANSFORM_HBM_XML, BOOLEAN,false );
-
-			if ( !transformHbm ) {
-				for ( var hbmXmlBinding : sources.getHbmXmlBindings() ) {
-					final var origin = hbmXmlBinding.getOrigin();
-					DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
-				}
-			}
-			else {
-				final var transformed = HbmXmlTransformer.transform(
-						sources.getHbmXmlBindings(),
-						bootModel,
-						UnsupportedFeatureHandling.fromSetting(
-								configurationService.getSettings().get( TRANSFORM_HBM_XML_FEATURE_HANDLING ),
-								UnsupportedFeatureHandling.ERROR
-						)
-				);
-
-				final var newSources = new MetadataSources( bootstrapContext.getServiceRegistry() );
-				if ( sources.getAnnotatedClasses() != null ) {
-					sources.getAnnotatedClasses().forEach( newSources::addAnnotatedClass );
-				}
-				if ( sources.getAnnotatedClassNames() != null ) {
-					sources.getAnnotatedClassNames().forEach( newSources::addAnnotatedClassName );
-				}
-				if ( sources.getAnnotatedPackages() != null ) {
-					sources.getAnnotatedPackages().forEach( newSources::addPackage );
-				}
-				if ( sources.getExtraQueryImports() != null ) {
-					sources.getExtraQueryImports().forEach( newSources::addQueryImport );
-				}
-				for ( var mappingXmlBinding : transformed ) {
-					newSources.addMappingXmlBinding( mappingXmlBinding );
-				}
-
-				return (MetadataImplementor) newSources.buildMetadata();
-			}
-		}
-
-		return bootModel;
+		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
 	}
 
 	@Override

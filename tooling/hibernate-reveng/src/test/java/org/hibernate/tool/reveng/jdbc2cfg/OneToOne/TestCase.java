@@ -19,7 +19,6 @@ import org.hibernate.tool.reveng.api.export.ExporterFactory;
 import org.hibernate.tool.reveng.api.export.ExporterType;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.reveng.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.reveng.internal.metadata.NativeMetadataDescriptor;
 import org.hibernate.tool.reveng.internal.core.util.EnhancedValue;
 import org.hibernate.tool.reveng.test.utils.HibernateUtil;
@@ -131,53 +130,6 @@ public class TestCase {
 	@Test
 	public void testBuildMappings() {
 		assertNotNull(metadata);
-	}
-
-	@Test
-	public void testGenerateMappingAndReadable() throws MalformedURLException {
-		HbmExporter hme = new HbmExporter();
-		hme.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		hme.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		hme.start();
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "Person.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "AddressPerson.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "AddressMultiPerson.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "MultiPerson.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "MiddleTable.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "LeftTable.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputDir, "RightTable.hbm.xml") );
-		assertEquals(7, Objects.requireNonNull(outputDir.listFiles()).length);
-		Exporter exporter = ExporterFactory.createExporter(ExporterType.JAVA);
-		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		exporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[0]);
-		exporter.getProperties().setProperty("ejb3", "false");
-		exporter.getProperties().setProperty("jdk5", "false");
-		exporter.start();
-		JavaUtil.compile(outputDir);
-		URL[] urls = new URL[] { outputDir.toURI().toURL() };
-		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
-		URLClassLoader ucl = new URLClassLoader(urls, oldLoader );
-		try {
-			Thread.currentThread().setContextClassLoader(ucl);
-			StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
-			ServiceRegistry serviceRegistry = builder.build();
-			File[] files = new File[7];
-			files[0] = new File(outputDir, "Person.hbm.xml");
-			files[1] = new File(outputDir, "AddressPerson.hbm.xml");
-			files[2] = new File(outputDir, "AddressMultiPerson.hbm.xml");
-			files[3] = new File(outputDir, "MultiPerson.hbm.xml");
-			files[4] = new File(outputDir, "MiddleTable.hbm.xml");
-			files[5] = new File(outputDir, "LeftTable.hbm.xml");
-			files[6] = new File(outputDir, "RightTable.hbm.xml");
-			SchemaUtil.validateSchema(
-					MetadataDescriptorFactory
-						.createNativeDescriptor(null, files, null)
-						.createMetadata(),
-					serviceRegistry);
-		} finally {
-			Thread.currentThread().setContextClassLoader(oldLoader);
-		}
 	}
 
 	@Test

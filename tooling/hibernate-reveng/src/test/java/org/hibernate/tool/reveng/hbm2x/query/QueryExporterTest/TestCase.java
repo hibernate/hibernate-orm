@@ -16,9 +16,9 @@ import org.hibernate.tool.reveng.api.export.ExporterType;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.reveng.test.utils.HibernateUtil;
 import org.hibernate.tool.reveng.test.utils.JUnitUtil;
 import org.hibernate.tool.reveng.test.utils.JdbcUtil;
-import org.hibernate.tool.reveng.test.utils.ResourceUtil;
 import org.hibernate.tool.schema.TargetType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,25 +40,19 @@ public class TestCase {
 	public File outputDir = new File("output");
 
 	private File destinationDir = null;
-	private File userGroupHbmXmlFile = null;
 
 	@BeforeEach
 	public void setUp() throws Exception {
 		JdbcUtil.createDatabase(this);
 		destinationDir = new File(outputDir, "destination");
 		assertTrue(destinationDir.mkdir());
-		File resourcesDir = new File(outputDir, "resources");
-		assertTrue(resourcesDir.mkdir());
-		String[] resources = { "UserGroup.hbm.xml" };
-		ResourceUtil.createResources(this, resources, resourcesDir);
-		userGroupHbmXmlFile = new File(resourcesDir, "UserGroup.hbm.xml");
 		SessionFactory factory = createMetadata().buildSessionFactory();
 		Session s = factory.openSession();
 		Transaction t = s.beginTransaction();
 		User user = new User("max", "jboss");
-		s.persist( user );
+		s.persist(user);
 		user = new User("gavin", "jboss");
-		s.persist( user );
+		s.persist(user);
 		s.flush();
 		t.commit();
 		s.close();
@@ -68,11 +62,7 @@ public class TestCase {
 	@Test
 	public void testQueryExporter() {
 		Exporter exporter = ExporterFactory.createExporter(ExporterType.QUERY);
-		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
-				.createNativeDescriptor(
-						null,
-						new File[] { userGroupHbmXmlFile },
-						null);
+		MetadataDescriptor metadataDescriptor = createMetadataDescriptor(null);
 		exporter.getProperties().put(AvailableSettings.HBM2DDL_AUTO, "update");
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, destinationDir);
@@ -87,24 +77,25 @@ public class TestCase {
 	@AfterEach
 	public void tearDown() throws Exception {
 		SchemaExport export = new SchemaExport();
-		final EnumSet<TargetType> targetTypes = EnumSet.noneOf( TargetType.class );
-		targetTypes.add( TargetType.DATABASE );
+		final EnumSet<TargetType> targetTypes = EnumSet.noneOf(TargetType.class);
+		targetTypes.add(TargetType.DATABASE);
 		export.drop(targetTypes, createMetadata());
-		if (export.getExceptions() != null && !export.getExceptions().isEmpty()){
+		if (export.getExceptions() != null && !export.getExceptions().isEmpty()) {
 			fail("Schema export failed");
 		}
 		JdbcUtil.dropDatabase(this);
 	}
 
+	private MetadataDescriptor createMetadataDescriptor(Properties properties) {
+		Properties props = properties != null ? properties : new Properties();
+		props.put(AvailableSettings.HBM2DDL_AUTO, "update");
+		MetadataDescriptor md = MetadataDescriptorFactory.createNativeDescriptor(null, null, props);
+		HibernateUtil.addAnnotatedClass(md, User.class);
+		return md;
+	}
+
 	private Metadata createMetadata() {
-		Properties properties = new Properties();
-		properties.put(AvailableSettings.HBM2DDL_AUTO, "update");
-		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
-				.createNativeDescriptor(
-						null,
-						new File[] { userGroupHbmXmlFile },
-						properties);
-		return metadataDescriptor.createMetadata();
+		return createMetadataDescriptor(null).createMetadata();
 	}
 
 }

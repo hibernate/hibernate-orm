@@ -8,9 +8,9 @@ import java.util.Map;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -28,13 +28,12 @@ public class SessionFactoryObserverTest {
 
 		Map<String, Object> settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put( AvailableSettings.SESSION_FACTORY_OBSERVER, GoofySessionFactoryObserver.class.getName() );
-		EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder(
-				new PersistenceUnitInfoAdapter(),
-				settings
-		);
 
 		try {
-			final EntityManagerFactory entityManagerFactory = builder.build();
+			final EntityManagerFactory entityManagerFactory = SessionFactoryBootstrap.build(
+					new PersistenceUnitInfoDescriptor( new PersistenceUnitInfoAdapter() ),
+					settings
+			);
 			entityManagerFactory.close();
 			Assertions.fail( "GoofyException should have been thrown" );
 		}

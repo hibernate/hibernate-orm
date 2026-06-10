@@ -6,7 +6,7 @@ package org.hibernate.boot.models.categorize.internal;
 
 import java.util.Locale;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.OptimisticLocking;
@@ -127,27 +127,27 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		return result;
 	}
 
-	@Override @NonNull
+	@Override @Nonnull
 	public EntityTypeMetadata getRoot() {
 		return rootEntityTypeMetadata;
 	}
 
-	@Override @NonNull
+	@Override @Nonnull
 	public IdentifiableTypeMetadata getAbsoluteRoot() {
 		return absoluteRootTypeMetadata;
 	}
 
-	@Override @NonNull
+	@Override @Nonnull
 	public InheritanceType getInheritanceType() {
 		return inheritanceType;
 	}
 
-	@Override @NonNull
+	@Override @Nonnull
 	public AccessType getDefaultAccessType() {
 		return defaultAccessType;
 	}
 
-	@Override @NonNull
+	@Override @Nonnull
 	public KeyMapping getIdMapping() {
 		return idMapping;
 	}
@@ -167,17 +167,17 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		return tenantIdAttribute;
 	}
 
-	@Override @NonNull
+	@Override @Nonnull
 	public OptimisticLockStyle getOptimisticLockStyle() {
 		return optimisticLockStyle;
 	}
 
-	@Override @NonNull
+	@Override @Nonnull
 	public CacheRegion getCacheRegion() {
 		return cacheRegion;
 	}
 
-	@Override @NonNull
+	@Override @Nonnull
 	public NaturalIdCacheRegion getNaturalIdCacheRegion() {
 		return naturalIdCacheRegion;
 	}

@@ -12,6 +12,7 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.id.IncrementGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.ClassDetailsRegistry;
@@ -320,8 +321,7 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		if ( "increment".equals( generatedValue.generator() ) ) {
 			final var incrementGenerator =
 					new GenericGeneratorAnnotation( buildingContext.getBootstrapContext().getModelsContext() );
-			incrementGenerator.name( "increment" );
-			incrementGenerator.strategy( "increment" );
+			incrementGenerator.type( IncrementGenerator.class );
 
 			GeneratorAnnotationHelper.handleGenericGenerator(
 					generatedValue.generator(),

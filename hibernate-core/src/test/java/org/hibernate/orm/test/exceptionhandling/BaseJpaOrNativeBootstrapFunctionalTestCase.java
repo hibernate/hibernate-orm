@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.hibernate.internal.util.config.ConfigurationHelper.resolvePlaceHolders;
-import static org.hibernate.jpa.boot.spi.Bootstrap.getEntityManagerFactoryBuilder;
 
 /**
  * A base class for all functional tests.
@@ -99,8 +98,8 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase {
 		properties.put( AvailableSettings.LOADED_CLASSES, List.of( getAnnotatedClasses() ) );
 		ServiceRegistryUtil.applySettings( properties );
 
-		sessionFactory = getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), properties )
-				.build()
+		sessionFactory = org.hibernate.boot.orchestration.SessionFactoryBootstrap
+				.build( new PersistenceUnitDescriptorAdapter(), properties )
 				.unwrap( SessionFactoryImplementor.class );
 
 		serviceRegistry = (StandardServiceRegistryImpl) sessionFactory.getServiceRegistry().getParentServiceRegistry();

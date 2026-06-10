@@ -9,7 +9,7 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.models.AccessTypeDeterminationException;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.CategorizationContext;
@@ -75,7 +75,7 @@ public class EntityHierarchyBuilder {
 		return entityHierarchies;
 	}
 
-	@NonNull
+	@Nonnull
 	private AccessType determineDefaultAccessTypeForHierarchy(ClassDetails rootEntityType) {
 		assert rootEntityType != null;
 

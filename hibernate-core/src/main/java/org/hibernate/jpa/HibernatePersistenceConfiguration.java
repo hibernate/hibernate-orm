@@ -14,7 +14,6 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SchemaManagementAction;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import org.hibernate.SessionFactory;
 import org.hibernate.StatementObserver;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.cache.spi.access.AccessType;
@@ -27,7 +26,6 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.StatisticsSettings;
-import org.hibernate.jpa.boot.internal.PersistenceConfigurationBootstrapAdapter;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tool.schema.Action;
 
@@ -153,15 +151,6 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 */
 	public HibernatePersistenceConfiguration(@Nonnull String name, @Nonnull Class<?> classFromRootUrl) {
 		this( name, classFromRootUrl.getProtectionDomain().getCodeSource().getLocation() );
-	}
-
-	/**
-	 * Create a new {@link SessionFactory} based on this configuration.
-	 */
-	@Override
-	@Nonnull
-	public SessionFactory createEntityManagerFactory() {
-		return (SessionFactory) new PersistenceConfigurationBootstrapAdapter().build( this );
 	}
 
 	/**

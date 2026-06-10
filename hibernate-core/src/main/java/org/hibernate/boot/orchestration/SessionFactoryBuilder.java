@@ -26,8 +26,6 @@ import org.hibernate.service.ServiceRegistry;
 /// @since 9.0
 /// @author Steve Ebersole
 public class SessionFactoryBuilder {
-	private static final SessionFactorySettingsResolver settingsResolver = new SessionFactorySettingsResolver();
-
 	/**
 	 * Build a SessionFactoryImplementor from the resolved bootstrap settings root.
 	 *
@@ -42,7 +40,7 @@ public class SessionFactoryBuilder {
 			ResolvedMetadata resolvedMetadata,
 			ServiceRegistry serviceRegistry) {
 		return build(
-				settingsResolver.resolve( bootstrapSettings, serviceRegistry ),
+				SessionFactorySettingsResolver.resolve( bootstrapSettings, serviceRegistry ),
 				resolvedMetadata,
 				serviceRegistry
 		);

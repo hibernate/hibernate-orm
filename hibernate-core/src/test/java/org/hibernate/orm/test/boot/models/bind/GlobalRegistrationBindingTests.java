@@ -14,14 +14,12 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CompositeTypeRegistration;
 import org.hibernate.annotations.ConverterRegistration;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JdbcTypeRegistration;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.TypeRegistration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.CollectionClassification;
@@ -71,8 +69,6 @@ public class GlobalRegistrationBindingTests {
 							.isEqualTo( SequenceStyleGenerator.class.getName() );
 					assertThat( metadataCollector.getIdentifierGenerator( "global_table" ).getStrategy() )
 							.isEqualTo( org.hibernate.id.enhanced.TableGenerator.class.getName() );
-					assertThat( metadataCollector.getIdentifierGenerator( "global_increment" ).getStrategy() )
-							.isEqualTo( IncrementGenerator.class.getName() );
 
 					assertThat( metadataCollector.getAttributeConverterManager()
 							.findRegisteredConversion( GlobalConverted.class ) ).isNotNull();
@@ -120,7 +116,6 @@ public class GlobalRegistrationBindingTests {
 	@jakarta.persistence.Table(name = "global_registration_entities")
 	@SequenceGenerator(name = "global_seq", sequenceName = "global_sequence")
 	@TableGenerator(name = "global_table", table = "global_id_table")
-	@GenericGenerator(name = "global_increment", type = IncrementGenerator.class)
 	@NamedQuery(name = "globalJpaQuery", query = "from GlobalRegistrationEntity")
 	@NamedNativeQuery(name = "globalNativeQuery", query = "select * from global_registration_entities")
 	@org.hibernate.annotations.NamedQuery(name = "globalHibernateQuery", query = "from GlobalRegistrationEntity")

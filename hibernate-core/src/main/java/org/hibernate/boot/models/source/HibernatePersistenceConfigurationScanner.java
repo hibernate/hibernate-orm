@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
@@ -46,7 +46,7 @@ class HibernatePersistenceConfigurationScanner {
 	/// @param classLoaderService Class-loading access used to resolve scanner classes and service-loaded providers
 	///
 	/// @return The discovered classes, packages, and mapping files.  Never null, returns [ScanningResult#NONE] instead.
-	@NonNull
+	@Nonnull
 	static ScanningResult performScanning(
 			HibernatePersistenceConfiguration persistenceConfiguration,
 			ResolvedBootstrapSettings bootstrapSettings,

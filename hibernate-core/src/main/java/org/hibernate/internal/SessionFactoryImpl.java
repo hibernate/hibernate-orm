@@ -173,6 +173,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  *           that the class is not only thread-safe, but also highly concurrent.
  *           Synchronization must be used extremely sparingly.
  *
+ * @see SessFacBo
  * @author Gavin King
  * @author Steve Ebersole
  * @author Chris Cranford

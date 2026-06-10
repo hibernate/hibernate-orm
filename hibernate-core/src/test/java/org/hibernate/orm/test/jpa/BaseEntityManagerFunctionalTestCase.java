@@ -19,7 +19,7 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
@@ -28,8 +28,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
@@ -80,16 +78,11 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	@Before
 	public void buildEntityManagerFactory() {
 		log.trace( "Building EntityManagerFactory" );
-		final EntityManagerFactoryBuilder entityManagerFactoryBuilder =
-				Bootstrap.getEntityManagerFactoryBuilder( buildPersistenceUnitDescriptor(), buildSettings() );
-		applyMetadataImplementor( entityManagerFactoryBuilder.metadata() );
-		entityManagerFactory = entityManagerFactoryBuilder.build().unwrap( SessionFactoryImplementor.class );
+		entityManagerFactory = SessionFactoryBootstrap.build( buildPersistenceUnitDescriptor(), buildSettings() )
+				.unwrap( SessionFactoryImplementor.class );
 		serviceRegistry = (StandardServiceRegistryImpl)
 				entityManagerFactory.getServiceRegistry().getParentServiceRegistry();
 		afterEntityManagerFactoryBuilt();
-	}
-
-	protected void applyMetadataImplementor(MetadataImplementor metadataImplementor) {
 	}
 
 	protected PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {

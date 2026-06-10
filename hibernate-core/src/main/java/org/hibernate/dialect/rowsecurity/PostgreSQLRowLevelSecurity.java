@@ -41,27 +41,6 @@ public class PostgreSQLRowLevelSecurity implements RowLevelSecurity {
 	}
 
 	@Override
-	public boolean supportsTenantIdentifierSource(TenantIdentifierSource tenantIdentifierSource) {
-		return tenantIdentifierSource == TenantIdentifierSource.SESSION
-			|| tenantIdentifierSource == TenantIdentifierSource.DATABASE_USER;
-	}
-
-	@Override
-	public String[] getTenantIdTableCreateStrings(
-			Table table,
-			Column tenantIdentifierColumn,
-			Metadata metadata,
-			SqlStringGenerationContext context) {
-		return getTenantIdTableCreateStrings(
-				table,
-				tenantIdentifierColumn,
-				metadata,
-				context,
-				TenantIdentifierSource.SESSION
-		);
-	}
-
-	@Override
 	public String[] getTenantIdTableCreateStrings(
 			Table table,
 			Column tenantIdentifierColumn,
@@ -103,13 +82,4 @@ public class PostgreSQLRowLevelSecurity implements RowLevelSecurity {
 		}
 	}
 
-	@Override
-	public String getTenantIdentifierSettingName() {
-		return TENANT_IDENTIFIER_SETTING;
-	}
-
-	@Override
-	public String getRootTenantIdentifierSettingName() {
-		return ROOT_TENANT_IDENTIFIER_SETTING;
-	}
 }

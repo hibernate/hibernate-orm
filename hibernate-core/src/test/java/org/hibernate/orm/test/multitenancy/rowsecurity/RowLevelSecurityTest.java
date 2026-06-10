@@ -27,9 +27,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
-import org.hibernate.dialect.rowsecurity.CockroachRowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.DB2RowLevelSecurity;
-import org.hibernate.dialect.rowsecurity.PostgreSQLRowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.SQLServerRowLevelSecurity;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -387,54 +385,6 @@ class RowLevelSecurityTest {
 		finally {
 			StandardServiceRegistryBuilder.destroy( registry );
 		}
-	}
-
-	@Test
-	void cockroachRowLevelSecurityIsVersionGated() {
-		assertThat( new CockroachDialect( DatabaseVersion.make( 25, 1 ) )
-				.getRowLevelSecurity()
-				.supportsRowLevelSecurity() )
-				.isFalse();
-		assertThat( new CockroachDialect( DatabaseVersion.make( 25, 2 ) )
-				.getRowLevelSecurity()
-				.supportsRowLevelSecurity() )
-				.isTrue();
-	}
-
-	@Test
-	void postgreSqlRowLevelSecurityUsesHibernateTenantSettings() {
-		assertThat( PostgreSQLRowLevelSecurity.INSTANCE.getTenantIdentifierSettingName() )
-				.isEqualTo( "hibernate.tenant_id" );
-		assertThat( PostgreSQLRowLevelSecurity.INSTANCE.getRootTenantIdentifierSettingName() )
-				.isEqualTo( "hibernate.tenant_id_root" );
-	}
-
-	@Test
-	void cockroachRowLevelSecurityUsesApplicationNameSetting() {
-		assertThat( CockroachRowLevelSecurity.INSTANCE.getTenantIdentifierSettingName() )
-				.isEqualTo( "application_name" );
-		assertThat( CockroachRowLevelSecurity.INSTANCE.getRootTenantIdentifierSettingName() )
-				.isEqualTo( "application_name" );
-	}
-
-	@Test
-	void sqlServerRowLevelSecurityUsesHibernateTenantSessionContextKeys() {
-		assertThat( new SQLServerDialect().getRowLevelSecurity().supportsRowLevelSecurity() )
-				.isFalse();
-		assertThat( new SQLServer2016Dialect().getRowLevelSecurity().supportsRowLevelSecurity() )
-				.isTrue();
-		assertThat( SQLServerRowLevelSecurity.INSTANCE.getTenantIdentifierSettingName() )
-				.isEqualTo( "hibernate.tenant_id" );
-		assertThat( SQLServerRowLevelSecurity.INSTANCE.getRootTenantIdentifierSettingName() )
-				.isEqualTo( "hibernate.tenant_id_root" );
-	}
-
-	@Test
-	void db2RowLevelSecurityUsesHibernateTenantVariables() {
-		assertThat( DB2RowLevelSecurity.INSTANCE.getTenantIdentifierSettingName() )
-				.isEqualTo( "hibernate.tenant_id" );
-		assertThat( DB2RowLevelSecurity.INSTANCE.getRootTenantIdentifierSettingName() )
-				.isEqualTo( "hibernate.tenant_id_root" );
 	}
 
 	private static String db2PermissionName(org.hibernate.mapping.Table table, SqlStringGenerationContext context) {

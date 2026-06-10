@@ -115,7 +115,7 @@ public class GradleParallelTestingResolver {
 							user.replace( GRADLE_WORKER_PATTERN, String.valueOf( getWorkerID() ) ) );
 				}
 			}
-			if( settingsProps.containsKey(  JdbcSettings.URL ) ) {
+			if( settingsProps.containsKey( JdbcSettings.URL ) ) {
 				final String url = (String) settingsProps.get( JdbcSettings.URL );
 				if ( url != null && url.contains( GRADLE_WORKER_PATTERN ) ) {
 					settingsProps.put( JdbcSettings.URL,

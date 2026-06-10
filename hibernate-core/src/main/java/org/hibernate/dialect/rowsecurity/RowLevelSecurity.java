@@ -55,39 +55,21 @@ public interface RowLevelSecurity {
 	 * tenant identifier?
 	 */
 	default boolean supportsTenantIdentifierSource(TenantIdentifierSource tenantIdentifierSource) {
-		return tenantIdentifierSource == TenantIdentifierSource.SESSION;
+		return true;
 	}
 
 	/**
-	 * Register table initialization commands which enforce discriminator-based
+	 * Register table initialization commands enforcing discriminator-based
 	 * multitenancy via native row-level security.
 	 *
-	 * @param table The table containing the tenant id column
-	 * @param tenantIdentifierColumn The tenant id column
-	 * @param metadata The mapping metadata
-	 */
-	default void addTenantIdTableInitCommands(
-			Table table,
-			Column tenantIdentifierColumn,
-			Metadata metadata) {
-		addTenantIdTableInitCommands(
-				table,
-				tenantIdentifierColumn,
-				metadata,
-				TenantIdentifierSource.SESSION
-		);
-	}
-
-	/**
-	 * Register table initialization commands which enforce discriminator-based
-	 * multitenancy via native row-level security.
-	 *
+	 * @param collector The metadata collector
 	 * @param table The table containing the tenant id column
 	 * @param tenantIdentifierColumn The tenant id column
 	 * @param metadata The mapping metadata
 	 * @param tenantIdentifierSource The source used to resolve the tenant id
 	 */
 	default void addTenantIdTableInitCommands(
+			InFlightMetadataCollector collector,
 			Table table,
 			Column tenantIdentifierColumn,
 			Metadata metadata,
@@ -106,64 +88,6 @@ public interface RowLevelSecurity {
 	}
 
 	/**
-	 * Register table initialization commands enforcing discriminator-based
-	 * multitenancy via native row-level security.
-	 *
-	 * @param collector The metadata collector
-	 * @param table The table containing the tenant id column
-	 * @param tenantIdentifierColumn The tenant id column
-	 * @param metadata The mapping metadata
-	 */
-	default void addTenantIdTableInitCommands(
-			InFlightMetadataCollector collector,
-			Table table,
-			Column tenantIdentifierColumn,
-			Metadata metadata) {
-		addTenantIdTableInitCommands( table, tenantIdentifierColumn, metadata, TenantIdentifierSource.SESSION );
-	}
-
-	/**
-	 * Register table initialization commands enforcing discriminator-based
-	 * multitenancy via native row-level security.
-	 *
-	 * @param collector The metadata collector
-	 * @param table The table containing the tenant id column
-	 * @param tenantIdentifierColumn The tenant id column
-	 * @param metadata The mapping metadata
-	 * @param tenantIdentifierSource The source used to resolve the tenant id
-	 */
-	default void addTenantIdTableInitCommands(
-			InFlightMetadataCollector collector,
-			Table table,
-			Column tenantIdentifierColumn,
-			Metadata metadata,
-			TenantIdentifierSource tenantIdentifierSource) {
-		if ( tenantIdentifierSource == TenantIdentifierSource.SESSION ) {
-			addTenantIdTableInitCommands( collector, table, tenantIdentifierColumn, metadata );
-		}
-		else {
-			addTenantIdTableInitCommands( table, tenantIdentifierColumn, metadata, tenantIdentifierSource );
-		}
-	}
-
-	/**
-	 * Create the DDL commands which enforce discriminator-based multitenancy
-	 * via native row-level security.
-	 *
-	 * @param table The table containing the tenant id column
-	 * @param tenantIdentifierColumn The tenant id column
-	 * @param metadata The mapping metadata
-	 * @param context SQL rendering context
-	 */
-	default String[] getTenantIdTableCreateStrings(
-			Table table,
-			Column tenantIdentifierColumn,
-			Metadata metadata,
-			SqlStringGenerationContext context) {
-		return EMPTY_STRINGS;
-	}
-
-	/**
 	 * Create the DDL commands which enforce discriminator-based multitenancy
 	 * via native row-level security.
 	 *
@@ -179,7 +103,7 @@ public interface RowLevelSecurity {
 			Metadata metadata,
 			SqlStringGenerationContext context,
 			TenantIdentifierSource tenantIdentifierSource) {
-		return getTenantIdTableCreateStrings( table, tenantIdentifierColumn, metadata, context );
+		return EMPTY_STRINGS;
 	}
 
 	/**
@@ -191,22 +115,7 @@ public interface RowLevelSecurity {
 	 * @param tenantIdentifier The tenant identifier rendered as a string
 	 * @param root Whether the tenant identifier is a root tenant
 	 */
-	default void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root) throws SQLException {
-	}
-
-	/**
-	 * The name of the database session setting that holds the current tenant id,
-	 * if the dialect uses one.
-	 */
-	default String getTenantIdentifierSettingName() {
-		return null;
-	}
-
-	/**
-	 * The name of the database session setting that indicates a root tenant,
-	 * if the dialect uses one.
-	 */
-	default String getRootTenantIdentifierSettingName() {
-		return null;
+	default void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root)
+			throws SQLException {
 	}
 }

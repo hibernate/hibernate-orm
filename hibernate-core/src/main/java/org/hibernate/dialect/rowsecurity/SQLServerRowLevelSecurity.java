@@ -51,21 +51,6 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 	}
 
 	@Override
-	public boolean supportsTenantIdentifierSource(TenantIdentifierSource tenantIdentifierSource) {
-		return tenantIdentifierSource == TenantIdentifierSource.SESSION
-			|| tenantIdentifierSource == TenantIdentifierSource.DATABASE_USER;
-	}
-
-	@Override
-	public void addTenantIdTableInitCommands(
-			InFlightMetadataCollector collector,
-			Table table,
-			Column tenantIdentifierColumn,
-			Metadata metadata) {
-		addTenantIdTableInitCommands( collector, table, tenantIdentifierColumn, metadata, TenantIdentifierSource.SESSION );
-	}
-
-	@Override
 	public void addTenantIdTableInitCommands(
 			InFlightMetadataCollector collector,
 			Table table,
@@ -137,16 +122,6 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 			statement.setInt( 1, root ? 1 : 0 );
 			statement.execute();
 		}
-	}
-
-	@Override
-	public String getTenantIdentifierSettingName() {
-		return TENANT_IDENTIFIER_CONTEXT_KEY;
-	}
-
-	@Override
-	public String getRootTenantIdentifierSettingName() {
-		return ROOT_TENANT_IDENTIFIER_CONTEXT_KEY;
 	}
 
 	private record PredicateFunction(

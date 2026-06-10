@@ -32,16 +32,13 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -57,7 +54,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER;
 import static org.hibernate.cfg.JdbcSettings.AUTOCOMMIT;
 import static org.hibernate.cfg.JdbcSettings.DRIVER;
-import static org.hibernate.cfg.JdbcSettings.JAKARTA_JDBC_URL;
 import static org.hibernate.cfg.JdbcSettings.URL;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
@@ -77,12 +73,6 @@ import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFr
 				value = "org.hibernate.orm.test.multitenancy.rowsecurity.RowLevelSecurityTenantCredentialsMapperEndToEndTest$TenantCredentialsConnectionProvider")
 } )
 @RequiresDialectFeature( feature = DialectFeatureChecks.RowLevelSecurity.class )
-@RequiresDialects({
-		@RequiresDialect(PostgreSQLDialect.class),
-		@RequiresDialect(DB2Dialect.class),
-		@RequiresDialect(SQLServerDialect.class),
-		@RequiresDialect(CockroachDialect.class)
-})
 class RowLevelSecurityTenantCredentialsMapperEndToEndTest {
 	private static final String TENANT_ONE = "hibernate_rls_tenant_one";
 	private static final String TENANT_TWO = "hibernate_rls_tenant_two";
@@ -188,7 +178,8 @@ class RowLevelSecurityTenantCredentialsMapperEndToEndTest {
 		}
 	}
 
-	private static void createTenantRole(Statement statement, Dialect dialect, String roleName) throws SQLException {
+	private static void createTenantRole(Statement statement, Dialect dialect, String roleName)
+			throws SQLException {
 		if ( dialect instanceof PostgreSQLDialect ) {
 			createPostgreSqlTenantRole( statement, roleName );
 		}
@@ -206,7 +197,8 @@ class RowLevelSecurityTenantCredentialsMapperEndToEndTest {
 		}
 	}
 
-	private static void createPostgreSqlTenantRole(Statement statement, String roleName) throws SQLException {
+	private static void createPostgreSqlTenantRole(Statement statement, String roleName)
+			throws SQLException {
 		statement.execute( "do $$ begin create role " + roleName + " login password '" + roleName
 				+ "'; exception when duplicate_object then null; end $$" );
 		statement.execute( "alter role " + roleName + " login password '" + roleName
@@ -215,14 +207,16 @@ class RowLevelSecurityTenantCredentialsMapperEndToEndTest {
 		statement.execute( "grant select, insert, update, delete on table rls_credentials_document to " + roleName );
 	}
 
-	private static void createCockroachTenantRole(Statement statement, String roleName) throws SQLException {
+	private static void createCockroachTenantRole(Statement statement, String roleName)
+			throws SQLException {
 		statement.execute( "create user if not exists " + roleName );
 		statement.execute( "alter role " + roleName + " nobypassrls" );
 		statement.execute( "grant usage on schema public to " + roleName );
 		statement.execute( "grant select, insert, update, delete on table rls_credentials_document to " + roleName );
 	}
 
-	private static void createSqlServerTenantUser(Statement statement, String roleName) throws SQLException {
+	private static void createSqlServerTenantUser(Statement statement, String roleName)
+			throws SQLException {
 		final String userName = sqlServerIdentifier( roleName );
 		final String password = sqlServerStringLiteral( roleName );
 		statement.execute( "if suser_id(" + password + ") is null exec("
@@ -411,9 +405,6 @@ class RowLevelSecurityTenantCredentialsMapperEndToEndTest {
 			resolveFromSettings( resolvedConfigurationValues );
 			super.configure( resolvedConfigurationValues );
 			url = (String) resolvedConfigurationValues.get( URL );
-			if ( url == null ) {
-				url = (String) resolvedConfigurationValues.get( JAKARTA_JDBC_URL );
-			}
 			driverClassName = (String) resolvedConfigurationValues.get( DRIVER );
 			connectionProperties = getConnectionProperties( resolvedConfigurationValues );
 			defaultSchema = defaultSchema( connectionProperties );

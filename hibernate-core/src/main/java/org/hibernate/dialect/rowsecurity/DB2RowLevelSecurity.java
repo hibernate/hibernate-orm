@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.DB2Dialect;
@@ -53,55 +52,23 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 	}
 
 	@Override
-	public boolean supportsTenantIdentifierSource(TenantIdentifierSource tenantIdentifierSource) {
-		return tenantIdentifierSource == TenantIdentifierSource.SESSION
-			|| tenantIdentifierSource == TenantIdentifierSource.DATABASE_USER;
-	}
-
-	@Override
-	public void addTenantIdTableInitCommands(
-			InFlightMetadataCollector collector,
-			Table table,
-			Column tenantIdentifierColumn,
-			Metadata metadata) {
-		addTenantIdTableInitCommands( collector, table, tenantIdentifierColumn, metadata, TenantIdentifierSource.SESSION );
-	}
-
-	@Override
 	public void addTenantIdTableInitCommands(
 			InFlightMetadataCollector collector,
 			Table table,
 			Column tenantIdentifierColumn,
 			Metadata metadata,
 			TenantIdentifierSource tenantIdentifierSource) {
-		if ( supportsRowLevelSecurity() ) {
-			if ( tenantIdentifierSource == TenantIdentifierSource.SESSION ) {
-				collector.getDatabase()
-						.addAuxiliaryDatabaseObject( SessionVariables.INSTANCE );
-			}
-			table.addInitCommand( context ->
-					new InitCommand( getTenantIdTableCreateStrings(
-							table,
-							tenantIdentifierColumn,
-							metadata,
-							context,
-							tenantIdentifierSource
-					) ) );
+		if ( supportsRowLevelSecurity()
+				&& tenantIdentifierSource == TenantIdentifierSource.SESSION ) {
+			collector.getDatabase()
+					.addAuxiliaryDatabaseObject( SessionVariables.INSTANCE );
 		}
-	}
-
-	@Override
-	public String[] getTenantIdTableCreateStrings(
-			Table table,
-			Column tenantIdentifierColumn,
-			Metadata metadata,
-			SqlStringGenerationContext context) {
-		return getTenantIdTableCreateStrings(
+		RowLevelSecurity.super.addTenantIdTableInitCommands(
+				collector,
 				table,
 				tenantIdentifierColumn,
 				metadata,
-				context,
-				TenantIdentifierSource.SESSION
+				tenantIdentifierSource
 		);
 	}
 
@@ -153,16 +120,6 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 			statement.setInt( 1, root ? 1 : 0 );
 			statement.execute();
 		}
-	}
-
-	@Override
-	public String getTenantIdentifierSettingName() {
-		return TENANT_IDENTIFIER_VARIABLE;
-	}
-
-	@Override
-	public String getRootTenantIdentifierSettingName() {
-		return ROOT_TENANT_IDENTIFIER_VARIABLE;
 	}
 
 	private static class SessionVariables implements AuxiliaryDatabaseObject {

@@ -11,6 +11,7 @@ import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity.TenantIdentifierSource;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -22,8 +23,6 @@ import static java.util.Collections.singletonMap;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
 import static org.hibernate.context.spi.MultiTenancy.getTenantCredentialsMapper;
-import static org.hibernate.dialect.rowsecurity.RowLevelSecurity.TenantIdentifierSource.DATABASE_USER;
-import static org.hibernate.dialect.rowsecurity.RowLevelSecurity.TenantIdentifierSource.SESSION;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -114,31 +113,18 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			final var table = property.getValue().getTable();
 			if ( property.getSelectables().get( 0 ) instanceof Column column
 					&& table.isPhysicalTable() && !table.isView() ) {
-				final var tenantIdentifierSource =
-						getTenantIdentifierSource( rowLevelSecurity, buildingContext );
-				if ( tenantIdentifierSource == SESSION ) {
-					rowLevelSecurity.addTenantIdTableInitCommands( collector, table, column, collector );
-				}
-				else {
-					rowLevelSecurity.addTenantIdTableInitCommands(
-							collector,
-							table,
-							column,
-							collector,
-							tenantIdentifierSource
-					);
-				}
+				rowLevelSecurity.addTenantIdTableInitCommands(
+						collector,
+						table,
+						column,
+						collector,
+						hasTenantCredentialsMapper( buildingContext )
+							&& rowLevelSecurity.supportsTenantIdentifierSource( TenantIdentifierSource.DATABASE_USER )
+								? TenantIdentifierSource.DATABASE_USER
+								: TenantIdentifierSource.SESSION
+				);
 			}
 		}
-	}
-
-	private static RowLevelSecurity.TenantIdentifierSource getTenantIdentifierSource(
-			RowLevelSecurity rowLevelSecurity,
-			MetadataBuildingContext buildingContext) {
-		final var databaseUserSource =
-				hasTenantCredentialsMapper( buildingContext )
-						&& rowLevelSecurity.supportsTenantIdentifierSource( DATABASE_USER );
-		return databaseUserSource ? DATABASE_USER : SESSION;
 	}
 
 	private static boolean hasTenantCredentialsMapper(MetadataBuildingContext buildingContext) {

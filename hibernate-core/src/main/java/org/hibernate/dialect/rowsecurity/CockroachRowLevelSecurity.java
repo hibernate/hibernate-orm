@@ -40,27 +40,6 @@ public class CockroachRowLevelSecurity implements RowLevelSecurity {
 	}
 
 	@Override
-	public boolean supportsTenantIdentifierSource(TenantIdentifierSource tenantIdentifierSource) {
-		return tenantIdentifierSource == TenantIdentifierSource.SESSION
-			|| tenantIdentifierSource == TenantIdentifierSource.DATABASE_USER;
-	}
-
-	@Override
-	public String[] getTenantIdTableCreateStrings(
-			Table table,
-			Column tenantIdentifierColumn,
-			Metadata metadata,
-			SqlStringGenerationContext context) {
-		return getTenantIdTableCreateStrings(
-				table,
-				tenantIdentifierColumn,
-				metadata,
-				context,
-				TenantIdentifierSource.SESSION
-		);
-	}
-
-	@Override
 	public String[] getTenantIdTableCreateStrings(
 			Table table,
 			Column tenantIdentifierColumn,
@@ -96,13 +75,4 @@ public class CockroachRowLevelSecurity implements RowLevelSecurity {
 		}
 	}
 
-	@Override
-	public String getTenantIdentifierSettingName() {
-		return APPLICATION_NAME_SETTING;
-	}
-
-	@Override
-	public String getRootTenantIdentifierSettingName() {
-		return APPLICATION_NAME_SETTING;
-	}
 }

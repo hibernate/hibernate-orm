@@ -347,7 +347,6 @@
             <!-- hbm: The size for batch fetching : @BatchSize -->
             <xsd:element name="batch-size" type="xsd:int" minOccurs="0"/>
 
-            <!-- hbm : can we generate proxies for this entity? : @Proxy -->
             <xsd:element name="lazy" type="xsd:boolean" minOccurs="0"/>
 
             <!-- hbm : is the state of this entity considered mutable : ! @Immutable -->
@@ -358,11 +357,6 @@
 
             <xsd:element name="id-class" type="orm:id-class" minOccurs="0"/>
             <xsd:element name="inheritance" type="orm:inheritance" minOccurs="0"/>
-
-            <!-- hbm : name the interface/class to act as the proxy contract for this entity  : @Proxy -->
-            <xsd:element name="proxy" type="xsd:string" minOccurs="0" />
-            <!-- hbm : used in query language to control how inherited "domain schema" references are handled : @Polymorphism -->
-            <xsd:element name="polymorphism" type="orm:polymorphism-type" default="IMPLICIT" minOccurs="0" />
 
             <xsd:element name="discriminator-value" type="orm:discriminator-value"
                          minOccurs="0"/>
@@ -3480,22 +3474,6 @@
             <xsd:enumeration value="DIRTY"/>
             <xsd:enumeration value="VERSION"/>
             <xsd:enumeration value="NONE"/>
-        </xsd:restriction>
-    </xsd:simpleType>
-
-
-    <!-- **************************************************** -->
-
-    <xsd:simpleType name="polymorphism-type">
-        <xsd:annotation>
-            <xsd:documentation>
-                See `@org.hibernate.annotations.PolymorphismType`
-                See `@org.hibernate.annotations.Polymorphism`
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:restriction base="xsd:token">
-            <xsd:enumeration value="EXPLICIT"/>
-            <xsd:enumeration value="IMPLICIT"/>
         </xsd:restriction>
     </xsd:simpleType>
 

@@ -76,9 +76,6 @@ public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
 	@Nullable JaxbInheritanceImpl getInheritance();
 	void setInheritance(@Nullable JaxbInheritanceImpl value);
 
-	@Nullable String getProxy();
-	void setProxy(@Nullable String value);
-
 	@Nullable String getDiscriminatorValue();
 	void setDiscriminatorValue(@Nullable String value);
 

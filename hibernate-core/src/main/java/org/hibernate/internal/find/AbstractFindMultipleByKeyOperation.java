@@ -15,15 +15,13 @@ import jakarta.annotation.Nullable;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.EnabledFetchProfile;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.NaturalIdSynchronization;
-import org.hibernate.OrderingMode;
 import org.hibernate.ReadOnlyMode;
-import org.hibernate.RemovalsMode;
-import org.hibernate.SessionCheckMode;
 import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -52,9 +50,9 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 	private KeyType keyType = KeyType.IDENTIFIER;
 
 	private BatchSize batchSize;
-	private SessionCheckMode sessionCheckMode = SessionCheckMode.DISABLED;
-	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
-	private OrderingMode orderingMode = OrderingMode.ORDERED;
+	private FindMultipleOption.SessionCheckMode sessionCheckMode = FindMultipleOption.SessionCheckMode.DISABLED;
+	private FindMultipleOption.RemovalsMode removalsMode = FindMultipleOption.RemovalsMode.REPLACE;
+	private FindMultipleOption.OrderingMode orderingMode = FindMultipleOption.OrderingMode.ORDERED;
 
 	private CacheStoreMode cacheStoreMode;
 	private CacheRetrieveMode cacheRetrieveMode;
@@ -109,13 +107,13 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 				else if ( option instanceof BatchSize batchSize ) {
 					this.batchSize = batchSize;
 				}
-				else if ( option instanceof SessionCheckMode sessionCheckMode ) {
+				else if ( option instanceof FindMultipleOption.SessionCheckMode sessionCheckMode ) {
 					this.sessionCheckMode = sessionCheckMode;
 				}
-				else if ( option instanceof RemovalsMode removalsMode ) {
+				else if ( option instanceof FindMultipleOption.RemovalsMode removalsMode ) {
 					this.removalsMode = removalsMode;
 				}
-				else if ( option instanceof OrderingMode orderingMode ) {
+				else if ( option instanceof FindMultipleOption.OrderingMode orderingMode ) {
 					this.orderingMode = orderingMode;
 				}
 				else if ( option instanceof CacheStoreMode cacheStoreMode ) {
@@ -245,7 +243,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 	// MultiIdLoadOptions & MultiNaturalIdLoadOptions
 
 	@Override
-	public SessionCheckMode getSessionCheckMode() {
+	public FindMultipleOption.SessionCheckMode getSessionCheckMode() {
 		return sessionCheckMode;
 	}
 
@@ -260,12 +258,12 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 	}
 
 	@Override
-	public RemovalsMode getRemovalsMode() {
+	public FindMultipleOption.RemovalsMode getRemovalsMode() {
 		return removalsMode;
 	}
 
 	@Override
-	public OrderingMode getOrderingMode() {
+	public FindMultipleOption.OrderingMode getOrderingMode() {
 		return orderingMode;
 	}
 
@@ -291,9 +289,9 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 			EntityPersister entityDescriptor,
 			KeyType keyType,
 			BatchSize batchSize,
-			SessionCheckMode sessionCheckMode,
-			RemovalsMode removalsMode,
-			OrderingMode orderingMode,
+			FindMultipleOption.SessionCheckMode sessionCheckMode,
+			FindMultipleOption.RemovalsMode removalsMode,
+			FindMultipleOption.OrderingMode orderingMode,
 			CacheMode cacheMode,
 			LockOptions lockOptions,
 			ReadOnlyMode readOnlyMode,

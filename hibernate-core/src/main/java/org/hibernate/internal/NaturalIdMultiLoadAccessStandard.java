@@ -9,15 +9,13 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.NaturalIdSynchronization;
-import org.hibernate.OrderingMode;
 import org.hibernate.ReadOnlyMode;
-import org.hibernate.RemovalsMode;
-import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -45,8 +43,8 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	private GraphSemantic graphSemantic;
 
 	private Integer batchSize;
-	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
-	private OrderingMode orderingMode = OrderingMode.ORDERED;
+	private FindMultipleOption.RemovalsMode removalsMode = FindMultipleOption.RemovalsMode.REPLACE;
+	private FindMultipleOption.OrderingMode orderingMode = FindMultipleOption.OrderingMode.ORDERED;
 
 	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
 		this.entityDescriptor = entityDescriptor;
@@ -106,21 +104,21 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 
 	@Override
 	public NaturalIdMultiLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
-		this.removalsMode = enabled ? RemovalsMode.INCLUDE : RemovalsMode.REPLACE;
+		this.removalsMode = enabled ? FindMultipleOption.RemovalsMode.INCLUDE : FindMultipleOption.RemovalsMode.REPLACE;
 		return this;
 	}
 
-	public void with(RemovalsMode removalsMode) {
+	public void with(FindMultipleOption.RemovalsMode removalsMode) {
 		this.removalsMode = removalsMode;
 	}
 
 	@Override
 	public NaturalIdMultiLoadAccess<T> enableOrderedReturn(boolean enabled) {
-		this.orderingMode = enabled ? OrderingMode.ORDERED : OrderingMode.UNORDERED;
+		this.orderingMode = enabled ? FindMultipleOption.OrderingMode.ORDERED : FindMultipleOption.OrderingMode.UNORDERED;
 		return this;
 	}
 
-	public void with(OrderingMode orderingMode) {
+	public void with(FindMultipleOption.OrderingMode orderingMode) {
 		this.orderingMode = orderingMode;
 	}
 
@@ -142,7 +140,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 				(StatefulLoadAccessContext) session,
 				KeyType.NATURAL,
 				batchSize == null ? null : new BatchSize( batchSize ),
-				SessionCheckMode.ENABLED,
+				FindMultipleOption.SessionCheckMode.ENABLED,
 				removalsMode,
 				orderingMode,
 				cacheMode,
@@ -155,12 +153,12 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	}
 
 	@Override
-	public RemovalsMode getRemovalsMode() {
+	public FindMultipleOption.RemovalsMode getRemovalsMode() {
 		return removalsMode;
 	}
 
 	@Override
-	public OrderingMode getOrderingMode() {
+	public FindMultipleOption.OrderingMode getOrderingMode() {
 		return orderingMode;
 	}
 

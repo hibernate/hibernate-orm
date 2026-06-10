@@ -4,9 +4,8 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import org.hibernate.FindMultipleOption;
 import org.hibernate.LockOptions;
-import org.hibernate.OrderingMode;
-import org.hibernate.RemovalsMode;
 
 /// Encapsulation of the options for loading multiple entities (of a type)
 /// by [key][org.hibernate.KeyType].
@@ -21,7 +20,7 @@ public interface MultiLoadOptions {
 	 *
 	 * @since 7.2
 	 */
-	RemovalsMode getRemovalsMode();
+	FindMultipleOption.RemovalsMode getRemovalsMode();
 
 	/**
 	 * Whether the result should be ordered relative to the order of
@@ -29,7 +28,7 @@ public interface MultiLoadOptions {
 	 *
 	 * @since 7.2
 	 */
-	OrderingMode getOrderingMode();
+	FindMultipleOption.OrderingMode getOrderingMode();
 
 	/**
 	 * Should we returned entities that are scheduled for deletion.
@@ -40,7 +39,7 @@ public interface MultiLoadOptions {
 	 */
 	@Deprecated(since = "7.2", forRemoval = true)
 	default boolean isReturnOfDeletedEntitiesEnabled() {
-		return getRemovalsMode() == RemovalsMode.INCLUDE;
+		return getRemovalsMode() == FindMultipleOption.RemovalsMode.INCLUDE;
 	}
 
 	/**
@@ -52,7 +51,7 @@ public interface MultiLoadOptions {
 	 */
 	@Deprecated(since = "7.2", forRemoval = true)
 	default boolean isOrderReturnEnabled() {
-		return getOrderingMode() == OrderingMode.ORDERED;
+		return getOrderingMode() == FindMultipleOption.OrderingMode.ORDERED;
 	}
 
 	/**

@@ -9,13 +9,11 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.KeyType;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdSynchronization;
-import org.hibernate.OrderingMode;
 import org.hibernate.ReadOnlyMode;
-import org.hibernate.RemovalsMode;
-import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -155,9 +153,9 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			KeyType keyType,
 			BatchSize batchSize,
-			SessionCheckMode sessionCheckMode,
-			RemovalsMode removalsMode,
-			OrderingMode orderingMode,
+			FindMultipleOption.SessionCheckMode sessionCheckMode,
+			FindMultipleOption.RemovalsMode removalsMode,
+			FindMultipleOption.OrderingMode orderingMode,
 			CacheMode cacheMode,
 			LockOptions lockOptions,
 			ReadOnlyMode readOnlyMode,

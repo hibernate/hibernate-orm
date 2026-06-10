@@ -9,12 +9,10 @@ import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.KeyType;
 import org.hibernate.LockMode;
-import org.hibernate.OrderingMode;
 import org.hibernate.ReadOnlyMode;
-import org.hibernate.RemovalsMode;
-import org.hibernate.SessionCheckMode;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -136,9 +134,9 @@ public class LoadByNaturalIdTest {
 					Parent.class,
 					List.of( "Luigi", "Filippo" ),
 					KeyType.NATURAL,
-					SessionCheckMode.ENABLED,
-					OrderingMode.UNORDERED,
-					RemovalsMode.EXCLUDE
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.OrderingMode.UNORDERED,
+					FindMultipleOption.RemovalsMode.EXCLUDE
 			);
 			assertEquals( 1, multiple.size() );
 		} );
@@ -148,9 +146,9 @@ public class LoadByNaturalIdTest {
 					Parent.class,
 					List.of( "Luigi", "Filippo" ),
 					KeyType.NATURAL,
-					SessionCheckMode.ENABLED,
-					OrderingMode.UNORDERED,
-					RemovalsMode.EXCLUDE
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.OrderingMode.UNORDERED,
+					FindMultipleOption.RemovalsMode.EXCLUDE
 			);
 			assertEquals( 0, multiple.size() );
 		} );
@@ -163,8 +161,8 @@ public class LoadByNaturalIdTest {
 					Parent.class,
 					List.of( "Luigi", "Filippo" ),
 					KeyType.NATURAL,
-					SessionCheckMode.ENABLED,
-					RemovalsMode.REPLACE
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.REPLACE
 			);
 			assertEquals( 2, multiple.size() );
 			assertNotNull( multiple.get(0) );
@@ -176,8 +174,8 @@ public class LoadByNaturalIdTest {
 					Parent.class,
 					List.of( "Luigi", "Filippo" ),
 					KeyType.NATURAL,
-					SessionCheckMode.ENABLED,
-					RemovalsMode.REPLACE
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.REPLACE
 			);
 			assertEquals( 2, multiple.size() );
 			assertNull( multiple.get(0) );

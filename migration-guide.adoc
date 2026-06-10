@@ -507,6 +507,23 @@ would need to be changed to
 
 
 
+[[xsd-many-to-many-orphan-removal]]
+=== Removal of `orphan-removal` from `<many-to-many>`
+
+The `orphan-removal` attribute has been removed from the `<many-to-many>` element in the XML mapping XSD.
+
+Although previous versions of the schema allowed specifying `orphan-removal="true"` on a `<many-to-many>` mapping, this attribute was never processed during boot. Orphan removal behavior was silently ignored for many-to-many associations. The attribute has been removed from the XSD to reflect the actual supported behavior.
+
+Any `mapping.xml` documents using this attribute:
+
+[source,xml]
+----
+<many-to-many orphan-removal="true" ... />
+----
+
+should remove the `orphan-removal` attribute, as it had no effect.
+
+
 === Migration of Spanner PostgreSQL Dialect to core
 
 The `SpannerPostgreSQLDialect`, which was previously part of the `hibernate-community-dialects` artifact under the package name `org.hibernate.community.dialect`, has been migrated to the `hibernate-core` artifact and package name `org.hibernate.dialect`.

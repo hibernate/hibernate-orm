@@ -1916,7 +1916,6 @@
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
-        <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
         <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
         <xsd:attribute name="not-found" type="orm:not-found-enum"/>
         <xsd:attribute name="optimistic-lock" type="xsd:boolean" />

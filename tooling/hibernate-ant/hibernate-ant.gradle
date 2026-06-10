@@ -6,5 +6,6 @@ apply plugin: 'version-injection'
 
 dependencies {
     compileOnly libs.ant
-    implementation project( ':hibernate-core' )
+    implementation project(':hibernate-core')
+    testImplementation libs.ant
 }

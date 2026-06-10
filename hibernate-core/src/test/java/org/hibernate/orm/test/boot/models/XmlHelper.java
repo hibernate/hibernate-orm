@@ -12,7 +12,6 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.models.xml.XmlResourceException;
 import org.hibernate.models.spi.ClassLoading;
 
@@ -34,11 +33,11 @@ public class XmlHelper {
 		if ( stream == null ) {
 			throw new XmlResourceException( "Could not locate XML mapping resource - " + resourceName );
 		}
-		final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind(
+		final Binding<JaxbEntityMappingsImpl> binding = mappingBinder.bind(
 				stream,
 				new Origin( SourceType.RESOURCE, resourceName )
 		);
-		return (JaxbEntityMappingsImpl) binding.getRoot();
+		return binding.getRoot();
 	}
 
 	private record ResourceStreamLocatorImpl(ClassLoading classLoadingAccess) implements ResourceStreamLocator {

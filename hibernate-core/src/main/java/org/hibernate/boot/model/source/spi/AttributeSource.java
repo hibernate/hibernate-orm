@@ -1,9 +1,5 @@
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.Remove;
-
-import org.hibernate.boot.model.source.internal.hbm.XmlElementMetadata;
-
 /**
  * Contract for sources of persistent attribute descriptions.
  * <p>
@@ -11,10 +7,7 @@ import org.hibernate.boot.model.source.internal.hbm.XmlElementMetadata;
  *
  * @author Steve Ebersole
  */
-@Remove
 public interface AttributeSource extends ToolingHintContextContainer {
-	XmlElementMetadata getSourceType();
-
 	/**
 	 * Obtain the attribute name.
 	 *

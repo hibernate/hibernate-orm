@@ -6,10 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.envers.Audited;
 
 @Entity
-@Audited
 public class Author {
 
 	@Id

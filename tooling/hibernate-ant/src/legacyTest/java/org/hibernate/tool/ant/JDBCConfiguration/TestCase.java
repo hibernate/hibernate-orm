@@ -79,7 +79,7 @@ public class TestCase {
 		assertTrue(cfgxml.exists());
 		assertTrue(FileUtil
 				.findFirstString("mapping", cfgxml)
-				.contains("BottomUp.hbm.xml"));
+				.contains("BottomUp"));
 
 	}
 

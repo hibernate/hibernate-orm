@@ -11,7 +11,6 @@ java.modularity.inferModulePath = true
 
 dependencies {
 	api project( ':hibernate-core' )
-	api project( ':hibernate-envers' )
 	implementation project( ':hibernate-scan-jandex' )
 	implementation libs.hibernateAccessorByteBuddy
 

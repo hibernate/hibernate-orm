@@ -54,7 +54,6 @@ module org.hibernate.orm.integrationtest.java.module.test {
 	requires org.hibernate.orm.core;
 	requires org.hibernate.accessor;
 	requires org.hibernate.accessor.bytebuddy;
-	requires org.hibernate.orm.envers;
 
 	// Transitive dependencies that leak through the Hibernate ORM API
 	requires java.sql;

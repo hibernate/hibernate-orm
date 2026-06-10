@@ -3,8 +3,8 @@ package org.hibernate.boot.jaxb.internal;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.SerializationException;
 
@@ -19,7 +19,7 @@ import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 /**
  * Support for creating a mapping {@linkplain Binding binding} from "cached" XML files.
  * <p>
- * This is a legacy feature, caching a serialized form of the {@linkplain JaxbBindableMappingDescriptor JAXB model}
+ * This is a legacy feature, caching a serialized form of the {@linkplain JaxbEntityMappingsImpl JAXB model}
  * into a file for later use.  While not deprecated per se, its use is discouraged.
  *
  * @see MappingBinder
@@ -28,7 +28,7 @@ import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
  */
 public class CacheableFileXmlSource {
 
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromCacheableFile(
+	public static Binding<JaxbEntityMappingsImpl> fromCacheableFile(
 			File xmlFile,
 			File serLocation,
 			boolean strict,
@@ -37,7 +37,7 @@ public class CacheableFileXmlSource {
 		return fromCacheableFile( xmlFile, serLocation, origin, strict, binder );
 	}
 
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromCacheableFile(
+	public static Binding<JaxbEntityMappingsImpl> fromCacheableFile(
 			File xmlFile,
 			File serLocation,
 			Origin origin,
@@ -120,14 +120,14 @@ public class CacheableFileXmlSource {
 		return new File( serDirectory, xmlFile.getName() + ".bin" );
 	}
 
-	private static <T extends JaxbBindableMappingDescriptor> T readSerFile(File serFile)
+	private static JaxbEntityMappingsImpl readSerFile(File serFile)
 			throws SerializationException, FileNotFoundException {
 		JAXB_LOGGER.readingCachedMappings( serFile );
 		return SerializationHelper.deserialize( new FileInputStream( serFile ) );
 	}
 
-	private static <T extends JaxbBindableMappingDescriptor> void writeSerFile(
-			T jaxbModel,
+	private static void writeSerFile(
+			JaxbEntityMappingsImpl jaxbModel,
 			File xmlFile,
 			File serFile) {
 		try ( var fileOutputStream = new FileOutputStream( serFile ) ) {

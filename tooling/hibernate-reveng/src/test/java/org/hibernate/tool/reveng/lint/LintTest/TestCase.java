@@ -1,0 +1,73 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.tool.reveng.lint.LintTest;
+
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.reveng.internal.export.lint.*;
+import org.hibernate.tool.reveng.test.utils.ConnectionProvider;
+import org.hibernate.tool.reveng.test.utils.HibernateUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.File;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TestCase {
+
+	@TempDir
+	public File outputDir = new File("output");
+
+	private MetadataDescriptor metadataDescriptor = null;
+
+	@BeforeEach
+	public void setUp() {
+		Properties properties = new Properties();
+		properties.put(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());
+		properties.setProperty(AvailableSettings.CONNECTION_PROVIDER, ConnectionProvider.class.getName());
+		metadataDescriptor = MetadataDescriptorFactory.createNativeDescriptor(null, null, properties);
+		HibernateUtil.addAnnotatedClass(metadataDescriptor, Category.class);
+		HibernateUtil.addAnnotatedClass(metadataDescriptor, NoTable.class);
+		HibernateUtil.addAnnotatedClass(metadataDescriptor, IdentifierProblem.class);
+		HibernateUtil.addAnnotatedClass(metadataDescriptor, BrokenLazy.class);
+		HibernateUtil.addAnnotatedClass(metadataDescriptor, BrokenNonLazy.class);
+		HibernateUtil.addAnnotatedClass(metadataDescriptor, FakeNonLazy.class);
+	}
+
+	@Test
+	public void testExporter() {
+		LintExporter exporter = new LintExporter();
+		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
+		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
+		exporter.start();
+	}
+
+	@Test
+	public void testValidateCache() {
+		Lint analyzer = new Lint(new Detector[] { new BadCachingDetector() });
+		analyzer.analyze(metadataDescriptor.createMetadata());
+		assertEquals(1, analyzer.getResults().size());
+	}
+
+	@Test
+	public void testValidateIdentifier() {
+		Lint analyzer = new Lint(new Detector[] { new ShadowedIdentifierDetector() });
+		analyzer.analyze(metadataDescriptor.createMetadata());
+		assertEquals(1, analyzer.getResults().size());
+	}
+
+	@Test
+	public void testBytecodeRestrictions() {
+		Lint analyzer = new Lint(new Detector[] { new InstrumentationDetector() });
+		analyzer.analyze(metadataDescriptor.createMetadata());
+		assertEquals(2, analyzer.getResults().size(), analyzer.getResults().toString());
+	}
+
+}

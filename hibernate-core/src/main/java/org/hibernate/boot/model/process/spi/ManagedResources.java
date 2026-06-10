@@ -6,7 +6,7 @@ import org.hibernate.models.spi.ClassDetails;
 import java.util.Collection;
 import java.util.Map;
 
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 
@@ -76,7 +76,7 @@ public interface ManagedResources {
 	 *
 	 * @return The list of bindings for all known XML mapping files.
 	 */
-	Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings();
+	Collection<Binding<JaxbEntityMappingsImpl>> getXmlMappingBindings();
 
 	Map<String,Class<?>> getExtraQueryImports();
 }

@@ -1,2 +1,0 @@
-org.hibernate.envers.boot.internal.ModifiedColumnNamingStrategyRegistrationProvider
-org.hibernate.envers.boot.internal.AuditStrategyRegistrationProvider

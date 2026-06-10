@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Implementation of WithClauseTest.
- *
  * @author Steve Ebersole
  */
 @DomainModel(

@@ -120,8 +120,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			registryBuilder.applySettings( configurationValues );
 			standardServiceRegistry = registryLifecycle.register( registryBuilder.build() );
 
-			final var discovery = performScanning( cfg, standardServiceRegistry );
-			persistenceUnit = new PersistenceConfigurationDescriptor( cfg, discovery );
+			persistenceUnit = new PersistenceConfigurationDescriptor( cfg, standardServiceRegistry );
 
 			final var metadataSources = new MetadataSources( standardServiceRegistry );
 			metamodelBuilder =
@@ -256,7 +255,19 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 
 	private void setupMappingReferences(MetadataSources metadataSources) {
-		MappingSourceHelper.applyConfigurationMappings( metadataSources, standardServiceRegistry );
+		// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
+		//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
+		final var aggregatedConfig =
+				standardServiceRegistry.requireService( CfgXmlAccessService.class )
+						.getAggregatedConfig();
+		if ( aggregatedConfig != null ) {
+			final var mappingReferences = aggregatedConfig.getMappingReferences();
+			if ( mappingReferences != null ) {
+				for ( var mappingReference : mappingReferences ) {
+					mappingReference.apply( metadataSources );
+				}
+			}
+		}
 	}
 
 	private void setupValidation() {
@@ -273,7 +284,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private void setupEnhancement(PersistenceUnitDescriptor persistenceUnit) {
+	private void setupEnhancement(PersistenceUnitDescriptor persistenceUnit, MetadataSources metadataSources) {
 		if ( persistenceUnit.isClassTransformerRegistrationDisabled() ) {
 			return;
 		}
@@ -303,28 +314,18 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					throw new PersistenceException( "Enhancement requires a temp class loader, but none was given"
 							+ exceptionHeader() );
 				}
-				discoverTypesToTransform( classTransformer, classLoader );
+				discoverTypesToTransform( metadataSources, classTransformer, classLoader );
 			}
 		}
 	}
 
-	private void discoverTypesToTransform(ClassTransformer transformer, ClassLoader loader) {
-		if ( persistenceUnit instanceof PersistenceUnitInfoDescriptor ) {
-			EnhancementCandidates.forContainer( persistenceUnit.getAllClassNames() )
-					.forEach( name -> transformer.discoverTypes( loader, name ) );
+	private static void discoverTypesToTransform(
+			MetadataSources metadataSources, ClassTransformer classTransformer, ClassLoader classLoader) {
+		for ( String annotatedClassName : metadataSources.getAnnotatedClassNames() ) {
+			classTransformer.discoverTypes( classLoader, annotatedClassName );
 		}
-		else {
-			EnhancementCandidates.forResources( managedResources ).forEach( (name, hbm) -> {
-				try {
-					transformer.discoverTypes( loader, name );
-				}
-				catch (EnhancementException e) {
-					if ( !hbm ) {
-						throw e;
-					}
-					JPA_LOGGER.enhancementDiscoveryFailed( name, e );
-				}
-			} );
+		for ( Class<?> annotatedClass : metadataSources.getAnnotatedClasses() ) {
+			classTransformer.discoverTypes( classLoader, annotatedClass.getName() );
 		}
 	}
 

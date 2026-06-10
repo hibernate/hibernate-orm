@@ -3,8 +3,7 @@
 
 :tooling-maven-examples: {root-project-dir}/tooling/hibernate-maven-plugin/src/intTest/resources/guide
 
-Use `org.hibernate.orm:hibernate-maven-plugin` for enhancement, reverse engineering,
-and HBM XML transformation. Keep the plugin, processor, and runtime versions aligned.
+Use `org.hibernate.orm:hibernate-maven-plugin` for enhancement and reverse engineering. Keep the plugin, processor, and runtime versions aligned.
 
 [[tooling-maven-enhancement]]
 ==== Enhancement and compilation
@@ -158,15 +157,3 @@ For `hbm2dao`, `outputDirectory` defaults to `${project.build.directory}/generat
 `ejb3` and `jdk5` both default to `false`; `templatePath` selects custom templates.
 Generated DAO sources may require additional application dependencies before compilation.
 
-[[tooling-maven-transformhbm]]
-==== HBM XML transformation
-
-`transformHbm` converts legacy mappings without reverse engineering a database. It binds to
-`generate-resources` and uses the project's runtime classpath. With its defaults, it recursively
-finds files ending in `hbm.xml` beneath `src/main/resources`, writing a sibling
-`.mapping.xml` for a normal `.hbm.xml` filename.
-
-[[tooling-maven-transformhbm-params]]
-`inputFolder` changes the input directory; `format` defaults to `true` and controls XML formatting.
-Review the generated mappings and include them in the application configuration as needed.
-This conversion is separate from generating new mappings from JDBC metadata.

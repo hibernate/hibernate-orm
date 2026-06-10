@@ -176,4 +176,29 @@ var entityManager = entityManagerFactory.createEntityManager(
 		ReadOnlyMode.READ_ONLY
 );
 
+[[safe-mode]]
+== Safe Mode Validator
+
+8.0 introduces an opt-in "safe mode" for HQL and Criteria queries, designed to restrict potentially unsafe query operations. This feature is particularly valuable for applications that expose Hibernate's `SessionFactory` to Large Language Models (LLMs) through various integrations, as well as for security-conscious organizations and multi-tenant applications.
+
+When safe mode is enabled, Hibernate blocks the following operations:
+
+* The `sql()` function - prevents arbitrary SQL syntax execution at runtime
+* The `function()` function - blocks explicit arbitrary function calls
+* The `column()` function - prevents arbitrary table column access
+* Unknown function calls - Hibernate will reject any function call that hasn't been explicitly registered with the `Dialect`
+
+To use custom functions in safe mode, they must be explicitly registered via `org.hibernate.boot.model.FunctionContributor`.
+
+Safe mode is disabled by default and can be enabled using:
+
+[source,properties]
+----
+hibernate.query.safe_mode_enabled=true
+----
+
+When safe mode is enabled and an unsafe operation is attempted, Hibernate will throw an exception indicating which function or operation is not allowed.
+
+
+
 ----

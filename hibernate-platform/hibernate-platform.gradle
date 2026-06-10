@@ -13,8 +13,6 @@ dependencies {
         api project( ":hibernate-testing" )
         api "org.hibernate:hibernate-testing:$version"
 
-        api project( ":hibernate-envers" )
-        api "org.hibernate:hibernate-envers:$version"
         api project( ":hibernate-spatial" )
         api "org.hibernate:hibernate-spatial:$version"
         api project( ":hibernate-vector" )

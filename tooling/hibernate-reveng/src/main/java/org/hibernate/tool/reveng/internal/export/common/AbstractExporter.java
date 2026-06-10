@@ -12,7 +12,6 @@ import org.hibernate.tool.reveng.api.export.ArtifactCollector;
 import org.hibernate.tool.reveng.api.export.Exporter;
 import org.hibernate.tool.reveng.api.export.ExporterConstants;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.reveng.internal.export.hbm.Cfg2HbmTool;
 import org.hibernate.tool.reveng.internal.export.java.Cfg2JavaTool;
 import org.jboss.logging.Logger;
 
@@ -39,11 +38,11 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 
 	private Iterator<Entry<Object, Object>> iterator;
 
-	private final Cfg2HbmTool c2h;
+	private final MappingTemplateHelper c2h;
 	private final Cfg2JavaTool c2j;
 
 	public AbstractExporter() {
-		c2h = new Cfg2HbmTool();
+		c2h = new MappingTemplateHelper();
 		c2j = new Cfg2JavaTool();
 		properties.put(ARTIFACT_COLLECTOR, new DefaultArtifactCollector());
 		properties.put(TEMPLATE_PATH, new String[0]);
@@ -76,7 +75,7 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 		return this.getClass().getName();
 	}
 
-	public Cfg2HbmTool getCfg2HbmTool() {
+	public MappingTemplateHelper getMappingTemplateHelper() {
 		return c2h;
 	}
 
@@ -145,7 +144,7 @@ public abstract class AbstractExporter implements Exporter, ExporterConstants {
 	protected void setupContext() {
 		getTemplateHelper().setupContext();
 		getTemplateHelper().putInContext("exporter", this);
-		getTemplateHelper().putInContext("c2h", getCfg2HbmTool());
+		getTemplateHelper().putInContext("c2h", getMappingTemplateHelper());
 		getTemplateHelper().putInContext("c2j", getCfg2JavaTool());
 		if(getOutputDirectory()!=null) {
 			getTemplateHelper().putInContext("outputdir", getOutputDirectory());

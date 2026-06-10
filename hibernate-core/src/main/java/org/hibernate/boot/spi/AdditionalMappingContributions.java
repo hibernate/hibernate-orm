@@ -7,7 +7,6 @@ package org.hibernate.boot.spi;
 import java.io.InputStream;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
@@ -37,16 +36,6 @@ public interface AdditionalMappingContributions {
 	 * Contribute mappings from the InputStream containing an XML mapping document.
 	 */
 	void contributeBinding(InputStream xmlStream);
-
-	/**
-	 * Contribute mappings in the form of {@code hbm.xml} JAXB bindings.
-	 *
-	 * @deprecated {@code hbm.xml} mapping file support is deprecated.  Use
-	 * {@linkplain #contributeBinding(org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl) extended orm.xml}
-	 * bindings instead.
-	 */
-	@Deprecated
-	void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding);
 
 	/**
 	 * Contribute mappings in the form of (extended) {@code orm.xml} JAXB bindings

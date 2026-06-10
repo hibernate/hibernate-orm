@@ -36,45 +36,45 @@ public class SchemaExportCommandLineTest {
 
 	@Test
 	public void testParseImportFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--import=import.sql", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--import=import.sql", "test.mapping.xml"});
 		assertEquals("import.sql", getField(args, "importFile"));
 	}
 
 	@Test
 	public void testParseConfigFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--config=hibernate.cfg.xml", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--config=hibernate.cfg.xml", "test.mapping.xml"});
 		assertEquals("hibernate.cfg.xml", getField(args, "cfgXmlFile"));
 	}
 
 	@Test
 	public void testParseImplicitNamingFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--implicit-naming=com.example.MyStrategy", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--implicit-naming=com.example.MyStrategy", "test.mapping.xml"});
 		assertEquals("com.example.MyStrategy", getField(args, "implicitNamingStrategyImplName"));
 	}
 
 	@Test
 	public void testParsePhysicalNamingFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--physical-naming=com.example.MyPhysical", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--physical-naming=com.example.MyPhysical", "test.mapping.xml"});
 		assertEquals("com.example.MyPhysical", getField(args, "physicalNamingStrategyImplName"));
 	}
 
 	@Test
 	public void testParseNamingDeprecatedFlag() throws Exception {
 		// --naming= should trigger deprecation warning but not fail
-		Object args = parseArgs(new String[]{"--naming=com.example.Old", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--naming=com.example.Old", "test.mapping.xml"});
 		assertNotNull(args);
 	}
 
 	@Test
 	public void testParseCreateFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--create", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--create", "test.mapping.xml"});
 		// --create without --action= uses Action.interpret(drop=false, create=true) -> CREATE
 		assertEquals(SchemaExport.Action.CREATE, getField(args, "action"));
 	}
 
 	@Test
 	public void testParseQuietFlag() throws Exception {
-		Object args = parseArgs(new String[]{"--quiet", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--quiet", "test.mapping.xml"});
 		// --quiet disables script output
 		assertNotNull(args);
 	}
@@ -89,20 +89,20 @@ public class SchemaExportCommandLineTest {
 	}
 
 	@Test
-	public void testParseHbmAndJarMixed() throws Exception {
-		Object args = parseArgs(new String[]{"Person.hbm.xml", "entities.jar", "Address.hbm.xml"});
+	public void testParseMappingAndJarMixed() throws Exception {
+		Object args = parseArgs(new String[]{"Person.mapping.xml", "entities.jar", "Address.mapping.xml"});
 		@SuppressWarnings("unchecked")
-		java.util.List<String> hbmFiles = (java.util.List<String>) getField(args, "hbmXmlFiles");
+		java.util.List<String> mappingFiles = (java.util.List<String>) getField(args, "mappingFiles");
 		@SuppressWarnings("unchecked")
 		java.util.List<String> jarFiles = (java.util.List<String>) getField(args, "jarFiles");
-		assertEquals(2, hbmFiles.size());
+		assertEquals(2, mappingFiles.size());
 		assertEquals(1, jarFiles.size());
 	}
 
 	@Test
 	public void testParseDropAndCreateWithActionWarning() throws Exception {
 		// Both --drop and --action= specified: triggers warning
-		Object args = parseArgs(new String[]{"--drop", "--action=create", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--drop", "--action=create", "test.mapping.xml"});
 		// --action takes precedence
 		assertEquals(SchemaExport.Action.CREATE, getField(args, "action"));
 	}
@@ -110,13 +110,13 @@ public class SchemaExportCommandLineTest {
 	@Test
 	public void testParseTextAndTargetWarning() throws Exception {
 		// Both --text and --target= specified: triggers warning
-		Object args = parseArgs(new String[]{"--text", "--target=database", "test.hbm.xml"});
+		Object args = parseArgs(new String[]{"--text", "--target=database", "test.mapping.xml"});
 		assertNotNull(getField(args, "targetTypes"));
 	}
 
 	@Test
 	public void testParseDefaults() throws Exception {
-		Object args = parseArgs(new String[]{"test.hbm.xml"});
+		Object args = parseArgs(new String[]{"test.mapping.xml"});
 		assertFalse((boolean) getField(args, "halt"));
 		assertFalse((boolean) getField(args, "format"));
 		assertFalse((boolean) getField(args, "manageNamespaces"));

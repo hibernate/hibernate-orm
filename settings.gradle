@@ -117,7 +117,6 @@ buildCache {
 include 'hibernate-core'
 include 'hibernate-testing'
 
-include 'hibernate-envers'
 include 'hibernate-spatial'
 
 include 'hibernate-platform'

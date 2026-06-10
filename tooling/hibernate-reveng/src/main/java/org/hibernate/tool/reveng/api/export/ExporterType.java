@@ -11,8 +11,7 @@ public enum ExporterType {
 	DDL ("org.hibernate.tool.reveng.internal.export.ddl.DdlExporter"),
 	DOC ("org.hibernate.tool.reveng.internal.export.doc.DocExporter"),
 	GENERIC ("org.hibernate.tool.reveng.internal.export.common.GenericExporter"),
-	HBM ("org.hibernate.tool.reveng.internal.export.hbm.HbmExporter"),
-	HBM_LINT ("org.hibernate.tool.reveng.internal.export.lint.HbmLintExporter"),
+	LINT ("org.hibernate.tool.reveng.internal.export.lint.LintExporter"),
 	JAVA ("org.hibernate.tool.reveng.internal.export.java.JavaExporter"),
 	QUERY ("org.hibernate.tool.reveng.internal.export.query.QueryExporter");
 

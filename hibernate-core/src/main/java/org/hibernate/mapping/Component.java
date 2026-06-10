@@ -21,7 +21,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
@@ -854,8 +853,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		// to be able to sort the other side of the foreign key accordingly
 		// and also if the source is a XML mapping
 		// because XML mappings might refer to this through the defined order
-		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isEmbedded()
-				|| getBuildingContext() instanceof MappingDocument ) {
+		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isEmbedded() ) {
 			final var originalProperties = properties.toArray( new Property[0] );
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = new int[originalProperties.length];

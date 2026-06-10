@@ -4,24 +4,17 @@
  */
 package org.hibernate.orm.test.procedure;
 
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.jpa.HibernateHints;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
 import org.junit.jupiter.api.AfterEach;
@@ -35,7 +28,6 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -48,118 +40,21 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @RequiresDialect(PostgreSQLDialect.class)
 @SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support stored procedures")
-public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFunctionalTest {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class
-		};
-	}
+@DomainModel(
+		annotatedClasses = {Person.class, Phone.class},
+		xmlMappings = "org/hibernate/orm/test/procedure/PostgreSQLFunctionProcedureTest.xml"
+)
+@org.hibernate.testing.orm.junit.SessionFactory
+public class PostgreSQLFunctionProcedureTest {
 
 	@AfterEach
-	public void cleanupTestData() {
-		entityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncate();
-	}
-
-	@Override
-	public EntityManagerFactory produceEntityManagerFactory() {
-		EntityManagerFactoryBuilder entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				buildSettings()
-		);
-		Database database = entityManagerFactoryBuilder.metadata().getDatabase();
-		final Namespace namespace = database.getDefaultNamespace();
-		database.addAuxiliaryDatabaseObject(
-				new NamedAuxiliaryDatabaseObject(
-						"fn_count_phones",
-						namespace,
-						"CREATE OR REPLACE FUNCTION fn_count_phones( " +
-						"   IN personId bigint) " +
-						"   RETURNS bigint AS " +
-						"$BODY$ " +
-						"    DECLARE " +
-						"        phoneCount bigint; " +
-						"    BEGIN " +
-						"        SELECT COUNT(*) INTO phoneCount " +
-						"        FROM phone  " +
-						"        WHERE person_id = personId; " +
-						"        RETURN phoneCount;" +
-						"    END; " +
-						"$BODY$ " +
-						"LANGUAGE plpgsql;",
-						"drop function fn_count_phones(bigint)",
-						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
-				)
-		);
-		database.addAuxiliaryDatabaseObject(
-				new NamedAuxiliaryDatabaseObject(
-						"fn_phones",
-						namespace,
-						"CREATE OR REPLACE FUNCTION fn_phones(personId BIGINT) " +
-						"   RETURNS REFCURSOR AS " +
-						"$BODY$ " +
-						"    DECLARE " +
-						"        phones REFCURSOR; " +
-						"    BEGIN " +
-						"        OPEN phones FOR  " +
-						"            SELECT *  " +
-						"            FROM phone   " +
-						"            WHERE person_id = personId;  " +
-						"        RETURN phones; " +
-						"    END; " +
-						"$BODY$ " +
-						"LANGUAGE plpgsql",
-						"drop function fn_phones(bigint, bigint)",
-						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
-				)
-		);
-		database.addAuxiliaryDatabaseObject(
-				new NamedAuxiliaryDatabaseObject(
-						"singleRefCursor",
-						namespace,
-						"CREATE OR REPLACE FUNCTION singleRefCursor() " +
-						"   RETURNS REFCURSOR AS " +
-						"$BODY$ " +
-						"    DECLARE " +
-						"        p_recordset REFCURSOR; " +
-						"    BEGIN " +
-						"      OPEN p_recordset FOR SELECT 1; " +
-						"      RETURN p_recordset; " +
-						"    END; " +
-						"$BODY$ " +
-						"LANGUAGE plpgsql;",
-						"drop function singleRefCursor()",
-						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
-				)
-		);
-		database.addAuxiliaryDatabaseObject(
-				new NamedAuxiliaryDatabaseObject(
-						"fn_is_null",
-						namespace,
-						"CREATE OR REPLACE FUNCTION fn_is_null( " +
-						"   IN param varchar(255)) " +
-						"   RETURNS boolean AS " +
-						"$BODY$ " +
-						"    DECLARE " +
-						"        result boolean; " +
-						"    BEGIN " +
-						"        SELECT param is null INTO result; " +
-						"        RETURN result; " +
-						"    END; " +
-						"$BODY$ " +
-						"LANGUAGE plpgsql;",
-						"drop function fn_is_null(varchar)",
-						Set.of( PostgreSQLDialect.class.getName(), PostgresPlusDialect.class.getName() )
-				)
-		);
-		return entityManagerFactoryBuilder.build();
+	public void cleanupTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@BeforeEach
-	public void init() {
-		inTransaction( entityManager -> {
+	public void init(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Person person1 = new Person( 1L, "John Doe" );
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
@@ -181,8 +76,8 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 	}
 
 	@Test
-	public void testFunctionProcedureOutParameter() {
-		inTransaction( entityManager -> {
+	public void testFunctionProcedureOutParameter(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "fn_count_phones", Long.class );
 			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
 			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
@@ -196,8 +91,8 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 	}
 
 	@Test
-	public void testFunctionProcedureRefCursor() {
-		inTransaction( entityManager -> {
+	public void testFunctionProcedureRefCursor(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "fn_phones" );
 			query.registerStoredProcedureParameter( 1, Long.class, ParameterMode.IN );
 			query.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
@@ -209,8 +104,8 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 	}
 
 	@Test
-	public void testFunctionProcedureRefCursorOld() {
-		inTransaction( entityManager -> {
+	public void testFunctionProcedureRefCursorOld(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "fn_phones" );
 			query.registerStoredProcedureParameter( 1, void.class, ParameterMode.REF_CURSOR );
 			query.registerStoredProcedureParameter( 2, Long.class, ParameterMode.IN );
@@ -223,8 +118,8 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 	}
 
 	@Test
-	public void testFunctionWithJDBC() {
-		inTransaction( entityManager -> {
+	public void testFunctionWithJDBC(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap( Session.class );
 			Long phoneCount = session.doReturningWork( connection -> {
 				CallableStatement function = null;
@@ -247,9 +142,8 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 	@Test
 	@JiraKey(value = "HHH-11863")
-	public void testSysRefCursorAsOutParameter() {
-
-		inTransaction( entityManager -> {
+	public void testSysRefCursorAsOutParameter(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			Integer value = null;
 
 			Session session = entityManager.unwrap( Session.class );
@@ -291,8 +185,8 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 	@Test
 	@JiraKey(value = "HHH-11863")
-	public void testSysRefCursorAsOutParameterOld() {
-		inTransaction( entityManager -> {
+	public void testSysRefCursorAsOutParameterOld(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			StoredProcedureQuery function = entityManager.createStoredProcedureQuery( "singleRefCursor" );
 			function.registerStoredProcedureParameter( 1, void.class, ParameterMode.REF_CURSOR );
 			function.setHint( HibernateHints.HINT_CALLABLE_FUNCTION, "true" );
@@ -317,9 +211,8 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 	@Test
 	@JiraKey(value = "HHH-12905")
-	public void testFunctionProcedureNullParameterHibernate() {
-
-		inTransaction( entityManager -> {
+	public void testFunctionProcedureNullParameterHibernate(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "fn_is_null" );
 			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
@@ -331,7 +224,7 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 			assertTrue( result );
 		} );
 
-		inTransaction( entityManager -> {
+		factoryScope.inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "fn_is_null" );
 			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
@@ -346,9 +239,8 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 
 	@Test
 	@JiraKey(value = "HHH-12905")
-	public void testFunctionProcedureNullParameterHibernateWithoutEnablePassingNulls() {
-
-		inTransaction( entityManager -> {
+	public void testFunctionProcedureNullParameterHibernateWithoutEnablePassingNulls(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "fn_is_null" );
 			procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );
@@ -362,10 +254,9 @@ public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFu
 	}
 
 	@Test
-	public void testFunctionProcedureNullParameterHibernateWithoutSettingTheParameter() {
-
+	public void testFunctionProcedureNullParameterHibernateWithoutSettingTheParameter(SessionFactoryScope factoryScope) {
 		IllegalArgumentException exception = assertThrows( IllegalArgumentException.class,
-				() -> inTransaction( entityManager -> {
+				() -> factoryScope.inTransaction( entityManager -> {
 					ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 							.createStoredProcedureCall( "fn_is_null" );
 					procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );

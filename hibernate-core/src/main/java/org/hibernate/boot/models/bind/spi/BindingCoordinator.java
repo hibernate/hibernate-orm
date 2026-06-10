@@ -25,7 +25,6 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.boot.model.internal.AnnotationHelper;
 import org.hibernate.boot.model.internal.GeneratorParameters;
 import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.models.AnnotationPlacementException;
@@ -55,7 +54,6 @@ import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.SequenceGeneratorRegistration;
 import org.hibernate.boot.models.categorize.spi.TableGeneratorRegistration;
 import org.hibernate.boot.models.categorize.spi.UserTypeRegistration;
-import org.hibernate.generator.Generator;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.RootClass;
@@ -427,14 +425,10 @@ public class BindingCoordinator {
 	private IdentifierGeneratorDefinition buildGenericGeneratorDefinition(GenericGeneratorRegistration registration) {
 		final IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
 		definitionBuilder.setName( registration.name() );
-		final Class<? extends Generator> generatorClass = registration.configuration().type();
-		final String strategy = generatorClass.equals( Generator.class )
-				? registration.configuration().strategy()
-				: generatorClass.getName();
-		if ( isNotEmpty( strategy ) ) {
-			definitionBuilder.setStrategy( strategy );
+		if ( isNotEmpty( registration.strategy() ) ) {
+			definitionBuilder.setStrategy( registration.strategy() );
 		}
-		definitionBuilder.addParams( AnnotationHelper.extractParameterMap( registration.configuration().parameters() ) );
+		definitionBuilder.addParams( registration.parameters() );
 		return definitionBuilder.build();
 	}
 

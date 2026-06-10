@@ -18,13 +18,12 @@ import jakarta.persistence.Table;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +40,8 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 	private File createSchema;
 	private File dropSchema;
 
-	private EntityManagerFactoryBuilder entityManagerFactoryBuilder;
+	private PersistenceUnitDescriptor persistenceUnitDescriptor;
+	private Map<String, Object> config;
 
 	protected Map<String, Object> getConfig() {
 		final Map<String, Object> config = PropertiesHelper.map( Environment.getProperties() );
@@ -63,24 +63,15 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 		createSchema.deleteOnExit();
 		dropSchema.deleteOnExit();
 
-		entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-				new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
-				getConfig()
-		);
-	}
-
-	@AfterEach
-	public void destroy() {
-		if ( entityManagerFactoryBuilder != null ) {
-			entityManagerFactoryBuilder.cancel();
-		}
+		persistenceUnitDescriptor = new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		config = getConfig();
 	}
 
 	@Test
 	@JiraKey(value = "HHH-10972")
 	public void testEncoding() throws Exception {
 
-		entityManagerFactoryBuilder.generateSchema();
+		SessionFactoryBootstrap.generateSchema( persistenceUnitDescriptor, config );
 
 		final String fileContent = new String( Files.readAllBytes( createSchema.toPath() ) )
 				.toLowerCase();

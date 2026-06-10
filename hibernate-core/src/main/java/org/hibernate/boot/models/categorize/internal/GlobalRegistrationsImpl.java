@@ -877,7 +877,10 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	private Map<String,String> extractParameterMap(org.hibernate.annotations.CollectionTypeRegistration source) {
-		final Parameter[] parameters = source.parameters();
+		return extractParameterMap( source.parameters() );
+	}
+
+	private Map<String,String> extractParameterMap(Parameter[] parameters) {
 		if ( parameters.length == 0 ) {
 			return Collections.emptyMap();
 		}
@@ -1149,23 +1152,23 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			return;
 		}
 
-		genericGenerators.forEach( (generator) -> {
-			final GenericGenerator annotationUsage = makeAnnotation(
-					GenericGenerator.class,
-					Map.of(
-							"name", generator.getName(),
-							"strategy", generator.getClazz()
-					)
-			);
-
-			// todo : update the mapping.xsd to account for new @GenericGenerator definition
-
-			collectGenericGenerator( new GenericGeneratorRegistration( generator.getName(), annotationUsage ) );
-		} );
+		genericGenerators.forEach( (generator) -> collectGenericGenerator(
+				new GenericGeneratorRegistration(
+						generator.getName(),
+						generator.getClazz(),
+						extractParameterMap( generator.getParameters() )
+				)
+		) );
 	}
 
 	public void collectGenericGenerator(GenericGenerator usage) {
-		collectGenericGenerator( new GenericGeneratorRegistration( usage.name(), usage ) );
+		collectGenericGenerator(
+				new GenericGeneratorRegistration(
+						usage.type().getName(),
+						usage.type().getName(),
+						extractParameterMap( usage.parameters() )
+				)
+		);
 	}
 
 	public void collectGenericGenerator(GenericGeneratorRegistration generatorRegistration) {

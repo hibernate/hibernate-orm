@@ -19,14 +19,12 @@ import java.util.regex.Pattern;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +37,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SchemaScriptFileGenerationTest {
 	private File createSchema;
 	private File dropSchema;
-	private EntityManagerFactoryBuilder entityManagerFactoryBuilder;
+	private PersistenceUnitDescriptor persistenceUnitDescriptor;
+	private Map<String, Object> config;
 
 	@BeforeEach
 	public void setUp() throws IOException {
@@ -48,24 +47,15 @@ public class SchemaScriptFileGenerationTest {
 		createSchema.deleteOnExit();
 		dropSchema.deleteOnExit();
 
-		entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				getConfig()
-		);
-	}
-
-	@AfterEach
-	public void destroy() {
-		if ( entityManagerFactoryBuilder != null ) {
-			entityManagerFactoryBuilder.cancel();
-		}
+		persistenceUnitDescriptor = buildPersistenceUnitDescriptor();
+		config = getConfig();
 	}
 
 	@Test
 	@JiraKey(value = "10601")
 	public void testGenerateSchemaDoesNotProduceTheSameStatementTwice() throws Exception {
 
-		entityManagerFactoryBuilder.generateSchema();
+		SessionFactoryBootstrap.generateSchema( persistenceUnitDescriptor, config );
 
 		final String fileContent = new String( Files.readAllBytes( createSchema.toPath() ) ).toLowerCase();
 

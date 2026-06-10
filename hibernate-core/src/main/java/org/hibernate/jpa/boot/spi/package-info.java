@@ -4,10 +4,13 @@
  */
 
 /**
- * An SPI used to {@linkplain org.hibernate.jpa.boot.spi.Bootstrap initiate}
+ * Legacy SPI used to {@linkplain org.hibernate.jpa.boot.spi.Bootstrap initiate}
  * and {@linkplain org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder control}
  * the JPA bootstrap process, along with SPI interfaces allowing certain sorts of
  * extensions to be contributed during the bootstrap process.
+ * <p>
+ * One-shot bootstrap entry points should use
+ * {@link org.hibernate.boot.orchestration.SessionFactoryBootstrap}.
  *
  * @author Steve Ebersole
  */

@@ -4,8 +4,8 @@
  */
 package org.hibernate.boot.models.source;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.PersistenceConfiguration;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -50,17 +50,17 @@ public record AvailableResources(
 		Collection<ClassDetails> packageDetails,
 		Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings) {
 
-	@NonNull
+	@Nonnull
 	public Collection<ClassDetails> managedClassDetails() {
 		return managedClassDetails == null ? Collections.emptyList() : managedClassDetails;
 	}
 
-	@NonNull
+	@Nonnull
 	public Collection<ClassDetails> packageDetails() {
 		return packageDetails == null ? Collections.emptyList() : packageDetails;
 	}
 
-	@NonNull
+	@Nonnull
 	public Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings() {
 		return xmlMappings == null ? Collections.emptyList() : xmlMappings;
 	}

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -20,6 +19,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.AnnotationPlacementException;
+import org.hibernate.boot.models.annotations.spi.Commentable;
 import org.hibernate.boot.models.bind.internal.BindingHelper;
 import org.hibernate.boot.models.bind.internal.InLineView;
 import org.hibernate.boot.models.bind.internal.PhysicalTable;
@@ -283,13 +283,13 @@ public class TableBinder {
 		);
 	}
 
-	private Comment findCommentAnnotation(
+	private Commentable findCommentAnnotation(
 			EntityTypeMetadata type,
 			Identifier logicalTableName,
 			boolean isPrimary) {
 		if ( isPrimary ) {
-			final Comment unnamed = type.getClassDetails().getNamedAnnotationUsage(
-					Comment.class,
+			final Commentable unnamed = type.getClassDetails().getNamedAnnotationUsage(
+					Commentable.class,
 					"",
 					"on",
 					bindingContext.getBootstrapContext().getModelsContext()
@@ -300,7 +300,7 @@ public class TableBinder {
 		}
 
 		return type.getClassDetails().getNamedAnnotationUsage(
-				Comment.class,
+				Commentable.class,
 				logicalTableName.getCanonicalName(),
 				"on",
 				bindingContext.getBootstrapContext().getModelsContext()
@@ -605,9 +605,9 @@ public class TableBinder {
 	}
 
 
-	private void applyComment(Table table, TableSource tableSource, Comment commentAnn) {
+	private void applyComment(Table table, TableSource tableSource, Commentable commentAnn) {
 		if ( commentAnn != null ) {
-			table.setComment( commentAnn.value() );
+			table.setComment( commentAnn.comment() );
 		}
 		else if ( tableSource != null ) {
 			final String comment = tableSource.comment();

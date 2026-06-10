@@ -1,0 +1,99 @@
+= ORM 9 Boot Model Design Notes
+:toc:
+
+This directory collects design notes for the ORM 9 boot-model work.
+The documents are intentionally not all the same kind of artifact: some describe
+the desired end state, some record the current implementation plan, and some
+track follow-up work discovered while integrating the prototype into ORM.
+
+Use this index as the starting point when deciding which document to read or
+update.
+
+== Bootstrap Design and Plan
+
+link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`]
+
+This is the main end-state design note for building a `SessionFactory` /
+`EntityManagerFactory` through an explicit pipeline of named products.  Read this
+when you want the intended architecture: entry points, settings, source products,
+domain-model products, metadata production, and the eventual SessionFactory
+handoff.
+
+Update this document when the target design changes.  Avoid using it as a work
+log; detailed implementation notes belong in the plan.
+
+link:session-factory-bootstrap-plan.adoc[`session-factory-bootstrap-plan.adoc`]
+
+This is the ongoing implementation plan and work log for the SessionFactory
+bootstrap slice.  It works backward from the current `SessionFactoryImpl`
+constructor boundary and records what each compatibility adapter or phase needs
+to prove before the new pipeline can replace legacy bootstrap paths.
+
+Update this document when a concrete slice is started, completed, or reshaped.
+It is the right place for current status, next steps, constructor dependency
+audits, and compatibility pressure points.
+
+link:orm-bootstrap-direction.adoc[`orm-bootstrap-direction.adoc`]
+
+This is a historical direction note from the early PoC.  It explains why the
+work moved toward a normalized source model, explicit settings resolution,
+`AvailableResources`, categorization, and phased binding.
+
+Read it for background and rationale.  Prefer the design and plan documents
+above for the current target.
+
+== Model Binding and Integration
+
+link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
+
+This is the orientation guide for people changing the boot-model pipeline.  It
+explains the source-to-categorization-to-binding flow, package layout, binding
+phases, pending state, source descriptors, and common traps.
+
+Read this first when making binder, categorizer, XML preprocessing, or source
+collection changes.  Update it when package structure, phase ordering, or the
+mental model for new contributors changes.
+
+link:orm-integration-notes.adoc[`orm-integration-notes.adoc`]
+
+This tracks concrete `org.hibernate.mapping` and ORM-internal API changes
+suggested by the phased binder.  These are not merely missing annotation
+features; they are integration pressure points where the prototype exposed a
+better shape for ORM proper.
+
+Use this document when work crosses the boundary between the boot-model binder
+and existing ORM mapping structures.  Examples include custom SQL mutation
+storage, collection key / primary-key / foreign-key creation, table-key FK
+metadata, source-model facts on mapping values, property-ref target resolution,
+and derived identifier phase ordering.
+
+link:remaining-binding-gaps.adoc[`remaining-binding-gaps.adoc`]
+
+This is the model-building backlog.  It tracks known gaps in source discovery,
+annotation/XML categorization, phased binding, and production of
+`org.hibernate.mapping` metadata.
+
+Use this document for missing mapping support and coverage gaps.  Items here may
+eventually move into `orm-integration-notes.adoc` if they turn out to require
+mapping-model API changes, but they should start here when the local prototype
+story is still unclear.
+
+== How To Choose
+
+If the question is "what should the final bootstrap architecture look like?",
+start with `session-factory-bootstrap-design.adoc`.
+
+If the question is "what are we doing next in this branch?", start with
+`session-factory-bootstrap-plan.adoc`.
+
+If the question is "why did the PoC take this shape?", read
+`orm-bootstrap-direction.adoc`.
+
+If the question is "how does the model-binding pipeline work?", read
+`new-contributor-model-binding-guide.adoc`.
+
+If the question is "what ORM mapping API change would make this cleaner?", use
+`orm-integration-notes.adoc`.
+
+If the question is "what mapping support is still missing?", use
+`remaining-binding-gaps.adoc`.

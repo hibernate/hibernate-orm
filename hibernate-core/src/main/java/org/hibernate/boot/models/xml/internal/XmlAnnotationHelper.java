@@ -136,6 +136,7 @@ import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
@@ -652,8 +653,7 @@ public class XmlAnnotationHelper {
 				HibernateAnnotations.GENERIC_GENERATOR,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		generatorAnn.name( "" );
-		generatorAnn.strategy( jaxbGenerator.getClazz() );
+		generatorAnn.type( generatorClass( jaxbGenerator, xmlDocumentContext ) );
 
 		final List<JaxbConfigurationParameterImpl> jaxbParameters = jaxbGenerator.getParameters();
 		if ( isEmpty( jaxbParameters ) ) {
@@ -669,6 +669,21 @@ public class XmlAnnotationHelper {
 			}
 			generatorAnn.parameters( parameters );
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Class<? extends Generator> generatorClass(
+			JaxbGenericIdGeneratorImpl jaxbGenerator,
+			XmlDocumentContext xmlDocumentContext) {
+		final Class<?> generatorClass = xmlDocumentContext.getBootstrapContext()
+				.getClassLoaderService()
+				.classForName( jaxbGenerator.getClazz() );
+		if ( !Generator.class.isAssignableFrom( generatorClass ) ) {
+			throw new AnnotationException(
+					"Generic generator class '" + generatorClass.getName() + "' does not implement 'Generator'"
+			);
+		}
+		return (Class<? extends Generator>) generatorClass;
 	}
 
 	public static void applyAttributeOverrides(

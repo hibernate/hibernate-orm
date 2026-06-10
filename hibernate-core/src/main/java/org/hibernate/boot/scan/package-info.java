@@ -8,7 +8,7 @@
 /// {@linkplain org.hibernate.jpa.HibernatePersistenceConfiguration}.
 /// Designed with use from integrations in mind as well.
 ///
-/// @see org.hibernate.jpa.boot.internal.PersistenceConfigurationBootstrapAdapter
+/// @see org.hibernate.boot.orchestration.SessionFactoryBootstrap
 ///
 /// @author Steve Ebersole
 package org.hibernate.boot.scan;

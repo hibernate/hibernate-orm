@@ -21,6 +21,12 @@ import jakarta.persistence.FetchType;
 
 import static org.hibernate.cfg.AvailableSettings.CLASS_CACHE_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.COLLECTION_CACHE_PREFIX;
+import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_MODE;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_JTA_DATASOURCE;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_NON_JTA_DATASOURCE;
+import static org.hibernate.cfg.PersistenceSettings.JAKARTA_TRANSACTION_TYPE;
+import static org.hibernate.cfg.PersistenceSettings.PERSISTENCE_UNIT_NAME;
+import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 
 /// Resolves the subset of bootstrap settings used while collecting,
 /// categorizing, and binding boot-model sources.
@@ -143,6 +149,20 @@ public class BootstrapSettingsResolver {
 			Map<?, ?> integrationSettings) {
 		final var resolvedConfigurationValues = copyEnvironmentProperties();
 		overlay( persistenceUnitDescriptor.getProperties(), resolvedConfigurationValues );
+		putIfNonNull( resolvedConfigurationValues, PERSISTENCE_UNIT_NAME, persistenceUnitDescriptor.getName() );
+		putIfNonNull(
+				resolvedConfigurationValues,
+				JAKARTA_TRANSACTION_TYPE,
+				persistenceUnitDescriptor.getPersistenceUnitTransactionType()
+		);
+		putIfNonNull( resolvedConfigurationValues, JAKARTA_JTA_DATASOURCE, persistenceUnitDescriptor.getJtaDataSource() );
+		putIfNonNull(
+				resolvedConfigurationValues,
+				JAKARTA_NON_JTA_DATASOURCE,
+				persistenceUnitDescriptor.getNonJtaDataSource()
+		);
+		putIfNonNull( resolvedConfigurationValues, JAKARTA_VALIDATION_MODE, persistenceUnitDescriptor.getValidationMode() );
+		putIfNonNull( resolvedConfigurationValues, JAKARTA_SHARED_CACHE_MODE, persistenceUnitDescriptor.getSharedCacheMode() );
 		overlay( integrationSettings, resolvedConfigurationValues );
 		return createResolvedSettings(
 				resolvedConfigurationValues,
@@ -188,6 +208,12 @@ public class BootstrapSettingsResolver {
 				target.put( key.toString(), value );
 			}
 		} );
+	}
+
+	private static void putIfNonNull(Map<String, Object> target, String key, Object value) {
+		if ( value != null ) {
+			target.putIfAbsent( key, value );
+		}
 	}
 
 	private static boolean resolveXmlMappingEnabled(Map<String, Object> configurationValues) {

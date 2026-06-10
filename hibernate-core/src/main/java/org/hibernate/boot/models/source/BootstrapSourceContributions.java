@@ -12,6 +12,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.scan.spi.ScanningResult;
 import org.hibernate.boot.settings.ResolvedBootstrapSettings;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import jakarta.persistence.PersistenceConfiguration;
 
@@ -85,6 +86,18 @@ public record BootstrapSourceContributions(
 		return new BootstrapSourceContributions(
 				persistenceConfiguration.managedClasses(),
 				persistenceConfiguration.mappingFiles()
+		);
+	}
+
+	/// Adapts Hibernate's persistence-unit descriptor abstraction to neutral
+	/// source contributions.
+	public static BootstrapSourceContributions from(PersistenceUnitDescriptor persistenceUnitDescriptor) {
+		return new BootstrapSourceContributions(
+				List.of(),
+				persistenceUnitDescriptor.getAllClassNames(),
+				List.of(),
+				persistenceUnitDescriptor.getMappingFileNames(),
+				List.of()
 		);
 	}
 

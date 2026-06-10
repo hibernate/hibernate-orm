@@ -34,15 +34,196 @@ inline flow from `EntityManagerFactoryBuilderImpl` and `MetadataBuildingProcess`
 
 First, a few assumptions we will be working under...
 
-* We no longer need the split in building the EMF from JPA container.  This was something we did for Wild Fly to address a gap in the EE and JPA spec which should no longer be an issue.
-* We will need to come back and address other Hibernate projects concerns.  Some of them contributor specialized builders, and we need to make sure those needs are addressed.
+* We no longer need the 2-phase split in building the EMF from JPA container.  This was something we did for WildFly to address a gap in the EE and JPA spec which should no longer be an issue.
+* We will need to come back and address other Hibernate projects (Search, Reactive, etc) concerns.  Some of them contribute specialized builders, and we need to make sure those underlying needs are addressed.
 * Limit set of bootstrap entries -
-** JPA "SE boostrap" - `Persistence`
-** JPA "SE boostrap" - `(Hibernate)PersistenceConfiguration`
-** JPA "EE bootstrap" - Ultimately `PeristenceUnitDescriptor`
+** JPA "SE bootstrap" - `Persistence`
+** JPA "SE bootstrap" - `(Hibernate)PersistenceConfiguration`
+** JPA "EE bootstrap" - Ultimately `PersistenceUnitDescriptor`
 ** Legacy `Configuration`, but deprecated in favor of `HibernatePersistenceConfiguration`
 ** Maybe some form that accepts `AvailableResources` + settings?
 
+
+== Current Bootstrap Entry-Point Status
+
+This branch has moved the main JPA provider entry points onto
+`org.hibernate.boot.orchestration.SessionFactoryBootstrap`, but several older
+paths remain deliberately alive.
+
+=== Canonical Path On This Branch
+
+`org.hibernate.boot.orchestration.SessionFactoryBootstrap` is currently the
+canonical one-shot bootstrap facade for the new pipeline.
+
+It has entry-point adapters for:
+
+* `jakarta.persistence.PersistenceConfiguration`
+* `org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor` plus integration
+  settings
+* schema generation for the same two source shapes
+* already-resolved `SessionFactoryBootstrapRequest`
+
+The `HibernatePersistenceProvider` public provider methods now use this facade
+for:
+
+* `createEntityManagerFactory(String, Map)`
+* `createContainerEntityManagerFactory(PersistenceUnitInfo, Map)`
+* `createEntityManagerFactory(PersistenceConfiguration)`
+* `generateSchema(String, Map)`
+* `generateSchema(PersistenceUnitInfo, Map)`
+* `generateSchema(PersistenceConfiguration)`
+
+This means the normal JPA SE, JPA EE/container, and
+`PersistenceConfiguration` provider paths are no longer routed through
+`EntityManagerFactoryBuilderImpl`.
+
+=== Remaining EntityManagerFactoryBuilder / Bootstrap Usage
+
+The following uses of `EntityManagerFactoryBuilder`,
+`EntityManagerFactoryBuilderImpl`, or `org.hibernate.jpa.boot.spi.Bootstrap`
+remain and need separate treatment.
+
+[cols="2,3,3,2", options="header"]
+|===
+| Area
+| Current use
+| Why it remains
+| Likely next action
+
+| `org.hibernate.jpa.boot.spi.Bootstrap`
+| Public static facade returning `EntityManagerFactoryBuilderImpl` for
+  `PersistenceUnitDescriptor`, `PersistenceUnitInfo`, persistence.xml `URL`,
+  and supplied class-loading variants.
+| Public SPI compatibility.  Integrations and tests may still call these
+  overloads directly.
+| Deprecate once `SessionFactoryBootstrap` and any replacement customization
+  hooks cover the documented use cases.
+
+| `HibernatePersistenceProvider`
+| Protected `getEntityManagerFactoryBuilder(...)` methods still delegate to
+  `Bootstrap`.
+| Integration compatibility.  These protected methods may be overridden or used
+  by downstream integrations even though the provider's public methods no
+  longer call them for normal EMF creation.
+| Audit known overrides, then either route through the new facade where possible
+  or deprecate with a replacement.
+
+| `hibernate-testing` JPA helpers
+| `EntityManagerFactoryBasedFunctionalTest` and `EntityManagerFactoryExtension`
+  still create EMFs through `Bootstrap#getEntityManagerFactoryBuilder(...).build()`.
+| Test infrastructure predates the new facade and still exercises JPA-style
+  descriptor bootstrap, integration settings, and extension-managed scopes.
+| Convert to `SessionFactoryBootstrap.build(PersistenceUnitDescriptor, Map)`
+  unless a test genuinely needs builder-specific behavior.
+
+| Tests asserting builder metadata or implementation details
+| Tests such as configuration-object/naming-strategy/cache-mode/bootstrap
+  checks cast to `EntityManagerFactoryBuilderImpl` or call `builder.metadata()`.
+| These tests assert legacy builder behavior, merged setting behavior,
+  metadata-builder contributor behavior, warning behavior, or pre-build metadata
+  state.
+| Split into tests of the specific product or behavior: settings resolution,
+  metadata resolution, contributor application, warning emission, or legacy SPI
+  compatibility.  Do not preserve general two-phase bootstrap for these tests.
+
+| Constants on `EntityManagerFactoryBuilderImpl`
+| Tests and annotations still refer to constants such as integrator-provider and
+  metadata-builder-contributor setting names.
+| The constants are currently the public names for integration settings, even if
+  the implementation class should stop being the conceptual owner.
+| Move setting-name ownership to a neutral settings/API type before retiring the
+  implementation class.
+|===
+
+=== Two-Phase Bootstrap Status
+
+The remaining two-phase shape is the legacy JPA builder SPI:
+
+[source,java]
+----
+EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder(...);
+MetadataImplementor metadata = builder.metadata();
+EntityManagerFactory emf = builder.build();
+----
+
+That pattern remains only because some compatibility tests and SPIs still expose
+or assert pre-build metadata.  The plan is to replace those cases with narrower
+product builders or assertions:
+
+* use `MetadataResolver` when the test needs finalized metadata;
+* use `BootstrapSettingsResolver` or `SessionFactorySettingsResolver` when the
+  test needs setting interpretation;
+* use source-contribution helpers when the test needs mapping/source discovery;
+* keep explicit legacy-SPI tests for `Bootstrap` and
+  `EntityManagerFactoryBuilder` until those APIs are formally deprecated or
+  removed.
+
+=== Other SessionFactory Build Paths Still In Use
+
+The new JPA orchestration path is not the only active way to build a
+`SessionFactory`.
+
+`Configuration`::
+`org.hibernate.cfg.Configuration#buildSessionFactory(...)` remains a native
+Hibernate API.  It collects properties, annotated classes, XML mappings,
+auxiliary database objects, type contributors, function contributors,
+attribute converters, naming strategies, interceptors, statement inspectors,
+tenant resolvers, observers, and other convenience registrations.  It then
+builds `Metadata`, obtains `Metadata#getSessionFactoryBuilder()`, applies
+factory-level customizations, and calls `SessionFactoryBuilder#build()`.
++
+This path should eventually converge on the same resolved settings/source/model
+products, but it must preserve native-specific convenience methods and builder
+customization behavior.
+
+`org.hibernate.boot.Metadata#buildSessionFactory()`::
+This is still a public convenience method.  In `MetadataImpl` it delegates to
+`getSessionFactoryBuilder().build()`.  `InFlightMetadataCollectorImpl`
+deliberately rejects this path, which is why the PoC finalizes metadata before
+factory construction.
+
+`org.hibernate.boot.SessionFactoryBuilder`::
+This public builder remains the central native customization point after
+metadata is built.  `MetadataImpl#getSessionFactoryBuilder()` creates the
+default builder through `SessionFactoryBuilderService` and still honors
+`SessionFactoryBuilderFactory` service-provider replacement.
++
+The new `org.hibernate.boot.orchestration.SessionFactoryBuilder` is an internal
+pipeline component with the same conceptual target but not the same API role.
+The public `org.hibernate.boot.SessionFactoryBuilder` cannot be folded into it
+without a compatibility plan for public builder methods and builder-factory
+replacement.
+
+Hibernate test infrastructure::
+The JUnit 5 `SessionFactoryExtension`, JUnit 4 core test bases, and many native
+tests still use `Metadata`, `Configuration`, or public
+`SessionFactoryBuilder`.  Those paths are useful coverage for native bootstrap
+features and should be migrated selectively, not mechanically.
+
+=== Recent Decisions Applied To Tests
+
+`PostgreSQLFunctionProcedureTest` is the current concrete example of how tests
+should move away from two-phase bootstrap pressure.  The test previously used
+builder metadata access to add PostgreSQL functions as auxiliary database
+objects before building the factory.  That was the wrong pressure on
+`SessionFactoryBootstrap`: the functions are mapping/source contributions, not
+a reason to preserve a general prepared factory bootstrap.
+
+The test now contributes the functions through Hibernate `mapping.xsd` XML using
+`entity-mappings/database-object`.  The resource uses the current mapping XML
+format, not legacy `hbm.xml`, because this branch is intentionally not carrying
+legacy HBM mappings forward in the boot-model path.
+
+This pattern should guide similar tests:
+
+* if the thing being asserted is mapping metadata, express it as a mapping
+  contribution or build metadata directly;
+* if the thing being asserted is settings interpretation, test the settings
+  resolver;
+* if the thing being asserted is runtime factory behavior, use one-shot
+  `SessionFactoryBootstrap.build(...)`;
+* avoid adding public or semi-public bootstrap phases just to let a test mutate
+  metadata between discovery and factory construction.
 
 == Current Constructor Responsibilities
 

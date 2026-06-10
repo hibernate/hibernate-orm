@@ -4,9 +4,9 @@
  */
 package org.hibernate.boot.models.categorize.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AccessType;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.OptimisticLockStyle;
 
 import jakarta.persistence.InheritanceType;
@@ -24,27 +24,27 @@ import jakarta.persistence.InheritanceType;
 /// @author Steve Ebersole
 public interface EntityHierarchy {
 	/// The hierarchy's root entity type.
-	@NonNull
+	@Nonnull
 	EntityTypeMetadata getRoot();
 
 	/// The highest visible identifiable type in this hierarchy, which might be a
 	/// mapped-superclass above the {@linkplain #getRoot() root entity}.
-	@NonNull
+	@Nonnull
 	IdentifiableTypeMetadata getAbsoluteRoot();
 
 	/// Visit each type in the hierarchy, top down starting from {@linkplain #getAbsoluteRoot()}
 	void forEachType(HierarchyTypeVisitor typeVisitor);
 
 	/// The inheritance strategy for the hierarchy.
-	@NonNull
+	@Nonnull
 	InheritanceType getInheritanceType();
 
 	/// The "default access-type" effective for the hierarchy.
 	/// See Jakarta Persistence section _2.3.1. Default Access Type_.
-	@NonNull
+	@Nonnull
 	AccessType getDefaultAccessType();
 
-	@NonNull
+	@Nonnull
 	KeyMapping getIdMapping();
 
 	@Nullable
@@ -57,15 +57,15 @@ public interface EntityHierarchy {
 	AttributeMetadata getTenantIdAttribute();
 
 	/// Style of optimistic locking for the hierarchy.
-	@NonNull
+	@Nonnull
 	OptimisticLockStyle getOptimisticLockStyle();
 
 	/// The caching configuration for entities in this hierarchy.
-	@NonNull
+	@Nonnull
 	CacheRegion getCacheRegion();
 
 	/// The caching configuration for this hierarchy's {@linkplain org.hibernate.annotations.NaturalId natural-id}
-	@NonNull
+	@Nonnull
 	NaturalIdCacheRegion getNaturalIdCacheRegion();
 
 	/// Describes a type's place in the hierarchy relative to the {@linkplain #getRoot() root entity}

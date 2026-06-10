@@ -36,7 +36,7 @@
  * Subpackages define a range of SPIs.
  * <ul>
  * <li>The subpackage {@link org.hibernate.jpa.boot.spi} contains the SPI of
- *     this persistence provider, including an SPI used to
+ *     this persistence provider, including legacy SPI used to
  *     {@linkplain org.hibernate.jpa.boot.spi.Bootstrap bootstrap} the JPA
  *     provider, and interfaces which may be implemented to contribute extensions
  *     during of the bootstrap process.

@@ -14,8 +14,7 @@ import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -23,7 +22,6 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -48,7 +46,8 @@ import static org.mockito.Mockito.when;
  */
 public class SchemaDatabaseFileGenerationFailureTest {
 	private Connection connection;
-	private EntityManagerFactoryBuilder entityManagerFactoryBuilder;
+	private PersistenceUnitDescriptor persistenceUnitDescriptor;
+	private Map<String, Object> config;
 
 	@BeforeEach
 	public void setUp() throws IOException, SQLException {
@@ -58,17 +57,8 @@ public class SchemaDatabaseFileGenerationFailureTest {
 		when( connection.createStatement() ).thenReturn( statement );
 		when( statement.execute( anyString() ) ).thenThrow( new SQLException( "Expected" ) );
 
-		entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				getConfig()
-		);
-	}
-
-	@AfterEach
-	public void destroy() {
-		if ( entityManagerFactoryBuilder != null ) {
-			entityManagerFactoryBuilder.cancel();
-		}
+		persistenceUnitDescriptor = buildPersistenceUnitDescriptor();
+		config = getConfig();
 	}
 
 	@Test
@@ -80,7 +70,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "on gauss we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
-			entityManagerFactoryBuilder.generateSchema();
+			SessionFactoryBootstrap.generateSchema( persistenceUnitDescriptor, config );
 			fail( "Should have thrown IOException" );
 		}
 		catch (Exception e) {

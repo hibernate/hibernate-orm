@@ -22,6 +22,9 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 /// [ResolvedSessionFactorySettings].
 ///
 /// @author Steve Ebersole
+///
+/// @deprecated This is a temporary adapter which is useful during migration to new SF bootstrap design.
+@Deprecated(forRemoval = true)
 public final class SessionFactoryOptionsAdapter {
 	private SessionFactoryOptionsAdapter() {
 	}

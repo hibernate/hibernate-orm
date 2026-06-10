@@ -10,8 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -48,7 +48,7 @@ public class MappedSuperclassType2Test {
 		final Map<String,Object> settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
-		try ( EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( pu, settings ).build() ) {
+		try ( EntityManagerFactory emf = SessionFactoryBootstrap.build( pu, settings ) ) {
 			ManagedType<SomeMappedSuperclass> type = emf.getMetamodel().managedType( SomeMappedSuperclass.class );
 			// the issue was in regards to throwing an exception, but also check for nullness
 			assertNotNull( type );

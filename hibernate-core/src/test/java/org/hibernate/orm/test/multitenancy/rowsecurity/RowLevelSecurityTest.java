@@ -32,6 +32,7 @@ import org.hibernate.dialect.rowsecurity.SQLServerRowLevelSecurity;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -410,13 +411,13 @@ class RowLevelSecurityTest {
 	}
 
 	public static class TenantCredentialsMapperImpl implements TenantCredentialsMapper<String> {
-		@Override
-		public String user(String tenantIdentifier) {
+		@Override @NonNull
+		public String user(@NonNull String tenantIdentifier) {
 			return tenantIdentifier;
 		}
 
-		@Override
-		public String password(String tenantIdentifier) {
+		@Override @NonNull
+		public String password(@NonNull String tenantIdentifier) {
 			return tenantIdentifier;
 		}
 	}

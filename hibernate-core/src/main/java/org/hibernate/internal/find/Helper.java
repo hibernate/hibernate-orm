@@ -9,10 +9,10 @@ import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TransactionRequiredException;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
-import org.hibernate.OrderingMode;
 import org.hibernate.Timeouts;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -130,7 +130,7 @@ public class Helper {
 		// results are ordered or unordered, defined by the OrderingMode option
 		final var orderingMode = determineOrderingMode( findOptions );
 
-		if ( orderingMode == OrderingMode.UNORDERED ) {
+		if ( orderingMode == FindMultipleOption.OrderingMode.UNORDERED ) {
 			for ( int i = 0; i < results.size(); i++ ) {
 				if ( results.get( i ) == null ) {
 					throw new EntityNotFoundException(
@@ -159,14 +159,14 @@ public class Helper {
 		}
 	}
 
-	private static OrderingMode determineOrderingMode(FindOption[] findOptions) {
+	private static FindMultipleOption.OrderingMode determineOrderingMode(FindOption[] findOptions) {
 		if ( findOptions != null ) {
 			for ( var findOption : findOptions ) {
-				if ( findOption instanceof OrderingMode requestedMode ) {
+				if ( findOption instanceof FindMultipleOption.OrderingMode requestedMode ) {
 					return requestedMode;
 				}
 			}
 		}
-		return OrderingMode.ORDERED;
+		return FindMultipleOption.OrderingMode.ORDERED;
 	}
 }

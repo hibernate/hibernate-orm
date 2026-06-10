@@ -8,10 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.KeyType;
-import org.hibernate.RemovalsMode;
-import org.hibernate.OrderingMode;
-import org.hibernate.SessionCheckMode;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -25,7 +23,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
-import static org.hibernate.OrderingMode.ORDERED;
+import static org.hibernate.FindMultipleOption.OrderingMode.ORDERED;
 
 /**
  * @author Steve Ebersole
@@ -106,9 +104,9 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					SessionCheckMode.ENABLED,
-					RemovalsMode.REPLACE,
-					OrderingMode.UNORDERED
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.REPLACE,
+					FindMultipleOption.OrderingMode.UNORDERED
 			);
 			assertThat( persons ).hasSize( 5 );
 			assertThat( persons ).containsNull();
@@ -123,8 +121,8 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					RemovalsMode.REPLACE,
-					OrderingMode.UNORDERED
+					FindMultipleOption.RemovalsMode.REPLACE,
+					FindMultipleOption.OrderingMode.UNORDERED
 			);
 			assertThat( persons ).hasSize( 5 );
 			assertThat( persons ).containsNull();
@@ -139,9 +137,9 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					SessionCheckMode.ENABLED,
-					RemovalsMode.INCLUDE,
-					OrderingMode.UNORDERED
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.INCLUDE,
+					FindMultipleOption.OrderingMode.UNORDERED
 			);
 			assertThat( persons ).hasSize( 5 );
 			assertThat( persons ).doesNotContainNull();
@@ -156,9 +154,9 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					SessionCheckMode.ENABLED,
-					RemovalsMode.EXCLUDE,
-					OrderingMode.UNORDERED
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.EXCLUDE,
+					FindMultipleOption.OrderingMode.UNORDERED
 			);
 			assertThat( persons ).hasSize( 4 );
 			assertThat( persons ).doesNotContainNull();
@@ -169,9 +167,9 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					SessionCheckMode.ENABLED,
-					RemovalsMode.EXCLUDE,
-					OrderingMode.UNORDERED
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.EXCLUDE,
+					FindMultipleOption.OrderingMode.UNORDERED
 			);
 			assertThat( persons ).hasSize( 3 );
 			assertThat( persons ).doesNotContainNull();
@@ -186,8 +184,8 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					RemovalsMode.EXCLUDE,
-					OrderingMode.UNORDERED
+					FindMultipleOption.RemovalsMode.EXCLUDE,
+					FindMultipleOption.OrderingMode.UNORDERED
 			);
 			assertThat( persons ).hasSize( 4 );
 			assertThat( persons ).doesNotContainNull();
@@ -198,8 +196,8 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					RemovalsMode.EXCLUDE,
-					OrderingMode.UNORDERED
+					FindMultipleOption.RemovalsMode.EXCLUDE,
+					FindMultipleOption.OrderingMode.UNORDERED
 			);
 			assertThat( persons ).hasSize( 3 );
 			assertThat( persons ).doesNotContainNull();
@@ -214,8 +212,8 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					SessionCheckMode.ENABLED,
-					RemovalsMode.EXCLUDE
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.EXCLUDE
 			);
 			assertThat( persons ).hasSize( 4 );
 			assertThat( persons ).doesNotContainNull();
@@ -226,8 +224,8 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					SessionCheckMode.ENABLED,
-					RemovalsMode.EXCLUDE
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.EXCLUDE
 			);
 			assertThat( persons ).hasSize( 3 );
 			assertThat( persons ).doesNotContainNull();
@@ -242,9 +240,9 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					SessionCheckMode.ENABLED,
-					RemovalsMode.INCLUDE,
-					OrderingMode.ORDERED
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.INCLUDE,
+					FindMultipleOption.OrderingMode.ORDERED
 			);
 			assertThat( persons ).hasSize( 5 );
 			assertThat( persons ).doesNotContainNull();
@@ -260,9 +258,9 @@ public class FindMultipleDocTests {
 			List<Person> persons = session.findMultiple(
 					Person.class,
 					List.of(1,2,3,4,5),
-					SessionCheckMode.ENABLED,
-					RemovalsMode.REPLACE,
-					OrderingMode.ORDERED
+					FindMultipleOption.SessionCheckMode.ENABLED,
+					FindMultipleOption.RemovalsMode.REPLACE,
+					FindMultipleOption.OrderingMode.ORDERED
 			);
 			assertThat( persons ).hasSize( 5 );
 			assertThat( persons ).containsNull();

@@ -9,15 +9,13 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdSynchronization;
-import org.hibernate.OrderingMode;
 import org.hibernate.ReadOnlyMode;
-import org.hibernate.RemovalsMode;
-import org.hibernate.SessionCheckMode;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -52,9 +50,9 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private GraphSemantic graphSemantic;
 
 	private BatchSize batchSize;
-	private SessionCheckMode sessionCheckMode = SessionCheckMode.DISABLED;
-	private RemovalsMode removalsMode = RemovalsMode.REPLACE;
-	protected OrderingMode orderingMode = OrderingMode.ORDERED;
+	private FindMultipleOption.SessionCheckMode sessionCheckMode = FindMultipleOption.SessionCheckMode.DISABLED;
+	private FindMultipleOption.RemovalsMode removalsMode = FindMultipleOption.RemovalsMode.REPLACE;
+	protected FindMultipleOption.OrderingMode orderingMode = FindMultipleOption.OrderingMode.ORDERED;
 
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
@@ -125,7 +123,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	}
 
 	@Override
-	public SessionCheckMode getSessionCheckMode() {
+	public FindMultipleOption.SessionCheckMode getSessionCheckMode() {
 		return sessionCheckMode;
 	}
 
@@ -136,29 +134,29 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 
 	@Override
 	public MultiIdentifierLoadAccess<T> enableSessionCheck(boolean enabled) {
-		this.sessionCheckMode = enabled ? SessionCheckMode.ENABLED : SessionCheckMode.DISABLED;
+		this.sessionCheckMode = enabled ? FindMultipleOption.SessionCheckMode.ENABLED : FindMultipleOption.SessionCheckMode.DISABLED;
 		return this;
 	}
 
 	@Override
-	public RemovalsMode getRemovalsMode() {
+	public FindMultipleOption.RemovalsMode getRemovalsMode() {
 		return removalsMode;
 	}
 
 	@Override
 	public MultiIdentifierLoadAccess<T> enableReturnOfDeletedEntities(boolean enabled) {
-		this.removalsMode = enabled ? RemovalsMode.INCLUDE : RemovalsMode.REPLACE;
+		this.removalsMode = enabled ? FindMultipleOption.RemovalsMode.INCLUDE : FindMultipleOption.RemovalsMode.REPLACE;
 		return this;
 	}
 
 	@Override
-	public OrderingMode getOrderingMode() {
+	public FindMultipleOption.OrderingMode getOrderingMode() {
 		return orderingMode;
 	}
 
 	@Override
 	public MultiIdentifierLoadAccess<T> enableOrderedReturn(boolean enabled) {
-		this.orderingMode = enabled ? OrderingMode.ORDERED : OrderingMode.UNORDERED;
+		this.orderingMode = enabled ? FindMultipleOption.OrderingMode.ORDERED : FindMultipleOption.OrderingMode.UNORDERED;
 		return this;
 	}
 

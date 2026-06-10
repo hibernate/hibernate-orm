@@ -5,11 +5,9 @@
 package org.hibernate.loader.ast.internal;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.OrderingMode;
-import org.hibernate.RemovalsMode;
-import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -85,7 +83,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	@Override
 	public final <K> List<T> load(K[] ids, MultiIdLoadOptions loadOptions, SharedSessionContractImplementor session) {
 		assert ids != null;
-		return loadOptions.getOrderingMode() == OrderingMode.ORDERED
+		return loadOptions.getOrderingMode() == FindMultipleOption.OrderingMode.ORDERED
 				? performOrderedMultiLoad( ids, loadOptions, session )
 				: performUnorderedMultiLoad( ids, loadOptions, session );
 	}
@@ -94,7 +92,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
-		assert loadOptions.getOrderingMode() == OrderingMode.UNORDERED;
+		assert loadOptions.getOrderingMode() == FindMultipleOption.OrderingMode.UNORDERED;
 		assert ids != null;
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.unorderedBatchLoadStarting( getLoadable().getEntityName() );
@@ -106,7 +104,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
-		assert loadOptions.getOrderingMode() == OrderingMode.ORDERED;
+		assert loadOptions.getOrderingMode() == FindMultipleOption.OrderingMode.ORDERED;
 		assert ids != null;
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.orderedMultiLoadStarting( getLoadable().getEntityName() );
@@ -189,7 +187,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			final Object result =
 					entity == null
 						// the entity is locally deleted, and the options ask that we not return such entities
-						|| loadOptions.getRemovalsMode() == RemovalsMode.REPLACE
+						|| loadOptions.getRemovalsMode() == FindMultipleOption.RemovalsMode.REPLACE
 								&& persistenceContext.getEntry( entity ).getStatus().isDeletedOrGone()
 							? null
 							: persistenceContext.proxyFor( entity );
@@ -211,7 +209,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			EntityKey entityKey,
 			List<Object> result,
 			int i) {
-		return ( loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED
+		return (loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED
 				|| loadOptions.isSecondLevelCacheCheckingEnabled() )
 			&& isLoadFromCaches( loadOptions, entityKey, lockOptions, result, i, session );
 	}
@@ -222,9 +220,9 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			LockOptions lockOptions,
 			List<Object> results, int i,
 			SharedSessionContractImplementor session) {
-		if ( loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED ) {
+		if ( loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED ) {
 			final var removalsMode = loadOptions.getRemovalsMode();
-			if ( removalsMode == RemovalsMode.EXCLUDE ) {
+			if ( removalsMode == FindMultipleOption.RemovalsMode.EXCLUDE ) {
 				// note, this method is only called from orderedMultiLoad()
 				throw new IllegalArgumentException( "RemovalsMode.EXCLUDE is incompatible with OrderingMode.ORDERED" );
 			}
@@ -234,7 +232,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			if ( entity != null ) {
 				// put a null in the results
 				final Object result =
-						loadOptions.getRemovalsMode() == RemovalsMode.INCLUDE
+						loadOptions.getRemovalsMode() == FindMultipleOption.RemovalsMode.INCLUDE
 							|| entry.isManaged()
 								? entity
 								: null;
@@ -301,7 +299,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			@Nonnull LockOptions lockOptions,
 			SharedSessionContractImplementor session,
 			ResolutionConsumer<R> resolutionConsumer) {
-		return loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED
+		return loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED
 			|| loadOptions.isSecondLevelCacheCheckingEnabled()
 				// the user requested that we exclude ids corresponding to already managed
 				// entities from the generated load SQL. So here we will iterate all
@@ -380,7 +378,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		// look for it in the Session first
 		final var entry = loadFromSessionCache( entityKey, lockOptions, GET, session );
 		final Object sessionEntity;
-		if ( loadOptions.getSessionCheckMode() == SessionCheckMode.ENABLED ) {
+		if ( loadOptions.getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED ) {
 			sessionEntity = entry.entity();
 			if ( sessionEntity != null && !entry.isManaged() ) {
 				switch ( loadOptions.getRemovalsMode() ) {

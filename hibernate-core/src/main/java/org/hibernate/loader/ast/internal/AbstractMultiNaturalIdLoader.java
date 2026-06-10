@@ -5,9 +5,8 @@
 package org.hibernate.loader.ast.internal;
 
 
+import org.hibernate.FindMultipleOption;
 import org.hibernate.LockOptions;
-import org.hibernate.OrderingMode;
-import org.hibernate.RemovalsMode;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -41,7 +40,7 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			return emptyList();
 		}
 		else {
-			return options.getOrderingMode() == OrderingMode.ORDERED
+			return options.getOrderingMode() == FindMultipleOption.OrderingMode.ORDERED
 					? performOrderedMultiLoad( naturalIds, options, session )
 					: performUnorderedMultiLoad( naturalIds, options, session );
 		}
@@ -116,7 +115,7 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			final Object result;
 			if ( entity == null
 				// the entity is locally deleted, and the options ask that we not return such entities
-				|| loadOptions.getRemovalsMode() == RemovalsMode.REPLACE
+				|| loadOptions.getRemovalsMode() == FindMultipleOption.RemovalsMode.REPLACE
 				&& context.getEntry( entity ).getStatus().isDeletedOrGone() ) {
 				result = null;
 			}
@@ -143,8 +142,8 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			LockOptions lockOptions,
 			Consumer<E> results ) {
 		final var removalsMode = loadOptions.getRemovalsMode();
-		if ( removalsMode == RemovalsMode.EXCLUDE
-				&& loadOptions.getOrderingMode() == OrderingMode.ORDERED ) {
+		if ( removalsMode == FindMultipleOption.RemovalsMode.EXCLUDE
+				&& loadOptions.getOrderingMode() == FindMultipleOption.OrderingMode.ORDERED ) {
 			throw new IllegalArgumentException( "RemovalsMode.EXCLUDE is incompatible with OrderingMode.ORDERED" );
 		}
 		final List<K> unresolvedIds = arrayList( naturalIds.length );
@@ -154,11 +153,11 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			if ( entity != null ) {
 				// Entity is already in the persistence context
 				final var entry = context.getEntry( entity );
-				if ( removalsMode == RemovalsMode.INCLUDE
+				if ( removalsMode == FindMultipleOption.RemovalsMode.INCLUDE
 						|| !entry.getStatus().isDeletedOrGone() ) {
 					// either a managed entry, or a deleted one with returnDeleted enabled
 					upgradeLock( entity, entry, lockOptions, session );
-					if ( removalsMode != RemovalsMode.EXCLUDE ) {
+					if ( removalsMode != FindMultipleOption.RemovalsMode.EXCLUDE ) {
 						final Object result = context.proxyFor( entity );
 						results.accept( (E) result );
 					}

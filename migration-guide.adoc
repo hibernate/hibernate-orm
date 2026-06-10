@@ -156,6 +156,18 @@ The API for `ProcedureCall` and `ProcedureOutputs` has been redesigned for a num
 * Clean up leakage of various SPI contracts into these API contracts.
 * Align with changes in Jakarta Persistence 4.0.
 
+[[FindMultipleOption]]
+=== FindMultipleOption
+
+The 3 enums which are implementors of `org.hibernate.FindMultipleOption` have been moved as inner enums of `org.hibernate.FindMultipleOption` itself :
+
+* `org.hibernate.OrderingMode` -> `org.hibernate.FindMultipleOption.OrderingMode`
+* `org.hibernate.SessionCheckMode` -> `org.hibernate.FindMultipleOption.SessionCheckMode`
+* `org.hibernate.RemovalsMode` -> `org.hibernate.FindMultipleOption.RemovalsMode`
+
+These enums were previously incubating.
+
+
 [[generic-generator]]
 === `@GenericGenerator`
 

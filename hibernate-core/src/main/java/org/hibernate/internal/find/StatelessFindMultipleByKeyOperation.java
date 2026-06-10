@@ -8,12 +8,10 @@ import jakarta.persistence.FindOption;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.OrderingMode;
-import org.hibernate.RemovalsMode;
-import org.hibernate.SessionCheckMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
@@ -117,8 +115,8 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 		}
 
 		@Override
-		public SessionCheckMode getSessionCheckMode() {
-			return SessionCheckMode.DISABLED;
+		public FindMultipleOption.SessionCheckMode getSessionCheckMode() {
+			return FindMultipleOption.SessionCheckMode.DISABLED;
 		}
 
 		@Override
@@ -132,13 +130,13 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 		}
 
 		@Override
-		public RemovalsMode getRemovalsMode() {
-			return RemovalsMode.REPLACE;
+		public FindMultipleOption.RemovalsMode getRemovalsMode() {
+			return FindMultipleOption.RemovalsMode.REPLACE;
 		}
 
 		@Override
-		public OrderingMode getOrderingMode() {
-			return OrderingMode.ORDERED;
+		public FindMultipleOption.OrderingMode getOrderingMode() {
+			return FindMultipleOption.OrderingMode.ORDERED;
 		}
 
 		@Override

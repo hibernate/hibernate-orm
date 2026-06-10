@@ -4,7 +4,7 @@
  */
 package org.hibernate.loader.ast.spi;
 
-import org.hibernate.SessionCheckMode;
+import org.hibernate.FindMultipleOption;
 import org.hibernate.engine.spi.SessionImplementor;
 
 
@@ -22,7 +22,7 @@ public interface MultiIdLoadOptions extends MultiLoadOptions {
 	 *
 	 * @since 7.2
 	 */
-	SessionCheckMode getSessionCheckMode();
+	FindMultipleOption.SessionCheckMode getSessionCheckMode();
 
 	/**
 	 * Check the first-level cache first, and only if the entity is not found in the cache
@@ -33,7 +33,7 @@ public interface MultiIdLoadOptions extends MultiLoadOptions {
 	 */
 	@Deprecated(since = "7.2", forRemoval = true)
 	default boolean isSessionCheckingEnabled() {
-		return getSessionCheckMode() == SessionCheckMode.ENABLED;
+		return getSessionCheckMode() == FindMultipleOption.SessionCheckMode.ENABLED;
 	}
 
 	/**

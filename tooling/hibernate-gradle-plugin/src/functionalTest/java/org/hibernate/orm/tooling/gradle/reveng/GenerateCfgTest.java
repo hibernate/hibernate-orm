@@ -31,7 +31,7 @@ class GenerateCfgTest extends TestTemplate {
 		assertTrue(cfgFile.exists());
 		assertTrue(cfgFile.isFile());
 		String cfgContents = Files.readString(cfgFile.toPath());
-		assertTrue(cfgContents.contains("<mapping resource=\"Foo.hbm.xml\"/>"));
+		assertTrue(cfgContents.contains("<mapping class=\"Foo\"/>"));
 	}
 
 }

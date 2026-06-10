@@ -48,11 +48,7 @@ import org.apache.tools.ant.types.FileSet;
  *     text="no"
  *     drop="no"
  *     delimiter=";"
- *     output="${build.dir}/schema-export.sql"&gt;
- *     &lt;fileset dir="${build.classes.dir}"&gt;
- *         &lt;include name="*.hbm.xml"/&gt;
- *     &lt;/fileset&gt;
- * &lt;/schemaexport&gt;
+ *     output="${build.dir}/schema-export.sql"/&gt;
  * </pre>
  *
  * @author Rong C Ou

@@ -16,7 +16,6 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -35,13 +34,13 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 	private final Collection<Class<?>> knownClasses;
 	private final Collection<ClassDetails> classDetails;
 	private final Collection<String> packageNames;
-	private final Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlMappings;
+	private final Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings;
 
 	public AdditionalManagedResourcesImpl(
 			Collection<Class<?>> knownClasses,
 			Collection<ClassDetails> classDetails,
 			Collection<String> packageNames,
-			Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlMappings) {
+			Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings) {
 		this.knownClasses = knownClasses;
 		this.classDetails = classDetails;
 		this.packageNames = packageNames;
@@ -72,7 +71,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
-	public Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
+	public Collection<Binding<JaxbEntityMappingsImpl>> getXmlMappingBindings() {
 		if ( xmlMappings == null ) {
 			return emptyList();
 		}
@@ -90,7 +89,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		private List<Class<?>> classes;
 		private List<ClassDetails> classDetails;
 		private List<String> packageNames;
-		private Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlMappings;
+		private Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings;
 
 		public Builder(ServiceRegistry serviceRegistry) {
 			this.mappingBinder = new MappingBinder( serviceRegistry );
@@ -148,7 +147,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 			return addXmlBinding( mappingBinder.bind( getResourceAsStream( resourceName ), origin ) );
 		}
 
-		public Builder addXmlBinding(Binding<JaxbBindableMappingDescriptor> binding) {
+		public Builder addXmlBinding(Binding<JaxbEntityMappingsImpl> binding) {
 			if ( xmlMappings == null ) {
 				xmlMappings = new ArrayList<>();
 			}

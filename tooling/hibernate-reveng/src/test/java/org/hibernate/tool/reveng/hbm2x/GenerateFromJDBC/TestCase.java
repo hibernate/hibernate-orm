@@ -4,7 +4,6 @@
  */
 package org.hibernate.tool.reveng.hbm2x.GenerateFromJDBC;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.reveng.api.export.Exporter;
@@ -15,7 +14,6 @@ import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.reveng.api.core.RevengSettings;
 import org.hibernate.tool.reveng.internal.export.doc.DocExporter;
-import org.hibernate.tool.reveng.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.reveng.internal.core.strategy.AbstractStrategy;
 import org.hibernate.tool.reveng.internal.core.strategy.DefaultStrategy;
 import org.hibernate.tool.reveng.test.utils.JUnitUtil;
@@ -36,7 +34,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -79,25 +76,6 @@ public class TestCase {
 	}
 
 	@Test
-	public void testGenerateMappings() {
-		Exporter exporter = new HbmExporter();
-		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		exporter.start();
-		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/reveng/Child.hbm.xml"));
-		File file = new File(outputDir, "GeneralHbmSettings.hbm.xml");
-		assertFalse(file.exists(), file + " should not exist");
-		File[] files = new File[2];
-		files[0] = new File(outputDir, "org/reveng/Child.hbm.xml");
-		files[1] = new File(outputDir, "org/reveng/Master.hbm.xml");
-		Metadata metadata = MetadataDescriptorFactory
-				.createNativeDescriptor(null, files, null)
-				.createMetadata();
-		assertNotNull(metadata.getEntityBinding("org.reveng.Child") );
-		assertNotNull(metadata.getEntityBinding("org.reveng.Master") );
-	}
-
-	@Test
 	public void testGenerateCfgXml() throws Exception {
 		Exporter exporter = ExporterFactory.createExporter(ExporterType.CFG);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
@@ -118,8 +96,8 @@ public class TestCase {
 		}
 		assertEquals(2, elements.length);
 		for (Node element : elements) {
-			assertNotNull(element.getAttributes().getNamedItem("resource"));
-			assertNull(element.getAttributes().getNamedItem("class"));
+			assertNotNull(element.getAttributes().getNamedItem("class"));
+			assertNull(element.getAttributes().getNamedItem("resource"));
 		}
 	}
 

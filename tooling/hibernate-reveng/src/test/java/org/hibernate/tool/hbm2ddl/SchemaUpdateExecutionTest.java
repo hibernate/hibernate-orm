@@ -25,6 +25,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SchemaUpdateExecutionTest {
 
+	private static final String ORM_XML = """
+			<?xml version="1.0" encoding="UTF-8"?>
+			<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="3.2">
+				<entity class="org.hibernate.tool.hbm2ddl.HelloWorld" metadata-complete="true" access="FIELD">
+					<table name="HELLO_WORLD"/>
+					<attributes>
+						<id name="id"><column length="10"/></id>
+						<basic name="hello"><column length="5"/></basic>
+						<basic name="world"/>
+					</attributes>
+				</entity>
+			</entity-mappings>
+			""";
+
 	private StandardServiceRegistry serviceRegistry;
 	private Metadata metadata;
 
@@ -40,7 +54,7 @@ public class SchemaUpdateExecutionTest {
 				.applySetting("hibernate.default_catalog", "")
 				.build();
 		metadata = new MetadataSources(serviceRegistry)
-				.addResource("org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")
+				.addAnnotatedClass(HelloWorld.class)
 				.buildMetadata();
 	}
 
@@ -157,14 +171,12 @@ public class SchemaUpdateExecutionTest {
 				"hibernate.default_schema=\n" +
 				"hibernate.default_catalog=\n");
 
-		File hbmFile = new File(tempDir, "HelloWorld.hbm.xml");
-		try (var in = getClass().getResourceAsStream("/org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")) {
-			Files.copy(in, hbmFile.toPath());
-		}
+		File ormFile = new File(tempDir, "HelloWorld.orm.xml");
+		Files.writeString(ormFile.toPath(), ORM_XML);
 
 		MetadataImplementor md = SchemaUpdate.buildMetadataFromMainArgs(new String[]{
 				"--properties=" + propsFile.getAbsolutePath(),
-				hbmFile.getAbsolutePath()
+				ormFile.getAbsolutePath()
 		});
 		assertNotNull(md);
 	}
@@ -181,10 +193,8 @@ public class SchemaUpdateExecutionTest {
 				"hibernate.default_schema=\n" +
 				"hibernate.default_catalog=\n");
 
-		File hbmFile = new File(tempDir, "HelloWorld.hbm.xml");
-		try (var in = getClass().getResourceAsStream("/org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")) {
-			Files.copy(in, hbmFile.toPath());
-		}
+		File ormFile = new File(tempDir, "HelloWorld.orm.xml");
+		Files.writeString(ormFile.toPath(), ORM_XML);
 
 		File outputFile = new File(tempDir, "output.sql");
 		SchemaUpdate.main(new String[]{
@@ -192,7 +202,7 @@ public class SchemaUpdateExecutionTest {
 				"--output=" + outputFile.getAbsolutePath(),
 				"--delimiter=;",
 				"--target=script",
-				hbmFile.getAbsolutePath()
+				ormFile.getAbsolutePath()
 		});
 		assertTrue(outputFile.exists());
 	}
@@ -209,17 +219,14 @@ public class SchemaUpdateExecutionTest {
 				"hibernate.default_schema=\n" +
 				"hibernate.default_catalog=\n");
 
-		File hbmFile = new File(tempDir, "HelloWorld.hbm.xml");
-		try (var in = getClass().getResourceAsStream("/org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")) {
-			Files.copy(in, hbmFile.toPath());
-		}
+		File ormFile = new File(tempDir, "HelloWorld.orm.xml");
+		Files.writeString(ormFile.toPath(), ORM_XML);
 
-		// Test legacy flags: --text, --quiet
 		SchemaUpdate.main(new String[]{
 				"--properties=" + propsFile.getAbsolutePath(),
 				"--text",
 				"--quiet",
-				hbmFile.getAbsolutePath()
+				ormFile.getAbsolutePath()
 		});
 	}
 }

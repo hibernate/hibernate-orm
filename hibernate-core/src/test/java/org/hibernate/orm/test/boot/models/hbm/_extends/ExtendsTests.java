@@ -11,7 +11,6 @@ import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -38,11 +37,11 @@ public class ExtendsTests {
 		final String mappingName = "mappings/models/hbm/extends/discriminated-separate.xml";
 
 		try (InputStream stream = classLoaderService.locateResourceStream( mappingName )) {
-			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind(
+			final Binding<JaxbEntityMappingsImpl> binding = mappingBinder.bind(
 					stream,
 					new Origin( SourceType.RESOURCE, mappingName )
 			);
-			verifyHierarchy( (JaxbEntityMappingsImpl) binding.getRoot(), InheritanceType.SINGLE_TABLE );
+			verifyHierarchy( binding.getRoot(), InheritanceType.SINGLE_TABLE );
 		}
 		catch (IOException e) {
 			throw new RuntimeException( e );

@@ -25,7 +25,7 @@ public class PostgreSQLRowLevelSecurity implements RowLevelSecurity {
 	public static final String TENANT_ISOLATION_POLICY = "hibernate_tenant_isolation";
 
 	private static final String SET_TENANT_SQL =
-			"select set_config(%s, ?, true), set_config(%s, ?, true)"
+			"select set_config('%s', ?, true), set_config('%s', ?, true)"
 					.formatted( TENANT_IDENTIFIER_SETTING, ROOT_TENANT_IDENTIFIER_SETTING );
 	private static final String PREDICATE_SQL =
 			" = cast(nullif(current_setting('%s', true), '') as $TYPE$)"
@@ -59,11 +59,11 @@ public class PostgreSQLRowLevelSecurity implements RowLevelSecurity {
 	}
 
 	@Override
-	public void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root) throws SQLException {
-		try (var statement =
-				connection.prepareStatement( SET_TENANT_SQL ) ) {
-			statement.setString( 2, tenantIdentifier );
-			statement.setString( 4, Boolean.toString( root ) );
+	public void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root)
+			throws SQLException {
+		try ( var statement = connection.prepareStatement( SET_TENANT_SQL ) ) {
+			statement.setString( 1, tenantIdentifier );
+			statement.setString( 2, Boolean.toString( root ) );
 			statement.execute();
 		}
 	}

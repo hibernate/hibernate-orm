@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -76,18 +77,15 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 				isBinaryType( tenantIdentifierColumn.getSqlTypeCode( metadata ) )
 						? UUID_PREDICATE_SQL
 						: PREDICATE_SQL.replace( "$TYPE$", tenantIdentifierColumnType );
+		final String permissionName =
+				TENANT_ISOLATION_PERMISSION + "_"
+					// permissions names are per-table; need to make them unique
+					+ NamingHelper.INSTANCE.hashedName( table.getQualifiedName( context ) );
 		return new String[] {
-				"create or replace permission " + permissionName( table ) + " on " + tableName
+				"create or replace permission " + permissionName + " on " + tableName
 					+ " for rows where " + tenantIdentifierColumnName + predicate + " enforced for all access enable",
 				"alter table " + tableName + " activate row access control"
 		};
-	}
-
-	private static String permissionName(Table table) {
-		return TENANT_ISOLATION_PERMISSION + "_" + Integer.toUnsignedString(
-				table.getQualifiedTableName().toString().hashCode(),
-				36
-		);
 	}
 
 	@Override

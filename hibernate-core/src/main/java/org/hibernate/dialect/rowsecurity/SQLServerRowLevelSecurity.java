@@ -7,6 +7,7 @@ package org.hibernate.dialect.rowsecurity;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
@@ -29,6 +30,18 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 	public static final String ROOT_TENANT_IDENTIFIER_CONTEXT_KEY = "hibernate.tenant_id_root";
 	public static final String TENANT_ISOLATION_POLICY = "hibernate_tenant_isolation";
 
+	private static final String SET_TENANT_SQL =
+			"exec sys.sp_set_session_context @key=N'%s', @value=?"
+					.formatted( TENANT_IDENTIFIER_CONTEXT_KEY );
+	private static final String SET_ROOT_TENANT_SQL =
+			"exec sys.sp_set_session_context @key=N'%s', @value=?"
+					.formatted( ROOT_TENANT_IDENTIFIER_CONTEXT_KEY );
+	private static final String PREDICATE_SQL =
+			"@tenant_id = cast(session_context(N'%s') as $TYPE$)"
+					.formatted( TENANT_IDENTIFIER_CONTEXT_KEY )
+			+ " or cast(session_context(N'%s') as bit) = 1"
+					.formatted( ROOT_TENANT_IDENTIFIER_CONTEXT_KEY );
+
 	@Override
 	public boolean supportsRowLevelSecurity() {
 		return true;
@@ -39,14 +52,12 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 			InFlightMetadataCollector collector,
 			Table table,
 			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType) {
+			Metadata metadata) {
 		if ( supportsRowLevelSecurity() ) {
-			collector.getDatabase().addAuxiliaryDatabaseObject(
-					new PredicateFunction( table, tenantIdentifierColumnType )
-			);
-			collector.getDatabase().addAuxiliaryDatabaseObject(
-					new SecurityPolicy( table, tenantIdentifierColumn )
-			);
+			final String tenantIdentifierColumnType = tenantIdentifierColumn.getSqlType( metadata );
+			final var database = collector.getDatabase();
+			database.addAuxiliaryDatabaseObject( new PredicateFunction( table, tenantIdentifierColumnType ) );
+			database.addAuxiliaryDatabaseObject( new SecurityPolicy( table, tenantIdentifierColumn ) );
 		}
 	}
 
@@ -72,39 +83,38 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 	}
 
 	private static String qualifiedTableName(Table table, SqlStringGenerationContext context) {
+		final var qualifiedTableName = table.getQualifiedTableName();
 		return context.format(
 				new QualifiedNameImpl(
-						table.getQualifiedTableName().getCatalogName(),
+						qualifiedTableName.getCatalogName(),
 						objectSchema( table, context ),
-						table.getQualifiedTableName().getTableName()
+						qualifiedTableName.getTableName()
 				)
 		);
 	}
 
 	private static Identifier objectSchema(Table table, SqlStringGenerationContext context) {
 		final Identifier schema = table.getQualifiedTableName().getSchemaName();
-		return schema != null ? schema
-				: context.getDefaultSchema() != null ? context.getDefaultSchema()
-				: context.toIdentifier( "dbo" );
-	}
-
-	private static String tenantPredicate(String tenantIdentifierColumnType) {
-		return "@tenant_id = cast(session_context(N'" + TENANT_IDENTIFIER_CONTEXT_KEY + "') as "
-				+ tenantIdentifierColumnType + ")"
-				+ " or cast(session_context(N'" + ROOT_TENANT_IDENTIFIER_CONTEXT_KEY + "') as bit) = 1";
+		final Identifier defaultSchema = context.getDefaultSchema();
+		if ( schema != null ) {
+			return schema;
+		}
+		else if ( defaultSchema != null ) {
+			return defaultSchema;
+		}
+		else {
+			return context.toIdentifier( "dbo" );
+		}
 	}
 
 	@Override
-	public void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root) throws SQLException {
-		try ( var statement = connection.prepareStatement(
-				"exec sys.sp_set_session_context @key=N'" + TENANT_IDENTIFIER_CONTEXT_KEY + "', @value=?"
-		) ) {
+	public void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root)
+			throws SQLException {
+		try ( var statement = connection.prepareStatement( SET_TENANT_SQL ) ) {
 			statement.setString( 1, tenantIdentifier );
 			statement.execute();
 		}
-		try ( var statement = connection.prepareStatement(
-				"exec sys.sp_set_session_context @key=N'" + ROOT_TENANT_IDENTIFIER_CONTEXT_KEY + "', @value=?"
-		) ) {
+		try ( var statement = connection.prepareStatement( SET_ROOT_TENANT_SQL ) ) {
 			statement.setInt( 1, root ? 1 : 0 );
 			statement.execute();
 		}
@@ -133,24 +143,25 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 			return true;
 		}
 
+		private String qualifiedPredicateFunctionName(SqlStringGenerationContext context) {
+			return qualifiedObjectName( table, predicateFunctionName( table ), context );
+		}
+
 		@Override
 		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
 			return new String[] {
-					"create function " + qualifiedObjectName( table, predicateFunctionName( table ), context )
+					"create function "
+					+ qualifiedPredicateFunctionName( context )
 					+ "(@tenant_id " + tenantIdentifierColumnType + ")"
-					+ " returns table"
-					+ " with schemabinding"
-					+ " as"
-					+ " return select 1 as hibernate_tenant_isolation_result"
-					+ " where " + tenantPredicate( tenantIdentifierColumnType )
+					+ " returns table with schemabinding as"
+					+ " return select 1 as hibernate_tenant_isolation_result where "
+					+ PREDICATE_SQL.replace( "$TYPE$", tenantIdentifierColumnType )
 			};
 		}
 
 		@Override
 		public String[] sqlDropStrings(SqlStringGenerationContext context) {
-			return new String[] {
-					"drop function " + qualifiedObjectName( table, predicateFunctionName( table ), context )
-			};
+			return new String[] { "drop function " + qualifiedPredicateFunctionName( context ) };
 		}
 
 		@Override
@@ -172,14 +183,18 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 			return false;
 		}
 
+		private String qualifiedSecurityPolicyName(SqlStringGenerationContext context) {
+			return qualifiedObjectName( table, objectBaseName( table ), context );
+		}
+
 		@Override
 		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
-			final String policyName = qualifiedObjectName( table, objectBaseName( table ), context );
 			final String functionName = qualifiedObjectName( table, predicateFunctionName( table ), context );
 			final String tableName = qualifiedTableName( table, context );
 			final String tenantIdentifierColumnName = tenantIdentifierColumn.getQuotedName( context.getDialect() );
 			return new String[] {
-					"create security policy " + policyName
+					"create security policy "
+					+ qualifiedSecurityPolicyName( context )
 					+ " add filter predicate " + functionName + "(" + tenantIdentifierColumnName + ")"
 					+ " on " + tableName + ","
 					+ " add block predicate " + functionName + "(" + tenantIdentifierColumnName + ")"
@@ -192,9 +207,7 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 
 		@Override
 		public String[] sqlDropStrings(SqlStringGenerationContext context) {
-			return new String[] {
-					"drop security policy " + qualifiedObjectName( table, objectBaseName( table ), context )
-			};
+			return new String[] { "drop security policy " + qualifiedSecurityPolicyName( context ) };
 		}
 
 		@Override

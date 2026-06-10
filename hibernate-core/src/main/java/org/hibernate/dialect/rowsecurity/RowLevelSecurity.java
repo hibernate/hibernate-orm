@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -37,18 +38,18 @@ public interface RowLevelSecurity {
 	 *
 	 * @param table The table containing the tenant id column
 	 * @param tenantIdentifierColumn The tenant id column
-	 * @param tenantIdentifierColumnType The DDL type of the tenant id column
+	 * @param metadata The mapping metadata
 	 */
 	default void addTenantIdTableInitCommands(
 			Table table,
 			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType) {
+			Metadata metadata) {
 		if ( supportsRowLevelSecurity() ) {
 			table.addInitCommand( context -> new InitCommand(
 					getTenantIdTableCreateStrings(
 							table,
 							tenantIdentifierColumn,
-							tenantIdentifierColumnType,
+							metadata,
 							context
 					)
 			) );
@@ -62,14 +63,14 @@ public interface RowLevelSecurity {
 	 * @param collector The metadata collector
 	 * @param table The table containing the tenant id column
 	 * @param tenantIdentifierColumn The tenant id column
-	 * @param tenantIdentifierColumnType The DDL type of the tenant id column
+	 * @param metadata The mapping metadata
 	 */
 	default void addTenantIdTableInitCommands(
 			InFlightMetadataCollector collector,
 			Table table,
 			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType) {
-		addTenantIdTableInitCommands( table, tenantIdentifierColumn, tenantIdentifierColumnType );
+			Metadata metadata) {
+		addTenantIdTableInitCommands( table, tenantIdentifierColumn, metadata );
 	}
 
 	/**
@@ -78,13 +79,13 @@ public interface RowLevelSecurity {
 	 *
 	 * @param table The table containing the tenant id column
 	 * @param tenantIdentifierColumn The tenant id column
-	 * @param tenantIdentifierColumnType The DDL type of the tenant id column
+	 * @param metadata The mapping metadata
 	 * @param context SQL rendering context
 	 */
 	default String[] getTenantIdTableCreateStrings(
 			Table table,
 			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType,
+			Metadata metadata,
 			SqlStringGenerationContext context) {
 		return EMPTY_STRINGS;
 	}

@@ -7,6 +7,7 @@ package org.hibernate.dialect.rowsecurity;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -15,6 +16,8 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+
+import static org.hibernate.type.SqlTypes.isBinaryType;
 
 /**
  * Row-level security support for Db2 row and column access control.
@@ -28,6 +31,17 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 	public static final String ROOT_TENANT_IDENTIFIER_VARIABLE = "hibernate.tenant_id_root";
 	public static final String TENANT_ISOLATION_PERMISSION = "hibernate_tenant_isolation";
 
+	public static final String SET_TENANT_SQL =
+			"set %s = ?".formatted( TENANT_IDENTIFIER_VARIABLE );
+	public static final String SET_ROOT_TENANT_SQL =
+			"set %s = ?".formatted( ROOT_TENANT_IDENTIFIER_VARIABLE );
+	public static final String UUID_PREDICATE_SQL =
+			" = varchar_bit_format(%s, 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx') or %s = 1"
+					.formatted( TENANT_IDENTIFIER_VARIABLE, ROOT_TENANT_IDENTIFIER_VARIABLE );
+	public static final String PREDICATE_SQL =
+			" = cast(%s as $TYPE$) or %s = 1"
+					.formatted( TENANT_IDENTIFIER_VARIABLE, ROOT_TENANT_IDENTIFIER_VARIABLE );
+
 	@Override
 	public boolean supportsRowLevelSecurity() {
 		return true;
@@ -38,17 +52,12 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 			InFlightMetadataCollector collector,
 			Table table,
 			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType) {
+			Metadata metadata) {
 		if ( supportsRowLevelSecurity() ) {
-			collector.getDatabase().addAuxiliaryDatabaseObject( SessionVariables.INSTANCE );
-			table.addInitCommand( context -> new InitCommand(
-					getTenantIdTableCreateStrings(
-							table,
-							tenantIdentifierColumn,
-							tenantIdentifierColumnType,
-							context
-					)
-			) );
+			collector.getDatabase()
+					.addAuxiliaryDatabaseObject( SessionVariables.INSTANCE );
+			table.addInitCommand( context ->
+					new InitCommand( getTenantIdTableCreateStrings( table, tenantIdentifierColumn, metadata, context ) ) );
 		}
 	}
 
@@ -56,14 +65,20 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 	public String[] getTenantIdTableCreateStrings(
 			Table table,
 			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType,
+			Metadata metadata,
 			SqlStringGenerationContext context) {
 		final String tableName = table.getQualifiedName( context );
+		final String tenantIdentifierColumnName =
+				tenantIdentifierColumn.getQuotedName( context.getDialect() );
+		final String tenantIdentifierColumnType =
+				tenantIdentifierColumn.getSqlType( metadata );
+		final String predicate =
+				isBinaryType( tenantIdentifierColumn.getSqlTypeCode( metadata ) )
+						? UUID_PREDICATE_SQL
+						: PREDICATE_SQL.replace( "$TYPE$", tenantIdentifierColumnType );
 		return new String[] {
 				"create or replace permission " + permissionName( table ) + " on " + tableName
-						+ " for rows where "
-						+ tenantPredicateWithRoot( tenantIdentifierColumn, tenantIdentifierColumnType, context )
-						+ " enforced for all access enable",
+					+ " for rows where " + tenantIdentifierColumnName + predicate + " enforced for all access enable",
 				"alter table " + tableName + " activate row access control"
 		};
 	}
@@ -75,45 +90,14 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 		);
 	}
 
-	private static String tenantPredicateWithRoot(
-			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType,
-			SqlStringGenerationContext context) {
-		return tenantDiscriminatorPredicate( tenantIdentifierColumn, tenantIdentifierColumnType, context )
-				+ " or " + ROOT_TENANT_IDENTIFIER_VARIABLE + " = 1";
-	}
-
-	private static String tenantDiscriminatorPredicate(
-			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType,
-			SqlStringGenerationContext context) {
-		final String tenantIdentifierColumnName =
-				tenantIdentifierColumn.getQuotedName( context.getDialect() );
-		if ( isUuidBinaryType( tenantIdentifierColumnType ) ) {
-			return tenantIdentifierColumnName
-					+ " = varchar_bit_format("
-					+ TENANT_IDENTIFIER_VARIABLE
-					+ ", 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')";
-		}
-		return tenantIdentifierColumnName
-				+ " = cast(" + TENANT_IDENTIFIER_VARIABLE + " as " + tenantIdentifierColumnType + ")";
-	}
-
-	private static boolean isUuidBinaryType(String tenantIdentifierColumnType) {
-		final String type = tenantIdentifierColumnType.toLowerCase();
-		return type.equals( "binary(16)" )
-			|| type.equals( "char(16) for bit data" )
-			|| type.equals( "varchar(16) for bit data" );
-	}
-
 	@Override
-	public void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root) throws SQLException {
-		try ( var statement = connection.prepareStatement( "set " + TENANT_IDENTIFIER_VARIABLE + " = ?" ) ) {
+	public void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root)
+			throws SQLException {
+		try ( var statement = connection.prepareStatement( SET_TENANT_SQL ) ) {
 			statement.setString( 1, tenantIdentifier );
 			statement.execute();
 		}
-		try ( var statement =
-				connection.prepareStatement( "set " + ROOT_TENANT_IDENTIFIER_VARIABLE + " = ?" ) ) {
+		try ( var statement = connection.prepareStatement( SET_ROOT_TENANT_SQL ) ) {
 			statement.setInt( 1, root ? 1 : 0 );
 			statement.execute();
 		}

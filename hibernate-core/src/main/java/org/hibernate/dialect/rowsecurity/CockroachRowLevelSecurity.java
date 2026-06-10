@@ -7,6 +7,7 @@ package org.hibernate.dialect.rowsecurity;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
@@ -23,6 +24,14 @@ public class CockroachRowLevelSecurity implements RowLevelSecurity {
 	public static final String APPLICATION_NAME_PREFIX = "hibernate_orm_rls";
 	public static final String TENANT_ISOLATION_POLICY = "hibernate_tenant_isolation";
 
+	private static final String SET_TENANT_SQL =
+			"set %s = ?".formatted( APPLICATION_NAME_SETTING );
+	private static final String PREDICATE_SQL =
+			" = cast(nullif(substring(current_setting('%s', true) from '^%s:[^:]*:(.*)$'), '') as $TYPE$)"
+					.formatted( APPLICATION_NAME_SETTING, APPLICATION_NAME_PREFIX )
+			+ " or split_part(current_setting('%s', true), ':', 2) = 'true'"
+					.formatted( APPLICATION_NAME_SETTING );
+
 	@Override
 	public boolean supportsRowLevelSecurity() {
 		return true;
@@ -32,10 +41,12 @@ public class CockroachRowLevelSecurity implements RowLevelSecurity {
 	public String[] getTenantIdTableCreateStrings(
 			Table table,
 			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType,
+			Metadata metadata,
 			SqlStringGenerationContext context) {
 		final String tableName = table.getQualifiedName( context );
-		final String predicate = tenantPredicate( tenantIdentifierColumn, tenantIdentifierColumnType, context );
+		final String predicate =
+				tenantIdentifierColumn.getQuotedName( context.getDialect() )
+				+ PREDICATE_SQL.replace( "$TYPE$", tenantIdentifierColumn.getSqlType( metadata ) );
 		return new String[] {
 				"alter table " + tableName + " enable row level security",
 				"alter table " + tableName + " force row level security",
@@ -45,20 +56,9 @@ public class CockroachRowLevelSecurity implements RowLevelSecurity {
 		};
 	}
 
-	private static String tenantPredicate(
-			Column tenantIdentifierColumn,
-			String tenantIdentifierColumnType,
-			SqlStringGenerationContext context) {
-		return tenantIdentifierColumn.getQuotedName( context.getDialect() )
-				+ " = cast(nullif(substring(current_setting('" + APPLICATION_NAME_SETTING
-				+ "', true) from '^" + APPLICATION_NAME_PREFIX + ":[^:]*:(.*)$'), '') as "
-				+ tenantIdentifierColumnType
-				+ ") or split_part(current_setting('" + APPLICATION_NAME_SETTING + "', true), ':', 2) = 'true'";
-	}
-
 	@Override
 	public void setTenantIdentifier(Connection connection, String tenantIdentifier, boolean root) throws SQLException {
-		try ( var statement = connection.prepareStatement( "set " + APPLICATION_NAME_SETTING + " = ?" ) ) {
+		try ( var statement = connection.prepareStatement( SET_TENANT_SQL ) ) {
 			statement.setString( 1, APPLICATION_NAME_PREFIX + ":" + root + ":" + tenantIdentifier );
 			statement.execute();
 		}

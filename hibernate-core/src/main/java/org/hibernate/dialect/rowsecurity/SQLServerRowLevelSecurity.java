@@ -42,6 +42,8 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 					.formatted( TENANT_IDENTIFIER_CONTEXT_KEY )
 			+ " or cast(session_context(N'%s') as bit) = 1"
 					.formatted( ROOT_TENANT_IDENTIFIER_CONTEXT_KEY );
+	private static final String CURRENT_USER_PREDICATE_SQL =
+			"@tenant_id = cast(current_user as $TYPE$)";
 
 	@Override
 	public boolean supportsRowLevelSecurity() {
@@ -53,11 +55,14 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 			InFlightMetadataCollector collector,
 			Table table,
 			Column tenantIdentifierColumn,
-			Metadata metadata) {
+			Metadata metadata,
+			TenantIdentifierSource tenantIdentifierSource) {
 		if ( supportsRowLevelSecurity() ) {
 			final String tenantIdentifierColumnType = tenantIdentifierColumn.getSqlType( metadata );
 			final var database = collector.getDatabase();
-			database.addAuxiliaryDatabaseObject( new PredicateFunction( table, tenantIdentifierColumnType ) );
+			database.addAuxiliaryDatabaseObject(
+					new PredicateFunction( table, tenantIdentifierColumnType, tenantIdentifierSource )
+			);
 			database.addAuxiliaryDatabaseObject( new SecurityPolicy( table, tenantIdentifierColumn ) );
 		}
 	}
@@ -119,17 +124,10 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 		}
 	}
 
-	@Override
-	public String getTenantIdentifierSettingName() {
-		return TENANT_IDENTIFIER_CONTEXT_KEY;
-	}
-
-	@Override
-	public String getRootTenantIdentifierSettingName() {
-		return ROOT_TENANT_IDENTIFIER_CONTEXT_KEY;
-	}
-
-	private record PredicateFunction(Table table, String tenantIdentifierColumnType)
+	private record PredicateFunction(
+			Table table,
+			String tenantIdentifierColumnType,
+			TenantIdentifierSource tenantIdentifierSource)
 			implements AuxiliaryDatabaseObject {
 
 		@Override
@@ -150,11 +148,11 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
 			return new String[] {
 					"create function "
-					+ qualifiedPredicateFunctionName( context )
-					+ "(@tenant_id " + tenantIdentifierColumnType + ")"
-					+ " returns table with schemabinding as"
-					+ " return select 1 as hibernate_tenant_isolation_result where "
-					+ PREDICATE_SQL.replace( "$TYPE$", tenantIdentifierColumnType )
+						+ qualifiedPredicateFunctionName( context )
+						+ "(@tenant_id " + tenantIdentifierColumnType + ")"
+						+ " returns table with schemabinding as"
+						+ " return select 1 as hibernate_tenant_isolation_result where "
+						+ predicateSql( tenantIdentifierSource ).replace( "$TYPE$", tenantIdentifierColumnType )
 			};
 		}
 
@@ -167,6 +165,13 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 		public String getExportIdentifier() {
 			return "hibernate-row-level-security-sql-server-function-" + table.getQualifiedTableName();
 		}
+	}
+
+	private static String predicateSql(TenantIdentifierSource tenantIdentifierSource) {
+		return switch ( tenantIdentifierSource ) {
+			case SESSION -> PREDICATE_SQL;
+			case DATABASE_USER -> CURRENT_USER_PREDICATE_SQL;
+		};
 	}
 
 	private record SecurityPolicy(Table table, Column tenantIdentifierColumn)

@@ -434,6 +434,13 @@ EOF
 
 db2_post_setup() {
     $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
+    db2_create_rls_tenant_user hibernate_rls_tenant_one
+    db2_create_rls_tenant_user hibernate_rls_tenant_two
+}
+
+db2_create_rls_tenant_user() {
+    local tenant_user=$1
+    $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2 bash -c "id '$tenant_user' >/dev/null 2>&1 || useradd -m '$tenant_user'; echo '$tenant_user:$tenant_user' | chpasswd"
 }
 
 db2_setup() {

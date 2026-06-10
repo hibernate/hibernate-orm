@@ -32,6 +32,8 @@ public class PostgreSQLRowLevelSecurity implements RowLevelSecurity {
 					.formatted( TENANT_IDENTIFIER_SETTING )
 			+ " or coalesce(cast(nullif(current_setting('%s', true), '') as boolean), false)"
 					.formatted( ROOT_TENANT_IDENTIFIER_SETTING );
+	private static final String CURRENT_USER_PREDICATE_SQL =
+			" = cast(current_user as $TYPE$)";
 
 	@Override
 	public boolean supportsRowLevelSecurity() {
@@ -43,12 +45,12 @@ public class PostgreSQLRowLevelSecurity implements RowLevelSecurity {
 			Table table,
 			Column tenantIdentifierColumn,
 			Metadata metadata,
-			SqlStringGenerationContext context) {
+			SqlStringGenerationContext context,
+			TenantIdentifierSource tenantIdentifierSource) {
 		final String tableName = table.getQualifiedName( context );
 		final String predicate =
 				tenantIdentifierColumn.getQuotedName( context.getDialect() )
-					+ PREDICATE_SQL.replace( "$TYPE$",
-						tenantIdentifierColumn.getSqlType( metadata ) );
+					+ predicateSql( tenantIdentifierSource, tenantIdentifierColumn, metadata );
 		return new String[] {
 				"alter table " + tableName + " enable row level security",
 				"alter table " + tableName + " force row level security",
@@ -56,6 +58,18 @@ public class PostgreSQLRowLevelSecurity implements RowLevelSecurity {
 						+ " using (" + predicate + ")"
 						+ " with check (" + predicate + ")"
 		};
+	}
+
+	private static String predicateSql(
+			TenantIdentifierSource tenantIdentifierSource,
+			Column tenantIdentifierColumn,
+			Metadata metadata) {
+		final String predicate = switch ( tenantIdentifierSource ) {
+			case SESSION -> PREDICATE_SQL;
+			case DATABASE_USER -> CURRENT_USER_PREDICATE_SQL;
+		};
+		return predicate.replace( "$TYPE$",
+				tenantIdentifierColumn.getSqlType( metadata ) );
 	}
 
 	@Override
@@ -68,13 +82,4 @@ public class PostgreSQLRowLevelSecurity implements RowLevelSecurity {
 		}
 	}
 
-	@Override
-	public String getTenantIdentifierSettingName() {
-		return TENANT_IDENTIFIER_SETTING;
-	}
-
-	@Override
-	public String getRootTenantIdentifierSettingName() {
-		return ROOT_TENANT_IDENTIFIER_SETTING;
-	}
 }

@@ -31,6 +31,8 @@ public class CockroachRowLevelSecurity implements RowLevelSecurity {
 					.formatted( APPLICATION_NAME_SETTING, APPLICATION_NAME_PREFIX )
 			+ " or split_part(current_setting('%s', true), ':', 2) = 'true'"
 					.formatted( APPLICATION_NAME_SETTING );
+	private static final String CURRENT_USER_PREDICATE_SQL =
+			" = cast(current_user as $TYPE$)";
 
 	@Override
 	public boolean supportsRowLevelSecurity() {
@@ -42,17 +44,26 @@ public class CockroachRowLevelSecurity implements RowLevelSecurity {
 			Table table,
 			Column tenantIdentifierColumn,
 			Metadata metadata,
-			SqlStringGenerationContext context) {
+			SqlStringGenerationContext context,
+			TenantIdentifierSource tenantIdentifierSource) {
 		final String tableName = table.getQualifiedName( context );
+		final String tenantIdentifierColumnType = tenantIdentifierColumn.getSqlType( metadata );
 		final String predicate =
 				tenantIdentifierColumn.getQuotedName( context.getDialect() )
-				+ PREDICATE_SQL.replace( "$TYPE$", tenantIdentifierColumn.getSqlType( metadata ) );
+					+ predicateSql( tenantIdentifierSource ).replace( "$TYPE$", tenantIdentifierColumnType );
 		return new String[] {
 				"alter table " + tableName + " enable row level security",
 				"alter table " + tableName + " force row level security",
 				"create policy " + TENANT_ISOLATION_POLICY + " on " + tableName
 						+ " using (" + predicate + ")"
 						+ " with check (" + predicate + ")"
+		};
+	}
+
+	private static String predicateSql(TenantIdentifierSource tenantIdentifierSource) {
+		return switch ( tenantIdentifierSource ) {
+			case SESSION -> PREDICATE_SQL;
+			case DATABASE_USER -> CURRENT_USER_PREDICATE_SQL;
 		};
 	}
 
@@ -64,13 +75,4 @@ public class CockroachRowLevelSecurity implements RowLevelSecurity {
 		}
 	}
 
-	@Override
-	public String getTenantIdentifierSettingName() {
-		return APPLICATION_NAME_SETTING;
-	}
-
-	@Override
-	public String getRootTenantIdentifierSettingName() {
-		return APPLICATION_NAME_SETTING;
-	}
 }

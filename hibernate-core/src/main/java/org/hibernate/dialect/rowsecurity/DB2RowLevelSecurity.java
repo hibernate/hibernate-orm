@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.DB2Dialect;
@@ -42,6 +41,10 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 	public static final String PREDICATE_SQL =
 			" = cast(%s as $TYPE$) or %s = 1"
 					.formatted( TENANT_IDENTIFIER_VARIABLE, ROOT_TENANT_IDENTIFIER_VARIABLE );
+	public static final String CURRENT_USER_UUID_PREDICATE_SQL =
+			" = varchar_bit_format(current_user, 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')";
+	public static final String CURRENT_USER_PREDICATE_SQL =
+			" = cast(current_user as $TYPE$)";
 
 	@Override
 	public boolean supportsRowLevelSecurity() {
@@ -53,13 +56,20 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 			InFlightMetadataCollector collector,
 			Table table,
 			Column tenantIdentifierColumn,
-			Metadata metadata) {
-		if ( supportsRowLevelSecurity() ) {
+			Metadata metadata,
+			TenantIdentifierSource tenantIdentifierSource) {
+		if ( supportsRowLevelSecurity()
+				&& tenantIdentifierSource == TenantIdentifierSource.SESSION ) {
 			collector.getDatabase()
 					.addAuxiliaryDatabaseObject( SessionVariables.INSTANCE );
-			table.addInitCommand( context ->
-					new InitCommand( getTenantIdTableCreateStrings( table, tenantIdentifierColumn, metadata, context ) ) );
 		}
+		RowLevelSecurity.super.addTenantIdTableInitCommands(
+				collector,
+				table,
+				tenantIdentifierColumn,
+				metadata,
+				tenantIdentifierSource
+		);
 	}
 
 	@Override
@@ -67,16 +77,16 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 			Table table,
 			Column tenantIdentifierColumn,
 			Metadata metadata,
-			SqlStringGenerationContext context) {
+			SqlStringGenerationContext context,
+			TenantIdentifierSource tenantIdentifierSource) {
 		final String tableName = table.getQualifiedName( context );
 		final String tenantIdentifierColumnName =
 				tenantIdentifierColumn.getQuotedName( context.getDialect() );
 		final String tenantIdentifierColumnType =
 				tenantIdentifierColumn.getSqlType( metadata );
 		final String predicate =
-				isBinaryType( tenantIdentifierColumn.getSqlTypeCode( metadata ) )
-						? UUID_PREDICATE_SQL
-						: PREDICATE_SQL.replace( "$TYPE$", tenantIdentifierColumnType );
+				predicateSql( tenantIdentifierColumn, metadata, tenantIdentifierSource )
+						.replace( "$TYPE$", tenantIdentifierColumnType );
 		final String permissionName =
 				TENANT_ISOLATION_PERMISSION + "_"
 					// permissions names are per-table; need to make them unique
@@ -85,6 +95,17 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 				"create or replace permission " + permissionName + " on " + tableName
 					+ " for rows where " + tenantIdentifierColumnName + predicate + " enforced for all access enable",
 				"alter table " + tableName + " activate row access control"
+		};
+	}
+
+	private static String predicateSql(
+			Column tenantIdentifierColumn,
+			Metadata metadata,
+			TenantIdentifierSource tenantIdentifierSource) {
+		final boolean binaryTenantIdentifier = isBinaryType( tenantIdentifierColumn.getSqlTypeCode( metadata ) );
+		return switch ( tenantIdentifierSource ) {
+			case SESSION -> binaryTenantIdentifier ? UUID_PREDICATE_SQL : PREDICATE_SQL;
+			case DATABASE_USER -> binaryTenantIdentifier ? CURRENT_USER_UUID_PREDICATE_SQL : CURRENT_USER_PREDICATE_SQL;
 		};
 	}
 
@@ -99,16 +120,6 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 			statement.setInt( 1, root ? 1 : 0 );
 			statement.execute();
 		}
-	}
-
-	@Override
-	public String getTenantIdentifierSettingName() {
-		return TENANT_IDENTIFIER_VARIABLE;
-	}
-
-	@Override
-	public String getRootTenantIdentifierSettingName() {
-		return ROOT_TENANT_IDENTIFIER_VARIABLE;
 	}
 
 	private static class SessionVariables implements AuxiliaryDatabaseObject {

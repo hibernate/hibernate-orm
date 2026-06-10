@@ -25,6 +25,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.boot.models.xml.internal.attr.AnyMappingAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
@@ -78,10 +79,10 @@ public class AttributeProcessor {
 							JaxbPersistentAttribute jaxbPersistentAttribute,
 							XmlDocumentContext xmlDocumentContext) {
 						memberAdjuster.adjust( member, jaxbPersistentAttribute, xmlDocumentContext );
-						member.applyAnnotationUsage( HibernateAnnotations.NATURAL_ID, xmlDocumentContext.getModelBuildingContext() );
-						if ( !jaxbNaturalId.isMutable() ) {
-							member.applyAnnotationUsage( HibernateAnnotations.IMMUTABLE, xmlDocumentContext.getModelBuildingContext() );
-						}
+						var naturalId = (NaturalIdAnnotation) member.applyAnnotationUsage(
+								HibernateAnnotations.NATURAL_ID,
+								xmlDocumentContext.getModelBuildingContext() );
+						naturalId.mutable( jaxbNaturalId.isMutable() );
 					}
 				},
 				xmlDocumentContext

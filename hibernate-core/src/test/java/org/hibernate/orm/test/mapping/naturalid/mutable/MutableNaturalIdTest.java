@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 				@Setting( name = GENERATE_STATISTICS, value = "true" ),
 		}
 )
-@DomainModel( xmlMappings = "mappings/natural-id/mutable/User.hbm.xml" )
+@DomainModel( xmlMappings = "mappings/natural-id/mutable/User.orm.xml" )
 @SessionFactory
 public class MutableNaturalIdTest {
 
@@ -54,7 +54,6 @@ public class MutableNaturalIdTest {
 		final EntityMappingType entityMappingType = sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( User.class );
 		final EntityPersister persister = entityMappingType.getEntityPersister();
 
-		// nullability is not specified, so it should be non-nullable by hbm-specific default
 		assertFalse( persister.getPropertyNullability()[persister.getPropertyIndex( "name" )] );
 		assertFalse( persister.getPropertyNullability()[persister.getPropertyIndex( "org" )] );
 	}

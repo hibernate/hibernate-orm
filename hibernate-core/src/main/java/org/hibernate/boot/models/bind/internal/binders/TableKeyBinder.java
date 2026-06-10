@@ -99,7 +99,7 @@ public class TableKeyBinder {
 				collectionTableBinding
 		);
 		collectionTableBinding.collection().setKey( key );
-		collectionTableBinding.collection().createAllKeys();
+		collectionTableBinding.collection().createPrimaryKeyIfNeeded();
 		bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(
 				entityBinder.getTypeBinding(),
 				key,

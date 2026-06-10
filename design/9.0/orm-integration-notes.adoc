@@ -38,7 +38,7 @@ Prototype touchpoints:
 
 == Separate collection key, primary-key, and foreign-key creation
 
-`org.hibernate.mapping.Collection#createAllKeys()` currently does too much for a phased binder.
+`org.hibernate.mapping.Collection#createAllKeys()` historically did too much for a phased binder.
 It creates collection foreign keys and then creates the collection table primary key.
 
 That makes it awkward to enforce a clean phase order:
@@ -48,24 +48,25 @@ That makes it awkward to enforce a clean phase order:
 * bind collection table primary key
 * create/customize physical foreign-key constraints
 
-The prototype can centralize most foreign-key creation in a `ForeignKeys` phase, but collection tables are still constrained by this API because `createAllKeys()` calls `createForeignKeys()` internally and `createPrimaryKey()` is package-private.
+The prototype can centralize most foreign-key creation in a `ForeignKeys` phase.
+Collection tables use `Collection#createPrimaryKeyIfNeeded()` so the table-key
+phase can create only the collection table primary key while leaving FK creation
+to the explicit late phase.
 
 Prototype touchpoints:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/TableKeyBinder.java[`TableKeyBinder`] still calls `collection.createAllKeys()` after setting the collection key.
-  This is the spot where the prototype cannot currently create only the collection table primary key.
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/TableKeyBinder.java[`TableKeyBinder`] calls `collection.createPrimaryKeyIfNeeded()` after setting the collection key.
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ForeignKeyBinder.java[`ForeignKeyBinder`] owns the explicit late FK phase for association values and table-key FKs.
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/TypeBindingPhase.java[`TypeBindingPhase.ForeignKeys`] and link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingCoordinator.java[`BindingCoordinator`] show where the FK phase runs after collection indexes, association targets, table keys, and inverse associations.
 
-When integrating upstream, split this API into explicit operations, for example:
+When integrating upstream, keep this API split explicit, for example:
 
 [source,java]
 ----
-collection.createPrimaryKey();
+collection.createPrimaryKeyIfNeeded();
 collection.createForeignKeys();
 ----
 
-or expose a binding-oriented API that lets the coordinator create the collection table primary key without also creating FKs.
 The important part is that physical FK creation/customization should happen in one explicit phase after table keys, association targets, collection indexes, and inverse structures are ready.
 
 == Make table-key foreign keys first-class

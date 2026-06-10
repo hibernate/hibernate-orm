@@ -14,18 +14,8 @@ import java.io.File;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HibernateToolTaskExtendedTest {
-
-	@Test
-	public void testCreateHbm2HbmXml() {
-		HibernateToolTask task = new HibernateToolTask();
-		ExporterTask gen = task.createHbm2HbmXml();
-		assertNotNull(gen);
-		assertTrue(gen instanceof Hbm2HbmXmlExporterTask);
-		assertEquals(1, task.generators.size());
-	}
 
 	@Test
 	public void testSetTemplatePath() {

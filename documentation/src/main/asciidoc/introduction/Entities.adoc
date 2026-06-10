@@ -81,15 +81,12 @@ We won't have much more to say about XML-based mappings in this Short Guide, sin
 ."Dynamic" models
 ****
 :maps: {doc-user-guide-url}#dynamic-model
-:envers: https://hibernate.org/orm/envers/
 We love representing entities as classes because the classes give us a _type-safe_ model of our data.
 But Hibernate also has the ability to represent entities as detyped instances of `java.util.Map`.
 There's information in the {maps}[User Guide], if you're curious.
 
 This must sound like a weird feature for a project that places importance on type-safety.
 Actually, it's a useful capability for a very particular sort of generic code.
-For example, the deprecated {envers}[Hibernate Envers] module is an auditing/versioning system for Hibernate entities.
-Envers makes use of maps to represent its _versioned model_ of the data.
 ****
 
 [[access-type]]

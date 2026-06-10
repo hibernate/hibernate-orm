@@ -8,7 +8,6 @@ import org.hibernate.Incubating;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
@@ -510,26 +509,6 @@ public interface MappingSettings {
 	 * @since 6.1
 	 */
 	String VALIDATE_XML = "hibernate.validate_xml";
-
-	/**
-	 * Enables processing {@code hbm.xml} mappings by transforming them to {@code mapping.xml} and using
-	 * that processor.
-	 *
-	 * @settingDefault {@code false} (opt-in).
-	 *
-	 * @since 6.1
-	 */
-	String TRANSFORM_HBM_XML = "hibernate.transform_hbm_xml.enabled";
-
-	/**
-	 * How features in a {@code hbm.xml} file which are not supported for transformation
-	 * should be handled.  Valid values are defined by {@link UnsupportedFeatureHandling}
-	 *
-	 * @settingDefault {@link UnsupportedFeatureHandling#ERROR}
-	 *
-	 * @since 6.1
-	 */
-	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
 
 	/**
 	 * Specifies that Hibernate should always restrict by discriminator values in

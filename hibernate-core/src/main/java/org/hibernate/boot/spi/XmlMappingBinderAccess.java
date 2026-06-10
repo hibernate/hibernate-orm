@@ -10,8 +10,8 @@ import org.hibernate.boot.jaxb.internal.InputStreamAccessXmlSource;
 import org.hibernate.boot.jaxb.internal.InputStreamXmlSource;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.internal.UrlXmlSource;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.ServiceRegistry;
 
@@ -51,9 +51,8 @@ public class XmlMappingBinderAccess {
 	 *
 	 * @see UrlXmlSource#fromUrl
 	 */
-	public Binding<JaxbBindableMappingDescriptor> bind(String resource) {
-		//noinspection unchecked,rawtypes
-		return (Binding) UrlXmlSource.fromResource( resource, classLoaderService, getMappingBinder() );
+	public Binding<JaxbEntityMappingsImpl> bind(String resource) {
+		return UrlXmlSource.fromResource( resource, classLoaderService, getMappingBinder() );
 	}
 
 	/**
@@ -61,9 +60,8 @@ public class XmlMappingBinderAccess {
 	 *
 	 * @see FileXmlSource#fromFile
 	 */
-	public Binding<JaxbBindableMappingDescriptor> bind(File file) {
-		//noinspection unchecked,rawtypes
-		return (Binding) FileXmlSource.fromFile( file, getMappingBinder() );
+	public Binding<JaxbEntityMappingsImpl> bind(File file) {
+		return FileXmlSource.fromFile( file, getMappingBinder() );
 	}
 
 	/**
@@ -71,9 +69,8 @@ public class XmlMappingBinderAccess {
 	 *
 	 * @see InputStreamAccessXmlSource#fromStreamAccess
 	 */
-	public Binding<JaxbBindableMappingDescriptor> bind(InputStreamAccess xmlInputStreamAccess) {
-		//noinspection unchecked,rawtypes
-		return (Binding) InputStreamAccessXmlSource.fromStreamAccess( xmlInputStreamAccess, getMappingBinder() );
+	public Binding<JaxbEntityMappingsImpl> bind(InputStreamAccess xmlInputStreamAccess) {
+		return InputStreamAccessXmlSource.fromStreamAccess( xmlInputStreamAccess, getMappingBinder() );
 	}
 
 	/**
@@ -81,9 +78,8 @@ public class XmlMappingBinderAccess {
 	 *
 	 * @see InputStreamXmlSource#fromStream
 	 */
-	public Binding<JaxbBindableMappingDescriptor> bind(InputStream xmlInputStream) {
-		//noinspection unchecked,rawtypes
-		return (Binding) InputStreamXmlSource.fromStream( xmlInputStream, getMappingBinder() );
+	public Binding<JaxbEntityMappingsImpl> bind(InputStream xmlInputStream) {
+		return InputStreamXmlSource.fromStream( xmlInputStream, getMappingBinder() );
 	}
 
 	/**
@@ -91,8 +87,7 @@ public class XmlMappingBinderAccess {
 	 *
 	 * @see UrlXmlSource#fromUrl
 	 */
-	public Binding<JaxbBindableMappingDescriptor> bind(URL url) {
-		//noinspection unchecked,rawtypes
-		return (Binding) UrlXmlSource.fromUrl( url, getMappingBinder() );
+	public Binding<JaxbEntityMappingsImpl> bind(URL url) {
+		return UrlXmlSource.fromUrl( url, getMappingBinder() );
 	}
 }

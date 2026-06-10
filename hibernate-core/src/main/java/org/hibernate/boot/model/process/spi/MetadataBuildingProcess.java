@@ -17,11 +17,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import jakarta.persistence.AttributeConverter;
-import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -29,7 +27,6 @@ import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.TypeContributions;
@@ -39,13 +36,8 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
-import org.hibernate.boot.model.source.internal.hbm.EntityHierarchyBuilder;
-import org.hibernate.boot.model.source.internal.hbm.HbmMetadataSourceProcessorImpl;
-import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
-import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
-import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
+import org.hibernate.boot.model.source.internal.annotations.ManagedResourcesBinder;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessor;
@@ -187,7 +179,6 @@ public class MetadataBuildingProcess {
 		// Set up the processors and start binding
 		//		NOTE : this becomes even more simplified after we move purely
 		// 		to unified model
-//		final IndexView jandexView = domainModelSource.getJandexIndex();
 
 		coordinateProcessors(
 				managedResources,
@@ -212,11 +203,7 @@ public class MetadataBuildingProcess {
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
 			DomainModelSource domainModelSource,
 			InFlightMetadataCollectorImpl metadataCollector) {
-		final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
-				? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
-				: new NoOpMetadataSourceProcessorImpl();
-
-		final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
+		final ManagedResourcesBinder managedResourcesBinder = new ManagedResourcesBinder(
 				managedResources,
 				domainModelSource,
 				rootMetadataBuildingContext
@@ -244,110 +231,13 @@ public class MetadataBuildingProcess {
 						registration.autoApply(), false
 				) ) );
 
-		final var processor = new MetadataSourceProcessor() {
-
-			@Override
-			public void prepare() {
-				hbmProcessor.prepare();
-				annotationProcessor.prepare();
-			}
-
-			@Override
-			public void processTypeDefinitions() {
-				hbmProcessor.processTypeDefinitions();
-				annotationProcessor.processTypeDefinitions();
-			}
-
-			@Override
-			public void processQueryRenames() {
-				hbmProcessor.processQueryRenames();
-				annotationProcessor.processQueryRenames();
-			}
-
-			@Override
-			public void processNamedQueries() {
-				hbmProcessor.processNamedQueries();
-				annotationProcessor.processNamedQueries();
-			}
-
-			@Override
-			public void processAuxiliaryDatabaseObjectDefinitions() {
-				hbmProcessor.processAuxiliaryDatabaseObjectDefinitions();
-				annotationProcessor.processAuxiliaryDatabaseObjectDefinitions();
-			}
-
-			@Override
-			public void processIdentifierGenerators() {
-				hbmProcessor.processIdentifierGenerators();
-				annotationProcessor.processIdentifierGenerators();
-			}
-
-			@Override
-			public void processFilterDefinitions() {
-				hbmProcessor.processFilterDefinitions();
-				annotationProcessor.processFilterDefinitions();
-			}
-
-			@Override
-			public void processFetchProfiles() {
-				hbmProcessor.processFetchProfiles();
-				annotationProcessor.processFetchProfiles();
-			}
-
-			@Override
-			public void prepareForEntityHierarchyProcessing() {
-				hbmProcessor.prepareForEntityHierarchyProcessing();
-				annotationProcessor.prepareForEntityHierarchyProcessing();
-			}
-
-			@Override
-			public void processEntityHierarchies(Set<String> processedEntityNames) {
-				hbmProcessor.processEntityHierarchies( processedEntityNames );
-				annotationProcessor.processEntityHierarchies( processedEntityNames );
-			}
-
-			@Override
-			public void postProcessEntityHierarchies() {
-				hbmProcessor.postProcessEntityHierarchies();
-				annotationProcessor.postProcessEntityHierarchies();
-			}
-
-			@Override
-			public void processResultSetMappings() {
-				hbmProcessor.processResultSetMappings();
-				annotationProcessor.processResultSetMappings();
-			}
-
-			@Override
-			public void finishUp() {
-				hbmProcessor.finishUp();
-				annotationProcessor.finishUp();
-			}
-		};
-
-		processor.prepare();
-
-		processor.processTypeDefinitions();
-		processor.processQueryRenames();
-		processor.processAuxiliaryDatabaseObjectDefinitions();
-
-		processor.processIdentifierGenerators();
-		processor.processFilterDefinitions();
-		processor.processFetchProfiles();
-
-		processor.prepareForEntityHierarchyProcessing();
-		processor.processEntityHierarchies( new HashSet<>() );
-		processor.postProcessEntityHierarchies();
-
-		processor.processResultSetMappings();
+		managedResourcesBinder.prepare();
+		managedResourcesBinder.bindFilterDefinitions();
+		managedResourcesBinder.bindFetchProfiles();
+		managedResourcesBinder.bindEntityHierarchies( new HashSet<>() );
+		managedResourcesBinder.bindPackageFetchProfiles();
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
-
-		// Make sure collections are fully bound before processing
-		// named queries as hbm result set mappings require it
-		processor.processNamedQueries();
-
-		processor.finishUp();
 	}
 
 	@Internal
@@ -519,12 +409,10 @@ public class MetadataBuildingProcess {
 		private final MetadataBuildingOptions options;
 		private final MappingBinder mappingBinder;
 		private final MetadataBuildingContextRootImpl rootMetadataBuildingContext;
-		private final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
 		private List<Class<?>> additionalEntityClasses;
 		private List<ClassDetails> additionalClassDetails;
-		private List<JaxbEntityMappingsImpl> additionalJaxbMappings;
-		private boolean extraHbmXml = false;
+		private List<JaxbMappingContribution> additionalJaxbMappings;
 
 		private String currentContributor;
 
@@ -567,16 +455,7 @@ public class MetadataBuildingProcess {
 		@Override
 		public void contributeBinding(InputStream xmlStream) {
 			final var origin = new Origin( SourceType.INPUT_STREAM, null );
-			final var bindingRoot = mappingBinder.bind( xmlStream, origin ).getRoot();
-			if ( bindingRoot instanceof JaxbHbmHibernateMapping hibernateMapping ) {
-				contributeBinding( hibernateMapping );
-			}
-			else if ( bindingRoot instanceof JaxbEntityMappingsImpl entityMappings ) {
-				contributeBinding( entityMappings );
-			}
-			else {
-				throw new AssertionFailure( "Unexpected binding type" );
-			}
+			contributeBinding( mappingBinder.bind( xmlStream, origin ).getRoot() );
 		}
 
 		@Override
@@ -585,20 +464,7 @@ public class MetadataBuildingProcess {
 				if ( additionalJaxbMappings == null ) {
 					additionalJaxbMappings = new ArrayList<>();
 				}
-				additionalJaxbMappings.add( mappingJaxbBinding );
-			}
-		}
-
-		@Override
-		public void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding) {
-			if ( options.isXmlMappingEnabled() ) {
-				extraHbmXml = true;
-				hierarchyBuilder.indexMappingDocument( new MappingDocument(
-						currentContributor,
-						hbmJaxbBinding,
-						new Origin( SourceType.OTHER, null ),
-						rootMetadataBuildingContext
-				) );
+				additionalJaxbMappings.add( new JaxbMappingContribution( currentContributor, mappingJaxbBinding ) );
 			}
 		}
 
@@ -630,23 +496,36 @@ public class MetadataBuildingProcess {
 
 		public void complete() {
 			// annotations / orm.xml
-			if ( additionalEntityClasses != null || additionalClassDetails != null || additionalJaxbMappings != null ) {
-				AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
+			if ( additionalEntityClasses != null || additionalClassDetails != null ) {
+				ManagedResourcesBinder.processAdditionalMappings(
 						additionalEntityClasses,
 						additionalClassDetails,
-						additionalJaxbMappings,
+						null,
 						rootMetadataBuildingContext,
 						options
 				);
 			}
 
-			// hbm.xml
-			if ( extraHbmXml ) {
-				final var binder = ModelBinder.prepare( rootMetadataBuildingContext );
-				for ( var entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
-					binder.bindEntityHierarchy( entityHierarchySource );
+			if ( additionalJaxbMappings != null ) {
+				for ( var additionalJaxbMapping : additionalJaxbMappings ) {
+					ManagedResourcesBinder.processAdditionalMappings(
+							null,
+							null,
+							List.of( additionalJaxbMapping.mapping() ),
+							new MetadataBuildingContextRootImpl(
+									additionalJaxbMapping.contributor(),
+									rootMetadataBuildingContext.getBootstrapContext(),
+									options,
+									metadataCollector,
+									rootMetadataBuildingContext.getEffectiveDefaults()
+							),
+							options
+					);
 				}
 			}
+		}
+
+		private record JaxbMappingContribution(String contributor, JaxbEntityMappingsImpl mapping) {
 		}
 	}
 

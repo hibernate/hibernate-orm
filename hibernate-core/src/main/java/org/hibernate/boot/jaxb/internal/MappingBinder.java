@@ -11,17 +11,14 @@ import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.StartElement;
 
 import org.hibernate.Internal;
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.UnsupportedOrmXsdVersionException;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
-import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.internal.stax.JpaOrmXmlEventReader;
 import org.hibernate.boot.jaxb.internal.stax.MappingEventReader;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -44,13 +41,12 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
  *
  * @author Steve Ebersole
  */
-public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor> {
+public class MappingBinder extends AbstractBinder<JaxbEntityMappingsImpl> {
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
 
 	private final Supplier<Options> optionsAccess;
 
-	private JAXBContext hbmJaxbContext;
 	private JAXBContext entityMappingsJaxbContext;
 
 	public interface Options {
@@ -76,20 +72,9 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 	 */
 	public MappingBinder(
 			ResourceStreamLocator resourceStreamLocator,
-			Supplier<Options> optionsAccess,
-			Supplier<UnsupportedFeatureHandling> unsupportedHandlingAccess) {
+			Supplier<Options> optionsAccess) {
 		super( resourceStreamLocator );
 		this.optionsAccess = optionsAccess;
-	}
-
-	/**
-	 * Full non-lazy constructor
-	 */
-	private MappingBinder(
-			ResourceStreamLocator resourceStreamLocator,
-			Options options,
-			UnsupportedFeatureHandling unsupportedHandling) {
-		this( resourceStreamLocator, () -> options, () -> unsupportedHandling );
 	}
 
 	public MappingBinder(
@@ -124,26 +109,10 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 	}
 
 	/**
-	 * Constructor used by the Gradle plugin
-	 */
-	public MappingBinder(ResourceStreamLocator resourceStreamLocator, UnsupportedFeatureHandling unsupportedHandling) {
-		this(
-				resourceStreamLocator,
-				new Options() {
-					@Override
-					public boolean validateMappings() {
-						return false;
-					}
-				},
-				unsupportedHandling
-		);
-	}
-
-	/**
 	 * Constructor used everywhere else
 	 */
 	public MappingBinder(ResourceStreamLocator resourceStreamLocator, Options options) {
-		this( resourceStreamLocator, options, UnsupportedFeatureHandling.ERROR );
+		this( resourceStreamLocator, () -> options );
 	}
 
 	@Override
@@ -152,22 +121,13 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 	}
 
 	@Override
-	protected <X extends JaxbBindableMappingDescriptor> Binding<X> doBind(
+	protected <X extends JaxbEntityMappingsImpl> Binding<X> doBind(
 			XMLEventReader staxEventReader,
 			StartElement rootElementStartEvent,
 			Origin origin) {
 		final String rootElementLocalName = rootElementStartEvent.getName().getLocalPart();
 		if ( "hibernate-mapping".equals( rootElementLocalName ) ) {
-			JAXB_LOGGER.performingJaxbBindingOfHbmXmlDocument( origin.toString() );
-			final var hbmBindings = jaxb(
-					new HbmEventReader( staxEventReader, xmlEventFactory ),
-					MappingXsdSupport.INSTANCE.hbmXsd().getSchema(),
-					hbmJaxbContext(),
-					origin
-			);
-
-			//noinspection unchecked
-			return new Binding<>( (X) hbmBindings, origin );
+			throw new MappingException( "Support for binding hbm.xml documents has been removed", origin );
 		}
 		else {
 			assert "entity-mappings".equals( rootElementLocalName );
@@ -187,18 +147,6 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 				throw new UnsupportedOrmXsdVersionException( e.getRequestedVersion(), origin );
 			}
 		}
-	}
-
-	private JAXBContext hbmJaxbContext() {
-		if ( hbmJaxbContext == null ) {
-			try {
-				hbmJaxbContext = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
-			}
-			catch (JAXBException e) {
-				throw new ConfigurationException( "Unable to build hbm.xml JAXBContext", e );
-			}
-		}
-		return hbmJaxbContext;
 	}
 
 	@Internal

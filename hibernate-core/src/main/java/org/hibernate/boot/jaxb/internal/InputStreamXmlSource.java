@@ -7,8 +7,8 @@ package org.hibernate.boot.jaxb.internal;
 import org.hibernate.boot.InvalidMappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +28,7 @@ public class InputStreamXmlSource {
 	 *
 	 * @apiNote This method does not close the given {@code inputStream}.
 	 */
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromStream(
+	public static Binding<JaxbEntityMappingsImpl> fromStream(
 			InputStream inputStream,
 			MappingBinder mappingBinder) {
 		JAXB_LOGGER.readingMappingsFromInputStream();
@@ -48,7 +48,7 @@ public class InputStreamXmlSource {
 	 * @param autoClose Whether to {@linkplain InputStream#close() close} the stream after we have processed it
 	 * @param binder The JAXB binder to use
 	 */
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromStream(
+	public static Binding<JaxbEntityMappingsImpl> fromStream(
 			InputStream stream,
 			Origin origin,
 			boolean autoClose,

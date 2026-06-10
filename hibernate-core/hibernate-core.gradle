@@ -255,6 +255,65 @@ compileTestJava {
     options.compilerArgs += [ "-AsuppressJakartaDataMetamodel=true" ]
 }
 
+def hbmXmlTestExclusionClassNames = providers.provider {
+    def testClassInfo = [:]
+    def testClassesBySimpleName = [:].withDefault { [] }
+    def hbmXmlTestClasses = [] as Set
+    def testJavaRoot = layout.projectDirectory.dir( 'src/test/java' ).asFile
+
+    fileTree( testJavaRoot ).matching { include '**/*.java' }.files.each { javaFile ->
+        def source = javaFile.text
+        def packageMatcher = source =~ /(?m)^package\s+([\w.]+);/
+        def classMatcher = source =~ /(?m)^\s*(?:public\s+|protected\s+|private\s+)?(?:abstract\s+|final\s+|static\s+)*class\s+(\w+)(?:\s+extends\s+([\w.]+)(?:<[^>{}]+>)?)?/
+        if ( !packageMatcher.find() || !classMatcher.find() ) {
+            return
+        }
+
+        def packageName = packageMatcher.group( 1 )
+        def className = classMatcher.group( 1 )
+        def classNameFqn = "${packageName}.${className}"
+        def superClassName = classMatcher.groupCount() >= 2 ? classMatcher.group( 2 ) : null
+        testClassInfo[classNameFqn] = [ file: javaFile, packageName: packageName, superClassName: superClassName ]
+        testClassesBySimpleName[className].add( classNameFqn )
+
+        def relativePath = testJavaRoot.toPath().relativize( javaFile.toPath() ).toString()
+        if ( source.contains( '.hbm.xml' )
+                || source.contains( '<hibernate-mapping' )
+                || relativePath.contains( "${File.separator}hbm${File.separator}" ) ) {
+            hbmXmlTestClasses.add( classNameFqn )
+        }
+    }
+
+    // This subclass inherits its HBM mapping through AggressiveReleaseTest but has no direct source-level HBM reference.
+    hbmXmlTestClasses.add( 'org.hibernate.orm.test.connections.CurrentSessionConnectionTest' )
+
+    def added
+    do {
+        added = false
+        testClassInfo.each { classNameFqn, classInfo ->
+            if ( hbmXmlTestClasses.contains( classNameFqn ) || classInfo.superClassName == null ) {
+                return
+            }
+
+            def superClassCandidates = []
+            if ( classInfo.superClassName.contains( '.' ) ) {
+                superClassCandidates.add( classInfo.superClassName )
+            }
+            else {
+                superClassCandidates.add( "${classInfo.packageName}.${classInfo.superClassName}" )
+                superClassCandidates.addAll( testClassesBySimpleName[classInfo.superClassName] )
+            }
+
+            if ( superClassCandidates.any { hbmXmlTestClasses.contains( it ) } ) {
+                hbmXmlTestClasses.add( classNameFqn )
+                added = true
+            }
+        }
+    } while ( added )
+
+    hbmXmlTestClasses.sort()
+}
+
 tasks.register( "generateAnnotationClasses", JavaCompile ) {
     description = "Generate concrete classes for Hibernate and JPA annotations"
 
@@ -271,32 +330,35 @@ tasks.register( "generateAnnotationClasses", JavaCompile ) {
     destinationDirectory.set( project.layout.buildDirectory.dir( "generated/sources/annotations/" ) )
 }
 
-tasks.register('generateEnversStaticMetamodel', JavaCompile) {
-    description = "Generate the Hibernate Envers revision entity static metamodel classes."
-
-    source = sourceSets.main.java
-    // we only want to include these specific classes for metamodel generation.
-    // if envers adds any additional revision entity classes, they must be listed here.
-    include 'org/hibernate/envers/DefaultRevisionEntity.java'
-    include 'org/hibernate/envers/DefaultTrackingModifiedEntitiesRevisionEntity.java'
-    include 'org/hibernate/envers/enhanced/SequenceIdRevisionEntity.java'
-    include 'org/hibernate/envers/enhanced/SequenceIdTrackingModifiedEntitiesRevisionEntity.java'
-
-    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.compileClasspath
-    options.compilerArgs = [
-            "-proc:only",
-            "-processor",
-            "org.hibernate.processor.HibernateProcessor"
-    ]
-
-    // put static metamodel classes back out to the source tree since they're version controlled.
-    destinationDirectory = layout.projectDirectory.dir("src/main/java").asFile
-}
-
 tasks.withType( Test.class ).configureEach { test ->
     test.systemProperty 'file.encoding', 'utf-8'
     // Allow creating a function in HSQLDB for this Java method
     test.systemProperty 'hsqldb.method_class_names', 'org.hibernate.orm.test.jpa.transaction.TransactionTimeoutTest.sleep'
+
+    // HBM XML support has been removed on the 9.0 branch. Keep HBM-dependent tests in place so
+    // conversions from the 8.0 branch can merge forward cleanly, but exclude them from this suite.
+    def hbmXmlTestClasses = hbmXmlTestExclusionClassNames.get()
+    def hbmXmlTestClassFileExclusions = hbmXmlTestClasses.collectMany { classNameFqn ->
+        def classFilePath = classNameFqn.replace( '.', '/' )
+        [
+                "${classFilePath}.class",
+                "${classFilePath}\$*.class",
+                "**/${classFilePath}.class",
+                "**/${classFilePath}\$*.class"
+        ]
+    }
+    test.testClassesDirs = files( test.testClassesDirs.files.collect { testClassesDir ->
+        fileTree( testClassesDir ) {
+            exclude hbmXmlTestClassFileExclusions
+        }
+    } )
+    test.exclude( hbmXmlTestClassFileExclusions )
+    test.filter {
+        hbmXmlTestClasses.each { classNameFqn ->
+            excludeTestsMatching classNameFqn
+            excludeTestsMatching "${classNameFqn}.*"
+        }
+    }
 
     // See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
     test.jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )

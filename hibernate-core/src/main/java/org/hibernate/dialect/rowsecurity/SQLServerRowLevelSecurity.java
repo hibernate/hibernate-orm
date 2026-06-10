@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -61,15 +62,13 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 		}
 	}
 
-	private static String objectBaseName(Table table) {
-		return TENANT_ISOLATION_POLICY + "_" + Integer.toUnsignedString(
-				table.getQualifiedTableName().toString().hashCode(),
-				36
-		);
+	private static String objectBaseName(Table table, SqlStringGenerationContext context) {
+		return TENANT_ISOLATION_POLICY + "_"
+			+ NamingHelper.INSTANCE.hashedName( table.getQualifiedName( context ) );
 	}
 
-	private static String predicateFunctionName(Table table) {
-		return objectBaseName( table ) + "_predicate";
+	private static String predicateFunctionName(Table table, SqlStringGenerationContext context) {
+		return objectBaseName( table, context ) + "_predicate";
 	}
 
 	private static String qualifiedObjectName(Table table, String name, SqlStringGenerationContext context) {
@@ -144,7 +143,7 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 		}
 
 		private String qualifiedPredicateFunctionName(SqlStringGenerationContext context) {
-			return qualifiedObjectName( table, predicateFunctionName( table ), context );
+			return qualifiedObjectName( table, predicateFunctionName( table, context ), context );
 		}
 
 		@Override
@@ -184,12 +183,12 @@ public class SQLServerRowLevelSecurity implements RowLevelSecurity {
 		}
 
 		private String qualifiedSecurityPolicyName(SqlStringGenerationContext context) {
-			return qualifiedObjectName( table, objectBaseName( table ), context );
+			return qualifiedObjectName( table, objectBaseName( table, context ), context );
 		}
 
 		@Override
 		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
-			final String functionName = qualifiedObjectName( table, predicateFunctionName( table ), context );
+			final String functionName = qualifiedObjectName( table, predicateFunctionName( table, context ), context );
 			final String tableName = qualifiedTableName( table, context );
 			final String tenantIdentifierColumnName = tenantIdentifierColumn.getQuotedName( context.getDialect() );
 			return new String[] {

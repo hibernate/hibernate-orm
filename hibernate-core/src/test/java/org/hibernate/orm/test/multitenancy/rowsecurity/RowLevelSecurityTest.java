@@ -15,10 +15,11 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.NamingHelper;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
@@ -35,6 +36,7 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.JdbcSettings.DIALECT;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
 
 @BaseUnitTest
@@ -43,7 +45,7 @@ class RowLevelSecurityTest {
 	@Test
 	void postgreSqlTenantIdRegistersRowLevelSecurityDdl() {
 		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, PostgreSQLDialect.class )
+				.applySetting( DIALECT, PostgreSQLDialect.class )
 				.build();
 		try {
 			final var metadata = new MetadataSources( registry )
@@ -74,7 +76,7 @@ class RowLevelSecurityTest {
 	@Test
 	void db2TenantIdRegistersRowLevelSecurityDdl() {
 		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, DB2Dialect.class )
+				.applySetting( DIALECT, DB2Dialect.class )
 				.build();
 		try {
 			final var metadata = new MetadataSources( registry )
@@ -98,7 +100,8 @@ class RowLevelSecurityTest {
 			final String predicate = "tenant_id = cast(hibernate.tenant_id as varchar(255))"
 					+ " or hibernate.tenant_id_root = 1";
 			assertThat( commands ).containsExactly(
-					"create or replace permission " + db2PermissionName( table ) + " on document"
+					"create or replace permission "
+							+ db2PermissionName( table, context ) + " on document"
 							+ " for rows where " + predicate
 							+ " enforced for all access enable",
 					"alter table document activate row access control"
@@ -112,7 +115,7 @@ class RowLevelSecurityTest {
 	@Test
 	void rowLevelSecurityCanBeDisabled() {
 		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, DB2Dialect.class )
+				.applySetting( DIALECT, DB2Dialect.class )
 				.applySetting( MULTI_TENANT_RLS_ENABLED, false )
 				.build();
 		try {
@@ -135,7 +138,7 @@ class RowLevelSecurityTest {
 	@Test
 	void db2UuidTenantIdUsesBitFormatting() {
 		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, DB2Dialect.class )
+				.applySetting( DIALECT, DB2Dialect.class )
 				.build();
 		try {
 			final var metadata = new MetadataSources( registry )
@@ -153,7 +156,8 @@ class RowLevelSecurityTest {
 					+ " 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')"
 					+ " or hibernate.tenant_id_root = 1";
 			assertThat( commands ).containsExactly(
-					"create or replace permission " + db2PermissionName( table ) + " on document"
+					"create or replace permission "
+							+ db2PermissionName( table, context ) + " on document"
 							+ " for rows where " + predicate
 							+ " enforced for all access enable",
 					"alter table document activate row access control"
@@ -167,7 +171,7 @@ class RowLevelSecurityTest {
 	@Test
 	void sqlServerTenantIdRegistersRowLevelSecurityDdl() {
 		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, SQLServer2016Dialect.class )
+				.applySetting( DIALECT, SQLServer2016Dialect.class )
 				.build();
 		try {
 			final var metadata = new MetadataSources( registry )
@@ -181,7 +185,7 @@ class RowLevelSecurityTest {
 					.flatMap( object -> Arrays.stream( object.sqlCreateStrings( context ) ) )
 					.toList();
 
-			final String policyName = "dbo." + sqlServerObjectBaseName( table );
+			final String policyName = "dbo." + sqlServerObjectBaseName( table, context );
 			final String functionName = policyName + "_predicate";
 			final String predicate = "@tenant_id = cast(session_context(N'hibernate.tenant_id') as varchar(255))"
 					+ " or cast(session_context(N'hibernate.tenant_id_root') as bit) = 1";
@@ -216,7 +220,7 @@ class RowLevelSecurityTest {
 	@Test
 	void cockroachTenantIdRegistersRowLevelSecurityDdl() {
 		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, Cockroach252Dialect.class )
+				.applySetting( DIALECT, Cockroach252Dialect.class )
 				.build();
 		try {
 			final var metadata = new MetadataSources( registry )
@@ -293,18 +297,14 @@ class RowLevelSecurityTest {
 				.isEqualTo( "hibernate.tenant_id_root" );
 	}
 
-	private static String db2PermissionName(org.hibernate.mapping.Table table) {
-		return DB2RowLevelSecurity.TENANT_ISOLATION_PERMISSION + "_" + Integer.toUnsignedString(
-				table.getQualifiedTableName().toString().hashCode(),
-				36
-		);
+	private static String db2PermissionName(org.hibernate.mapping.Table table, SqlStringGenerationContext context) {
+		return DB2RowLevelSecurity.TENANT_ISOLATION_PERMISSION + "_"
+			+ NamingHelper.INSTANCE.hashedName( table.getQualifiedName( context ) );
 	}
 
-	private static String sqlServerObjectBaseName(org.hibernate.mapping.Table table) {
-		return SQLServerRowLevelSecurity.TENANT_ISOLATION_POLICY + "_" + Integer.toUnsignedString(
-				table.getQualifiedTableName().toString().hashCode(),
-				36
-		);
+	private static String sqlServerObjectBaseName(org.hibernate.mapping.Table table, SqlStringGenerationContext context) {
+		return SQLServerRowLevelSecurity.TENANT_ISOLATION_POLICY + "_"
+			+ NamingHelper.INSTANCE.hashedName( table.getQualifiedName( context ) );
 	}
 
 	public static class SQLServer2016Dialect extends SQLServerDialect {

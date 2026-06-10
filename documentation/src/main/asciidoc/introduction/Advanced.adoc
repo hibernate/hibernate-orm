@@ -588,14 +588,22 @@ class Account {
 The link:{doc-javadoc-url}org/hibernate/annotations/TenantId.html[`@TenantId`] annotation is used to indicate an attribute of an entity which holds the tenant id.
 Within a given session, our data is automatically filtered so that only rows tagged with the tenant id of the current tenant are visible in that session.
 
-[CAUTION]
-====
-Native SQL queries are _not_ automatically filtered by tenant id; you'll have to do that part yourself.
-====
-
 Since Hibernate 8.0, the visibility rules for discriminator-based multi-tenancy are enforced by the database itself on platforms with built-in support for row-level security.
 Hibernate automatically generates DDL with the necessary row-level security constraints.
 This feature is enabled by default, but may be disabled by setting `hibernate.multi_tenant.rls_enabled=false`.
+
+Here there are two options:
+
+- when a `TenantCredentialsMapper` is supplied via `hibernate.multi_tenant.credentials_mapper`, the tenant id must represent the authenticated database user, and row-level ownership is tied to the current database user, or
+- otherwise, when no `TenantCredentialsMapper` is supplied, a transaction-local or session variable is set to the value of the tenant id, and row-level ownership is tied to the value of this variable.
+
+The first option is more secure, but does not work will with some connection pools.
+
+[CAUTION]
+====
+On databases which don't support row-level security, or when row-level security is disabled, native SQL queries are _not_ automatically filtered by tenant id.
+We must add the tenant filtering by hand.
+====
 
 [[read-only-replicas]]
 === Read-only replicas

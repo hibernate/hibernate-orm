@@ -52,7 +52,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
@@ -127,6 +126,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -1211,35 +1211,26 @@ public class DB2LegacyDialect extends Dialect {
 	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor(
-				sqle -> {
-					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
-						case -803:
-							return extractUsingTemplate( "SQLERRMC=1;", ",", sqle.getMessage() );
-						default:
-							return null;
-					}
-				}
+				sqle -> extractErrorCode( sqle ) == -803
+						? extractUsingTemplate( "SQLERRMC=1;", ",", sqle.getMessage() )
+						: null
 		);
 	}
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			switch ( errorCode ) {
-				case -952:
-					return new LockTimeoutException( message, sqlException, sql );
-				case -803:
-					return new ConstraintViolationException(
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case -952 -> new LockTimeoutException( message, sqlException, sql );
+					case -803 -> new ConstraintViolationException(
 							message,
 							sqlException,
 							sql,
 							ConstraintViolationException.ConstraintKind.UNIQUE,
 							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
 					);
-			}
-			return null;
-		};
+					default -> null;
+				};
 	}
 
 	@Override

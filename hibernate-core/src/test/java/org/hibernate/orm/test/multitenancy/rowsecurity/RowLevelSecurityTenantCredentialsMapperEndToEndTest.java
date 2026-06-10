@@ -307,7 +307,16 @@ class RowLevelSecurityTenantCredentialsMapperEndToEndTest {
 	}
 
 	private static String currentDatabaseUser(Session session) {
-		return session.createNativeQuery( "select current_user", String.class )
+		final var dialect =
+				session.getSessionFactory()
+						.unwrap( SessionFactoryImplementor.class )
+						.getJdbcServices()
+						.getDialect();
+		final String sql =
+				dialect instanceof DB2Dialect
+						? "values current_user"
+						: "select current_user";
+		return session.createNativeQuery( sql, String.class )
 				.getSingleResult().trim();
 	}
 

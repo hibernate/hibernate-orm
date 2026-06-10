@@ -90,7 +90,7 @@ class InversePluralAssociationBinder {
 		inverseCollection.setKey( createInverseKey( inverseBinding, collectionTable, owningElement ) );
 		inverseCollection.setElement( createInverseElement( inverseBinding, collectionTable, targetTypeBinder, owningCollection ) );
 		bindInverseIndex( inverseBinding, owningCollection, inverseCollection );
-		inverseCollection.createAllKeys();
+		inverseCollection.createPrimaryKeyIfNeeded();
 	}
 
 	private void bindInverseOneToMany(InversePluralAssociationBinding inverseBinding) {
@@ -120,7 +120,7 @@ class InversePluralAssociationBinder {
 		inverseCollection.setKey( createInverseKey( inverseBinding, collectionTable, owningToOne ) );
 		inverseCollection.setElement( createOneToManyElement( inverseBinding, targetTypeBinder ) );
 		bindInverseOneToManyIndex( inverseBinding, targetTypeBinder, inverseCollection );
-		inverseCollection.createAllKeys();
+		inverseCollection.createPrimaryKeyIfNeeded();
 	}
 
 	private KeyValue createInverseKey(

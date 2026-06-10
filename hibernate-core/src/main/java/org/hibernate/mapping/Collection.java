@@ -560,12 +560,16 @@ public abstract sealed class Collection
 
 	abstract void createPrimaryKey();
 
-	public void createAllKeys() throws MappingException {
-		createForeignKeys();
+	public void createPrimaryKeyIfNeeded() {
 		if ( !isInverse() && !isPrimaryKeyDisabled() ) {
 			createPrimaryKey();
 			adjustTemporalPrimaryKey();
 		}
+	}
+
+	public void createAllKeys() throws MappingException {
+		createForeignKeys();
+		createPrimaryKeyIfNeeded();
 	}
 
 	private void adjustTemporalPrimaryKey() {

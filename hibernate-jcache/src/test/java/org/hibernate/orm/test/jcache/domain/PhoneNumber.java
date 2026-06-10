@@ -6,12 +6,28 @@ package org.hibernate.orm.test.jcache.domain;
 
 import java.io.Serializable;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+
 /**
  * PhoneNumber
  */
+@Entity
+@Table(name = "PHONE_NUMBERS")
+@IdClass(PhoneNumberId.class)
 public class PhoneNumber implements Serializable {
+	@Id
+	@Column(name = "PERSON_ID")
 	private long personId = 0;
+
+	@Id
+	@Column(name = "NUMBER_TYPE")
 	private String numberType = "home";
+
+	@Column(name = "PHONE", precision = 22, scale = 0)
 	private long phone = 0;
 
 	public long getPersonId() {

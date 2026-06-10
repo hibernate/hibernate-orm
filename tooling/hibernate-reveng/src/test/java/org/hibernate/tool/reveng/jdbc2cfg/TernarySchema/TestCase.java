@@ -8,24 +8,19 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Set;
-import org.hibernate.tool.reveng.api.export.ExporterConstants;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.reveng.api.core.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.reveng.internal.export.common.DefaultValueVisitor;
-import org.hibernate.tool.reveng.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.reveng.internal.core.strategy.AbstractStrategy;
 import org.hibernate.tool.reveng.test.utils.JUnitUtil;
 import org.hibernate.tool.reveng.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,9 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author koen
  */
 public class TestCase {
-
-	@TempDir
-	public File outputFolder = new File("output");
 
 	private MetadataDescriptor metadataDescriptor = null;
 
@@ -65,25 +57,6 @@ public class TestCase {
 	@Test
 	public void testTernaryModel() {
 		assertMultiSchema(metadataDescriptor.createMetadata());
-	}
-
-	@Test
-	public void testGeneration() {
-		HbmExporter hme = new HbmExporter();
-		hme.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		hme.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
-		hme.start();
-		JUnitUtil.assertIsNonEmptyFile( new File(outputFolder, "Role.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputFolder, "Member.hbm.xml") );
-		JUnitUtil.assertIsNonEmptyFile( new File(outputFolder, "Plainrole.hbm.xml") );
-		assertEquals(3, Objects.requireNonNull( outputFolder.listFiles() ).length);
-		File[] files = new File[3];
-		files[0] = new File(outputFolder, "Role.hbm.xml");
-		files[1] = new File(outputFolder, "Member.hbm.xml");
-		files[2] = new File(outputFolder, "Plainrole.hbm.xml");
-		assertMultiSchema(MetadataDescriptorFactory
-				.createNativeDescriptor(null, files, null)
-				.createMetadata());
 	}
 
 	private void assertMultiSchema(Metadata metadata) {

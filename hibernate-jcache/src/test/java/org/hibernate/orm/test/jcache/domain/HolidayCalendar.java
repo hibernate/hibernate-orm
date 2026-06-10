@@ -13,13 +13,37 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.Table;
+import jakarta.persistence.TemporalType;
+
+@Entity
+@Table(name = "CALENDAR")
 public class HolidayCalendar {
 
 
+	@Id
+	@GeneratedValue
+	@Column(name = "CALENDAR_ID")
 	private Long id;
 	private String name;
+
 	// Date -> String
-	private Map holidays = new HashMap();
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "CALENDAR_HOLIDAYS", joinColumns = @JoinColumn(name = "CALENDAR_ID"))
+	@MapKeyColumn(name = "hol_date")
+	@MapKeyTemporal(TemporalType.DATE)
+	@Column(name = "hol_name")
+	private Map<Date, String> holidays = new HashMap<>();
 
 	public HolidayCalendar init() {
 		name = "default";
@@ -43,11 +67,11 @@ public class HolidayCalendar {
 		this.name = name;
 	}
 
-	public Map getHolidays() {
+	public Map<Date, String> getHolidays() {
 		return holidays;
 	}
 
-	protected void setHolidays(Map holidays) {
+	protected void setHolidays(Map<Date, String> holidays) {
 		this.holidays = holidays;
 	}
 

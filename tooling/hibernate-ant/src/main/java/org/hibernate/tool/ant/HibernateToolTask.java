@@ -92,12 +92,6 @@ public class HibernateToolTask extends Task {
 		return generator;
 	}
 
-	public ExporterTask createHbm2HbmXml() {
-		ExporterTask generator= new Hbm2HbmXmlExporterTask(this);
-		addGenerator( generator );
-		return generator;
-	}
-
 	public ExporterTask createHbm2Doc() {
 		ExporterTask generator= new Hbm2DocExporterTask(this);
 		addGenerator( generator );
@@ -123,8 +117,8 @@ public class HibernateToolTask extends Task {
 		return generator;
 	}
 
-	public HbmLintExporterTask createHbmLint() {
-		HbmLintExporterTask generator = new HbmLintExporterTask(this);
+	public LintExporterTask createLint() {
+		LintExporterTask generator = new LintExporterTask(this);
 		generators.add(generator);
 		return generator;
 	}

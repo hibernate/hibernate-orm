@@ -7,8 +7,8 @@ package org.hibernate.boot.jaxb.internal;
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +27,7 @@ public class FileXmlSource {
 	/**
 	 * Create a mapping {@linkplain Binding binding} from a File reference.
 	 */
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromFile(
+	public static Binding<JaxbEntityMappingsImpl> fromFile(
 			File file,
 			MappingBinder mappingBinder) {
 		final String filePath = file.getPath();

@@ -65,6 +65,5 @@ The main advantage of dynamic models is the quick turnaround time for prototypin
 The main downfall is that you lose compile-time type checking and will likely deal with many exceptions at runtime.
 However, as a result of the Hibernate mapping, the database schema can easily be normalized and sound, allowing to add a proper domain model implementation on top later on.
 
-It is also interesting to note that dynamic models are great for certain integration use cases as well.
-Envers, for example, makes extensive use of dynamic models to represent the historical data.
+It is also interesting to note that dynamic models are useful for certain integration use cases as well.
 ====

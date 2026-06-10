@@ -8,8 +8,8 @@ import org.hibernate.boot.MappingException;
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class JarFileEntryXmlSource {
 	public static void fromJar(
 			File jar,
 			MappingBinder mappingBinder,
-			Consumer<Binding<? extends JaxbBindableMappingDescriptor>> consumer) {
+			Consumer<Binding<JaxbEntityMappingsImpl>> consumer) {
 		JAXB_LOGGER.tracef( "Seeking mapping documents in jar file: %s", jar.getName() );
 		final var origin = new Origin( SourceType.JAR, jar.getAbsolutePath() );
 		try ( var jarFile = new JarFile( jar ) ) {
@@ -61,7 +61,7 @@ public class JarFileEntryXmlSource {
 	/**
 	 * Create a mapping {@linkplain Binding binding} from a JAR file entry.
 	 */
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromJarEntry(
+	public static Binding<JaxbEntityMappingsImpl> fromJarEntry(
 			JarFile jarFile,
 			ZipEntry jarFileEntry,
 			Origin origin,

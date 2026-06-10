@@ -36,49 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MultiInheritanceDiscriminatorTest {
 
 	@DomainModel(
-			xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/AccountOwner.hbm.xml"
-	)
-	@SessionFactory
-	@Test
-	public void testAbstractSuperClassMappingHbm(SessionFactoryScope scope) {
-		AccountOwner owner = new AccountOwner();
-		owner.setDescription( "Some account" );
-
-		CreditAccount cAcc1 = new CreditAccount();
-		cAcc1.setAmount( new BigDecimal( "123.34" ).setScale( 19, RoundingMode.DOWN ) );
-		cAcc1.setOwner( owner );
-		owner.getCreditAccounts().add( cAcc1 );
-
-		CreditAccount cAcc2 = new CreditAccount();
-		cAcc2.setAmount( new BigDecimal( "321.43" ).setScale( 19, RoundingMode.DOWN ) );
-		cAcc2.setOwner( owner );
-		owner.getCreditAccounts().add( cAcc2 );
-
-		DebitAccount dAcc = new DebitAccount();
-		dAcc.setAmount( new BigDecimal( "654.99" ).setScale( 19, RoundingMode.DOWN ) );
-		dAcc.setOwner( owner );
-		owner.getDebitAccounts().add( dAcc );
-
-		scope.inTransaction(
-				session ->
-						session.persist( owner )
-		);
-
-		Long ownerId = owner.getId();
-
-		scope.inTransaction(
-				session -> {
-					AccountOwner _owner = session.find( AccountOwner.class, ownerId );
-					assertEquals( 2, _owner.getCreditAccounts().size() );
-					assertEquals( "CreditAccount", _owner.getCreditAccounts().iterator().next().getClass().getSimpleName() );
-
-					assertEquals( 1, _owner.getDebitAccounts().size() );
-					assertEquals( "DebitAccount", _owner.getDebitAccounts().iterator().next().getClass().getSimpleName() );
-				}
-		);
-	}
-
-	@DomainModel(
 			annotatedClasses = {
 					AbstractAcc.class, CreditAcc.class, DebitAcc.class, AccOwner.class
 			}

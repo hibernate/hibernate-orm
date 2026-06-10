@@ -8,8 +8,9 @@ plugins {
     id "com.diffplug.spotless"
 }
 
-// Might need to skip errorprone when using JDK 17 to build.
-def skipErrorProne = project.findProperty('skipErrorProne') ?: false
+// Might need to skip errorprone/nullaway when using JDK 17 to build.
+// Note: for now we're skipping them by default, see https://github.com/hibernate/hibernate-orm/pull/12624#issuecomment-4668170987
+def skipErrorProne = project.findProperty('skipErrorProne') ?: true
 if (!skipErrorProne) {
     plugins.apply( 'net.ltgt.errorprone' )
     plugins.apply( 'net.ltgt.nullaway' )

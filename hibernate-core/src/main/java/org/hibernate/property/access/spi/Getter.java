@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Map;
 
+import org.hibernate.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import jakarta.annotation.Nullable;
@@ -19,6 +20,7 @@ import jakarta.annotation.Nullable;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@Remove // Remove/replace with a different SPI that is based on Hibernate Models
 public interface Getter {
 	/**
 	 * Get the property value from the given owner instance.

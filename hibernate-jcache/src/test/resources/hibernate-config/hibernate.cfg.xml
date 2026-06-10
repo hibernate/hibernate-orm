@@ -22,13 +22,13 @@
         <!-- Echo all executed SQL to stdout -->
         <property name="show_sql">true</property>
 
-        <mapping resource="hibernate-config/domain/Event.hbm.xml"/>
-        <mapping resource="hibernate-config/domain/Person.hbm.xml"/>
-        <mapping resource="hibernate-config/domain/PhoneNumber.hbm.xml"/>
-        <mapping resource="hibernate-config/domain/Account.hbm.xml"/>
-        <mapping resource="hibernate-config/domain/HolidayCalendar.hbm.xml"/>
-
-        <mapping resource="hibernate-config/domain/Item.hbm.xml"/>
+        <mapping class="org.hibernate.orm.test.jcache.domain.Event"/>
+        <mapping class="org.hibernate.orm.test.jcache.domain.Person"/>
+        <mapping class="org.hibernate.orm.test.jcache.domain.PhoneNumber"/>
+        <mapping class="org.hibernate.orm.test.jcache.domain.Account"/>
+        <mapping class="org.hibernate.orm.test.jcache.domain.HolidayCalendar"/>
+        <mapping class="org.hibernate.orm.test.jcache.domain.Item"/>
+        <mapping class="org.hibernate.orm.test.jcache.domain.VersionedItem"/>
 
     </session-factory>
 

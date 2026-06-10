@@ -4,67 +4,144 @@
  */
 package org.hibernate.boot.model.source.internal.annotations;
 
-import java.io.IOException;
-import org.hibernate.HibernateException;
-import org.hibernate.boot.MappingNotFoundException;
-import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.service.ServiceRegistry;
 
+import static java.util.Collections.addAll;
+import static java.util.Collections.emptyList;
+import static org.hibernate.boot.jaxb.SourceType.OTHER;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
-/// XML adapter for the common resource builder.
-///
-/// @author Steve Ebersole
-public final class AdditionalManagedResourcesImpl {
+/**
+ * @author Steve Ebersole
+ */
+public class AdditionalManagedResourcesImpl implements ManagedResources {
+	private final Collection<Class<?>> knownClasses;
+	private final Collection<ClassDetails> classDetails;
+	private final Collection<String> packageNames;
+	private final Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings;
+
+	public AdditionalManagedResourcesImpl(
+			Collection<Class<?>> knownClasses,
+			Collection<ClassDetails> classDetails,
+			Collection<String> packageNames,
+			Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings) {
+		this.knownClasses = knownClasses;
+		this.classDetails = classDetails;
+		this.packageNames = packageNames;
+		this.xmlMappings = xmlMappings;
+	}
+
+	@Override
+	public Collection<ConverterDescriptor<?,?>> getAttributeConverterDescriptors() {
+		return emptyList();
+	}
+
+	@Override
+	public Collection<Class<?>> getAnnotatedClassReferences() {
+		return knownClasses == null ? emptyList() : knownClasses;
+	}
+
+	@Override
+	public Collection<String> getAnnotatedClassNames() {
+		if ( isNotEmpty( classDetails ) ) {
+			return classDetails.stream().map( ClassDetails::getName ).toList();
+		}
+		return emptyList();
+	}
+
+	@Override
+	public Collection<String> getAnnotatedPackageNames() {
+		return packageNames == null ? emptyList() : packageNames;
+	}
+
+	@Override
+	public Collection<String> getAnnotatedModuleNames() {
+		return emptyList();
+	}
+
+	@Override
+	public Collection<Binding<JaxbEntityMappingsImpl>> getXmlMappingBindings() {
+		if ( xmlMappings == null ) {
+			return emptyList();
+		}
+		return xmlMappings;
+	}
+
+	@Override
+	public Map<String, Class<?>> getExtraQueryImports() {
+		return Collections.emptyMap();
+	}
+
 	public static class Builder {
-		private final ManagedResourcesBuilder resources = new ManagedResourcesBuilder();
-		private final ServiceRegistry serviceRegistry;
+		private final MappingBinder mappingBinder;
+
+		private List<Class<?>> classes;
+		private List<ClassDetails> classDetails;
+		private List<String> packageNames;
+		private Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings;
 
 		public Builder(ServiceRegistry serviceRegistry) {
-			this.serviceRegistry = serviceRegistry;
+			this.mappingBinder = new MappingBinder( serviceRegistry );
 		}
 
 		public Builder() {
-			this( null );
+			this( new StandardServiceRegistryBuilder().build() );
 		}
 
-		public Builder addLoadedClasses(List<Class<?>> classes) {
-			if ( classes != null ) {
-				classes.forEach( resources::addClass );
+		public Builder addLoadedClasses(List<Class<?>> additionalClasses) {
+			if ( additionalClasses != null ) {
+				if ( classes == null ) {
+					classes = new ArrayList<>();
+				}
+				classes.addAll( additionalClasses );
 			}
 			return this;
 		}
 
-		public Builder addLoadedClasses(Class<?>... classes) {
-			return addLoadedClasses( List.of( classes ) );
+		public Builder addLoadedClasses(Class<?>... additionalClasses) {
+			if ( classes == null ) {
+				classes = new ArrayList<>();
+			}
+			addAll( classes, additionalClasses );
+			return this;
 		}
 
-		public Builder addClassDetails(List<ClassDetails> details) {
-			if ( details != null ) {
-				details.forEach( resources::addClassDetails );
+		public Builder addClassDetails(List<ClassDetails> additionalClassDetails) {
+			if ( additionalClassDetails != null ) {
+				if ( classDetails == null ) {
+					classDetails = new ArrayList<>();
+				}
+				classDetails.addAll( additionalClassDetails );
 			}
 			return this;
 		}
 
-		public Builder addPackages(String... packages) {
-			List.of( packages ).forEach( resources::addPackageDescriptor );
+		public Builder addPackages(String... additionalPackageNames) {
+			if ( packageNames == null ) {
+				packageNames = new ArrayList<>();
+			}
+			addAll( packageNames, additionalPackageNames );
 			return this;
 		}
 
 		public ManagedResources build() {
-			return resources.build();
+			return new AdditionalManagedResourcesImpl( classes, classDetails, packageNames, xmlMappings );
 		}
 
 		public Builder addXmlMappings(String resourceName) {
@@ -72,34 +149,27 @@ public final class AdditionalManagedResourcesImpl {
 		}
 
 		public Builder addXmlMappings(String resourceName, Origin origin) {
-			final var registry = serviceRegistry == null
-					? new StandardServiceRegistryBuilder().build()
-					: serviceRegistry;
-			try (var stream = registry.requireService( ClassLoaderService.class ).locateResourceStream( resourceName )) {
-				if ( stream == null ) {
-					throw new MappingNotFoundException( origin );
-				}
-				return addXmlBinding( new MappingBinder( registry ).bind( stream, origin ) );
-			}
-			catch (IOException e) {
-				throw new HibernateException( "Could not read mapping " + resourceName, e );
-			}
-			finally {
-				if ( serviceRegistry == null ) {
-					StandardServiceRegistryBuilder.destroy( registry );
-				}
-			}
+			return addXmlBinding( mappingBinder.bind( getResourceAsStream( resourceName ), origin ) );
 		}
 
-		public Builder addXmlBinding(Binding<? extends JaxbBindableMappingDescriptor> binding) {
-			resources.addXmlBinding( binding );
+		public Builder addXmlBinding(Binding<JaxbEntityMappingsImpl> binding) {
+			if ( xmlMappings == null ) {
+				xmlMappings = new ArrayList<>();
+			}
+			xmlMappings.add( binding );
 			return this;
 		}
 
-		public void addJaxbEntityMappings(List<JaxbEntityMappingsImpl> mappings) {
-			if ( mappings != null ) {
-				mappings.forEach( mapping -> addXmlBinding( new Binding<>( mapping, new Origin( SourceType.OTHER, "additional" ) ) ) );
+		public void addJaxbEntityMappings(List<JaxbEntityMappingsImpl> additionalJaxbMappings) {
+			if ( additionalJaxbMappings != null ) {
+				for ( var additionalJaxbMapping : additionalJaxbMappings ) {
+					addXmlBinding( new Binding<>( additionalJaxbMapping, new Origin( OTHER, "additional" ) ) );
+				}
 			}
+		}
+
+		private static InputStream getResourceAsStream(String resourceName) {
+			return Builder.class.getClassLoader().getResourceAsStream( resourceName );
 		}
 	}
 }

@@ -4,14 +4,6 @@
  */
 package org.hibernate.boot.model.process.spi;
 
-import org.hibernate.MappingException;
-import org.hibernate.boot.model.process.internal.ManagedClassDetails;
-import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
-import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
-import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
-import org.hibernate.models.internal.jdk.JdkClassDetails;
-import org.hibernate.models.spi.ModelsContext;
 
 import java.io.InputStream;
 import java.sql.Types;
@@ -25,16 +17,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
-import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import jakarta.persistence.AttributeConverter;
-import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.Remove;
 import org.hibernate.boot.MetadataSources;
@@ -43,7 +29,6 @@ import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.TypeContributions;
@@ -53,17 +38,13 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
 import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
-import org.hibernate.boot.model.source.internal.hbm.EntityHierarchyBuilder;
-import org.hibernate.boot.model.source.internal.hbm.HbmMetadataSourceProcessorImpl;
-import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
-import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
-import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
+import org.hibernate.boot.model.source.internal.annotations.ManagedResourcesBinder;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -77,7 +58,9 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrapperArrayHandling;
@@ -99,6 +82,7 @@ import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForInstant;
@@ -204,7 +188,6 @@ public class MetadataBuildingProcess {
 		// Set up the processors and start binding
 		//		NOTE : this becomes even more simplified after we move purely
 		// 		to unified model
-//		final IndexView jandexView = domainModelSource.getJandexIndex();
 
 		coordinateProcessors(
 				managedResources,
@@ -229,11 +212,8 @@ public class MetadataBuildingProcess {
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
 			DomainModelSource domainModelSource,
 			InFlightMetadataCollectorImpl metadataCollector) {
-		final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
-				? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
-				: new NoOpMetadataSourceProcessorImpl();
-
-		final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
+		final ManagedResourcesBinder managedResourcesBinder = new ManagedResourcesBinder(
+				managedResources,
 				domainModelSource,
 				rootMetadataBuildingContext
 		);
@@ -260,110 +240,16 @@ public class MetadataBuildingProcess {
 						registration.autoApply(), false
 				) ) );
 
-		final var processor = new MetadataSourceProcessor() {
-
-			@Override
-			public void prepare() {
-				hbmProcessor.prepare();
-				annotationProcessor.prepare();
-			}
-
-			@Override
-			public void processTypeDefinitions() {
-				hbmProcessor.processTypeDefinitions();
-				annotationProcessor.processTypeDefinitions();
-			}
-
-			@Override
-			public void processQueryRenames() {
-				hbmProcessor.processQueryRenames();
-				annotationProcessor.processQueryRenames();
-			}
-
-			@Override
-			public void processNamedQueries() {
-				hbmProcessor.processNamedQueries();
-				annotationProcessor.processNamedQueries();
-			}
-
-			@Override
-			public void processAuxiliaryDatabaseObjectDefinitions() {
-				hbmProcessor.processAuxiliaryDatabaseObjectDefinitions();
-				annotationProcessor.processAuxiliaryDatabaseObjectDefinitions();
-			}
-
-			@Override
-			public void processIdentifierGenerators() {
-				hbmProcessor.processIdentifierGenerators();
-				annotationProcessor.processIdentifierGenerators();
-			}
-
-			@Override
-			public void processFilterDefinitions() {
-				hbmProcessor.processFilterDefinitions();
-				annotationProcessor.processFilterDefinitions();
-			}
-
-			@Override
-			public void processFetchProfiles() {
-				hbmProcessor.processFetchProfiles();
-				annotationProcessor.processFetchProfiles();
-			}
-
-			@Override
-			public void prepareForEntityHierarchyProcessing() {
-				hbmProcessor.prepareForEntityHierarchyProcessing();
-				annotationProcessor.prepareForEntityHierarchyProcessing();
-			}
-
-			@Override
-			public void processEntityHierarchies(Set<String> processedEntityNames) {
-				hbmProcessor.processEntityHierarchies( processedEntityNames );
-				annotationProcessor.processEntityHierarchies( processedEntityNames );
-			}
-
-			@Override
-			public void postProcessEntityHierarchies() {
-				hbmProcessor.postProcessEntityHierarchies();
-				annotationProcessor.postProcessEntityHierarchies();
-			}
-
-			@Override
-			public void processResultSetMappings() {
-				hbmProcessor.processResultSetMappings();
-				annotationProcessor.processResultSetMappings();
-			}
-
-			@Override
-			public void finishUp() {
-				hbmProcessor.finishUp();
-				annotationProcessor.finishUp();
-			}
-		};
-
-		processor.prepare();
-
-		processor.processTypeDefinitions();
-		processor.processQueryRenames();
-		processor.processAuxiliaryDatabaseObjectDefinitions();
-
-		processor.processIdentifierGenerators();
-		processor.processFilterDefinitions();
-		processor.processFetchProfiles();
-
-		processor.prepareForEntityHierarchyProcessing();
-		processor.processEntityHierarchies( new HashSet<>() );
-		processor.postProcessEntityHierarchies();
-
-		processor.processResultSetMappings();
+		managedResourcesBinder.prepare();
+		managedResourcesBinder.bindTypeDefinitions();
+		managedResourcesBinder.bindQueryRenames();
+		managedResourcesBinder.bindIdentifierGenerators();
+		managedResourcesBinder.bindFilterDefinitions();
+		managedResourcesBinder.bindFetchProfiles();
+		managedResourcesBinder.bindEntityHierarchies( new HashSet<>() );
+		managedResourcesBinder.bindPackageFetchProfiles();
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
-
-		// Make sure collections are fully bound before processing
-		// named queries as hbm result set mappings require it
-		processor.processNamedQueries();
-
-		processor.finishUp();
 	}
 
 	@Internal
@@ -372,107 +258,125 @@ public class MetadataBuildingProcess {
 			InFlightMetadataCollector metadataCollector,
 			BootstrapContext bootstrapContext,
 			MappingDefaults optionDefaults) {
-		return processManagedResources( managedResources, bootstrapContext, optionDefaults,
-				bootstrapContext.getModelsContext(), metadataCollector.getPersistenceUnitMetadata(),
-				metadataCollector.getGlobalRegistrations() );
-	}
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// 	- pre-process the XML
+		// 	- collect all known classes
+		// 	- resolve (possibly building) Jandex index
+		// 	- build the ModelsContext
+		//
+		// INPUTS:
+		//		- serviceRegistry
+		//		- managedResources
+		//		- bootstrapContext (supplied Jandex index, if one)
+		//
+		// OUTPUTS:
+		//		- xmlPreProcessingResult
+		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
+		//		- ModelsContext
 
-	@Internal
-	public static DomainModelSource processManagedResources(
-			ManagedResources managedResources,
-			BootstrapContext bootstrapContext,
-			MappingDefaults optionDefaults,
-			ModelsContext modelsContext,
-			PersistenceUnitMetadata aggregatedPersistenceUnitMetadata,
-			GlobalRegistrations globalRegistrations) {
-		final var registry = modelsContext.getClassDetailsRegistry();
-		final var xml = bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled()
-				? XmlPreProcessor.preProcessXmlResources( managedResources, aggregatedPersistenceUnitMetadata )
-				: new XmlPreProcessingResultImpl( aggregatedPersistenceUnitMetadata );
-		final var javaTypes = new LinkedHashMap<String, ClassDetails>();
-		final var dynamicTypes = new LinkedHashMap<String, ClassDetails>();
-		final var packages = new LinkedHashMap<String, ClassDetails>();
-		final var modules = new LinkedHashMap<String, DomainModelSource.ModuleDescriptor>();
+		final var aggregatedPersistenceUnitMetadata = metadataCollector.getPersistenceUnitMetadata();
+		final var modelsContext = bootstrapContext.getModelsContext();
+		final var xmlPreProcessingResult =
+				XmlPreProcessor.preProcessXmlResources( managedResources,
+						aggregatedPersistenceUnitMetadata );
 
-		managedResources.getClassDetails().forEach( details ->
-				ManagedClassDetails.register( details, registry ) );
-		final var identities = new ManagedResourcesBuilder();
-		for ( var type : managedResources.getAnnotatedClassReferences() ) {
-			identities.addClass( type );
-			var details = registry.findClassDetails( type.getName() );
-			if ( details == null ) {
-				details = new JdkClassDetails( type, modelsContext );
-				ManagedClassDetails.register( details, registry );
+		final var allKnownClassNames = mutableJoin(
+				managedResources.getAnnotatedClassReferences().stream()
+						.map( Class::getName ).toList(),
+				managedResources.getAnnotatedClassNames(),
+				xmlPreProcessingResult.getMappedClasses()
+		);
+		managedResources.getAnnotatedPackageNames()
+				.forEach( packageName -> {
+					try {
+						final Class<?> packageInfoClass =
+								modelsContext.getClassLoading()
+										.classForName( packageName + ".package-info" );
+						allKnownClassNames.add( packageInfoClass.getName() );
+					}
+					catch (ClassLoadingException classLoadingException) {
+						// no package-info, so there can be no annotations... just skip it
+					}
+				} );
+		managedResources.getAnnotatedClassReferences()
+				.forEach( clazz -> allKnownClassNames.add( clazz.getName() ) );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// 	- process metadata-complete XML
+		//	- collect overlay XML
+		//	- process annotations (including those from metadata-complete XML)
+		//	- apply overlay XML
+		//
+		// INPUTS:
+		//		- "options" (areIdGeneratorsGlobal, etc)
+		//		- xmlPreProcessingResult
+		//		- ModelsContext
+		//
+		// OUTPUTS
+		//		- rootEntities
+		//		- mappedSuperClasses
+		//  	- embeddables
+
+		final var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+		final var modelCategorizationCollector =
+				new DomainModelCategorizationCollector(
+						metadataCollector.getGlobalRegistrations(),
+						modelsContext
+				);
+
+		final HashSet<String> categorizedClassNames = new HashSet<>();
+		// apply known classes
+		allKnownClassNames.forEach( className -> {
+			if ( categorizedClassNames.add( className ) ) {
+				// not known yet
+				applyKnownClass( classDetailsRegistry.resolveClassDetails( className ),
+						categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
-			addJavaType( details, javaTypes );
-		}
-		for ( var name : managedResources.getAnnotatedClassNames() ) {
-			ManagedResourceValidation.validateClassName( name );
-			addJavaType( registry.resolveClassDetails( name ), javaTypes );
-		}
-		managedResources.getClassDetails().forEach( details -> addManagedType( details, javaTypes, dynamicTypes ) );
-		for ( var name : xml.getMappedClasses() ) {
-			ManagedResourceValidation.validateClassName( name );
-			addJavaType( registry.resolveClassDetails( name ), javaTypes );
-		}
-		for ( var packageName : new LinkedHashSet<>( managedResources.getAnnotatedPackageNames() ) ) {
-			packages.put( packageName, registry.resolveExplicitPackageDetails( packageName ) );
-		}
-		for ( var moduleName : managedResources.getAnnotatedModuleNames() ) {
-			modules.computeIfAbsent( moduleName, name -> new DomainModelSource.ModuleDescriptor(
-					name, modelsContext.getModuleDetailsRegistry().resolveModuleDetails( name ) ) );
-		}
+		} );
 
-		final var categorizer = new DomainModelCategorizationCollector( globalRegistrations, modelsContext );
-		final var categorized = new HashSet<String>();
-		javaTypes.values().forEach( details -> applyKnownClass( details, categorized, categorizer ) );
-		dynamicTypes.values().forEach( details -> applyKnownClass( details, categorized, categorizer ) );
-		packages.values().forEach( categorizer::apply );
-		final var defaults = new RootMappingDefaults( optionDefaults, aggregatedPersistenceUnitMetadata );
-		for ( var name : xml.getMappedNames() ) {
-			final var existing = registry.findClassDetails( name );
-			if ( existing != null && existing.getClassName() != null && !existing.getClassName().isEmpty() ) {
-				throw new MappingException( "Dynamic model name conflicts with Java type '" + name + "'" );
+		final var rootMappingDefaults =
+				new RootMappingDefaults( optionDefaults, aggregatedPersistenceUnitMetadata );
+		final var xmlProcessingResult = XmlProcessor.processXml(
+				xmlPreProcessingResult,
+				aggregatedPersistenceUnitMetadata,
+				modelCategorizationCollector::apply,
+				modelsContext,
+				bootstrapContext,
+				rootMappingDefaults
+		);
+
+
+		// apply known "names" - generally this handles dynamic models
+		xmlPreProcessingResult.getMappedNames().forEach( (mappedName) -> {
+			if ( categorizedClassNames.add( mappedName ) ) {
+				// not known yet
+				applyKnownClass( classDetailsRegistry.resolveClassDetails( mappedName ),
+						categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
-		}
-		final var processedXml = XmlProcessor.processXml( xml, aggregatedPersistenceUnitMetadata,
-				categorizer::apply, modelsContext, bootstrapContext, defaults );
-		for ( var name : xml.getMappedNames() ) {
-			final var details = registry.resolveClassDetails( name );
-			if ( details.getClassName() != null && !details.getClassName().isEmpty() ) {
-				throw new MappingException( "Dynamic model name conflicts with Java type '" + name + "'" );
-			}
-			dynamicTypes.putIfAbsent( name, details );
-			applyKnownClass( details, categorized, categorizer );
-		}
-		processedXml.apply();
-		return new DomainModelSource( registry, List.copyOf( javaTypes.values() ), List.copyOf( dynamicTypes.values() ),
-				List.copyOf( packages.values() ), List.copyOf( modules.values() ),
-				categorizer.getGlobalRegistrations(), defaults, aggregatedPersistenceUnitMetadata );
-	}
+		} );
 
-	private static void addJavaType(ClassDetails details, Map<String, ClassDetails> javaTypes) {
-		if ( details.getClassName() == null || details.getClassName().isEmpty() ) {
-			throw new MappingException( "Java type declaration conflicts with dynamic model '" + details.getName() + "'" );
-		}
-		javaTypes.putIfAbsent( details.getName(), details );
-	}
+		xmlProcessingResult.apply();
 
-	private static void addManagedType(
-			ClassDetails details,
-			Map<String, ClassDetails> javaTypes,
-			Map<String, ClassDetails> dynamicTypes) {
-		final var target = details.getClassName() == null || details.getClassName().isEmpty() ? dynamicTypes : javaTypes;
-		target.putIfAbsent( details.getName(), details );
+		return new DomainModelSource(
+				classDetailsRegistry,
+				mutableJoin( allKnownClassNames,
+						xmlPreProcessingResult.getMappedNames() ),
+				modelCategorizationCollector.getGlobalRegistrations(),
+				rootMappingDefaults,
+				aggregatedPersistenceUnitMetadata
+		);
 	}
 
 	private static void applyKnownClass(
-			ClassDetails details, Set<String> categorized, DomainModelCategorizationCollector categorizer) {
-		if ( categorized.add( details.getName() ) ) {
-			categorizer.apply( details );
-			final var superClass = details.getSuperClass();
-			if ( superClass != null && superClass != ClassDetails.OBJECT_CLASS_DETAILS ) {
-				applyKnownClass( superClass, categorized, categorizer );
+			ClassDetails classDetails,
+			HashSet<String> categorizedClassNames,
+			ClassDetailsRegistry classDetailsRegistry,
+			DomainModelCategorizationCollector modelCategorizationCollector) {
+		modelCategorizationCollector.apply( classDetails );
+		final var superClass = classDetails.getSuperClass();
+		if ( superClass != null && superClass != ClassDetails.OBJECT_CLASS_DETAILS ) {
+			if ( categorizedClassNames.add( superClass.getClassName() ) ) {
+				applyKnownClass( superClass, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
 			}
 		}
 	}
@@ -518,12 +422,10 @@ public class MetadataBuildingProcess {
 		private final MetadataBuildingOptions options;
 		private final MappingBinder mappingBinder;
 		private final MetadataBuildingContextRootImpl rootMetadataBuildingContext;
-		private final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
 		private List<Class<?>> additionalEntityClasses;
 		private List<ClassDetails> additionalClassDetails;
-		private Map<String, List<JaxbEntityMappingsImpl>> additionalJaxbMappingsByContributor;
-		private boolean extraHbmXml = false;
+		private List<JaxbMappingContribution> additionalJaxbMappings;
 
 		private String currentContributor;
 
@@ -556,47 +458,26 @@ public class MetadataBuildingProcess {
 				additionalClassDetails = new ArrayList<>();
 			}
 			additionalClassDetails.add( classDetails );
-			ManagedClassDetails.register(
-					classDetails, rootMetadataBuildingContext.getBootstrapContext().getModelsContext().getClassDetailsRegistry() );
+			rootMetadataBuildingContext.getBootstrapContext()
+					.getModelsContext()
+					.getClassDetailsRegistry()
+					.as( MutableClassDetailsRegistry.class )
+					.addClassDetails( classDetails.getName(), classDetails );
 		}
 
 		@Override
 		public void contributeBinding(InputStream xmlStream) {
 			final var origin = new Origin( SourceType.INPUT_STREAM, null );
-			final var bindingRoot = mappingBinder.bind( xmlStream, origin ).getRoot();
-			if ( bindingRoot instanceof JaxbHbmHibernateMapping hibernateMapping ) {
-				contributeBinding( hibernateMapping );
-			}
-			else if ( bindingRoot instanceof JaxbEntityMappingsImpl entityMappings ) {
-				contributeBinding( entityMappings );
-			}
-			else {
-				throw new AssertionFailure( "Unexpected binding type" );
-			}
+			contributeBinding( mappingBinder.bind( xmlStream, origin ).getRoot() );
 		}
 
 		@Override
 		public void contributeBinding(JaxbEntityMappingsImpl mappingJaxbBinding) {
 			if ( options.isXmlMappingEnabled() ) {
-				if ( additionalJaxbMappingsByContributor == null ) {
-					additionalJaxbMappingsByContributor = new LinkedHashMap<>();
+				if ( additionalJaxbMappings == null ) {
+					additionalJaxbMappings = new ArrayList<>();
 				}
-				additionalJaxbMappingsByContributor
-						.computeIfAbsent( currentContributor, k -> new ArrayList<>() )
-						.add( mappingJaxbBinding );
-			}
-		}
-
-		@Override
-		public void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding) {
-			if ( options.isXmlMappingEnabled() ) {
-				extraHbmXml = true;
-				hierarchyBuilder.indexMappingDocument( new MappingDocument(
-						currentContributor,
-						hbmJaxbBinding,
-						new Origin( SourceType.OTHER, null ),
-						rootMetadataBuildingContext
-				) );
+				additionalJaxbMappings.add( new JaxbMappingContribution( currentContributor, mappingJaxbBinding ) );
 			}
 		}
 
@@ -628,44 +509,36 @@ public class MetadataBuildingProcess {
 
 		public void complete() {
 			// annotations / orm.xml
-			if ( additionalEntityClasses != null || additionalClassDetails != null || additionalJaxbMappingsByContributor != null ) {
-				// Process contributed classes with the default "orm" context
-				AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
+			if ( additionalEntityClasses != null || additionalClassDetails != null ) {
+				ManagedResourcesBinder.processAdditionalMappings(
 						additionalEntityClasses,
 						additionalClassDetails,
-						additionalJaxbMappingsByContributor == null
-								? null
-								: additionalJaxbMappingsByContributor.remove( "orm" ),
+						null,
 						rootMetadataBuildingContext,
 						options
 				);
-				// Process remaining contributors' xml mappings with their contributor context
-				if ( additionalJaxbMappingsByContributor != null ) {
-					for ( var entry : additionalJaxbMappingsByContributor.entrySet() ) {
-						AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
-								null,
-								null,
-								entry.getValue(),
-								new MetadataBuildingContextRootImpl(
-										entry.getKey(),
-										rootMetadataBuildingContext.getBootstrapContext(),
-										options,
-										metadataCollector,
-										rootMetadataBuildingContext.getEffectiveDefaults()
-								),
-								options
-						);
-					}
-				}
 			}
 
-			// hbm.xml
-			if ( extraHbmXml ) {
-				final var binder = ModelBinder.prepare( rootMetadataBuildingContext );
-				for ( var entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
-					binder.bindEntityHierarchy( entityHierarchySource );
+			if ( additionalJaxbMappings != null ) {
+				for ( var additionalJaxbMapping : additionalJaxbMappings ) {
+					ManagedResourcesBinder.processAdditionalMappings(
+							null,
+							null,
+							List.of( additionalJaxbMapping.mapping() ),
+							new MetadataBuildingContextRootImpl(
+									additionalJaxbMapping.contributor(),
+									rootMetadataBuildingContext.getBootstrapContext(),
+									options,
+									metadataCollector,
+									rootMetadataBuildingContext.getEffectiveDefaults()
+							),
+							options
+					);
 				}
 			}
+		}
+
+		private record JaxbMappingContribution(String contributor, JaxbEntityMappingsImpl mapping) {
 		}
 	}
 

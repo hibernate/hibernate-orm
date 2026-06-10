@@ -7,8 +7,8 @@ package org.hibernate.boot.jaxb.internal;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
@@ -25,7 +25,7 @@ public class InputStreamAccessXmlSource {
 	 *
 	 * @apiNote This method does not close the given {@code inputStream}.
 	 */
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromStreamAccess(
+	public static Binding<JaxbEntityMappingsImpl> fromStreamAccess(
 			InputStreamAccess inputStreamAccess,
 			MappingBinder mappingBinder) {
 		return fromStreamAccess(
@@ -40,7 +40,7 @@ public class InputStreamAccessXmlSource {
 	 *
 	 * @apiNote This method does not close the given {@code inputStream}.
 	 */
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromStreamAccess(
+	public static Binding<JaxbEntityMappingsImpl> fromStreamAccess(
 			InputStreamAccess inputStreamAccess,
 			Origin origin,
 			MappingBinder mappingBinder) {

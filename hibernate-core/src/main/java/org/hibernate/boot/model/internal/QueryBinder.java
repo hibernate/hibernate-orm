@@ -4,21 +4,19 @@
  */
 package org.hibernate.boot.model.internal;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedStatement;
 import jakarta.persistence.NamedStoredProcedureQuery;
-import jakarta.persistence.ParameterMode;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
-import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
-import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.query.JakartaQuery;
 import jakarta.persistence.query.NativeQuery;
@@ -28,27 +26,19 @@ import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.SQLSelect;
-import org.hibernate.boot.model.source.internal.hbm.NativeQueryBuilder;
 import org.hibernate.boot.query.internal.NamedHqlMutationDefinitionImpl;
 import org.hibernate.boot.query.internal.NamedHqlSelectionDefinitionImpl;
 import org.hibernate.boot.query.internal.NamedNativeMutationDefinitionImpl;
 import org.hibernate.boot.query.internal.NamedNativeSelectionDefinitionImpl;
 import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
-import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.jpa.HibernateHints;
-import jakarta.annotation.Nullable;
-
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.query.hql.internal.HqlHelper;
-import org.hibernate.query.sql.internal.ParameterParser;
-import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.GenericArrayType;
@@ -56,13 +46,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.lang.Character.isWhitespace;
@@ -71,7 +59,6 @@ import static org.hibernate.boot.query.internal.Helper.extractHints;
 import static org.hibernate.internal.util.GenericsHelper.actualInheritedMemberType;
 import static org.hibernate.internal.util.PrimitiveHelper.boxedType;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_OBJECT_ARRAY;
-import static org.hibernate.models.internal.util.StringHelper.isEmpty;
 
 /**
  * Responsible for reading named queries defined in annotations and registering
@@ -770,28 +757,6 @@ public abstract class QueryBinder {
 		return options == null ? null : options.lockScope();
 	}
 //
-//	private static <T> NamedNativeQueryDefinition<T> createNamedQueryDefinition(
-//			String registrationName, String queryString,
-//			Class<T> resultClass, String resultSetMappingName,
-//			QueryHintDefinition hints,
-//			AnnotationTarget location) {
-//		return new NativeQueryBuilder<T>(registrationName, location)
-//				.setSqlString(queryString)
-//				.setResultClass(resultClass)
-//				.setResultSetMappingName(resultSetMappingName)
-//				.setQuerySpaces(null)
-//				.setCacheable(hints.getCacheability())
-//				.setCacheMode(hints.getCacheMode())
-//				.setCacheRegion(hints.getString(HibernateHints.HINT_CACHE_REGION))
-//				.setTimeout(hints.getTimeoutRef())
-//				.setFetchSize(hints.getInteger(HibernateHints.HINT_FETCH_SIZE))
-//				.setFlushMode(hints.getFlushMode())
-//				.setReadOnly(hints.getBooleanWrapper(HibernateHints.HINT_READ_ONLY))
-//				.setComment(hints.getString(HibernateHints.HINT_COMMENT))
-//				.addHints(hints.getHintsMap())
-//				.build();
-//	}
-
 	public static void bindNativeQuery(
 			String name,
 			SQLSelect sqlSelect,
@@ -820,121 +785,6 @@ public abstract class QueryBinder {
 			final var definition = NamedNativeSelectionDefinitionImpl.from( namedNativeQuery, location );
 			context.getMetadataCollector().addNamedNativeQuery( definition );
 		}
-	}
-
-//	private static CacheMode getCacheMode(CacheRetrieveMode cacheRetrieveMode, CacheStoreMode cacheStoreMode) {
-//		final CacheMode cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
-//		return cacheMode == null ? CacheMode.NORMAL : cacheMode;
-//	}
-//
-//	private static <T> NativeQueryBuilder<T> createQueryDefinition(
-//			org.hibernate.annotations.NamedNativeQuery namedNativeQuery,
-//			String registrationName, String resultSetMappingName,
-//			Class<T> resultClass,
-//			int timeout,
-//			int fetchSize,
-//			HashSet<String> querySpaces,
-//			AnnotationTarget location) {
-//		return new NativeQueryBuilder<T>(registrationName, location)
-//				.setSqlString(namedNativeQuery.query())
-//				.setResultSetMappingName(resultSetMappingName)
-//				.setResultClass(resultClass)
-//				.setCacheable(namedNativeQuery.cacheable())
-//				.setCacheRegion(nullIfEmpty(namedNativeQuery.cacheRegion()))
-//				.setCacheMode(getCacheMode(namedNativeQuery.cacheRetrieveMode(), namedNativeQuery.cacheStoreMode()))
-//				.setTimeout(timeout < 0 ? null : Timeout.seconds( timeout ) )
-//				.setFetchSize(fetchSize < 0 ? null : fetchSize)
-//				.setFlushMode(namedNativeQuery.flush())
-//				.setReadOnly(namedNativeQuery.readOnly())
-//				.setQuerySpaces(querySpaces)
-//				.setComment(nullIfEmpty(namedNativeQuery.comment()));
-//	}
-
-	/**
-	 * Handles legacy cases where a named native query was used to specify a procedure call
-	 *
-	 * @deprecated User should use {@linkplain NamedStoredProcedureQuery} instead
-	 */
-	@Deprecated
-	public static NamedProcedureCallDefinition createStoredProcedure(
-			NativeQueryBuilder<?> builder,
-			MetadataBuildingContext context,
-			Supplier<RuntimeException> exceptionProducer) {
-		final String sqlString = builder.getSqlString().trim();
-		if ( !sqlString.startsWith( "{" ) || !sqlString.endsWith( "}" ) ) {
-			throw exceptionProducer.get();
-		}
-		final var jdbcCall = parseJdbcCall( sqlString, exceptionProducer );
-
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		final var nameStoredProcedureQuery = JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY.createUsage( modelsContext );
-		nameStoredProcedureQuery.name( builder.getName() );
-		nameStoredProcedureQuery.procedureName( jdbcCall.callableName );
-		nameStoredProcedureQuery.parameters( parametersAsAnnotations( builder, context, jdbcCall ) );
-
-		final String resultSetMappingName = builder.getResultSetMappingName();
-		if ( resultSetMappingName != null ) {
-			nameStoredProcedureQuery.resultSetMappings( new String[] {resultSetMappingName} );
-		}
-
-		final var resultClass = builder.getResultClass();
-		if ( resultClass != null ) {
-			nameStoredProcedureQuery.resultClasses( new Class[]{ builder.getResultClass() } );
-		}
-
-		final var hints = hintsAsAnnotations( builder, modelsContext, jdbcCall );
-		nameStoredProcedureQuery.hints( hints.toArray(QueryHint[]::new) );
-
-		return new NamedProcedureCallDefinitionImpl( nameStoredProcedureQuery );
-	}
-
-	private static StoredProcedureParameter[] parametersAsAnnotations(
-			NativeQueryBuilder<?> builder, MetadataBuildingContext context, JdbcCall jdbcCall) {
-		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		final var parameters = new StoredProcedureParameter[jdbcCall.parameters.size()];
-		for ( int i = 0; i < jdbcCall.parameters.size(); i++ ) {
-			final var param = JpaAnnotations.STORED_PROCEDURE_PARAMETER.createUsage( modelsContext );
-			parameters[i] = param;
-
-			final String paramName = jdbcCall.parameters.get( i );
-			param.name( paramName );
-			param.mode( ParameterMode.IN );
-
-			final String typeName = builder.getParameterTypes().get( paramName );
-			final var classDetails =
-					isEmpty( typeName )
-							? ClassDetails.VOID_CLASS_DETAILS
-							: classDetails( context, typeName );
-			param.type( classDetails.toJavaClass() );
-		}
-		return parameters;
-	}
-
-	private static List<QueryHint> hintsAsAnnotations(
-			NativeQueryBuilder<?> builder, ModelsContext modelsContext, JdbcCall jdbcCall) {
-		final List<QueryHint> hints = new ArrayList<>();
-		if ( builder.getQuerySpaces() != null ) {
-			final var hint = JpaAnnotations.QUERY_HINT.createUsage( modelsContext );
-			hint.name( HibernateHints.HINT_NATIVE_SPACES );
-			hint.value( String.join( " ", builder.getQuerySpaces() ) );
-			hints.add( hint );
-		}
-		if ( jdbcCall.resultParameter ) {
-			// Mark native queries that have a result parameter as callable functions
-			final var hint = JpaAnnotations.QUERY_HINT.createUsage( modelsContext );
-			hint.name( HibernateHints.HINT_CALLABLE_FUNCTION );
-			hint.value( "true" );
-			hints.add( hint );
-		}
-		return hints;
-	}
-
-	private static ClassDetails classDetails(MetadataBuildingContext context, String typeName) {
-		final String registeredTypeName =
-				context.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry()
-						.getRegisteredType( typeName ).getJavaType().getName();
-		return context.getMetadataCollector().getClassDetailsRegistry()
-				.getClassDetails( registeredTypeName );
 	}
 
 	public static void bindQuery(
@@ -1006,75 +856,4 @@ public abstract class QueryBinder {
 				.addSecondPass( new ResultSetMappingSecondPass( resultSetMappingAnn, context, location, isDefault ) );
 	}
 
-	private record JdbcCall(String callableName, boolean resultParameter, ArrayList<String> parameters) {
-	}
-
-	private static JdbcCall parseJdbcCall(String sqlString, Supplier<RuntimeException> exceptionProducer) {
-		String callableName = null;
-		boolean resultParameter = false;
-		int index = skipWhitespace( sqlString, 1 );
-		// Parse the out param `?=` part
-		if ( sqlString.charAt( index ) == '?' ) {
-			resultParameter = true;
-			index++;
-			index = skipWhitespace( sqlString, index );
-			if ( sqlString.charAt( index ) != '=' ) {
-				throw exceptionProducer.get();
-			}
-			index++;
-			index = skipWhitespace( sqlString, index );
-		}
-		// Parse the call keyword
-		if ( !sqlString.regionMatches( true, index, "call", 0, 4 ) ) {
-			throw exceptionProducer.get();
-		}
-		index += 4;
-		index = skipWhitespace( sqlString, index );
-
-		// Parse the procedure name
-		final int procedureStart = index;
-		for ( ; index < sqlString.length(); index++ ) {
-			final char c = sqlString.charAt( index );
-			if ( c == '(' || isWhitespace( c ) ) {
-				callableName = sqlString.substring( procedureStart, index );
-				break;
-			}
-		}
-		index = skipWhitespace( sqlString, index );
-		final ArrayList<String> parameters = new ArrayList<>();
-		ParameterParser.parse(
-				sqlString.substring( index, sqlString.length() - 1 ),
-				new ParameterRecognizer() {
-					@Override
-					public void ordinalParameter(int sourcePosition) {
-						parameters.add( "" );
-					}
-
-					@Override
-					public void namedParameter(String name, int sourcePosition) {
-						parameters.add( name );
-					}
-
-					@Override
-					public void jpaPositionalParameter(int label, int sourcePosition) {
-						parameters.add( "" );
-					}
-
-					@Override
-					public void other(char character) {
-					}
-				}
-		);
-		return new JdbcCall( callableName, resultParameter, parameters );
-	}
-
-	private static int skipWhitespace(String sqlString, int i) {
-		while ( i < sqlString.length() ) {
-			if ( !isWhitespace( sqlString.charAt( i ) ) ) {
-				break;
-			}
-			i++;
-		}
-		return i;
-	}
 }

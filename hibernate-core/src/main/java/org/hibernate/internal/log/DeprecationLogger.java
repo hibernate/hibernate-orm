@@ -11,7 +11,6 @@ import java.util.Locale;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.cfg.AvailableSettings;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -152,8 +151,7 @@ public interface DeprecationLogger extends BasicLogger {
 	@Message(
 			id = 90000028,
 			value = "Support for `<hibernate-mappings/>` is deprecated [%s : %s]; " +
-					"migrate to orm.xml or mapping.xml, or enable `" + AvailableSettings.TRANSFORM_HBM_XML +
-					"` for on the fly transformation"
+					"migrate to orm.xml or mapping.xml"
 	)
 	void logDeprecatedHbmXmlProcessing(SourceType sourceType, String name);
 

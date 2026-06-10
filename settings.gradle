@@ -126,7 +126,6 @@ include 'hibernate-core'
 include 'hibernate-testing'
 include 'hibernate-dialect-testkit'
 
-include 'hibernate-envers'
 include 'hibernate-spatial'
 
 include 'hibernate-platform'

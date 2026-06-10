@@ -30,7 +30,6 @@ Additionally, Hibernate supports resolving the following integrations as managed
 * `org.hibernate.usertype.UserType`
 * `org.hibernate.usertype.UserCollectionType`
 * `org.hibernate.metamodel.EmbeddableInstantiator`
-* `org.hibernate.envers.RevisionListener`
 * `org.hibernate.id.IdentifierGenerator`
 
 NOTE: At the moment, when using either <<beans-cdi-delayed,delayed>> or <<beans-cdi-extended,extended>>

@@ -189,7 +189,7 @@ public class SchemaUpdate {
 	private static MetadataImplementor buildMetadata(CommandLineArgs parsedArgs, ServiceRegistry serviceRegistry) {
 		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 
-		for ( String filename : parsedArgs.hbmXmlFiles ) {
+		for ( String filename : parsedArgs.mappingFiles ) {
 			metadataSources.addFile( filename );
 		}
 
@@ -231,7 +231,7 @@ public class SchemaUpdate {
 		String implicitNamingStrategyImplName = null;
 		String physicalNamingStrategyImplName = null;
 
-		List<String> hbmXmlFiles = new ArrayList<>();
+		List<String> mappingFiles = new ArrayList<>();
 		List<String> jarFiles = new ArrayList<>();
 
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
@@ -279,7 +279,7 @@ public class SchemaUpdate {
 						parsedArgs.jarFiles.add( arg );
 					}
 					else {
-						parsedArgs.hbmXmlFiles.add( arg );
+						parsedArgs.mappingFiles.add( arg );
 					}
 				}
 			}

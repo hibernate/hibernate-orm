@@ -5,7 +5,6 @@
 package org.hibernate.orm.tooling.maven.reveng;
 
 import org.hibernate.orm.tooling.maven.AbstractMavenTestIT;
-import org.hibernate.tool.reveng.api.version.Version;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -124,18 +123,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 			assertGeneratedContains("Person.java", "Set<Item>");
 		}
 
-		@Test
-		public void testHbm2OrmSimpleDefault() throws Exception {
-			projectFolder = new File(baseFolder, "hbm2orm/simple-default");
-			File ormXmlFile = new File(projectFolder, "src/main/resources/simple.mapping.xml");
-			ormXmlFile.delete();
-			runMaven( projectFolder.getAbsolutePath(), "org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm");
-			assertTrue(ormXmlFile.exists());
-			String ormXmlContents = Files.readString( ormXmlFile.toPath() );
-			assertTrue(ormXmlContents.contains("entity-mappings"));
-		}
-
-		private void prepareProject(String projectName) throws Exception {
+			private void prepareProject(String projectName) throws Exception {
 			projectFolder = new File(baseFolder, projectName);
 			assertTrue(projectFolder.exists());
 			editPomFile(projectFolder);

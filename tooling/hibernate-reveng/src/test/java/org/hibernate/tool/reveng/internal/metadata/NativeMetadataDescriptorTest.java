@@ -11,7 +11,6 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Properties;
 import java.util.jar.JarOutputStream;
@@ -22,6 +21,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class NativeMetadataDescriptorTest {
+
+	private static final String ORM_XML = """
+			<?xml version="1.0" encoding="UTF-8"?>
+			<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="3.2">
+				<entity class="org.hibernate.tool.hbm2ddl.HelloWorld" metadata-complete="true" access="FIELD">
+					<table name="HELLO_WORLD"/>
+					<attributes>
+						<id name="id"><column length="10"/></id>
+						<basic name="hello"><column length="5"/></basic>
+						<basic name="world"/>
+					</attributes>
+				</entity>
+			</entity-mappings>
+			""";
 
 	private static Properties h2Props() {
 		Properties props = new Properties();
@@ -52,13 +65,10 @@ public class NativeMetadataDescriptorTest {
 
 	@Test
 	public void testConstructorWithMappingFiles(@TempDir File tempDir) throws IOException {
-		File hbmFile = new File(tempDir, "HelloWorld.hbm.xml");
-		try (InputStream in = getClass().getResourceAsStream(
-				"/org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")) {
-			Files.copy(in, hbmFile.toPath());
-		}
+		File ormFile = new File(tempDir, "HelloWorld.orm.xml");
+		Files.writeString(ormFile.toPath(), ORM_XML);
 		NativeMetadataDescriptor descriptor = new NativeMetadataDescriptor(
-				null, new File[]{hbmFile}, h2Props());
+				null, new File[]{ormFile}, h2Props());
 		Properties result = descriptor.getProperties();
 		assertNotNull(result);
 	}
@@ -108,13 +118,10 @@ public class NativeMetadataDescriptorTest {
 
 	@Test
 	public void testCreateMetadataWithMappingFiles(@TempDir File tempDir) throws IOException {
-		File hbmFile = new File(tempDir, "HelloWorld.hbm.xml");
-		try (InputStream in = getClass().getResourceAsStream(
-				"/org/hibernate/tool/reveng/hbm2x/DdlExporterTest/HelloWorld.hbm.xml")) {
-			Files.copy(in, hbmFile.toPath());
-		}
+		File ormFile = new File(tempDir, "HelloWorld.orm.xml");
+		Files.writeString(ormFile.toPath(), ORM_XML);
 		NativeMetadataDescriptor descriptor = new NativeMetadataDescriptor(
-				null, new File[]{hbmFile}, h2Props());
+				null, new File[]{ormFile}, h2Props());
 		Metadata metadata = descriptor.createMetadata();
 		assertNotNull(metadata);
 		assertTrue(metadata.getEntityBindings().iterator().hasNext());

@@ -40,11 +40,7 @@ import org.apache.tools.ant.types.FileSet;
  *     classpathref="class.path"/&gt;
  *
  * &lt;schemaupdate
- *     properties="${build.classes.dir}/hibernate.properties"
- *     &lt;fileset dir="${build.classes.dir}"&gt;
- *         &lt;include name="*.hbm.xml"/&gt;
- *     &lt;/fileset&gt;
- * &lt;/schemaupdate&gt;
+ *     properties="${build.classes.dir}/hibernate.properties"/&gt;
  * </pre>
  *
  * @see SchemaValidator

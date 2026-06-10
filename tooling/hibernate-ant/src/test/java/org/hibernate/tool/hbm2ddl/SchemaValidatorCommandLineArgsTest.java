@@ -24,7 +24,7 @@ public class SchemaValidatorCommandLineArgsTest {
 		assertNull(getField(args, "cfgXmlFile"));
 		assertNull(getField(args, "implicitNamingStrategy"));
 		assertNull(getField(args, "physicalNamingStrategy"));
-		assertTrue(((java.util.List<?>) getField(args, "hbmXmlFiles")).isEmpty());
+		assertTrue(((java.util.List<?>) getField(args, "mappingFiles")).isEmpty());
 		assertTrue(((java.util.List<?>) getField(args, "jarFiles")).isEmpty());
 	}
 
@@ -69,11 +69,11 @@ public class SchemaValidatorCommandLineArgsTest {
 	}
 
 	@Test
-	public void testParseHbmFile() throws Exception {
-		Object args = parseArgs(new String[]{"Person.hbm.xml"});
-		java.util.List<?> hbmFiles = (java.util.List<?>) getField(args, "hbmXmlFiles");
-		assertEquals(1, hbmFiles.size());
-		assertEquals("Person.hbm.xml", hbmFiles.get(0));
+	public void testParseMappingFile() throws Exception {
+		Object args = parseArgs(new String[]{"Person.mapping.xml"});
+		java.util.List<?> mappingFiles = (java.util.List<?>) getField(args, "mappingFiles");
+		assertEquals(1, mappingFiles.size());
+		assertEquals("Person.mapping.xml", mappingFiles.get(0));
 	}
 
 	@Test
@@ -81,15 +81,15 @@ public class SchemaValidatorCommandLineArgsTest {
 		Object args = parseArgs(new String[]{
 				"--properties=/tmp/test.properties",
 				"--config=/tmp/hibernate.cfg.xml",
-				"Person.hbm.xml",
+				"Person.mapping.xml",
 				"model.jar",
 				"--implicit-naming=org.example.ImplicitStrategy"
 		});
 		assertEquals("/tmp/test.properties", getField(args, "propertiesFile"));
 		assertEquals("/tmp/hibernate.cfg.xml", getField(args, "cfgXmlFile"));
 		assertEquals("org.example.ImplicitStrategy", getField(args, "implicitNamingStrategy"));
-		java.util.List<?> hbmFiles = (java.util.List<?>) getField(args, "hbmXmlFiles");
-		assertEquals(1, hbmFiles.size());
+		java.util.List<?> mappingFiles = (java.util.List<?>) getField(args, "mappingFiles");
+		assertEquals(1, mappingFiles.size());
 		java.util.List<?> jarFiles = (java.util.List<?>) getField(args, "jarFiles");
 		assertEquals(1, jarFiles.size());
 	}

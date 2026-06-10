@@ -146,7 +146,6 @@ dependencies {
 	reportAggregation project( ':hibernate-core' )
 	reportAggregation project( ':hibernate-dialect-testkit' )
 	reportAggregation project( ':hibernate-testing' )
-	reportAggregation project(':hibernate-envers')
 	reportAggregation project(':hibernate-graalvm')
 	reportAggregation project(':hibernate-hikaricp')
 	reportAggregation project(':hibernate-jcache')
@@ -174,9 +173,6 @@ dependencies {
 
 	core project( ':hibernate-core' )
 	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
-
-	envers project( ':hibernate-envers' )
-	javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
 
 	testing project( ':hibernate-testing' )
 	dialectTestkit project( ':hibernate-dialect-testkit' )
@@ -750,11 +746,6 @@ settingsDocumentation {
 			summary = "Dialect Specific Settings"
 			description = "Settings used for dialect configuration when the database isn't available"
 			settingsClassName "org.hibernate.cfg.DialectSpecificSettings"
-		}
-		envers {
-			summary = "Audit/History Settings"
-			description = "Settings which control Hibernate's audit/history support (hibernate-envers)"
-			settingsClassName "org.hibernate.envers.configuration.EnversSettings"
 		}
 		spatial {
 			summary = "Hibernate Spatial Settings"

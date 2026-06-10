@@ -5,16 +5,100 @@
 package org.hibernate.orm.test.sql.hand;
 import java.util.Date;
 
+import org.hibernate.annotations.CompositeType;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.id.IncrementGenerator;
+
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedStoredProcedureQueries;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureParameter;
+import jakarta.persistence.Table;
+
 /**
  * @author Gavin King
  */
+@Entity
+@Table(name = "EMPLOYMENT")
+@SQLInsert(sql = """
+		INSERT INTO EMPLOYMENT
+			(EMPLOYEE, EMPLOYER, STARTDATE, REGIONCODE, VALUE, CURRENCY, EMPID)
+		VALUES (?, ?, TIMESTAMP ('2006-02-28 11:39:00'), UPPER(? || ''), ?, ?, ?)
+		""")
+@SQLUpdate(sql = "UPDATE EMPLOYMENT SET ENDDATE=?, VALUE=?, CURRENCY=? WHERE EMPID=?")
+@SQLDelete(sql = "DELETE FROM EMPLOYMENT WHERE EMPID=?")
+@SQLSelect(sql = """
+		SELECT EMPLOYEE, EMPLOYER, STARTDATE, ENDDATE, REGIONCODE, EMPID, VALUE, CURRENCY
+		FROM EMPLOYMENT
+		WHERE EMPID = ?
+		""")
+@NamedStoredProcedureQueries({
+		@NamedStoredProcedureQuery(
+				name = "simpleScalar",
+				procedureName = "simpleScalar",
+				parameters = @StoredProcedureParameter(name = "p_number", mode = ParameterMode.IN, type = Integer.class)
+		),
+		@NamedStoredProcedureQuery(
+				name = "paramhandling",
+				procedureName = "paramHandling",
+				parameters = {
+						@StoredProcedureParameter(mode = ParameterMode.IN, type = Integer.class),
+						@StoredProcedureParameter(mode = ParameterMode.IN, type = Integer.class)
+				}
+		),
+		@NamedStoredProcedureQuery(
+				name = "paramhandling_mixed",
+				procedureName = "paramHandling",
+				parameters = {
+						@StoredProcedureParameter(mode = ParameterMode.IN, type = Integer.class),
+						@StoredProcedureParameter(name = "second", mode = ParameterMode.IN, type = Integer.class)
+				}
+		),
+		@NamedStoredProcedureQuery(
+				name = "selectAllEmployments",
+				procedureName = "selectAllEmployments",
+				resultClasses = Employment.class
+		)
+})
 public class Employment {
+	@Id
+	@GenericGenerator(type = IncrementGenerator.class)
+	@Column(name = "EMPID")
 	private long employmentId;
+
+	@ManyToOne
+	@JoinColumn(name = "EMPLOYEE", nullable = false, updatable = false)
 	private Person employee;
+
+	@ManyToOne
+	@JoinColumn(name = "EMPLOYER", nullable = false, updatable = false)
 	private Organization employer;
+
+	@Column(name = "STARTDATE", nullable = false, insertable = false, updatable = false)
 	private Date startDate;
+
+	@Column(name = "ENDDATE", insertable = false)
 	private Date endDate;
+
+	@Column(name = "REGIONCODE", updatable = false)
 	private String regionCode;
+
+	@CompositeType(MonetaryAmountUserType.class)
+	@AttributeOverrides({
+			@AttributeOverride(name = "value", column = @Column(name = "VALUE")),
+			@AttributeOverride(name = "currency", column = @Column(name = "CURRENCY"))
+	})
 	private MonetaryAmount salary;
 
 	public Employment() {}

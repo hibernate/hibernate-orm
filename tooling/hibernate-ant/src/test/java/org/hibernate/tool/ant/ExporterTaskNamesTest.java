@@ -37,15 +37,9 @@ public class ExporterTaskNamesTest {
 	}
 
 	@Test
-	public void testHbmLintExporterTaskName() {
-		assertEquals("hbmlint (scans mapping for errors)",
-				new HbmLintExporterTask(parent).getName());
-	}
-
-	@Test
-	public void testHbm2HbmXmlExporterTaskName() {
-		assertEquals("hbm2hbmxml (Generates a set of hbm.xml files)",
-				new Hbm2HbmXmlExporterTask(parent).getName());
+	public void testLintExporterTaskName() {
+		assertEquals("lint (scans mapping for errors)",
+				new LintExporterTask(parent).getName());
 	}
 
 	@Test

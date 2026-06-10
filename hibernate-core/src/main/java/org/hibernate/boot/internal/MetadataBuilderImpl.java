@@ -4,11 +4,6 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.Collection;
-import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
-import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
-import org.hibernate.boot.model.process.internal.MappingSourceHelper;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -29,8 +24,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.scan.spi.ScanningProvider;
-import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
-import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
@@ -96,8 +89,6 @@ import static org.hibernate.cfg.MappingSettings.IGNORE_EXPLICIT_DISCRIMINATOR_CO
 import static org.hibernate.cfg.MappingSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS;
 import static org.hibernate.cfg.MappingSettings.IMPLICIT_NAMING_STRATEGY;
 import static org.hibernate.cfg.MappingSettings.PHYSICAL_NAMING_STRATEGY;
-import static org.hibernate.cfg.MappingSettings.TRANSFORM_HBM_XML;
-import static org.hibernate.cfg.MappingSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING;
 import static org.hibernate.cfg.MappingSettings.USE_NATIONALIZED_CHARACTER_DATA;
 import static org.hibernate.cfg.MappingSettings.XML_FORMAT_MAPPER_LEGACY_FORMAT;
 import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
@@ -108,7 +99,6 @@ import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
-import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -238,7 +228,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	@Deprecated(since = "8.0", forRemoval = true)
 	public MetadataBuilder applyImplicitListSemantics(CollectionClassification classification) {
 		if ( classification != null ) {
 			options.mappingDefaults.implicitListClassification = classification;
@@ -426,43 +415,19 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataImplementor build() {
-		MappingSourceHelper.applyConfigurationMappings( sources, options.serviceRegistry );
-
-		final var bootModel = MetadataBuildingProcess.build( sources, bootstrapContext, options );
-
-		if ( isNotEmpty( sources.getHbmXmlBindings() ) ) {
-			final var configurationService = bootstrapContext.getConfigurationService();
-			final boolean transformHbm = configurationService != null
-					&& configurationService.getSetting( TRANSFORM_HBM_XML, BOOLEAN,false );
-
-			if ( !transformHbm ) {
-				for ( var hbmXmlBinding : sources.getHbmXmlBindings() ) {
-					final var origin = hbmXmlBinding.getOrigin();
-					DEPRECATION_LOGGER.logDeprecatedHbmXmlProcessing( origin.getType(), origin.getName() );
+		final var aggregatedConfig =
+				options.serviceRegistry.requireService( CfgXmlAccessService.class )
+						.getAggregatedConfig();
+		if ( aggregatedConfig != null ) {
+			final var mappingReferences = aggregatedConfig.getMappingReferences();
+			if ( mappingReferences != null ) {
+				for ( var mappingReference : mappingReferences ) {
+					mappingReference.apply( sources );
 				}
-			}
-			else {
-				final var transformed = HbmXmlTransformer.transform(
-						sources.getHbmXmlBindings(),
-						bootModel,
-						UnsupportedFeatureHandling.fromSetting(
-								configurationService.getSettings().get( TRANSFORM_HBM_XML_FEATURE_HANDLING ),
-								UnsupportedFeatureHandling.ERROR
-						)
-				);
-
-				final var transformedResources = new ManagedResourcesBuilder()
-						.addNonXmlResources( ManagedResourcesImpl.baseline( sources, bootstrapContext ) );
-				transformed.forEach( transformedResources::addXmlBinding );
-				final var transformedBuilder = new MetadataBuilderImpl(
-						new MetadataSources( bootstrapContext.getServiceRegistry() ), bootstrapContext.getServiceRegistry() );
-				// Initial preparation already admitted configuration references and non-XML resources.
-				return MetadataBuildingProcess.complete( transformedResources.build(),
-						transformedBuilder.bootstrapContext, transformedBuilder.options );
 			}
 		}
 
-		return bootModel;
+		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
 	}
 
 	@Override
@@ -509,7 +474,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implicitListClassification = configService.getSetting(
 					DEFAULT_LIST_SEMANTICS,
 					value -> {
-						DEPRECATION_LOGGER.deprecatedSetting( DEFAULT_LIST_SEMANTICS, "@DefaultListSemantics" );
 						final var classification = CollectionClassification.interpretSetting( value );
 						if ( classification != CollectionClassification.LIST
 							&& classification != CollectionClassification.BAG ) {
@@ -518,8 +482,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 											Locale.ROOT,
 											"'%s' should specify either '%s' or '%s' (was '%s')",
 											DEFAULT_LIST_SEMANTICS,
-											List.class.getName(),
-											Collection.class.getName(),
+											java.util.List.class.getName(),
+											java.util.Collection.class.getName(),
 											classification.name()
 									)
 							);
@@ -597,7 +561,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		@Deprecated(since = "8.0", forRemoval = true)
 		public CollectionClassification getImplicitListClassification() {
 			return implicitListClassification;
 		}

@@ -1,5 +1,0 @@
-# SPDX-License-Identifier: Apache-2.0
-# Copyright Red Hat Inc. and Hibernate Authors
-#
-org.hibernate.envers.boot.internal.ModifiedColumnNamingStrategyRegistrationProvider
-org.hibernate.envers.boot.internal.AuditStrategyRegistrationProvider

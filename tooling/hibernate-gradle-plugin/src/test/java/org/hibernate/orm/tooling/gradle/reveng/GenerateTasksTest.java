@@ -53,15 +53,6 @@ public class GenerateTasksTest {
 	}
 
 	@Test
-	public void testGenerateHbmTaskCreation() throws Exception {
-		TestableHbmTask task = project.getTasks().create("genHbm", TestableHbmTask.class);
-		assertNotNull(task);
-		RevengSpec spec = new RevengSpec();
-		task.initialize(spec);
-		assertSame(spec, task.getRevengSpec());
-	}
-
-	@Test
 	public void testGenerateJavaTaskPerform() {
 		TestableJavaTask task = project.getTasks().create("genJava2", TestableJavaTask.class);
 		task.perform();
@@ -80,13 +71,6 @@ public class GenerateTasksTest {
 		TestableCfgTask task = project.getTasks().create("genCfg2", TestableCfgTask.class);
 		task.perform();
 		assertNotNull(TestableCfgTask.usedClassLoader);
-	}
-
-	@Test
-	public void testGenerateHbmTaskPerform() {
-		TestableHbmTask task = project.getTasks().create("genHbm2", TestableHbmTask.class);
-		task.perform();
-		assertNotNull(TestableHbmTask.usedClassLoader);
 	}
 
 	@Test
@@ -117,9 +101,4 @@ public class GenerateTasksTest {
 		URL[] resolveProjectClassPath() { return URLS; }
 	}
 
-	public static class TestableHbmTask extends GenerateHbmTask {
-		static ClassLoader usedClassLoader;
-		void doWork() { usedClassLoader = Thread.currentThread().getContextClassLoader(); }
-		URL[] resolveProjectClassPath() { return URLS; }
-	}
 }

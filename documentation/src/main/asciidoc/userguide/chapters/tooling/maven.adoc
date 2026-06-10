@@ -2,8 +2,7 @@
 === Maven
 
 The following sections illustrate how <<tooling-maven-enhancement,bytecode enhancement>>,
-<<tooling-maven-modelgen,metamodel generation>>, <<tooling-maven-reveng,reverse engineering>>,
-and <<tooling-maven-transformhbm,HBM XML transformation>>
+<<tooling-maven-modelgen,metamodel generation>>, and <<tooling-maven-reveng,reverse engineering>>
 capabilities can be integrated into Maven builds.
 
 [[tooling-maven-enhancement]]
@@ -317,17 +316,3 @@ Run the generation with:
 ----
 mvn generate-sources
 ----
-
-
-[[tooling-maven-transformhbm]]
-==== HBM XML Transformation
-
-The `hibernate-maven-plugin` provides a `transformHbm` goal that transforms legacy `hbm.xml` mapping files
-into ORM `mapping.xml` files. This goal does not connect to a database -- it converts existing HBM mappings.
-
-
-[[tooling-maven-transformhbm-params]]
-===== transformHbm Parameters
-
-`inputFolder`:: The folder containing `hbm.xml` files to transform. Files are discovered recursively. Default: `${project.basedir}/src/main/resources`.
-`format`:: Whether to format the output XML. Default: `true`.

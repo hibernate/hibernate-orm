@@ -40,7 +40,6 @@ transitive dependencies based on the features being used or not.
 .API-oriented modules
 |===
 |hibernate-core| The core object/relational mapping engine
-|hibernate-envers| Entity versioning and auditing (deprecated since Hibernate ORM 8.0; prefer core temporal and audit support for new development)
 |hibernate-spatial| Support for spatial/GIS data types using https://github.com/GeoLatte/geolatte-geom[GeoLatte]
 |hibernate-processor| An annotation processor that generates a JPA-compliant metamodel, plus optional Hibernate extras
 |hibernate-vector| Support for mathematical vector types and functions useful for AI/ML topics like vector similarity search and Retrieval-Augmented Generation (RAG)

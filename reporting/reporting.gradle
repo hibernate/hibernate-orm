@@ -12,7 +12,6 @@ ext {
             'hibernate-community-dialects',
             'hibernate-core',
             'hibernate-dialect-testkit',
-            'hibernate-envers',
             'hibernate-graalvm',
             'hibernate-hikaricp',
             'hibernate-jcache',

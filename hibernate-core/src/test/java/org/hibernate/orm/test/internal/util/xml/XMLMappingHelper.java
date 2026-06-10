@@ -35,8 +35,8 @@ public final class XMLMappingHelper {
 	public JaxbEntityMappingsImpl readOrmXmlMappings(InputStream is, String name) {
 		try {
 			Assertions.assertNotNull( is, "Resource not found: " + name );
-			Binding<?> binding = binder.bind( is, new Origin( SourceType.JAR, name ) );
-			return (JaxbEntityMappingsImpl) binding.getRoot();
+			Binding<JaxbEntityMappingsImpl> binding = binder.bind( is, new Origin( SourceType.JAR, name ) );
+			return binding.getRoot();
 		}
 		catch (RuntimeException e) {
 			throw new IllegalStateException( "Could not parse orm.xml mapping '" + name + "': " + e.getMessage(), e );

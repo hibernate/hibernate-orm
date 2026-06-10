@@ -39,11 +39,7 @@ import org.apache.tools.ant.types.FileSet;
  *
  * &lt;schemaupdate
  *     properties="${build.classes.dir}/hibernate.properties"
- *     quiet="no"
- *     &lt;fileset dir="${build.classes.dir}"&gt;
- *         &lt;include name="*.hbm.xml"/&gt;
- *     &lt;/fileset&gt;
- * &lt;/schemaupdate&gt;
+ *     quiet="no"/&gt;
  * </pre>
  *
  * @author Rong C Ou, Gavin King

@@ -11,8 +11,8 @@ import org.hibernate.boot.MappingException;
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ public class UrlXmlSource {
 	 *
 	 * @see #fromUrl(URL, Origin, MappingBinder)
 	 */
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromResource(
+	public static Binding<JaxbEntityMappingsImpl> fromResource(
 			String resourceName,
 			ClassLoaderService classLoaderService,
 			MappingBinder mappingBinder) {
@@ -52,7 +52,7 @@ public class UrlXmlSource {
 	 *
 	 * @see #fromUrl(URL, Origin, MappingBinder)
 	 */
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromUrl(
+	public static Binding<JaxbEntityMappingsImpl> fromUrl(
 			URL url,
 			MappingBinder mappingBinder) {
 		return fromUrl( url, new Origin( SourceType.URL, url.toExternalForm() ), mappingBinder );
@@ -65,7 +65,7 @@ public class UrlXmlSource {
 	 * @param origin Description of the source from which the url came
 	 * @param binder The JAXB binder to use
 	 */
-	public static Binding<? extends JaxbBindableMappingDescriptor> fromUrl(
+	public static Binding<JaxbEntityMappingsImpl> fromUrl(
 			URL url,
 			Origin origin,
 			MappingBinder binder) {

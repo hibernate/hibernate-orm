@@ -72,8 +72,6 @@ public class CfgExporter extends AbstractExporter {
 						"https://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">\r
 				<hibernate-configuration>""" );
 
-		boolean ejb3 = Boolean.parseBoolean( (String) getProperties().get( "ejb3" ) );
-
 		Map<Object, Object> props = new TreeMap<>();
 		if (getProperties() != null) {
 				props.putAll(getProperties());
@@ -109,7 +107,7 @@ public class CfgExporter extends AbstractExporter {
 		if(getMetadata()!=null) {
 			for ( PersistentClass element : getMetadata().getEntityBindings() ) {
 				if ( element instanceof RootClass ) {
-					dump( pw, ejb3, element );
+					dump( pw, element );
 				}
 			}
 		}
@@ -130,23 +128,13 @@ public class CfgExporter extends AbstractExporter {
 
 	}
 
-	private void dump(PrintWriter pw, boolean useClass, PersistentClass element) {
-		if(useClass) {
-			pw.println("<mapping class=\"" + element.getClassName() + "\"/>");
-		}
-		else {
-			pw.println("<mapping resource=\"" + getMappingFileResource(element) + "\"/>");
-		}
+	private void dump(PrintWriter pw, PersistentClass element) {
+		pw.println("<mapping class=\"" + element.getClassName() + "\"/>");
 
 		for ( Subclass value : element.getDirectSubclasses() ) {
-			dump( pw, useClass, value );
+			dump( pw, value );
 		}
 
-	}
-
-	private String getMappingFileResource(PersistentClass element) {
-
-		return element.getClassName().replace('.', '/') + ".hbm.xml";
 	}
 
 	public String getName() {

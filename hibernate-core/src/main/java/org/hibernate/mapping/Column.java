@@ -306,7 +306,7 @@ public sealed class Column
 	private String getSqlTypeName(TypeConfiguration typeConfiguration, Dialect dialect, MappingContext mapping) {
 		if ( sqlTypeName == null ) {
 			final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final var type = ( (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex ) );
+			final var type = (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex );
 			final var jdbcType = type.getJdbcType();
 			final var descriptor = ddlTypeRegistry.getDescriptor( jdbcType.getDdlTypeCode() );
 			if ( descriptor == null ) {

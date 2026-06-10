@@ -108,7 +108,7 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			final var table = property.getValue().getTable();
 			if ( property.getSelectables().get( 0 ) instanceof Column column
 					&& table.isPhysicalTable() && !table.isView() ) {
-				rowLevelSecurity.addTenantIdTableInitCommands( collector, table, column, column.getSqlType( collector ) );
+				rowLevelSecurity.addTenantIdTableInitCommands( collector, table, column, collector );
 			}
 		}
 	}

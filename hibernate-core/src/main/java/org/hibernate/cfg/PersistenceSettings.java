@@ -170,6 +170,24 @@ public interface PersistenceSettings {
 	String JPA_CALLBACKS_ENABLED = "hibernate.jpa_callbacks.enabled";
 
 	/**
+	 * Enables flush-time management of bidirectional associations in the
+	 * managed object graph.
+	 * <p>
+	 * When enabled, Hibernate treats the owning side of each bidirectional
+	 * association as authoritative during flush preparation, and updates the
+	 * inverse side for managed entities and initialized managed persistent
+	 * collections as if application code had made those changes before flushing.
+	 * Uninitialized lazy inverse collections are not initialized solely for this
+	 * synchronization.
+	 *
+	 * @settingDefault {@code false}
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	String BIDIRECTIONALITY_MANAGEMENT = "hibernate.bidirectionality_management";
+
+	/**
 	 * Specifies a class which implements {@link org.hibernate.SessionFactoryObserver} and has
 	 * a constructor with no parameters.
 	 *

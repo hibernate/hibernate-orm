@@ -187,6 +187,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isBidirectionalAssociationManagementEnabled() {
+		return delegate.isBidirectionalAssociationManagementEnabled();
+	}
+
+	@Override
 	public int getDefaultBatchFetchSize() {
 		return delegate.getDefaultBatchFetchSize();
 	}

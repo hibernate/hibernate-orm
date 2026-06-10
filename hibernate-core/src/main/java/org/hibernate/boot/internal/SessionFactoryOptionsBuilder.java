@@ -170,6 +170,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean identifierRollbackEnabled;
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
+	private boolean bidirectionalAssociationManagementEnabled;
 	private TemporalTableStrategy temporalTableStrategy;
 	private AuditStrategy auditStrategy;
 	private int defaultBatchFetchSize;
@@ -369,7 +370,22 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
 		initializeLazyStateOutsideTransactions =
 				configurationService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
-
+		final Object bidirectionalAssociationManagementSetting =
+				settings.get( BIDIRECTIONALITY_MANAGEMENT );
+		if ( bidirectionalAssociationManagementSetting == null ) {
+			bidirectionalAssociationManagementEnabled =
+					getBoolean( ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT, settings, false );
+			if ( settings.containsKey( ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT ) ) {
+				DEPRECATION_LOGGER.deprecatedSetting(
+						ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT,
+						BIDIRECTIONALITY_MANAGEMENT
+				);
+			}
+		}
+		else {
+			bidirectionalAssociationManagementEnabled =
+					getBoolean( BIDIRECTIONALITY_MANAGEMENT, settings, false );
+		}
 		temporalTableStrategy = TemporalHelper.determineTemporalTableStrategy( settings );
 		if ( temporalTableStrategy == TemporalTableStrategy.AUTO ) {
 			temporalTableStrategy = dialect.getTemporalTableSupport().getDefaultTemporalTableStrategy();
@@ -1172,6 +1188,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isInitializeLazyStateOutsideTransactionsEnabled() {
 		return initializeLazyStateOutsideTransactions;
+	}
+
+	@Override
+	public boolean isBidirectionalAssociationManagementEnabled() {
+		return bidirectionalAssociationManagementEnabled;
 	}
 
 	@Override

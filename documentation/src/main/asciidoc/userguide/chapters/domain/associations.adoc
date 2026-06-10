@@ -7,6 +7,15 @@
 
 Associations describe how two or more entities form a relationship based on a database joining semantics.
 
+[NOTE]
+====
+Hibernate has historically relied on users managing both sides of bidirectional associations.  The examples in this chapter generally illustrate this manual management as it is the only portable approach, in the Jakarta Persistence sense.
+
+However, starting in 8.0 Hibernate adds the option to automatically manage the inverse side of these bidirectional
+associations.  See <<auto-bidir-mgmt>> for details.
+
+====
+
 [[associations-many-to-one]]
 ==== `@ManyToOne`
 
@@ -851,3 +860,68 @@ include::{extrasdir}/associations-JoinColumnOrFormula-fetching-example.sql[]
 ====
 
 Therefore, the `@JoinColumnOrFormula` annotation is used to define a custom join association between the parent-child association.
+
+
+[[auto-bidir-mgmt]]
+=== Automatic Bidirectionality Management
+
+As mentioned earlier, Hibernate assumes that users will manually manage both sides of a bidirectional association keeping them in sync.  That approach was discussed throughout this chapter.
+
+However, starting in 8.0 Hibernate also adds the option to automatically manage the *inverse* side of bidirectional associations.
+
+[IMPORTANT]
+====
+It is important to note that users must still manage the *owning* side.  Changing just the *inverse* side will have no effect.
+====
+
+To opt in to this behavior, use
+
+[source,properties]
+----
+hibernate.bidirectionality_management=true
+----
+
+
+Hibernate performs this management during flush preparation.
+At that time, Hibernate inspects the managed persistence context, treats the *owning* side of each bidirectional association as authoritative, and applies the corresponding *inverse*-side changes for managed entities.
+These changes are made before dirty checking and before SQL actions are scheduled.
+
+In other words, enabling this feature effectively asks Hibernate to perform the inverse-side updates that we saw performed manually throughout this chapter.  For example, if a managed child entity is reassigned to a different parent by changing the owning `@ManyToOne`, Hibernate can remove the child from the old parent's initialized `@OneToMany` collection and add it to the new parent's initialized `@OneToMany` collection.
+Similarly, when an owning bidirectional `@OneToOne` reference is reassigned, Hibernate updates the managed inverse reference, and when an owning `@ManyToMany` collection is changed, Hibernate updates initialized managed inverse collections.
+
+Because these changes happen before dirty checking, they participate in normal flush processing.
+That means collection dirtiness, entity dirtiness, versioning, callbacks, and second-level cache invalidation see the same kind of inverse-side changes they would have seen if application code had made those changes directly before flushing.
+
+==== Lazy inverse collections
+
+Automatic bidirectionality management does not initialize lazy inverse collections just to keep them synchronized in memory.
+Only inverse collections which are already initialized in the persistence context are changed.
+
+This boundary is intentional.
+If an inverse collection is uninitialized, Hibernate leaves it uninitialized during flush.
+When the collection is later initialized, it is loaded through the usual loading rules and reflects the database state visible to that session.
+
+For example, changing the owning `Child.parent` association does not force initialization of `Parent.children`.
+If `Parent.children` was already initialized, Hibernate updates it during flush preparation.
+If it was not initialized, Hibernate leaves it alone.
+
+==== Second-level cache considerations
+
+The same loaded-versus-unloaded boundary is important when second-level caching is enabled.
+
+If a cacheable inverse collection is initialized when bidirectionality management updates it, the collection is dirtied before normal flush processing.
+Hibernate therefore applies the usual collection action and collection cache invalidation rules.
+This does not depend on `hibernate.cache.auto_evict_collection_cache`.
+
+If a cacheable inverse collection is not initialized, bidirectionality management does not dirty it and does not evict its collection cache entry by itself.
+For owner-side-only changes where the inverse collection may remain unloaded, the existing automatic collection cache eviction setting is still relevant:
+
+[source,properties]
+----
+hibernate.cache.auto_evict_collection_cache=true
+----
+
+This setting is especially important for cacheable inverse `@OneToMany` collections mapped by an owning `@ManyToOne`.
+Without either an initialized inverse collection or appropriate collection cache eviction, a later session could read an outdated inverse collection entry from the second-level cache.
+
+The setting does not change the core contract of bidirectionality management: Hibernate manages loaded inverse state during flush preparation, but it does not load every possible inverse collection just to update the in-memory graph.

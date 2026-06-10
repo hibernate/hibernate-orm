@@ -954,6 +954,10 @@ public class ToOneAttributeMapping
 		return cardinality;
 	}
 
+	public SelectablePath getBidirectionalAttributePath() {
+		return bidirectionalAttributePath;
+	}
+
 	public boolean hasJoinTable() {
 		return hasJoinTable;
 	}

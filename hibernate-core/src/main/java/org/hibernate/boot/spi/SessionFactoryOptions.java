@@ -237,6 +237,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isInitializeLazyStateOutsideTransactionsEnabled();
 
 	/**
+	 * Is flush-time bidirectional association management enabled?
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#BIDIRECTIONALITY_MANAGEMENT
+	 */
+	boolean isBidirectionalAssociationManagementEnabled();
+
+	/**
 	 * The default batch size for batch fetching in new sessions.
 	 *
 	 * @see org.hibernate.cfg.FetchSettings#DEFAULT_BATCH_FETCH_SIZE

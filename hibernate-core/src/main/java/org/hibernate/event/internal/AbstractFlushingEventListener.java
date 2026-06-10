@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.BidirectionalAssociationSynchronizer;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.FlushProcessingContext;
@@ -98,6 +99,7 @@ public abstract class AbstractFlushingEventListener {
 		session.runInterceptorCallback(
 				() -> session.getInterceptor().preFlush( persistenceContext.managedEntitiesIterator() ) );
 		prepareEntityFlushes( session, persistenceContext );
+		BidirectionalAssociationSynchronizer.synchronize( session );
 		// we could move this inside if we wanted to
 		// tolerate collection initializations during
 		// collection dirty checking:
@@ -412,6 +414,7 @@ public abstract class AbstractFlushingEventListener {
 				},
 				true
 		);
+
 	}
 
 	protected void postPostFlush(SessionImplementor session) {

@@ -202,3 +202,14 @@ When safe mode is enabled and an unsafe operation is attempted, Hibernate will t
 
 
 ----
+
+
+
+[[bidir-mgmt]]
+== Flush-Time Bidirectionality Management
+
+Hibernate can now optionally manage bidirectional associations in the managed object graph during flush preparation. When enabled with `hibernate.bidirectionality_management=true`, Hibernate treats the owning side as authoritative and synchronizes inverse-side references and initialized collections for managed entities as if application code had made those inverse-side changes before flushing.
+
+Uninitialized lazy inverse collections are not initialized solely for bidirectionality management. This is also the important second-level cache boundary: initialized inverse collections participate in normal flush processing and collection cache invalidation, but uninitialized inverse collections are not dirtied or evicted by bidirectionality management alone. If an application changes only the owning side while a cacheable inverse collection remains unloaded, `hibernate.cache.auto_evict_collection_cache=true` is still the setting which evicts that inverse collection cache entry.
+
+NOTE: The deprecated bytecode-enhancement setting `hibernate.enhancer.enableAssociationManagement=true` is also recognized as an alias when the new setting is not specified, making migration to the runtime model straightforward.

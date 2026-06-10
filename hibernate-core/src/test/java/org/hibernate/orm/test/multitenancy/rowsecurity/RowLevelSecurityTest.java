@@ -20,6 +20,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.JdbcSettings.DIALECT;
+import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
 
 @BaseUnitTest
@@ -61,6 +63,37 @@ class RowLevelSecurityTest {
 
 			final String predicate = "tenant_id = cast(nullif(current_setting('hibernate.tenant_id', true), '') as uuid)"
 					+ " or coalesce(cast(nullif(current_setting('hibernate.tenant_id_root', true), '') as boolean), false)";
+			assertThat( commands ).containsExactly(
+					"alter table document enable row level security",
+					"alter table document force row level security",
+					"create policy hibernate_tenant_isolation on document using (" + predicate + ")"
+							+ " with check (" + predicate + ")"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
+	void postgreSqlTenantCredentialsMapperUsesCurrentUserInRlsDdl() {
+		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( DIALECT, PostgreSQLDialect.class )
+				.applySetting( MULTI_TENANT_CREDENTIALS_MAPPER, TenantCredentialsMapperImpl.class )
+				.build();
+		try {
+			final var metadata = new MetadataSources( registry )
+					.addAnnotatedClass( StringDocument.class )
+					.buildMetadata();
+			final org.hibernate.mapping.Table table =
+					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
+			final var context =
+					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+			final List<String> commands = table.getInitCommands( context ).stream()
+					.flatMap( command -> Arrays.stream( command.initCommands() ) )
+					.toList();
+
+			final String predicate = "tenant_id = cast(current_user as varchar(255))";
 			assertThat( commands ).containsExactly(
 					"alter table document enable row level security",
 					"alter table document force row level security",
@@ -316,6 +349,18 @@ class RowLevelSecurityTest {
 	public static class Cockroach252Dialect extends CockroachDialect {
 		public Cockroach252Dialect() {
 			super( DatabaseVersion.make( 25, 2 ) );
+		}
+	}
+
+	public static class TenantCredentialsMapperImpl implements TenantCredentialsMapper<String> {
+		@Override
+		public String user(String tenantIdentifier) {
+			return tenantIdentifier;
+		}
+
+		@Override
+		public String password(String tenantIdentifier) {
+			return tenantIdentifier;
 		}
 	}
 

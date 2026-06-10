@@ -45,6 +45,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
 import org.hibernate.engine.creation.internal.ParentSessionObserver;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
@@ -163,6 +164,7 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
+import static org.hibernate.dialect.rowsecurity.RowLevelSecurity.TenantIdentifierSource.DATABASE_USER;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -235,6 +237,8 @@ abstract class AbstractSharedSessionContract
 	private boolean criteriaPlanCacheEnabled;
 
 	private boolean nativeJdbcParametersIgnored;
+
+	private final boolean rowLevelSecurityEnabled;
 
 	protected boolean closed;
 	protected boolean waitingForAutoClose;
@@ -320,8 +324,11 @@ abstract class AbstractSharedSessionContract
 		for ( var integration : factory.getServiceRegistry()
 				.requireService( ExtensionIntegrationService.class )
 				.extensionIntegrations() ) {
-			extensions.put( integration.getExtensionType(), integration.createExtension( this ) );
+			extensions.put( integration.getExtensionType(),
+					integration.createExtension( this ) );
 		}
+
+		rowLevelSecurityEnabled = isRowLevelSecurityEnabled();
 	}
 
 	private static ChangesetIdentifierSupplier<?> initializeChangesetIdSupplier(SessionFactoryImplementor factory) {
@@ -1189,48 +1196,55 @@ abstract class AbstractSharedSessionContract
 		setUpRowLevelSecurity();
 	}
 
+	private RowLevelSecurity getRowLevelSecurity() {
+		return getJdbcServices().getDialect().getRowLevelSecurity();
+	}
+
 	private void setUpRowLevelSecurity() {
-		if ( usesRowLevelSecurity() ) {
+		if ( rowLevelSecurityEnabled ) {
 			setUpRowLevelSecurity( getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
 		}
 	}
 
 	private void setUpRowLevelSecurity(Connection connection) {
-		if ( usesRowLevelSecurity() ) {
+		if ( rowLevelSecurityEnabled ) {
 			final Object tenantIdentifier = getTenantIdentifierValue();
 			if ( tenantIdentifier == null ) {
-				throw new HibernateException(
-						"SessionFactory configured for multi-tenancy, but no tenant identifier specified"
-				);
+				throw new HibernateException( "Row-level security enabled, but no tenant identifier specified" );
 			}
 
-			final var resolver = factory.getCurrentTenantIdentifierResolver();
-			final boolean root = resolver != null && resolver.isRoot( tenantIdentifier );
-			try {
-				getJdbcServices().getDialect().getRowLevelSecurity()
-						.setTenantIdentifier( connection, getTenantIdentifier(), root );
-			}
-			catch (SQLException e) {
-				throw getJdbcServices().getSqlExceptionHelper().convert(
-						e,
-						"Unable to set row-level security tenant identifier"
-				);
+			if ( !useDatabaseUserForRowLevelSecurity() ) {
+				final var resolver = factory.getCurrentTenantIdentifierResolver();
+				final boolean root = resolver != null && resolver.isRoot( tenantIdentifier );
+				try {
+					getRowLevelSecurity()
+							.setTenantIdentifier( connection, getTenantIdentifier(), root );
+				}
+				catch (SQLException e) {
+					throw getJdbcServices().getSqlExceptionHelper()
+							.convert( e, "Unable to set row-level security tenant identifier" );
+				}
 			}
 		}
 	}
 
-	private boolean usesRowLevelSecurity() {
-		return isRowLevelSecurityEnabled()
-			&& factory.getDefinedFilterNames().contains( TenantIdBinder.FILTER_NAME )
-			&& getJdbcServices().getDialect().getRowLevelSecurity().supportsRowLevelSecurity();
+	private boolean useDatabaseUserForRowLevelSecurity() {
+		return getSessionFactoryOptions().getTenantCredentialsMapper() != null
+			&& getRowLevelSecurity().supportsTenantIdentifierSource( DATABASE_USER );
 	}
 
+	//TODO: move this to SessionFactoryOptions
 	private boolean isRowLevelSecurityEnabled() {
-		return getBoolean(
-				MULTI_TENANT_RLS_ENABLED,
-				factory.getServiceRegistry().requireService( ConfigurationService.class ).getSettings(),
-				true
-		);
+		return factory.getDefinedFilterNames().contains( TenantIdBinder.FILTER_NAME )
+			&& getBoolean( MULTI_TENANT_RLS_ENABLED, getSettings(), true )
+			&& getRowLevelSecurity().supportsRowLevelSecurity();
+	}
+
+	@Nonnull
+	private Map<String, Object> getSettings() {
+		return factory.getServiceRegistry()
+				.requireService( ConfigurationService.class )
+				.getSettings();
 	}
 
 	protected void initializeCurrentChangesetIdentifier() {
@@ -1307,7 +1321,7 @@ abstract class AbstractSharedSessionContract
 	@Nonnull
 	public Transaction beginTransaction() {
 		checkOpen();
-		final Transaction transaction = accessTransaction();
+		final var transaction = accessTransaction();
 		// only need to begin a transaction if it was not
 		// already active (this is the documented semantics)
 		if ( !transaction.isActive() ) {

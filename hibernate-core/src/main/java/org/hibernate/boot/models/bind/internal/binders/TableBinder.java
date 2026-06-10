@@ -19,7 +19,6 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.AnnotationPlacementException;
-import org.hibernate.boot.models.annotations.spi.Commentable;
 import org.hibernate.boot.models.bind.internal.BindingHelper;
 import org.hibernate.boot.models.bind.internal.InLineView;
 import org.hibernate.boot.models.bind.internal.PhysicalTable;
@@ -266,11 +265,7 @@ public class TableBinder {
 				false
 		);
 
-		applyComment(
-				binding,
-				null,
-				findCommentAnnotation( type, logicalName, isPrimary )
-		);
+		applyComment( binding, null );
 
 		return new PhysicalTable(
 				logicalName,
@@ -280,30 +275,6 @@ public class TableBinder {
 				physicalNamingStrategy.toPhysicalCatalogName( logicalCatalogName, jdbcEnvironment ),
 				physicalNamingStrategy.toPhysicalSchemaName( logicalSchemaName, jdbcEnvironment ),
 				binding
-		);
-	}
-
-	private Commentable findCommentAnnotation(
-			EntityTypeMetadata type,
-			Identifier logicalTableName,
-			boolean isPrimary) {
-		if ( isPrimary ) {
-			final Commentable unnamed = type.getClassDetails().getNamedAnnotationUsage(
-					Commentable.class,
-					"",
-					"on",
-					bindingContext.getBootstrapContext().getModelsContext()
-			);
-			if ( unnamed != null ) {
-				return unnamed;
-			}
-		}
-
-		return type.getClassDetails().getNamedAnnotationUsage(
-				Commentable.class,
-				logicalTableName.getCanonicalName(),
-				"on",
-				bindingContext.getBootstrapContext().getModelsContext()
 		);
 	}
 
@@ -356,7 +327,7 @@ public class TableBinder {
 				false
 		);
 
-		applyComment( binding, tableSource, findCommentAnnotation( type, logicalName, isPrimary ) );
+		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
 
 		return new PhysicalTable(
@@ -429,7 +400,7 @@ public class TableBinder {
 				false
 		);
 
-		applyComment( binding, tableSource, null );
+		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
 
 		return new PhysicalTable(
@@ -556,7 +527,7 @@ public class TableBinder {
 				false
 		);
 
-		applyComment( binding, tableSource, findCommentAnnotation( entityBinder.getManagedType(), logicalName, false ) );
+		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
 
 		final Join join = new Join();
@@ -605,11 +576,8 @@ public class TableBinder {
 	}
 
 
-	private void applyComment(Table table, TableSource tableSource, Commentable commentAnn) {
-		if ( commentAnn != null ) {
-			table.setComment( commentAnn.comment() );
-		}
-		else if ( tableSource != null ) {
+	private void applyComment(Table table, TableSource tableSource) {
+		if ( tableSource != null ) {
 			final String comment = tableSource.comment();
 			if ( StringHelper.isNotEmpty( comment ) ) {
 				table.setComment( comment );

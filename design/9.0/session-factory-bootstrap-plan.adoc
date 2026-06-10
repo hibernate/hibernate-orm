@@ -225,6 +225,95 @@ This pattern should guide similar tests:
 * avoid adding public or semi-public bootstrap phases just to let a test mutate
   metadata between discovery and factory construction.
 
+=== Current Failure Buckets
+
+The broad boot-model source and binding slices are now useful as a control
+signal.  Before the `TableBinder` comment handling fix, the
+`org.hibernate.orm.test.boot.models.*` slice completed 203 tests with 148
+failures.  After that fix, the same slice is green.  The XML, source, and
+categorization slices are also green.
+
+The remaining failures are concentrated in the JPA provider paths that now flow
+through `SessionFactoryBootstrap`.  A representative JPA/provider slice
+completed 88 tests with 52 failures and 1 skipped test after the boot-model
+binding blocker was removed.  The earlier run had 60 failures, so the remaining
+signal is narrower than the original boot-model breakage.
+
+[cols="2,3,3,3", options="header"]
+|===
+| Bucket
+| Representative tests
+| Current signal
+| Likely work
+
+| JPA exception wrapping parity
+| `BootFailureTest`
+| The new provider path wraps some bootstrap failures in
+  `jakarta.persistence.PersistenceException` where existing tests expected
+  lower-level exceptions such as `HibernateException` or `ServiceException`.
+  One missing-class case also exposes a boot-model failure while interpreting an
+  unexpected attribute nature.
+| Decide the public provider exception contract for these paths.  If legacy
+  parity is required, unwrap or translate at the provider boundary.  If JPA
+  wrapping is the desired contract, adjust the tests and keep lower-level causes
+  intact.
+
+| Persistence-unit setting and `cfg.xml` merge parity
+| `PersistenceUnitOverridesTests`
+| Several assertions still see different dialect, datasource, connection
+  provider, or mapped-entity behavior than the legacy
+  `EntityManagerFactoryBuilderImpl` path.
+| Compare descriptor bootstrap through `BootstrapSettingsResolver` and
+  `SessionFactorySettingsResolver` against the old merged-setting rules.  Pay
+  particular attention to `cfg.xml` baseline handling, integration-setting
+  precedence, datasource/provider selection, and source contributions implied by
+  configuration XML.
+
+| Settings-backed managed-class/source contributions
+| `InterceptorTest`, `JpaSchemaGeneratorTest`
+| Some descriptor-based tests pass managed classes through settings such as
+  `AvailableSettings.LOADED_CLASSES`, but the new path can still reach runtime
+  with an `UnknownEntityTypeException`.
+| Teach the descriptor entry-point path or source-contribution resolver to
+  incorporate settings-backed source contributions, including loaded classes and
+  any analogous package, mapping XML, or import settings that the legacy builder
+  honored.
+
+| Schema-generation script behavior
+| `SchemaScriptFileGenerationTest`, `JpaSchemaGenerator*`
+| The schema-generation provider methods now enter the new facade, but failures
+  remain around create/drop/load script handling, duplicate statements, charset
+  handling, and failure-message expectations.
+| Compare `SessionFactoryBootstrap.generateSchema(...)` with the legacy builder
+  schema-generation pipeline.  Preserve script URL/classpath resolution,
+  encoding, command ordering, duplicate suppression, and exception context.
+
+| Native bootstrap coverage
+| `BootstrapTest`, `ConfigurationTest`, `SafeMappingTest`,
+  `ServiceRegistryClosingCascadeTest`, builder-delegation tests
+| Representative native bootstrap tests are green.
+| Do not treat the JPA provider failures as evidence that `Configuration`,
+  `Metadata#getSessionFactoryBuilder()`, or the public
+  `org.hibernate.boot.SessionFactoryBuilder` are broadly broken.
+
+| Boot-model XML/source/categorization coverage
+| `org.hibernate.orm.test.boot.models.xml.*`,
+  `org.hibernate.orm.test.boot.models.source.*`,
+  `org.hibernate.orm.test.boot.models.categorize.*`
+| These slices are green.
+| Keep using these as regression controls while the remaining descriptor and
+  provider parity gaps are closed.
+|===
+
+The next useful implementation slices are therefore:
+
+* settings-backed source contributions, because they explain several
+  `UnknownEntityTypeException` failures;
+* persistence-unit setting and `cfg.xml` merge parity, because it affects both
+  provider runtime behavior and schema-generation setup;
+* schema-generation script parity after the source and setting baselines are
+  trustworthy.
+
 == Current Constructor Responsibilities
 
 The constructor still orchestrates a large amount of factory assembly:

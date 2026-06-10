@@ -42,10 +42,20 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 	public static final String PREDICATE_SQL =
 			" = cast(%s as $TYPE$) or %s = 1"
 					.formatted( TENANT_IDENTIFIER_VARIABLE, ROOT_TENANT_IDENTIFIER_VARIABLE );
+	public static final String CURRENT_USER_UUID_PREDICATE_SQL =
+			" = varchar_bit_format(current_user, 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')";
+	public static final String CURRENT_USER_PREDICATE_SQL =
+			" = cast(current_user as $TYPE$)";
 
 	@Override
 	public boolean supportsRowLevelSecurity() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsTenantIdentifierSource(TenantIdentifierSource tenantIdentifierSource) {
+		return tenantIdentifierSource == TenantIdentifierSource.SESSION
+			|| tenantIdentifierSource == TenantIdentifierSource.DATABASE_USER;
 	}
 
 	@Override
@@ -54,11 +64,29 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 			Table table,
 			Column tenantIdentifierColumn,
 			Metadata metadata) {
+		addTenantIdTableInitCommands( collector, table, tenantIdentifierColumn, metadata, TenantIdentifierSource.SESSION );
+	}
+
+	@Override
+	public void addTenantIdTableInitCommands(
+			InFlightMetadataCollector collector,
+			Table table,
+			Column tenantIdentifierColumn,
+			Metadata metadata,
+			TenantIdentifierSource tenantIdentifierSource) {
 		if ( supportsRowLevelSecurity() ) {
-			collector.getDatabase()
-					.addAuxiliaryDatabaseObject( SessionVariables.INSTANCE );
+			if ( tenantIdentifierSource == TenantIdentifierSource.SESSION ) {
+				collector.getDatabase()
+						.addAuxiliaryDatabaseObject( SessionVariables.INSTANCE );
+			}
 			table.addInitCommand( context ->
-					new InitCommand( getTenantIdTableCreateStrings( table, tenantIdentifierColumn, metadata, context ) ) );
+					new InitCommand( getTenantIdTableCreateStrings(
+							table,
+							tenantIdentifierColumn,
+							metadata,
+							context,
+							tenantIdentifierSource
+					) ) );
 		}
 	}
 
@@ -68,15 +96,30 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 			Column tenantIdentifierColumn,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
+		return getTenantIdTableCreateStrings(
+				table,
+				tenantIdentifierColumn,
+				metadata,
+				context,
+				TenantIdentifierSource.SESSION
+		);
+	}
+
+	@Override
+	public String[] getTenantIdTableCreateStrings(
+			Table table,
+			Column tenantIdentifierColumn,
+			Metadata metadata,
+			SqlStringGenerationContext context,
+			TenantIdentifierSource tenantIdentifierSource) {
 		final String tableName = table.getQualifiedName( context );
 		final String tenantIdentifierColumnName =
 				tenantIdentifierColumn.getQuotedName( context.getDialect() );
 		final String tenantIdentifierColumnType =
 				tenantIdentifierColumn.getSqlType( metadata );
 		final String predicate =
-				isBinaryType( tenantIdentifierColumn.getSqlTypeCode( metadata ) )
-						? UUID_PREDICATE_SQL
-						: PREDICATE_SQL.replace( "$TYPE$", tenantIdentifierColumnType );
+				predicateSql( tenantIdentifierColumn, metadata, tenantIdentifierSource )
+						.replace( "$TYPE$", tenantIdentifierColumnType );
 		final String permissionName =
 				TENANT_ISOLATION_PERMISSION + "_"
 					// permissions names are per-table; need to make them unique
@@ -85,6 +128,17 @@ public class DB2RowLevelSecurity implements RowLevelSecurity {
 				"create or replace permission " + permissionName + " on " + tableName
 					+ " for rows where " + tenantIdentifierColumnName + predicate + " enforced for all access enable",
 				"alter table " + tableName + " activate row access control"
+		};
+	}
+
+	private static String predicateSql(
+			Column tenantIdentifierColumn,
+			Metadata metadata,
+			TenantIdentifierSource tenantIdentifierSource) {
+		final boolean binaryTenantIdentifier = isBinaryType( tenantIdentifierColumn.getSqlTypeCode( metadata ) );
+		return switch ( tenantIdentifierSource ) {
+			case SESSION -> binaryTenantIdentifier ? UUID_PREDICATE_SQL : PREDICATE_SQL;
+			case DATABASE_USER -> binaryTenantIdentifier ? CURRENT_USER_UUID_PREDICATE_SQL : CURRENT_USER_PREDICATE_SQL;
 		};
 	}
 

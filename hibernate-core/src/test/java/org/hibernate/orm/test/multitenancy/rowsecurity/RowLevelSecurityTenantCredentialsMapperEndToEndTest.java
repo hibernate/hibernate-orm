@@ -67,7 +67,6 @@ import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveFr
 		@Setting(name = CONNECTION_PROVIDER,
 				value = "org.hibernate.orm.test.multitenancy.rowsecurity.RowLevelSecurityTenantCredentialsMapperEndToEndTest$TenantCredentialsConnectionProvider")
 } )
-@RequiresDialect( PostgreSQLDialect.class )
 @RequiresDialectFeature( feature = DialectFeatureChecks.RowLevelSecurity.class )
 class RowLevelSecurityTenantCredentialsMapperEndToEndTest {
 	private static final String TENANT_ONE = "hibernate_rls_tenant_one";

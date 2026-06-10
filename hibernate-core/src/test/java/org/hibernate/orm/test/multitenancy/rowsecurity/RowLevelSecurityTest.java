@@ -146,6 +146,39 @@ class RowLevelSecurityTest {
 	}
 
 	@Test
+	void db2TenantCredentialsMapperUsesCurrentUserInRlsDdl() {
+		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( DIALECT, DB2Dialect.class )
+				.applySetting( MULTI_TENANT_CREDENTIALS_MAPPER, TenantCredentialsMapperImpl.class )
+				.build();
+		try {
+			final var metadata = new MetadataSources( registry )
+					.addAnnotatedClass( StringDocument.class )
+					.buildMetadata();
+			final org.hibernate.mapping.Table table =
+					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
+			final var context =
+					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+			final List<String> commands = table.getInitCommands( context ).stream()
+					.flatMap( command -> Arrays.stream( command.initCommands() ) )
+					.toList();
+
+			assertThat( metadata.getDatabase().getAuxiliaryDatabaseObjects() ).isEmpty();
+			final String predicate = "tenant_id = cast(current_user as varchar(255))";
+			assertThat( commands ).containsExactly(
+					"create or replace permission "
+							+ db2PermissionName( table, context ) + " on document"
+							+ " for rows where " + predicate
+							+ " enforced for all access enable",
+					"alter table document activate row access control"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
 	void rowLevelSecurityCanBeDisabled() {
 		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( DIALECT, DB2Dialect.class )
@@ -245,6 +278,49 @@ class RowLevelSecurityTest {
 	}
 
 	@Test
+	void sqlServerTenantCredentialsMapperUsesCurrentUserInRlsDdl() {
+		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( DIALECT, SQLServer2016Dialect.class )
+				.applySetting( MULTI_TENANT_CREDENTIALS_MAPPER, TenantCredentialsMapperImpl.class )
+				.build();
+		try {
+			final var metadata = new MetadataSources( registry )
+					.addAnnotatedClass( StringDocument.class )
+					.buildMetadata();
+			final org.hibernate.mapping.Table table =
+					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
+			final var context =
+					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+			final List<String> commands = metadata.getDatabase().getAuxiliaryDatabaseObjects().stream()
+					.flatMap( object -> Arrays.stream( object.sqlCreateStrings( context ) ) )
+					.toList();
+
+			final String policyName = "dbo." + sqlServerObjectBaseName( table, context );
+			final String functionName = policyName + "_predicate";
+			final String predicate = "@tenant_id = cast(current_user as varchar(255))";
+			assertThat( commands ).containsExactly(
+					"create function " + functionName + "(@tenant_id varchar(255))"
+							+ " returns table"
+							+ " with schemabinding"
+							+ " as"
+							+ " return select 1 as hibernate_tenant_isolation_result"
+							+ " where " + predicate,
+					"create security policy " + policyName
+							+ " add filter predicate " + functionName + "(tenant_id)"
+							+ " on dbo.document,"
+							+ " add block predicate " + functionName + "(tenant_id)"
+							+ " on dbo.document after insert,"
+							+ " add block predicate " + functionName + "(tenant_id)"
+							+ " on dbo.document after update"
+							+ " with (state = on)"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
 	void spannerPostgreSqlDoesNotInheritPostgreSqlRowLevelSecurity() {
 		assertThat( new SpannerPostgreSQLDialect().getRowLevelSecurity().supportsRowLevelSecurity() )
 				.isFalse();
@@ -270,6 +346,37 @@ class RowLevelSecurityTest {
 			final String predicate = "tenant_id = cast(nullif(substring(current_setting('application_name', true)"
 					+ " from '^hibernate_orm_rls:[^:]*:(.*)$'), '') as uuid)"
 					+ " or split_part(current_setting('application_name', true), ':', 2) = 'true'";
+			assertThat( commands ).containsExactly(
+					"alter table document enable row level security",
+					"alter table document force row level security",
+					"create policy hibernate_tenant_isolation on document using (" + predicate + ")"
+							+ " with check (" + predicate + ")"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
+	void cockroachTenantCredentialsMapperUsesCurrentUserInRlsDdl() {
+		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( DIALECT, Cockroach252Dialect.class )
+				.applySetting( MULTI_TENANT_CREDENTIALS_MAPPER, TenantCredentialsMapperImpl.class )
+				.build();
+		try {
+			final var metadata = new MetadataSources( registry )
+					.addAnnotatedClass( StringDocument.class )
+					.buildMetadata();
+			final org.hibernate.mapping.Table table =
+					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
+			final var context =
+					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+			final List<String> commands = table.getInitCommands( context ).stream()
+					.flatMap( command -> Arrays.stream( command.initCommands() ) )
+					.toList();
+
+			final String predicate = "tenant_id = cast(current_user as varchar(255))";
 			assertThat( commands ).containsExactly(
 					"alter table document enable row level security",
 					"alter table document force row level security",

@@ -4,8 +4,6 @@
  */
 package org.hibernate.binder.internal;
 
-import java.util.Collections;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TenantId;

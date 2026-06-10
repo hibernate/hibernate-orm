@@ -230,6 +230,28 @@ When tests need to assert intermediate products, they should prefer building the
 specific product under test, such as metadata, source contributions, or resolved
 settings, instead of preserving a general two-phase SessionFactory bootstrap.
 
+=== Current Test Signal
+
+The remaining red tests on this branch are not currently pointing at a broad
+boot-model or native bootstrap failure.  The boot-model binding, XML, source,
+and categorization slices are green after fixing table-comment binding to use
+the concrete table sources rather than the internal mutable `Commentable`
+annotation contract.  Representative native bootstrap tests through
+`Configuration`, `Metadata#getSessionFactoryBuilder()`, and the public
+`org.hibernate.boot.SessionFactoryBuilder` are also green.
+
+The active gap signal is concentrated in the JPA provider paths that now route
+through `SessionFactoryBootstrap`:
+
+* provider exception wrapping parity;
+* persistence-unit setting and `cfg.xml` merge parity;
+* settings-backed managed-class/source contributions;
+* schema-generation script handling.
+
+Those buckets are tracked in detail in
+link:session-factory-bootstrap-plan.adoc#current-failure-buckets[the current
+failure-bucket section of the plan].
+
 == Settings Model
 
 `ResolvedBootstrapSettings` is the root resolved settings product.  It owns the

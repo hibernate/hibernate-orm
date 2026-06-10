@@ -127,7 +127,11 @@ public @interface FetchProfile {
 		/**
 		 * The {@linkplain FetchMode method} used for fetching the
 		 * association in the fetch profile being defined.
+		 *
+		 * @deprecated Since {@link FetchMode} is deprected.
+		 *             An alternative will be provided.
 		 */
+		@Deprecated(since = "8.0", forRemoval = true)
 		FetchMode mode() default JOIN;
 
 		/**

@@ -15,8 +15,11 @@ package org.hibernate;
  * @see org.hibernate.annotations.FetchMode
  *
  * @author Gavin King
+ *
+ * @deprecated This internal type will be moved or removed.
  */
 @Internal
+@Deprecated(since = "8.0", forRemoval = true)
 public enum FetchMode  {
 
 	/**

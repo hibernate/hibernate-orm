@@ -34,9 +34,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see FetchMode
  * @see FetchProfile
+ *
+ * @deprecated Use {@link jakarta.persistence.Fetch} instead.
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated(since = "8.0", forRemoval = true)
 public @interface Fetch {
 	/**
 	 * The method that should be used to fetch the association.

@@ -17,7 +17,11 @@ package org.hibernate.annotations;
  *
  * @see Fetch
  * @see FetchProfile.FetchOverride#mode()
+ *
+ * @deprecated Since {@link Fetch} is deprected.
+ *             This enum will move to the package {@link org.hibernate}.
  */
+@Deprecated(since = "8.0", forRemoval = true)
 public enum FetchMode {
 	/**
 	 * Use a secondary select to load a single associated entity or

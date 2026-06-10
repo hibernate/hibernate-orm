@@ -552,7 +552,6 @@ public class HbmXmlTransformer {
 			EntityTypeInfo subclassEntityInfo) {
 		currentBaseTable = subclassEntityInfo.table();
 
-		subclassEntity.setProxy( hbmSubclass.getProxy() );
 		transferBaseEntityInformation( hbmSubclass, subclassEntity, subclassEntityInfo );
 		transferEntityAttributes( hbmSubclass, subclassEntity, subclassEntityInfo );
 
@@ -595,7 +594,6 @@ public class HbmXmlTransformer {
 		}
 
 		TransformationHelper.transfer( hbmEntity::isLazy, mappingEntity::setLazy );
-		TransformationHelper.transfer( hbmEntity::getProxy, mappingEntity::setProxy );
 
 		TransformationHelper.transfer( hbmEntity::getBatchSize, mappingEntity::setBatchSize );
 

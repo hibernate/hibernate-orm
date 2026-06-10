@@ -524,6 +524,28 @@ Any `mapping.xml` documents using this attribute:
 should remove the `orphan-removal` attribute, as it had no effect.
 
 
+[[xsd-proxy-polymorphism-removal]]
+=== Removal of `proxy` and `polymorphism` from Entity Mappings
+
+TThe proxy and polymorphism XML mapping attributes have been removed from the entity mapping XSD.
+
+This change follows the removal of the corresponding @Proxy and @Polymorphism annotations in Hibernate ORM 7.0.0.Beta1.
+
+Both elements have been removed from the `mapping-8.0.xsd` schema along with the `polymorphism-type` simple type definition.
+
+Any `mapping.xml` documents using these elements:
+
+[source,xml]
+----
+<entity ...>
+    <proxy>com.example.MyEntityProxy</proxy>
+    <polymorphism>EXPLICIT</polymorphism>
+</entity>
+----
+
+should remove them, as they are no longer supported.
+
+
 === Migration of Spanner PostgreSQL Dialect to core
 
 The `SpannerPostgreSQLDialect`, which was previously part of the `hibernate-community-dialects` artifact under the package name `org.hibernate.community.dialect`, has been migrated to the `hibernate-core` artifact and package name `org.hibernate.dialect`.

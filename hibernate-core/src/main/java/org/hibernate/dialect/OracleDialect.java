@@ -24,6 +24,9 @@ import org.hibernate.dialect.lock.internal.OracleLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
+import org.hibernate.dialect.rowsecurity.NoRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.OracleDeepDataSecurityRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.OracleSqlAstTranslator;
@@ -236,6 +239,7 @@ public class OracleDialect extends Dialect {
 	protected final int driverMinorVersion;
 	private boolean useBinaryFloat;
 	private boolean useValueLOB; //TODO: if removed or issue fixed update SkipLockedWithLobTest
+	private RowLevelSecurity rowLevelSecurity = NoRowLevelSecurity.INSTANCE;
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -259,8 +263,12 @@ public class OracleDialect extends Dialect {
 		autonomous = serverConfiguration.isAutonomous();
 		extended = serverConfiguration.isExtended();
 		applicationContinuity = serverConfiguration.isApplicationContinuity();
-		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
-		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
+		driverMinorVersion = serverConfiguration.getDriverMinorVersion();
+		driverMajorVersion = serverConfiguration.getDriverMajorVersion();
+		rowLevelSecurity =
+				getVersion().isSameOrAfter( 23, 26 )
+							? OracleDeepDataSecurityRowLevelSecurity.fromSettings( info.getConfigurationValues() )
+							: NoRowLevelSecurity.INSTANCE;
 	}
 
 	public boolean isAutonomous() {
@@ -1516,6 +1524,11 @@ public class OracleDialect extends Dialect {
 	@Override
 	public LockingSupport getLockingSupport() {
 		return OracleLockingSupport.ORACLE_LOCKING_SUPPORT;
+	}
+
+	@Override
+	public RowLevelSecurity getRowLevelSecurity() {
+		return rowLevelSecurity;
 	}
 
 	@Override

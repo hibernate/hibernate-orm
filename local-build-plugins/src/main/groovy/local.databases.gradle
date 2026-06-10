@@ -160,6 +160,20 @@ ext {
 //                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
                     'connection.init_sql' : ''
             ],
+            oracle_dds : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate',
+                    'jdbc.pass'  : 'free',
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/freepdb1',
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : 'alter session set current_schema=DEVELOPER',
+                    'hibernate.default_schema' : 'DEVELOPER',
+                    'hibernate.dialect.oracle.deep_data_security.tenant_context_name' : 'DEVELOPER.HIBERNATE_TENANCY',
+                    'hibernate.dialect.oracle.deep_data_security.tenant_data_grantee' : 'hibernate_dds_role',
+                    'hibernate.dialect.oracle.deep_data_security.tenant_database_role' : 'hibernate_dds_database_role'
+            ],
             oracle_xe : [
                     'db.dialect' : 'org.hibernate.dialect.OracleDialect',
                     'jdbc.driver': 'oracle.jdbc.OracleDriver',

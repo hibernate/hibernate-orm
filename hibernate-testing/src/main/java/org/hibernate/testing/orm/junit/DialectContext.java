@@ -5,7 +5,6 @@
 package org.hibernate.testing.orm.junit;
 
 import java.lang.reflect.Constructor;
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -30,7 +29,7 @@ public final class DialectContext {
 	private static Dialect dialect;
 
 	static void initDialectClass() {
-		final Properties properties = Environment.getProperties();
+		final var properties = Environment.getProperties();
 		final String dialectName = properties.getProperty( Environment.DIALECT );
 		if ( dialectName == null ) {
 			throw new HibernateException( "The dialect was not set. Set the property hibernate.dialect." );
@@ -44,20 +43,23 @@ public final class DialectContext {
 	}
 
 	static void init() {
-		final Properties properties = Environment.getProperties();
+		final var properties = Environment.getProperties();
 		final String driverClassName = properties.getProperty( Environment.DRIVER );
-		final String jdbcUrl = resolveUrl( properties.containsKey( Environment.URL )
-				? properties.getProperty( Environment.URL )
-				: properties.getProperty( Environment.JAKARTA_JDBC_URL ) );
-		final Properties props = new Properties();
+		final String jdbcUrl =
+				resolveUrl( properties.containsKey( Environment.URL )
+						? properties.getProperty( Environment.URL )
+						: properties.getProperty( Environment.JAKARTA_JDBC_URL ) );
+		final var props = new Properties();
 		resolveFromSettings(properties);
-		props.setProperty( "user", properties.containsKey( Environment.USER )
-				? properties.getProperty( Environment.USER )
-				: properties.getProperty( Environment.JAKARTA_JDBC_USER ) );
-		props.setProperty( "password", properties.containsKey( Environment.PASS )
-				? properties.getProperty( Environment.PASS )
-				: properties.getProperty( Environment.JAKARTA_JDBC_PASSWORD ) );
-		final Class<? extends Dialect> dialectClass = getDialectClass();
+		props.setProperty( "user",
+				properties.containsKey( Environment.USER )
+						? properties.getProperty( Environment.USER )
+						: properties.getProperty( Environment.JAKARTA_JDBC_USER ) );
+		props.setProperty( "password",
+				properties.containsKey( Environment.PASS )
+						? properties.getProperty( Environment.PASS )
+						: properties.getProperty( Environment.JAKARTA_JDBC_PASSWORD ) );
+		final var dialectClass = getDialectClass();
 		final Constructor<? extends Dialect> constructor;
 		try {
 			constructor = dialectClass.getConstructor( DialectResolutionInfo.class );
@@ -75,10 +77,10 @@ public final class DialectContext {
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate given JDBC driver class: " + driverClassName, e );
 		}
-		try ( Connection connection = driver.connect( jdbcUrl, props ) ) {
+		try ( var connection = driver.connect( jdbcUrl, props ) ) {
 //			if ( jdbcUrl.startsWith( "jdbc:derby:" ) ) {
 //				// Unfortunately we may only configure this once
-//				try ( Statement s = connection.createStatement() ) {
+//				try ( var s = connection.createStatement() ) {
 //					s.execute( "CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(\'derby.locks.waitTimeout\', \'10\')" );
 //					if ( !connection.getAutoCommit() ) {
 //						connection.commit();
@@ -114,15 +116,15 @@ public final class DialectContext {
 	}
 
 	public static void awaitTimestampTick() {
-		final Dialect dialect = getDialect();
-		final long sleepMillis = switch ( dialect.getDefaultTimestampPrecision() ) {
-			case 0 -> 1_000;
-			case 1 -> 100;
-			case 2 -> 10;
-			// Instead of waiting 1 millisecond, let's wait 3 to not run into issues with e.g. Sybase,
-			// which has a resolution of 1/300th of a second for timestamps
-			default -> 3;
-		};
+		final long sleepMillis =
+				switch ( getDialect().getDefaultTimestampPrecision() ) {
+					case 0 -> 1_000;
+					case 1 -> 100;
+					case 2 -> 10;
+					// Instead of waiting 1 millisecond, let's wait 3 to not run into issues with
+					// e.g. Sybase, which has a resolution of 1/300th of a second for timestamps
+					default -> 3;
+				};
 		try {
 			Thread.sleep( sleepMillis );
 		}

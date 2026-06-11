@@ -11,7 +11,6 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.orchestration.internal.SessionFactoryOptionsAdapter;
 import org.hibernate.boot.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.settings.ResolvedMappingSettings;
 import org.hibernate.boot.settings.SessionFactorySettingsResolver;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
 import org.hibernate.cfg.CacheSettings;
@@ -23,8 +22,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
 import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.FetchType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -59,8 +56,7 @@ public class SessionFactorySettingsResolverTests {
 
 		final var bootstrapSettings = new ResolvedBootstrapSettings(
 				configurationValues,
-				true,
-				new ResolvedMappingSettings( true, false, FetchType.EAGER, null )
+				true
 		);
 
 		final var sessionFactorySettings = SessionFactorySettingsResolver.resolve(
@@ -114,8 +110,7 @@ public class SessionFactorySettingsResolverTests {
 		final var settings = SessionFactorySettingsResolver.resolve(
 				new ResolvedBootstrapSettings(
 						configurationValues,
-						true,
-						new ResolvedMappingSettings( true, false, FetchType.EAGER, null )
+						true
 				),
 				registryScope.getRegistry()
 		);

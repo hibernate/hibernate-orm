@@ -9,6 +9,7 @@ import java.util.Objects;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.models.source.BootstrapSourceContributions;
 import org.hibernate.boot.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.settings.ResolvedMappingSettings;
 import org.hibernate.boot.settings.ResolvedSessionFactorySettings;
 import org.hibernate.service.ServiceRegistry;
 
@@ -18,6 +19,7 @@ import org.hibernate.service.ServiceRegistry;
 /// @author Steve Ebersole
 public record SessionFactoryBootstrapRequest(
 		ResolvedBootstrapSettings bootstrapSettings,
+		ResolvedMappingSettings mappingSettings,
 		BootstrapSourceContributions sourceContributions,
 		ResolvedSessionFactorySettings sessionFactorySettings,
 		ServiceRegistry serviceRegistry,
@@ -25,6 +27,7 @@ public record SessionFactoryBootstrapRequest(
 
 	public SessionFactoryBootstrapRequest {
 		Objects.requireNonNull( bootstrapSettings );
+		Objects.requireNonNull( mappingSettings );
 		Objects.requireNonNull( sourceContributions );
 		Objects.requireNonNull( sessionFactorySettings );
 		Objects.requireNonNull( serviceRegistry );

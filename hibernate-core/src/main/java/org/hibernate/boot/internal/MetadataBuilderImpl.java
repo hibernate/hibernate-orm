@@ -32,16 +32,20 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
-import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategyStandard;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.orchestration.MetadataResolver;
+import org.hibernate.boot.orchestration.internal.ResolvedMetadataImplementor;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.settings.ResolvedMappingSettings;
+import org.hibernate.boot.settings.SettingsResolver;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
@@ -423,7 +427,39 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
+				options.serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
+				bootstrapContext.isJpaBootstrap()
+		);
+		final var resolvedMetadata = MetadataResolver.resolve(
+				resolveMappingSettings( bootstrapSettings ),
+				sources,
+				bootstrapContext,
+				options
+		);
+		return new ResolvedMetadataImplementor(
+				bootstrapSettings,
+				resolvedMetadata
+		);
+	}
+
+	private ResolvedMappingSettings resolveMappingSettings(ResolvedBootstrapSettings bootstrapSettings) {
+		final var resolvedMappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				options.mappingDefaults.areEntitiesImplicitlyLazy()
+						? FetchType.LAZY
+						: FetchType.EAGER
+		);
+		final var cacheRegionDefinitions = new ArrayList<>( resolvedMappingSettings.cacheRegionDefinitions() );
+		cacheRegionDefinitions.addAll( bootstrapContext.getCacheRegionDefinitions() );
+		return new ResolvedMappingSettings(
+				resolvedMappingSettings.xmlMappingEnabled(),
+				resolvedMappingSettings.validateXml(),
+				resolvedMappingSettings.defaultToOneFetchType(),
+				options.createImplicitDiscriminatorsForJoinedInheritance(),
+				options.ignoreExplicitDiscriminatorsForJoinedInheritance(),
+				cacheRegionDefinitions
+		);
 	}
 
 	@Override

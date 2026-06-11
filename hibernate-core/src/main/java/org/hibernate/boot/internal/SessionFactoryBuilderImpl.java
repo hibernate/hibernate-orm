@@ -15,6 +15,9 @@ import org.hibernate.StatementObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.orchestration.ResolvedMetadata;
+import org.hibernate.boot.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.settings.SettingsResolver;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
@@ -42,24 +45,60 @@ import static org.hibernate.internal.SessionFactoryRegistry.instantiateSessionFa
  */
 public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplementor {
 	private final MetadataImplementor metadata;
-	private final SessionFactoryOptionsBuilder optionsBuilder;
+	private final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
+	private final Supplier<SessionFactoryOptionsBuilder> legacyOptionsBuilderSupplier;
 	private final BootstrapContext bootstrapContext;
+	private final ResolvedBootstrapSettings bootstrapSettings;
+	private final ResolvedMetadata resolvedMetadata;
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
 		this(
 				metadata,
-				new SessionFactoryOptionsBuilder(
+				() -> new SessionFactoryOptionsBuilder(
 						metadata.getMetadataBuildingOptions().getServiceRegistry(),
 						bootstrapContext
 				),
-				bootstrapContext
+				bootstrapContext,
+				null,
+				null,
+				true
 		);
 	}
 
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder, BootstrapContext context) {
+		this( metadata, () -> optionsBuilder, context, null, null, true );
+	}
+
+	public SessionFactoryBuilderImpl(
+			MetadataImplementor metadata,
+			BootstrapContext bootstrapContext,
+			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMetadata resolvedMetadata) {
+		this(
+				metadata,
+				() -> new SessionFactoryOptionsBuilder(
+						metadata.getMetadataBuildingOptions().getServiceRegistry(),
+						bootstrapContext
+				),
+				bootstrapContext,
+				bootstrapSettings,
+				resolvedMetadata,
+				false
+		);
+	}
+
+	private SessionFactoryBuilderImpl(
+			MetadataImplementor metadata,
+			Supplier<SessionFactoryOptionsBuilder> legacyOptionsBuilderSupplier,
+			BootstrapContext context,
+			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMetadata resolvedMetadata,
+			boolean applyLegacyBuiltInObservers) {
 		this.metadata = metadata;
-		this.optionsBuilder = optionsBuilder;
+		this.legacyOptionsBuilderSupplier = legacyOptionsBuilderSupplier;
 		this.bootstrapContext = context;
+		this.bootstrapSettings = bootstrapSettings;
+		this.resolvedMetadata = resolvedMetadata;
 
 		if ( metadata.getSqlFunctionMap() != null ) {
 			for ( var sqlFunctionEntry : metadata.getSqlFunctionMap().entrySet() ) {
@@ -70,378 +109,393 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		final var bytecodeProvider =
 				metadata.getMetadataBuildingOptions().getServiceRegistry()
 						.getService( BytecodeProvider.class );
-		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
-		addSessionFactoryObservers( new SessionFactoryObserverForNamedQueryValidation( metadata ) );
-		addSessionFactoryObservers( new SessionFactoryObserverForSchemaExport( metadata ) );
-		addSessionFactoryObservers( new SessionFactoryObserverForRegistration() );
+		if ( applyLegacyBuiltInObservers ) {
+			addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
+			addSessionFactoryObservers( new SessionFactoryObserverForNamedQueryValidation( metadata ) );
+			addSessionFactoryObservers( new SessionFactoryObserverForSchemaExport( metadata ) );
+			addSessionFactoryObservers( new SessionFactoryObserverForRegistration() );
+		}
 	}
 
 	@Override
 	public SessionFactoryBuilder applyBeanManager(Object beanManager) {
-		optionsBuilder.applyBeanManager(  beanManager );
+		optionsCollector.applyBeanManager(  beanManager );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyValidatorFactory(Object validatorFactory) {
-		optionsBuilder.applyValidatorFactory( validatorFactory );
+		optionsCollector.applyValidatorFactory( validatorFactory );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyName(String sessionFactoryName) {
-		optionsBuilder.applySessionFactoryName( sessionFactoryName );
+		optionsCollector.applySessionFactoryName( sessionFactoryName );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyNameAsJndiName(boolean isJndiName) {
-		optionsBuilder.enableSessionFactoryNameAsJndiName( isJndiName );
+		optionsCollector.enableSessionFactoryNameAsJndiName( isJndiName );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyAutoClosing(boolean enabled) {
-		optionsBuilder.enableSessionAutoClosing( enabled );
+		optionsCollector.enableSessionAutoClosing( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyAutoFlushing(boolean enabled) {
-		optionsBuilder.enableSessionAutoFlushing( enabled );
+		optionsCollector.enableSessionAutoFlushing( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyJtaTrackingByThread(boolean enabled) {
-		optionsBuilder.enableJtaTrackingByThread( enabled );
+		optionsCollector.enableJtaTrackingByThread( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyPreferUserTransactions(boolean preferUserTransactions) {
-		optionsBuilder.enablePreferUserTransaction( preferUserTransactions );
+		optionsCollector.enablePreferUserTransaction( preferUserTransactions );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyStatisticsSupport(boolean enabled) {
-		optionsBuilder.enableStatisticsSupport( enabled );
+		optionsCollector.enableStatisticsSupport( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder addSessionFactoryObservers(SessionFactoryObserver... observers) {
-		optionsBuilder.addSessionFactoryObservers( observers );
+		optionsCollector.addSessionFactoryObservers( observers );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyInterceptor(Interceptor interceptor) {
-		optionsBuilder.applyInterceptor( interceptor );
+		optionsCollector.applyInterceptor( interceptor );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
-		optionsBuilder.applyStatelessInterceptor( statelessInterceptorClass );
+		optionsCollector.applyStatelessInterceptor( statelessInterceptorClass );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
-		optionsBuilder.applyStatelessInterceptorSupplier( statelessInterceptorSupplier );
+		optionsCollector.applyStatelessInterceptorSupplier( statelessInterceptorSupplier );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyStatementObserver(StatementObserver statementObserver) {
-		optionsBuilder.applyStatementObserver( statementObserver );
+		optionsCollector.applyStatementObserver( statementObserver );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyStatementInspector(StatementInspector statementInspector) {
-		optionsBuilder.applyStatementInspector( statementInspector );
+		optionsCollector.applyStatementInspector( statementInspector );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy) {
-		optionsBuilder.applyCustomEntityDirtinessStrategy( strategy );
+		optionsCollector.applyCustomEntityDirtinessStrategy( strategy );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder addEntityNameResolver(EntityNameResolver... entityNameResolvers) {
-		optionsBuilder.addEntityNameResolvers( entityNameResolvers );
+		optionsCollector.addEntityNameResolvers( entityNameResolvers );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
-		optionsBuilder.applyEntityNotFoundDelegate( entityNotFoundDelegate );
+		optionsCollector.applyEntityNotFoundDelegate( entityNotFoundDelegate );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyIdentifierRollbackSupport(boolean enabled) {
-		optionsBuilder.enableIdentifierRollbackSupport( enabled );
+		optionsCollector.enableIdentifierRollbackSupport( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyNullabilityChecking(boolean enabled) {
-		optionsBuilder.enableNullabilityChecking( enabled );
+		optionsCollector.enableNullabilityChecking( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled) {
-		optionsBuilder.allowLazyInitializationOutsideTransaction( enabled );
+		optionsCollector.allowLazyInitializationOutsideTransaction( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyDefaultBatchFetchSize(int size) {
-		optionsBuilder.applyDefaultBatchFetchSize( size );
+		optionsCollector.applyDefaultBatchFetchSize( size );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyMaximumFetchDepth(int depth) {
-		optionsBuilder.applyMaximumFetchDepth( depth );
+		optionsCollector.applyMaximumFetchDepth( depth );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applySubselectFetchEnabled(boolean enabled) {
-		optionsBuilder.applySubselectFetchEnabled( enabled );
+		optionsCollector.applySubselectFetchEnabled( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyDefaultNullPrecedence(Nulls nullPrecedence) {
-		optionsBuilder.applyDefaultNullPrecedence( nullPrecedence );
+		optionsCollector.applyDefaultNullPrecedence( nullPrecedence );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyOrderingOfInserts(boolean enabled) {
-		optionsBuilder.enableOrderingOfInserts( enabled );
+		optionsCollector.enableOrderingOfInserts( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyOrderingOfUpdates(boolean enabled) {
-		optionsBuilder.enableOrderingOfUpdates( enabled );
+		optionsCollector.enableOrderingOfUpdates( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyMultiTenancy(boolean enabled) {
-		optionsBuilder.applyMultiTenancy(enabled);
+		optionsCollector.applyMultiTenancy(enabled);
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
-		optionsBuilder.applyCurrentTenantIdentifierResolver( resolver );
+		optionsCollector.applyCurrentTenantIdentifierResolver( resolver );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
-		optionsBuilder.applyTenantSchemaMapper( mapper );
+		optionsCollector.applyTenantSchemaMapper( mapper );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyTenantCredentialsMapper(TenantCredentialsMapper<?> mapper) {
-		optionsBuilder.applyTenantCredentialsMapper( mapper );
+		optionsCollector.applyTenantCredentialsMapper( mapper );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyNamedQueryCheckingOnStartup(boolean enabled) {
-		optionsBuilder.enableNamedQueryCheckingOnStartup( enabled );
+		optionsCollector.enableNamedQueryCheckingOnStartup( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applySecondLevelCacheSupport(boolean enabled) {
-		optionsBuilder.enableSecondLevelCacheSupport( enabled );
+		optionsCollector.enableSecondLevelCacheSupport( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyQueryCacheSupport(boolean enabled) {
-		optionsBuilder.enableQueryCacheSupport( enabled );
+		optionsCollector.enableQueryCacheSupport( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout) {
-		optionsBuilder.applyQueryCacheLayout( cacheLayout );
+		optionsCollector.applyQueryCacheLayout( cacheLayout );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
-		optionsBuilder.applyTimestampsCacheFactory( factory );
+		optionsCollector.applyTimestampsCacheFactory( factory );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyCacheRegionPrefix(String prefix) {
-		optionsBuilder.applyCacheRegionPrefix( prefix );
+		optionsCollector.applyCacheRegionPrefix( prefix );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyMinimalPutsForCaching(boolean enabled) {
-		optionsBuilder.enableMinimalPuts( enabled );
+		optionsCollector.enableMinimalPuts( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyStructuredCacheEntries(boolean enabled) {
-		optionsBuilder.enabledStructuredCacheEntries( enabled );
+		optionsCollector.enabledStructuredCacheEntries( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyDirectReferenceCaching(boolean enabled) {
-		optionsBuilder.allowDirectReferenceCacheEntries( enabled );
+		optionsCollector.allowDirectReferenceCacheEntries( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyAutomaticEvictionOfCollectionCaches(boolean enabled) {
-		optionsBuilder.enableAutoEvictCollectionCaches( enabled );
+		optionsCollector.enableAutoEvictCollectionCaches( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyJdbcBatchSize(int size) {
-		optionsBuilder.applyJdbcBatchSize( size );
+		optionsCollector.applyJdbcBatchSize( size );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled) {
-		optionsBuilder.enableScrollableResultSupport( enabled );
+		optionsCollector.enableScrollableResultSupport( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyGetGeneratedKeysSupport(boolean enabled) {
-		optionsBuilder.enableGeneratedKeysSupport( enabled );
+		optionsCollector.enableGeneratedKeysSupport( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyJdbcFetchSize(int size) {
-		optionsBuilder.applyJdbcFetchSize( size );
+		optionsCollector.applyJdbcFetchSize( size );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
-		optionsBuilder.applyConnectionHandlingMode( connectionHandlingMode );
+		optionsCollector.applyConnectionHandlingMode( connectionHandlingMode );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
-		optionsBuilder.applyConnectionProviderDisablesAutoCommit( providerDisablesAutoCommit );
+		optionsCollector.applyConnectionProviderDisablesAutoCommit( providerDisablesAutoCommit );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applySqlComments(boolean enabled) {
-		optionsBuilder.enableCommentsSupport( enabled );
+		optionsCollector.enableCommentsSupport( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionDescriptor functionDescriptor) {
-		optionsBuilder.applySqlFunction( registrationName, functionDescriptor );
+		optionsCollector.applySqlFunction( registrationName, functionDescriptor );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled) {
-		optionsBuilder.enableCollectionInDefaultFetchGroup( enabled );
+		optionsCollector.enableCollectionInDefaultFetchGroup( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy) {
-		optionsBuilder.applyTemporalTableStrategy( strategy );
+		optionsCollector.applyTemporalTableStrategy( strategy );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyAuditStrategy(AuditStrategy strategy) {
-		optionsBuilder.applyAuditStrategy( strategy );
+		optionsCollector.applyAuditStrategy( strategy );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow) {
-		optionsBuilder.allowOutOfTransactionUpdateOperations( allow );
+		optionsCollector.allowOutOfTransactionUpdateOperations( allow );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder enableJpaQueryCompliance(boolean enabled) {
-		optionsBuilder.enableJpaQueryCompliance( enabled );
+		optionsCollector.enableJpaQueryCompliance( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder enableJpaOrderByMappingCompliance(boolean enabled) {
-		optionsBuilder.enableJpaOrderByMappingCompliance( enabled );
+		optionsCollector.enableJpaOrderByMappingCompliance( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder enableJpaTransactionCompliance(boolean enabled) {
-		optionsBuilder.enableJpaTransactionCompliance( enabled );
+		optionsCollector.enableJpaTransactionCompliance( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
-		optionsBuilder.enableJpaClosedCompliance( enabled );
+		optionsCollector.enableJpaClosedCompliance( enabled );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
-		optionsBuilder.applyJsonFormatMapper( jsonFormatMapper );
+		optionsCollector.applyJsonFormatMapper( jsonFormatMapper );
 		return this;
 	}
 
 	@Override
 	public SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
-		optionsBuilder.applyXmlFormatMapper( xmlFormatMapper );
+		optionsCollector.applyXmlFormatMapper( xmlFormatMapper );
 		return this;
 	}
 
 	@Override
 	public void disableJtaTransactionAccess() {
-		optionsBuilder.disableJtaTransactionAccess();
+		optionsCollector.disableJtaTransactionAccess();
 	}
 
 	@Override
 	public SessionFactory build() {
+		if ( resolvedMetadata != null ) {
+			final var sessionFactorySettings = optionsCollector.applyTo(
+					SettingsResolver.resolveSessionFactorySettings(
+							bootstrapSettings,
+							metadata.getMetadataBuildingOptions().getServiceRegistry()
+					)
+			);
+			return org.hibernate.boot.orchestration.SessionFactoryBuilder.build(
+					sessionFactorySettings,
+					resolvedMetadata,
+					metadata.getMetadataBuildingOptions().getServiceRegistry()
+			);
+		}
 		return instantiateSessionFactory( metadata, buildSessionFactoryOptions(), bootstrapContext );
 	}
 
 	@Override
 	public SessionFactoryOptions buildSessionFactoryOptions() {
-		return optionsBuilder.buildOptions();
+		return optionsCollector.buildOptions( legacyOptionsBuilderSupplier.get() );
 	}
 }

@@ -9,8 +9,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/// Resolved bootstrap settings relevant to model source collection,
-/// categorization, and binding.
+/// Resolved settings relevant to bootstrap entry-point normalization and service
+/// setup.
 ///
 /// The raw configuration map remains available for settings consumed downstream,
 /// while grouped, frequently used bootstrap decisions are exposed as named
@@ -35,16 +35,12 @@ public record ResolvedBootstrapSettings(
 		///
 		/// This lets later stages distinguish JPA bootstrap defaults and
 		/// compatibility behavior from native Hibernate bootstrap.
-		boolean jpaBootstrap,
-
-		/// Resolved settings used while processing mapping sources.
-		ResolvedMappingSettings mappingSettings) {
+		boolean jpaBootstrap) {
 
 	/// Exposes immutable snapshots.
 	public ResolvedBootstrapSettings {
 		configurationValues = Collections.unmodifiableMap( new LinkedHashMap<>(
 				Objects.requireNonNull( configurationValues )
 		) );
-		Objects.requireNonNull( mappingSettings );
 	}
 }

@@ -10,8 +10,9 @@ import java.util.List;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.scan.spi.ScanningResult;
-import org.hibernate.boot.settings.BootstrapSettingsResolver;
 import org.hibernate.boot.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.settings.ResolvedMappingSettings;
+import org.hibernate.boot.settings.SettingsResolver;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
@@ -77,9 +78,14 @@ public record BootstrapSourceContributions(
 	/// neutral source contributions.
 	public static BootstrapSourceContributions from(PersistenceConfiguration persistenceConfiguration) {
 		if ( persistenceConfiguration instanceof HibernatePersistenceConfiguration hibernatePersistenceConfiguration ) {
+			final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( hibernatePersistenceConfiguration );
 			return from(
 					hibernatePersistenceConfiguration,
-					BootstrapSettingsResolver.resolve( hibernatePersistenceConfiguration ),
+					bootstrapSettings,
+					SettingsResolver.resolveMappingSettings(
+							bootstrapSettings,
+							hibernatePersistenceConfiguration.defaultToOneFetchType()
+					),
 					null
 			);
 		}
@@ -106,6 +112,7 @@ public record BootstrapSourceContributions(
 	public static BootstrapSourceContributions from(
 			HibernatePersistenceConfiguration persistenceConfiguration,
 			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
 			ClassLoaderService classLoaderService) {
 		if ( classLoaderService == null ) {
 			return new BootstrapSourceContributions(
@@ -116,6 +123,7 @@ public record BootstrapSourceContributions(
 		final ScanningResult scanningResult = HibernatePersistenceConfigurationScanner.performScanning(
 				persistenceConfiguration,
 				bootstrapSettings,
+				mappingSettings,
 				classLoaderService
 		);
 		return new BootstrapSourceContributions(

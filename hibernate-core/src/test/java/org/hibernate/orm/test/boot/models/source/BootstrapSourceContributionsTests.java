@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.hibernate.boot.models.source.BootstrapSourceContributions;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.settings.BootstrapSettingsResolver;
+import org.hibernate.boot.settings.SettingsResolver;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -27,14 +27,19 @@ public class BootstrapSourceContributionsTests {
 		final var persistenceConfiguration = new HibernatePersistenceConfiguration( "test" );
 		persistenceConfiguration.managedClass( SimpleEntity.class );
 		persistenceConfiguration.mappingFile( "mappings/complete/simple-complete.xml" );
-		final var bootstrapSettings = BootstrapSettingsResolver.resolve(
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
 				persistenceConfiguration,
 				Map.of()
+		);
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				persistenceConfiguration.defaultToOneFetchType()
 		);
 
 		final var sourceContributions = BootstrapSourceContributions.from(
 				persistenceConfiguration,
 				bootstrapSettings,
+				mappingSettings,
 				registryScope.getRegistry().requireService( ClassLoaderService.class )
 		);
 

@@ -65,32 +65,35 @@ public record ResolvedSessionFactorySettings(
 		/// Whether the SessionFactory name should also be treated as a JNDI name.
 		Boolean sessionFactoryNameAlsoJndiName,
 
-			/// Statement observer applied to SQL statements emitted by this factory.
-			StatementObserver statementObserver,
+		/// Statement observer applied to SQL statements emitted by this factory.
+		StatementObserver statementObserver,
 
-			/// SQL statement inspector applied before JDBC execution.
-			StatementInspector statementInspector,
+		/// SQL statement inspector applied before JDBC execution.
+		StatementInspector statementInspector,
 
-			/// Initial cache mode for newly opened sessions.
-			CacheMode initialSessionCacheMode,
+		/// Initial cache mode for newly opened sessions.
+		CacheMode initialSessionCacheMode,
 
-			/// Physical JDBC connection handling mode for sessions.
-			PhysicalConnectionHandlingMode physicalConnectionHandlingMode,
+		/// Physical JDBC connection handling mode for sessions.
+		PhysicalConnectionHandlingMode physicalConnectionHandlingMode,
 
-			/// JDBC time zone override, if configured.
-			TimeZone jdbcTimeZone,
+		/// JDBC time zone override, if configured.
+		TimeZone jdbcTimeZone,
 
-			/// Whether sessions should flush before transaction completion.
-			boolean flushBeforeCompletionEnabled,
+		/// Whether sessions should flush before transaction completion.
+		boolean flushBeforeCompletionEnabled,
 
-			/// Whether sessions should auto-close after transaction completion.
-			boolean autoCloseSessionEnabled,
+		/// Whether sessions should auto-close after transaction completion.
+		boolean autoCloseSessionEnabled,
 
-			/// Whether identifiers should be reset on delete.
-			boolean identifierRollbackEnabled,
+		/// Whether identifiers should be reset on delete.
+		boolean identifierRollbackEnabled,
 
-			/// Factory-wide interceptor applied to Sessions unless overridden.
-			Interceptor interceptor,
+		/// Whether flush-time bidirectional association management is enabled.
+		boolean bidirectionalAssociationManagementEnabled,
+
+		/// Factory-wide interceptor applied to Sessions unless overridden.
+		Interceptor interceptor,
 
 		/// Observers notified about SessionFactory lifecycle events.
 		SessionFactoryObserver[] sessionFactoryObservers,
@@ -123,78 +126,78 @@ public record ResolvedSessionFactorySettings(
 		/// Whether direct-reference cache entries are enabled.
 		boolean directReferenceCacheEntriesEnabled,
 
-			/// Whether collection caches are auto-evicted for bidirectional association changes.
-			boolean autoEvictCollectionCache,
+		/// Whether collection caches are auto-evicted for bidirectional association changes.
+		boolean autoEvictCollectionCache,
 
-			/// Custom SQL-function registrations applied before contributor and dialect functions.
-			Map<String, SqmFunctionDescriptor> customSqlFunctionMap,
+		/// Custom SQL-function registrations applied before contributor and dialect functions.
+		Map<String, SqmFunctionDescriptor> customSqlFunctionMap,
 
-			/// Custom SQM function registry overlay, if configured.
-			SqmFunctionRegistry customSqmFunctionRegistry,
+		/// Custom SQM function registry overlay, if configured.
+		SqmFunctionRegistry customSqmFunctionRegistry,
 
-			/// Custom HQL translator, if configured.
-			HqlTranslator customHqlTranslator,
+		/// Custom HQL translator, if configured.
+		HqlTranslator customHqlTranslator,
 
-			/// Custom SQM translator factory, if configured.
-			SqmTranslatorFactory customSqmTranslatorFactory,
+		/// Custom SQM translator factory, if configured.
+		SqmTranslatorFactory customSqmTranslatorFactory,
 
-			/// Custom multi-table mutation strategy, if configured.
-			SqmMultiTableMutationStrategy customSqmMultiTableMutationStrategy,
+		/// Custom multi-table mutation strategy, if configured.
+		SqmMultiTableMutationStrategy customSqmMultiTableMutationStrategy,
 
-			/// Custom multi-table insert strategy, if configured.
-			SqmMultiTableInsertStrategy customSqmMultiTableInsertStrategy,
+		/// Custom multi-table insert strategy, if configured.
+		SqmMultiTableInsertStrategy customSqmMultiTableInsertStrategy,
 
-			/// JPA compliance settings visible to query/runtime model creation.
-			JpaCompliance jpaCompliance,
+		/// JPA compliance settings visible to query/runtime model creation.
+		JpaCompliance jpaCompliance,
 
-			/// Criteria literal/bind handling mode.
-			ValueHandlingMode criteriaValueHandlingMode,
+		/// Criteria literal/bind handling mode.
+		ValueHandlingMode criteriaValueHandlingMode,
 
-			/// Handling mode for bulk updates against immutable entities.
-			ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode,
+		/// Handling mode for bulk updates against immutable entities.
+		ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode,
 
-			/// Whether HQL JSON functions are enabled.
-			boolean jsonFunctionsEnabled,
+		/// Whether HQL JSON functions are enabled.
+		boolean jsonFunctionsEnabled,
 
-			/// Whether HQL XML functions are enabled.
-			boolean xmlFunctionsEnabled,
+		/// Whether HQL XML functions are enabled.
+		boolean xmlFunctionsEnabled,
 
-			/// Whether integer division should be portable across dialects.
-			boolean portableIntegerDivisionEnabled,
+		/// Whether integer division should be portable across dialects.
+		boolean portableIntegerDivisionEnabled,
 
-			/// Whether native-query JDBC ordinal parameters should be ignored.
-			boolean nativeJdbcParametersIgnored,
+		/// Whether native-query JDBC ordinal parameters should be ignored.
+		boolean nativeJdbcParametersIgnored,
 
-			/// Whether named queries should be validated during SessionFactory startup.
-			boolean namedQueryStartupCheckingEnabled,
+		/// Whether named queries should be validated during SessionFactory startup.
+		boolean namedQueryStartupCheckingEnabled,
 
-			/// Whether enhanced collection attributes are included in the default fetch
-			/// group.
-			boolean collectionsInDefaultFetchGroupEnabled,
+		/// Whether enhanced collection attributes are included in the default fetch
+		/// group.
+		boolean collectionsInDefaultFetchGroupEnabled,
 
-			/// Whether Jakarta Persistence entity callbacks are enabled.
-			boolean jpaCallbacksEnabled,
+		/// Whether Jakarta Persistence entity callbacks are enabled.
+		boolean jpaCallbacksEnabled,
 
-			/// Default batch-fetch size for entity and collection persisters.
-			int defaultBatchFetchSize,
+		/// Default batch-fetch size for entity and collection persisters.
+		int defaultBatchFetchSize,
 
-			/// Maximum outer-join fetch depth, if configured.
-			Integer maximumFetchDepth,
+		/// Maximum outer-join fetch depth, if configured.
+		Integer maximumFetchDepth,
 
-			/// Whether subselect fetching is enabled by default.
-			boolean subselectFetchEnabled,
+		/// Whether subselect fetching is enabled by default.
+		boolean subselectFetchEnabled,
 
-			/// Whether generated SQL should include comments.
-			boolean commentsEnabled,
+		/// Whether generated SQL should include comments.
+		boolean commentsEnabled,
 
-			/// Strategy used for temporal table mappings.
-			TemporalTableStrategy temporalTableStrategy,
+		/// Strategy used for temporal table mappings.
+		TemporalTableStrategy temporalTableStrategy,
 
-			/// Strategy used for audited mappings.
-			AuditStrategy auditStrategy,
+		/// Strategy used for audited mappings.
+		AuditStrategy auditStrategy,
 
-			/// Whether a multi-tenant connection provider is available.
-			boolean multiTenancyEnabled,
+		/// Whether a multi-tenant connection provider is available.
+		boolean multiTenancyEnabled,
 
 		/// Current tenant identifier resolver, if one is configured.
 		CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver,

@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import org.hibernate.boot.CacheRegionDefinition.CacheRegionType;
 import org.hibernate.boot.settings.BootstrapSettingsResolver;
+import org.hibernate.boot.settings.MappingSettingsResolver;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -38,12 +39,14 @@ public class BootstrapSettingsResolverTests {
 		assertThat( settings.configurationValues() )
 				.containsEntry( "java.version", Environment.getProperties().get( "java.version" ) );
 		assertThat( settings.jpaBootstrap() ).isFalse();
-		assertThat( settings.mappingSettings().xmlMappingEnabled() ).isTrue();
-		assertThat( settings.mappingSettings().validateXml() ).isFalse();
-		assertThat( settings.mappingSettings().defaultToOneFetchType() ).isEqualTo( FetchType.EAGER );
-		assertThat( settings.mappingSettings().createImplicitDiscriminatorsForJoinedInheritance() ).isFalse();
-		assertThat( settings.mappingSettings().ignoreExplicitDiscriminatorsForJoinedInheritance() ).isFalse();
-		assertThat( settings.mappingSettings().cacheRegionDefinitions() ).isEmpty();
+
+		final var mappingSettings = MappingSettingsResolver.resolve( settings, FetchType.EAGER );
+		assertThat( mappingSettings.xmlMappingEnabled() ).isTrue();
+		assertThat( mappingSettings.validateXml() ).isFalse();
+		assertThat( mappingSettings.defaultToOneFetchType() ).isEqualTo( FetchType.EAGER );
+		assertThat( mappingSettings.createImplicitDiscriminatorsForJoinedInheritance() ).isFalse();
+		assertThat( mappingSettings.ignoreExplicitDiscriminatorsForJoinedInheritance() ).isFalse();
+		assertThat( mappingSettings.cacheRegionDefinitions() ).isEmpty();
 	}
 
 	@Test
@@ -57,11 +60,12 @@ public class BootstrapSettingsResolverTests {
 				COLLECTION_CACHE_PREFIX + ".org.acme.TheEntity.items", "nonstrict-read-write,items"
 		) );
 
-		assertThat( settings.mappingSettings().xmlMappingEnabled() ).isFalse();
-		assertThat( settings.mappingSettings().validateXml() ).isTrue();
-		assertThat( settings.mappingSettings().createImplicitDiscriminatorsForJoinedInheritance() ).isTrue();
-		assertThat( settings.mappingSettings().ignoreExplicitDiscriminatorsForJoinedInheritance() ).isTrue();
-		assertThat( settings.mappingSettings().cacheRegionDefinitions() )
+		final var mappingSettings = MappingSettingsResolver.resolve( settings, FetchType.EAGER );
+		assertThat( mappingSettings.xmlMappingEnabled() ).isFalse();
+		assertThat( mappingSettings.validateXml() ).isTrue();
+		assertThat( mappingSettings.createImplicitDiscriminatorsForJoinedInheritance() ).isTrue();
+		assertThat( mappingSettings.ignoreExplicitDiscriminatorsForJoinedInheritance() ).isTrue();
+		assertThat( mappingSettings.cacheRegionDefinitions() )
 				.extracting( "regionType", "role", "usage", "region", "cacheLazy" )
 				.containsExactlyInAnyOrder(
 						tuple( CacheRegionType.ENTITY, "org.acme.TheEntity", "read-write", "entities", true ),
@@ -90,8 +94,9 @@ public class BootstrapSettingsResolverTests {
 		);
 
 		assertThat( settings.jpaBootstrap() ).isTrue();
-		assertThat( settings.mappingSettings().xmlMappingEnabled() ).isFalse();
-		assertThat( settings.mappingSettings().defaultToOneFetchType() ).isEqualTo( FetchType.LAZY );
+		final var mappingSettings = MappingSettingsResolver.resolve( settings, FetchType.LAZY );
+		assertThat( mappingSettings.xmlMappingEnabled() ).isFalse();
+		assertThat( mappingSettings.defaultToOneFetchType() ).isEqualTo( FetchType.LAZY );
 	}
 
 	private record TestPersistenceUnitDescriptor(Properties properties) implements PersistenceUnitDescriptor {

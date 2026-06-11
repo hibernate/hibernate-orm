@@ -24,6 +24,7 @@ import org.hibernate.boot.scan.spi.Scanner;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.scan.spi.ScanningResult;
 import org.hibernate.boot.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.settings.ResolvedMappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
@@ -50,6 +51,7 @@ class HibernatePersistenceConfigurationScanner {
 	static ScanningResult performScanning(
 			HibernatePersistenceConfiguration persistenceConfiguration,
 			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
 			ClassLoaderService classLoaderService) {
 		final URL[] boundaries = collectUrls( persistenceConfiguration );
 		if ( boundaries == null ) {

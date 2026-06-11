@@ -19,9 +19,9 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.settings.BootstrapSettingsResolver;
 import org.hibernate.boot.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.settings.SessionFactorySettingsResolver;
+import org.hibernate.boot.settings.ResolvedMappingSettings;
+import org.hibernate.boot.settings.SettingsResolver;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
@@ -239,6 +239,7 @@ public class SessionFactoryBootstrap {
 		Objects.requireNonNull( request );
 		final var resolvedMetadata = MetadataResolver.resolve(
 				request.bootstrapSettings(),
+				request.mappingSettings(),
 				request.sourceContributions(),
 				request.serviceRegistry()
 		);
@@ -251,13 +252,14 @@ public class SessionFactoryBootstrap {
 	}
 
 	private static SessionFactory build(EntryPointBootstrapRequest bootstrapRequest) {
-		final var sessionFactorySettings = SessionFactorySettingsResolver.resolve(
+		final var sessionFactorySettings = SettingsResolver.resolveSessionFactorySettings(
 				bootstrapRequest.bootstrapSettings(),
 				bootstrapRequest.standardServiceRegistry()
 		);
 		return build(
 				new SessionFactoryBootstrapRequest(
 						bootstrapRequest.bootstrapSettings(),
+						bootstrapRequest.mappingSettings(),
 						bootstrapRequest.sourceContributions(),
 						sessionFactorySettings,
 						bootstrapRequest.standardServiceRegistry(),
@@ -269,6 +271,7 @@ public class SessionFactoryBootstrap {
 	private static void generateSchema(EntryPointBootstrapRequest bootstrapRequest) {
 		final var resolvedMetadata = MetadataResolver.resolve(
 				bootstrapRequest.bootstrapSettings(),
+				bootstrapRequest.mappingSettings(),
 				bootstrapRequest.sourceContributions(),
 				bootstrapRequest.standardServiceRegistry()
 		);
@@ -288,9 +291,12 @@ public class SessionFactoryBootstrap {
 			JPA_LOGGER.definingFlushBeforeCompletionIgnoredInHem( FLUSH_BEFORE_COMPLETION );
 			configurationValues.put( FLUSH_BEFORE_COMPLETION, String.valueOf( false ) );
 		}
-		final var bootstrapSettings = BootstrapSettingsResolver.resolve(
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
 				configurationValues,
-				true,
+				true
+		);
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
 				persistenceConfiguration.defaultToOneFetchType()
 		);
 		final var standardServiceRegistry = StandardServiceRegistryBuilder.forJpa( bootstrapServiceRegistry )
@@ -299,10 +305,12 @@ public class SessionFactoryBootstrap {
 		final var sourceContributions = resolveBootstrapSourceContributions(
 				persistenceConfiguration,
 				bootstrapSettings,
+				mappingSettings,
 				standardServiceRegistry
 		);
 		return new EntryPointBootstrapRequest(
 				bootstrapSettings,
+				mappingSettings,
 				standardServiceRegistry,
 				sourceContributions
 		);
@@ -312,9 +320,13 @@ public class SessionFactoryBootstrap {
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map<?, ?> integrationSettings,
 			org.hibernate.boot.registry.BootstrapServiceRegistry bootstrapServiceRegistry) {
-		final var bootstrapSettings = BootstrapSettingsResolver.resolve(
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
 				persistenceUnitDescriptor,
 				integrationSettings
+		);
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				persistenceUnitDescriptor.getDefaultToOneFetchType()
 		);
 		if ( getBoolean( FLUSH_BEFORE_COMPLETION, bootstrapSettings.configurationValues() ) ) {
 			JPA_LOGGER.definingFlushBeforeCompletionIgnoredInHem( FLUSH_BEFORE_COMPLETION );
@@ -325,6 +337,7 @@ public class SessionFactoryBootstrap {
 				.build();
 		return new EntryPointBootstrapRequest(
 				bootstrapSettings,
+				mappingSettings,
 				standardServiceRegistry,
 				BootstrapSourceContributions.from( persistenceUnitDescriptor )
 		);
@@ -333,11 +346,13 @@ public class SessionFactoryBootstrap {
 	private static BootstrapSourceContributions resolveBootstrapSourceContributions(
 			PersistenceConfiguration persistenceConfiguration,
 			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
 			StandardServiceRegistry serviceRegistry) {
 		if ( persistenceConfiguration instanceof HibernatePersistenceConfiguration hibernatePersistenceConfiguration ) {
 			return BootstrapSourceContributions.from(
 					hibernatePersistenceConfiguration,
 					bootstrapSettings,
+					mappingSettings,
 					serviceRegistry.requireService( ClassLoaderService.class )
 			);
 		}
@@ -410,6 +425,7 @@ public class SessionFactoryBootstrap {
 	/// needed by both one-shot SessionFactory construction and schema generation.
 	private record EntryPointBootstrapRequest(
 			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
 			StandardServiceRegistry standardServiceRegistry,
 			BootstrapSourceContributions sourceContributions) {
 	}

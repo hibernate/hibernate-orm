@@ -13,10 +13,10 @@
  * source collection, categorization, binding, option resolution, and eventual
  * factory construction.
  * <p>
- * The current PoC slice is deliberately narrow: settings are resolved by
- * {@link org.hibernate.boot.settings.BootstrapSettingsResolver}, and then
- * {@link org.hibernate.boot.orchestration.MetadataResolver} turns resolved
- * settings, source contributions, and a service registry into
+ * The current PoC slice is deliberately narrow: settings are resolved through
+ * {@link org.hibernate.boot.settings.SettingsResolver} into phase-specific
+ * buckets, and then {@link org.hibernate.boot.orchestration.MetadataResolver}
+ * turns resolved settings, source contributions, and a service registry into
  * {@link org.hibernate.boot.orchestration.ResolvedMetadata} by running source
  * resource creation, categorization, binding, metadata registration, ordering,
  * and validation in order.  {@link org.hibernate.boot.orchestration.SessionFactoryBuilder}

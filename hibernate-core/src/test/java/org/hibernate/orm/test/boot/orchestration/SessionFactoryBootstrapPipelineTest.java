@@ -11,8 +11,7 @@ import org.hibernate.boot.orchestration.MetadataResolver;
 import org.hibernate.boot.orchestration.ResolvedMetadata;
 import org.hibernate.boot.orchestration.SessionFactoryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.settings.BootstrapSettingsResolver;
-import org.hibernate.boot.settings.SessionFactorySettingsResolver;
+import org.hibernate.boot.settings.SettingsResolver;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -43,15 +42,21 @@ class SessionFactoryBootstrapPipelineTest {
 	void buildsSessionFactoryFromResolvedProducts(ServiceRegistryScope registryScope) {
 		final var persistenceConfiguration = new HibernatePersistenceConfiguration( "test" )
 				.managedClass( PipelineEntity.class );
-		final var bootstrapSettings = new BootstrapSettingsResolver()
-				.resolve( persistenceConfiguration, Map.of() );
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration, Map.of() );
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				persistenceConfiguration.defaultToOneFetchType()
+		);
 		final var resolvedMetadata = resolveMetadata(
 				registryScope,
 				persistenceConfiguration,
-				bootstrapSettings
+				bootstrapSettings,
+				mappingSettings
 		);
-		final var sessionFactorySettings = new SessionFactorySettingsResolver()
-				.resolve( bootstrapSettings, registryScope.getRegistry() );
+		final var sessionFactorySettings = SettingsResolver.resolveSessionFactorySettings(
+				bootstrapSettings,
+				registryScope.getRegistry()
+		);
 
 		try (var sessionFactory = new SessionFactoryBuilder().build(
 				sessionFactorySettings,
@@ -67,14 +72,17 @@ class SessionFactoryBootstrapPipelineTest {
 	private static ResolvedMetadata resolveMetadata(
 			ServiceRegistryScope registryScope,
 			HibernatePersistenceConfiguration persistenceConfiguration,
-			org.hibernate.boot.settings.ResolvedBootstrapSettings bootstrapSettings) {
+			org.hibernate.boot.settings.ResolvedBootstrapSettings bootstrapSettings,
+			org.hibernate.boot.settings.ResolvedMappingSettings mappingSettings) {
 		final var sourceContributions = BootstrapSourceContributions.from(
 				persistenceConfiguration,
 				bootstrapSettings,
+				mappingSettings,
 				registryScope.getRegistry().requireService( ClassLoaderService.class )
 		);
 		return new MetadataResolver().resolve(
 				bootstrapSettings,
+				mappingSettings,
 				sourceContributions,
 				registryScope.getRegistry()
 		);

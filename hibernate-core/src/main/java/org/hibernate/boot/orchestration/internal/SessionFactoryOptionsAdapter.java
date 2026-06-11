@@ -92,6 +92,7 @@ public final class SessionFactoryOptionsAdapter {
 				case "isAllowOutOfTransactionUpdateOperations" -> false;
 				case "isJtaTrackByThread" -> true;
 				case "isIdentifierRollbackEnabled" -> settings.identifierRollbackEnabled();
+				case "isBidirectionalAssociationManagementEnabled" -> settings.bidirectionalAssociationManagementEnabled();
 				case "getInterceptor" -> settings.interceptor();
 				case "getStatelessInterceptorImplementorSupplier" -> null;
 				case "buildSessionEventListeners" -> new org.hibernate.SessionEventListener[0];

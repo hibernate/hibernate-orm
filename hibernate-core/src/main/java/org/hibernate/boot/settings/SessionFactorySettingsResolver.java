@@ -21,6 +21,7 @@ import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.model.internal.TemporalHelper;
+import org.hibernate.cfg.BytecodeSettings;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -100,6 +101,7 @@ public class SessionFactorySettingsResolver {
 					asBoolean( configurationValues.get( TransactionSettings.FLUSH_BEFORE_COMPLETION ), true ),
 					asBoolean( configurationValues.get( TransactionSettings.AUTO_CLOSE_SESSION ), false ),
 					asBoolean( configurationValues.get( org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK ), false ),
+					resolveBidirectionalAssociationManagementEnabled( configurationValues ),
 					resolveInterceptor( configurationValues, standardServiceRegistry ),
 					resolveSessionFactoryObservers( configurationValues, standardServiceRegistry ),
 					resolveValidatorFactoryReference( configurationValues ),
@@ -142,6 +144,14 @@ public class SessionFactorySettingsResolver {
 				asString( configurationValues.get( MappingSettings.DEFAULT_CATALOG ) ),
 				asString( configurationValues.get( MappingSettings.DEFAULT_SCHEMA ) )
 		);
+	}
+
+	private static boolean resolveBidirectionalAssociationManagementEnabled(Map<String, Object> configurationValues) {
+		final Object bidirectionalAssociationManagement =
+				configurationValues.get( PersistenceSettings.BIDIRECTIONALITY_MANAGEMENT );
+		return bidirectionalAssociationManagement == null
+				? asBoolean( configurationValues.get( BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT ), false )
+				: asBoolean( bidirectionalAssociationManagement, false );
 	}
 
 	private static Interceptor resolveInterceptor(

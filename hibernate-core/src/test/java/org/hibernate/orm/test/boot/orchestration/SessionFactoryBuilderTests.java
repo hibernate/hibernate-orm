@@ -6,15 +6,18 @@ package org.hibernate.orm.test.boot.orchestration;
 
 import java.util.Map;
 
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.models.source.BootstrapSourceContributions;
 import org.hibernate.boot.orchestration.MetadataResolver;
 import org.hibernate.boot.orchestration.ResolvedMetadata;
 import org.hibernate.boot.orchestration.SessionFactoryBuilder;
+import org.hibernate.boot.orchestration.internal.ResolvedMetadataImplementor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.settings.BootstrapSettingsResolver;
 import org.hibernate.boot.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.settings.SessionFactorySettingsResolver;
+import org.hibernate.boot.settings.ResolvedMappingSettings;
+import org.hibernate.boot.settings.SettingsResolver;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.orm.test.boot.models.source.SimpleEntity;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -39,9 +42,18 @@ public class SessionFactoryBuilderTests {
 	void sessionFactoryBuildTargetIsDefined(ServiceRegistryScope registryScope) {
 		final var persistenceConfiguration = new HibernatePersistenceConfiguration( "test" )
 				.managedClass( SimpleEntity.class );
-		final var bootstrapSettings = BootstrapSettingsResolver.resolve( persistenceConfiguration, Map.of() );
-		final var resolvedMetadata = resolveMetadata( registryScope, persistenceConfiguration, bootstrapSettings );
-		final var sessionFactorySettings = SessionFactorySettingsResolver.resolve(
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration, Map.of() );
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				persistenceConfiguration.defaultToOneFetchType()
+		);
+		final var resolvedMetadata = resolveMetadata(
+				registryScope,
+				persistenceConfiguration,
+				bootstrapSettings,
+				mappingSettings
+		);
+		final var sessionFactorySettings = SettingsResolver.resolveSessionFactorySettings(
 				bootstrapSettings,
 				registryScope.getRegistry()
 		);
@@ -67,9 +79,18 @@ public class SessionFactoryBuilderTests {
 	void sessionFactorySupportsBasicPersistAndQuery(ServiceRegistryScope registryScope) {
 		final var persistenceConfiguration = new HibernatePersistenceConfiguration( "test" )
 				.managedClass( RuntimeSmokeEntity.class );
-		final var bootstrapSettings = BootstrapSettingsResolver.resolve( persistenceConfiguration, Map.of() );
-		final var resolvedMetadata = resolveMetadata( registryScope, persistenceConfiguration, bootstrapSettings );
-		final var sessionFactorySettings = SessionFactorySettingsResolver.resolve(
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration, Map.of() );
+		final var mappingSettings = SettingsResolver.resolveMappingSettings(
+				bootstrapSettings,
+				persistenceConfiguration.defaultToOneFetchType()
+		);
+		final var resolvedMetadata = resolveMetadata(
+				registryScope,
+				persistenceConfiguration,
+				bootstrapSettings,
+				mappingSettings
+		);
+		final var sessionFactorySettings = SettingsResolver.resolveSessionFactorySettings(
 				bootstrapSettings,
 				registryScope.getRegistry()
 		);
@@ -111,17 +132,44 @@ public class SessionFactoryBuilderTests {
 		}
 	}
 
+	@Test
+	@ServiceRegistry(settings = {
+			@Setting(name = JdbcSettings.URL, value = "jdbc:h2:mem:native-metadata-session-factory;DB_CLOSE_DELAY=-1"),
+			@Setting(name = JdbcSettings.USER, value = "sa"),
+			@Setting(name = JdbcSettings.PASS, value = "")
+	})
+	void nativeMetadataBuildPreservesResolvedMetadataForSessionFactoryBuild(ServiceRegistryScope registryScope) {
+		final var metadata = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClass( RuntimeSmokeEntity.class )
+				.getMetadataBuilder()
+				.build();
+
+		assertThat( metadata ).isInstanceOf( ResolvedMetadataImplementor.class );
+		final var resolvedMetadata = ( (ResolvedMetadataImplementor) metadata ).getResolvedMetadata();
+		assertThat( resolvedMetadata.categorizedDomainModel() ).isNotNull();
+		assertThat( resolvedMetadata.bindingState() ).isNotNull();
+
+		try (var sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory()) {
+			assertThat( sessionFactory.getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( RuntimeSmokeEntity.class ) ).isNotNull();
+		}
+	}
+
 	private static ResolvedMetadata resolveMetadata(
 			ServiceRegistryScope registryScope,
 			HibernatePersistenceConfiguration persistenceConfiguration,
-			ResolvedBootstrapSettings bootstrapSettings) {
+			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings) {
 		final var sourceContributions = BootstrapSourceContributions.from(
 				persistenceConfiguration,
 				bootstrapSettings,
+				mappingSettings,
 				registryScope.getRegistry().requireService( ClassLoaderService.class )
 		);
 		return MetadataResolver.resolve(
 				bootstrapSettings,
+				mappingSettings,
 				sourceContributions,
 				registryScope.getRegistry()
 		);

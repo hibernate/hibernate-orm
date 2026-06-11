@@ -12,8 +12,8 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.settings.BootstrapSettingsResolver;
-import org.hibernate.boot.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.settings.ResolvedMappingSettings;
+import org.hibernate.boot.settings.SettingsResolver;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -80,7 +80,10 @@ public record AvailableResources(
 		return from(
 				persistenceUnitDescriptor,
 				context,
-				new BootstrapSettingsResolver().resolve( persistenceUnitDescriptor, Map.of() )
+				SettingsResolver.resolveMappingSettings(
+						SettingsResolver.resolveBootstrapSettings( persistenceUnitDescriptor, Map.of() ),
+						persistenceUnitDescriptor.getDefaultToOneFetchType()
+				)
 		);
 	}
 
@@ -93,11 +96,11 @@ public record AvailableResources(
 	///
 	/// @param persistenceUnitDescriptor The persistence-unit wrapper
 	/// @param context Context used to resolve model details and load resources
-	/// @param bootstrapSettings Resolved bootstrap settings used during source collection
+	/// @param mappingSettings Resolved mapping settings used during source collection
 	public static AvailableResources from(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			AvailableResourcesContext context,
-			ResolvedBootstrapSettings bootstrapSettings) {
+			ResolvedMappingSettings mappingSettings) {
 		var classLoading = context.getClassLoaderService();
 		var classDetailsRegistry = context.modelsContext().getClassDetailsRegistry();
 
@@ -114,7 +117,7 @@ public record AvailableResources(
 		} );
 
 		final List<Binding<JaxbEntityMappingsImpl>> xmlBindings;
-		if ( !bootstrapSettings.mappingSettings().xmlMappingEnabled()
+		if ( !mappingSettings.xmlMappingEnabled()
 				|| persistenceUnitDescriptor.getMappingFileNames().isEmpty() ) {
 			xmlBindings = Collections.emptyList();
 		}
@@ -153,7 +156,10 @@ public record AvailableResources(
 		return from(
 				persistenceConfiguration,
 				context,
-				new BootstrapSettingsResolver().resolve( persistenceConfiguration )
+				SettingsResolver.resolveMappingSettings(
+						SettingsResolver.resolveBootstrapSettings( persistenceConfiguration ),
+						persistenceConfiguration.defaultToOneFetchType()
+				)
 		);
 	}
 
@@ -166,19 +172,21 @@ public record AvailableResources(
 	///
 	/// @param persistenceConfiguration The PersistenceConfiguration
 	/// @param context Context used to resolve model details and load resources
-	/// @param bootstrapSettings Resolved bootstrap settings used during source collection
+	/// @param mappingSettings Resolved mapping settings used during source collection
 	public static AvailableResources from(
 			HibernatePersistenceConfiguration persistenceConfiguration,
 			AvailableResourcesContext context,
-			ResolvedBootstrapSettings bootstrapSettings) {
+			ResolvedMappingSettings mappingSettings) {
+		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration );
 		return from(
 				BootstrapSourceContributions.from(
 						persistenceConfiguration,
 						bootstrapSettings,
+						mappingSettings,
 						context.getClassLoaderService()
 				),
 				context,
-				bootstrapSettings
+				mappingSettings
 		);
 	}
 
@@ -190,11 +198,11 @@ public record AvailableResources(
 	///
 	/// @param sourceContributions Source declarations from a bootstrap entry point
 	/// @param context Context used to resolve model details and load resources
-	/// @param bootstrapSettings Resolved bootstrap settings used during source collection
+	/// @param mappingSettings Resolved mapping settings used during source collection
 	public static AvailableResources from(
 			BootstrapSourceContributions sourceContributions,
 			AvailableResourcesContext context,
-			ResolvedBootstrapSettings bootstrapSettings) {
+			ResolvedMappingSettings mappingSettings) {
 		final var classLoading = context.getClassLoaderService();
 		final var classDetailsRegistry = context.modelsContext().getClassDetailsRegistry();
 		final var mappingFileBinder = context.createMappingBinder();
@@ -224,7 +232,7 @@ public record AvailableResources(
 		} );
 
 		final var xmlBindings = new ArrayList<Binding<JaxbEntityMappingsImpl>>();
-		if ( bootstrapSettings.mappingSettings().xmlMappingEnabled() ) {
+		if ( mappingSettings.xmlMappingEnabled() ) {
 			sourceContributions.mappingFiles().forEach( (mappingFile) -> {
 				try (var mappingFileStream = classLoading.locateResourceStream( mappingFile )) {
 					xmlBindings.add( mappingFileBinder.bind(

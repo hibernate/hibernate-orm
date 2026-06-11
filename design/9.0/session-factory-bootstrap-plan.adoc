@@ -157,8 +157,9 @@ or assert pre-build metadata.  The plan is to replace those cases with narrower
 product builders or assertions:
 
 * use `MetadataResolver` when the test needs finalized metadata;
-* use `BootstrapSettingsResolver` or `SessionFactorySettingsResolver` when the
-  test needs setting interpretation;
+* use `SettingsResolver` when the test needs complete settings-bucket
+  resolution, or the focused phase resolver when testing one bucket
+  specifically;
 * use source-contribution helpers when the test needs mapping/source discovery;
 * keep explicit legacy-SPI tests for `Bootstrap` and
   `EntityManagerFactoryBuilder` until those APIs are formally deprecated or
@@ -199,6 +200,55 @@ pipeline component with the same conceptual target but not the same API role.
 The public `org.hibernate.boot.SessionFactoryBuilder` cannot be folded into it
 without a compatibility plan for public builder methods and builder-factory
 replacement.
++
+Current branch status: the default public builder implementation still uses the
+legacy `SessionFactoryOptionsBuilder` and final `SessionFactoryImpl`
+construction path.  This is intentional until the public builder can produce a
+resolved/request object for the new factory-build phase.
++
+`SessionFactoryBuilderImpl` no longer uses `SessionFactoryOptionsBuilder` as
+its direct mutation state.  It collects public-builder customizations in
+`SessionFactoryOptionsCollector` and replays them into
+`SessionFactoryOptionsBuilder` only from the legacy
+`SessionFactoryBuilderImplementor#buildSessionFactoryOptions()` compatibility
+method.
++
+`SessionFactoryOptionsCollector` can also overlay the subset of collected values
+already represented by `ResolvedSessionFactorySettings`, producing a resolved
+factory-settings snapshot for the new pipeline.  This is intentionally a partial
+bridge.  Collector values which do not yet have named homes in
+`ResolvedSessionFactorySettings` still remain legacy-only until the
+`SessionFactoryOptions` audit decides whether they belong on
+`ResolvedSessionFactorySettings`, on a narrower runtime request object, or on a
+different replacement contract.  Examples include stateless interceptors,
+custom dirtiness and entity-name resolution hooks, entity-not-found handling,
+nullability/lazy-loading/default-null-ordering flags, insert/update ordering,
+tenant schema/credentials mappers, JDBC batching/fetch/result-set toggles,
+connection-provider auto-commit handling, out-of-transaction update handling,
+JSON/XML format mappers, statistics support, BeanManager integration, and JTA
+transaction-access preferences.
++
+Routing
+`MetadataSources -> Metadata -> public SessionFactoryBuilder#build()` into the
+new pipeline by passing only `MetadataImplementor`, `SessionFactoryOptions`, and
+`BootstrapContext` would preserve behavior, but it would also move the legacy
+compatibility shapes into the pipeline we are trying to replace.  The current
+PoC instead returns an internal `MetadataImplementor` view over
+`ResolvedMetadata`, preserving the categorized model and binding state for the
+subsequent `Metadata -> SessionFactory` step.
+
+Native `MetadataSources` migration should start from source/resource products:
+`AvailableResources.from(MetadataSources, AvailableResourcesContext)` already
+adapts the current native accumulator, including already-bound XML mapping
+documents.  A future `BootstrapSourceContributions` adapter only makes sense
+after `MetadataSources` retains XML source declarations instead of immediately
+binding them.
+
+The default `MetadataBuilderImpl#build()` path now uses that native source
+adapter and `MetadataResolver`, then returns the resolved-backed metadata view.
+Public `MetadataSources#buildMetadata()` remains shorthand for
+`getMetadataBuilder().build()` so `MetadataBuilderFactory` customizations still
+get their usual chance to replace the builder.
 
 Hibernate test infrastructure::
 The JUnit 5 `SessionFactoryExtension`, JUnit 4 core test bases, and many native
@@ -287,10 +337,10 @@ signal is narrower than the original boot-model breakage.
 | Datasource and JDBC override assertions exercise precedence differences
   between persistence-unit values, descriptor datasource elements, and
   integration settings.
-| Compare descriptor bootstrap through `BootstrapSettingsResolver` and
-  `SessionFactorySettingsResolver` against the supported old merged-setting
-  rules.  Keep the useful datasource/JDBC precedence behavior, but do not make
-  legacy `cfg.xml` a source model for the new descriptor path.
+| Compare descriptor bootstrap through `SettingsResolver` (and the focused
+  phase resolvers where needed) against the supported old merged-setting rules.
+  Keep the useful datasource/JDBC precedence behavior, but do not make legacy
+  `cfg.xml` a source model for the new descriptor path.
 
 | Extended persistence-unit source descriptors
 | `PersistenceUnitOverridesTests` `cfg.xml` cases
@@ -383,6 +433,7 @@ clear.
 ----
 Bootstrap inputs
     -> ResolvedBootstrapSettings
+    -> ResolvedMappingSettings
     -> AvailableResources
     -> CategorizedDomainModel
     -> MetadataImplementor
@@ -400,8 +451,24 @@ is to produce its three required inputs through the new pipeline.
 
 Already prototyped.
 
-Owns early boot settings that affect source collection and mapping processing.
-It should not be a dumping ground for all session-factory behavior.
+Owns entry-point and service-setup settings, including the immutable normalized
+configuration map and whether the entry point is JPA bootstrap.  It should not
+be a dumping ground for mapping or session-factory behavior.
+
+=== ResolvedMappingSettings
+
+Already prototyped.
+
+Owns mapping/model-build settings used by source collection, categorization,
+and binding.  Current named values include XML mapping enablement, XML
+validation, default to-one fetch type, joined-inheritance discriminator
+handling, and cache-region declarations.
+
+This bucket is intentionally a peer of `ResolvedBootstrapSettings` in the
+orchestration request.  `MappingSettingsResolver` derives
+`ResolvedMappingSettings` from the normalized configuration map plus entry-point
+defaults.  Mapping consumers receive this bucket explicitly rather than reaching
+through bootstrap settings.
 
 === AvailableResources
 
@@ -1424,9 +1491,10 @@ normalizing the workaround as the target design.
   simple factory construction does not: stateless interceptor supplier, session
   event listeners, statistics enablement and query-statistics size, initial
   flush mode, default lock options, default session properties, JTA behavior,
-  custom dirtiness strategy, entity-name resolvers, nullability checking, JDBC
-  batch/fetch/generated-key/scrollability defaults, insert/update ordering, and
-  connection-provider autocommit behavior.
+  custom dirtiness strategy, entity-name resolvers, nullability checking,
+  bidirectional association management, JDBC batch/fetch/generated-key/
+  scrollability defaults, insert/update ordering, and connection-provider
+  autocommit behavior.
 | The adapter supplies neutral ORM defaults for these methods.  Some are
   currently hard-coded rather than named on `ResolvedSessionFactorySettings`
   because the PoC has only proven the default runtime path.
@@ -2374,18 +2442,26 @@ Success criteria:
 
 The current metadata collector resolver is:
 
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/SettingsResolver.java[`SettingsResolver`]
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/BootstrapSettingsResolver.java[`BootstrapSettingsResolver`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/MappingSettingsResolver.java[`MappingSettingsResolver`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/SessionFactorySettingsResolver.java[`SessionFactorySettingsResolver`]
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/MetadataResolver.java[`MetadataResolver`]
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/ResolvedMetadata.java[`ResolvedMetadata`]
 
 Settings resolution is a separate target:
 
-.BootstrapSettingsResolver
+.SettingsResolver
 [source]
 ----
 configuration values / JPA inputs
-    -> BootstrapSettingsResolver
+    -> SettingsResolver
+        -> BootstrapSettingsResolver
+        -> MappingSettingsResolver
+        -> SessionFactorySettingsResolver
     -> ResolvedBootstrapSettings
+    -> ResolvedMappingSettings
+    -> ResolvedSessionFactorySettings
 ----
 
 `MetadataResolver#resolve` owns only the metadata collector phase order:

@@ -21,6 +21,9 @@ import org.hibernate.boot.models.source.AvailableResources;
 import org.hibernate.boot.models.source.AvailableResourcesContext;
 import org.hibernate.boot.models.source.BootstrapSourceContributions;
 import org.hibernate.boot.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.settings.ResolvedMappingSettings;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -49,7 +52,8 @@ public class MetadataResolver {
 	/// binding-state bridge, and resolved settings that were used to produce the
 	/// metadata.
 	///
-	/// @param bootstrapSettings Resolved bootstrap and mapping settings
+	/// @param bootstrapSettings Resolved bootstrap settings
+	/// @param mappingSettings Resolved mapping/model-build settings
 	/// @param sourceContributions Mapping-source contributions supplied by the
 	/// entry point
 	/// @param serviceRegistry Service registry for the metadata build
@@ -57,26 +61,104 @@ public class MetadataResolver {
 	/// @return The resolved metadata product
 	public static ResolvedMetadata resolve(
 			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
 			BootstrapSourceContributions sourceContributions,
 			ServiceRegistry serviceRegistry) {
 		final MetadataBuildingContext metadataBuildingContext = createMetadataBuildingContext(
 				serviceRegistry,
-				bootstrapSettings
+				bootstrapSettings,
+				mappingSettings
 		);
 		metadataBuildingContext.getBootstrapContext().getTypeConfiguration().scope( metadataBuildingContext );
 		applyTypeContributions( metadataBuildingContext );
 		final AvailableResources availableResources = buildAvailableResources(
 				sourceContributions,
-				bootstrapSettings,
+				mappingSettings,
 				metadataBuildingContext
 		);
+		return resolve(
+				metadataBuildingContext,
+				mappingSettings,
+				availableResources
+		);
+	}
+
+	/// Resolve ORM boot metadata from Hibernate's native source accumulator.
+	///
+	/// This overload is used by native [org.hibernate.boot.MetadataSources]
+	/// entry points because native sources can already contain bound XML mapping
+	/// documents, not just source names.
+	public static ResolvedMetadata resolve(
+			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
+			MetadataSources metadataSources,
+			ServiceRegistry serviceRegistry) {
+		final MetadataBuildingContext metadataBuildingContext = createMetadataBuildingContext(
+				serviceRegistry,
+				bootstrapSettings,
+				mappingSettings
+		);
+		metadataBuildingContext.getBootstrapContext().getTypeConfiguration().scope( metadataBuildingContext );
+		applyTypeContributions( metadataBuildingContext );
+		final AvailableResources availableResources = AvailableResources.from(
+				metadataSources,
+				new AvailableResourcesContext(
+						metadataBuildingContext.getBootstrapContext().getModelsContext(),
+						metadataBuildingContext.getBootstrapContext().getServiceRegistry()
+				)
+		);
+		return resolve(
+				metadataBuildingContext,
+				mappingSettings,
+				availableResources
+		);
+	}
+
+	/// Resolve ORM boot metadata from Hibernate's native source accumulator using
+	/// an already-customized metadata building context.
+	public static ResolvedMetadata resolve(
+			ResolvedMappingSettings mappingSettings,
+			MetadataSources metadataSources,
+			BootstrapContext bootstrapContext,
+			MetadataBuildingOptions buildingOptions) {
+		final var metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingOptions );
+		final var metadataBuildingContext = new MetadataBuildingContextRootImpl(
+				"orm",
+				bootstrapContext,
+				buildingOptions,
+				metadataCollector,
+				new RootMappingDefaults(
+						buildingOptions.getMappingDefaults(),
+						metadataCollector.getPersistenceUnitMetadata()
+				)
+		);
+		bootstrapContext.getTypeConfiguration().scope( metadataBuildingContext );
+		applyTypeContributions( metadataBuildingContext );
+		final AvailableResources availableResources = AvailableResources.from(
+				metadataSources,
+				new AvailableResourcesContext(
+						bootstrapContext.getModelsContext(),
+						bootstrapContext.getServiceRegistry()
+				)
+		);
+		return resolve(
+				metadataBuildingContext,
+				mappingSettings,
+				availableResources
+		);
+	}
+
+	private static ResolvedMetadata resolve(
+			MetadataBuildingContext metadataBuildingContext,
+			ResolvedMappingSettings mappingSettings,
+			AvailableResources availableResources) {
 		final CategorizedDomainModel categorizedDomainModel = categorize(
 				availableResources,
 				metadataBuildingContext
 		);
 		final BindingStateImpl bindingState = bind(
 				categorizedDomainModel,
-				bootstrapSettings,
+				mappingSettings,
 				metadataBuildingContext
 		);
 		final MetadataImplementor metadata = finalizeMetadata( metadataBuildingContext );
@@ -89,7 +171,7 @@ public class MetadataResolver {
 
 	private static AvailableResources buildAvailableResources(
 			BootstrapSourceContributions sourceContributions,
-			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
 			MetadataBuildingContext metadataBuildingContext) {
 		return AvailableResources.from(
 				sourceContributions,
@@ -97,7 +179,7 @@ public class MetadataResolver {
 						metadataBuildingContext.getBootstrapContext().getModelsContext(),
 						metadataBuildingContext.getBootstrapContext().getServiceRegistry()
 				),
-				bootstrapSettings
+				mappingSettings
 		);
 	}
 
@@ -112,7 +194,7 @@ public class MetadataResolver {
 
 	private static BindingStateImpl bind(
 			CategorizedDomainModel categorizedDomainModel,
-			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
 			MetadataBuildingContext metadataBuildingContext) {
 		final BindingStateImpl bindingState = new BindingStateImpl(
 				metadataBuildingContext,
@@ -121,7 +203,7 @@ public class MetadataResolver {
 		BindingCoordinator.coordinateBinding(
 				categorizedDomainModel,
 				bindingState,
-				new BindingOptionsImpl( metadataBuildingContext, bootstrapSettings.mappingSettings() ),
+				new BindingOptionsImpl( metadataBuildingContext, mappingSettings ),
 				new BindingContextImpl(
 						categorizedDomainModel,
 						metadataBuildingContext.getBootstrapContext()
@@ -140,11 +222,12 @@ public class MetadataResolver {
 
 	private static MetadataBuildingContext createMetadataBuildingContext(
 			ServiceRegistry serviceRegistry,
-			ResolvedBootstrapSettings bootstrapSettings) {
+			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings) {
 		final var standardServiceRegistry = MetadataBuilderImpl.getStandardServiceRegistry( serviceRegistry );
 		final var metadataBuilder = new MetadataBuilderImpl( new MetadataSources( standardServiceRegistry ), standardServiceRegistry );
-		metadataBuilder.applyDefaultToOneFetchType( bootstrapSettings.mappingSettings().defaultToOneFetchType() );
-		bootstrapSettings.mappingSettings()
+		metadataBuilder.applyDefaultToOneFetchType( mappingSettings.defaultToOneFetchType() );
+		mappingSettings
 				.cacheRegionDefinitions()
 				.forEach( metadataBuilder::applyCacheRegionDefinition );
 

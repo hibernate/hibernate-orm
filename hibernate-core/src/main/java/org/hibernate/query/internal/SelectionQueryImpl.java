@@ -44,6 +44,7 @@ import org.hibernate.query.Page;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.named.internal.CriteriaSelectionMementoImpl;
@@ -70,6 +71,8 @@ import org.hibernate.query.sqm.spi.SqmStatementAccess;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -1259,7 +1262,7 @@ public class SelectionQueryImpl<R>
 
 	protected int first(boolean hasLimit, SqmSelectStatement<?> sqmStatement) {
 		return !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
-				? getIntegerLiteral( sqmStatement.getOffset(), 0 )
+				? getIntegerLiteral( sqmStatement.getOffset() )
 				: getQueryOptions().getLimit().getFirstRow();
 	}
 
@@ -1504,6 +1507,54 @@ public class SelectionQueryImpl<R>
 		}
 		else {
 			QUERY_MESSAGE_LOGGER.firstOrMaxResultsSpecifiedWithCollectionFetch();
+		}
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Utilities
+
+	protected int getIntegerLiteral(JpaExpression<Number> expression) {
+		if ( expression == null ) {
+			return 0;
+		}
+		else if ( expression instanceof SqmLiteral<Number> numericLiteral ) {
+			return numericLiteral.getLiteralValue().intValue();
+		}
+		else if ( expression instanceof SqmParameter<Number> parameterExpression ) {
+			final Number number = getParameterValue( parameterExpression );
+			return number == null ? 0 : number.intValue();
+		}
+		else {
+			throw new IllegalArgumentException( "Not an integer literal: " + expression );
+		}
+	}
+
+	protected int getMaxRows(SqmSelectStatement<?> selectStatement, int size) {
+		final var fetchExpression = selectStatement.getFetch();
+		if ( fetchExpression != null ) {
+			final var fetchValue = fetchValue( fetchExpression );
+			if ( fetchValue != null ) {
+				// Note that we can never have ties because this is only used when we deduplicate results
+				return switch ( selectStatement.getFetchClauseType() ) {
+					case ROWS_ONLY, ROWS_WITH_TIES -> fetchValue.intValue();
+					case PERCENT_ONLY, PERCENT_WITH_TIES ->
+							(int) Math.ceil( (((double) size) * fetchValue.doubleValue()) / 100d );
+				};
+			}
+		}
+		return -1;
+	}
+
+	private Number fetchValue(JpaExpression<Number> expression) {
+		if ( expression instanceof SqmLiteral<Number> numericLiteral ) {
+			return numericLiteral.getLiteralValue();
+		}
+		else if ( expression instanceof SqmParameter<Number> numericParameter ) {
+			return getParameterValue( numericParameter );
+		}
+		else {
+			throw new IllegalArgumentException( "Can't get max rows value from: " + expression );
 		}
 	}
 

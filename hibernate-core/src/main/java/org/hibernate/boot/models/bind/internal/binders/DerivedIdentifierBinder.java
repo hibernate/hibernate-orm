@@ -12,6 +12,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 
@@ -63,9 +64,11 @@ class DerivedIdentifierBinder {
 		}
 
 		final Value identifierValue = resolveIdentifierValue( derivedIdentifierBinding, identifierComponent );
-		if ( !( identifierValue instanceof BasicValue || identifierValue instanceof Component ) ) {
+		if ( !( identifierValue instanceof BasicValue
+				|| identifierValue instanceof Component
+				|| identifierValue instanceof ManyToOne ) ) {
 			throw new UnsupportedOperationException(
-					"@MapsId is only implemented for basic or component identifier attributes - "
+					"@MapsId is only implemented for basic, component, or to-one identifier attributes - "
 							+ derivedIdentifierBinding.ownerBinding().getEntityName()
 							+ "." + derivedIdentifierBinding.property().getName()
 			);

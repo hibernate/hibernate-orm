@@ -15,33 +15,6 @@ NOTE: This gap analysis is based on an older version of ORM code, probably even 
 
 Known remaining gaps:
 
-* `@MapsId` targeting a to-one attribute inside the owner embedded id.
-+
-For example, an embedded id containing a `@ManyToOne` part, with a separate
-entity attribute using `@MapsId("thatToOnePart")`.
-+
-The current binder fails before the derived-identifier phase because the
-embedded-id component binder tries to bind the nested to-one during the
-`Identifiers` phase.  That nested to-one requires the target entity identifier
-binding, but root identifiers for all entity hierarchies are not guaranteed to be
-available yet.
-+
-This needs a deeper deferral than ordinary component binding currently provides:
-+
-** embedded-id component binding should be able to create the nested to-one
-   value shape without resolving target identifier columns immediately, or
-** identifier binding should get a sub-phase for association-valued component id
-   parts after all root identifier shells exist, similar in spirit to the current
-   `AssociationIdentifiers` phase for `IdClass` to-one attributes.
-+
-Prototype touchpoints:
-+
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/IdentifierBinder.java[`IdentifierBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ComponentBinder.java[`ComponentBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/DerivedIdentifierBinder.java[`DerivedIdentifierBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ToOneAttributeBinder.java[`ToOneAttributeBinder`]
-* link:../../hibernate-core/src/test/java/org/hibernate/models/orm/bind/id/SimpleIdTests.java[`SimpleIdTests`]
-
 * Inverse `@OneToOne` association identifiers.
 +
 `IdClass` association identifiers currently support owning to-one attributes.
@@ -54,7 +27,7 @@ Prototype touchpoints:
 +
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/IdentifierBinder.java[`IdentifierBinder`]
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/InverseToOneAssociationBinder.java[`InverseToOneAssociationBinder`]
-* link:../../hibernate-core/src/test/java/org/hibernate/models/orm/bind/id/SimpleIdTests.java[`SimpleIdTests`]
+* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/bind/id/SimpleIdTests.java[`SimpleIdTests`]
 
 
 

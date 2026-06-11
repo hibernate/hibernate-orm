@@ -19,6 +19,7 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -339,6 +340,45 @@ public class LoaderSelectBuilder {
 				sqlAliasBaseGenerator
 		);
 		return process.generateSelect( subselect, sqlAliasBaseGenerator );
+	}
+
+	/**
+	 * Create an SQL AST select-statement used for subselect-based to-one entity loading
+	 *
+	 * @param entityMapping The entity being loaded
+	 * @param attributeMapping The to-one attribute being loaded
+	 * @param subselect The subselect details to apply
+	 * @param cachedDomainResult DomainResult to be used.  Null indicates to generate the DomainResult
+	 * @param loadQueryInfluencers Any influencers (entity graph, fetch profile) to account for
+	 * @param lockOptions Pessimistic lock options to apply
+	 * @param jdbcParameterConsumer Consumer for all JdbcParameter references created
+	 * @param sessionFactory The SessionFactory
+	 *
+	 * @see EntityLoaderSubSelectFetch
+	 */
+	public static SelectStatement createSubSelectFetchSelect(
+			EntityMappingType entityMapping,
+			ToOneAttributeMapping attributeMapping,
+			SubselectFetch subselect,
+			DomainResult<?> cachedDomainResult,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			SessionFactoryImplementor sessionFactory) {
+		final var process = new LoaderSelectBuilder(
+				sessionFactory.getSqlTranslationEngine(),
+				entityMapping,
+				null,
+				entityMapping.getIdentifierMapping(),
+				cachedDomainResult,
+				-1,
+				loadQueryInfluencers,
+				lockOptions,
+				jdbcParameterConsumer,
+				sqlAliasBaseGenerator
+		);
+		return process.generateSelect( attributeMapping, subselect, sqlAliasBaseGenerator );
 	}
 
 	private final SqlAstCreationContext creationContext;
@@ -1063,6 +1103,48 @@ public class LoaderSelectBuilder {
 		);
 	}
 
+	private SelectStatement generateSelect(
+			ToOneAttributeMapping attributeMapping,
+			SubselectFetch subselect,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator) {
+		assert loadable instanceof EntityMappingType;
+		final var entityMapping = (EntityMappingType) loadable;
+
+		final var rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
+		final var rootQuerySpec = new QuerySpec( true );
+		rootQuerySpec.applyRootPathForLocking( rootNavigablePath );
+
+		final var sqlAstCreationState = new LoaderSqlAstCreationState(
+				rootQuerySpec,
+				sqlAliasBaseGenerator,
+				new SimpleFromClauseAccessImpl(),
+				lockOptions,
+				this::visitFetches,
+				true,
+				loadQueryInfluencers,
+				creationContext
+		);
+
+		final var rootTableGroup = buildRootTableGroup( rootNavigablePath, rootQuerySpec, sqlAstCreationState );
+
+		final List<DomainResult<?>> domainResults =
+				cachedDomainResult == null
+						? singletonList(
+								loadable.createDomainResult(
+										rootNavigablePath,
+										rootTableGroup,
+										null,
+										sqlAstCreationState
+								)
+						)
+						: singletonList( cachedDomainResult );
+
+		applySubSelectRestriction( rootQuerySpec, rootTableGroup, attributeMapping, subselect, sqlAstCreationState );
+		applyFiltering( rootQuerySpec, rootTableGroup, entityMapping, sqlAstCreationState );
+
+		return new SelectStatement( rootQuerySpec, domainResults );
+	}
+
 	private void applySubSelectRestriction(
 			QuerySpec querySpec,
 			TableGroup rootTableGroup,
@@ -1110,6 +1192,52 @@ public class LoaderSelectBuilder {
 		);
 	}
 
+	private void applySubSelectRestriction(
+			QuerySpec querySpec,
+			TableGroup rootTableGroup,
+			ToOneAttributeMapping attributeMapping,
+			SubselectFetch subselect,
+			LoaderSqlAstCreationState sqlAstCreationState) {
+		final var fkDescriptor = attributeMapping.getForeignKeyDescriptor();
+		final var targetPart = fkDescriptor.getPart( attributeMapping.getSideNature().inverse() );
+
+		querySpec.applyPredicate(
+				new InSubQueryPredicate(
+						createPartExpression( rootTableGroup, targetPart, sqlAstCreationState ),
+						generateSubSelect( attributeMapping, subselect, sqlAstCreationState ),
+						false
+				)
+		);
+	}
+
+	private Expression createPartExpression(
+			TableGroup tableGroup,
+			ValuedModelPart modelPart,
+			LoaderSqlAstCreationState sqlAstCreationState) {
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		if ( modelPart.getJdbcTypeCount() == 1 ) {
+			final var selectable = modelPart.getSelectable( 0 );
+			final var tableReference =
+					tableGroup.resolveTableReference( null, modelPart, selectable.getContainingTableExpression() );
+			return sqlExpressionResolver.resolveSqlExpression( tableReference, selectable );
+		}
+		else {
+			final List<ColumnReference> columnReferences = new ArrayList<>( modelPart.getJdbcTypeCount() );
+			modelPart.forEachSelectable(
+					(columnIndex, selection) -> {
+						final var tableReference =
+								tableGroup.resolveTableReference( null, modelPart,
+										selection.getContainingTableExpression() );
+						columnReferences.add(
+								(ColumnReference)
+										sqlExpressionResolver.resolveSqlExpression( tableReference, selection )
+						);
+					}
+			);
+			return new SqlTuple( columnReferences, modelPart );
+		}
+	}
+
 	private QueryPart generateSubSelect(
 			PluralAttributeMapping attributeMapping,
 			SubselectFetch subselect,
@@ -1137,6 +1265,35 @@ public class LoaderSelectBuilder {
 		);
 
 		// transfer the restriction
+		subQuery.applyPredicate( loadingSqlAst.getWhereClauseRestrictions() );
+
+		return subQuery;
+	}
+
+	private QueryPart generateSubSelect(
+			ToOneAttributeMapping attributeMapping,
+			SubselectFetch subselect,
+			LoaderSqlAstCreationState creationState) {
+		final var fkDescriptor = attributeMapping.getForeignKeyDescriptor();
+		final var ownerPart = fkDescriptor.getPart( attributeMapping.getSideNature() );
+		final var subQuery = new QuerySpec( false );
+		final var loadingSqlAst = subselect.getLoadingSqlAst();
+		final var ownerTableGroup = subselect.getOwnerTableGroup();
+
+		loadingSqlAst.getFromClause().visitRoots( subQuery.getFromClause()::addRoot );
+
+		final var sqlExpressionResolver = creationState.getSqlExpressionResolver();
+		ownerPart.forEachSelectable(
+				(valuesPosition, selection) -> {
+					final var tableReference =
+							ownerTableGroup.resolveTableReference( null, ownerPart,
+									selection.getContainingTableExpression() );
+					subQuery.getSelectClause()
+							.addSqlSelection( new SqlSelectionImpl( valuesPosition,
+									sqlExpressionResolver.resolveSqlExpression( tableReference, selection ) ) );
+				}
+		);
+
 		subQuery.applyPredicate( loadingSqlAst.getWhereClauseRestrictions() );
 
 		return subQuery;

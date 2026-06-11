@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.FetchMethod;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -116,6 +117,9 @@ public class EntitySelectFetchInitializerBuilder {
 		final var batchSize = fetchOptions.batchSize();
 		if ( batchSize != null && batchSize <= 1 ) {
 			return NONE;
+		}
+		else if ( fetchOptions.fetchMethod() == FetchMethod.BULK_SELECT ) {
+			return BATCH_LOAD;
 		}
 		else if ( batchSize == null && !entityPersister.isBatchLoadable() ) {
 			return NONE;

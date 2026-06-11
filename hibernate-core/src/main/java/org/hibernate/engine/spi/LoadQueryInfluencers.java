@@ -463,7 +463,7 @@ public class LoadQueryInfluencers implements Serializable {
 			GraphImplementor<?> graph,
 			EntityDomainType<?> entityType) {
 		if ( appliesTo( graph, entityType )
-				&& hasDirectBulkSelectCollectionNode( graph ) ) {
+				&& hasDirectBulkSelectNode( graph ) ) {
 			return true;
 		}
 
@@ -487,10 +487,9 @@ public class LoadQueryInfluencers implements Serializable {
 		return false;
 	}
 
-	private static boolean hasDirectBulkSelectCollectionNode(GraphImplementor<?> graph) {
+	private static boolean hasDirectBulkSelectNode(GraphImplementor<?> graph) {
 		for ( var node : graph.getNodes().values() ) {
 			if ( node.getFetchType() != FetchType.LAZY
-					&& node.getAttributeDescriptor().isCollection()
 					&& node.getOptions().contains( FetchMethod.BULK_SELECT ) ) {
 				return true;
 			}

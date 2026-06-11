@@ -76,7 +76,7 @@ public class ColumnBinder {
 
 		result.setUnique( columnSource == null ? uniqueByDefault : columnSource.unique( uniqueByDefault ) );
 		result.setNullable( columnSource == null ? nullableByDefault : columnSource.nullable( nullableByDefault ) );
-		result.setSqlType( columnSource == null ? null : columnSource.columnDefinition() );
+		result.setSqlType( columnSource == null ? null : StringHelper.nullIfEmpty( columnSource.columnDefinition() ) );
 		result.setLength( columnSource == null ? lengthByDefault : columnSource.length( lengthByDefault ) );
 		result.setPrecision( columnSource == null ? precisionByDefault : columnSource.precision( precisionByDefault ) );
 		result.setScale( columnSource == null ? scaleByDefault : columnSource.scale( scaleByDefault ) );
@@ -119,12 +119,15 @@ public class ColumnBinder {
 
 			column.setName( columnName( columnSource, () -> "dtype" ) );
 			column.setLength( columnSource == null ? 31 : columnSource.length( 31 ) );
-			column.setSqlType( BindingHelper.applyGlobalQuoting(
-					columnSource == null ? "" : columnSource.columnDefinition(),
-					org.hibernate.boot.models.bind.spi.QuotedIdentifierTarget.COLUMN_DEFINITION,
-					bindingOptions,
-					bindingState
-			) );
+			final String columnDefinition = columnSource == null ? null : columnSource.columnDefinition();
+			column.setSqlType( StringHelper.isEmpty( columnDefinition )
+					? null
+					: BindingHelper.applyGlobalQuoting(
+							columnDefinition,
+							org.hibernate.boot.models.bind.spi.QuotedIdentifierTarget.COLUMN_DEFINITION,
+							bindingOptions,
+							bindingState
+					) );
 			applyOptions( column, columnSource );
 		}
 		return discriminatorType;

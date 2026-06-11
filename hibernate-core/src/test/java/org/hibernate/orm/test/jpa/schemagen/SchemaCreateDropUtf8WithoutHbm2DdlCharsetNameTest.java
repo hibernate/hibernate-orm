@@ -7,22 +7,20 @@ package org.hibernate.orm.test.jpa.schemagen;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,10 +47,6 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 		config.put( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
 		config.put( JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
 		config.put( JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
-		ArrayList<Class<?>> classes = new ArrayList<>();
-
-		classes.addAll( Arrays.asList( new Class<?>[] {TestEntity.class} ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
 
@@ -63,7 +57,12 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 		createSchema.deleteOnExit();
 		dropSchema.deleteOnExit();
 
-		persistenceUnitDescriptor = new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		persistenceUnitDescriptor = new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+			@Override
+			public List<String> getManagedClassNames() {
+				return List.of( TestEntity.class.getName() );
+			}
+		};
 		config = getConfig();
 	}
 
@@ -75,12 +74,16 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 
 		final String fileContent = new String( Files.readAllBytes( createSchema.toPath() ) )
 				.toLowerCase();
-		assertTrue( fileContent.contains( expectedTableName() ) );
-		assertTrue( fileContent.contains( expectedFieldName() ) );
+		assertTrue( fileContent.contains( expectedTableName() ), () -> scriptContentMessage( fileContent ) );
+		assertTrue( fileContent.contains( expectedFieldName() ), () -> scriptContentMessage( fileContent ) );
 
 		final String dropFileContent = new String( Files.readAllBytes(
 				dropSchema.toPath() ) ).toLowerCase();
-		assertTrue( dropFileContent.contains( expectedTableName() ) );
+		assertTrue( dropFileContent.contains( expectedTableName() ), () -> scriptContentMessage( dropFileContent ) );
+	}
+
+	private static String scriptContentMessage(String content) {
+		return "script content (" + content.length() + "): [" + content + "]";
 	}
 
 	protected String expectedTableName() {

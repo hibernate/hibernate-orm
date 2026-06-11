@@ -63,6 +63,7 @@ public class MetadataResolver {
 				serviceRegistry,
 				bootstrapSettings
 		);
+		metadataBuildingContext.getBootstrapContext().getTypeConfiguration().scope( metadataBuildingContext );
 		applyTypeContributions( metadataBuildingContext );
 		final AvailableResources availableResources = buildAvailableResources(
 				sourceContributions,

@@ -30,8 +30,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -110,7 +109,12 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	}
 
 	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+			@Override
+			public List<String> getManagedClassNames() {
+				return List.of( TestEntity.class.getName() );
+			}
+		};
 	}
 
 	private Map<String, Object> getConfig() {
@@ -119,10 +123,6 @@ public class SchemaDatabaseFileGenerationFailureTest {
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_CONNECTION, connection );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, true );
-		ArrayList<Class<?>> classes = new ArrayList<>();
-
-		classes.addAll( Arrays.asList( new Class<?>[] { TestEntity.class } ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
 }

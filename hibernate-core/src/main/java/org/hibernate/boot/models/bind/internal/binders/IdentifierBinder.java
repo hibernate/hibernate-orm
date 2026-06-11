@@ -118,7 +118,7 @@ public class IdentifierBinder {
 		typeBinding.setIdentifierProperty( idProperty );
 		typeBinding.setDeclaredIdentifierProperty( idProperty );
 
-		final org.hibernate.mapping.Column column = bindIdColumn( idAttributeMember, () -> "id", idValue, table );
+		final org.hibernate.mapping.Column column = bindIdColumn( idAttributeMember, idAttribute::getName, idValue, table );
 
 		return new IdentifierBinding(
 				typeMetadata,

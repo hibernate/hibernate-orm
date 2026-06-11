@@ -27,8 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -103,7 +102,12 @@ public class SchemaScriptFileGenerationFailureTest {
 	}
 
 	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+			@Override
+			public List<String> getManagedClassNames() {
+				return List.of( TestEntity.class.getName() );
+			}
+		};
 	}
 
 	private Map<String, Object> getConfig() {
@@ -112,10 +116,6 @@ public class SchemaScriptFileGenerationFailureTest {
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, writer );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" );
-		ArrayList<Class<?>> classes = new ArrayList<>();
-
-		classes.addAll( Arrays.asList( new Class<?>[] { TestEntity.class } ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
 

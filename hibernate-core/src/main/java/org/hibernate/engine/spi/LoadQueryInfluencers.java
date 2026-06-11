@@ -419,6 +419,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public boolean hasSubselectLoadableCollections(EntityPersister persister) {
 		return persister.hasSubselectLoadableCollections()
+			|| hasSubselectLoadableAttributes( persister )
 			|| subselectFetchEnabled && persister.hasCollections()
 			|| hasSubselectLoadableCollectionsEnabledInProfile( persister )
 			|| hasSubselectLoadableCollectionsEnabledInGraph( effectiveEntityGraph, persister );
@@ -429,6 +430,16 @@ public class LoadQueryInfluencers implements Serializable {
 			@Nullable AppliedGraph appliedGraph) {
 		return hasSubselectLoadableCollections( persister )
 			|| hasSubselectLoadableCollectionsEnabledInGraph( appliedGraph, persister );
+	}
+
+	private static boolean hasSubselectLoadableAttributes(EntityPersister persister) {
+		final var attributeMappings = persister.getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			if ( attributeMappings.get( i ).getMappedFetchOptions().getStyle() == SUBSELECT ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {

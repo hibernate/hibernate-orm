@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.hibernate.FetchMethod;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -109,7 +108,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			final var session = data.getRowProcessingState().getSession();
 			final var factory = session.getFactory();
 			final var persistenceContext = session.getPersistenceContextInternal();
-			if ( fetchOptions.fetchMethod() == FetchMethod.BULK_SELECT
+			if ( isSubselectFetch()
 					&& initializeSubselect( toBatchLoad, session, persistenceContext ) ) {
 				data.toBatchLoad = null;
 				return;

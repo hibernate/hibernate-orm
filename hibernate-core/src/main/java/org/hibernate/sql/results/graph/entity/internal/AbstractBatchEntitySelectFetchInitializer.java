@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import org.hibernate.FetchMethod;
 import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -53,7 +54,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			if ( rowProcessingState.isScrollResult() ) {
 				return true;
 			}
-			else if ( initializer.fetchOptions.fetchMethod() == FetchMethod.BULK_SELECT ) {
+			else if ( initializer.isSubselectFetch() ) {
 				return false;
 			}
 			else {
@@ -88,6 +89,11 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 	}
 
 	protected abstract void registerResolutionListener(Data data);
+
+	protected boolean isSubselectFetch() {
+		return fetchOptions.fetchMethod() == FetchMethod.BULK_SELECT
+			|| toOneMapping.getMappedFetchOptions().getStyle() == FetchStyle.SUBSELECT;
+	}
 
 	@Override
 	public void resolveKey(Data data) {

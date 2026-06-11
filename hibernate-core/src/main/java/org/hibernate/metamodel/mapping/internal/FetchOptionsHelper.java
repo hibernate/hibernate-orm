@@ -41,6 +41,9 @@ public final class FetchOptionsHelper {
 			return FetchStyle.JOIN;
 		}
 		else if ( type instanceof EntityType entityType ) {
+			if ( mappingFetchStyle == FetchStyle.SUBSELECT ) {
+				return FetchStyle.SUBSELECT;
+			}
 			final var persister = entityType.getAssociatedEntityPersister( factory );
 			if ( persister.isBatchLoadable() ) {
 				return FetchStyle.BATCH;

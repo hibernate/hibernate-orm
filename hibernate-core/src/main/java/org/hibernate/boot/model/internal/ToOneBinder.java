@@ -9,6 +9,7 @@ import java.util.EnumSet;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NotFound;
@@ -375,14 +376,14 @@ public class ToOneBinder {
 		final var fetchAnnotationUsage = property.getDirectAnnotationUsage( Fetch.class );
 		if ( fetchAnnotationUsage != null ) {
 			// Hibernate @Fetch annotation takes precedence
-			setHibernateFetchStyle( toOne, property, fetchAnnotationUsage.value() );
+			setHibernateFetchStyle( toOne, fetchAnnotationUsage.value() );
 		}
 		else {
 			toOne.setFetchStyle( getFetchStyle( getJpaFetchType( property, toOne.getBuildingContext() ) ) );
 		}
 	}
 
-	private static void setHibernateFetchStyle(ToOne toOne, MemberDetails property, org.hibernate.annotations.FetchMode fetchMode) {
+	private static void setHibernateFetchStyle(ToOne toOne, FetchMode fetchMode) {
 		switch ( fetchMode ) {
 			case JOIN:
 				toOne.setFetchStyle( FetchStyle.JOIN );
@@ -393,8 +394,8 @@ public class ToOneBinder {
 				toOne.setFetchStyle( FetchStyle.SELECT );
 				break;
 			case SUBSELECT:
-				throw new AnnotationException( "Association '" + property.getName()
-						+ "' is annotated '@Fetch(SUBSELECT)' but is not many-valued");
+				toOne.setFetchStyle( FetchStyle.SUBSELECT );
+				break;
 			default:
 				throw new AssertionFailure("unknown fetch type");
 		}

@@ -32,6 +32,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private List<EntityHolder> loadingEntityHolders;
 	private List<EntityHolder> reloadedEntityHolders;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
+	private boolean subselectsRegistered;
 
 	private final PreLoadEvent preLoadEvent;
 	private final PostLoadEvent postLoadEvent;
@@ -148,11 +149,31 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	@Override
 	public void finishUp(boolean registerSubselects) {
+		if ( registerSubselects ) {
+			registerSubselects();
+		}
 		// now we can finalize loading collections
 		finishLoadingCollections();
 		getSession().getPersistenceContextInternal()
-				.postLoad( this,
-						registerSubselects ? executionContext::registerLoadingEntityHolder : null );
+				.postLoad( this, null );
+	}
+
+	@Override
+	public void registerSubselects() {
+		if ( subselectsRegistered ) {
+			return;
+		}
+		subselectsRegistered = true;
+		registerSubselects( loadingEntityHolders );
+		registerSubselects( reloadedEntityHolders );
+	}
+
+	private void registerSubselects(List<EntityHolder> entityHolders) {
+		if ( entityHolders != null ) {
+			for ( var holder : entityHolders ) {
+				executionContext.registerLoadingEntityHolder( holder );
+			}
+		}
 	}
 
 	/**

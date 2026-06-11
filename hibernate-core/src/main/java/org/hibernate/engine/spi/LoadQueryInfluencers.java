@@ -12,15 +12,20 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.FetchType;
+import org.hibernate.FetchMethod;
 import org.hibernate.Filter;
 import org.hibernate.Internal;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -30,6 +35,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.engine.FetchStyle.SUBSELECT;
+import static org.hibernate.graph.spi.GraphHelper.appliesTo;
 
 /**
  * Centralize all options which can influence the SQL query needed to load an
@@ -390,6 +396,7 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public boolean effectiveSubselectFetchEnabled(CollectionPersister persister) {
 		return subselectFetchEnabled
+			|| fetchOptions.fetchMethod() == FetchMethod.BULK_SELECT
 			|| persister.isSubselectLoadable()
 			|| isSubselectFetchEnabledInProfile( persister );
 	}
@@ -413,7 +420,15 @@ public class LoadQueryInfluencers implements Serializable {
 	public boolean hasSubselectLoadableCollections(EntityPersister persister) {
 		return persister.hasSubselectLoadableCollections()
 			|| subselectFetchEnabled && persister.hasCollections()
-			|| hasSubselectLoadableCollectionsEnabledInProfile( persister );
+			|| hasSubselectLoadableCollectionsEnabledInProfile( persister )
+			|| hasSubselectLoadableCollectionsEnabledInGraph( effectiveEntityGraph, persister );
+	}
+
+	public boolean hasSubselectLoadableCollections(
+			EntityPersister persister,
+			@Nullable AppliedGraph appliedGraph) {
+		return hasSubselectLoadableCollections( persister )
+			|| hasSubselectLoadableCollectionsEnabledInGraph( appliedGraph, persister );
 	}
 
 	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {
@@ -424,6 +439,60 @@ public class LoadQueryInfluencers implements Serializable {
 						.hasSubselectLoadableCollectionsEnabled( persister ) ) {
 					return true;
 				}
+			}
+		}
+		return false;
+	}
+
+	private boolean hasSubselectLoadableCollectionsEnabledInGraph(
+			@Nullable AppliedGraph appliedGraph,
+			EntityPersister persister) {
+		final var graph = appliedGraph == null ? null : appliedGraph.getGraph();
+		if ( graph == null || appliedGraph.getSemantic() == null ) {
+			return false;
+		}
+
+		var entityType = sessionFactory.getJpaMetamodel().findEntityType( persister.getEntityName() );
+		if ( entityType == null ) {
+			entityType = sessionFactory.getJpaMetamodel().findEntityType( persister.getMappedClass() );
+		}
+		return entityType != null && hasSubselectLoadableCollectionsEnabledInGraph( graph, entityType );
+	}
+
+	private static boolean hasSubselectLoadableCollectionsEnabledInGraph(
+			GraphImplementor<?> graph,
+			EntityDomainType<?> entityType) {
+		if ( appliesTo( graph, entityType )
+				&& hasDirectBulkSelectCollectionNode( graph ) ) {
+			return true;
+		}
+
+		for ( var subgraph : graph.getTreatedSubgraphs().values() ) {
+			if ( hasSubselectLoadableCollectionsEnabledInGraph( subgraph, entityType ) ) {
+				return true;
+			}
+		}
+		for ( var node : graph.getNodes().values() ) {
+			for ( var subgraph : node.getSubGraphs().values() ) {
+				if ( hasSubselectLoadableCollectionsEnabledInGraph( subgraph, entityType ) ) {
+					return true;
+				}
+			}
+			for ( var subgraph : node.getKeySubGraphs().values() ) {
+				if ( hasSubselectLoadableCollectionsEnabledInGraph( subgraph, entityType ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean hasDirectBulkSelectCollectionNode(GraphImplementor<?> graph) {
+		for ( var node : graph.getNodes().values() ) {
+			if ( node.getFetchType() != FetchType.LAZY
+					&& node.getAttributeDescriptor().isCollection()
+					&& node.getOptions().contains( FetchMethod.BULK_SELECT ) ) {
+				return true;
 			}
 		}
 		return false;

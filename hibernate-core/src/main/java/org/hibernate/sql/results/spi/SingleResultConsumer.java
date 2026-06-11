@@ -49,6 +49,7 @@ public class SingleResultConsumer<T> implements ResultsConsumer<T, T> {
 			}
 			final T result = rowReader.readRow( rowProcessingState );
 			rowProcessingState.finishRowProcessing( true );
+			jdbcValuesSourceProcessingState.registerSubselects();
 			rowReader.finishUp( rowProcessingState );
 			jdbcValuesSourceProcessingState.finishUp( true );
 			return result;

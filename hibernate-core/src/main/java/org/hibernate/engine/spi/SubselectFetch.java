@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -90,11 +91,20 @@ public class SubselectFetch {
 			SelectStatement sqlAst,
 			JdbcParametersList jdbcParameters,
 			JdbcParameterBindings jdbcParameterBindings) {
+		return createRegistrationHandler( batchFetchQueue, sqlAst, jdbcParameters, jdbcParameterBindings, null );
+	}
+
+	public static RegistrationHandler createRegistrationHandler(
+			BatchFetchQueue batchFetchQueue,
+			SelectStatement sqlAst,
+			JdbcParametersList jdbcParameters,
+			JdbcParameterBindings jdbcParameterBindings,
+			AppliedGraph appliedGraph) {
 		// we allow this now
 		return sqlAst.getQuerySpec().getFromClause().getRoots().isEmpty()
 				? NO_OP_REG_HANDLER
 				: new StandardRegistrationHandler( batchFetchQueue, sqlAst,
-						jdbcParameters, jdbcParameterBindings );
+						jdbcParameters, jdbcParameterBindings, appliedGraph );
 	}
 
 	public interface RegistrationHandler {
@@ -108,23 +118,26 @@ public class SubselectFetch {
 		private final SelectStatement loadingSqlAst;
 		private final JdbcParametersList loadingJdbcParameters;
 		private final JdbcParameterBindings loadingJdbcParameterBindings;
+		private final AppliedGraph appliedGraph;
 		private final Map<NavigablePath, SubselectFetch> subselectFetches = new HashMap<>();
 
 		private StandardRegistrationHandler(
 				BatchFetchQueue batchFetchQueue,
 				SelectStatement loadingSqlAst,
 				JdbcParametersList loadingJdbcParameters,
-				JdbcParameterBindings loadingJdbcParameterBindings) {
+				JdbcParameterBindings loadingJdbcParameterBindings,
+				AppliedGraph appliedGraph) {
 			this.batchFetchQueue = batchFetchQueue;
 			this.loadingSqlAst = loadingSqlAst;
 			this.loadingJdbcParameters = loadingJdbcParameters;
 			this.loadingJdbcParameterBindings = loadingJdbcParameterBindings;
+			this.appliedGraph = appliedGraph;
 		}
 
 		@Override
 		public void addKey(EntityHolder holder) {
 			if ( batchFetchQueue.getSession().getLoadQueryInfluencers()
-					.hasSubselectLoadableCollections( holder.getDescriptor() ) ) {
+					.hasSubselectLoadableCollections( holder.getDescriptor(), appliedGraph ) ) {
 				final var path = castNonNull( holder.getEntityInitializer() ).getNavigablePath();
 				final var querySpec = loadingSqlAst.getQuerySpec();
 				final var subselectFetch = subselectFetches.computeIfAbsent(

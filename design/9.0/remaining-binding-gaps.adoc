@@ -29,25 +29,6 @@ Prototype touchpoints:
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/InverseToOneAssociationBinder.java[`InverseToOneAssociationBinder`]
 * link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/bind/id/SimpleIdTests.java[`SimpleIdTests`]
 
-
-
-== Any and Many-To-Any
-
-Known remaining gaps:
-
-* Implicit `@Any @JoinTable` naming without a single target entity.
-* `@Any` key Java type inference when `@AnyKeyJavaClass` is absent.
-* `@Any` discriminator mappings without explicit discriminator values or
-  `@AnyDiscriminatorImplicitValues`.
-
-Prototype touchpoints:
-
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/AnyAttributeBinder.java[`AnyAttributeBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/AnyValueBinder.java[`AnyValueBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/PluralAssociationAttributeBinder.java[`PluralAssociationAttributeBinder`]
-* link:../../hibernate-core/src/test/java/org/hibernate/models/orm/bind/associations/AnyAssociationTests.java[`AnyAssociationTests`]
-
-
 == Collection Long Tail
 
 Known remaining gaps:

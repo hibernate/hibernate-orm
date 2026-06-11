@@ -15,6 +15,7 @@ import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.boot.models.bind.internal.binders.CascadeBinder;
 import org.hibernate.boot.models.bind.spi.BindingContext;
@@ -47,8 +48,7 @@ import jakarta.persistence.JoinTable;
 ///
 /// - `@Any` / `@ManyToAny` controls association options such as fetch, cascade,
 ///   and singular optionality.
-/// - `@Column` controls the discriminator column.  Eventually `@Formula` should
-///   be another discriminator storage source.
+/// - `@Column` or `@Formula` controls the discriminator storage.
 /// - `@AnyDiscriminator`, `@JdbcType`, and `@JdbcTypeCode` describe the
 ///   discriminator type.  `@AnyDiscriminator` controls the Java-side
 ///   discriminator type, while the JDBC annotations are applied to the
@@ -60,10 +60,10 @@ import jakarta.persistence.JoinTable;
 /// - For singular `@Any`, `@JoinColumn` controls the key/id column.
 /// - For singular `@Any`, `@JoinTable` controls an association table when
 ///   present, `@JoinTable#joinColumns` controls the owner key, and
-///   `@JoinTable#inverseJoinColumns` controls the any key/id column.
+///   `@JoinTable#inverseJoinColumns` controls the ANY key/id column.
 /// - For plural `@ManyToAny`, `@JoinTable` controls the collection table,
 ///   `@JoinTable#joinColumns` controls the owner key, and
-///   `@JoinTable#inverseJoinColumns` controls the any key/id column.
+///   `@JoinTable#inverseJoinColumns` controls the ANY key/id column.
 ///
 /// The current binder supports a conservative subset of that model:
 ///
@@ -72,19 +72,14 @@ import jakarta.persistence.JoinTable;
 /// - explicit or implicit `@ManyToAny` collection tables
 /// - explicit singular `@Any` association tables
 /// - singular and plural composite any key columns
-/// - explicit `@AnyKeyJavaClass`
-/// - explicit discriminator values or an implicit discriminator strategy
+/// - explicit `@AnyKeyJavaClass`, or inference from explicit discriminator
+///   target identifiers
+/// - explicit discriminator values, an explicit implicit discriminator strategy,
+///   or the default full-name implicit strategy
+/// - discriminator storage through `@Column` or `@Formula`
 /// - discriminator Java type selection through `@AnyDiscriminator`
 /// - key Java/JDBC type overrides through the `@AnyKey...` annotations
 /// - cascade aggregation from `@Any#cascade`, `@ManyToAny#cascade`, and mapping defaults
-///
-/// Known gaps are left visible here because they describe real mapping controls,
-/// not incidental implementation details:
-///
-/// - discriminator `@Formula`
-/// - inferring the key Java type from target identifiers
-/// - implicit singular `@Any` association-table names
-/// - optionality derived from explicit discriminator/key column nullability
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -94,6 +89,7 @@ public record AnySource(
 		boolean optional,
 		EnumSet<CascadeType> cascades,
 		Column discriminatorColumn,
+		Formula discriminatorFormula,
 		AnyDiscriminator discriminator,
 		List<AnyDiscriminatorValue> discriminatorValues,
 		AnyDiscriminatorImplicitValues implicitDiscriminatorValues,
@@ -118,6 +114,7 @@ public record AnySource(
 				any.optional(),
 				CascadeBinder.aggregateCascadeTypes( any.cascade(), false, bindingState ),
 				member.getDirectAnnotationUsage( Column.class ),
+				member.getDirectAnnotationUsage( Formula.class ),
 				member.getDirectAnnotationUsage( AnyDiscriminator.class ),
 				discriminatorValues( member, bindingContext ),
 				member.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class ),
@@ -146,6 +143,7 @@ public record AnySource(
 				true,
 				CascadeBinder.aggregateCascadeTypes( manyToAny.cascade(), false, bindingState ),
 				member.getDirectAnnotationUsage( Column.class ),
+				member.getDirectAnnotationUsage( Formula.class ),
 				member.getDirectAnnotationUsage( AnyDiscriminator.class ),
 				discriminatorValues( member, bindingContext ),
 				member.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class ),
@@ -165,6 +163,21 @@ public record AnySource(
 			case CHAR -> Character.class;
 			case STRING -> String.class;
 		};
+	}
+
+	public boolean effectiveOptional() {
+		if ( !optional ) {
+			return false;
+		}
+		if ( discriminatorColumn != null && !discriminatorColumn.nullable() ) {
+			return false;
+		}
+		for ( JoinColumn keyColumn : keyColumns ) {
+			if ( !keyColumn.nullable() ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static List<AnyDiscriminatorValue> discriminatorValues(

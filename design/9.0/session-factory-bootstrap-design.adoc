@@ -216,6 +216,18 @@ These APIs are not simply aliases for JPA bootstrap.  They are part of the
 native Hibernate programming model.  The new orchestration pipeline should
 eventually be able to serve them, but that requires preserving the public
 builder customization points or providing a credible replacement.
++
+Design direction:
++
+* `Configuration` should become a legacy compatibility layer and, once the
+  replacement path covers its supported convenience methods, should be
+  deprecated in favor of `PersistenceConfiguration` /
+  `HibernatePersistenceConfiguration`.
+* Native bootstrap through `MetadataSources`, `Metadata`, and the public
+  `org.hibernate.boot.SessionFactoryBuilder` should likewise converge on the
+  shared orchestration pipeline.  These APIs should not be deprecated until the
+  pipeline has an explicit replacement story for native source contribution,
+  metadata inspection, and public builder customization points.
 
 Two-phase bootstrap::
 The old need for a two-phase JPA `EntityManagerFactory` build is gone.  This

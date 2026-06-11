@@ -15,6 +15,7 @@ import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.AnyKeyJavaType;
 import org.hibernate.annotations.AnyKeyJdbcTypeCode;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.mapping.BasicValue;
@@ -22,10 +23,14 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
+import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.MetaType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
@@ -85,15 +90,21 @@ public class AnyAssociationTests {
 
 	@Test
 	@ServiceRegistry
-	void testAnyRequiresExplicitKeyJavaClass(ServiceRegistryScope scope) {
-		assertThatThrownBy( () -> BindingTestingHelper.checkDomainModel(
+	void testAnyInfersKeyJavaClass(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
 				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( MissingKeyTypeHolder.class.getName() );
+					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) entityBinding.getProperty( "target" )
+							.getValue();
+
+					assertThat( value.getKeyDescriptor().resolve().getDomainJavaType().getJavaType() )
+							.isEqualTo( Integer.class );
 				},
 				scope.getRegistry(),
 				MissingKeyTypeHolder.class,
 				TargetOne.class
-		) ).isInstanceOf( UnsupportedOperationException.class )
-				.hasMessageContaining( "@Any requires @AnyKeyJavaClass" );
+		);
 	}
 
 	@Test
@@ -130,9 +141,35 @@ public class AnyAssociationTests {
 					assertThat( value.getMetaValues() ).isEmpty();
 					assertThat( value.getDiscriminatorDescriptor().resolve().getDomainJavaType().getJavaType() )
 							.isEqualTo( String.class );
+					assertThat( ( (MetaType) ( (AnyType) value.getType() ).getDiscriminatorType() )
+							.getImplicitValueStrategy() )
+							.isSameAs( ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY );
 				},
 				scope.getRegistry(),
 				ImplicitDiscriminatorHolder.class,
+				TargetOne.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testAnyDefaultsImplicitDiscriminatorValues(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( DefaultImplicitDiscriminatorHolder.class.getName() );
+					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) entityBinding.getProperty( "target" )
+							.getValue();
+
+					assertThat( value.getMetaValues() ).isEmpty();
+					assertThat( value.getDiscriminatorDescriptor().resolve().getDomainJavaType().getJavaType() )
+							.isEqualTo( String.class );
+					assertThat( ( (MetaType) ( (AnyType) value.getType() ).getDiscriminatorType() )
+							.getImplicitValueStrategy() )
+							.isSameAs( FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY );
+				},
+				scope.getRegistry(),
+				DefaultImplicitDiscriminatorHolder.class,
 				TargetOne.class
 		);
 	}
@@ -153,6 +190,70 @@ public class AnyAssociationTests {
 				},
 				scope.getRegistry(),
 				JdbcTypeCodeDiscriminatorHolder.class,
+				TargetOne.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testAnyDiscriminatorFormula(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( FormulaDiscriminatorHolder.class.getName() );
+					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) entityBinding.getProperty( "target" )
+							.getValue();
+
+					assertThat( value.getDiscriminatorDescriptor().getColumn() )
+							.isInstanceOf( org.hibernate.mapping.Formula.class );
+					assertThat( ( (org.hibernate.mapping.Formula) value.getDiscriminatorDescriptor().getColumn() )
+							.getFormula() )
+							.isEqualTo( "'one'" );
+					assertThat( ( (Column) value.getKeyDescriptor().getColumn() ).getName() )
+							.isEqualTo( "target_id" );
+				},
+				scope.getRegistry(),
+				FormulaDiscriminatorHolder.class,
+				TargetOne.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testAnyIsNotOptionalWhenDiscriminatorColumnIsNotNullable(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( NonNullableDiscriminatorHolder.class.getName() );
+					final Property property = entityBinding.getProperty( "target" );
+					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) property.getValue();
+
+					assertThat( property.isOptional() ).isFalse();
+					assertThat( ( (Column) value.getDiscriminatorDescriptor().getColumn() ).isNullable() )
+							.isFalse();
+				},
+				scope.getRegistry(),
+				NonNullableDiscriminatorHolder.class,
+				TargetOne.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testAnyIsNotOptionalWhenKeyColumnIsNotNullable(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( NonNullableKeyHolder.class.getName() );
+					final Property property = entityBinding.getProperty( "target" );
+					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) property.getValue();
+
+					assertThat( property.isOptional() ).isFalse();
+					assertThat( ( (Column) value.getKeyDescriptor().getColumn() ).isNullable() )
+							.isFalse();
+				},
+				scope.getRegistry(),
+				NonNullableKeyHolder.class,
 				TargetOne.class
 		);
 	}
@@ -238,6 +339,33 @@ public class AnyAssociationTests {
 				},
 				scope.getRegistry(),
 				JoinTableHolder.class,
+				TargetOne.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testAnyImplicitJoinTable(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( ImplicitJoinTableHolder.class.getName() );
+					final org.hibernate.mapping.Join join = entityBinding.getJoins().get( 0 );
+					final Property property = join.getProperties().get( 0 );
+					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) property.getValue();
+
+					assertThat( join.getTable() ).isNotSameAs( entityBinding.getTable() );
+					assertThat( join.getTable().getName() ).isEqualTo( "implicitjointableanyholder_target" );
+					assertThat( join.getKey().getColumns() ).extracting( Column::getName )
+							.containsExactly( "holder_id" );
+					assertThat( value.getTable() ).isSameAs( join.getTable() );
+					assertThat( ( (Column) value.getDiscriminatorDescriptor().getColumn() ).getName() )
+							.isEqualTo( "target_type" );
+					assertThat( ( (Column) value.getKeyDescriptor().getColumn() ).getName() )
+							.isEqualTo( "target_id" );
+				},
+				scope.getRegistry(),
+				ImplicitJoinTableHolder.class,
 				TargetOne.class
 		);
 	}
@@ -458,6 +586,17 @@ public class AnyAssociationTests {
 		private Object target;
 	}
 
+	@Entity(name = "DefaultImplicitAnyDiscriminatorHolder")
+	public static class DefaultImplicitDiscriminatorHolder {
+		@Id
+		private Integer id;
+
+		@Any
+		@AnyKeyJavaClass(Integer.class)
+		@JoinColumn(name = "target_id")
+		private Object target;
+	}
+
 	@Entity(name = "JdbcTypeCodeAnyDiscriminatorHolder")
 	public static class JdbcTypeCodeDiscriminatorHolder {
 		@Id
@@ -469,6 +608,45 @@ public class AnyAssociationTests {
 		@AnyKeyJavaClass(Integer.class)
 		@JdbcTypeCode(SqlTypes.CHAR)
 		@JoinColumn(name = "target_id")
+		private Object target;
+	}
+
+	@Entity(name = "FormulaAnyDiscriminatorHolder")
+	public static class FormulaDiscriminatorHolder {
+		@Id
+		private Integer id;
+
+		@Any
+		@AnyDiscriminatorValue(discriminator = "one", entity = TargetOne.class)
+		@AnyKeyJavaClass(Integer.class)
+		@Formula("'one'")
+		@JoinColumn(name = "target_id")
+		private Object target;
+	}
+
+	@Entity(name = "NonNullableAnyDiscriminatorHolder")
+	public static class NonNullableDiscriminatorHolder {
+		@Id
+		private Integer id;
+
+		@Any(optional = true)
+		@AnyDiscriminatorValue(discriminator = "one", entity = TargetOne.class)
+		@AnyKeyJavaClass(Integer.class)
+		@jakarta.persistence.Column(name = "target_type", nullable = false)
+		@JoinColumn(name = "target_id")
+		private Object target;
+	}
+
+	@Entity(name = "NonNullableAnyKeyHolder")
+	public static class NonNullableKeyHolder {
+		@Id
+		private Integer id;
+
+		@Any(optional = true)
+		@AnyDiscriminatorValue(discriminator = "one", entity = TargetOne.class)
+		@AnyKeyJavaClass(Integer.class)
+		@jakarta.persistence.Column(name = "target_type")
+		@JoinColumn(name = "target_id", nullable = false)
 		private Object target;
 	}
 
@@ -518,6 +696,22 @@ public class AnyAssociationTests {
 		@Any
 		@JoinTable(
 				name = "any_holder_targets",
+				joinColumns = @JoinColumn(name = "holder_id"),
+				inverseJoinColumns = @JoinColumn(name = "target_id")
+		)
+		@jakarta.persistence.Column(name = "target_type")
+		@AnyDiscriminatorValue(discriminator = "one", entity = TargetOne.class)
+		@AnyKeyJavaClass(Integer.class)
+		private Object target;
+	}
+
+	@Entity(name = "ImplicitJoinTableAnyHolder")
+	public static class ImplicitJoinTableHolder {
+		@Id
+		private Integer id;
+
+		@Any
+		@JoinTable(
 				joinColumns = @JoinColumn(name = "holder_id"),
 				inverseJoinColumns = @JoinColumn(name = "target_id")
 		)

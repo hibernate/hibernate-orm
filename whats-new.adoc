@@ -11,3 +11,58 @@
 Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
+
+[[bootstrap]]
+== SessionFactory bootstrap orchestration
+
+ORM 9.0 introduces a new internal SessionFactory bootstrap pipeline which makes
+the major bootstrap products explicit and shared across entry points.
+
+At a high level, the pipeline resolves bootstrap settings, normalizes source
+contributions, prepares available mapping resources, categorizes the domain
+model, resolves mapping metadata, resolves SessionFactory settings, and then
+builds the `SessionFactory` / `EntityManagerFactory`.  It also limits the number
+of bootstrap entry points and centralizes the handling based on that pipeline -
+
+* Jakarta Persistence SE bootstrap with `(Hibernate)PersistenceConfiguration`
+* Jakarta Persistence SE bootstrap with `Persistence`
+* Jakarta Persistence EE bootstrap with container and `PersistenceUnitInfo`
+* Hibernate native bootstrap with `Configuration` footnote:recommentation[Consider migrating to `(Hibernate)PersistenceConfiguration`]
+* Hibernate native bootstrap with `MetadataSources`, `SessionFactoryBuilder`, etc. footnote:recommentation[]
+
+The end-user impact of this pipeline specifically is small - basically some
+historical bootstrap entry paths are compatibility paths rather than the
+canonical pipeline.  However, it is fundamental to most of the new features
+listed here.
+
+
+
+== ORM 9 Model-Binding Pipeline
+
+Part of the work done for <<bootstrap>>, and building on top of dropping support for
+`hbm.xml` mappings, is deep changes to how Hibernate performs model binding.  The reasons
+and goals for this are numerous - from functionality to correctness to performance...
+
+Below are a few of the new capabilities beyond the historical model binding path.
+
+
+=== Discriminated association binding
+
+The new model-binding path supports a few `@Any` / `@ManyToAny` capabilities
+that are not handled by the historical annotation binder:
+
+`@Any` key Java type inference for basic target identifiers::
+When `@AnyKeyJavaClass` is omitted, the new binder can infer the any-key Java
+type from explicit `@AnyDiscriminatorValue` target entities, provided each
+target uses the same basic identifier Java type.
++
+Historically, Hibernate required the any-key type to be supplied explicitly with
+`@AnyKeyJavaType`, `@AnyKeyJavaClass`, or the XML-oriented key type setting.
+
+Default implicit discriminator strategy::
+When an `@Any` or `@ManyToAny` mapping declares no explicit
+`@AnyDiscriminatorValue` mappings and no `@AnyDiscriminatorImplicitValues`, the
+new binder uses Hibernate's full entity-name implicit discriminator strategy.
++
+Historically, implicit discriminator resolution had to be requested explicitly
+with `@AnyDiscriminatorImplicitValues`.

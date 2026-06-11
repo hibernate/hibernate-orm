@@ -947,7 +947,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				//this should evaluate to a floating point type
 				return "(datepart(second,?2)+datepart(nanosecond,?2)/1000000000)";
 			case EPOCH:
-				return "datediff_big(second, '1970-01-01', ?2)";
+				return getVersion().isSameOrAfter( 13 )
+						? "datediff_big(second, '1970-01-01', ?2)"
+						: "datediff(second, '1970-01-01', ?2)";
 			case WEEK:
 				// Thanks https://www.sqlservercentral.com/articles/a-simple-formula-to-calculate-the-iso-week-number
 				if ( getVersion().isBefore( 10 ) ) {
@@ -978,14 +980,15 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		if ( unit == TemporalUnit.NATIVE ) {//use microsecond as the "native" precision
-			return "datediff_big(nanosecond,?2,?3)";
+		boolean supportsDateDiffBig = getVersion().isSameOrAfter( 13 );
+		if ( unit == TemporalUnit.NATIVE ) {//use nanosecond as the "native" precision
+			return supportsDateDiffBig ? "datediff_big(nanosecond,?2,?3)" : "datediff(nanosecond,?2,?3)";
 		}
 
 		//datediff() returns an int, and can easily
 		//overflow when dealing with "physical"
 		//durations, so use datediff_big()
-		return unit.normalized() == NANOSECOND
+		return unit.normalized() == NANOSECOND && supportsDateDiffBig
 				? "datediff_big(?1,?2,?3)"
 				: "datediff(?1,?2,?3)";
 	}

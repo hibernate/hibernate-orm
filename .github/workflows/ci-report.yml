@@ -24,7 +24,7 @@ jobs:
     steps:
       # Checkout target branch which has trusted code
       - name: Check out target branch
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
           ref: ${{ github.ref }}
@@ -133,7 +133,7 @@ jobs:
           fi
       # Checkout target branch (from the main repository)
       - name: Check out target branch
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
           # By default, a workflow that is triggered with on workflow_run would run on the main (default) branch.

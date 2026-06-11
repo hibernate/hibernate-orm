@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,25 +26,29 @@ public final class FetchOptionsHelper {
 
 	/**
 	 *
-	 * @param mappingFetchMode The mapping defined fetch mode
+	 * @param mappingFetchStyle The mapping defined fetch style, or
+	 * {@code null} if unspecified
 	 * @param type The association type
 	 * @param factory The session factory
 	 *
 	 * @return the fetch style
 	 */
 	public static FetchStyle determineFetchStyleByMetadata(
-			FetchMode mappingFetchMode,
+			FetchStyle mappingFetchStyle,
 			AssociationType type,
 			SessionFactoryImplementor factory) {
-		if ( mappingFetchMode == FetchMode.JOIN ) {
+		if ( mappingFetchStyle == FetchStyle.JOIN ) {
 			return FetchStyle.JOIN;
 		}
 		else if ( type instanceof EntityType entityType ) {
+			if ( mappingFetchStyle == FetchStyle.SUBSELECT ) {
+				return FetchStyle.SUBSELECT;
+			}
 			final var persister = entityType.getAssociatedEntityPersister( factory );
 			if ( persister.isBatchLoadable() ) {
 				return FetchStyle.BATCH;
 			}
-			else if ( mappingFetchMode == FetchMode.SELECT ) {
+			else if ( mappingFetchStyle == FetchStyle.SELECT ) {
 				return FetchStyle.SELECT;
 			}
 			else if ( !persister.hasProxy() ) {

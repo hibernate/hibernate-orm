@@ -28,7 +28,6 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Bag;
@@ -92,6 +91,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrati
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
@@ -151,7 +151,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
 import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
-import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
+import static org.hibernate.boot.model.internal.BinderHelper.getFetchStyle;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
@@ -1442,24 +1442,24 @@ public abstract class CollectionBinder {
 		final var fetchAnnotation = property.getDirectAnnotationUsage( Fetch.class );
 		if ( fetchAnnotation != null ) {
 			// Hibernate @Fetch annotation takes precedence
-			setHibernateFetchMode( fetchAnnotation.value() );
+			setHibernateFetchStyle( fetchAnnotation.value() );
 		}
 		else {
-			collection.setFetchMode( getFetchMode( getJpaFetchType() ) );
+			collection.setFetchStyle( getFetchStyle( getJpaFetchType() ) );
 		}
 	}
 
-	private void setHibernateFetchMode(org.hibernate.annotations.FetchMode fetchMode) {
+	private void setHibernateFetchStyle(org.hibernate.annotations.FetchMode fetchMode) {
 		switch ( fetchMode ) {
 			case JOIN :
-				collection.setFetchMode( FetchMode.JOIN );
+				collection.setFetchStyle( FetchStyle.JOIN );
 				collection.setLazy( false );
 				break;
 			case SELECT:
-				collection.setFetchMode( FetchMode.SELECT );
+				collection.setFetchStyle( FetchStyle.SELECT );
 				break;
 			case SUBSELECT:
-				collection.setFetchMode( FetchMode.SELECT );
+				collection.setFetchStyle( FetchStyle.SELECT );
 				collection.setSubselectLoadable( true );
 				collection.getOwner().setSubselectLoadableCollections( true );
 				break;
@@ -2357,7 +2357,7 @@ public abstract class CollectionBinder {
 		//element.setFetchMode( fetchMode );
 		//element.setLazy( fetchMode != FetchMode.JOIN );
 		//make the second join non-lazy
-		element.setFetchMode( FetchMode.JOIN );
+		element.setFetchStyle( FetchStyle.JOIN );
 		element.setLazy( false );
 		element.setNotFoundAction( notFoundAction );
 		// as per 11.1.38 of JPA 2.0 spec, default to primary key if no column is specified by @OrderBy.
@@ -2698,9 +2698,9 @@ public abstract class CollectionBinder {
 	private static void checkFilterConditions(Collection collection) {
 		//for now it can't happen, but sometime soon...
 		if ( ( !collection.getFilters().isEmpty() || isNotBlank( collection.getWhere() ) )
-				&& collection.getFetchMode() == FetchMode.JOIN
+				&& collection.getFetchStyle() == FetchStyle.JOIN
 				&& !( collection.getElement() instanceof SimpleValue ) //SimpleValue (CollectionOfElements) are always SELECT but it does not matter
-				&& collection.getElement().getFetchMode() != FetchMode.JOIN ) {
+				&& collection.getElement().getFetchStyle() != FetchStyle.JOIN ) {
 			throw new MappingException(
 					"@ManyToMany or @ElementCollection defining filter or where without join fetching "
 							+ "not valid within collection using join fetching[" + collection.getRole() + "]"

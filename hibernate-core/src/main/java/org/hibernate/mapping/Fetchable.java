@@ -3,7 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
-import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
 
 /**
  * Any mapping with an outer-join attribute
@@ -11,8 +11,8 @@ import org.hibernate.FetchMode;
  * @author Gavin King
  */
 public interface Fetchable {
-	FetchMode getFetchMode();
-	void setFetchMode(FetchMode joinedFetch);
+	FetchStyle getFetchStyle();
+	void setFetchStyle(FetchStyle fetchStyle);
 	boolean isLazy();
 	void setLazy(boolean lazy);
 }

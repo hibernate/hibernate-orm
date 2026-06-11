@@ -2,29 +2,38 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.annotations;
+package org.hibernate;
 
-import org.hibernate.Remove;
+import jakarta.persistence.FetchOption;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
 
 /**
- * Enumerates methods for fetching an association from the database.
+ * Enumerates methods for fetching an association from the database,
+ * allowing a fetching method to be specified as a {@link FetchOption}
+ * of an {@linkplain org.hibernate.graph.AttributeNode#addOption
+ * attribute node of an entity graph}.
+ * <pre>
+ * var bookWithAuthors = session.createEntityGraph(Book.class);
+ * bookWithAuthors.addAttributeNode(Book_.authors) // fetch authors
+ *                .addOption(FetchMethod.SELECT);  // using separate SQL select
+ * Book book = session.get(bookWithAuthors, isbn);
+ * </pre>
  * <p>
  * The JPA-defined {@link jakarta.persistence.FetchType} enumerates the
  * possibilities for <em>when</em> an association might be fetched. This
- * enumeration defines <em>how</em> it is fetched in terms of the actual
- * SQL executed by the database.
+ * enumeration defines <em>how</em> fetching is realized in terms of the
+ * actual SQL executed by the database.
  *
+ * @see org.hibernate.graph.AttributeNode#addOption(FetchOption)
+ * @see jakarta.persistence.FetchType
+ *
+ * @author Gavin King
  * @author Steve Ebersole
- * @author Emmanuel Bernard
  *
- * @see Fetch
- * @see FetchProfile.FetchOverride#mode()
- *
- * @apiNote This enumeration duplicates {@link org.hibernate.FetchMethod}
- *          and will eventually be deprecated and removed.
+ * @since 8.0
  */
-@Remove // see the @apiNote
-public enum FetchMode {
+public enum FetchMethod implements FetchOption {
 	/**
 	 * Use a secondary select to load a single associated entity or
 	 * collection, at some point after an initial query is executed.
@@ -37,7 +46,7 @@ public enum FetchMode {
 	 * This fetching strategy is vulnerable to the "N+1 selects"
 	 * bugbear, though the impact may be alleviated somewhat via:
 	 * <ul>
-	 * <li>enabling batch fetching using {@link BatchSize}, or
+	 * <li>enabling batch fetching using {@link org.hibernate.annotations.BatchSize}, or
 	 * <li>ensuring that the associated entity or collection may be
 	 *     retrieved from the {@linkplain Cache second-level cache}.
 	 * </ul>
@@ -87,5 +96,5 @@ public enum FetchMode {
 	 *     re-execution of the initial query within a SQL subselect.
 	 * </ul>
 	 */
-	SUBSELECT
+	BULK_SELECT
 }

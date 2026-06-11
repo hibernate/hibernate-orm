@@ -2778,7 +2778,7 @@
     <xsd:simpleType name="singular-fetch-mode">
         <xsd:annotation>
             <xsd:documentation>
-                org.hibernate.FetchMode enum values
+                org.hibernate.annotations.FetchMode enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -2793,7 +2793,7 @@
     <xsd:simpleType name="plural-fetch-mode">
         <xsd:annotation>
             <xsd:documentation>
-                org.hibernate.FetchMode enum values
+                org.hibernate.annotations.FetchMode enum values
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">

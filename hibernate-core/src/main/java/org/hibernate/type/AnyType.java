@@ -4,7 +4,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -12,6 +11,7 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -474,8 +474,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public FetchMode getFetchMode(int i) {
-		return FetchMode.SELECT;
+	public FetchStyle getFetchStyle(int i) {
+		return FetchStyle.SELECT;
 	}
 
 

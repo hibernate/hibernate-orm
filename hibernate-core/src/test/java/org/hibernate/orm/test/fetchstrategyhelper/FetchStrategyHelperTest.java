@@ -41,10 +41,10 @@ public class FetchStrategyHelperTest {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityDefault", sessionFactory );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityDefault", sessionFactory );
-		Assertions.assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "otherEntityDefault", sessionFactory );
+		Assertions.assertSame( FetchStyle.JOIN, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				sessionFactory
 		);
@@ -62,10 +62,10 @@ public class FetchStrategyHelperTest {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityJoin", sessionFactory );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityJoin", sessionFactory );
-		Assertions.assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "otherEntityJoin", sessionFactory );
+		Assertions.assertSame( FetchStyle.JOIN, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				sessionFactory
 		);
@@ -83,10 +83,10 @@ public class FetchStrategyHelperTest {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntitySelect", sessionFactory );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntitySelect", sessionFactory );
-		Assertions.assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "otherEntitySelect", sessionFactory );
+		Assertions.assertSame( FetchStyle.SELECT, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				sessionFactory
 		);
@@ -104,10 +104,10 @@ public class FetchStrategyHelperTest {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsDefault", sessionFactory );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsDefault", sessionFactory );
-		Assertions.assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "colorsDefault", sessionFactory );
+		Assertions.assertSame( FetchStyle.SELECT, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				sessionFactory
 		);
@@ -125,10 +125,10 @@ public class FetchStrategyHelperTest {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsJoin", sessionFactory );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsJoin", sessionFactory );
-		Assertions.assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "colorsJoin", sessionFactory );
+		Assertions.assertSame( FetchStyle.JOIN, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				sessionFactory
 		);
@@ -146,10 +146,10 @@ public class FetchStrategyHelperTest {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsSelect", sessionFactory );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsSelect", sessionFactory );
-		Assertions.assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "colorsSelect", sessionFactory );
+		Assertions.assertSame( FetchStyle.SELECT, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				sessionFactory
 		);
@@ -167,10 +167,10 @@ public class FetchStrategyHelperTest {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsSubselect", sessionFactory );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsSubselect", sessionFactory );
-		Assertions.assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "colorsSubselect", sessionFactory );
+		Assertions.assertSame( FetchStyle.SELECT, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				sessionFactory
 		);
@@ -183,7 +183,7 @@ public class FetchStrategyHelperTest {
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}
 
-	private org.hibernate.FetchMode determineFetchMode(
+	private FetchStyle determineFetchStyle(
 			@SuppressWarnings("SameParameterValue") Class<?> entityClass,
 			String path,
 			SessionFactoryImplementor sessionFactory) {
@@ -191,7 +191,7 @@ public class FetchStrategyHelperTest {
 				sessionFactory.getMappingMetamodel().getEntityDescriptor(entityClass.getName());
 		//noinspection removal
 		int index = entityPersister.getPropertyIndex( path );
-		return  entityPersister.getFetchMode( index );
+		return entityPersister.getFetchStyle( index );
 	}
 
 	private AssociationType determineAssociationType(

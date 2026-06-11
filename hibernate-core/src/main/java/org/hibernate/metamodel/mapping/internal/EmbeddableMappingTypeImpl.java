@@ -613,7 +613,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						this,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex),
-						compositeType.getFetchMode( attributeIndex ),
+						compositeType.getFetchStyle( attributeIndex ),
 						creationProcess
 				);
 			}

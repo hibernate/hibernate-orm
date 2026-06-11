@@ -8,12 +8,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.FetchMode;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CompositeType;
@@ -121,7 +121,13 @@ public interface Value extends Serializable {
 				: entityBinding.getProperty( entityType.getRHSUniqueKeyPropertyName() ).getType();
 	}
 
-	FetchMode getFetchMode();
+	/**
+	 * The fetch style explicitly requested via mapping (e.g.
+	 * {@link org.hibernate.annotations.Fetch @Fetch}), or {@code null}
+	 * if unspecified — in which case the runtime resolves the style
+	 * from metadata such as batch size and proxy presence.
+	 */
+	FetchStyle getFetchStyle();
 
 	Table getTable();
 

@@ -457,7 +457,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						this,
 						propertyAccess,
 						compositeType.getCascadeStyle( attributeIndex ),
-						compositeType.getFetchMode( attributeIndex ),
+						compositeType.getFetchStyle( attributeIndex ),
 						creationProcess
 				);
 			}

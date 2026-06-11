@@ -295,7 +295,7 @@ session.setSubselectFetchingEnabled(true);
 [%unbreakable]
 [TIP]
 ====
-We may request subselect fetching more selectively by annotating a collection or many-valued association with the link:{doc-javadoc-url}/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation.
+We may request subselect fetching more selectively by annotating a collection or association with the link:{doc-javadoc-url}/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation.
 [source,java]
 ----
 @ManyToMany @Fetch(SUBSELECT)

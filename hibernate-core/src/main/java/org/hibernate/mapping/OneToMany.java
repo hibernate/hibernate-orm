@@ -7,10 +7,10 @@ package org.hibernate.mapping;
 import java.util.List;
 import java.util.Objects;
 
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
@@ -99,8 +99,8 @@ public class OneToMany implements Value {
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return FetchMode.JOIN;
+	public FetchStyle getFetchStyle() {
+		return FetchStyle.JOIN;
 	}
 
 	/**

@@ -81,8 +81,7 @@ public enum FetchMethod implements FetchOption {
 	 * Use a secondary select with a subselect that re-executes an
 	 * initial query to load all instances of the related entity or
 	 * collection at once, at some point after the initial query is
-	 * executed. This fetching strategy is currently only available
-	 * for collections and many-valued associations.
+	 * executed.
 	 * <p>
 	 * This advanced fetching strategy is compatible with both
 	 * {@linkplain jakarta.persistence.FetchType#EAGER eager} and

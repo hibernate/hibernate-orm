@@ -12,22 +12,31 @@ package org.hibernate.engine;
  */
 public enum FetchStyle {
 	/**
-	 * Performs a separate SQL select to load the indicated data.  This can either be eager (the second select is
-	 * issued immediately) or lazy (the second select is delayed until the data is needed).
+	 * Performs a separate SQL select statement to load the indicated data.
+	 * <p>
+	 * This can either be eager (the second select is issued immediately)
+	 * or lazy (the second select is delayed until the data is needed).
 	 */
 	SELECT,
 	/**
-	 * Inherently an eager style of fetching.  The data to be fetched is obtained as part of an SQL join.
+	 * The data to be fetched is obtained as part of an SQL join.
+	 * <p>
+	 * Inherently an eager style of fetching.
 	 */
 	JOIN,
 	/**
-	 * Initializes a number of indicated data items (entities or collections) in a series of grouped sql selects
-	 * using an in-style sql restriction to define the batch size.  Again, can be either eager or lazy.
+	 * Initializes a number of indicated data items (entities or collections)
+	 * in a series of grouped SQL select statements using an in-style SQL
+	 * restriction to define the batch size.
+	 * <p>
+	 * Can be either eager or lazy.
 	 */
 	BATCH,
 	/**
-	 * Performs fetching of associated data (currently limited to only collections) based on the sql restriction
-	 * used to load the owner.  Again, can be either eager or lazy.
+	 * Performs fetching of associated data based on the SQL restriction used
+	 * to load the owner.
+	 * <p>
+	 * Can be either eager or lazy.
 	 */
 	SUBSELECT
 }

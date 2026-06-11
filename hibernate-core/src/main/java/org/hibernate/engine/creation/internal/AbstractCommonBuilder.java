@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.creation.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
@@ -44,97 +46,113 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 	protected abstract T getThis();
 
 	@Override
-	public T connection(Connection connection) {
+	@Nonnull
+	public T connection(@Nonnull Connection connection) {
 		options.connection( connection );
 		return getThis();
 	}
 
 	@Override
-	public T connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+	@Nonnull
+	public T connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode) {
 		options.connectionHandling( acquisitionMode, releaseMode );
 		return getThis();
 	}
 
 	@Override
-	public T interceptor(Interceptor interceptor) {
+	@Nonnull
+	public T interceptor(@Nullable Interceptor interceptor) {
 		options.interceptor( interceptor );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T noInterceptor() {
 		options.noInterceptor();
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T noSessionInterceptorCreation() {
 		options.noSessionInterceptorCreation();
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T tenantIdentifier(Object tenantIdentifier) {
 		options.tenantIdentifier( tenantIdentifier );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T jdbcBatchSize(int batchSize) {
 		options.jdbcBatchSize( batchSize );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T readOnly(boolean readOnly) {
 		options.readOnly( readOnly );
 		return getThis();
 	}
 
 	@Override
-	public T initialCacheMode(CacheMode cacheMode) {
+	@Nonnull
+	public T initialCacheMode(@Nonnull CacheMode cacheMode) {
 		options.initialCacheMode( cacheMode );
 		return getThis();
 	}
 
 	@Override
-	public CommonBuilder cacheStoreMode(CacheStoreMode cacheStoreMode) {
+	@Nonnull
+	public CommonBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
 		options.cacheStoreMode( cacheStoreMode );
 		return getThis();
 	}
 
 	@Override
-	public CommonBuilder cacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+	@Nonnull
+	public CommonBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
 		options.cacheRetrieveMode( cacheRetrieveMode );
 		return getThis();
 	}
 
 	@Override
-	public T statementInspector(UnaryOperator<String> operator) {
+	@Nonnull
+	public T statementInspector(@Nullable UnaryOperator<String> operator) {
 		options.statementInspector( operator );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T noStatementInspector() {
 		options.noStatementInspector();
 		return getThis();
 	}
 
 	@Override
-	public T jdbcTimeZone(TimeZone timeZone) {
+	@Nonnull
+	public T jdbcTimeZone(@Nullable TimeZone timeZone) {
 		options.jdbcTimeZone( timeZone );
 		return getThis();
 	}
 
 	@Override
-	public T asOf(Instant instant) {
+	@Nonnull
+	public T asOf(@Nullable Instant instant) {
 		options.asOf( instant );
 		return getThis();
 	}
 
 	@Override
-	public T atChangeset(Object changesetId) {
+	@Nonnull
+	public T atChangeset(@Nullable Object changesetId) {
 		options.atChangeset( changesetId );
 		return getThis();
 	}

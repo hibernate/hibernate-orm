@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.creation.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityManager;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionEventListener;
@@ -51,12 +52,14 @@ public abstract class SharedSessionBuilderImpl
 	// SharedSessionBuilder
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor withOption(EntityManager.CreationOption option) {
 		options.apply( option );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionImplementor open() {
 		CORE_LOGGER.openingSession( options.getTenantIdentifierValue() );
 		if ( original.getFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
@@ -75,11 +78,13 @@ public abstract class SharedSessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	public SessionImplementor openSession() {
 		return open();
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor tenantIdentifier(Object tenantIdentifier) {
 		super.tenantIdentifier( tenantIdentifier );
 		tenantIdChanged = true;
@@ -87,6 +92,7 @@ public abstract class SharedSessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor readOnly(boolean readOnly) {
 		super.readOnly( readOnly );
 		readOnlyChanged = true;
@@ -94,18 +100,21 @@ public abstract class SharedSessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor connection() {
 		options.shareTransactionContext();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor interceptor() {
 		options.useInterceptor( original.getInterceptor() );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor statementInspector() {
 		options.statementInspector( original.getJdbcSessionContext().getStatementInspector() );
 		return this;
@@ -116,36 +125,42 @@ public abstract class SharedSessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor connectionHandlingMode() {
 		connectionHandlingMode( getConnectionHandlingMode() );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor autoJoinTransactions() {
 		options.autoJoinTransactions( original.shouldAutoJoinTransaction() );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor autoJoinTransactions(boolean autoJoinTransactions) {
 		options.autoJoinTransactions( autoJoinTransactions );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor autoClose(boolean autoClose) {
 		options.autoClose( autoClose );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor flushMode() {
 		flushMode( original.getHibernateFlushMode() );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor autoClose() {
 		autoClose( original instanceof SessionImplementor statefulSession
 				&& statefulSession.isAutoCloseSessionEnabled() );
@@ -153,24 +168,28 @@ public abstract class SharedSessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor identifierRollback(boolean identifierRollback) {
 		options.identifierRollback( identifierRollback );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor clearEventListeners() {
 		options.clearEventListeners();
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilderImplementor flushMode(FlushMode flushMode) {
+	@Nonnull
+	public SharedSessionBuilderImplementor flushMode(@Nonnull FlushMode flushMode) {
 		options.flushMode( flushMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor autoClear(boolean autoClear) {
 		options.autoClear( autoClear );
 		return this;
@@ -178,31 +197,36 @@ public abstract class SharedSessionBuilderImpl
 
 	@Override
 	@Deprecated
-	public SharedSessionBuilderImplementor statementInspector(StatementInspector statementInspector) {
+	@Nonnull
+	public SharedSessionBuilderImplementor statementInspector(@Nonnull StatementInspector statementInspector) {
 		options.statementInspector( statementInspector );
 		return this;
 	}
 
 	@Override
 	@Deprecated
-	public SharedSessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+	@Nonnull
+	public SharedSessionBuilderImplementor connectionHandlingMode(@Nonnull PhysicalConnectionHandlingMode connectionHandlingMode) {
 		options.connectionHandlingMode( connectionHandlingMode );
 		return this;
 	}
 
 	@Override
-	public SharedSessionBuilderImplementor eventListeners(SessionEventListener... listeners) {
+	@Nonnull
+	public SharedSessionBuilderImplementor eventListeners(@Nonnull SessionEventListener... listeners) {
 		options.eventListeners( sessionFactory, listeners );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize) {
 		options.defaultBatchFetchSize( defaultBatchFetchSize );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedSessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled) {
 		options.subselectFetchEnabled( subselectFetchEnabled );
 		return this;

@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.creation.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityManager;
 import org.hibernate.FlushMode;
 import org.hibernate.SessionEventListener;
@@ -48,12 +49,14 @@ public abstract class SessionBuilderImpl
 	// SessionBuilder
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor withOption(EntityManager.CreationOption option) {
 		options.apply( option );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionImplementor openSession() {
 		CORE_LOGGER.openingSession( options.getTenantIdentifierValue() );
 		return createSession( options );
@@ -63,67 +66,78 @@ public abstract class SessionBuilderImpl
 
 	@Override
 	@Deprecated
-	public SessionBuilderImplementor statementInspector(StatementInspector statementInspector) {
+	@Nonnull
+	public SessionBuilderImplementor statementInspector(@Nonnull StatementInspector statementInspector) {
 		options.statementInspector( statementInspector );
 		return this;
 	}
 
 	@Override
 	@Deprecated
-	public SessionBuilderImplementor connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+	@Nonnull
+	public SessionBuilderImplementor connectionHandlingMode(@Nonnull PhysicalConnectionHandlingMode connectionHandlingMode) {
 		options.connectionHandlingMode( connectionHandlingMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor autoJoinTransactions(boolean autoJoinTransactions) {
 		options.autoJoinTransactions( autoJoinTransactions );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor autoClose(boolean autoClose) {
 		options.autoClose( autoClose );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor autoClear(boolean autoClear) {
 		options.autoClear( autoClear );
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor flushMode(FlushMode flushMode) {
+	@Nonnull
+	public SessionBuilderImplementor flushMode(@Nonnull FlushMode flushMode) {
 		options.flushMode( flushMode );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor identifierRollback(boolean identifierRollback) {
 		options.identifierRollback( identifierRollback );
 		return this;
 	}
 
 	@Override
-	public SessionBuilderImplementor eventListeners(SessionEventListener... listeners) {
+	@Nonnull
+	public SessionBuilderImplementor eventListeners(@Nonnull SessionEventListener... listeners) {
 		options.eventListeners( sessionFactory, listeners );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor clearEventListeners() {
 		options.clearEventListeners();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor defaultBatchFetchSize(int defaultBatchFetchSize) {
 		options.defaultBatchFetchSize( defaultBatchFetchSize );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled) {
 		options.subselectFetchEnabled( subselectFetchEnabled );
 		return this;

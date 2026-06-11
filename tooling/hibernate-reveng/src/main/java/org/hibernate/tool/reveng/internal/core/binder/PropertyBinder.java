@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.reveng.internal.core.binder;
 
-import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Fetchable;
 import org.hibernate.mapping.MetaAttribute;
@@ -51,7 +51,7 @@ class PropertyBinder extends AbstractBinder {
 		result.setCascade(cascade);
 		boolean lazy = false;
 		if (Fetchable.class.isInstance(value)) {
-			lazy = ((Fetchable)value).getFetchMode() != FetchMode.JOIN;
+			lazy = ((Fetchable)value).getFetchStyle() != FetchStyle.JOIN;
 		}
 		result.setLazy(lazy);
 		result.setPropertyAccessorName("property");

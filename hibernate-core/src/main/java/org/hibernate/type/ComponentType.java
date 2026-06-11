@@ -12,12 +12,12 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -55,7 +55,7 @@ public class ComponentType extends AbstractType
 	protected final int propertySpan;
 	private final CascadeStyle[] cascade;
 	private final OnDeleteAction[] onDeleteAction;
-	private final FetchMode[] joinedFetch;
+	private final FetchStyle[] joinedFetch;
 	private final int discriminatorColumnSpan;
 
 	private final boolean isAggregate;
@@ -85,7 +85,7 @@ public class ComponentType extends AbstractType
 		this.propertyNullability = new boolean[length];
 		this.cascade = new CascadeStyle[length];
 		this.onDeleteAction = new OnDeleteAction[length];
-		this.joinedFetch = new FetchMode[length];
+		this.joinedFetch = new FetchStyle[length];
 
 		final boolean supportsCascadeDelete =
 				component.getBuildingContext().getMetadataCollector()
@@ -98,7 +98,7 @@ public class ComponentType extends AbstractType
 			this.propertyTypes[i] = property.getValue().getType();
 			this.propertyNullability[i] = property.isOptional();
 			this.cascade[i] = property.getCascadeStyle();
-			this.joinedFetch[i] = property.getValue().getFetchMode();
+			this.joinedFetch[i] = property.getValue().getFetchStyle();
 			onDeleteAction[i] = supportsCascadeDelete ? property.getOnDeleteAction() : null;
 			if ( !property.isOptional() ) {
 				hasNotNullProperty = true;
@@ -114,7 +114,7 @@ public class ComponentType extends AbstractType
 			this.propertyTypes[i] = component.getDiscriminatorType();
 			this.propertyNullability[i] = false;
 			this.cascade[i] = CascadeStyles.NONE;
-			this.joinedFetch[i] = FetchMode.SELECT;
+			this.joinedFetch[i] = FetchStyle.SELECT;
 		}
 		else {
 			this.discriminatorColumnSpan = 0;
@@ -681,7 +681,7 @@ public class ComponentType extends AbstractType
 	}
 
 	@Override
-	public FetchMode getFetchMode(int i) {
+	public FetchStyle getFetchStyle(int i) {
 		return joinedFetch[i];
 	}
 

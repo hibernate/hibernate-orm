@@ -8,7 +8,6 @@ import java.util.EnumSet;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.LazyGroup;
@@ -19,6 +18,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
@@ -42,7 +42,7 @@ import static jakarta.persistence.FetchType.DEFAULT;
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
-import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
+import static org.hibernate.boot.model.internal.BinderHelper.getFetchStyle;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
@@ -375,22 +375,22 @@ public class ToOneBinder {
 		final var fetchAnnotationUsage = property.getDirectAnnotationUsage( Fetch.class );
 		if ( fetchAnnotationUsage != null ) {
 			// Hibernate @Fetch annotation takes precedence
-			setHibernateFetchMode( toOne, property, fetchAnnotationUsage.value() );
+			setHibernateFetchStyle( toOne, property, fetchAnnotationUsage.value() );
 		}
 		else {
-			toOne.setFetchMode( getFetchMode( getJpaFetchType( property, toOne.getBuildingContext() ) ) );
+			toOne.setFetchStyle( getFetchStyle( getJpaFetchType( property, toOne.getBuildingContext() ) ) );
 		}
 	}
 
-	private static void setHibernateFetchMode(ToOne toOne, MemberDetails property, org.hibernate.annotations.FetchMode fetchMode) {
+	private static void setHibernateFetchStyle(ToOne toOne, MemberDetails property, org.hibernate.annotations.FetchMode fetchMode) {
 		switch ( fetchMode ) {
 			case JOIN:
-				toOne.setFetchMode( FetchMode.JOIN );
+				toOne.setFetchStyle( FetchStyle.JOIN );
 				toOne.setLazy( false );
 				toOne.setUnwrapProxy( false );
 				break;
 			case SELECT:
-				toOne.setFetchMode( FetchMode.SELECT );
+				toOne.setFetchStyle( FetchStyle.SELECT );
 				break;
 			case SUBSELECT:
 				throw new AnnotationException( "Association '" + property.getName()

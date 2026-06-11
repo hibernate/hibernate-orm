@@ -9,12 +9,12 @@ import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKeyCompositeType;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -332,7 +332,7 @@ public class MapBinder extends CollectionBinder {
 		//element.setFetchMode( fetchMode );
 		//element.setLazy( fetchMode != FetchMode.JOIN );
 		//make the second join non-lazy
-		element.setFetchMode( FetchMode.JOIN );
+		element.setFetchStyle( FetchStyle.JOIN );
 		element.setLazy( false );
 		//does not make sense for a map key element.setIgnoreNotFound( ignoreNotFound );
 		return element;
@@ -499,7 +499,7 @@ public class MapBinder extends CollectionBinder {
 		final SimpleValue targetValue;
 		if ( sourceValue instanceof ManyToOne sourceManyToOne ) {
 			final var targetManyToOne = new ManyToOne( getBuildingContext(), mapKeyTable);
-			targetManyToOne.setFetchMode( FetchMode.DEFAULT );
+			targetManyToOne.setFetchStyle( null );
 			targetManyToOne.setLazy( true );
 			//targetValue.setIgnoreNotFound( ); does not make sense for a map key
 			targetManyToOne.setReferencedEntityName( sourceManyToOne.getReferencedEntityName() );

@@ -15,7 +15,6 @@ import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -33,6 +32,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.internal.GeneratorTypeHelper;
@@ -457,8 +457,8 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return FetchMode.SELECT;
+	public FetchStyle getFetchStyle() {
+		return FetchStyle.SELECT;
 	}
 
 	@Override

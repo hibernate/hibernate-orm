@@ -82,11 +82,5 @@ public enum FetchMode {
 	 *     re-execution of the initial query within a SQL subselect.
 	 * </ul>
 	 */
-	SUBSELECT;
-
-	public org.hibernate.FetchMode getHibernateFetchMode() {
-		return this == JOIN
-				? org.hibernate.FetchMode.JOIN
-				: org.hibernate.FetchMode.SELECT;
-	}
+	SUBSELECT
 }

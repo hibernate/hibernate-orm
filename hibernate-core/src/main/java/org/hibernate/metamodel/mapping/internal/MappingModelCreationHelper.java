@@ -15,7 +15,6 @@ import java.util.function.Function;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.collection.internal.StandardArraySemantics;
@@ -454,7 +453,7 @@ public class MappingModelCreationHelper {
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
-			FetchMode fetchMode,
+			FetchStyle mappingFetchStyle,
 			MappingModelCreationProcess creationProcess) {
 		return buildPluralAttributeMapping(
 				attrName,
@@ -464,7 +463,7 @@ public class MappingModelCreationHelper {
 				declaringType,
 				propertyAccess,
 				cascadeStyle,
-				fetchMode,
+				mappingFetchStyle,
 				creationProcess,
 				Function.identity()
 		);
@@ -481,7 +480,7 @@ public class MappingModelCreationHelper {
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
-			FetchMode fetchMode,
+			FetchStyle mappingFetchStyle,
 			MappingModelCreationProcess creationProcess,
 			Function<PluralAttributeMappingImpl, PluralAttributeMappingImpl> mappingConverter) {
 
@@ -626,7 +625,7 @@ public class MappingModelCreationHelper {
 		final var collectionType = collectionDescriptor.getCollectionType();
 
 		final var fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				collectionType,
 				sessionFactory
 		);
@@ -1852,7 +1851,7 @@ public class MappingModelCreationHelper {
 			final var type = (AssociationType) bootProperty.getType();
 			final var fetchStyle =
 					FetchOptionsHelper.determineFetchStyleByMetadata(
-							bootProperty.getValue().getFetchMode(),
+							bootProperty.getValue().getFetchStyle(),
 							type,
 							factory
 					);

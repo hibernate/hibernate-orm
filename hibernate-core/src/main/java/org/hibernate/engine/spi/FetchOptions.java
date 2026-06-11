@@ -12,6 +12,7 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
+import org.hibernate.FetchMethod;
 
 import jakarta.annotation.Nullable;
 
@@ -25,26 +26,36 @@ import jakarta.annotation.Nullable;
 public record FetchOptions(
 		@Nullable CacheStoreMode cacheStoreMode,
 		@Nullable CacheRetrieveMode cacheRetrieveMode,
-		@Nullable Integer batchSize)
+		@Nullable Integer batchSize,
+		@Nullable FetchMethod fetchMethod)
 				implements Serializable {
 
-	public static final FetchOptions NONE = new FetchOptions( null, null, null );
+	public static final FetchOptions NONE = new FetchOptions( null, null, null, null );
 
 	public static FetchOptions of(
 			@Nullable CacheStoreMode cacheStoreMode,
 			@Nullable CacheRetrieveMode cacheRetrieveMode,
 			@Nullable Integer batchSize) {
+		return of( cacheStoreMode, cacheRetrieveMode, batchSize, null );
+	}
+
+	public static FetchOptions of(
+			@Nullable CacheStoreMode cacheStoreMode,
+			@Nullable CacheRetrieveMode cacheRetrieveMode,
+			@Nullable Integer batchSize,
+			@Nullable FetchMethod fetchMethod) {
 		return cacheStoreMode == null
 			&& cacheRetrieveMode == null
 			&& batchSize == null
+			&& fetchMethod == null
 				? NONE
-				: new FetchOptions( cacheStoreMode, cacheRetrieveMode, batchSize );
+				: new FetchOptions( cacheStoreMode, cacheRetrieveMode, batchSize, fetchMethod );
 	}
 
 	public static FetchOptions of(AttributeNode<?> node) {
 		return node == null
 				? NONE
-				: of( cacheStoreMode( node ), cacheRetrieveMode( node ), batchSize( node ) );
+				: of( cacheStoreMode( node ), cacheRetrieveMode( node ), batchSize( node ), fetchMethod( node ) );
 	}
 
 	private static @Nullable CacheStoreMode cacheStoreMode(AttributeNode<?> node) {
@@ -75,9 +86,18 @@ public record FetchOptions(
 		return null;
 	}
 
+	private static @Nullable FetchMethod fetchMethod(AttributeNode<?> node) {
+		for ( var option : node.getOptions() ) {
+			if ( option instanceof FetchMethod fetchMethod ) {
+				return fetchMethod;
+			}
+		}
+		return null;
+	}
+
 	public boolean hasOptions() {
 		return this != NONE
-			&& ( cacheStoreMode != null || cacheRetrieveMode != null || batchSize != null );
+			&& ( cacheStoreMode != null || cacheRetrieveMode != null || batchSize != null || fetchMethod != null );
 	}
 
 	public boolean hasCacheModes() {

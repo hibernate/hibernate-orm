@@ -4,6 +4,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.Remove;
+
 /**
  * Enumerates methods for fetching an association from the database.
  * <p>
@@ -17,7 +19,11 @@ package org.hibernate.annotations;
  *
  * @see Fetch
  * @see FetchProfile.FetchOverride#mode()
+ *
+ * @apiNote This enumeration duplicates {@link org.hibernate.FetchMethod}
+ *          and will eventually be deprecated and removed.
  */
+@Remove // see the @apiNote
 public enum FetchMode {
 	/**
 	 * Use a secondary select to load a single associated entity or

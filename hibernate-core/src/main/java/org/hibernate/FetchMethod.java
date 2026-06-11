@@ -9,15 +9,29 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 
 /**
- * Enumerates methods for fetching an association from the database.
+ * Enumerates methods for fetching an association from the database,
+ * allowing a fetching method to be specified as a {@link FetchOption}
+ * of an {@linkplain org.hibernate.graph.AttributeNode#addOption
+ * attribute node of an entity graph}.
+ * <pre>
+ * var bookWithAuthors = session.createEntityGraph(Book.class);
+ * bookWithAuthors.addAttributeNode(Book_.authors) // fetch authors
+ *                .addOption(FetchMethod.SELECT);  // using separate SQL select
+ * Book book = session.get(bookWithAuthors, isbn);
+ * </pre>
  * <p>
  * The JPA-defined {@link jakarta.persistence.FetchType} enumerates the
  * possibilities for <em>when</em> an association might be fetched. This
  * enumeration defines <em>how</em> fetching is realized in terms of the
  * actual SQL executed by the database.
  *
+ * @see org.hibernate.graph.AttributeNode#addOption(FetchOption)
+ * @see jakarta.persistence.FetchType
+ *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @since 8.0
  */
 public enum FetchMethod implements FetchOption {
 	/**

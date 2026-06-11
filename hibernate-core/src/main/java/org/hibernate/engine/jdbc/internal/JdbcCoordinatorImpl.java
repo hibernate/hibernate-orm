@@ -40,6 +40,7 @@ import java.sql.Statement;
 import java.util.function.Supplier;
 
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
+import static org.hibernate.ConnectionReleaseMode.AFTER_TRANSACTION;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
@@ -333,15 +334,21 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			JDBC_LOGGER.statementExecutionComplete( connectionReleaseMode, hashCode() );
 		}
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
-			if ( ! releasesEnabled ) {
+			if ( !releasesEnabled ) {
 				JDBC_LOGGER.skippingAggressiveRelease( "manually disabled" );
 			}
 			else if ( hasRegisteredResources() ) {
 				JDBC_LOGGER.skippingAggressiveRelease( "registered resources" );
 			}
 			else {
-				getLogicalConnection().afterStatement();
+				getLogicalConnection().afterStatement( false );
 			}
+		}
+		else if ( connectionReleaseMode == AFTER_TRANSACTION
+				&& releasesEnabled
+				&& !hasRegisteredResources()
+				&& !owner.getTransactionCoordinator().isTransactionActive() ) {
+			getLogicalConnection().afterStatement( true );
 		}
 	}
 

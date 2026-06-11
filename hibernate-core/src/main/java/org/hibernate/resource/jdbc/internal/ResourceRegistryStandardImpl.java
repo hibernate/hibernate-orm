@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import org.hibernate.JDBCException;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
+import org.hibernate.type.descriptor.java.BlobJavaType;
+import org.hibernate.type.descriptor.java.ClobJavaType;
+import org.hibernate.type.descriptor.java.NClobJavaType;
 
 import static org.hibernate.resource.jdbc.internal.ResourceRegistryLogger.RESOURCE_REGISTRY_LOGGER;
 
@@ -381,13 +384,20 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 
 		public void releaseResources() {
-			closeAll( unassociatedResultSets );
-			unassociatedResultSets.clear();
+			if ( unassociatedResultSets != null ) {
+				closeAll( unassociatedResultSets );
+				unassociatedResultSets.clear();
+			}
 
 			if ( blobs != null ) {
 				blobs.forEach( blob -> {
 					try {
-						blob.free();
+						if ( blob instanceof BlobJavaType.ReleasableBlob rb ) {
+							rb.doFree();
+						}
+						else {
+							blob.free();
+						}
 					}
 					catch (SQLException e) {
 						RESOURCE_REGISTRY_LOGGER.unableToFreeLob( Blob.class.getSimpleName(), e.getMessage() );
@@ -400,7 +410,12 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			if ( clobs != null ) {
 				clobs.forEach( clob -> {
 					try {
-						clob.free();
+						if ( clob instanceof ClobJavaType.ReleasableClob rb ) {
+							rb.doFree();
+						}
+						else {
+							clob.free();
+						}
 					}
 					catch (SQLException e) {
 						RESOURCE_REGISTRY_LOGGER.unableToFreeLob( Clob.class.getSimpleName(), e.getMessage() );
@@ -412,6 +427,12 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			if ( nclobs != null ) {
 				nclobs.forEach( nclob -> {
 					try {
+						if ( nclob instanceof NClobJavaType.ReleasableNClob rb ) {
+							rb.doFree();
+						}
+						else {
+							nclob.free();
+						}
 						nclob.free();
 					}
 					catch (SQLException e) {

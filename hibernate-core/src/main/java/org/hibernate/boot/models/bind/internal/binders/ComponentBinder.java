@@ -12,13 +12,16 @@ import java.util.function.BiFunction;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
+import org.hibernate.boot.models.bind.internal.sources.ToOneSource;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
+import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -27,6 +30,8 @@ import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.Convert;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.models.bind.internal.binders.AttributeBinder.bindPropertyAccessor;
 
@@ -80,6 +85,8 @@ public class ComponentBinder {
 				source::columnSource,
 				source::conversion,
 				(path, member) -> source.associationOverride( path ),
+				source.kind(),
+				null,
 				columnConsumer,
 				uniqueByDefault,
 				nullableByDefault,
@@ -110,6 +117,8 @@ public class ComponentBinder {
 				columnSourceResolver,
 				conversionResolver,
 				associationOverrideResolver,
+				ComponentSource.Kind.EMBEDDED_ATTRIBUTE,
+				null,
 				columnConsumer,
 				uniqueByDefault,
 				nullableByDefault,
@@ -127,11 +136,17 @@ public class ComponentBinder {
 			BiFunction<String, MemberDetails, ColumnSource> columnSourceResolver,
 			BiFunction<String, MemberDetails, Convert> conversionResolver,
 			BiFunction<String, MemberDetails, AssociationOverride> associationOverrideResolver,
+			ComponentSource.Kind componentKind,
+			List<Column> identifierColumns,
 			BiConsumer<MemberDetails, Column> columnConsumer,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
 			boolean updatable) {
 		final List<Column> columns = new ArrayList<>();
+		final List<Column> associationIdentifierColumns =
+				componentKind == ComponentSource.Kind.EMBEDDED_IDENTIFIER && identifierColumns == null
+						? columns
+						: identifierColumns;
 		componentType.forEachPersistableMember( (member) -> {
 			validateMember( member );
 			final String attributeName = member.resolveAttributeName();
@@ -141,20 +156,33 @@ public class ComponentBinder {
 				final Property property = new Property();
 				property.setName( attributeName );
 				bindPropertyAccessor( member, property );
-				final var manyToOne = ToOneAttributeBinder.bindToOne(
-						ownerType,
-						ownerBinding,
-						componentType.getClassName(),
-						attributeName,
-						member,
-						property,
-						table,
-						associationOverrideResolver.apply( memberPath, member ),
-						modelBinders,
-						options,
-						state,
-						context
-				);
+				final AssociationOverride associationOverride = associationOverrideResolver.apply( memberPath, member );
+				final var manyToOne = componentKind == ComponentSource.Kind.EMBEDDED_IDENTIFIER
+						? bindAssociationIdentifierMember(
+								ownerType,
+								ownerBinding,
+								componentType,
+								attributeName,
+								member,
+								property,
+								table,
+								associationOverride,
+								associationIdentifierColumns
+						)
+						: ToOneAttributeBinder.bindToOne(
+								ownerType,
+								ownerBinding,
+								componentType.getClassName(),
+								attributeName,
+								member,
+								property,
+								table,
+								associationOverride,
+								modelBinders,
+								options,
+								state,
+								context
+						);
 				property.setValue( manyToOne );
 				component.addProperty( property );
 				columns.addAll( manyToOne.getColumns() );
@@ -180,6 +208,8 @@ public class ComponentBinder {
 						columnSourceResolver,
 						conversionResolver,
 						associationOverrideResolver,
+						componentKind,
+						associationIdentifierColumns,
 						columnConsumer,
 						uniqueByDefault,
 						nullableByDefault,
@@ -208,6 +238,72 @@ public class ComponentBinder {
 			columns.add( column );
 		} );
 		return columns;
+	}
+
+	private ManyToOne bindAssociationIdentifierMember(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			ClassDetails componentType,
+			String attributeName,
+			MemberDetails member,
+			Property property,
+			Table table,
+			AssociationOverride associationOverride,
+			List<Column> identifierColumns) {
+		final ToOneSource source = ToOneSource.create(
+				member,
+				componentType.getClassName(),
+				attributeName,
+				associationOverride
+		);
+		if ( source.isInverseOneToOne() ) {
+			throw new UnsupportedOperationException(
+					"Association identifiers are only implemented for owning to-one attributes - "
+							+ ownerBinding.getEntityName() + "." + attributeName
+			);
+		}
+
+		final JoinTable joinTable = source.joinTable();
+		if ( joinTable != null ) {
+			throw new UnsupportedOperationException(
+					"Embedded-id association identifiers with @JoinTable are not yet implemented - "
+							+ ownerBinding.getEntityName() + "." + attributeName
+			);
+		}
+
+		final EntityTypeBinder targetTypeBinder = (EntityTypeBinder) state.getTypeBinder(
+				source.targetClassDetails( context )
+		);
+		if ( targetTypeBinder == null ) {
+			throw new org.hibernate.MappingException(
+					"Could not resolve local type binding for association identifier target entity - "
+							+ source.targetClassDetails( context ).getClassName()
+			);
+		}
+
+		final ManyToOne value = new ManyToOne( state.getMetadataBuildingContext(), table );
+		value.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
+		value.setReferenceToPrimaryKey( true );
+		value.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
+		value.setTypeUsingReflection( componentType.getClassName(), attributeName );
+		value.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
+		if ( source.isLogicalOneToOne() ) {
+			value.markAsLogicalOneToOne();
+		}
+		property.setOptional( false );
+		property.setCascade( source.cascades( state ), source.orphanRemoval() );
+
+		state.addAssociationIdentifierBinding( new AssociationIdentifierBinding(
+				resolveOwnerEntityType( ownerType ),
+				ownerBinding,
+				property,
+				value,
+				targetTypeBinder,
+				source.valueJoinColumns( null ),
+				source.valueForeignKeySource( null ),
+				identifierColumns
+		) );
+		return value;
 	}
 
 	private void validateMember(MemberDetails member) {
@@ -243,6 +339,17 @@ public class ComponentBinder {
 				context
 		);
 		return basicValue;
+	}
+
+	private static EntityTypeMetadata resolveOwnerEntityType(IdentifiableTypeMetadata ownerType) {
+		if ( ownerType instanceof EntityTypeMetadata entityType ) {
+			return entityType;
+		}
+		return ownerType.getHierarchy().getRoot();
+	}
+
+	private FetchType effectiveFetchType(ToOneSource source) {
+		return source.fetchType() == FetchType.LAZY ? FetchType.LAZY : options.getDefaultToOneFetchType();
 	}
 
 	private Property createProperty(String name, org.hibernate.mapping.Value value, MemberDetails member) {

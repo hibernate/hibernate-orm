@@ -500,21 +500,31 @@ public class SimpleIdTests {
 
 	@Test
 	@ServiceRegistry
-	void testMapsIdWithToOneIdentifierAttributeFails(ServiceRegistryScope scope) {
-		assertThatThrownBy( () -> checkDomainModel(
+	void testMapsIdWithToOneIdentifierAttribute(ServiceRegistryScope scope) {
+		checkDomainModel(
 				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( ToOneAttributeMapsIdChild.class.getName() );
+					final Component identifier = (Component) entityBinding.getIdentifier();
+					final ManyToOne identifierParent = (ManyToOne) identifier.getProperty( "parentRef" ).getValue();
+					final ManyToOne parent = (ManyToOne) entityBinding.getProperty( "parent" ).getValue();
+
+					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "parent_id", "child_id" );
+					assertThat( identifierParent.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "parent_id" );
+					assertThat( parent.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "parent_id" );
+					assertThat( parent.getColumnInsertability() ).containsExactly( false );
+					assertThat( parent.getColumnUpdateability() ).containsExactly( false );
 				},
 				scope.getRegistry(),
 				MapsIdParent.class,
 				ToOneAttributeMapsIdChild.class
-		) ).satisfies( (throwable) -> {
-			assertThat( throwable ).isInstanceOfAny( org.hibernate.MappingException.class, UnsupportedOperationException.class );
-			assertThat( throwable.getMessage() )
-					.containsAnyOf(
-							"Could not resolve identifier binding for to-one target entity",
-							"@MapsId is only implemented for basic or component identifier attributes"
-					);
-		} );
+		);
 	}
 
 	@Test

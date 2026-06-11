@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.scan.spi.ScanningResult;
+import org.hibernate.boot.settings.BootstrapSettingsResolver;
 import org.hibernate.boot.settings.ResolvedBootstrapSettings;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -78,8 +79,7 @@ public record BootstrapSourceContributions(
 		if ( persistenceConfiguration instanceof HibernatePersistenceConfiguration hibernatePersistenceConfiguration ) {
 			return from(
 					hibernatePersistenceConfiguration,
-					new org.hibernate.boot.settings.BootstrapSettingsResolver()
-							.resolve( hibernatePersistenceConfiguration ),
+					BootstrapSettingsResolver.resolve( hibernatePersistenceConfiguration ),
 					null
 			);
 		}

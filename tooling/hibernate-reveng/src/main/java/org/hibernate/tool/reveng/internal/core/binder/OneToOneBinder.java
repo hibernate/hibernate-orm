@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.reveng.internal.core.binder;
 
-import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.OneToOne;
@@ -40,7 +40,7 @@ class OneToOneBinder extends AbstractBinder {
 		value.setReferencedEntityName(
 				getRevengStrategy().tableToClassName(TableIdentifier.create(targetTable)));
 		addColumns(fk, value, processedColumns);
-		value.setFetchMode(FetchMode.SELECT);
+		value.setFetchStyle(FetchStyle.SELECT);
 		value.setConstrained(constrained);
 		value.setForeignKeyType(
 				constrained ?

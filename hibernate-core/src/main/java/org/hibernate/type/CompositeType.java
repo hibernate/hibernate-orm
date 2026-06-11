@@ -6,9 +6,9 @@ package org.hibernate.type;
 
 import java.lang.reflect.Method;
 
-import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -135,13 +135,14 @@ public interface CompositeType extends Type {
 	OnDeleteAction getOnDeleteAction(int index);
 
 	/**
-	 * Retrieve the fetch mode of the indicated component property.
+	 * Retrieve the fetch style of the indicated component property,
+	 * or {@code null} if unspecified.
 	 *
 	 * @param index The property index,
 	 *
-	 * @return The fetch mode
+	 * @return The fetch style
 	 */
-	FetchMode getFetchMode(int index);
+	FetchStyle getFetchStyle(int index);
 
 	/**
 	 * Is the given method a member of this component's class?

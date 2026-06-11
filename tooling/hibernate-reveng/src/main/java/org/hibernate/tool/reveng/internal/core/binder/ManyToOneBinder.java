@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.reveng.internal.core.binder;
 
-import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.ManyToOne;
@@ -35,7 +35,7 @@ class ManyToOneBinder extends AbstractBinder {
 		ManyToOne value = new ManyToOne(getMetadataBuildingContext(), table);
 		value.setReferencedEntityName( fk.getReferencedEntityName() );
 		addColumns(value, fk, processedColumns);
-		value.setFetchMode(FetchMode.SELECT);
+		value.setFetchStyle(FetchStyle.SELECT);
 		return entityPropertyBinder
 				.bind(
 						propertyName,

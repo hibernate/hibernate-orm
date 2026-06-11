@@ -6,10 +6,10 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.List;
 
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
@@ -65,7 +65,7 @@ public class ColumnValue implements Value {
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
+	public FetchStyle getFetchStyle() {
 		return null;
 	}
 

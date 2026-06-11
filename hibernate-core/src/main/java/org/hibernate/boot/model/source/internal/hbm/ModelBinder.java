@@ -5,7 +5,6 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -1325,9 +1324,9 @@ public class ModelBinder {
 	private static void setupFetching(PluralAttributeSource source, Collection binding) {
 		final var fetchCharacteristics = source.getFetchCharacteristics();
 		final var fetchStyle = fetchCharacteristics.getFetchStyle();
-		binding.setFetchMode( switch ( fetchStyle ) {
-			case SELECT, BATCH, SUBSELECT -> FetchMode.SELECT;
-			case JOIN -> FetchMode.JOIN;
+		binding.setFetchStyle( switch ( fetchStyle ) {
+			case SELECT, BATCH, SUBSELECT -> FetchStyle.SELECT;
+			case JOIN -> FetchStyle.JOIN;
 		} );
 		switch ( fetchStyle ) {
 			case BATCH:
@@ -1806,10 +1805,10 @@ public class ModelBinder {
 	private static void handleFetchCharacteristics(SingularAttributeSourceToOne toOneSource, ToOne toOneBinding) {
 		final var fetchCharacteristics = toOneSource.getFetchCharacteristics();
 		toOneBinding.setLazy( fetchCharacteristics.getFetchTiming() == FetchTiming.DELAYED );
-		toOneBinding.setFetchMode(
+		toOneBinding.setFetchStyle(
 				fetchCharacteristics.getFetchStyle() == FetchStyle.SELECT
-						? FetchMode.SELECT
-						: FetchMode.JOIN
+						? FetchStyle.SELECT
+						: FetchStyle.JOIN
 		);
 		toOneBinding.setUnwrapProxy( fetchCharacteristics.isUnwrapProxies() );
 	}
@@ -3210,8 +3209,8 @@ public class ModelBinder {
 				ManyToOne elementBinding) {
 			if ( !isEmpty( elementSource.getFilterSources() )
 					|| elementSource.getWhere() != null ) {
-				if ( collectionBinding.getFetchMode() == FetchMode.JOIN
-						&& elementBinding.getFetchMode() != FetchMode.JOIN ) {
+				if ( collectionBinding.getFetchStyle() == FetchStyle.JOIN
+						&& elementBinding.getFetchStyle() != FetchStyle.JOIN ) {
 					throw new MappingException(
 							"many-to-many defining filter or where without join fetching is not "
 							+ "valid within collection [%s] using join fetching"
@@ -3318,10 +3317,10 @@ public class ModelBinder {
 				PluralAttributeElementSourceManyToMany elementSource, ManyToOne elementBinding) {
 			final var characteristics = elementSource.getFetchCharacteristics();
 			elementBinding.setLazy( characteristics.getFetchTiming() != FetchTiming.IMMEDIATE );
-			elementBinding.setFetchMode(
+			elementBinding.setFetchStyle(
 					characteristics.getFetchStyle() == FetchStyle.SELECT
-							? FetchMode.SELECT
-							: FetchMode.JOIN
+							? FetchStyle.SELECT
+							: FetchStyle.JOIN
 			);
 		}
 

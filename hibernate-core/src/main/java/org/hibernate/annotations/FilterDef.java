@@ -113,8 +113,7 @@ public @interface FilterDef {
 	 * By default, a filter does not apply to lookups by primary
 	 * key, for example, when:
 	 * <ul>
-	 * <li>{@linkplain org.hibernate.FetchMode fetching} a
-	 *     {@code @ManyToOne} association, or
+	 * <li> fetching a {@code @ManyToOne} association, or
 	 * <li>{@link org.hibernate.Session#find(Class, Object) find()}
 	 *     is called.
 	 * </ul>

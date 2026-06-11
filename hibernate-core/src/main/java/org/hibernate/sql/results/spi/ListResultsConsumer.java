@@ -162,6 +162,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			final int initialCollectionSize = Math.min( jdbcValues.getResultCountEstimate(), INITIAL_COLLECTION_SIZE_LIMIT );
 			final var results = createResults( isEntityResultType, domainResultJavaType, initialCollectionSize );
 			final int readRows = readRows( rowProcessingState, rowReader, isEntityResultType, results );
+			if ( readRows > 1 ) {
+				jdbcValuesSourceProcessingState.registerSubselects();
+			}
 			rowReader.finishUp( rowProcessingState );
 			jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
 			return transformList( rowProcessingState, results );

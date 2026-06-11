@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.FetchMethod;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -56,7 +58,7 @@ public class EntitySelectFetchInitializerBuilder {
 					creationState
 			);
 		}
-		switch ( determineBatchMode( entityPersister, parent, fetchOptions, creationState ) ) {
+		switch ( determineBatchMode( entityPersister, parent, fetchedAttribute, fetchOptions, creationState ) ) {
 			case NONE:
 				return new EntitySelectFetchInitializer<>(
 						parent,
@@ -111,11 +113,16 @@ public class EntitySelectFetchInitializerBuilder {
 	private static BatchMode determineBatchMode(
 			EntityPersister entityPersister,
 			InitializerParent<?> parent,
+			ToOneAttributeMapping fetchedAttribute,
 			FetchOptions fetchOptions,
 			AssemblerCreationState creationState) {
 		final var batchSize = fetchOptions.batchSize();
 		if ( batchSize != null && batchSize <= 1 ) {
 			return NONE;
+		}
+		else if ( fetchOptions.fetchMethod() == FetchMethod.BULK_SELECT
+				|| fetchedAttribute.getMappedFetchOptions().getStyle() == FetchStyle.SUBSELECT ) {
+			return BATCH_LOAD;
 		}
 		else if ( batchSize == null && !entityPersister.isBatchLoadable() ) {
 			return NONE;

@@ -102,7 +102,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						session.getPersistenceContext().getBatchFetchQueue(),
 						sqmInterpretation.statement(),
 						JdbcParametersList.empty(),
-						jdbcParameterBindings
+						jdbcParameterBindings,
+						executionContext.getQueryOptions().getAppliedGraph()
 				);
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), skipPreFlush );
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
@@ -129,7 +130,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						session.getPersistenceContext().getBatchFetchQueue(),
 						sqmInterpretation.statement(),
 						JdbcParametersList.empty(),
-						jdbcParameterBindings
+						jdbcParameterBindings,
+						executionContext.getQueryOptions().getAppliedGraph()
 				);
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames(), skipPreFlush );
 				//noinspection unchecked

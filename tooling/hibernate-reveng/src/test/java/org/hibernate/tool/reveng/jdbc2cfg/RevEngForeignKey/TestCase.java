@@ -121,7 +121,7 @@ public class TestCase {
 		Property o2o = multiPerson.getProperty("renamedInversedOne");
 		assertNotNull(o2o);
 		assertEquals("update", o2o.getCascade());
-		assertEquals("JOIN", o2o.getValue().getFetchMode().toString());
+		assertEquals("JOIN", o2o.getValue().getFetchStyle().toString());
 	}
 
 	@Test
@@ -149,7 +149,7 @@ public class TestCase {
 		assertEquals("none", property.getCascade());
 		assertTrue(property.isUpdatable());
 		assertTrue(property.isInsertable());
-		assertEquals("SELECT", property.getValue().getFetchMode().toString());
+		assertEquals("SELECT", property.getValue().getFetchStyle().toString());
 	}
 
 	@Test
@@ -165,7 +165,7 @@ public class TestCase {
 		assertEquals("all", property.getCascade());
 		assertFalse(property.isUpdatable());
 		assertFalse(property.isInsertable());
-		assertEquals("JOIN", property.getValue().getFetchMode().toString());
+		assertEquals("JOIN", property.getValue().getFetchStyle().toString());
 	}
 
 	private void assertPropertyNotExists(PersistentClass employee, String name, String msg) {

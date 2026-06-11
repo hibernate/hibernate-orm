@@ -7,6 +7,7 @@ package org.hibernate.sql.results.internal;
 import java.util.Map;
 import java.util.Objects;
 
+import org.hibernate.FetchMethod;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.graph.GraphSemantic;
@@ -99,7 +100,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 					if ( subgraphMap != null && subgraphMapKey != null ) {
 						currentGraphContext = subgraphMap.get( subgraphMapKey );
 					}
-					return new FetchStrategy( FetchTiming.IMMEDIATE, !fetchOptions.hasBatchSize() );
+					return new FetchStrategy( FetchTiming.IMMEDIATE, shouldJoin( fetchOptions ) );
 				case LAZY:
 					return new FetchStrategy( FetchTiming.DELAYED, false );
 				default:
@@ -112,6 +113,13 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 		else {
 			return null;
 		}
+	}
+
+	private static boolean shouldJoin(FetchOptions fetchOptions) {
+		final var fetchMethod = fetchOptions.fetchMethod();
+		return fetchMethod == null
+				? !fetchOptions.hasBatchSize()
+				: fetchMethod == FetchMethod.JOIN;
 	}
 
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {

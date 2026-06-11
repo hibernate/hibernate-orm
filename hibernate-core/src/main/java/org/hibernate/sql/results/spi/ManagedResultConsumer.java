@@ -39,9 +39,10 @@ public class ManagedResultConsumer implements ResultsConsumer<Void, Object> {
 				rowReader.readRow( rowProcessingState );
 				rowProcessingState.finishRowProcessing( true );
 			}
+			jdbcValuesSourceProcessingState.registerSubselects();
 			rowReader.finishUp( rowProcessingState );
 			jdbcValuesSourceProcessingState.finishUp( true );
-		return null;
+			return null;
 		}
 		catch (RuntimeException e) {
 			ex = e;

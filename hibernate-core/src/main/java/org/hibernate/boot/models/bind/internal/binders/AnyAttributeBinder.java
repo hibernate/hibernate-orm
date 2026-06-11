@@ -70,35 +70,41 @@ class AnyAttributeBinder {
 				bindingState,
 				bindingContext
 		).bind( source, attributeMetadata.getName(), valueTable );
-		property.setOptional( source.optional() );
+		property.setOptional( source.effectiveOptional() );
 		property.setCascade( source.cascades() );
 		return value;
 	}
 
 	private Table bindAssociationTable(AnySource source, Table ownerTable) {
 		final JoinTable joinTable = source.joinTable();
+		final Table associationTable;
 		if ( StringHelper.isEmpty( joinTable.name() ) ) {
-			// todo (any) : support implicit @Any association-table names without a single target entity
-			throw new UnsupportedOperationException(
-					"Implicit @Any @JoinTable names are not yet implemented - " + source.member().getName()
-			);
+			associationTable = modelBinders.getTableBinder()
+					.bindOwnedTable(
+							resolveOwnerEntityType(),
+							ownerTable,
+							attributeMetadata.getName(),
+							joinTable
+					)
+					.binding();
 		}
-
-		final Table associationTable = modelBinders.getTableBinder()
-				.bindAssociationTable(
-						resolveOwnerEntityType(),
-						ownerTable,
-						attributeMetadata.getName(),
-						resolveOwnerEntityType(),
-						ownerTable,
-						joinTable
-				)
-				.binding();
+		else {
+			associationTable = modelBinders.getTableBinder()
+					.bindAssociationTable(
+							resolveOwnerEntityType(),
+							ownerTable,
+							attributeMetadata.getName(),
+							resolveOwnerEntityType(),
+							ownerTable,
+							joinTable
+					)
+					.binding();
+		}
 
 		final Join join = new Join();
 		join.setTable( associationTable );
 		join.setPersistentClass( ownerBinding );
-		join.setOptional( source.optional() );
+		join.setOptional( source.effectiveOptional() );
 		join.setInverse( false );
 		ownerBinding.addJoin( join );
 

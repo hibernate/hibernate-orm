@@ -40,7 +40,13 @@ First, a few assumptions we will be working under...
 ** JPA "SE bootstrap" - `Persistence`
 ** JPA "SE bootstrap" - `(Hibernate)PersistenceConfiguration`
 ** JPA "EE bootstrap" - Ultimately `PersistenceUnitDescriptor`
-** Legacy `Configuration`, but deprecated in favor of `HibernatePersistenceConfiguration`
+** Legacy `Configuration`, eventually deprecated in favor of
+   `(Hibernate)PersistenceConfiguration` after its supported native
+   convenience methods have a replacement story
+** Native `MetadataSources`, `Metadata`, and public `SessionFactoryBuilder`,
+   eventually converged on the shared pipeline and deprecated only after native
+   source contribution, metadata inspection, and builder customization use cases
+   are covered
 ** Maybe some form that accepts `AvailableResources` + settings?
 
 
@@ -199,6 +205,24 @@ The JUnit 5 `SessionFactoryExtension`, JUnit 4 core test bases, and many native
 tests still use `Metadata`, `Configuration`, or public
 `SessionFactoryBuilder`.  Those paths are useful coverage for native bootstrap
 features and should be migrated selectively, not mechanically.
+
+=== Native Bootstrap Deprecation Direction
+
+The intended long-term direction is to reduce Hibernate bootstrap to a small
+set of entry-point adapters over the shared pipeline.
+
+In that end state, `Configuration` should be treated as a legacy compatibility
+layer and deprecated in favor of `PersistenceConfiguration` /
+`HibernatePersistenceConfiguration`.  Native bootstrap APIs such as
+`MetadataSources`, `Metadata#buildSessionFactory()`, and the public
+`org.hibernate.boot.SessionFactoryBuilder` should also converge on the shared
+pipeline and may become deprecation candidates once replacement APIs cover the
+supported native use cases.
+
+This is direction, not current branch status.  The current branch still keeps
+these APIs alive because they cover native convenience registrations, metadata
+inspection, and public SessionFactory-builder customization points that the new
+orchestration path has not fully replaced.
 
 === Recent Decisions Applied To Tests
 

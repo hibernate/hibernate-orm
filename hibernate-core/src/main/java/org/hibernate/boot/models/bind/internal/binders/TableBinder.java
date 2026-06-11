@@ -356,6 +356,21 @@ public class TableBinder {
 		return bindPhysicalTable( logicalName, tableSource, false );
 	}
 
+	public PhysicalTable bindOwnedTable(
+			EntityTypeMetadata ownerType,
+			Table owningTable,
+			String attributeName,
+			JoinTable joinTable) {
+		final TableSource tableSource = TableSource.from( joinTable );
+		final Identifier logicalName = determineCollectionTableLogicalName(
+				ownerType,
+				owningTable,
+				attributeName,
+				tableSource
+		);
+		return bindPhysicalTable( logicalName, tableSource, false );
+	}
+
 	public PhysicalTable bindAssociationTable(
 			EntityTypeMetadata ownerType,
 			Table owningTable,

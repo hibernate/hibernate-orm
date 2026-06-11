@@ -2,23 +2,24 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.annotations;
+package org.hibernate;
+
+import jakarta.persistence.FetchOption;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
 
 /**
  * Enumerates methods for fetching an association from the database.
  * <p>
  * The JPA-defined {@link jakarta.persistence.FetchType} enumerates the
  * possibilities for <em>when</em> an association might be fetched. This
- * enumeration defines <em>how</em> it is fetched in terms of the actual
- * SQL executed by the database.
+ * enumeration defines <em>how</em> fetching is realized in terms of the
+ * actual SQL executed by the database.
  *
+ * @author Gavin King
  * @author Steve Ebersole
- * @author Emmanuel Bernard
- *
- * @see Fetch
- * @see FetchProfile.FetchOverride#mode()
  */
-public enum FetchMode {
+public enum FetchMethod implements FetchOption {
 	/**
 	 * Use a secondary select to load a single associated entity or
 	 * collection, at some point after an initial query is executed.
@@ -31,7 +32,7 @@ public enum FetchMode {
 	 * This fetching strategy is vulnerable to the "N+1 selects"
 	 * bugbear, though the impact may be alleviated somewhat via:
 	 * <ul>
-	 * <li>enabling batch fetching using {@link BatchSize}, or
+	 * <li>enabling batch fetching using {@link org.hibernate.annotations.BatchSize}, or
 	 * <li>ensuring that the associated entity or collection may be
 	 *     retrieved from the {@linkplain Cache second-level cache}.
 	 * </ul>
@@ -82,5 +83,5 @@ public enum FetchMode {
 	 *     re-execution of the initial query within a SQL subselect.
 	 * </ul>
 	 */
-	SUBSELECT
+	BULK_SELECT
 }

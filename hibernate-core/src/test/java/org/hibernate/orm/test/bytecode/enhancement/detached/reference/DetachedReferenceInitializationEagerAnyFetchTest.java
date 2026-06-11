@@ -4,14 +4,12 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.detached.reference;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -26,13 +24,13 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(annotatedClasses = {
-		DetachedReferenceInitializationDelayedFetchTest.EntityA.class,
-		DetachedReferenceInitializationDelayedFetchTest.EntityB.class,
+		DetachedReferenceInitializationEagerAnyFetchTest.EntityA.class,
+		DetachedReferenceInitializationEagerAnyFetchTest.EntityB.class,
 })
 @SessionFactory
 @BytecodeEnhanced(runNotEnhancedAsWell = true)
 @Jira("https://hibernate.atlassian.net/browse/HHH-19910")
-public class DetachedReferenceInitializationDelayedFetchTest {
+public class DetachedReferenceInitializationEagerAnyFetchTest {
 	@Test
 	public void testDetachedAndPersistentEntity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -243,7 +241,6 @@ public class DetachedReferenceInitializationDelayedFetchTest {
 			// put a different instance of EntityB in the persistence context
 			final var ignored = session.getReference( EntityB.class, 1L );
 
-
 			fetchQuery( 1L, entityB, ignored, session );
 		} );
 	}
@@ -384,6 +381,7 @@ public class DetachedReferenceInitializationDelayedFetchTest {
 
 			// put a different instance of EntityB in the persistence context
 			final var ignored = session.getReference( EntityB.class, 1L );
+
 			fetchQuery( null, entityB, ignored, session );
 		} );
 	}
@@ -423,6 +421,7 @@ public class DetachedReferenceInitializationDelayedFetchTest {
 		final var entityA = new EntityA();
 		entityA.id = 1L;
 		entityA.bId = bId;
+		entityA.bType = bId == null ? null : "B";
 		entityA.b = entityB;
 		session.persist( entityA );
 
@@ -437,10 +436,14 @@ public class DetachedReferenceInitializationDelayedFetchTest {
 		assertThat( Hibernate.isInitialized( entityB ) ).isEqualTo( wasDetachedInitialized );
 		assertThat( result.b ).isSameAs( entityB );
 
-		final var id = session.getSessionFactory().getPersistenceUnitUtil().getIdentifier( managedB );
-		final var reference = session.getReference( EntityB.class, id );
-		assertThat( Hibernate.isInitialized( reference ) ).isEqualTo( wasManagedInitialized );
-		assertThat( reference ).isNotSameAs( entityB );
+		if ( bId == null ) {
+			assertThat( Hibernate.isInitialized( managedB ) ).isSameAs( wasManagedInitialized );
+		}
+		else {
+			// We cannot create a proxy for the non-enhanced case
+			assertThat( Hibernate.isInitialized( managedB ) ).isTrue();
+		}
+		assertThat( managedB ).isNotSameAs( entityB );
 	}
 
 	@Entity(name = "EntityA")
@@ -449,9 +452,14 @@ public class DetachedReferenceInitializationDelayedFetchTest {
 		private Long id;
 		@Column(name = "b_id")
 		private Long bId;
-		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumn(name = "b_id", insertable = false, updatable = false)
-		private EntityB b;
+		@Column(name = "b_type")
+		private String bType;
+		@Any(fetch = FetchType.EAGER)
+		@AnyKeyJavaClass(Long.class)
+		@JoinColumn(name = "b_id", insertable = false, updatable = false) //the foreign key column
+		@Column(name = "b_type", insertable = false, updatable = false)   //the discriminator column
+		@AnyDiscriminatorValue(discriminator = "B", entity = EntityB.class)
+		private Object b;
 	}
 
 	@Entity(name = "EntityB")

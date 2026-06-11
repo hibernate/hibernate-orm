@@ -54,6 +54,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected final boolean affectedByFilter;
 	protected final boolean keyIsEager;
 	protected final boolean hasLazySubInitializer;
+	protected final boolean isReadOnly;
 
 	public static class EntitySelectFetchInitializerData extends InitializerData {
 		// per-row state
@@ -98,6 +99,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			this.keyIsEager = initializer.isEager();
 			this.hasLazySubInitializer = !initializer.isEager() || initializer.hasLazySubInitializers();
 		}
+		this.isReadOnly = toOneMapping.isReadOnly();
 	}
 
 	@Override
@@ -153,11 +155,35 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		initialize( data );
 	}
 
+	protected boolean resolveIdentifier(Object instance, Data data) {
+		final boolean identifierResolved;
+		if ( instance == null && !isReadOnly ) {
+			data.entityIdentifier = null;
+			identifierResolved = true;
+		}
+		else if ( isReadOnly ) {
+			// When the mapping is read-only, we can't trust the state of the persistence context
+			resolveKey( data );
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			data.entityIdentifier = keyAssembler.assemble( rowProcessingState );
+			identifierResolved = true;
+		}
+		else {
+			final var rowProcessingState = data.getRowProcessingState();
+			final var session = rowProcessingState.getSession();
+			final var entityDescriptor = getEntityDescriptor();
+			data.entityIdentifier = entityDescriptor.getIdentifier( instance, session );
+			assert data.entityIdentifier != null;
+			identifierResolved = false;
+		}
+		return identifierResolved;
+	}
+
 	@Override
 	public void resolveInstance(Object instance, Data data) {
-		if ( instance == null ) {
-			data.setState(  State.MISSING );
-			data.entityIdentifier = null;
+		final boolean identifierResolved = resolveIdentifier( instance, data );
+		if ( data.entityIdentifier == null ) {
+			data.setState( State.MISSING );
 			data.setInstance( null );
 		}
 		else {
@@ -167,23 +193,19 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
 			if ( lazyInitializer == null ) {
 				data.setState( State.INITIALIZED );
-				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, session );
 			}
 			else if ( lazyInitializer.isUninitialized() ) {
 				data.setState( State.RESOLVED );
-				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 			}
 			else {
 				data.setState( State.INITIALIZED );
-				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 			}
 
 			final var entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
-			final var entityHolder = persistenceContext.getEntityHolder(
-					entityKey
-			);
+			final var entityHolder = persistenceContext.getEntityHolder( entityKey );
 
-			if ( entityHolder == null || entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
+			if ( entityHolder == null || instance == null
+					|| entityHolder.getEntity() != instance && entityHolder.getProxy() != instance ) {
 				// the existing entity instance is detached or transient
 				if ( entityHolder != null ) {
 					final var managed = entityHolder.getManagedObject();
@@ -199,12 +221,12 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 				data.setInstance( instance );
 			}
 
-			if ( keyIsEager ) {
+			if ( keyIsEager && !identifierResolved ) {
 				final Initializer<?> initializer = keyAssembler.getInitializer();
 				assert initializer != null;
 				initializer.resolveInstance( data.entityIdentifier, rowProcessingState );
 			}
-			else if ( rowProcessingState.needsResolveState() ) {
+			else if ( rowProcessingState.needsResolveState() && !identifierResolved ) {
 				// Resolve the state of the identifier if result caching is enabled and this is not a query cache hit
 				keyAssembler.resolveState( rowProcessingState );
 			}

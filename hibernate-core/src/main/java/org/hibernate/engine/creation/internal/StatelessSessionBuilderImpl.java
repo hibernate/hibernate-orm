@@ -1,5 +1,6 @@
 package org.hibernate.engine.creation.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.engine.creation.internal.options.StatelessOptions;
@@ -35,11 +36,13 @@ public abstract class StatelessSessionBuilderImpl
 	// StatelessSessionBuilder
 
 	@Override
+	@Nonnull
 	public StatelessSession open() {
 		return openStatelessSession();
 	}
 
 	@Override
+	@Nonnull
 	public StatelessSession openStatelessSession() {
 		CORE_LOGGER.openingStatelessSession( options.getTenantIdentifierValue() );
 		return createStatelessSession( options );
@@ -49,7 +52,8 @@ public abstract class StatelessSessionBuilderImpl
 
 	@Override
 	@Deprecated
-	public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
+	@Nonnull
+	public StatelessSessionBuilder statementInspector(@Nonnull StatementInspector statementInspector) {
 		options.statementInspector( statementInspector );
 		return this;
 	}

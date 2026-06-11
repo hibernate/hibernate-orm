@@ -433,7 +433,6 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 						else {
 							nclob.free();
 						}
-						nclob.free();
 					}
 					catch (SQLException e) {
 						RESOURCE_REGISTRY_LOGGER.unableToFreeLob( NClob.class.getSimpleName(), e.getMessage() );

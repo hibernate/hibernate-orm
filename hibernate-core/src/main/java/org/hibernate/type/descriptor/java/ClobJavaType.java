@@ -4,8 +4,11 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.Writer;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -18,6 +21,7 @@ import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.proxy.ClobProxy;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -138,22 +142,29 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 			return null;
 		}
 		else {
+			final ResourceRegistry resourceRegistry = options.getResourceRegistry();
 			final LobCreator lobCreator = options.getLobCreator();
+
+			final Clob result;
 			if ( value instanceof Clob clob ) {
-				return lobCreator.wrap( clob );
+				result = lobCreator.wrap( clob );
 			}
 			else if ( value instanceof String string ) {
-				return lobCreator.createClob( string );
+				result = lobCreator.createClob( string );
 			}
 			else if ( value instanceof Reader reader ) {
-				return lobCreator.createClob( extractString( reader ) );
+				result = lobCreator.createClob( extractString( reader ) );
 			}
 			else if ( value instanceof CharacterStream stream ) {
-				return lobCreator.createClob( stream.asReader(), stream.getLength() );
+				result = lobCreator.createClob( stream.asReader(), stream.getLength() );
 			}
 			else {
 				throw unknownWrap( value.getClass() );
 			}
+
+			final ReleasableClob releasableClob = new ReleasableClob( resourceRegistry, result );
+			resourceRegistry.register( releasableClob );
+			return result;
 		}
 	}
 
@@ -182,6 +193,82 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 
 		public Clob assemble(Serializable cached, SharedSessionContract session) {
 			throw new UnsupportedOperationException( "Clobs are not cacheable" );
+		}
+	}
+
+	public record ReleasableClob(ResourceRegistry resourceRegistry, Clob clob) implements Clob {
+		@Override
+		public long length() throws SQLException {
+			return clob.length();
+		}
+
+		@Override
+		public String getSubString(long pos, int length) throws SQLException {
+			return clob.getSubString( pos, length );
+		}
+
+		@Override
+		public Reader getCharacterStream() throws SQLException {
+			return clob.getCharacterStream();
+		}
+
+		@Override
+		public InputStream getAsciiStream() throws SQLException {
+			return clob.getAsciiStream();
+		}
+
+		@Override
+		public long position(String searchstr, long start) throws SQLException {
+			return clob.position( searchstr, start );
+		}
+
+		@Override
+		public long position(Clob searchstr, long start) throws SQLException {
+			return clob.position( searchstr, start );
+		}
+
+		@Override
+		public int setString(long pos, String str) throws SQLException {
+			return clob.setString( pos, str );
+		}
+
+		@Override
+		public int setString(long pos, String str, int offset, int len) throws SQLException {
+			return clob.setString( pos, str, offset, len );
+		}
+
+		@Override
+		public OutputStream setAsciiStream(long pos) throws SQLException {
+			return clob.setAsciiStream( pos );
+		}
+
+		@Override
+		public Writer setCharacterStream(long pos) throws SQLException {
+			return clob.setCharacterStream( pos );
+		}
+
+		@Override
+		public void truncate(long len) throws SQLException {
+			clob.truncate( len );
+		}
+
+		@Override
+		public void free() throws SQLException {
+			try {
+				doFree();
+			}
+			finally {
+				resourceRegistry.release( this );
+			}
+		}
+
+		public void doFree() throws SQLException {
+			clob.free();
+		}
+
+		@Override
+		public Reader getCharacterStream(long pos, long length) throws SQLException {
+			return clob.getCharacterStream( pos, length );
 		}
 	}
 }

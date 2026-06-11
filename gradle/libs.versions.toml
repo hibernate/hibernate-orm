@@ -89,9 +89,9 @@ pgsql = "42.7.11"
 edb = "42.7.3.5"
 gaussdb = "506.0.0.b058"
 sybase = "1.3.1"
-teradata = "20.00.00.56"
+teradata = "20.00.00.57"
 altibase = "8.1.0.0.3"
-spanner = "2.35.5"
+spanner = "2.40.0"
 
 # Maven
 maven = "3.9.16"
@@ -108,12 +108,12 @@ slf4j = "2.0.18"
 # Asciidocs
 hibernate-asciidoctor-theme = "6.1.2.Final"
 hibernate-extensions = "3.2.1.Final"
-asciidoctorj = "3.0.0"
+asciidoctorj = "3.0.1"
 
 # Compilation (static checks)
 jetbrainsAnnotations = "26.1.0"
-errorprone = "2.49.0"
-nullaway = "0.13.4"
+errorprone = "2.50.0"
+nullaway = "0.13.6"
 ## For custom NullAway LibraryModels
 guava = "33.6.0-jre"
 
@@ -123,7 +123,7 @@ customUserData = "2.6.0"
 asciidoctor = "4.0.5"
 spotless = "8.6.0"
 errorpronePlugin = "5.1.0"
-nullawayPlugin = "3.0.0"
+nullawayPlugin = "3.1.0"
 pluginPublish = "2.1.1"
 kotlin = "2.4.0"
 mavenPluginDev = "1.0.3"

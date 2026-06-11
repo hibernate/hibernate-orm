@@ -133,11 +133,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	protected AbstractCommonQueryContract(AbstractCommonQueryContract original) {
-		this.session = original.session;
-		this.queryOptions = original.queryOptions;
-	}
-
 	protected AbstractCommonQueryContract(
 			SharedSessionContractImplementor session,
 			MutableQueryOptions queryOptions) {
@@ -345,6 +340,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	// Hints
 
 	@Override
+	@Nonnull
 	public final Map<String, Object> getHints() {
 		// According to the JPA spec, this should force a rollback, but that's insane :)
 		// If the TCK ever adds a check for this, we may need to change this behavior
@@ -965,20 +961,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	private <P> Type<P> getParamType(Class<P> javaType) {
 		final var basicType = getTypeConfiguration().standardBasicTypeForJavaType( javaType );
-		if ( basicType != null ) {
-			return basicType;
-		}
-		else {
-			final var managedDomainType =
-					getSessionFactory().getJpaMetamodel()
-							.managedType( javaType );
-			if ( managedDomainType != null ) {
-				return managedDomainType;
-			}
-			else {
-				throw new HibernateException( "Unable to determine Type: " + javaType.getName() );
-			}
-		}
+		return basicType != null ? basicType : getSessionFactory().getJpaMetamodel().managedType( javaType );
 	}
 
 	protected QueryParameterBinding<?> locateBinding(Parameter<?> parameter) {
@@ -1070,6 +1053,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		else {
 			final var binding = getQueryParameterBindings().getBinding( name );
 			if ( multipleBinding( binding.getQueryParameter(), value ) ) {
+				if ( value == null ) {
+					throw new IllegalArgumentException( "Null value not allowed for multi-valued parameter ':" + name + "'" );
+				}
 				setParameterList( name, (Collection<?>) value );
 			}
 			else {
@@ -1125,6 +1111,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		else {
 			final var binding = getQueryParameterBindings().getBinding( position );
 			if ( multipleBinding( binding.getQueryParameter(), value ) ) {
+				if ( value == null ) {
+					throw new IllegalArgumentException( "Null value not allowed for multi-valued parameter '?" + position + "'" );
+				}
 				setParameterList( position, (Collection<?>) value );
 			}
 			else {
@@ -1607,9 +1596,15 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				final var returnType = getter.getReturnTypeClass();
 				final Object object = getter.get( bean );
 				if ( Collection.class.isAssignableFrom( returnType ) ) {
+					if ( object == null ) {
+						throw new IllegalArgumentException( "Null value not allowed for multi-valued parameter ':" + paramName + "'" );
+					}
 					setParameterList( paramName, (Collection<?>) object );
 				}
 				else if ( returnType.isArray() ) {
+					if ( object == null ) {
+						throw new IllegalArgumentException( "Null value not allowed for array-valued parameter ':" + paramName + "'" );
+					}
 					setParameterList( paramName, (Object[]) object );
 				}
 				else {

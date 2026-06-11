@@ -34,12 +34,8 @@ import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import java.time.Instant;
 import java.util.Calendar;
@@ -66,10 +62,6 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	public AbstractQuery(SharedSessionContractImplementor session) {
 		super( session );
-	}
-
-	protected AbstractQuery(AbstractQuery<T> original) {
-		super( original );
 	}
 
 	protected AbstractQuery(SharedSessionContractImplementor session, MutableQueryOptions queryOptions) {
@@ -813,53 +805,5 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 	public QueryImplementor<T> setParameter(int position, @Nullable Date value, @Nonnull TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Utilities
-
-	protected int getIntegerLiteral(JpaExpression<Number> expression, int defaultValue) {
-		if ( expression == null ) {
-			return defaultValue;
-		}
-		else if ( expression instanceof SqmLiteral<Number> numericLiteral ) {
-			return numericLiteral.getLiteralValue().intValue();
-		}
-		else if ( expression instanceof SqmParameter<Number> parameterExpression ) {
-			final Number number = getParameterValue( parameterExpression );
-			return number == null ? defaultValue : number.intValue();
-		}
-		else {
-			throw new IllegalArgumentException( "Not an integer literal: " + expression );
-		}
-	}
-
-	protected int getMaxRows(SqmSelectStatement<?> selectStatement, int size) {
-		final var fetchExpression = selectStatement.getFetch();
-		if ( fetchExpression != null ) {
-			final var fetchValue = fetchValue( fetchExpression );
-			if ( fetchValue != null ) {
-				// Note that we can never have ties because this is only used when we deduplicate results
-				return switch ( selectStatement.getFetchClauseType() ) {
-					case ROWS_ONLY, ROWS_WITH_TIES -> fetchValue.intValue();
-					case PERCENT_ONLY, PERCENT_WITH_TIES ->
-							(int) Math.ceil( (((double) size) * fetchValue.doubleValue()) / 100d );
-				};
-			}
-		}
-		return -1;
-	}
-
-	private Number fetchValue(JpaExpression<Number> expression) {
-		if ( expression instanceof SqmLiteral<Number> numericLiteral ) {
-			return numericLiteral.getLiteralValue();
-		}
-		else if ( expression instanceof SqmParameter<Number> numericParameter ) {
-			return getParameterValue( numericParameter );
-		}
-		else {
-			throw new IllegalArgumentException( "Can't get max rows value from: " + expression );
-		}
 	}
 }

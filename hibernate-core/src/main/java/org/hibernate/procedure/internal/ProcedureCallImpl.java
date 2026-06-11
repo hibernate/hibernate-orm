@@ -1648,12 +1648,16 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
+	@SuppressWarnings("removal")
 	public int getMaxResults() {
 		checkNotClosed();
 		return super.getMaxResults();
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
+	@SuppressWarnings("removal")
 	public int getFirstResult() {
 		checkNotClosed();
 		return super.getFirstResult();
@@ -1661,6 +1665,8 @@ public class ProcedureCallImpl<R>
 
 	@Nonnull
 	@Override
+	@Deprecated
+	@SuppressWarnings("deprecation")
 	public FlushModeType getFlushMode() {
 		checkNotClosed();
 		return super.getFlushMode();

@@ -21,6 +21,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import static org.hibernate.ConnectionAcquisitionMode.IMMEDIATELY;
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
+import static org.hibernate.ConnectionReleaseMode.AFTER_TRANSACTION;
 import static org.hibernate.ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION;
 import static org.hibernate.ConnectionReleaseMode.ON_CLOSE;
 import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONNECTION_LOGGER;
@@ -136,6 +137,26 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			else {
 				CONNECTION_LOGGER.initiatingConnectionReleaseAfterStatement( hashCode() );
 				releaseConnectionIfNeeded();
+			}
+		}
+	}
+
+	@Override
+	public void afterStatement(boolean treatAfterTransactionAsAfterStatement) {
+		if ( !treatAfterTransactionAsAfterStatement ) {
+			afterStatement();
+		}
+		else {
+			super.afterStatement(treatAfterTransactionAsAfterStatement);
+			var releaseMode = connectionHandlingMode.getReleaseMode();
+			if ( releaseMode == AFTER_STATEMENT || releaseMode == AFTER_TRANSACTION  ) {
+				if ( getResourceRegistry().hasRegisteredResources() ) {
+					CONNECTION_LOGGER.skipConnectionReleaseAfterStatementDueToResources( hashCode() );
+				}
+				else {
+					CONNECTION_LOGGER.initiatingConnectionReleaseAfterStatement( hashCode() );
+					releaseConnectionIfNeeded();
+				}
 			}
 		}
 	}

@@ -49,6 +49,10 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	}
 
 	@Override
+	public void afterStatement(boolean treatAfterTransactionAsAfterStatement) {
+	}
+
+	@Override
 	public void beforeTransactionCompletion() {
 	}
 

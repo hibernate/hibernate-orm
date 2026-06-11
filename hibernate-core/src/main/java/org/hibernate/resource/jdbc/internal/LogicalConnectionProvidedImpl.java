@@ -46,6 +46,11 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	}
 
 	@Override
+	public void afterStatement() {
+
+	}
+
+	@Override
 	public boolean isOpen() {
 		return !closed;
 	}

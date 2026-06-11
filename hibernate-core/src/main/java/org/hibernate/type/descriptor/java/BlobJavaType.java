@@ -6,6 +6,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
@@ -16,9 +17,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.proxy.BlobProxy;
-import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.internal.StreamBackedBinaryStream;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -170,30 +171,108 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 			return null;
 		}
 		else {
-			final LobCreator lobCreator = options.getLobCreator();
-			if ( value instanceof Blob blob ) {
-				return lobCreator.wrap( blob );
+			final var result = createLob( value, options );
+			if ( options.getDialect().supportsUnboundedLobLocatorMaterialization() ) {
+				return result;
 			}
-			else if ( value instanceof byte[] bytes ) {
-				return lobCreator.createBlob( bytes );
-			}
-			else if ( value instanceof BinaryStream binaryStream) {
-				return binaryStream.asBlob( lobCreator );
-			}
-			else if ( value instanceof InputStream inputStream ) {
-				// A JDBC Blob object needs to know its length, but
-				// there's no way to get an accurate length from an
-				// InputStream without reading the whole stream
-				return lobCreator.createBlob( extractBytes( inputStream ) );
-			}
-			else {
-				throw unknownWrap( value.getClass() );
-			}
+			final var resourceRegistry = options.getResourceRegistry();
+			final var releasableBlob = new ReleasableBlob( resourceRegistry, result );
+			resourceRegistry.register( releasableBlob );
+			return releasableBlob;
+		}
+	}
+
+	private <X> Blob createLob(X value, WrapperOptions options) {
+		final var lobCreator = options.getLobCreator();
+		if ( value instanceof Blob blob ) {
+			return lobCreator.wrap( blob );
+		}
+		else if ( value instanceof byte[] bytes ) {
+			return lobCreator.createBlob( bytes );
+		}
+		else if ( value instanceof BinaryStream binaryStream ) {
+			return binaryStream.asBlob( lobCreator );
+		}
+		else if ( value instanceof InputStream inputStream ) {
+			// A JDBC Blob object needs to know its length, but
+			// there's no way to get an accurate length from an
+			// InputStream without reading the whole stream
+			return lobCreator.createBlob( extractBytes( inputStream ) );
+		}
+		else {
+			throw unknownWrap( value.getClass() );
 		}
 	}
 
 	@Override
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultLobLength();
+	}
+
+	public record ReleasableBlob(ResourceRegistry resourceRegistry, Blob blob) implements Blob {
+
+		@Override
+		public InputStream getBinaryStream() throws SQLException {
+			return blob.getBinaryStream();
+		}
+
+		@Override
+		public byte[] getBytes(long pos, int length) throws SQLException {
+			return blob.getBytes( pos, length );
+		}
+
+		@Override
+		public InputStream getBinaryStream(long pos, long length) throws SQLException {
+			return blob.getBinaryStream( pos, length );
+		}
+
+		@Override
+		public long length() throws SQLException {
+			return blob.length();
+		}
+
+		@Override
+		public long position(byte[] pattern, long start) throws SQLException {
+			return blob.position( pattern, start );
+		}
+
+		@Override
+		public long position(Blob pattern, long start) throws SQLException {
+			return blob.position( pattern, start );
+		}
+
+		@Override
+		public int setBytes(long pos, byte[] bytes) throws SQLException {
+			return blob.setBytes( pos, bytes );
+		}
+
+		@Override
+		public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+			return blob.setBytes( pos, bytes, offset, len );
+		}
+
+		@Override
+		public OutputStream setBinaryStream(long pos) throws SQLException {
+			return blob.setBinaryStream( pos );
+		}
+
+		@Override
+		public void truncate(long len) throws SQLException {
+			blob.truncate( len );
+		}
+
+		@Override
+		public void free() throws SQLException {
+			try {
+				doFree();
+			}
+			finally {
+				resourceRegistry.release( this );
+			}
+		}
+
+		public void doFree() throws SQLException {
+			blob.free();
+		}
 	}
 }

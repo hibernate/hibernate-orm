@@ -9,6 +9,8 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.resource.jdbc.ResourceRegistry;
+import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -107,6 +109,11 @@ public abstract class AbstractDescriptorTest<T> {
 		@Override
 		public FormatMapper getJsonFormatMapper() {
 			return null;
+		}
+
+		@Override
+		public ResourceRegistry getResourceRegistry() {
+			return new ResourceRegistryStandardImpl();
 		}
 	};
 

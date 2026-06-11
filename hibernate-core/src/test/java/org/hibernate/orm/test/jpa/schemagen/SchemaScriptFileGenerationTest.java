@@ -10,8 +10,7 @@ import jakarta.persistence.Table;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,7 +92,12 @@ public class SchemaScriptFileGenerationTest {
 	}
 
 	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+			@Override
+			public List<String> getManagedClassNames() {
+				return List.of( TestEntity.class.getName() );
+			}
+		};
 	}
 
 	private Map<String, Object> getConfig() {
@@ -102,10 +106,6 @@ public class SchemaScriptFileGenerationTest {
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
-		ArrayList<Class<?>> classes = new ArrayList<>();
-
-		classes.addAll( Arrays.asList( new Class<?>[] {TestEntity.class} ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
 }

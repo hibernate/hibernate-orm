@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.jpa.schemagen;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import jakarta.persistence.EntityManager;
@@ -13,6 +14,7 @@ import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
@@ -39,6 +41,16 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Item.class };
+	}
+
+	@Override
+	protected PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
+		return new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+			@Override
+			public List<String> getManagedClassNames() {
+				return List.of( Item.class.getName() );
+			}
+		};
 	}
 
 	@Test

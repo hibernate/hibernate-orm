@@ -176,6 +176,7 @@ var entityManager = entityManagerFactory.createEntityManager(
 		new EffectiveAt(now().minus(1,YEARS)),
 		ReadOnlyMode.READ_ONLY
 );
+----
 
 [[safe-mode]]
 == Safe Mode Validator
@@ -198,12 +199,7 @@ Safe mode is disabled by default and can be enabled using:
 hibernate.query.safe_mode_enabled=true
 ----
 
-When safe mode is enabled and an unsafe operation is attempted, Hibernate will throw an exception indicating which function or operation is not allowed.
-
-
-
-----
-
+When safe mode is enabled and an unsafe operation is attempted, Hibernate throws an exception indicating which function or operation is not allowed.
 
 
 [[bidir-mgmt]]
@@ -214,3 +210,16 @@ Hibernate can now optionally manage bidirectional associations in the managed ob
 Uninitialized lazy inverse collections are not initialized solely for bidirectionality management. This is also the important second-level cache boundary: initialized inverse collections participate in normal flush processing and collection cache invalidation, but uninitialized inverse collections are not dirtied or evicted by bidirectionality management alone. If an application changes only the owning side while a cacheable inverse collection remains unloaded, `hibernate.cache.auto_evict_collection_cache=true` is still the setting which evicts that inverse collection cache entry.
 
 NOTE: The deprecated bytecode-enhancement setting `hibernate.enhancer.enableAssociationManagement=true` is also recognized as an alias when the new setting is not specified, making migration to the runtime model straightforward.
+
+[[bulk-select]]
+== Bulk Select (Subselect) Fetching
+
+The following major enhancements were made to _bulk select fetching_ (what we previously called "subselect" fetching).
+
+- To-one associations are now eligible for bulk select fetching. Previously, only many-valued associations could be fetched in bulk.
+
+- `FetchMethod` was introduced as a JPA 4 `FetchOption` enumerating the basic fetching methods `SELECT`, `JOIN`, and `BULK_SELECT`. To request bulk select fetching for an `AttributeNode` of an `EntityGraph`, call `node.addOption(FetchMethod.BULK_SELECT)`.
++
+Note that batch fetching may be requested using the standard JPA 4 fetch option `BatchSize`.
+
+These changes finally make bulk select fetching a first-class citizen.

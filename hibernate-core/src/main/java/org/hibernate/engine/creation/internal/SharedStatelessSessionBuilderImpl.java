@@ -1,5 +1,6 @@
 package org.hibernate.engine.creation.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.SessionException;
 import org.hibernate.SharedStatelessSessionBuilder;
 import org.hibernate.StatelessSession;
@@ -45,6 +46,7 @@ public abstract class SharedStatelessSessionBuilderImpl
 	// SharedStatelessSessionBuilder
 
 	@Override
+	@Nonnull
 	public StatelessSessionImplementor open() {
 		CORE_LOGGER.openingStatelessSession( options.getTenantIdentifierValue() );
 		if ( original.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
@@ -60,30 +62,35 @@ public abstract class SharedStatelessSessionBuilderImpl
 	}
 
 	@Override
+	@Nonnull
 	public StatelessSession openStatelessSession() {
 		return open();
 	}
 
 	@Override
+	@Nonnull
 	public SharedStatelessSessionBuilder connection() {
 		options.shareTransactionContext();
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedStatelessSessionBuilder interceptor() {
 		options.useInterceptor( original.getInterceptor() );
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public SharedStatelessSessionBuilder statementInspector() {
 		options.statementInspector( original.getJdbcSessionContext().getStatementInspector() );
 		return this;
 	}
 
 	@Override @Deprecated
-	public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
+	@Nonnull
+	public StatelessSessionBuilder statementInspector(@Nonnull StatementInspector statementInspector) {
 		options.statementInspector( statementInspector );
 		return this;
 	}

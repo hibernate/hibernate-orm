@@ -4,7 +4,6 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.SoftDeleteType;
@@ -13,6 +12,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
@@ -80,7 +80,7 @@ public abstract sealed class Collection
 	private String comparatorClassName;
 	private boolean orphanDelete;
 	private int batchSize = -1;
-	private FetchMode fetchMode;
+	private FetchStyle fetchStyle;
 	private boolean optimisticLocked = true;
 
 	private String typeName;
@@ -163,7 +163,7 @@ public abstract sealed class Collection
 		this.comparatorClassName = original.comparatorClassName;
 		this.orphanDelete = original.orphanDelete;
 		this.batchSize = original.batchSize;
-		this.fetchMode = original.fetchMode;
+		this.fetchStyle = original.fetchStyle;
 		this.optimisticLocked = original.optimisticLocked;
 		this.typeName = original.typeName;
 		this.typeParameters = original.typeParameters == null ? null : new Properties(original.typeParameters);
@@ -378,13 +378,13 @@ public abstract sealed class Collection
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return fetchMode;
+	public FetchStyle getFetchStyle() {
+		return fetchStyle;
 	}
 
 	@Override
-	public void setFetchMode(FetchMode fetchMode) {
-		this.fetchMode = fetchMode;
+	public void setFetchStyle(FetchStyle fetchStyle) {
+		this.fetchStyle = fetchStyle;
 	}
 
 	public void validate(MappingContext mappingContext) throws MappingException {

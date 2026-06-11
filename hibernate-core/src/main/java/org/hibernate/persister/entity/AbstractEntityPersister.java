@@ -8,7 +8,6 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -44,6 +43,7 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
@@ -379,7 +379,7 @@ public abstract class AbstractEntityPersister
 	private final String[][] subclassPropertyColumnNameClosure;
 //	private final String[][] subclassPropertyColumnReaderClosure;
 //	private final String[][] subclassPropertyColumnReaderTemplateClosure;
-	private final FetchMode[] subclassPropertyFetchModeClosure;
+	private final FetchStyle[] subclassPropertyFetchStyleClosure;
 
 	private final StateManagement stateManagement;
 
@@ -686,7 +686,7 @@ public abstract class AbstractEntityPersister
 		final ArrayList<String[]> propColumnAliases = new ArrayList<>();
 //		final ArrayList<String[]> propColumnReaders = new ArrayList<>();
 //		final ArrayList<String[]> propColumnReaderTemplates = new ArrayList<>();
-		final ArrayList<FetchMode> joinedFetchesList = new ArrayList<>();
+		final ArrayList<FetchStyle> joinedFetchesList = new ArrayList<>();
 
 		if ( persistentClass.hasSubclasses() ) {
 			for ( var selectable : persistentClass.getIdentifier().getSelectables() ) {
@@ -742,7 +742,7 @@ public abstract class AbstractEntityPersister
 //			propColumnReaderTemplates.add( readerTemplates );
 //			templates.add( formulaTemplates );
 
-			joinedFetchesList.add( prop.getValue().getFetchMode() );
+			joinedFetchesList.add( prop.getValue().getFetchStyle() );
 		}
 		subclassColumnAliasClosure = toStringArray( aliases );
 		subclassFormulaAliasClosure = toStringArray( formulaAliases );
@@ -755,10 +755,10 @@ public abstract class AbstractEntityPersister
 //		subclassPropertyColumnReaderClosure = to2DStringArray( propColumnReaders );
 //		subclassPropertyColumnReaderTemplateClosure = to2DStringArray( propColumnReaderTemplates );
 
-		subclassPropertyFetchModeClosure = new FetchMode[joinedFetchesList.size()];
+		subclassPropertyFetchStyleClosure = new FetchStyle[joinedFetchesList.size()];
 		int j = 0;
-		for ( var fetchMode : joinedFetchesList) {
-			subclassPropertyFetchModeClosure[j++] = fetchMode;
+		for ( var fetchStyle : joinedFetchesList) {
+			subclassPropertyFetchStyleClosure[j++] = fetchStyle;
 		}
 
 		useReferenceCacheEntries = shouldUseReferenceCacheEntries( factoryOptions );
@@ -2438,8 +2438,8 @@ public abstract class AbstractEntityPersister
 		return hasFormulaProperties;
 	}
 
-	public FetchMode getFetchMode(int i) {
-		return subclassPropertyFetchModeClosure[i];
+	public FetchStyle getFetchStyle(int i) {
+		return subclassPropertyFetchStyleClosure[i];
 	}
 
 	public Type getSubclassPropertyType(int i) {
@@ -6138,7 +6138,7 @@ public abstract class AbstractEntityPersister
 					this,
 					propertyAccess,
 					cascadeStyle,
-					getFetchMode( stateArrayPosition ),
+					getFetchStyle( stateArrayPosition ),
 					creationProcess
 			);
 		}
@@ -6238,7 +6238,7 @@ public abstract class AbstractEntityPersister
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
 			CascadeStyle cascadeStyle,
-			FetchMode fetchMode,
+			FetchStyle fetchStyle,
 			MappingModelCreationProcess creationProcess) {
 		return MappingModelCreationHelper.buildPluralAttributeMapping(
 				attrName,
@@ -6248,7 +6248,7 @@ public abstract class AbstractEntityPersister
 				declaringType,
 				propertyAccess,
 				cascadeStyle,
-				fetchMode,
+				fetchStyle,
 				creationProcess
 		);
 	}

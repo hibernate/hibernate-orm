@@ -4,6 +4,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.Remove;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -34,9 +36,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see FetchMode
  * @see FetchProfile
+ *
+ * @apiNote Since {@link FetchMode} is deprecated, and since its name
+ *          collides with {@link jakarta.persistence.Fetch}, this
+ *          annotation will eventually be deprecated and removed.
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Remove // see the @apiNote
 public @interface Fetch {
 	/**
 	 * The method that should be used to fetch the association.

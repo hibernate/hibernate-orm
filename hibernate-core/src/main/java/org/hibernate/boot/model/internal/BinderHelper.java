@@ -11,7 +11,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.CascadeType;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.AnyDiscriminatorValue;
@@ -22,6 +21,7 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
@@ -874,10 +874,10 @@ public class BinderHelper {
 	}
 
 
-	public static FetchMode getFetchMode(FetchType fetch) {
+	public static FetchStyle getFetchStyle(FetchType fetch) {
 		return switch ( fetch ) {
-			case EAGER -> FetchMode.JOIN;
-			case LAZY -> FetchMode.SELECT;
+			case EAGER -> FetchStyle.JOIN;
+			case LAZY -> FetchStyle.SELECT;
 			case DEFAULT -> throw new UnsupportedOperationException( "Not implemented yet - decide how to handle" );
 		};
 	}

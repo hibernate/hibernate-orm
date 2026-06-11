@@ -9,6 +9,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
+import org.hibernate.FetchMethod;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
@@ -8942,6 +8943,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							if ( profileFetch != null ) {
 								fetchTiming = profileFetch.getTiming();
 								joined = joined || profileFetch.getMethod() == FetchStyle.JOIN;
+								if ( profileFetch.getMethod() == FetchStyle.SUBSELECT ) {
+									registerFetchOptions( fetchablePath,
+											FetchOptions.of( null, null, null, FetchMethod.BULK_SELECT ) );
+								}
 								if ( shouldExplicitFetch( maxDepth, fetchable ) ) {
 									explicitFetch = true;
 								}

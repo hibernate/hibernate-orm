@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.reveng.internal.core.binder;
 
-import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -72,11 +72,11 @@ public class BinderUtils {
 	}
 
 	static void updateFetchMode(Fetchable value, String fetchMode) {
-		if(FetchMode.JOIN.toString().equalsIgnoreCase(fetchMode)) {
-			value.setFetchMode(FetchMode.JOIN);
+		if(FetchStyle.JOIN.toString().equalsIgnoreCase(fetchMode)) {
+			value.setFetchStyle(FetchStyle.JOIN);
 		}
 		else {
-			value.setFetchMode(FetchMode.SELECT);
+			value.setFetchStyle(FetchStyle.SELECT);
 		}
 	}
 

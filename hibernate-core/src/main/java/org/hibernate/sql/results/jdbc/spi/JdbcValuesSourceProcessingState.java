@@ -60,5 +60,7 @@ public interface JdbcValuesSourceProcessingState {
 			CollectionKey collectionKey,
 			LoadingCollectionEntry loadingCollectionEntry);
 
+	void registerSubselects();
+
 	void finishUp(boolean registerSubselects);
 }

@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.reveng.internal.export.hbm;
 
-import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
@@ -317,8 +317,8 @@ public class Cfg2HbmTool {
 		return fetch != null && !"default".equals(fetch);
 	}
 	public String getFetchMode(Property property) {
-		FetchMode fetchMode = property.getValue().getFetchMode();
-		return (fetchMode== null) ? null : fetchMode.toString().toLowerCase();
+		FetchStyle fetchStyle = property.getValue().getFetchStyle();
+		return (fetchStyle == null) ? null : fetchStyle.toString().toLowerCase();
 	}
 
 

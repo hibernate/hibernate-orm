@@ -40,14 +40,14 @@ public class BatchFetchStrategyHelperTest {
 	@Test
 	public void testManyToOneDefaultFetch(SessionFactoryScope factoryScope) {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityDefault", factoryScope.getSessionFactory() );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityDefault", factoryScope.getSessionFactory() );
-		Assertions.assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "otherEntityDefault", factoryScope.getSessionFactory() );
+		Assertions.assertSame( FetchStyle.JOIN, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				factoryScope.getSessionFactory()
 		);
-		// batch size is ignored with org.hibernate.FetchMode.JOIN
+		// batch size is ignored with FetchStyle.JOIN
 		Assertions.assertSame( FetchStyle.JOIN, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
@@ -60,14 +60,14 @@ public class BatchFetchStrategyHelperTest {
 	@Test
 	public void testManyToOneJoinFetch(SessionFactoryScope factoryScope) {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityJoin", factoryScope.getSessionFactory() );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityJoin", factoryScope.getSessionFactory() );
-		Assertions.assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "otherEntityJoin", factoryScope.getSessionFactory() );
+		Assertions.assertSame( FetchStyle.JOIN, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				factoryScope.getSessionFactory()
 		);
-		// batch size is ignored with org.hibernate.FetchMode.JOIN
+		// batch size is ignored with FetchStyle.JOIN
 		Assertions.assertSame( FetchStyle.JOIN, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
@@ -80,10 +80,10 @@ public class BatchFetchStrategyHelperTest {
 	@Test
 	public void testManyToOneSelectFetch(SessionFactoryScope factoryScope) {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntitySelect", factoryScope.getSessionFactory() );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntitySelect", factoryScope.getSessionFactory() );
-		Assertions.assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "otherEntitySelect", factoryScope.getSessionFactory() );
+		Assertions.assertSame( FetchStyle.SELECT, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				factoryScope.getSessionFactory()
 		);
@@ -99,10 +99,10 @@ public class BatchFetchStrategyHelperTest {
 	@Test
 	public void testCollectionDefaultFetch(SessionFactoryScope factoryScope) {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsDefault", factoryScope.getSessionFactory() );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsDefault", factoryScope.getSessionFactory() );
-		Assertions.assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "colorsDefault", factoryScope.getSessionFactory() );
+		Assertions.assertSame( FetchStyle.SELECT, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				factoryScope.getSessionFactory()
 		);
@@ -118,14 +118,14 @@ public class BatchFetchStrategyHelperTest {
 	@Test
 	public void testCollectionJoinFetch(SessionFactoryScope factoryScope) {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsJoin", factoryScope.getSessionFactory() );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsJoin", factoryScope.getSessionFactory() );
-		Assertions.assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "colorsJoin", factoryScope.getSessionFactory() );
+		Assertions.assertSame( FetchStyle.JOIN, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				factoryScope.getSessionFactory()
 		);
-		// batch size is ignored with org.hibernate.FetchMode.JOIN
+		// batch size is ignored with FetchStyle.JOIN
 		Assertions.assertSame( FetchStyle.JOIN, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
@@ -138,10 +138,10 @@ public class BatchFetchStrategyHelperTest {
 	@Test
 	public void testCollectionSelectFetch(SessionFactoryScope factoryScope) {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsSelect", factoryScope.getSessionFactory() );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsSelect", factoryScope.getSessionFactory() );
-		Assertions.assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "colorsSelect", factoryScope.getSessionFactory() );
+		Assertions.assertSame( FetchStyle.SELECT, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				factoryScope.getSessionFactory()
 		);
@@ -157,14 +157,14 @@ public class BatchFetchStrategyHelperTest {
 	@Test
 	public void testCollectionSubselectFetch(SessionFactoryScope factoryScope) {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsSubselect", factoryScope.getSessionFactory() );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsSubselect", factoryScope.getSessionFactory() );
-		Assertions.assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final FetchStyle mappingFetchStyle = determineFetchStyle( AnEntity.class, "colorsSubselect", factoryScope.getSessionFactory() );
+		Assertions.assertSame( FetchStyle.SELECT, mappingFetchStyle );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
-				fetchMode,
+				mappingFetchStyle,
 				associationType,
 				factoryScope.getSessionFactory()
 		);
-		// Batch size is ignored with FetchMode.SUBSELECT
+		// Batch size is ignored with FetchStyle.SUBSELECT
 		Assertions.assertSame( FetchStyle.SUBSELECT, fetchStyle );
 		final FetchTiming fetchTiming = FetchOptionsHelper.determineFetchTiming(
 				fetchStyle,
@@ -174,11 +174,11 @@ public class BatchFetchStrategyHelperTest {
 		Assertions.assertSame( FetchTiming.DELAYED, fetchTiming );
 	}
 
-	private org.hibernate.FetchMode determineFetchMode(Class<?> entityClass, String path, SessionFactoryImplementor sessionFactory) {
+	private FetchStyle determineFetchStyle(Class<?> entityClass, String path, SessionFactoryImplementor sessionFactory) {
 		AbstractEntityPersister entityPersister = (AbstractEntityPersister)
 				sessionFactory.getMappingMetamodel().getEntityDescriptor(entityClass.getName());
 		int index = entityPersister.getPropertyIndex( path );
-		return  entityPersister.getFetchMode( index );
+		return entityPersister.getFetchStyle( index );
 	}
 
 	private AssociationType determineAssociationType(

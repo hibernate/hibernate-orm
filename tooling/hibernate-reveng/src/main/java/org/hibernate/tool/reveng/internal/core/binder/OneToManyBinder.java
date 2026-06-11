@@ -4,7 +4,7 @@
  */
 package org.hibernate.tool.reveng.internal.core.binder;
 
-import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -140,7 +140,7 @@ class OneToManyBinder extends AbstractBinder {
 		collection.setRole(getFullRolePath(pc, fromForeignKey, toForeignKey));
 		collection.setInverse(isCollectionInverse(targetKey));
 		collection.setLazy(isCollectionLazy(targetKey));
-		collection.setFetchMode(FetchMode.SELECT);
+		collection.setFetchStyle(FetchStyle.SELECT);
 	}
 
 	private boolean isCollectionLazy(ForeignKey foreignKey) {

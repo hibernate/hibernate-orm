@@ -4,10 +4,10 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.MappingContext;
 
@@ -25,7 +25,7 @@ public abstract sealed class ToOne
 		extends SimpleValue implements Fetchable, SortableValue
 		permits OneToOne, ManyToOne {
 
-	private FetchMode fetchMode;
+	private FetchStyle fetchStyle;
 	protected String referencedPropertyName;
 	private String referencedEntityName;
 	private String propertyName;
@@ -41,7 +41,7 @@ public abstract sealed class ToOne
 
 	protected ToOne(ToOne original) {
 		super( original );
-		this.fetchMode = original.fetchMode;
+		this.fetchStyle = original.fetchStyle;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.referencedEntityName = original.referencedEntityName;
 		this.propertyName = original.propertyName;
@@ -53,13 +53,13 @@ public abstract sealed class ToOne
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return fetchMode;
+	public FetchStyle getFetchStyle() {
+		return fetchStyle;
 	}
 
 	@Override
-	public void setFetchMode(FetchMode fetchMode) {
-		this.fetchMode=fetchMode;
+	public void setFetchStyle(FetchStyle fetchStyle) {
+		this.fetchStyle = fetchStyle;
 	}
 
 	public String getReferencedPropertyName() {

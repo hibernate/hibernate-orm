@@ -8,8 +8,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.FetchOptions;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.loader.ast.internal.EntityLoaderSubSelectFetch;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -104,6 +108,11 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			final var session = data.getRowProcessingState().getSession();
 			final var factory = session.getFactory();
 			final var persistenceContext = session.getPersistenceContextInternal();
+			if ( isSubselectFetch()
+					&& initializeSubselect( toBatchLoad, session, persistenceContext ) ) {
+				data.toBatchLoad = null;
+				return;
+			}
 			for ( var entry : toBatchLoad.entrySet() ) {
 				final var entityKey = entry.getKey();
 				final var parentInfos = entry.getValue();
@@ -121,6 +130,58 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			}
 			data.toBatchLoad = null;
 		}
+	}
+
+	private boolean initializeSubselect(
+			HashMap<EntityKey, List<ParentInfo>> toBatchLoad,
+			SharedSessionContractImplementor session,
+			PersistenceContext persistenceContext) {
+		final var subselect = findSubselectFetch( toBatchLoad, persistenceContext );
+		if ( subselect == null ) {
+			return false;
+		}
+
+		new EntityLoaderSubSelectFetch( concreteDescriptor, toOneMapping, subselect, session )
+				.load( session );
+
+		final var factory = session.getFactory();
+		for ( var entry : toBatchLoad.entrySet() ) {
+			final var entityKey = entry.getKey();
+			final var parentInfos = entry.getValue();
+			var instance = persistenceContext.getEntity( entityKey );
+			if ( instance == null ) {
+				instance = loadInstance( entityKey, session );
+			}
+			for ( var parentInfo : parentInfos ) {
+				final Object parentInstance = parentInfo.parentInstance;
+				final var entityEntry = persistenceContext.getEntry( parentInstance );
+				referencedModelPartSetter.set( parentInstance, instance );
+				final var loadedState = entityEntry.getLoadedState();
+				if ( loadedState != null ) {
+					loadedState[parentInfo.propertyIndex] =
+							referencedModelPartType.deepCopy( instance, factory );
+				}
+			}
+		}
+		return true;
+	}
+
+	private SubselectFetch findSubselectFetch(
+			HashMap<EntityKey, List<ParentInfo>> toBatchLoad,
+			PersistenceContext persistenceContext) {
+		final var batchFetchQueue = persistenceContext.getBatchFetchQueue();
+		for ( var parentInfos : toBatchLoad.values() ) {
+			for ( var parentInfo : parentInfos ) {
+				final var entityEntry = persistenceContext.getEntry( parentInfo.parentInstance );
+				if ( entityEntry != null ) {
+					final var subselect = batchFetchQueue.getSubselect( entityEntry.getEntityKey() );
+					if ( subselect != null ) {
+						return subselect;
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	@Override

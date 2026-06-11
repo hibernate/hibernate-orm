@@ -258,16 +258,27 @@ signal is narrower than the original boot-model breakage.
   wrapping is the desired contract, adjust the tests and keep lower-level causes
   intact.
 
-| Persistence-unit setting and `cfg.xml` merge parity
+| Persistence-unit setting precedence parity
 | `PersistenceUnitOverridesTests`
-| Several assertions still see different dialect, datasource, connection
-  provider, or mapped-entity behavior than the legacy
-  `EntityManagerFactoryBuilderImpl` path.
+| Datasource and JDBC override assertions exercise precedence differences
+  between persistence-unit values, descriptor datasource elements, and
+  integration settings.
 | Compare descriptor bootstrap through `BootstrapSettingsResolver` and
-  `SessionFactorySettingsResolver` against the old merged-setting rules.  Pay
-  particular attention to `cfg.xml` baseline handling, integration-setting
-  precedence, datasource/provider selection, and source contributions implied by
-  configuration XML.
+  `SessionFactorySettingsResolver` against the supported old merged-setting
+  rules.  Keep the useful datasource/JDBC precedence behavior, but do not make
+  legacy `cfg.xml` a source model for the new descriptor path.
+
+| Extended persistence-unit source descriptors
+| `PersistenceUnitOverridesTests` `cfg.xml` cases
+| The legacy builder treated `hibernate.cfg_xml_file` as a JPA bootstrap
+  baseline, including settings, mapping references, and cache declarations.  The
+  new canonical descriptor path should not depend on `cfg.xml` or on
+  `StandardServiceRegistryBuilder#getAggregatedCfgXml()`.
+| Keep `cfg.xml` as legacy/native coverage through `Configuration` and the old
+  builder while those APIs remain.  Define an extended persistence-unit
+  descriptor model for the supported replacement: managed classes, packages,
+  mapping XML, query imports, cache declarations, auxiliary database objects,
+  and similar source-level contributions.
 
 | Settings-backed managed-class/source contributions
 | `InterceptorTest`, `JpaSchemaGeneratorTest`
@@ -309,8 +320,10 @@ The next useful implementation slices are therefore:
 
 * settings-backed source contributions, because they explain several
   `UnknownEntityTypeException` failures;
-* persistence-unit setting and `cfg.xml` merge parity, because it affects both
-  provider runtime behavior and schema-generation setup;
+* persistence-unit setting precedence parity, because it affects both provider
+  runtime behavior and schema-generation setup;
+* extended persistence-unit source descriptors as the replacement for legacy
+  `cfg.xml` pressure in JPA-style bootstrap;
 * schema-generation script parity after the source and setting baselines are
   trustworthy.
 

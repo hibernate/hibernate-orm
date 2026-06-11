@@ -244,7 +244,9 @@ The active gap signal is concentrated in the JPA provider paths that now route
 through `SessionFactoryBootstrap`:
 
 * provider exception wrapping parity;
-* persistence-unit setting and `cfg.xml` merge parity;
+* persistence-unit setting precedence parity;
+* extended persistence-unit source descriptors to replace legacy `cfg.xml`
+  pressure;
 * settings-backed managed-class/source contributions;
 * schema-generation script handling.
 

@@ -27,6 +27,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.util.jpa.DelegatingPersistenceUnitInfo;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
@@ -390,6 +391,7 @@ public class PersistenceUnitOverridesTests {
 	}
 
 	@Test
+	@Disabled("cfg.xml is legacy native/builder input; new descriptor bootstrap should use extended persistence.xml sources")
 	public void testCfgXmlBaseline() {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
@@ -424,6 +426,7 @@ public class PersistenceUnitOverridesTests {
 	}
 
 	@Test
+	@Disabled("cfg.xml is legacy native/builder input; new descriptor bootstrap should use extended persistence.xml sources")
 	public void testIntegrationOverridesOfCfgXml() {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();

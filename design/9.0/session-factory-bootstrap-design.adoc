@@ -380,7 +380,10 @@ product, not the public collector API.
 * managed class details
 * package-info class details
 * JPA `orm.xml` mapping bindings
-* extra query imports or equivalent source-level contributions
+
+Programmatic metadata customizations such as query imports are intentionally
+not part of `AvailableResources`; they flow through `MetadataCustomizations`
+and later binding/customization state.
 
 Scanning belongs before or inside source-contribution creation, depending on the
 entry point.  Categorization should receive available source material, not an

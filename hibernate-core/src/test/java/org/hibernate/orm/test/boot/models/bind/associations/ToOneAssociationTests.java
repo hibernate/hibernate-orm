@@ -430,6 +430,23 @@ public class ToOneAssociationTests {
 
 	@Test
 	@ServiceRegistry
+	void testOwningManyToManyOrderBy(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ManyToManyOrderByOwner.class.getName() );
+					final Collection collection = (Collection) entityBinding.getProperty( "parents" ).getValue();
+
+					assertThat( collection.getOrderBy() ).isEqualTo( "name desc" );
+				},
+				scope.getRegistry(),
+				Parent.class,
+				ManyToManyOrderByOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testOwningManyToManyEmptyOrderBy(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -1471,6 +1488,21 @@ public class ToOneAssociationTests {
 				inverseJoinColumns = @JoinColumn(name = "parent_id", referencedColumnName = "id")
 		)
 		@OrderBy
+		private Set<Parent> parents;
+	}
+
+	@Entity(name="ManyToManyOrderByOwner")
+	@Table(name="many_to_many_order_by_owners")
+	public static class ManyToManyOrderByOwner {
+		@Id
+		private Integer id;
+		@ManyToMany
+		@JoinTable(
+				name = "owner_parent_ordered_sets",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id"),
+				inverseJoinColumns = @JoinColumn(name = "parent_id", referencedColumnName = "id")
+		)
+		@OrderBy("name desc")
 		private Set<Parent> parents;
 	}
 

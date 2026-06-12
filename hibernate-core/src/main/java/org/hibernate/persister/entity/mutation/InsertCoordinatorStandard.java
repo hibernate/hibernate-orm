@@ -32,6 +32,7 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
@@ -52,6 +53,9 @@ import static org.hibernate.generator.EventType.INSERT;
  */
 @Internal
 public class InsertCoordinatorStandard extends AbstractMutationCoordinator implements InsertCoordinator {
+	private static final ValuesAnalysis SIMPLE_INSERT_VALUES_ANALYSIS = new ValuesAnalysis() {};
+	private static final TableInclusionChecker INCLUDE_ALL_TABLES = tableMapping -> true;
+
 	private final MutationOperationGroup staticInsertGroup;
 	private final BasicBatchKey batchKey;
 
@@ -162,9 +166,17 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	protected GeneratedValues doStaticInserts(Object id, Object[] values, Object object, SharedSessionContractImplementor session) {
-		final var insertValuesAnalysis = new InsertValuesAnalysis( entityPersister(), values );
-
-		final var tableInclusionChecker = getTableInclusionChecker( insertValuesAnalysis );
+		final ValuesAnalysis insertValuesAnalysis;
+		final TableInclusionChecker tableInclusionChecker;
+		if ( isSingleNonOptionalTableMutation( staticInsertGroup ) ) {
+			insertValuesAnalysis = SIMPLE_INSERT_VALUES_ANALYSIS;
+			tableInclusionChecker = INCLUDE_ALL_TABLES;
+		}
+		else {
+			final var analysis = new InsertValuesAnalysis( entityPersister(), values );
+			insertValuesAnalysis = analysis;
+			tableInclusionChecker = getTableInclusionChecker( analysis );
+		}
 
 		final var mutationExecutor = executor( session, staticInsertGroup, false );
 
@@ -468,6 +480,12 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	protected static TableInclusionChecker getTableInclusionChecker(InsertValuesAnalysis insertValuesAnalysis) {
 		return tableMapping -> !tableMapping.isOptional()
 			|| insertValuesAnalysis.hasNonNullBindings( tableMapping );
+	}
+
+	private static boolean isSingleNonOptionalTableMutation(MutationOperationGroup mutationGroup) {
+		return mutationGroup.getNumberOfOperations() == 1
+			&& mutationGroup.getSingleOperation() instanceof PreparableMutationOperation
+			&& !mutationGroup.getSingleOperation().getTableDetails().isOptional();
 	}
 
 

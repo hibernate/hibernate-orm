@@ -485,9 +485,9 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append( "\tvar _entity = (" )
 				.append( annotationMetaEntity.importType( "jakarta.persistence.criteria.Root" ) )
 				.append( "<" )
+				// Never null because this is called only when useAugmentedQuery() is true
 				.append( annotationMetaEntity.importType( selectionEntity ) )
-				// TODO: use getRootList().get(0) in next milestone!
-				.append( ">) _query.getRoots().iterator().next();\n" );
+				.append( ">) _query.getRootList().get(0);\n" );
 	}
 
 	private List<String> queryParameterNames() {

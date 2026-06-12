@@ -7006,19 +7006,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		final String qualifier = determineColumnReferenceQualifier( columnReference );
-		if ( columnReference.isColumnExpressionFormula() ) {
-			// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
-			// This is fine for now as this is only temporary anyway until we render aliases for table references
-			final String replacement = qualifier != null ? "$1" + qualifier + ".$3" : "$1$3";
-			appendSql(
-					columnReference.getColumnExpression()
-							.replaceAll( "(\\b)(" + columnReference.getQualifier() + "\\.)(\\b)", replacement )
-			);
-		}
-		else {
-			columnReference.appendReadExpression( this, qualifier );
-		}
+		columnReference.appendReadExpression( this, determineColumnReferenceQualifier( columnReference ) );
 	}
 
 	@Override

@@ -90,6 +90,10 @@ public interface CommonQueryContractImplementor extends CommonQueryContract {
 
 	@Override
 	@Nonnull
+	CommonQueryContractImplementor setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> CommonQueryContractImplementor setParameter(@Nonnull QueryParameter<P> parameter, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override

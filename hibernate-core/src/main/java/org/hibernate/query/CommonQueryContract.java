@@ -336,6 +336,13 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	CommonQueryContract setParameter(int parameter, @Nullable Object value);
 
 	/**
+	 * @see jakarta.persistence.Query#setParameters(Object...)
+	 */
+	@Override
+	@Nonnull
+	CommonQueryContract setParameters(@Nonnull Object... arguments);
+
+	/**
 	 * Bind an argument to the query parameter represented by the given
 	 * {@link QueryParameter}, using the given {@link Class} reference to attempt
 	 * to infer the {@link Type} to use.  If unable to infer an appropriate

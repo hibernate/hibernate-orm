@@ -151,6 +151,10 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 
 	@Override
 	@Nonnull
+	QueryImplementor<T> setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> QueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override

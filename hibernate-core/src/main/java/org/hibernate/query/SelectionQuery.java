@@ -877,6 +877,10 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 
 	@Override
 	@Nonnull
+	SelectionQuery<R> setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> SelectionQuery<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override

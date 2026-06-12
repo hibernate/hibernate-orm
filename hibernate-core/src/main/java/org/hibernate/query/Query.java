@@ -220,6 +220,13 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override
 	@Nonnull
+	Query<T> setParameters(@Nonnull Object... arguments);
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@Nonnull
 	<P> Query<T> setParameter(int parameter, @Nullable P argument, @Nonnull Class<P> type);
 
 	/**

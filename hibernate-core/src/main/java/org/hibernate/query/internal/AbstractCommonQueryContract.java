@@ -1136,6 +1136,22 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	@Nonnull
+	public CommonQueryContractImplementor setParameters(@Nonnull Object... arguments) {
+		final int parameterCount = getParameterMetadata().getOrdinalParameterLabels().size();
+		if ( arguments.length != parameterCount ) {
+			throw new IllegalArgumentException(
+					"Received " + arguments.length + " arguments for "
+							+ parameterCount + " positional parameters"
+			);
+		}
+		for ( int i = 0; i < arguments.length; i++ ) {
+			setParameter( i + 1, arguments[i] );
+		}
+		return this;
+	}
+
+	@Override
+	@Nonnull
 	public <P> CommonQueryContractImplementor setParameter(
 			int position, @Nullable P value, @Nonnull Class<P> javaType) {
 		final var javaDescriptor = getJavaType( javaType );

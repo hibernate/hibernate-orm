@@ -197,6 +197,10 @@ public interface SelectionQueryImplementor<R>
 
 	@Override
 	@Nonnull
+	SelectionQueryImplementor<R> setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> SelectionQueryImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override

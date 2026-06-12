@@ -5,18 +5,21 @@
 package org.hibernate.orm.test.boot.orchestration;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.hibernate.boot.HibernateBootstrap;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.models.source.BootstrapSourceContributions;
-import org.hibernate.boot.orchestration.MetadataResolver;
-import org.hibernate.boot.orchestration.ResolvedMetadata;
-import org.hibernate.boot.orchestration.SessionFactoryBuilder;
-import org.hibernate.boot.orchestration.internal.ResolvedMetadataImplementor;
+import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
+import org.hibernate.boot.pipeline.internal.MetadataResolver;
+import org.hibernate.boot.pipeline.internal.ResolvedMetadata;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBuilder;
+import org.hibernate.boot.pipeline.internal.ResolvedMetadataImplementor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.settings.ResolvedMappingSettings;
-import org.hibernate.boot.settings.SettingsResolver;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.orm.test.boot.models.source.SimpleEntity;
@@ -38,6 +41,59 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @ServiceRegistry
 public class SessionFactoryBuilderTests {
+	@Test
+	void hibernateBootstrapBuildsSessionFactoryWithProvidedRegistry(ServiceRegistryScope registryScope) {
+		try (var sessionFactory = HibernateBootstrap.create( registryScope.getRegistry() )
+				.addManagedClass( SimpleEntity.class )
+				.buildSessionFactory()) {
+			assertThat( ( (SessionFactoryImplementor) sessionFactory ).getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( SimpleEntity.class ) ).isNotNull();
+		}
+	}
+
+	@Test
+	void hibernateBootstrapBuildsSessionFactoryWithOwnedRegistry() {
+		try (var sessionFactory = HibernateBootstrap.create()
+				.applySetting( JdbcSettings.URL, "jdbc:h2:mem:hibernate-bootstrap-owned;DB_CLOSE_DELAY=-1" )
+				.applySetting( JdbcSettings.USER, "sa" )
+				.applySetting( JdbcSettings.PASS, "" )
+				.addManagedClass( SimpleEntity.class )
+				.buildSessionFactory()) {
+			assertThat( ( (SessionFactoryImplementor) sessionFactory ).getRuntimeMetamodels()
+					.getMappingMetamodel()
+					.getEntityDescriptor( SimpleEntity.class ) ).isNotNull();
+		}
+	}
+
+	@Test
+	void hibernateBootstrapAppliesNativeContributors(ServiceRegistryScope registryScope) {
+		final var typeContributorApplied = new AtomicBoolean();
+		final var functionContributorApplied = new AtomicBoolean();
+
+		try (var sessionFactory = HibernateBootstrap.create( registryScope.getRegistry() )
+				.addManagedClass( SimpleEntity.class )
+				.applyTypeContributor( (typeContributions, serviceRegistry) -> typeContributorApplied.set( true ) )
+				.applyFunctionContributor( functionContributions -> functionContributorApplied.set( true ) )
+				.buildSessionFactory()) {
+			assertThat( sessionFactory ).isNotNull();
+		}
+
+		assertThat( typeContributorApplied ).isTrue();
+		assertThat( functionContributorApplied ).isTrue();
+	}
+
+	@Test
+	void hibernateBootstrapGeneratesSchemaWithOwnedRegistry() {
+		HibernateBootstrap.create()
+				.applySetting( JdbcSettings.URL, "jdbc:h2:mem:hibernate-bootstrap-schema;DB_CLOSE_DELAY=-1" )
+				.applySetting( JdbcSettings.USER, "sa" )
+				.applySetting( JdbcSettings.PASS, "" )
+				.applySetting( SchemaToolingSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop-and-create" )
+				.addManagedClass( SimpleEntity.class )
+				.generateSchema();
+	}
+
 	@Test
 	void sessionFactoryBuildTargetIsDefined(ServiceRegistryScope registryScope) {
 		final var persistenceConfiguration = new HibernatePersistenceConfiguration( "test" )
@@ -161,7 +217,7 @@ public class SessionFactoryBuilderTests {
 			HibernatePersistenceConfiguration persistenceConfiguration,
 			ResolvedBootstrapSettings bootstrapSettings,
 			ResolvedMappingSettings mappingSettings) {
-		final var sourceContributions = BootstrapSourceContributions.from(
+		final var sourceContributions = MappingSourceContributions.from(
 				persistenceConfiguration,
 				bootstrapSettings,
 				mappingSettings,

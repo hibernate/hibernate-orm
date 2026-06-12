@@ -98,7 +98,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase {
 		properties.put( AvailableSettings.LOADED_CLASSES, List.of( getAnnotatedClasses() ) );
 		ServiceRegistryUtil.applySettings( properties );
 
-		sessionFactory = org.hibernate.boot.orchestration.SessionFactoryBootstrap
+		sessionFactory = org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
 				.build( new PersistenceUnitDescriptorAdapter(), properties )
 				.unwrap( SessionFactoryImplementor.class );
 

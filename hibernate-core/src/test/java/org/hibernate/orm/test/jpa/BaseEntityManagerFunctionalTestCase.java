@@ -19,7 +19,7 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;

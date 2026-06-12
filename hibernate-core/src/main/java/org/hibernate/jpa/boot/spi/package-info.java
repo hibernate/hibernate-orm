@@ -10,7 +10,7 @@
  * extensions to be contributed during the bootstrap process.
  * <p>
  * One-shot bootstrap entry points should use
- * {@link org.hibernate.boot.orchestration.SessionFactoryBootstrap}.
+ * {@link org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap}.
  *
  * @author Steve Ebersole
  */

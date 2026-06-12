@@ -6,12 +6,12 @@ package org.hibernate.orm.test.boot.orchestration;
 
 import java.util.Map;
 
-import org.hibernate.boot.models.source.BootstrapSourceContributions;
-import org.hibernate.boot.orchestration.MetadataResolver;
-import org.hibernate.boot.orchestration.ResolvedMetadata;
-import org.hibernate.boot.orchestration.SessionFactoryBuilder;
+import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
+import org.hibernate.boot.pipeline.internal.MetadataResolver;
+import org.hibernate.boot.pipeline.internal.ResolvedMetadata;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.settings.SettingsResolver;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -72,9 +72,9 @@ class SessionFactoryBootstrapPipelineTest {
 	private static ResolvedMetadata resolveMetadata(
 			ServiceRegistryScope registryScope,
 			HibernatePersistenceConfiguration persistenceConfiguration,
-			org.hibernate.boot.settings.ResolvedBootstrapSettings bootstrapSettings,
-			org.hibernate.boot.settings.ResolvedMappingSettings mappingSettings) {
-		final var sourceContributions = BootstrapSourceContributions.from(
+			org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings bootstrapSettings,
+			org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings mappingSettings) {
+		final var sourceContributions = MappingSourceContributions.from(
 				persistenceConfiguration,
 				bootstrapSettings,
 				mappingSettings,

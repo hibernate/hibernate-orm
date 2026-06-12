@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.settings;
+package org.hibernate.boot.pipeline.internal.settings;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;

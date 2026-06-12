@@ -15,7 +15,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.RollbackException;
 
-import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.models.source;
+package org.hibernate.boot.pipeline.internal.source;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -23,8 +23,8 @@ import org.hibernate.boot.scan.internal.StandardScanningProvider;
 import org.hibernate.boot.scan.spi.Scanner;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.scan.spi.ScanningResult;
-import org.hibernate.boot.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.settings.ResolvedMappingSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;

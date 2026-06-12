@@ -60,7 +60,12 @@ import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
  * @author Steve Ebersole
  *
  * @since 5.0
+ *
+ * @deprecated Use {@linkplain HibernateBootstrap} or {@linkplain org.hibernate.jpa.HibernatePersistenceConfiguration}
+ * 		instead.  This pipeline of {@linkplain MetadataSources}, {@linkplain MetadataBuilder}, {@linkplain Metadata},
+ * 		{@linkplain SessionFactoryBuilder} mixes public and internal concerns in an inflexible manner.
  */
+@Deprecated(since = "9.0", forRemoval = true)
 public class MetadataSources implements Serializable {
 
 	private final ServiceRegistry serviceRegistry;

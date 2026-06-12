@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.orchestration;
+package org.hibernate.boot.pipeline.internal;
 
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;

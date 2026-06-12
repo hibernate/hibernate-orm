@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.orchestration;
+package org.hibernate.boot.pipeline.internal;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,14 +14,14 @@ import jakarta.persistence.SchemaManagementAction;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.models.source.BootstrapSourceContributions;
+import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.settings.ResolvedMappingSettings;
-import org.hibernate.boot.settings.SettingsResolver;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
@@ -241,6 +241,7 @@ public class SessionFactoryBootstrap {
 				request.bootstrapSettings(),
 				request.mappingSettings(),
 				request.sourceContributions(),
+				request.metadataCustomizations(),
 				request.serviceRegistry()
 		);
 		return SessionFactoryBuilder.build(
@@ -261,6 +262,7 @@ public class SessionFactoryBootstrap {
 						bootstrapRequest.bootstrapSettings(),
 						bootstrapRequest.mappingSettings(),
 						bootstrapRequest.sourceContributions(),
+						MetadataCustomizations.NONE,
 						sessionFactorySettings,
 						bootstrapRequest.standardServiceRegistry(),
 						new SessionFactoryObserver[] { ServiceRegistryCloser.INSTANCE }
@@ -302,7 +304,7 @@ public class SessionFactoryBootstrap {
 		final var standardServiceRegistry = StandardServiceRegistryBuilder.forJpa( bootstrapServiceRegistry )
 				.applySettings( bootstrapSettings.configurationValues() )
 				.build();
-		final var sourceContributions = resolveBootstrapSourceContributions(
+		final var sourceContributions = resolveMappingSourceContributions(
 				persistenceConfiguration,
 				bootstrapSettings,
 				mappingSettings,
@@ -339,17 +341,17 @@ public class SessionFactoryBootstrap {
 				bootstrapSettings,
 				mappingSettings,
 				standardServiceRegistry,
-				BootstrapSourceContributions.from( persistenceUnitDescriptor )
+				MappingSourceContributions.from( persistenceUnitDescriptor )
 		);
 	}
 
-	private static BootstrapSourceContributions resolveBootstrapSourceContributions(
+	private static MappingSourceContributions resolveMappingSourceContributions(
 			PersistenceConfiguration persistenceConfiguration,
 			ResolvedBootstrapSettings bootstrapSettings,
 			ResolvedMappingSettings mappingSettings,
 			StandardServiceRegistry serviceRegistry) {
 		if ( persistenceConfiguration instanceof HibernatePersistenceConfiguration hibernatePersistenceConfiguration ) {
-			return BootstrapSourceContributions.from(
+			return MappingSourceContributions.from(
 					hibernatePersistenceConfiguration,
 					bootstrapSettings,
 					mappingSettings,
@@ -357,7 +359,7 @@ public class SessionFactoryBootstrap {
 			);
 		}
 		else {
-			return BootstrapSourceContributions.from( persistenceConfiguration );
+			return MappingSourceContributions.from( persistenceConfiguration );
 		}
 	}
 
@@ -427,7 +429,7 @@ public class SessionFactoryBootstrap {
 			ResolvedBootstrapSettings bootstrapSettings,
 			ResolvedMappingSettings mappingSettings,
 			StandardServiceRegistry standardServiceRegistry,
-			BootstrapSourceContributions sourceContributions) {
+			MappingSourceContributions sourceContributions) {
 	}
 
 	private static class ServiceRegistryCloser implements SessionFactoryObserver {

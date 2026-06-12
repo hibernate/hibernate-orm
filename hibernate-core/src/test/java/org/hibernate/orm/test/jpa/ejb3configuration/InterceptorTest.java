@@ -275,7 +275,7 @@ public class InterceptorTest {
 	}
 
 	private void buildEntityManagerFactory(Map<String,Object> settings) {
-		entityManagerFactory = org.hibernate.boot.orchestration.SessionFactoryBootstrap
+		entityManagerFactory = org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
 				.build( new PersistenceUnitDescriptorAdapter(), settings );
 	}
 

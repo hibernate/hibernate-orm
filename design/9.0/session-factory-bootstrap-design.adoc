@@ -41,7 +41,7 @@ explanations of why.
 ----
 Entry point
     -> ResolvedBootstrapSettings
-    -> BootstrapSourceContributions
+    -> MappingSourceContributions
     -> AvailableResources
     -> CategorizedDomainModel
     -> ResolvedMetadata
@@ -83,7 +83,7 @@ For example:
 [source]
 ----
 ResolvedBootstrapSettings
-BootstrapSourceContributions
+MappingSourceContributions
 ServiceRegistry
     -> AvailableResources
     -> CategorizedDomainModel (*)
@@ -129,7 +129,7 @@ runtime factory construction.
 
 Current branch status:
 
-* `org.hibernate.boot.orchestration.SessionFactoryBootstrap` is the canonical
+* `org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap` is the canonical
   internal facade for one-shot SessionFactory bootstrap.
 * `PersistenceConfiguration` bootstrap goes through this facade.
 * `PersistenceUnitDescriptor` bootstrap for
@@ -152,7 +152,7 @@ compatibility pressures.
 JPA provider entry points::
 The public `jakarta.persistence.spi.PersistenceProvider` methods implemented by
 `org.hibernate.jpa.HibernatePersistenceProvider` now delegate to
-`org.hibernate.boot.orchestration.SessionFactoryBootstrap`:
+`org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap`:
 +
 * `createEntityManagerFactory(String, Map)` resolves a matching
   `PersistenceUnitDescriptor` from `persistence.xml`, then calls
@@ -232,7 +232,7 @@ Current branch status:
   instead of replacing them.
 * `AvailableResources.from(MetadataSources, AvailableResourcesContext)` already
   exists as a transitional native source adapter.  It is currently more accurate
-  than a `BootstrapSourceContributions.from(MetadataSources)` adapter because
+  than a `MappingSourceContributions.from(MetadataSources)` adapter because
   `MetadataSources` stores XML mappings as already-bound mapping documents, not
   only as source declarations.
 +
@@ -251,7 +251,7 @@ Design direction:
   `AvailableResources.from(MetadataSources, AvailableResourcesContext)` because
   `MetadataSources` may contain already-bound XML mappings.  After XML source
   handling is changed to retain declarations, this can move toward
-  `BootstrapSourceContributions`.
+  `MappingSourceContributions`.
 * Public `SessionFactoryBuilder` migration should make builder customizations
   produce a resolved/request object consumed by the new factory-build phase.  It
   should not pass legacy `SessionFactoryOptions` into the orchestration API.
@@ -259,7 +259,7 @@ Design direction:
 ==== Replacement Native Workflow
 
 The replacement native workflow should preserve the useful shape of
-`MetadataSources -> MetadataBuilder -> Metadata -> SessionFactoryBuilder`
+`Configuration -> MetadataSources -> MetadataBuilder -> Metadata -> SessionFactoryBuilder`
 without cloning the old contracts.
 
 The target workflow is:
@@ -267,33 +267,47 @@ The target workflow is:
 .Replacement native bootstrap workflow
 [source]
 ----
-Native source collector
-    -> BootstrapSourceContributions / AvailableResources
-
-Metadata build request
+HibernateBootstrap
+    -> MappingSourceContributions / AvailableResources
     -> ResolvedBootstrapSettings
     -> ResolvedMappingSettings
     -> ResolvedMetadata
-
-SessionFactory build request
     -> ResolvedSessionFactorySettings
     -> SessionFactoryImplementor
 ----
 
-The source collector is the replacement for `MetadataSources`.  It should
-collect source declarations: managed classes, class names, package names,
-mapping resources, mapping files, query imports, and eventually mapping XML
-declarations.  It should not perform categorization, binding, or factory
-construction.  While `MetadataSources` still stores already-bound XML mapping
-documents, the native adapter may continue to produce `AvailableResources`
-directly.
+`HibernateBootstrap` is the intended user-facing native bootstrap API and the
+replacement for the useful native roles of `Configuration`, `MetadataSources`,
+and `MetadataBuilder`.  It belongs in `org.hibernate.boot`, alongside the native
+bootstrap contracts it replaces.
++
+`HibernateBootstrap` should collect source declarations, settings, and
+metadata-build customizations, then build a `SessionFactory` or perform schema
+generation through the new pipeline.  Metadata resolution remains an internal
+phase; the public native API should not lead with a durable `buildMetadata()`
+product that recreates the old two-phase workflow.
++
+`MappingSourceContributions` is the immutable internal source product created
+from `HibernateBootstrap` and other entry-point adapters.  It is the renamed
+target for the former `BootstrapSourceContributions` concept.  The record should
+stay implementation-facing.
++
+While `MetadataSources` still stores already-bound XML mapping documents, the
+legacy native adapter may continue to produce `AvailableResources` directly.
+After native XML handling retains declarations instead of already-bound
+documents, `MetadataSources` can adapt through `MappingSourceContributions` as
+another compatibility entry point.
 
-The metadata build request is the replacement for `MetadataBuilder`.  It should
-collect model-build customizations such as naming strategies, default to-one
-fetch behavior, type and function contributions, converters, auxiliary database
-objects, XML defaults, cache region declarations, and other metadata-shaping
-options.  Its result is `ResolvedMetadata`, not the legacy `Metadata`
-contract.
+The metadata-build customization role of `MetadataBuilder` moves onto
+`HibernateBootstrap`.  These methods should map deliberately to source
+contribution, bootstrap setting, mapping setting, metadata-build customization,
+or factory setting rather than copying the old builder wholesale.
++
+`MetadataCustomizations` is the immutable internal customization product created
+from `HibernateBootstrap` and other entry-point adapters.  It carries
+programmatic metadata-build instructions such as query imports, contributor
+instances, and explicit cache-region definitions, keeping those concerns out of
+`MappingSourceContributions`.
 
 The metadata inspection surface should be deliberate.  If native users still
 need metadata inspection before building a factory, expose that as a view over
@@ -405,8 +419,9 @@ have not yet earned a named slot.
 
 == Source Products
 
-`BootstrapSourceContributions` represents entry-point source contributions after
-entry-point-specific discovery has run.
+`MappingSourceContributions` represents entry-point source contributions after
+entry-point-specific discovery has run.  It is an internal phase-boundary
+product, not the public collector API.
 
 `AvailableResources` represents source material that can be categorized:
 
@@ -449,7 +464,7 @@ rather than carried forward as a permanent source kind in this design.
 [source]
 ----
 ResolvedBootstrapSettings
-BootstrapSourceContributions
+MappingSourceContributions
 ServiceRegistry
     -> AvailableResources
     -> CategorizedDomainModel (*)

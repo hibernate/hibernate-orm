@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.orchestration;
+package org.hibernate.boot.pipeline.internal;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.TypeContributions;
@@ -17,11 +17,11 @@ import org.hibernate.boot.models.bind.internal.InFlightMetadataCollectorAdapter;
 import org.hibernate.boot.models.bind.spi.BindingCoordinator;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.DomainModelCategorizer;
-import org.hibernate.boot.models.source.AvailableResources;
-import org.hibernate.boot.models.source.AvailableResourcesContext;
-import org.hibernate.boot.models.source.BootstrapSourceContributions;
-import org.hibernate.boot.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.settings.ResolvedMappingSettings;
+import org.hibernate.boot.pipeline.internal.source.AvailableResources;
+import org.hibernate.boot.pipeline.internal.source.AvailableResourcesContext;
+import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -62,12 +62,30 @@ public class MetadataResolver {
 	public static ResolvedMetadata resolve(
 			ResolvedBootstrapSettings bootstrapSettings,
 			ResolvedMappingSettings mappingSettings,
-			BootstrapSourceContributions sourceContributions,
+			MappingSourceContributions sourceContributions,
 			ServiceRegistry serviceRegistry) {
+		return resolve(
+				bootstrapSettings,
+				mappingSettings,
+				sourceContributions,
+				MetadataCustomizations.NONE,
+				serviceRegistry
+		);
+	}
+
+	/// Resolve ORM boot metadata and retain intermediate boot-model products.
+	public static ResolvedMetadata resolve(
+			ResolvedBootstrapSettings bootstrapSettings,
+			ResolvedMappingSettings mappingSettings,
+			MappingSourceContributions sourceContributions,
+			MetadataCustomizations metadataCustomizations,
+			ServiceRegistry serviceRegistry) {
+		metadataCustomizations = metadataCustomizations == null ? MetadataCustomizations.NONE : metadataCustomizations;
 		final MetadataBuildingContext metadataBuildingContext = createMetadataBuildingContext(
 				serviceRegistry,
 				bootstrapSettings,
-				mappingSettings
+				mappingSettings,
+				metadataCustomizations
 		);
 		metadataBuildingContext.getBootstrapContext().getTypeConfiguration().scope( metadataBuildingContext );
 		applyTypeContributions( metadataBuildingContext );
@@ -79,7 +97,8 @@ public class MetadataResolver {
 		return resolve(
 				metadataBuildingContext,
 				mappingSettings,
-				availableResources
+				availableResources,
+				metadataCustomizations
 		);
 	}
 
@@ -96,7 +115,8 @@ public class MetadataResolver {
 		final MetadataBuildingContext metadataBuildingContext = createMetadataBuildingContext(
 				serviceRegistry,
 				bootstrapSettings,
-				mappingSettings
+				mappingSettings,
+				MetadataCustomizations.NONE
 		);
 		metadataBuildingContext.getBootstrapContext().getTypeConfiguration().scope( metadataBuildingContext );
 		applyTypeContributions( metadataBuildingContext );
@@ -110,7 +130,8 @@ public class MetadataResolver {
 		return resolve(
 				metadataBuildingContext,
 				mappingSettings,
-				availableResources
+				availableResources,
+				MetadataCustomizations.NONE
 		);
 	}
 
@@ -144,14 +165,16 @@ public class MetadataResolver {
 		return resolve(
 				metadataBuildingContext,
 				mappingSettings,
-				availableResources
+				availableResources,
+				MetadataCustomizations.NONE
 		);
 	}
 
 	private static ResolvedMetadata resolve(
 			MetadataBuildingContext metadataBuildingContext,
 			ResolvedMappingSettings mappingSettings,
-			AvailableResources availableResources) {
+			AvailableResources availableResources,
+			MetadataCustomizations metadataCustomizations) {
 		final CategorizedDomainModel categorizedDomainModel = categorize(
 				availableResources,
 				metadataBuildingContext
@@ -161,6 +184,7 @@ public class MetadataResolver {
 				mappingSettings,
 				metadataBuildingContext
 		);
+		applyQueryImports( metadataCustomizations, metadataBuildingContext );
 		final MetadataImplementor metadata = finalizeMetadata( metadataBuildingContext );
 		return new ResolvedMetadata(
 				metadata,
@@ -169,8 +193,16 @@ public class MetadataResolver {
 		);
 	}
 
+	private static void applyQueryImports(
+			MetadataCustomizations metadataCustomizations,
+			MetadataBuildingContext metadataBuildingContext) {
+		metadataCustomizations.queryImports().forEach( (importName, target) ->
+				metadataBuildingContext.getMetadataCollector().addImport( importName, target.getName() )
+		);
+	}
+
 	private static AvailableResources buildAvailableResources(
-			BootstrapSourceContributions sourceContributions,
+			MappingSourceContributions sourceContributions,
 			ResolvedMappingSettings mappingSettings,
 			MetadataBuildingContext metadataBuildingContext) {
 		return AvailableResources.from(
@@ -223,13 +255,23 @@ public class MetadataResolver {
 	private static MetadataBuildingContext createMetadataBuildingContext(
 			ServiceRegistry serviceRegistry,
 			ResolvedBootstrapSettings bootstrapSettings,
-			ResolvedMappingSettings mappingSettings) {
+			ResolvedMappingSettings mappingSettings,
+			MetadataCustomizations metadataCustomizations) {
 		final var standardServiceRegistry = MetadataBuilderImpl.getStandardServiceRegistry( serviceRegistry );
 		final var metadataBuilder = new MetadataBuilderImpl( new MetadataSources( standardServiceRegistry ), standardServiceRegistry );
 		metadataBuilder.applyDefaultToOneFetchType( mappingSettings.defaultToOneFetchType() );
 		mappingSettings
 				.cacheRegionDefinitions()
 				.forEach( metadataBuilder::applyCacheRegionDefinition );
+		metadataCustomizations
+				.cacheRegionDefinitions()
+				.forEach( metadataBuilder::applyCacheRegionDefinition );
+		metadataCustomizations
+				.typeContributors()
+				.forEach( metadataBuilder::applyTypes );
+		metadataCustomizations
+				.functionContributors()
+				.forEach( metadataBuilder::applyFunctions );
 
 		final var bootstrapContext = metadataBuilder.getBootstrapContext();
 		if ( bootstrapSettings.jpaBootstrap() ) {

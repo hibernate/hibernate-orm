@@ -6,7 +6,7 @@ package org.hibernate.orm.test.boot.settings;
 
 import java.util.Map;
 
-import org.hibernate.boot.settings.SettingsResolver;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.testing.orm.junit.ServiceRegistry;

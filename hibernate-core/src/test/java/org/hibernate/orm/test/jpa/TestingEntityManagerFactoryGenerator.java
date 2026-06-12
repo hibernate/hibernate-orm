@@ -7,7 +7,7 @@ package org.hibernate.orm.test.jpa;
 import jakarta.persistence.EntityManagerFactory;
 import java.util.Map;
 
-import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;

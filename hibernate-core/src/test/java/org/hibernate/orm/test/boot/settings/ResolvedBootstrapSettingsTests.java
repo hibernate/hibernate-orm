@@ -6,7 +6,7 @@ package org.hibernate.orm.test.boot.settings;
 
 import java.util.LinkedHashMap;
 
-import org.hibernate.boot.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 
 import org.junit.jupiter.api.Test;
 

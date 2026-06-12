@@ -8,7 +8,7 @@
 /// Support for categorizing available ORM mapping sources into a domain model that
 /// later binding steps can consume.
 ///
-/// Categorization starts from {@link org.hibernate.boot.models.source.AvailableResources}
+/// Categorization starts from {@link org.hibernate.boot.models.AvailableResources}
 /// and interprets class, package, annotation, and XML inputs through Hibernate
 /// Models.  The result is a
 /// {@link org.hibernate.boot.models.categorize.spi.CategorizedDomainModel}

@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 

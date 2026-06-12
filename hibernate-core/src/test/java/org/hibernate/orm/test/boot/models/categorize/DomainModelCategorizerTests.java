@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.boot.models.categorize.spi.DomainModelCategorizer;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
-import org.hibernate.boot.models.source.AvailableResources;
+import org.hibernate.boot.pipeline.internal.source.AvailableResources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.models.spi.ClassDetails;

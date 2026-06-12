@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.CacheRegionDefinition.CacheRegionType;
-import org.hibernate.boot.settings.BootstrapSettingsResolver;
-import org.hibernate.boot.settings.MappingSettingsResolver;
+import org.hibernate.boot.pipeline.internal.settings.BootstrapSettingsResolver;
+import org.hibernate.boot.pipeline.internal.settings.MappingSettingsResolver;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;

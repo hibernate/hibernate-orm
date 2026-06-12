@@ -21,6 +21,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -123,6 +125,52 @@ public class SimpleJoinedTests {
 		);
 	}
 
+	@Test
+	@ServiceRegistry
+	void primaryKeyJoinColumnTest(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadataCollector = context.getMetadataCollector();
+					final JoinedSubclass subBinding = (JoinedSubclass) metadataCollector.getEntityBinding(
+							PkJoinSub.class.getName()
+					);
+
+					assertThat( subBinding.getKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "sub_root_id" );
+					assertThat( subBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "sub_root_id" );
+				},
+				scope.getRegistry(),
+				PkJoinRoot.class,
+				PkJoinSub.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void compositePrimaryKeyJoinColumnsTest(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadataCollector = context.getMetadataCollector();
+					final JoinedSubclass subBinding = (JoinedSubclass) metadataCollector.getEntityBinding(
+							CompositePkJoinSub.class.getName()
+					);
+
+					assertThat( subBinding.getKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "sub_id1", "sub_id2" );
+					assertThat( subBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "sub_id1", "sub_id2" );
+				},
+				scope.getRegistry(),
+				CompositePkJoinRoot.class,
+				CompositePkJoinSub.class
+		);
+	}
+
 	@Entity(name = "Root")
 	@Table(name = "Root")
 	@Inheritance(strategy = InheritanceType.JOINED)
@@ -184,6 +232,43 @@ public class SimpleJoinedTests {
 	@Entity(name = "IdClassSub")
 	@Table(name = "IdClassSub")
 	public static class IdClassSub extends IdClassRoot {
+		private String details;
+	}
+
+	@Entity(name = "PkJoinRoot")
+	@Table(name = "PkJoinRoot")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class PkJoinRoot {
+		@Id
+		private Integer id;
+
+		private String name;
+	}
+
+	@Entity(name = "PkJoinSub")
+	@Table(name = "PkJoinSub")
+	@PrimaryKeyJoinColumn(name = "sub_root_id", referencedColumnName = "id")
+	public static class PkJoinSub extends PkJoinRoot {
+		private String details;
+	}
+
+	@Entity(name = "CompositePkJoinRoot")
+	@Table(name = "CompositePkJoinRoot")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class CompositePkJoinRoot {
+		@EmbeddedId
+		private Pk id;
+
+		private String name;
+	}
+
+	@Entity(name = "CompositePkJoinSub")
+	@Table(name = "CompositePkJoinSub")
+	@PrimaryKeyJoinColumns({
+			@PrimaryKeyJoinColumn(name = "sub_id2", referencedColumnName = "id2"),
+			@PrimaryKeyJoinColumn(name = "sub_id1", referencedColumnName = "id1")
+	})
+	public static class CompositePkJoinSub extends CompositePkJoinRoot {
 		private String details;
 	}
 

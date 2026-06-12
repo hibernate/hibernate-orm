@@ -86,6 +86,9 @@ public class SimpleBindingCoordinatorTests {
 					assertThat( entityBinding.getCacheRegionName() ).isEqualTo( "my-region" );
 					assertThat( entityBinding.getCacheConcurrencyStrategy() )
 							.isEqualTo( CacheConcurrencyStrategy.READ_ONLY.toAccessType().getExternalName() );
+					assertThat( entityBinding.getPropertyClosure() )
+							.extracting( Property::getName )
+							.doesNotContain( "ignored" );
 
 					final Property id = entityBinding.getProperty( "id" );
 					assertThat( id.getValue().getTable().getName() ).isEqualTo( "SIMPLETONS" );

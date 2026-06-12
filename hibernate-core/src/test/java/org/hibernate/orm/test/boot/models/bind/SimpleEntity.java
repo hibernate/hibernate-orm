@@ -22,6 +22,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
 
 /**
@@ -56,6 +57,9 @@ public class SimpleEntity {
 
 	@Enumerated(EnumType.STRING)
 	private Stuff stuff;
+
+	@Transient
+	private String ignored;
 
 	enum Stuff {BITS, BOBS}
 

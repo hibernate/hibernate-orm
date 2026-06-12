@@ -1458,7 +1458,7 @@ public class PropertyBinder {
 			}
 		}
 
-		if ( returnedClass != null ) {
+		if ( returnedClass != null && returnedClass.isRealClass() ) {
 			final var embeddableClass = returnedClass.toJavaClass();
 			if ( embeddableClass != null ) {
 				return buildingContext.getMetadataCollector().findRegisteredCompositeUserType( embeddableClass );

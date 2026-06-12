@@ -1005,20 +1005,27 @@ public class EmbeddableBinder {
 		final var embeddable = new Component( context, propertyHolder.getPersistentClass() );
 		embeddable.setEmbedded( isNonAggregated );
 		applyExplicitTableName( embeddable, inferredData, propertyHolder, context );
-
+		final var type = inferredData.getClassOrElementType();
 		if ( isIdentifierMapper( inferredData, isIdentifierMapper )
 				|| isNonAggregated && inferredData.getPropertyName() == null ) {
 			embeddable.setComponentClassName( embeddable.getOwner().getClassName() );
 		}
 		else {
-			final var type = inferredData.getClassOrElementType();
 			embeddable.setComponentClassName( type.getName() );
 			checkEmbeddableRecursiveHierarchy( type, inferredData, propertyHolder );
 		}
 		embeddable.setCustomInstantiator( customInstantiatorImpl );
-		final var constructor = resolveInstantiator( inferredData.getClassOrElementType() );
-		if ( constructor != null ) {
-			embeddable.setInstantiator( constructor, constructor.getAnnotation( Instantiator.class ).value() );
+		if ( type != null ) {
+			final var classDetails = type.determineRawClass();
+			final var constructor = resolveInstantiator( classDetails );
+			if ( constructor != null ) {
+				embeddable.setInstantiator( constructor, constructor.getAnnotation( Instantiator.class ).value() );
+			}
+			final var realClass = classDetails.isRealClass();
+			embeddable.setDynamic( !realClass );
+			if ( !realClass ) {
+				embeddable.setRoleName( classDetails.getName() );
+			}
 		}
 		if ( propertyHolder.isComponent() ) {
 			final var componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
@@ -1054,9 +1061,7 @@ public class EmbeddableBinder {
 	}
 
 	private static void applyColumnNamingPattern(Component embeddable, PropertyData inferredData) {
-		final var componentClass = embeddable.getComponentClass();
-		if ( componentClass == null || Map.class.equals( componentClass ) ) {
-			// dynamic models
+		if ( embeddable.isDynamic() ) {
 			return;
 		}
 
@@ -1096,7 +1101,7 @@ public class EmbeddableBinder {
 	}
 
 	private static Constructor<?> resolveInstantiator(ClassDetails embeddableClass) {
-		if ( embeddableClass != null ) {
+		if ( embeddableClass != null && embeddableClass.isRealClass() ) {
 			final var declaredConstructors = embeddableClass.toJavaClass().getDeclaredConstructors();
 			Constructor<?> constructor = null;
 			for ( var declaredConstructor : declaredConstructors ) {

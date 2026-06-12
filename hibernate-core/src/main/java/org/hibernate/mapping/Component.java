@@ -122,7 +122,6 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	public Component(MetadataBuildingContext metadata, Table table, PersistentClass owner) throws MappingException {
 		super( metadata, table );
 		this.owner = owner;
-
 		metadata.getMetadataCollector().registerComponent( this );
 	}
 
@@ -364,6 +363,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 				return null;
 			}
 			else {
+				if ( dynamic ) {
+					return null;
+				}
 				try {
 					componentClass = classForName( componentClassName, getBootstrapContext() );
 				}
@@ -385,6 +387,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	public void setComponentClassName(String componentClass) {
 		this.componentClassName = componentClass;
+		if ( this.dynamic ) {
+			this.roleName = componentClassName;
+		}
 		this.componentClass = null;
 		this.simpleRecord = null;
 	}
@@ -407,6 +412,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	public void setDynamic(boolean dynamic) {
 		this.dynamic = dynamic;
+		if ( dynamic ) {
+			isGeneric = false;
+		}
 	}
 
 	private CompositeUserType<?> createCompositeUserType(Component component) {
@@ -939,5 +947,9 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	public void setGeneric(boolean generic) {
 		isGeneric = generic;
+	}
+
+	public boolean isRecord() {
+		return getComponentClass() != null && getComponentClass().isRecord();
 	}
 }

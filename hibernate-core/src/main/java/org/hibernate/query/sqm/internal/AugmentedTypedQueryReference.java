@@ -18,7 +18,8 @@ import java.util.Map;
 import java.util.Set;
 
 public final class AugmentedTypedQueryReference<T> implements JpaTypedQueryReference<T> {
-	private final TypedQueryReference<T> reference;
+	private final TypedQueryReference<?> reference;
+	private final Class<? extends T> augmentedResultType;
 	private final SqmSelectStatement<T> criteriaQuery;
 	private final @Nullable NamedSqmQueryMemento<?> sqmMemento;
 
@@ -27,6 +28,18 @@ public final class AugmentedTypedQueryReference<T> implements JpaTypedQueryRefer
 			SqmSelectStatement<T> criteriaQuery,
 			@Nullable NamedSqmQueryMemento<?> sqmMemento) {
 		this.reference = reference;
+		this.augmentedResultType = reference.getResultType();
+		this.criteriaQuery = criteriaQuery;
+		this.sqmMemento = sqmMemento;
+	}
+
+	AugmentedTypedQueryReference(
+			TypedQueryReference<?> reference,
+			Class<T> augmentedResultType,
+			SqmSelectStatement<T> criteriaQuery,
+			@Nullable NamedSqmQueryMemento<?> sqmMemento) {
+		this.reference = reference;
+		this.augmentedResultType = augmentedResultType;
 		this.criteriaQuery = criteriaQuery;
 		this.sqmMemento = sqmMemento;
 	}
@@ -47,7 +60,7 @@ public final class AugmentedTypedQueryReference<T> implements JpaTypedQueryRefer
 	@Override
 	@Nonnull
 	public Class<? extends T> getResultType() {
-		return reference.getResultType();
+		return augmentedResultType;
 	}
 
 	@Override

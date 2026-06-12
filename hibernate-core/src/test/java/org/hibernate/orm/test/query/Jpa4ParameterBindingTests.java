@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Steve Ebersole
@@ -82,6 +83,70 @@ public class Jpa4ParameterBindingTests {
 			assertEquals( 1, positionalResults.size() );
 			assertEquals( new Code( "B" ), positionalResults.get( 0 ).getCode() );
 		} );
+	}
+
+	@Test
+	void testSetParameters(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final var results =
+					session.createSelectionQuery(
+									"from CodedEntity where id = ?1 or id = ?2 order by id",
+									CodedEntity.class
+							)
+							.setParameters( 1, 2 )
+							.list();
+			assertEquals( 2, results.size() );
+			assertEquals( new Code( "A" ), results.get( 0 ).getCode() );
+			assertEquals( new Code( "B" ), results.get( 1 ).getCode() );
+		} );
+	}
+
+	@Test
+	void testSetParametersWithCollection(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final var results =
+					session.createSelectionQuery( "from CodedEntity where id in ?1 order by id", CodedEntity.class )
+							.setParameters( java.util.List.of( 1, 2 ) )
+							.list();
+			assertEquals( 2, results.size() );
+		} );
+	}
+
+	@Test
+	void testSetParametersWithMutationQuery(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final int deleted =
+					session.createMutationQuery( "delete from CodedEntity where id = ?1 or id = ?2" )
+							.setParameters( 1, 2 )
+							.executeUpdate();
+			assertEquals( 2, deleted );
+		} );
+	}
+
+	@Test
+	void testSetParametersWithNativeQuery(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final var results =
+					session.createNativeQuery(
+									"select * from coded_entities where id = ?1 or id = ?2 order by id",
+									CodedEntity.class
+							)
+							.setParameters( 1, 2 )
+							.list();
+			assertEquals( 2, results.size() );
+		} );
+	}
+
+	@Test
+	void testSetParametersRequiresExactArgumentCount(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> assertThrows(
+				IllegalArgumentException.class,
+				() -> session.createSelectionQuery(
+								"from CodedEntity where id = ?1 or id = ?2",
+								CodedEntity.class
+						)
+						.setParameters( 1 )
+		) );
 	}
 
 	@Test

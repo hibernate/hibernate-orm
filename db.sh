@@ -385,6 +385,22 @@ edb_setup() {
 
 ###############################################################################
 
+cubrid() {
+    cubrid_11_4
+}
+
+cubrid_11_4() {
+    compose_down "cubrid"
+    compose_up "latest/cubrid/docker-compose.yaml"
+}
+
+cubrid_10_2() {
+    compose_down "cubrid"
+    compose_up "versioned/cubrid-10.2/docker-compose.yaml"
+}
+
+###############################################################################
+
 db2() {
   db2_12_1
 }
@@ -1182,6 +1198,9 @@ if [ -z ${1} ]; then
     echo -e "\tcockroachdb_24_3"
     echo -e "\tcockroachdb_24_1"
     echo -e "\tcockroachdb_23_2"
+    echo -e "\tcubrid"
+    echo -e "\tcubrid_11_4"
+    echo -e "\tcubrid_10_2"
     echo -e "\tdb2"
     echo -e "\tdb2_12_1"
     echo -e "\tdb2_11_5"

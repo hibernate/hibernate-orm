@@ -359,6 +359,15 @@ ext {
                     'jdbc.url'   : 'jdbc:Altibase://' + dbHost + ':20300/mydb?force_clob_bind=true',
                     'jdbc.datasource' : 'Altibase.jdbc.driver.AltibaseDriver'
             ],
+            cubrid : [
+                    'db.dialect' : 'org.hibernate.community.dialect.CUBRIDDialect',
+                    'jdbc.driver': 'cubrid.jdbc.driver.CUBRIDDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'connection.init_sql' : '',
+                    'jdbc.url'   : 'jdbc:cubrid:' + dbHost + ':33000:hibernate_orm:::',
+                    'jdbc.datasource' : 'cubrid.jdbc.driver.CUBRIDDataSource'
+            ],
             spanner : [
                     'db.dialect'      : 'org.hibernate.dialect.SpannerDialect',
                     'jdbc.driver'     : 'com.google.cloud.spanner.jdbc.JdbcDriver',

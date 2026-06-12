@@ -165,6 +165,7 @@ updates:
   - package-ecosystem: docker-compose
     directories:
       - "/docker-compose/latest/cockroachdb"
+      - "/docker-compose/latest/cubrid"
       - "/docker-compose/latest/db2"
       - "/docker-compose/latest/db2_spatial"
       - "/docker-compose/latest/edb"

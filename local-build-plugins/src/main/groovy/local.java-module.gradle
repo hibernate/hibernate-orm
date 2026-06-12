@@ -116,6 +116,9 @@ dependencies {
     else if ( db.startsWith( 'altibase' ) ) {
         testRuntimeOnly libs.jdbc.altibase
     }
+    else if ( db.startsWith( 'cubrid' ) ) {
+        testRuntimeOnly libs.jdbc.cubrid
+    }
     else if ( db.startsWith( 'informix' ) ) {
         testRuntimeOnly libs.jdbc.informix
     }

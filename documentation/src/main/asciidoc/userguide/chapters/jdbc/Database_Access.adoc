@@ -76,7 +76,8 @@ Any other settings prefixed with `c3p0.`:: Get passed to c3p0 as is. See https:/
 
 [IMPORTANT]
 ====
-To use the HikariCP this integration, the application must include the `hibernate-hikari` module jar (as well as its dependencies) on the classpath.
+To use the HikariCP integration, the application must include the `hibernate-hikaricp` module jar on the classpath,
+as well as an appropriate version of `com.zaxxer:HikariCP`.
 ====
 
 Hibernate also provides support for applications to use https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pool.

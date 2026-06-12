@@ -12,7 +12,8 @@ description = 'Integration for HikariCP into Hibernate O/RM'
 
 dependencies {
     implementation project( ':hibernate-core' )
-    implementation libs.hikaricp
+    compileOnly libs.hikaricp
 
     testImplementation project( ':hibernate-testing' )
+    testRuntimeOnly libs.hikaricp
 }

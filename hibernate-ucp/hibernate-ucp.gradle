@@ -12,8 +12,10 @@ description = 'Integration for Oracle Universal Connection Pool within Hibernate
 
 dependencies {
     implementation project( ':hibernate-core' )
-    implementation libs.oracleucp
-    implementation libs.jdbc.oracle
+    compileOnly libs.oracleucp
+    compileOnly libs.jdbc.oracle
 
     testImplementation project( ':hibernate-testing' )
+    testRuntimeOnly libs.oracleucp
+    testRuntimeOnly libs.jdbc.oracle
 }

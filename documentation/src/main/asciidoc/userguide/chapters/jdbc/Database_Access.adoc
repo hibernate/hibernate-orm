@@ -52,7 +52,10 @@ NOTE: Not all properties apply to all situations. For example, if you are provid
 
 [IMPORTANT]
 ====
-To use the c3p0 integration, the application must include the `hibernate-c3p0` module jar (as well as its dependencies) on the classpath.
+To use the c3p0 integration, the application must include the `hibernate-c3p0` module jar on the classpath,
+as well as an appropriate version of `com.mchange:c3p0`.
+
+This version of Hibernate ORM was tested with c3p0 {c3p0Version}.
 ====
 
 Hibernate also provides support for applications to use https://www.mchange.com/projects/c3p0/[c3p0] connection pooling.
@@ -75,7 +78,10 @@ Any other settings prefixed with `c3p0.`:: Get passed to c3p0 as is. See https:/
 
 [IMPORTANT]
 ====
-To use the HikariCP this integration, the application must include the `hibernate-hikari` module jar (as well as its dependencies) on the classpath.
+To use the HikariCP integration, the application must include the `hibernate-hikaricp` module jar on the classpath,
+as well as an appropriate version of `com.zaxxer:HikariCP`.
+
+This version of Hibernate ORM was tested with HikariCP {hikaricpVersion}.
 ====
 
 Hibernate also provides support for applications to use https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pool.
@@ -96,7 +102,10 @@ Note that Hikari only supports JDBC standard isolation levels (apparently).
 
 [IMPORTANT]
 ====
-To use the Agroal integration, the application must include the `hibernate-agroal` module jar (as well as its dependencies) on the classpath.
+To use the Agroal integration, the application must include the `hibernate-agroal` module jar on the classpath,
+as well as an appropriate version of `io.agroal:agroal-pool`.
+
+This version of Hibernate ORM was tested with Agroal {agroalVersion}.
 ====
 
 Hibernate also provides support for applications to use https://agroal.github.io/[Agroal] connection pool.
@@ -116,7 +125,10 @@ Additionally, this `ConnectionProvider` will pick up the following Hibernate-spe
 
 [IMPORTANT]
 ====
-To use the Oracle Universal Connection Pool (aka UCP) integration, the application must include the `hibernate-ucp` module jar (as well as its dependencies) on the classpath.
+To use the Oracle Universal Connection Pool (aka UCP) integration, the application must include the `hibernate-ucp` module jar on the classpath,
+as well as appropriate versions of `com.oracle.database.jdbc:ucp17` and `com.oracle.database.jdbc:ojdbc17`.
+
+This version of Hibernate ORM was tested with Oracle JDBC {oracleVersion}.
 ====
 
 Hibernate also provides support for applications using https://docs.oracle.com/en/database/oracle/oracle-database/26/jjucp/intro.html[Oracle Universal Connection Pool].

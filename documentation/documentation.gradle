@@ -271,7 +271,12 @@ asciidoctorj {
             'html-outdated-content-project-key': 'orm',
             'html-meta-description': 'Hibernate ORM, relational persistence for idiomatic Java',
             'html-meta-keywords': 'hibernate, orm, hibernate orm, database, db, jpa, sql',
-            'html-meta-version-family': ormBuildDetails.hibernateVersion.family
+            'html-meta-version-family': ormBuildDetails.hibernateVersion.family,
+            micrometerVersion: libs.versions.micrometer.get(),
+            c3p0Version: libs.versions.c3p0.get(),
+            hikaricpVersion: libs.versions.hikaricp.get(),
+            agroalVersion: libs.versions.agroal.get(),
+            oracleVersion: libs.versions.oracle.get()
 
     options logDocuments: true
 

@@ -57,7 +57,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 		final var customInstantiator =
 				getCustomInstantiator( bootDescriptor, creationContext, compositeUserType );
 
-		if ( bootDescriptor.getComponentClassName() == null ) { // i.e. RepresentationMode.MAP;
+		if ( bootDescriptor.isDynamic() ) { // i.e. RepresentationMode.MAP;
 			return new EmbeddableRepresentationStrategyMap(
 					bootDescriptor,
 					runtimeDescriptorAccess,
@@ -104,8 +104,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			//noinspection unchecked,rawtypes
 			return new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
 		}
-		else if ( bootDescriptor.getComponentClassName() != null
-				&& bootDescriptor.getComponentClass().isRecord() ) {
+		else if ( bootDescriptor.isRecord() ) {
 			if ( bootDescriptor.sortProperties() == null ) {
 				return new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
 			}

@@ -17,8 +17,8 @@ import org.hibernate.testing.orm.junit.Setting;
 		annotatedClasses = {AbstractJpaMetamodelPopulationTest.SimpleAnnotatedEntity.class, AbstractJpaMetamodelPopulationTest.CompositeIdAnnotatedEntity.class},
 		xmlMappings = {
 				"org/hibernate/jpa/test/metamodel/SimpleEntity.xml",
-				"org/hibernate/jpa/test/metamodel/CompositeIdEntity.hbm.xml",
-				"org/hibernate/jpa/test/metamodel/CompositeId2Entity.hbm.xml"
+				"org/hibernate/jpa/test/metamodel/CompositeIdEntity.orm.xml",
+				"org/hibernate/jpa/test/metamodel/CompositeId2Entity.orm.xml"
 		},
 		integrationSettings = {@Setting(name = AvailableSettings.JPA_METAMODEL_POPULATION, value = "ignoreUnsupported")}
 )

@@ -333,6 +333,14 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean hasSubselectLoadableCollections();
 
 	/**
+	 * Determine whether this entity contains references to attributes
+	 * which are fetchable by subselect?
+	 *
+	 * @return True if the entity contains attributes fetchable by subselect; false otherwise.
+	 */
+	boolean hasSubselectLoadableAttributes();
+
+	/**
 	 * Determine whether this entity contains references to persistent collections
 	 * not referencing the primary key.
 	 *

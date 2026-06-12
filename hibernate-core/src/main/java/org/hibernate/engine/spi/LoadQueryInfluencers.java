@@ -417,29 +417,22 @@ public class LoadQueryInfluencers implements Serializable {
 		return false;
 	}
 
-	public boolean hasSubselectLoadableCollections(EntityPersister persister) {
-		return persister.hasSubselectLoadableCollections()
-			|| hasSubselectLoadableAttributes( persister )
+	public boolean hasSubselectLoadableAttributes(EntityPersister persister) {
+		return canUseAttributeFetchOptions( effectiveEntityGraph ) && persister.hasSubselectLoadableAttributes()
 			|| subselectFetchEnabled && persister.hasCollections()
 			|| hasSubselectLoadableCollectionsEnabledInProfile( persister )
 			|| hasSubselectLoadableCollectionsEnabledInGraph( effectiveEntityGraph, persister );
 	}
 
-	public boolean hasSubselectLoadableCollections(
+	public boolean hasSubselectLoadableAttributes(
 			EntityPersister persister,
 			@Nullable AppliedGraph appliedGraph) {
-		return hasSubselectLoadableCollections( persister )
+		return canUseAttributeFetchOptions( appliedGraph ) && hasSubselectLoadableAttributes( persister )
 			|| hasSubselectLoadableCollectionsEnabledInGraph( appliedGraph, persister );
 	}
 
-	private static boolean hasSubselectLoadableAttributes(EntityPersister persister) {
-		final var attributeMappings = persister.getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			if ( attributeMappings.get( i ).getMappedFetchOptions().getStyle() == SUBSELECT ) {
-				return true;
-			}
-		}
-		return false;
+	private static boolean canUseAttributeFetchOptions(@Nullable AppliedGraph appliedGraph) {
+		return appliedGraph == null || appliedGraph.getSemantic() != GraphSemantic.FETCH;
 	}
 
 	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {

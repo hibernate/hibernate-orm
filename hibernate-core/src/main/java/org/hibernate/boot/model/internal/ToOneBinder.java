@@ -342,7 +342,7 @@ public class ToOneBinder {
 			PropertyData inferredData,
 			PropertyHolder propertyHolder) {
 		handleLazy( toOne, property );
-		handleFetch( toOne, property );
+		handleFetch( toOne, property, propertyHolder );
 		handleFetchProfileOverrides( toOne, property, propertyHolder, inferredData );
 	}
 
@@ -372,18 +372,18 @@ public class ToOneBinder {
 						propertyHolder, inferredData.getPropertyName(), context ) ));
 	}
 
-	private static void handleFetch(ToOne toOne, MemberDetails property) {
+	private static void handleFetch(ToOne toOne, MemberDetails property, PropertyHolder propertyHolder) {
 		final var fetchAnnotationUsage = property.getDirectAnnotationUsage( Fetch.class );
 		if ( fetchAnnotationUsage != null ) {
 			// Hibernate @Fetch annotation takes precedence
-			setHibernateFetchStyle( toOne, fetchAnnotationUsage.value() );
+			setHibernateFetchStyle( toOne, fetchAnnotationUsage.value(), propertyHolder );
 		}
 		else {
 			toOne.setFetchStyle( getFetchStyle( getJpaFetchType( property, toOne.getBuildingContext() ) ) );
 		}
 	}
 
-	private static void setHibernateFetchStyle(ToOne toOne, FetchMode fetchMode) {
+	private static void setHibernateFetchStyle(ToOne toOne, FetchMode fetchMode, PropertyHolder propertyHolder) {
 		switch ( fetchMode ) {
 			case JOIN:
 				toOne.setFetchStyle( FetchStyle.JOIN );
@@ -395,6 +395,7 @@ public class ToOneBinder {
 				break;
 			case SUBSELECT:
 				toOne.setFetchStyle( FetchStyle.SUBSELECT );
+				propertyHolder.getPersistentClass().setSubselectLoadableAttributes( true );
 				break;
 			default:
 				throw new AssertionFailure("unknown fetch type");

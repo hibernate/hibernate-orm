@@ -98,6 +98,7 @@ public abstract sealed class PersistentClass
 	private String loaderName;
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
+	private boolean hasSubselectLoadableAttributes;
 	private Component identifierMapper;
 	private List<CallbackDefinition> callbackDefinitions;
 	private Table auxiliaryTable;
@@ -986,6 +987,14 @@ public abstract sealed class PersistentClass
 
 	public void setSubselectLoadableCollections(boolean hasSubselectCollections) {
 		this.hasSubselectLoadableCollections = hasSubselectCollections;
+	}
+
+	public boolean hasSubselectLoadableAttributes() {
+		return hasSubselectLoadableAttributes;
+	}
+
+	public void setSubselectLoadableAttributes(boolean hasSubselectAttributes) {
+		this.hasSubselectLoadableAttributes = hasSubselectAttributes;
 	}
 
 	public boolean hasCollectionNotReferencingPK() {

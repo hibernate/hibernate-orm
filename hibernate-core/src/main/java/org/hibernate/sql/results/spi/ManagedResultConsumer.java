@@ -41,7 +41,7 @@ public class ManagedResultConsumer implements ResultsConsumer<Void, Object> {
 			}
 			jdbcValuesSourceProcessingState.registerSubselects();
 			rowReader.finishUp( rowProcessingState );
-			jdbcValuesSourceProcessingState.finishUp( true );
+			jdbcValuesSourceProcessingState.finishUp();
 			return null;
 		}
 		catch (RuntimeException e) {

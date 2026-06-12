@@ -1462,6 +1462,7 @@ public abstract class CollectionBinder {
 				collection.setFetchStyle( FetchStyle.SELECT );
 				collection.setSubselectLoadable( true );
 				collection.getOwner().setSubselectLoadableCollections( true );
+				collection.getOwner().setSubselectLoadableAttributes( true );
 				break;
 			default:
 				throw new AssertionFailure( "unknown fetch type" );

@@ -98,7 +98,8 @@ Note that Hikari only supports JDBC standard isolation levels (apparently).
 
 [IMPORTANT]
 ====
-To use the Agroal integration, the application must include the `hibernate-agroal` module jar (as well as its dependencies) on the classpath.
+To use the Agroal integration, the application must include the `hibernate-agroal` module jar on the classpath,
+as well as appropriate versions of `io.agroal:agroal-api` and `io.agroal:agroal-pool`.
 ====
 
 Hibernate also provides support for applications to use https://agroal.github.io/[Agroal] connection pool.

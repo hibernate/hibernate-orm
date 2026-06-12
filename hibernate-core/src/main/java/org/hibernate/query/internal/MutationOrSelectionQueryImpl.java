@@ -670,6 +670,13 @@ public final class MutationOrSelectionQueryImpl implements MutationOrSelectionQu
 
 	@Override
 	@Nonnull
+	public MutationOrSelectionQuery setParameters(@Nonnull Object... arguments) {
+		delegate.setParameters( arguments );
+		return this;
+	}
+
+	@Override
+	@Nonnull
 	public <P> MutationOrSelectionQuery setParameter(int position, @Nullable P value, @Nonnull Class<P> type) {
 		delegate.setParameter( position, value, type );
 		return this;

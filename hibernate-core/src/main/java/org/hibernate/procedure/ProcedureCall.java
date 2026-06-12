@@ -381,6 +381,10 @@ public interface ProcedureCall
 
 	@Override
 	@Nonnull
+	ProcedureCall setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> ProcedureCall setConvertedParameter(int position, @Nullable P value, @Nonnull Class<? extends AttributeConverter<P, ?>> converter);
 
 	@Override

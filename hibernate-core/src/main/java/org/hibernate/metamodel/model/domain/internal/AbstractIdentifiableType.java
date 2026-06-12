@@ -92,6 +92,11 @@ public abstract class AbstractIdentifiableType<J>
 		return identifierDescriptor;
 	}
 
+	@Override
+	public boolean hasId() {
+		return hasIdClass || hasIdentifierProperty;
+	}
+
 	public boolean hasIdClass() {
 		return hasIdClass;
 	}

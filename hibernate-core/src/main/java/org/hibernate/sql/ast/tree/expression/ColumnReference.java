@@ -35,6 +35,7 @@ import static org.hibernate.sql.Template.TEMPLATE;
 public class ColumnReference implements Expression, Assignable {
 	private final @Nullable String qualifier;
 	private final String columnExpression;
+	private final String columnExpressionTemplate;
 	private final @Nullable SelectablePath selectablePath;
 	private final boolean isFormula;
 	private final @Nullable String readExpression;
@@ -117,15 +118,11 @@ public class ColumnReference implements Expression, Assignable {
 			@Nullable String customReadExpression,
 			JdbcMapping jdbcMapping) {
 		this.qualifier = nullIfEmpty( qualifier );
+		this.columnExpressionTemplate = columnExpression;
 
-		if ( isFormula ) {
-			this.columnExpression = qualifier == null
-					? replace( columnExpression, TEMPLATE + '.', "" )
-					: replace( columnExpression, TEMPLATE, qualifier );
-		}
-		else {
-			this.columnExpression = columnExpression;
-		}
+		this.columnExpression = isFormula
+				? renderColumnExpression( columnExpression, this.qualifier )
+				: columnExpression;
 
 		this.selectablePath = selectablePath == null
 				? new SelectablePath( this.columnExpression )
@@ -177,7 +174,7 @@ public class ColumnReference implements Expression, Assignable {
 
 	public void appendReadExpression(@Nullable String qualifier, Consumer<String> appender) {
 		if ( isFormula ) {
-			appender.accept( columnExpression );
+			appender.accept( renderColumnExpression( columnExpressionTemplate, qualifier ) );
 		}
 		else if ( readExpression != null ) {
 			appender.accept( qualifier == null
@@ -191,6 +188,12 @@ public class ColumnReference implements Expression, Assignable {
 			}
 			appender.accept( columnExpression );
 		}
+	}
+
+	private static String renderColumnExpression(String template, @Nullable String qualifier) {
+		return qualifier == null
+				? replace( template, TEMPLATE + '.', "" )
+				: replace( template, TEMPLATE, qualifier );
 	}
 
 	public void appendReadExpression(SqlAppender appender, @Nullable String qualifier) {
@@ -246,6 +249,7 @@ public class ColumnReference implements Expression, Assignable {
 		return isFormula == that.isFormula
 				&& Objects.equals( qualifier, that.qualifier )
 				&& Objects.equals( columnExpression, that.columnExpression )
+				&& Objects.equals( columnExpressionTemplate, that.columnExpressionTemplate )
 				&& Objects.equals( readExpression, that.readExpression );
 	}
 
@@ -253,6 +257,7 @@ public class ColumnReference implements Expression, Assignable {
 	public int hashCode() {
 		int result = qualifier != null ? qualifier.hashCode() : 0;
 		result = 31 * result + ( columnExpression != null ? columnExpression.hashCode() : 0 );
+		result = 31 * result + columnExpressionTemplate.hashCode();
 		result = 31 * result + ( isFormula ? 1 : 0 );
 		result = 31 * result + ( readExpression != null ? readExpression.hashCode() : 0 );
 		return result;

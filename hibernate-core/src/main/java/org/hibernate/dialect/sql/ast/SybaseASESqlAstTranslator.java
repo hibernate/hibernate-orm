@@ -579,8 +579,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			return columnReference.getQualifier();
 		}
 		else if ( columnReference.isColumnExpressionFormula() ) {
-			// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
-			// This is fine for now as this is only temporary anyway until we render aliases for table references
+			// Sybase needs formula references to the DML target rendered without a qualifier
 			return null;
 		}
 		else {

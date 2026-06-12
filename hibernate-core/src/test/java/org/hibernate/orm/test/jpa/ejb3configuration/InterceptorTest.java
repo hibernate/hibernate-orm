@@ -16,7 +16,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
@@ -276,9 +275,8 @@ public class InterceptorTest {
 	}
 
 	private void buildEntityManagerFactory(Map<String,Object> settings) {
-		entityManagerFactory = Bootstrap
-			.getEntityManagerFactoryBuilder( new PersistenceUnitDescriptorAdapter(), settings )
-			.build();
+		entityManagerFactory = org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap
+				.build( new PersistenceUnitDescriptorAdapter(), settings );
 	}
 
 }

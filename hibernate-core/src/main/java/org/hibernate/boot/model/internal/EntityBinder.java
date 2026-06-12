@@ -88,10 +88,10 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.CustomSqlMapping;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
@@ -154,7 +154,6 @@ import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.boot.spi.AccessType.getAccessStrategy;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
-import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -1506,11 +1505,12 @@ public class EntityBinder {
 			sqlInsert = resolveCustomSqlAnnotation( annotatedClass, SQLInsert.class, "" );
 		}
 		if ( sqlInsert != null ) {
-			persistentClass.setCustomSQLInsert( sqlInsert.sql().trim(), sqlInsert.callable() );
-			final var expectationClass = sqlInsert.verify();
-			if ( expectationClass != Expectation.class ) {
-				persistentClass.setInsertExpectation( getDefaultSupplier( expectationClass ) );
-			}
+			persistentClass.setCustomSqlInsert( CustomSqlMapping.customSqlMapping(
+					sqlInsert.sql(),
+					sqlInsert.callable(),
+					sqlInsert.verify(),
+					true
+			) );
 		}
 
 		var sqlUpdate = resolveCustomSqlAnnotation( annotatedClass, SQLUpdate.class, primaryTableName );
@@ -1518,11 +1518,12 @@ public class EntityBinder {
 			sqlUpdate = resolveCustomSqlAnnotation( annotatedClass, SQLUpdate.class, "" );
 		}
 		if ( sqlUpdate != null ) {
-			persistentClass.setCustomSQLUpdate( sqlUpdate.sql().trim(), sqlUpdate.callable() );
-			final var expectationClass = sqlUpdate.verify();
-			if ( expectationClass != Expectation.class ) {
-				persistentClass.setUpdateExpectation( getDefaultSupplier( expectationClass ) );
-			}
+			persistentClass.setCustomSqlUpdate( CustomSqlMapping.customSqlMapping(
+					sqlUpdate.sql(),
+					sqlUpdate.callable(),
+					sqlUpdate.verify(),
+					true
+			) );
 		}
 
 		var sqlDelete = resolveCustomSqlAnnotation( annotatedClass, SQLDelete.class, primaryTableName );
@@ -1530,11 +1531,12 @@ public class EntityBinder {
 			sqlDelete = resolveCustomSqlAnnotation( annotatedClass, SQLDelete.class, "" );
 		}
 		if ( sqlDelete != null ) {
-			persistentClass.setCustomSQLDelete( sqlDelete.sql().trim(), sqlDelete.callable() );
-			final var expectationClass = sqlDelete.verify();
-			if ( expectationClass != Expectation.class ) {
-				persistentClass.setDeleteExpectation( getDefaultSupplier( expectationClass ) );
-			}
+			persistentClass.setCustomSqlDelete( CustomSqlMapping.customSqlMapping(
+					sqlDelete.sql(),
+					sqlDelete.callable(),
+					sqlDelete.verify(),
+					true
+			) );
 		}
 
 		final var sqlDeleteAll = resolveCustomSqlAnnotation( annotatedClass, SQLDeleteAll.class, "" );
@@ -2414,29 +2416,32 @@ public class EntityBinder {
 
 		final var sqlInsert = resolveCustomSqlAnnotation( annotatedClass, SQLInsert.class, tableName );
 		if ( sqlInsert != null ) {
-			join.setCustomSQLInsert( sqlInsert.sql().trim(), sqlInsert.callable() );
-			final var expectationClass = sqlInsert.verify();
-			if ( expectationClass != Expectation.class ) {
-				join.setInsertExpectation( getDefaultSupplier( expectationClass ) );
-			}
+			join.setCustomSqlInsert( CustomSqlMapping.customSqlMapping(
+					sqlInsert.sql(),
+					sqlInsert.callable(),
+					sqlInsert.verify(),
+					false
+			) );
 		}
 
 		final var sqlUpdate = resolveCustomSqlAnnotation( annotatedClass, SQLUpdate.class, tableName );
 		if ( sqlUpdate != null ) {
-			join.setCustomSQLUpdate( sqlUpdate.sql().trim(), sqlUpdate.callable() );
-			final var expectationClass = sqlUpdate.verify();
-			if ( expectationClass != Expectation.class ) {
-				join.setUpdateExpectation( getDefaultSupplier( expectationClass ) );
-			}
+			join.setCustomSqlUpdate( CustomSqlMapping.customSqlMapping(
+					sqlUpdate.sql(),
+					sqlUpdate.callable(),
+					sqlUpdate.verify(),
+					false
+			) );
 		}
 
 		final var sqlDelete = resolveCustomSqlAnnotation( annotatedClass, SQLDelete.class, tableName );
 		if ( sqlDelete != null ) {
-			join.setCustomSQLDelete( sqlDelete.sql().trim(), sqlDelete.callable() );
-			final var expectationClass = sqlDelete.verify();
-			if ( expectationClass != Expectation.class ) {
-				join.setDeleteExpectation( getDefaultSupplier( expectationClass ) );
-			}
+			join.setCustomSqlDelete( CustomSqlMapping.customSqlMapping(
+					sqlDelete.sql(),
+					sqlDelete.callable(),
+					sqlDelete.verify(),
+					false
+			) );
 		}
 	}
 

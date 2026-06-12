@@ -14,7 +14,6 @@ import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
-import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -420,10 +419,6 @@ public class GeneratorAnnotationHelper {
 	}
 
 	private static String determineStrategyName(GenericGenerator generatorConfig) {
-		if ( generatorConfig instanceof GenericGeneratorAnnotation generatorAnnotation
-				&& generatorAnnotation.strategy() != null ) {
-			return generatorAnnotation.strategy();
-		}
 		return generatorConfig.type().getName();
 	}
 

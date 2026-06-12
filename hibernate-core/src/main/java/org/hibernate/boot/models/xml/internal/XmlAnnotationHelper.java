@@ -105,14 +105,21 @@ import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JavaTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.JdbcTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.JdbcTypeCodeAnnotation;
+import org.hibernate.boot.models.annotations.internal.MutabilityAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdCacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.ParameterAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLDeletesAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLInsertsAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLJoinTableRestrictionAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLUpdatesAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryRowAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryRowsAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
@@ -136,6 +143,7 @@ import org.hibernate.boot.models.xml.internal.db.TableProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.ModelsException;
@@ -148,6 +156,7 @@ import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -165,6 +174,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
@@ -652,8 +662,7 @@ public class XmlAnnotationHelper {
 				HibernateAnnotations.GENERIC_GENERATOR,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		generatorAnn.name( "" );
-		generatorAnn.strategy( jaxbGenerator.getClazz() );
+		generatorAnn.type( generatorClass( jaxbGenerator, xmlDocumentContext ) );
 
 		final List<JaxbConfigurationParameterImpl> jaxbParameters = jaxbGenerator.getParameters();
 		if ( isEmpty( jaxbParameters ) ) {
@@ -669,6 +678,21 @@ public class XmlAnnotationHelper {
 			}
 			generatorAnn.parameters( parameters );
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Class<? extends Generator> generatorClass(
+			JaxbGenericIdGeneratorImpl jaxbGenerator,
+			XmlDocumentContext xmlDocumentContext) {
+		final Class<?> generatorClass = xmlDocumentContext.getBootstrapContext()
+				.getClassLoaderService()
+				.classForName( jaxbGenerator.getClazz() );
+		if ( !Generator.class.isAssignableFrom( generatorClass ) ) {
+			throw new AnnotationException(
+					"Generic generator class '" + generatorClass.getName() + "' does not implement 'Generator'"
+			);
+		}
+		return (Class<? extends Generator>) generatorClass;
 	}
 
 	public static void applyAttributeOverrides(
@@ -1141,6 +1165,26 @@ public class XmlAnnotationHelper {
 					xmlDocumentContext
 			);
 		}
+
+		if ( isNotEmpty( jaxbBasicMapping.getMutability() ) ) {
+			final MutabilityAnnotation mutability = (MutabilityAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.MUTABILITY,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			mutability.value( resolveMutabilityPlanClass( jaxbBasicMapping.getMutability(), xmlDocumentContext ) );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Class<? extends MutabilityPlan<?>> resolveMutabilityPlanClass(
+			String mutabilityPlanClassName,
+			XmlDocumentContext xmlDocumentContext) {
+		final ClassDetails descriptorClassDetails = xmlDocumentContext
+				.getModelBuildingContext()
+				.getClassDetailsRegistry()
+				.resolveClassDetails( mutabilityPlanClassName );
+		final Class<?> javaClass = descriptorClassDetails.toJavaClass();
+		return (Class<? extends MutabilityPlan<?>>) javaClass;
 	}
 
 	private static int resolveJdbcTypeName(String name) {
@@ -1312,6 +1356,16 @@ public class XmlAnnotationHelper {
 
 		if ( jaxbCustomSql.getResultCheck() != null ) {
 			annotation.verify( jaxbCustomSql.getResultCheck().expectationClass() );
+		}
+	}
+
+	private static void applyCustomSql(
+			JaxbCustomSqlImpl jaxbCustomSql,
+			CustomSqlDetails annotation,
+			String defaultTable) {
+		applyCustomSql( jaxbCustomSql, annotation );
+		if ( isEmpty( annotation.table() ) ) {
+			annotation.table( defaultTable );
 		}
 	}
 
@@ -1673,7 +1727,92 @@ public class XmlAnnotationHelper {
 			rowUsage.table( tableUsage.name() );
 			rowUsage.optional( jaxbSecondaryTable.isOptional() == TRUE );
 			rowUsage.owned( jaxbSecondaryTable.isOwned() == TRUE );
+
+			applySecondaryTableSqlInsert( jaxbSecondaryTable, target, xmlDocumentContext );
+			applySecondaryTableSqlUpdate( jaxbSecondaryTable, target, xmlDocumentContext );
+			applySecondaryTableSqlDelete( jaxbSecondaryTable, target, xmlDocumentContext );
 		}
+	}
+
+	private static void applySecondaryTableSqlInsert(
+			JaxbSecondaryTableImpl jaxbSecondaryTable,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbSecondaryTable.getSqlInsert() == null ) {
+			return;
+		}
+
+		final org.hibernate.annotations.SQLInsert[] previous = target.getRepeatedAnnotationUsages(
+				HibernateAnnotations.SQL_INSERT,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final SQLInsertsAnnotation sqlInserts = (SQLInsertsAnnotation) target.replaceAnnotationUsage(
+				HibernateAnnotations.SQL_INSERT,
+				HibernateAnnotations.SQL_INSERTS,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final SQLInsertAnnotation sqlInsert = HibernateAnnotations.SQL_INSERT.createUsage(
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		applyCustomSql( jaxbSecondaryTable.getSqlInsert(), sqlInsert, jaxbSecondaryTable.getName() );
+
+		final org.hibernate.annotations.SQLInsert[] usages = Arrays.copyOf( previous, previous.length + 1 );
+		usages[previous.length] = sqlInsert;
+		sqlInserts.value( usages );
+	}
+
+	private static void applySecondaryTableSqlUpdate(
+			JaxbSecondaryTableImpl jaxbSecondaryTable,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbSecondaryTable.getSqlUpdate() == null ) {
+			return;
+		}
+
+		final org.hibernate.annotations.SQLUpdate[] previous = target.getRepeatedAnnotationUsages(
+				HibernateAnnotations.SQL_UPDATE,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final SQLUpdatesAnnotation sqlUpdates = (SQLUpdatesAnnotation) target.replaceAnnotationUsage(
+				HibernateAnnotations.SQL_UPDATE,
+				HibernateAnnotations.SQL_UPDATES,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final SQLUpdateAnnotation sqlUpdate = HibernateAnnotations.SQL_UPDATE.createUsage(
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		applyCustomSql( jaxbSecondaryTable.getSqlUpdate(), sqlUpdate, jaxbSecondaryTable.getName() );
+
+		final org.hibernate.annotations.SQLUpdate[] usages = Arrays.copyOf( previous, previous.length + 1 );
+		usages[previous.length] = sqlUpdate;
+		sqlUpdates.value( usages );
+	}
+
+	private static void applySecondaryTableSqlDelete(
+			JaxbSecondaryTableImpl jaxbSecondaryTable,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbSecondaryTable.getSqlDelete() == null ) {
+			return;
+		}
+
+		final org.hibernate.annotations.SQLDelete[] previous = target.getRepeatedAnnotationUsages(
+				HibernateAnnotations.SQL_DELETE,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final SQLDeletesAnnotation sqlDeletes = (SQLDeletesAnnotation) target.replaceAnnotationUsage(
+				HibernateAnnotations.SQL_DELETE,
+				HibernateAnnotations.SQL_DELETES,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		final SQLDeleteAnnotation sqlDelete = HibernateAnnotations.SQL_DELETE.createUsage(
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		applyCustomSql( jaxbSecondaryTable.getSqlDelete(), sqlDelete, jaxbSecondaryTable.getName() );
+
+		final org.hibernate.annotations.SQLDelete[] usages = Arrays.copyOf( previous, previous.length + 1 );
+		usages[previous.length] = sqlDelete;
+		sqlDeletes.value( usages );
 	}
 
 	private static final CheckConstraint[] NO_CHECK_CONSTRAINTS = new CheckConstraint[0];

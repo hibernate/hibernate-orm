@@ -228,10 +228,6 @@ public class DomainModelExtension
 					metadataSources.addQueryImport( extraQueryImport.name(), extraQueryImport.importedClass() );
 				}
 
-				for ( Class<?> importedClass : domainModelAnnotation.extraQueryImportClasses() ) {
-					metadataSources.addQueryImport( importedClass.getSimpleName(), importedClass );
-				}
-
 				final MetadataBuilderImpl metadataBuilder = (MetadataBuilderImpl) metadataSources.getMetadataBuilder();
 
 				for ( Class<? extends TypeContributor> contributorType : domainModelAnnotation.typeContributors() ) {

@@ -44,11 +44,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @DomainModel(
 		annotatedClasses = { SmokeTests.SimpleEntity.class, SmokeTests.OtherEntity.class },
-		extraQueryImportClasses = {
-				SmokeTests.ListItemDto.class,
-				SmokeTests.CategorizedListItemDto.class,
-				SmokeTests.CompoundDto.class,
-				SmokeTests.BasicSetterBasedDto.class
+		extraQueryImports = {
+				@DomainModel.ExtraQueryImport( name = "ListItemDto", importedClass = SmokeTests.ListItemDto.class ),
+				@DomainModel.ExtraQueryImport( name = "CategorizedListItemDto", importedClass = SmokeTests.CategorizedListItemDto.class ),
+				@DomainModel.ExtraQueryImport( name = "CompoundDto", importedClass = SmokeTests.CompoundDto.class ),
+				@DomainModel.ExtraQueryImport( name = "BasicSetterBasedDto", importedClass = SmokeTests.BasicSetterBasedDto.class )
 		}
 )
 @ServiceRegistry(

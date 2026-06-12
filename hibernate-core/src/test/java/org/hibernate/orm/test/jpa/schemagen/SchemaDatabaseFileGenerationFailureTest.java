@@ -14,8 +14,7 @@ import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -23,7 +22,6 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -32,8 +30,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -48,7 +45,8 @@ import static org.mockito.Mockito.when;
  */
 public class SchemaDatabaseFileGenerationFailureTest {
 	private Connection connection;
-	private EntityManagerFactoryBuilder entityManagerFactoryBuilder;
+	private PersistenceUnitDescriptor persistenceUnitDescriptor;
+	private Map<String, Object> config;
 
 	@BeforeEach
 	public void setUp() throws IOException, SQLException {
@@ -58,17 +56,8 @@ public class SchemaDatabaseFileGenerationFailureTest {
 		when( connection.createStatement() ).thenReturn( statement );
 		when( statement.execute( anyString() ) ).thenThrow( new SQLException( "Expected" ) );
 
-		entityManagerFactoryBuilder = Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				getConfig()
-		);
-	}
-
-	@AfterEach
-	public void destroy() {
-		if ( entityManagerFactoryBuilder != null ) {
-			entityManagerFactoryBuilder.cancel();
-		}
+		persistenceUnitDescriptor = buildPersistenceUnitDescriptor();
+		config = getConfig();
 	}
 
 	@Test
@@ -80,7 +69,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "on gauss we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
-			entityManagerFactoryBuilder.generateSchema();
+			SessionFactoryBootstrap.generateSchema( persistenceUnitDescriptor, config );
 			fail( "Should have thrown IOException" );
 		}
 		catch (Exception e) {
@@ -120,7 +109,12 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	}
 
 	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
+		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ) {
+			@Override
+			public List<String> getManagedClassNames() {
+				return List.of( TestEntity.class.getName() );
+			}
+		};
 	}
 
 	private Map<String, Object> getConfig() {
@@ -129,10 +123,6 @@ public class SchemaDatabaseFileGenerationFailureTest {
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_CONNECTION, connection );
 		config.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "drop" );
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, true );
-		ArrayList<Class<?>> classes = new ArrayList<>();
-
-		classes.addAll( Arrays.asList( new Class<?>[] { TestEntity.class } ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
 }

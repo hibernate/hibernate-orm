@@ -104,7 +104,9 @@ public class DomainModelCategorizationCollector {
 		getGlobalRegistrations().collectCollectionTypeRegistrations( classDetails );
 		getGlobalRegistrations().collectEmbeddableInstantiatorRegistrations( classDetails );
 		getGlobalRegistrations().collectFilterDefinitions( classDetails );
+		getGlobalRegistrations().collectFetchProfiles( classDetails );
 		getGlobalRegistrations().collectNamedQueryRegistrations( classDetails );
+		getGlobalRegistrations().collectSqlResultSetMappingRegistrations( classDetails );
 		getGlobalRegistrations().collectNamedEntityGraphRegistrations( classDetails );
 		getGlobalRegistrations().collectImportRename( classDetails );
 

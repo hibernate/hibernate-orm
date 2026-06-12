@@ -144,6 +144,7 @@ import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
+import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -473,7 +474,26 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			@Nonnull Consumer<CriteriaQuery<T>> augmentation) {
 		final var buildResult = buildCriteriaQuery( reference );
 		augmentation.accept( buildResult.sqmStatement );
-		return new AugmentedTypedQueryReference<>( reference, buildResult.sqmStatement, buildResult.sqmMemento );
+		return new AugmentedTypedQueryReference<>(
+				reference,
+				buildResult.sqmStatement,
+				buildResult.sqmMemento
+		);
+	}
+
+	@Override
+	@Nonnull
+	public <T> TypedQueryReference<T> augment(@Nonnull TypedQueryReference<?> reference,
+											@Nonnull Class<T> augmentedResultType,
+											@Nonnull Consumer<CriteriaQuery<T>> augmentation) {
+		final var buildResult = buildCriteriaQuery( reference, augmentedResultType );
+		augmentation.accept( buildResult.sqmStatement );
+		return new AugmentedTypedQueryReference<>(
+				reference,
+				augmentedResultType,
+				buildResult.sqmStatement,
+				buildResult.sqmMemento
+		);
 	}
 
 	private <T> SqmBuildResult<T> buildCriteriaQuery(TypedQueryReference<T> reference) {
@@ -483,6 +503,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				.getQueryMementoByName( reference.getName(), false );
 		if ( namedMemento instanceof NamedSqmQueryMemento<?> sqmMemento ) {
 			return new SqmBuildResult<>( createCriteriaQuery( sqmMemento, resultType ), sqmMemento );
+		}
+		else {
+			throw new IllegalSelectQueryException(
+					"CriteriaBuilder.augment() only supports HQL query references: " + reference.getName()
+			);
+		}
+	}
+
+	private <T> SqmBuildResult<T> buildCriteriaQuery(TypedQueryReference<?> reference, Class<T> resultType) {
+		final var namedMemento = queryEngine.getNamedObjectRepository()
+				.getQueryMementoByName( reference.getName(), false );
+		if ( namedMemento instanceof NamedSqmQueryMemento<?> sqmMemento ) {
+			return new SqmBuildResult<>( createCriteriaQueryNoSelect( sqmMemento, resultType ), sqmMemento );
 		}
 		else {
 			throw new IllegalSelectQueryException(
@@ -505,6 +538,31 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 					sqmMemento.getHqlString()
 			);
 		}
+	}
+
+	private <T> SqmSelectStatement<T> createCriteriaQueryNoSelect(NamedSqmQueryMemento<?> sqmMemento, Class<T> resultType) {
+		final var sqmStatement = sqmMemento.getSqmStatement();
+		if ( sqmStatement == null ) {
+			final var query = createCriteriaQuery( sqmMemento.getHqlString(), resultType );
+			clearSelection( query );
+			return query;
+		}
+		else if ( sqmStatement instanceof SqmSelectStatement<?> selectStatement ) {
+			final var copy = selectStatement.createCopy( simpleContext( SqmQuerySource.CRITERIA ), resultType );
+			clearSelection( copy );
+			return copy;
+		}
+		else {
+			throw new IllegalSelectQueryException(
+					"Expecting a selection query, but found '" + sqmMemento.getHqlString() + "'",
+					sqmMemento.getHqlString()
+			);
+		}
+	}
+
+	private void clearSelection(SqmSelectStatement<?> query) {
+		final var querySpec = query.getQuerySpec();
+		querySpec.setSelectClause( new SqmSelectClause( querySpec.getSelectClause().isDistinct(), this ) );
 	}
 
 	private <T> SqmSelectStatement<T> createCriteriaQuery(String hql, Class<T> resultType) {
@@ -1313,14 +1371,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Nonnull
 	@Override
 	public <X extends Comparable<? super X>> SqmExpression<X> greatest(@Nonnull Expression<X> argument) {
-		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "max" )
+		return getFunctionDescriptor( "max" )
 				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine);
 	}
 
 	@Nonnull
 	@Override
 	public <X extends Comparable<? super X>> SqmExpression<X> least(@Nonnull Expression<X> argument) {
-		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "min" )
+		return getFunctionDescriptor( "min" )
 				.generateSqmExpression( (SqmTypedNode<?>) argument, null, queryEngine);
 	}
 
@@ -6729,5 +6787,29 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				asList( (SqmTypedNode<?>) xpath, (SqmTypedNode<?>) xmlDocument ),
 				queryEngine
 		);
+	}
+
+	@Override
+	public <C extends Comparable<? super C>> Expression<C> least(Expression<C> x, Expression<C> y) {
+		return getFunctionDescriptor( "least" )
+				.generateSqmExpression( List.of( (SqmTypedNode<?>) x, (SqmTypedNode<?>) y), null, queryEngine);
+	}
+
+	@Override
+	public <C extends Comparable<? super C>> Expression<C> least(C x, Expression<C> y) {
+		return getFunctionDescriptor( "least" )
+				.generateSqmExpression( List.of( literal(x), (SqmTypedNode<?>) y), null, queryEngine);
+	}
+
+	@Override
+	public <C extends Comparable<? super C>> Expression<C> greatest(Expression<C> x, Expression<C> y) {
+		return getFunctionDescriptor( "greatest" )
+				.generateSqmExpression( List.of( (SqmTypedNode<?>) x, (SqmTypedNode<?>) y), null, queryEngine);
+	}
+
+	@Override
+	public <C extends Comparable<? super C>> Expression<C> greatest(C x, Expression<C> y) {
+		return getFunctionDescriptor( "greatest" )
+				.generateSqmExpression( List.of( literal(x), (SqmTypedNode<?>) y), null, queryEngine);
 	}
 }

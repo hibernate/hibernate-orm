@@ -35,6 +35,18 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	void afterStatement();
 
 	/**
+	 * Notification indicating a JDBC statement has been executed, to trigger
+	 * {@link org.hibernate.ConnectionReleaseMode#AFTER_STATEMENT} releasing
+	 * if needed.
+	 * @param treatAfterTransactionAsAfterStatement whether to consider {@link org.hibernate.ConnectionReleaseMode#AFTER_TRANSACTION}
+	 * as {@link org.hibernate.ConnectionReleaseMode#AFTER_STATEMENT}, useful when you have the after transaction release mode,
+	 * but no actual transactions and still want to release the resources.
+	 */
+	default void afterStatement(boolean treatAfterTransactionAsAfterStatement) {
+		afterStatement();
+	};
+
+	/**
 	 * Notification indicating a transaction is about to be completed, to
 	 * trigger release of the JDBC connection if needed, that is, if
 	 * {@link org.hibernate.ConnectionReleaseMode#BEFORE_TRANSACTION_COMPLETION}

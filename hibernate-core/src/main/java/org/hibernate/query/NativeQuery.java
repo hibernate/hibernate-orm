@@ -315,6 +315,10 @@ public interface NativeQuery<T>
 
 	@Override
 	@Nonnull
+	NativeQuery<T> setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> NativeQuery<T> setParameter(int position, @Nullable P val, @Nonnull Class<P> type);
 
 	@Override

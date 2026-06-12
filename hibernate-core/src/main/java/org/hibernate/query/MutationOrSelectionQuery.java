@@ -407,6 +407,10 @@ public interface MutationOrSelectionQuery
 
 	@Override
 	@Nonnull
+	MutationOrSelectionQuery setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> MutationOrSelectionQuery setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override

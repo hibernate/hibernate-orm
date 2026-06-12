@@ -763,6 +763,13 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	@Nonnull
+	public SelectionQueryImplementor<R> setParameters(@Nonnull Object... arguments) {
+		super.setParameters( arguments );
+		return this;
+	}
+
+	@Override
+	@Nonnull
 	public <P> SelectionQueryImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaType) {
 		super.setParameter( position, value, javaType );
 		return this;

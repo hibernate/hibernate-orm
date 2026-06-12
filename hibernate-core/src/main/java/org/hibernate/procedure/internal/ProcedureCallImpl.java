@@ -1471,6 +1471,14 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@Nonnull
+	public ProcedureCallImplementor<R> setParameters(@Nonnull Object... arguments) {
+		checkNotClosed();
+		super.setParameters( arguments );
+		return this;
+	}
+
+	@Override
+	@Nonnull
 	public <P> ProcedureCallImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaTypeClass) {
 		checkNotClosed();
 		super.setParameter( position, value, javaTypeClass );

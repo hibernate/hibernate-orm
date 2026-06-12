@@ -664,6 +664,13 @@ public class MutationQueryImpl<T>
 
 	@Override
 	@Nonnull
+	public MutationQueryImplementor<T> setParameters(@Nonnull Object... arguments) {
+		super.setParameters( arguments );
+		return this;
+	}
+
+	@Override
+	@Nonnull
 	public <P> MutationQueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaType) {
 		super.setParameter( position, value, javaType );
 		return this;

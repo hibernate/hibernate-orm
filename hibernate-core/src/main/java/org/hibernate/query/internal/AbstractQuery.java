@@ -560,6 +560,13 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	@Nonnull
+	public QueryImplementor<T> setParameters(@Nonnull Object... arguments) {
+		super.setParameters( arguments );
+		return this;
+	}
+
+	@Override
+	@Nonnull
 	public <P> QueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaType) {
 		super.setParameter( position, value, javaType );
 		return this;

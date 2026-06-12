@@ -988,9 +988,11 @@ custom collection type, and sorting.
 `@MapKeyJavaType`, `@MapKeyJdbcType`, `@MapKeyJdbcTypeCode`,
 `@MapKeyType`, `@Mutability`, `@Nationalized`, `@TimeZoneColumn`,
 `@TimeZoneStorage`, `@Type`
-| Mostly test-only, with XML parity noted for `@Mutability`.  Add focused
-basic, embeddable, and map-key assertions against `org.hibernate.mapping`
-state.
+| Covered for annotation binding.  Focused bind tests cover property access,
+column transformers, component type/instantiator customizations, basic
+Java/JDBC/custom type metadata, map-key Java/JDBC/custom type metadata,
+mutability, nationalization, and time-zone storage.  XML `@Mutability`
+remains tracked in XML/source parity.
 
 | Entity, table, and hierarchy coverage
 | `@BatchSize`, `@Cache`, `@Check`, `@DiscriminatorFormula`,
@@ -1175,11 +1177,11 @@ observed support from work still needing binder/test confirmation.
 | `@AttributeAccessor`
 | `METHOD`, `FIELD`
 | yes
-| XML/common attribute processing present
+| property accessor binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@AttributeBinderType`
 | `ANNOTATION_TYPE`
@@ -1436,11 +1438,11 @@ observed support from work still needing binder/test confirmation.
 | `@ColumnTransformer`
 | `FIELD`, `METHOD`
 | yes
-| column-transformer support appears present
+| basic column-transformer binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@ColumnTransformers`
 | `FIELD`, `METHOD`
@@ -1454,11 +1456,11 @@ observed support from work still needing binder/test confirmation.
 | `@CompositeType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
-| composite type support appears present
+| component custom type binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@CompositeTypeRegistration`
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
@@ -1562,11 +1564,11 @@ observed support from work still needing binder/test confirmation.
 | `@EmbeddableInstantiator`
 | `TYPE`, `FIELD`, `METHOD`, `ANNOTATION_TYPE`
 | yes
-| embeddable support appears present
+| component custom instantiator binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@EmbeddableInstantiatorRegistration`
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
@@ -1808,8 +1810,8 @@ observed support from work still needing binder/test confirmation.
 | basic-value Java type binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@JavaTypeRegistration`
 | `PACKAGE`, `TYPE`, `ANNOTATION_TYPE`
@@ -1835,8 +1837,8 @@ observed support from work still needing binder/test confirmation.
 | basic-value JDBC type binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@JdbcTypeCode`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1844,8 +1846,8 @@ observed support from work still needing binder/test confirmation.
 | basic-value JDBC type-code binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@JdbcTypeRegistration`
 | `PACKAGE`, `TYPE`
@@ -1961,8 +1963,8 @@ observed support from work still needing binder/test confirmation.
 | map-key Java-type binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@MapKeyJdbcType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1970,8 +1972,8 @@ observed support from work still needing binder/test confirmation.
 | map-key JDBC-type binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@MapKeyJdbcTypeCode`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1979,8 +1981,8 @@ observed support from work still needing binder/test confirmation.
 | map-key JDBC-type-code binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@MapKeyMutability`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1994,20 +1996,20 @@ observed support from work still needing binder/test confirmation.
 | `@MapKeyType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
-| map-key type support appears present
+| map-key custom type binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@Mutability`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`, `TYPE`
 | yes
-| mutability support appears present
-| XML descriptor/source present; focused test needed
+| basic-value mutability binding present
+| XML descriptor/source present; XML-focused test tracked separately
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@NamedEntityGraph`
 | `TYPE`, `PACKAGE`
@@ -2066,11 +2068,11 @@ observed support from work still needing binder/test confirmation.
 | `@Nationalized`
 | `PACKAGE`, `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
-| basic-value support appears present
+| basic-value nationalization binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@NativeGenerator`
 | `METHOD`, `FIELD`, `TYPE`, `PACKAGE`
@@ -2348,8 +2350,8 @@ observed support from work still needing binder/test confirmation.
 | basic-value support present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@TimeZoneStorage`
 | `FIELD`, `METHOD`
@@ -2357,17 +2359,17 @@ observed support from work still needing binder/test confirmation.
 | basic-value support present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@Type`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
-| custom type support appears present
+| custom type binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@TypeBinderType`
 | `ANNOTATION_TYPE`

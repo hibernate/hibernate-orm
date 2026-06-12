@@ -84,6 +84,7 @@ public class ComponentBinder {
 			boolean nullableByDefault,
 			boolean updatable) {
 		validateEmbeddedTablePlacement( source );
+		applyComponentCustomizations( component, source.sourceMember(), source.componentType() );
 		applyColumnNamingPattern( component, source.sourceMember() );
 		return bindProperties(
 				ownerType,
@@ -215,6 +216,7 @@ public class ComponentBinder {
 				nestedComponent.setComponentClassName( nestedComponentType.getClassName() );
 				nestedComponent.setTable( table );
 				nestedComponent.setTypeUsingReflection( componentType.getClassName(), attributeName );
+				applyComponentCustomizations( nestedComponent, member, nestedComponentType );
 				applyColumnNamingPattern( nestedComponent, member );
 
 				final Property property = createProperty( attributeName, nestedComponent, member );
@@ -267,6 +269,29 @@ public class ComponentBinder {
 		} );
 		CustomMappingBinder.callTypeBinders( componentType, component, state, context );
 		return columns;
+	}
+
+	private static void applyComponentCustomizations(
+			Component component,
+			MemberDetails sourceMember,
+			ClassDetails componentType) {
+		final org.hibernate.annotations.CompositeType compositeType = sourceMember == null
+				? null
+				: sourceMember.getDirectAnnotationUsage( org.hibernate.annotations.CompositeType.class );
+		if ( compositeType != null ) {
+			component.setTypeName( compositeType.value().getName() );
+		}
+
+		final org.hibernate.annotations.EmbeddableInstantiator memberInstantiator = sourceMember == null
+				? null
+				: sourceMember.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final org.hibernate.annotations.EmbeddableInstantiator typeInstantiator =
+				componentType.getDirectAnnotationUsage( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final org.hibernate.annotations.EmbeddableInstantiator instantiator =
+				memberInstantiator == null ? typeInstantiator : memberInstantiator;
+		if ( instantiator != null ) {
+			component.setCustomInstantiator( instantiator.value() );
+		}
 	}
 
 	private ManyToOne bindAssociationIdentifierMember(

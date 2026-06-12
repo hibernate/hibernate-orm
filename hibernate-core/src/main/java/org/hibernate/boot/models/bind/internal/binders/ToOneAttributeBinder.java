@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
@@ -185,6 +186,7 @@ class ToOneAttributeBinder {
 		value.setTypeName( target.entityName() );
 		value.setTypeUsingReflection( ownerClassName, propertyName );
 		value.setLazy( effectiveFetchType( source, bindingOptions ) == FetchType.LAZY );
+		applyOnDelete( member, value );
 
 		final boolean logicalOneToOne = source.isLogicalOneToOne();
 		if ( logicalOneToOne ) {
@@ -252,6 +254,7 @@ class ToOneAttributeBinder {
 		value.setConstrained( !source.optional() );
 		value.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
 		value.setMappedByProperty( source.oneToOne().mappedBy() );
+		applyOnDelete( attributeMetadata.getMember(), value );
 		property.setOptional( source.optional() );
 		property.setCascade( source.cascades( bindingState ), source.orphanRemoval() );
 
@@ -265,6 +268,13 @@ class ToOneAttributeBinder {
 				source.oneToOne().mappedBy()
 		) );
 		return value;
+	}
+
+	private static void applyOnDelete(MemberDetails member, org.hibernate.mapping.SimpleValue value) {
+		final OnDelete onDelete = member.getDirectAnnotationUsage( OnDelete.class );
+		if ( onDelete != null ) {
+			value.setOnDeleteAction( onDelete.action() );
+		}
 	}
 
 	private static void bindJoinColumns(

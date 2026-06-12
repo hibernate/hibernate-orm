@@ -14,7 +14,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.SharedCacheMode;
 import org.hibernate.MappingException;
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.annotations.NaturalIdClass;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
@@ -228,9 +230,13 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	/// Examples include cacheability, filters, and JPA callback definitions.
 	public void bindEntityMetadata() {
 		final ClassDetails classDetails = getManagedType().getClassDetails();
+		processRowManagement( getManagedType(), getTypeBinding() );
+		processConcreteProxy( classDetails, getTypeBinding() );
+		processNaturalIdClass( classDetails, getTypeBinding(), getBindingContext() );
 		processCaching( classDetails, getBindingState(), getBindingContext() );
 		processFilters( classDetails, getBindingState(), getBindingContext() );
 		processJpaEventListeners( getManagedType(), getBindingState(), getBindingContext() );
+		CustomMappingBinder.callTypeBinders( classDetails, binding, getBindingState(), getBindingContext() );
 	}
 
 	/// Bind the root identifier and retain its local binding state.
@@ -877,6 +883,54 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			RootClass rootEntity,
 			EntityTypeMetadata source) {
 		rootEntity.setOptimisticLockStyle( source.getHierarchy().getOptimisticLockStyle() );
+	}
+
+	private void processRowManagement(
+			EntityTypeMetadata managedType,
+			PersistentClass typeBinding) {
+		typeBinding.setDynamicInsert( managedType.isDynamicInsert() );
+		typeBinding.setDynamicUpdate( managedType.isDynamicUpdate() );
+	}
+
+	private void processConcreteProxy(
+			ClassDetails classDetails,
+			PersistentClass typeBinding) {
+		final var concreteProxy = classDetails.getDirectAnnotationUsage( ConcreteProxy.class );
+		if ( concreteProxy == null ) {
+			return;
+		}
+
+		if ( typeBinding.getSuperclass() != null ) {
+			throw new AnnotationException(
+					"Entity class '" + typeBinding.getClassName()
+							+ "' is annotated '@ConcreteProxy' but it is not the root of the entity inheritance hierarchy"
+			);
+		}
+
+		typeBinding.getRootClass().setConcreteProxy( true );
+	}
+
+	private void processNaturalIdClass(
+			ClassDetails classDetails,
+			PersistentClass typeBinding,
+			BindingContext bindingContext) {
+		if ( !( typeBinding instanceof RootClass rootClass ) ) {
+			return;
+		}
+
+		final var naturalIdClass = classDetails.getDirectAnnotationUsage( NaturalIdClass.class );
+		if ( naturalIdClass == null ) {
+			return;
+		}
+
+		if ( naturalIdClass.value() == void.class ) {
+			throw new IllegalStateException( "NaturalIdClass#value must not be void.class" );
+		}
+
+		rootClass.setNaturalIdClass(
+				bindingContext.getClassDetailsRegistry()
+						.resolveClassDetails( naturalIdClass.value().getName() )
+		);
 	}
 
 	private void processCacheRegions(

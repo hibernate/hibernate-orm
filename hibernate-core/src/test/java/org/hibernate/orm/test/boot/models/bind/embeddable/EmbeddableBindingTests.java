@@ -11,6 +11,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
 
+import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -125,6 +126,33 @@ public class EmbeddableBindingTests {
 				},
 				scope.getRegistry(),
 				SecondaryTableEmbeddedEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testEmbeddedTable(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( EmbeddedTableEntity.class.getName() );
+					assertThat( entityBinding.getJoins() ).hasSize( 1 );
+					final Join join = entityBinding.getJoins().get( 0 );
+					assertThat( entityBinding.getUnjoinedProperties() )
+							.extracting( org.hibernate.mapping.Property::getName )
+							.isEmpty();
+					assertThat( join.getProperties() )
+							.extracting( org.hibernate.mapping.Property::getName )
+							.containsExactly( "address" );
+
+					final Component component = (Component) join.getProperties().get( 0 ).getValue();
+					assertThat( component.getTable() ).isSameAs( join.getTable() );
+					assertThat( component.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "line1", "zipCode" );
+				},
+				scope.getRegistry(),
+				EmbeddedTableEntity.class
 		);
 	}
 
@@ -378,6 +406,17 @@ public class EmbeddableBindingTests {
 		@Embedded
 		@AttributeOverride(name = "line1", column = @Column(name = "street", table = "secondary_table_embedded_details"))
 		@AttributeOverride(name = "zipCode", column = @Column(name = "postal_code", table = "secondary_table_embedded_details"))
+		private Address address;
+	}
+
+	@Entity(name = "EmbeddedTableEntity")
+	@Table(name = "embedded_table_entities")
+	@SecondaryTable(name = "embedded_table_entity_details")
+	public static class EmbeddedTableEntity {
+		@Id
+		private Integer id;
+		@Embedded
+		@EmbeddedTable("embedded_table_entity_details")
 		private Address address;
 	}
 

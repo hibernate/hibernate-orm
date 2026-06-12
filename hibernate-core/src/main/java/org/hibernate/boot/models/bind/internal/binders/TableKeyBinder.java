@@ -98,6 +98,7 @@ public class TableKeyBinder {
 				rootIdentifierBinding,
 				collectionTableBinding
 		);
+		key.setOnDeleteAction( collectionTableBinding.onDeleteAction() );
 		collectionTableBinding.collection().setKey( key );
 		collectionTableBinding.collection().createPrimaryKeyIfNeeded();
 		bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(

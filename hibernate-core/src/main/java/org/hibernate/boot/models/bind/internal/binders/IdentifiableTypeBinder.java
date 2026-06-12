@@ -130,6 +130,13 @@ public abstract class IdentifiableTypeBinder extends ManagedTypeBinder {
 				final Join join = findJoin( attributeTable );
 				join.addProperty( property );
 			}
+			CustomMappingBinder.callAttributeBinders(
+					attributeMetadata.getMember(),
+					getTypeBinding() instanceof PersistentClass persistentClass ? persistentClass : null,
+					property,
+					getBindingState(),
+					getBindingContext()
+			);
 		} );
 
 		super.prepareBinding( modelBinders );

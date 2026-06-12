@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.models.bind.internal.sources;
 
+import java.util.Locale;
+
+import org.hibernate.MappingException;
+import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
@@ -12,6 +16,8 @@ import org.hibernate.models.spi.MemberDetails;
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 
 /// Source-model facts for an [org.hibernate.mapping.Component].
 ///
@@ -89,7 +95,10 @@ public record ComponentSource(
 		EMBEDDED_IDENTIFIER,
 
 		/// An embeddable value used as an element-collection element.
-		COLLECTION_ELEMENT
+		COLLECTION_ELEMENT,
+
+		/// An embeddable value used as a map key.
+		MAP_KEY
 	}
 
 	/// Creates a source for a normal embedded attribute.
@@ -100,7 +109,7 @@ public record ComponentSource(
 		return new ComponentSource(
 				Kind.EMBEDDED_ATTRIBUTE,
 				member,
-				member.getType().determineRawClass(),
+				resolveEmbeddableType( member, bindingContext, false ),
 				new PathAdjustmentCollector( member, bindingContext )
 		);
 	}
@@ -122,9 +131,61 @@ public record ComponentSource(
 		return new ComponentSource(
 				Kind.COLLECTION_ELEMENT,
 				member,
-				member.getElementType().determineRawClass(),
+				resolveEmbeddableType( member, bindingContext, true ),
 				new PathAdjustmentCollector( member, bindingContext )
 		);
+	}
+
+	/// Creates a source for an embeddable map key.
+	public static ComponentSource mapKey(
+			MemberDetails member,
+			ClassDetails componentType,
+			BindingContext bindingContext) {
+		return new ComponentSource(
+				Kind.MAP_KEY,
+				member,
+				componentType,
+				new PathAdjustmentCollector( member, bindingContext )
+		);
+	}
+
+	public static ClassDetails resolveEmbeddableType(
+			MemberDetails member,
+			BindingContext bindingContext,
+			boolean collectionElement) {
+		final TargetEmbeddable targetEmbeddable = resolveTargetEmbeddable( member, collectionElement );
+		if ( targetEmbeddable != null ) {
+			return bindingContext.getClassDetailsRegistry()
+					.resolveClassDetails( targetEmbeddable.value().getName() );
+		}
+
+		return collectionElement
+				? member.getElementType().determineRawClass()
+				: member.getType().determineRawClass();
+	}
+
+	private static TargetEmbeddable resolveTargetEmbeddable(MemberDetails member, boolean collectionElement) {
+		final TargetEmbeddable memberAnnotation = member.getDirectAnnotationUsage( TargetEmbeddable.class );
+		if ( memberAnnotation != null ) {
+			final boolean allowed = member.hasDirectAnnotationUsage( Embedded.class )
+					|| member.hasDirectAnnotationUsage( ElementCollection.class );
+			if ( !allowed ) {
+				throw new MappingException( String.format(
+						Locale.ROOT,
+						"@TargetEmbeddable can only be specified on properties marked with @Embedded or @ElementCollection [%s#%s]",
+						member.getDeclaringType().getName(),
+						member.getName()
+				) );
+			}
+			return memberAnnotation;
+		}
+
+		if ( collectionElement ) {
+			return null;
+		}
+
+		final ClassDetails memberType = member.getType().determineRawClass();
+		return memberType.isJdkClass() ? null : memberType.getDirectAnnotationUsage( TargetEmbeddable.class );
 	}
 
 	/// Resolves the column source for a component member path.
@@ -133,7 +194,7 @@ public record ComponentSource(
 	/// this behavior on the source object makes it clear that override resolution is a
 	/// source-model concern, not a physical-column concern.
 	public ColumnSource columnSource(String path, MemberDetails member) {
-		final var override = pathAdjustments == null ? null : pathAdjustments.locateAttributeOverride( path );
+		final var override = locateAttributeOverride( path );
 		if ( override != null ) {
 			return ColumnSource.from( override.column() );
 		}
@@ -148,7 +209,7 @@ public record ComponentSource(
 	/// the nested member.  Direct converters with non-empty `attributeName` are ignored
 	/// here because they are not direct conversions for the nested basic member.
 	public Convert conversion(String path, MemberDetails member) {
-		final Convert override = pathAdjustments == null ? null : pathAdjustments.locateConversion( path );
+		final Convert override = locateConversion( path );
 		if ( override != null ) {
 			return override;
 		}
@@ -161,6 +222,38 @@ public record ComponentSource(
 
 	/// Resolves an association override for a component member path.
 	public AssociationOverride associationOverride(String path) {
-		return pathAdjustments == null ? null : pathAdjustments.locateAssociationOverride( path );
+		return locateAssociationOverride( path );
+	}
+
+	private jakarta.persistence.AttributeOverride locateAttributeOverride(String path) {
+		if ( pathAdjustments == null ) {
+			return null;
+		}
+		final var direct = pathAdjustments.locateAttributeOverride( path );
+		return direct == null ? pathAdjustments.locateAttributeOverride( rolePath( path ) ) : direct;
+	}
+
+	private AssociationOverride locateAssociationOverride(String path) {
+		if ( pathAdjustments == null ) {
+			return null;
+		}
+		final var direct = pathAdjustments.locateAssociationOverride( path );
+		return direct == null ? pathAdjustments.locateAssociationOverride( rolePath( path ) ) : direct;
+	}
+
+	private Convert locateConversion(String path) {
+		if ( pathAdjustments == null ) {
+			return null;
+		}
+		final var direct = pathAdjustments.locateConversion( path );
+		return direct == null ? pathAdjustments.locateConversion( rolePath( path ) ) : direct;
+	}
+
+	private String rolePath(String path) {
+		return switch ( kind ) {
+			case MAP_KEY -> "key." + path;
+			case COLLECTION_ELEMENT -> "value." + path;
+			default -> path;
+		};
 	}
 }

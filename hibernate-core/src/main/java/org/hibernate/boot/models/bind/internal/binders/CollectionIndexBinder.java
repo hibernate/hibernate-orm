@@ -8,13 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.MapKeyCompositeType;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.CollectionSource;
+import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
+import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -22,10 +25,14 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantBasicValue;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.ModelsException;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyJoinColumn;
@@ -73,9 +80,12 @@ class CollectionIndexBinder {
 	}
 
 	static void bindMapKey(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
 			Table table,
+			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
@@ -93,7 +103,125 @@ class CollectionIndexBinder {
 					"Entity-valued map keys require @MapKeyJoinColumn support - " + collection.getRole()
 			);
 		}
+		final ComponentMapKey componentMapKey = resolveComponentMapKey( source, bindingState, bindingContext );
+		if ( componentMapKey != null ) {
+			bindComponentMapKey(
+					ownerType,
+					ownerBinding,
+					source,
+					collection,
+					table,
+					componentMapKey,
+					modelBinders,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
+			return;
+		}
 		bindBasicMapKey( source, collection, table, bindingOptions, bindingState, bindingContext );
+	}
+
+	private record ComponentMapKey(
+			ClassDetails componentType,
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+	}
+
+	private static ComponentMapKey resolveComponentMapKey(
+			CollectionSource source,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( source.mapKeyType() == null ) {
+			return null;
+		}
+
+		final MapKeyCompositeType mapKeyCompositeType =
+				source.member().getDirectAnnotationUsage( MapKeyCompositeType.class );
+		if ( mapKeyCompositeType != null ) {
+			final CompositeUserType<?> compositeUserType = instantiateCompositeUserType(
+					mapKeyCompositeType.value(),
+					bindingContext
+			);
+			return new ComponentMapKey(
+					bindingContext.getClassDetailsRegistry()
+							.resolveClassDetails( compositeUserType.embeddable().getName() ),
+					mapKeyCompositeType.value()
+			);
+		}
+
+		final Class<?> mapKeyJavaType = source.mapKeyType().determineRawClass().toJavaClass();
+		final Class<? extends CompositeUserType<?>> registeredCompositeUserType =
+				bindingState.getMetadataBuildingContext()
+						.getMetadataCollector()
+						.findRegisteredCompositeUserType( mapKeyJavaType );
+		if ( registeredCompositeUserType != null ) {
+			final CompositeUserType<?> compositeUserType = instantiateCompositeUserType(
+					registeredCompositeUserType,
+					bindingContext
+			);
+			return new ComponentMapKey(
+					bindingContext.getClassDetailsRegistry()
+							.resolveClassDetails( compositeUserType.embeddable().getName() ),
+					registeredCompositeUserType
+			);
+		}
+
+		final ClassDetails mapKeyType = source.mapKeyType().determineRawClass();
+		if ( mapKeyType.hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class ) ) {
+			return new ComponentMapKey( mapKeyType, null );
+		}
+
+		return null;
+	}
+
+	private static CompositeUserType<?> instantiateCompositeUserType(
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
+			BindingContext bindingContext) {
+		return bindingContext.getBootstrapContext().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+				? bindingContext.getBootstrapContext()
+						.getManagedBeanRegistry()
+						.getBean( compositeUserTypeClass )
+						.getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
+	}
+
+	private static void bindComponentMapKey(
+			IdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
+			CollectionSource collectionSource,
+			org.hibernate.mapping.Map collection,
+			Table table,
+			ComponentMapKey componentMapKey,
+			ModelBinders modelBinders,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final ComponentSource source = ComponentSource.mapKey(
+				collectionSource.member(),
+				componentMapKey.componentType(),
+				bindingContext
+		);
+		final Component component = new Component( bindingState.getMetadataBuildingContext(), collection );
+		component.setEmbedded( true );
+		component.setComponentClassName( source.componentType().getClassName() );
+		component.setTable( table );
+		component.setRoleName( collection.getRole() + ".key" );
+		if ( componentMapKey.compositeUserTypeClass() != null ) {
+			component.setTypeName( componentMapKey.compositeUserTypeClass().getName() );
+		}
+
+		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
+				ownerType,
+				ownerBinding,
+				source,
+				component,
+				table,
+				(ignored, column) -> table.addColumn( column ),
+				false,
+				false,
+				false
+		);
+		collection.setIndex( component );
 	}
 
 	private static boolean isEntityMapKey(CollectionSource source, BindingState bindingState) {

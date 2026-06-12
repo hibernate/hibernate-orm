@@ -6,9 +6,13 @@ package org.hibernate.boot.models.bind.internal.binders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
+import org.hibernate.MappingException;
+import org.hibernate.annotations.EmbeddedColumnNaming;
+import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
@@ -16,6 +20,7 @@ import org.hibernate.boot.models.bind.internal.sources.ToOneSource;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
+import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
@@ -34,6 +39,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.models.bind.internal.binders.AttributeBinder.bindPropertyAccessor;
+import static org.hibernate.internal.util.StringHelper.count;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /// Shared support for binding component-valued mappings.
 ///
@@ -75,6 +83,8 @@ public class ComponentBinder {
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
 			boolean updatable) {
+		validateEmbeddedTablePlacement( source );
+		applyColumnNamingPattern( component, source.sourceMember() );
 		return bindProperties(
 				ownerType,
 				ownerBinding,
@@ -87,6 +97,7 @@ public class ComponentBinder {
 				(path, member) -> source.associationOverride( path ),
 				source.kind(),
 				null,
+				columnNamingPatterns( component ),
 				columnConsumer,
 				uniqueByDefault,
 				nullableByDefault,
@@ -119,6 +130,7 @@ public class ComponentBinder {
 				associationOverrideResolver,
 				ComponentSource.Kind.EMBEDDED_ATTRIBUTE,
 				null,
+				columnNamingPatterns( component ),
 				columnConsumer,
 				uniqueByDefault,
 				nullableByDefault,
@@ -138,6 +150,7 @@ public class ComponentBinder {
 			BiFunction<String, MemberDetails, AssociationOverride> associationOverrideResolver,
 			ComponentSource.Kind componentKind,
 			List<Column> identifierColumns,
+			List<String> columnNamingPatterns,
 			BiConsumer<MemberDetails, Column> columnConsumer,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
@@ -151,6 +164,10 @@ public class ComponentBinder {
 			validateMember( member );
 			final String attributeName = member.resolveAttributeName();
 			final String memberPath = pathPrefix + attributeName;
+			if ( member.hasDirectAnnotationUsage( org.hibernate.annotations.Parent.class ) ) {
+				component.setParentProperty( attributeName );
+				return;
+			}
 
 			if ( isToOneMember( member ) ) {
 				final Property property = new Property();
@@ -185,23 +202,28 @@ public class ComponentBinder {
 						);
 				property.setValue( manyToOne );
 				component.addProperty( property );
+				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				columns.addAll( manyToOne.getColumns() );
 				return;
 			}
 
 			if ( isEmbeddedMember( member ) ) {
+				validateNestedEmbeddedTablePlacement( member );
+				final ClassDetails nestedComponentType = ComponentSource.resolveEmbeddableType( member, context, false );
 				final Component nestedComponent = new Component( state.getMetadataBuildingContext(), component );
 				nestedComponent.setEmbedded( true );
-				nestedComponent.setComponentClassName( member.getType().determineRawClass().getClassName() );
+				nestedComponent.setComponentClassName( nestedComponentType.getClassName() );
 				nestedComponent.setTable( table );
 				nestedComponent.setTypeUsingReflection( componentType.getClassName(), attributeName );
+				applyColumnNamingPattern( nestedComponent, member );
 
 				final Property property = createProperty( attributeName, nestedComponent, member );
 				component.addProperty( property );
+				CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 				columns.addAll( bindProperties(
 						ownerType,
 						ownerBinding,
-						member.getType().determineRawClass(),
+						nestedComponentType,
 						nestedComponent,
 						table,
 						memberPath + ".",
@@ -210,6 +232,7 @@ public class ComponentBinder {
 						associationOverrideResolver,
 						componentKind,
 						associationIdentifierColumns,
+						extendColumnNamingPatterns( columnNamingPatterns, nestedComponent ),
 						columnConsumer,
 						uniqueByDefault,
 						nullableByDefault,
@@ -218,25 +241,31 @@ public class ComponentBinder {
 				return;
 			}
 
-			final BasicValue basicValue = createBasicValue(
-					table,
-					member,
-					conversionResolver.apply( memberPath, member )
-			);
+			final BasicValue basicValue = createBasicValue( table );
 			final Property property = createProperty( attributeName, basicValue, member );
-			component.addProperty( property );
-
 			final Column column = bindColumn(
 					() -> attributeName,
 					basicValue,
 					columnSourceResolver.apply( memberPath, member ),
+					columnNamingPatterns,
 					uniqueByDefault,
 					nullableByDefault,
 					updatable
 			);
+			BasicValueBinder.bindBasicValue(
+					BasicValueSource.embeddableMember( member, conversionResolver.apply( memberPath, member ) ),
+					property,
+					basicValue,
+					options,
+					state,
+					context
+			);
+			component.addProperty( property );
+			CustomMappingBinder.callAttributeBinders( member, ownerBinding, property, state, context );
 			columnConsumer.accept( member, column );
 			columns.add( column );
 		} );
+		CustomMappingBinder.callTypeBinders( componentType, component, state, context );
 		return columns;
 	}
 
@@ -327,17 +356,9 @@ public class ComponentBinder {
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToOne.class );
 	}
 
-	private BasicValue createBasicValue(Table table, MemberDetails member, Convert conversion) {
+	private BasicValue createBasicValue(Table table) {
 		final BasicValue basicValue = new BasicValue( state.getMetadataBuildingContext(), table );
 		basicValue.setTable( table );
-		BasicValueBinder.bindBasicValue(
-				BasicValueSource.embeddableMember( member, conversion ),
-				null,
-				basicValue,
-				options,
-				state,
-				context
-		);
 		return basicValue;
 	}
 
@@ -364,6 +385,7 @@ public class ComponentBinder {
 			java.util.function.Supplier<String> implicitName,
 			BasicValue basicValue,
 			ColumnSource columnSource,
+			List<String> columnNamingPatterns,
 			boolean uniqueByDefault,
 			boolean nullableByDefault,
 			boolean updatable) {
@@ -373,7 +395,85 @@ public class ComponentBinder {
 				uniqueByDefault,
 				nullableByDefault
 		);
+		column.setName( applyColumnNamingPatterns( column.getName(), columnNamingPatterns ) );
 		basicValue.addColumn( column, true, updatable );
 		return column;
+	}
+
+	private static void applyColumnNamingPattern(Component component, MemberDetails sourceMember) {
+		if ( sourceMember == null ) {
+			return;
+		}
+
+		final EmbeddedColumnNaming columnNaming = sourceMember.getDirectAnnotationUsage( EmbeddedColumnNaming.class );
+		if ( columnNaming == null ) {
+			return;
+		}
+
+		final String pattern = isEmpty( columnNaming.value() )
+				? sourceMember.resolveAttributeName() + "_%s"
+				: columnNaming.value();
+		final int markerCount = count( pattern, '%' );
+		if ( markerCount != 1 ) {
+			throw new MappingException( String.format(
+					Locale.ROOT,
+					"@EmbeddedColumnNaming expects pattern with exactly 1 format marker, but found %s - `%s` (%s#%s)",
+					markerCount,
+					pattern,
+					sourceMember.getDeclaringType().getName(),
+					sourceMember.getName()
+			) );
+		}
+		component.setColumnNamingPattern( pattern );
+	}
+
+	private static void validateEmbeddedTablePlacement(ComponentSource source) {
+		if ( source.kind() == ComponentSource.Kind.COLLECTION_ELEMENT
+				&& source.sourceMember() != null
+				&& source.sourceMember().hasDirectAnnotationUsage( EmbeddedTable.class ) ) {
+			throw new AnnotationPlacementException(
+					"@EmbeddedTable only supported for use on entity or mapped-superclass"
+			);
+		}
+	}
+
+	private static void validateNestedEmbeddedTablePlacement(MemberDetails member) {
+		if ( member.hasDirectAnnotationUsage( EmbeddedTable.class ) ) {
+			throw new AnnotationPlacementException(
+					"@EmbeddedTable only supported for use on entity or mapped-superclass"
+			);
+		}
+	}
+
+	private static List<String> columnNamingPatterns(Component component) {
+		if ( isEmpty( component.getColumnNamingPattern() ) ) {
+			return List.of();
+		}
+		return List.of( component.getColumnNamingPattern() );
+	}
+
+	private static List<String> extendColumnNamingPatterns(List<String> patterns, Component component) {
+		final String pattern = component.getColumnNamingPattern();
+		if ( isEmpty( pattern ) ) {
+			return patterns;
+		}
+		final ArrayList<String> result = new ArrayList<>( patterns );
+		result.add( pattern );
+		return result;
+	}
+
+	private static String applyColumnNamingPatterns(String name, List<String> patterns) {
+		if ( patterns.isEmpty() ) {
+			return name;
+		}
+
+		String result = name;
+		for ( int i = patterns.size() - 1; i >= 0; i-- ) {
+			final String pattern = patterns.get( i );
+			if ( isNotEmpty( pattern ) ) {
+				result = String.format( Locale.ROOT, pattern, result );
+			}
+		}
+		return result;
 	}
 }

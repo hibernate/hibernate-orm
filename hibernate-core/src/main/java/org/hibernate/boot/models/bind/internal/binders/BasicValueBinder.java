@@ -4,15 +4,22 @@
  */
 package org.hibernate.boot.models.bind.internal.binders;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionIdMutability;
 import org.hibernate.annotations.CollectionIdType;
+import org.hibernate.annotations.Collate;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.FractionalSeconds;
+import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -22,14 +29,20 @@ import org.hibernate.annotations.ListIndexJdbcTypeCode;
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
+import org.hibernate.annotations.MapKeyMutability;
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.annotations.PartitionKey;
 import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.AnyKeyJavaType;
 import org.hibernate.annotations.AnyKeyJdbcType;
 import org.hibernate.annotations.AnyKeyJdbcTypeCode;
+import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.AnnotationException;
+import org.hibernate.MappingException;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
@@ -37,7 +50,14 @@ import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.boot.models.bind.spi.TableReference;
+import org.hibernate.generator.AnnotationBasedGenerator;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.Configurable;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.Property;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
@@ -81,6 +101,7 @@ public class BasicValueBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		basicValue.setMemberDetails( source.member() );
 		basicValue.setImplicitJavaTypeAccess( (typeConfiguration) -> source.javaType() );
 		bindConversion( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindJavaType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
@@ -88,10 +109,16 @@ public class BasicValueBinder {
 		bindMutability( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindLob( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindNationalized( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
+		bindPartitionKey( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindEnumerated( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindTemporalPrecision( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindTimeZoneStorage( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindCustomType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
+		bindColumnDefault( source, basicValue );
+		bindCollation( source, basicValue );
+		bindFractionalSeconds( source, basicValue );
+		bindGeneratedColumn( source, basicValue );
+		bindValueGeneration( source, property, basicValue, bindingContext );
 	}
 
 	public static void bindConversion(
@@ -113,6 +140,298 @@ public class BasicValueBinder {
 		basicValue.setJpaAttributeConverterDescriptor(
 				new RegisteredConversion( source.javaType(), javaClass, false ).getConverterDescriptor()
 		);
+	}
+
+	private static void bindGeneratedColumn(BasicValueSource source, BasicValue basicValue) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
+			return;
+		}
+
+		final GeneratedColumn generatedColumn = source.member().getDirectAnnotationUsage( GeneratedColumn.class );
+		if ( generatedColumn == null ) {
+			return;
+		}
+
+		if ( basicValue.getColumnSpan() != 1 ) {
+			throw new AnnotationException(
+					"'@GeneratedColumn' may only be applied to single-column mappings but '"
+							+ source.member().getName() + "' maps to " + basicValue.getColumnSpan() + " columns"
+			);
+		}
+
+		final var selectable = basicValue.getColumn();
+		if ( selectable instanceof org.hibernate.mapping.Column column ) {
+			column.setGeneratedAs( generatedColumn.value() );
+		}
+		else {
+			throw new AnnotationException(
+					"'@GeneratedColumn' may only be applied to column mappings but '"
+							+ source.member().getName() + "' maps to a formula"
+			);
+		}
+	}
+
+	private static void bindColumnDefault(BasicValueSource source, BasicValue basicValue) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
+			return;
+		}
+
+		final ColumnDefault columnDefault = source.member().getDirectAnnotationUsage( ColumnDefault.class );
+		if ( columnDefault == null ) {
+			return;
+		}
+
+		column( source, basicValue, ColumnDefault.class ).setDefaultValue( columnDefault.value() );
+	}
+
+	private static void bindCollation(BasicValueSource source, BasicValue basicValue) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
+			return;
+		}
+
+		final Collate collate = source.member().getDirectAnnotationUsage( Collate.class );
+		if ( collate == null ) {
+			return;
+		}
+
+		for ( org.hibernate.mapping.Column column : basicValue.getColumns() ) {
+			column.setCollation( collate.value() );
+		}
+	}
+
+	@SuppressWarnings({"deprecation", "removal"})
+	private static void bindFractionalSeconds(BasicValueSource source, BasicValue basicValue) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) ) {
+			return;
+		}
+
+		final FractionalSeconds fractionalSeconds = source.member().getDirectAnnotationUsage( FractionalSeconds.class );
+		if ( fractionalSeconds == null ) {
+			return;
+		}
+
+		column( source, basicValue, FractionalSeconds.class ).setTemporalPrecision( fractionalSeconds.value() );
+	}
+
+	private static org.hibernate.mapping.Column column(
+			BasicValueSource source,
+			BasicValue basicValue,
+			Class<? extends Annotation> annotationType) {
+		if ( basicValue.getColumnSpan() != 1 ) {
+			throw new AnnotationException(
+					"'@" + annotationType.getSimpleName() + "' may only be applied to single-column mappings but '"
+							+ source.member().getName() + "' maps to " + basicValue.getColumnSpan() + " columns"
+			);
+		}
+
+		final var selectable = basicValue.getColumn();
+		if ( selectable instanceof org.hibernate.mapping.Column column ) {
+			return column;
+		}
+
+		throw new AnnotationException(
+				"'@" + annotationType.getSimpleName() + "' may only be applied to column mappings but '"
+						+ source.member().getName() + "' maps to a formula"
+		);
+	}
+
+	private static void bindValueGeneration(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingContext bindingContext) {
+		if ( !supportsAttributeOrEmbeddableMember( source ) || property == null ) {
+			return;
+		}
+
+		final var generatorAnnotations = source.member().getMetaAnnotated(
+				ValueGenerationType.class,
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
+		if ( generatorAnnotations.isEmpty() ) {
+			return;
+		}
+		if ( generatorAnnotations.size() > 1 ) {
+			throw new AnnotationException(
+					"Property '" + property.getName() + "' has too many generator annotations: " + generatorAnnotations
+			);
+		}
+
+		property.setValueGeneratorCreator( generatorCreator(
+				source.member(),
+				generatorAnnotations.get( 0 )
+		) );
+	}
+
+	private static boolean supportsAttributeOrEmbeddableMember(BasicValueSource source) {
+		return source.kind() == BasicValueSource.Kind.ATTRIBUTE
+				|| source.kind() == BasicValueSource.Kind.EMBEDDABLE_MEMBER;
+	}
+
+	private static <A extends Annotation> GeneratorCreator generatorCreator(
+			MemberDetails member,
+			A annotation) {
+		@SuppressWarnings("unchecked")
+		final Class<A> annotationType = (Class<A>) annotation.annotationType();
+		final ValueGenerationType generatorAnnotation = annotationType.getAnnotation( ValueGenerationType.class );
+		final Class<? extends Generator> generatorClass = generatorAnnotation.generatedBy();
+		checkGeneratorClass( generatorClass );
+		return (creationContext) -> {
+			final Generator generator = instantiateGenerator( annotation, member, annotationType, creationContext, generatorClass );
+			callInitialize( annotation, creationContext, generator );
+			callConfigure( creationContext, generator );
+			checkVersionGenerationAlways( member, generator );
+			return generator;
+		};
+	}
+
+	private static void checkGeneratorClass(Class<? extends Generator> generatorClass) {
+		if ( !BeforeExecutionGenerator.class.isAssignableFrom( generatorClass )
+				&& !OnExecutionGenerator.class.isAssignableFrom( generatorClass ) ) {
+			throw new MappingException( "Generator class '" + generatorClass.getName()
+					+ "' must implement either 'BeforeExecutionGenerator' or 'OnExecutionGenerator'" );
+		}
+	}
+
+	private static <G extends Generator, A extends Annotation> G instantiateGenerator(
+			A annotation,
+			MemberDetails member,
+			Class<A> annotationType,
+			GeneratorCreationContext creationContext,
+			Class<? extends G> generatorClass) {
+		try {
+			G generator = construct(
+					generatorClass,
+					annotationType,
+					annotation,
+					Member.class,
+					member.toJavaMember(),
+					GeneratorCreationContext.class,
+					creationContext
+			);
+			if ( generator != null ) {
+				return generator;
+			}
+
+			generator = construct( generatorClass, annotationType, annotation, GeneratorCreationContext.class, creationContext );
+			if ( generator != null ) {
+				return generator;
+			}
+
+			generator = construct( generatorClass, annotationType, annotation );
+			if ( generator != null ) {
+				return generator;
+			}
+
+			generator = construct( generatorClass, GeneratorCreationContext.class, creationContext );
+			if ( generator != null ) {
+				return generator;
+			}
+
+			final var constructor = generatorClass.getDeclaredConstructor();
+			constructor.setAccessible( true );
+			return constructor.newInstance();
+		}
+		catch (NoSuchMethodException e) {
+			throw new org.hibernate.InstantiationException(
+					"No appropriate constructor for generator class",
+					generatorClass
+			);
+		}
+		catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+			throw new org.hibernate.InstantiationException(
+					"Could not instantiate generator",
+					generatorClass,
+					e
+			);
+		}
+	}
+
+	private static <G> G construct(
+			Class<? extends G> target,
+			Class<?> parameterType1,
+			Object argument1,
+			Class<?> parameterType2,
+			Object argument2) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+		try {
+			final var constructor = target.getDeclaredConstructor( parameterType1, parameterType2 );
+			constructor.setAccessible( true );
+			return constructor.newInstance( argument1, argument2 );
+		}
+		catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	private static <G> G construct(
+			Class<? extends G> target,
+			Class<?> parameterType1,
+			Object argument1,
+			Class<?> parameterType2,
+			Object argument2,
+			Class<?> parameterType3,
+			Object argument3) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+		try {
+			final var constructor = target.getDeclaredConstructor( parameterType1, parameterType2, parameterType3 );
+			constructor.setAccessible( true );
+			return constructor.newInstance( argument1, argument2, argument3 );
+		}
+		catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	private static <G> G construct(
+			Class<? extends G> target,
+			Class<?> parameterType,
+			Object argument) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+		try {
+			final var constructor = target.getDeclaredConstructor( parameterType );
+			constructor.setAccessible( true );
+			return constructor.newInstance( argument );
+		}
+		catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static <A extends Annotation> void callInitialize(
+			A annotation,
+			GeneratorCreationContext creationContext,
+			Generator generator) {
+		if ( generator instanceof AnnotationBasedGenerator annotationBasedGenerator ) {
+			annotationBasedGenerator.initialize( annotation, creationContext );
+		}
+	}
+
+	private static void callConfigure(GeneratorCreationContext creationContext, Generator generator) {
+		if ( generator instanceof Configurable configurable ) {
+			configurable.configure( creationContext, new Properties() );
+		}
+		if ( generator instanceof ExportableProducer exportableProducer ) {
+			exportableProducer.registerExportables( creationContext.getDatabase() );
+		}
+		if ( generator instanceof Configurable configurable ) {
+			configurable.initialize( creationContext.getSqlStringGenerationContext() );
+		}
+	}
+
+	private static void checkVersionGenerationAlways(MemberDetails member, Generator generator) {
+		if ( member.hasDirectAnnotationUsage( jakarta.persistence.Version.class ) ) {
+			if ( !generator.generatesOnInsert() ) {
+				throw new AnnotationException(
+						"Property '" + member.getName()
+								+ "' is annotated '@Version' but has a 'Generator' which does not generate on inserts"
+				);
+			}
+			if ( !generator.generatesOnUpdate() ) {
+				throw new AnnotationException(
+						"Property '" + member.getName()
+								+ "' is annotated '@Version' but has a 'Generator' which does not generate on updates"
+				);
+			}
+		}
 	}
 
 	private static void validateConversionAttributeName(BasicValueSource source, Convert conversion) {
@@ -349,16 +668,21 @@ public class BasicValueBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		if ( source.kind() != BasicValueSource.Kind.COLLECTION_ID ) {
+		final Class<? extends MutabilityPlan<?>> mutabilityClass = switch ( source.kind() ) {
+			case COLLECTION_ID -> {
+				final var mutabilityAnn = source.member().getDirectAnnotationUsage( CollectionIdMutability.class );
+				yield mutabilityAnn == null ? null : mutabilityAnn.value();
+			}
+			case MAP_KEY -> {
+				final var mutabilityAnn = source.member().getDirectAnnotationUsage( MapKeyMutability.class );
+				yield mutabilityAnn == null ? null : mutabilityAnn.value();
+			}
+			default -> null;
+		};
+		if ( mutabilityClass == null ) {
 			return;
 		}
 
-		final var mutabilityAnn = source.member().getDirectAnnotationUsage( CollectionIdMutability.class );
-		if ( mutabilityAnn == null ) {
-			return;
-		}
-
-		final var mutabilityClass = mutabilityAnn.value();
 		basicValue.setExplicitMutabilityPlanAccess( (typeConfiguration) -> instantiateMutabilityPlan(
 				source.member(),
 				mutabilityClass
@@ -418,6 +742,18 @@ public class BasicValueBinder {
 			BindingContext bindingContext) {
 		if ( member.hasDirectAnnotationUsage( Nationalized.class ) ) {
 			basicValue.makeNationalized();
+		}
+	}
+
+	public static void bindPartitionKey(
+			MemberDetails member,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( member.hasDirectAnnotationUsage( PartitionKey.class ) ) {
+			basicValue.setPartitionKey( true );
 		}
 	}
 

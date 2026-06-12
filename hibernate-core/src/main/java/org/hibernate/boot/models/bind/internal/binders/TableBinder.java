@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.annotations.SecondaryRow;
+import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
@@ -130,6 +131,7 @@ public class TableBinder {
 
 		if ( tableReference != null ) {
 			bindingState.addTable( type, tableReference );
+			applyRowId( tableReference.binding(), type );
 
 			final PrimaryKey primaryKey = new PrimaryKey( tableReference.binding() );
 			tableReference.binding().setPrimaryKey( primaryKey );
@@ -606,6 +608,13 @@ public class TableBinder {
 			if ( StringHelper.isNotEmpty( options ) ) {
 				table.setOptions( options );
 			}
+		}
+	}
+
+	private void applyRowId(Table table, EntityTypeMetadata type) {
+		final RowId rowId = type.getClassDetails().getDirectAnnotationUsage( RowId.class );
+		if ( rowId != null && StringHelper.isNotEmpty( rowId.value() ) ) {
+			table.setRowId( rowId.value() );
 		}
 	}
 }

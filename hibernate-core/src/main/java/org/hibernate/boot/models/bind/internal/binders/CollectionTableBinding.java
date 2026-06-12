@@ -6,6 +6,7 @@ package org.hibernate.boot.models.bind.internal.binders;
 
 import java.util.List;
 
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.mapping.Collection;
 
@@ -27,6 +28,7 @@ public record CollectionTableBinding(
 		Collection collection,
 		List<JoinColumn> joinColumns,
 		ForeignKeySource foreignKeySource,
+		OnDeleteAction onDeleteAction,
 		UniqueConstraint[] uniqueConstraints,
 		Index[] indexes) {
 }

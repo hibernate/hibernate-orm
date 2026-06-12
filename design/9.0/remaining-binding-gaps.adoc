@@ -11,51 +11,149 @@ changes, but they first need a clear local prototype story.
 
 NOTE: This gap analysis is based on an older version of ORM code, probably even pre-8.0.  The analysis will need to be performed again.
 
+See also `annotation-coverage.adoc` for the broader audit of runtime annotations
+declared in `jakarta.persistence` and `org.hibernate.annotations`, including
+`DialectOverride`.
+
 == Annotation and XML Coverage
 
 These are annotation and XML coverage items that have not yet been promoted into
 a focused implementation note, an explicit binder gap above, or focused tests.
 
-Parity-required annotation support:
+Coverage audit:
 
-* `@OnDelete`
-* `@Parent`
-* `@PartitionKey`
-* `@RowId`
-* `@TimeZoneStorage`
-* `@TimeZoneColumn`
-* `@CreationTimestamp`
-* `@UpdateTimestamp`
-* generated values
+[cols="1,1,3", options="header"]
+|===
+| Item
+| Status
+| Notes
 
-ORM 9 nice-to-have annotation support:
+| `@OnDelete`
+| Covered
+| Applied to to-one values, plural association element values, and collection
+table owner keys.
 
-* `@Struct`
-* `@View`
-* hierarchical package metadata
-+
-Open question: should mappings defined on package `com.acme` apply to
+| `@Parent`
+| Covered
+| Component binding records the parent-property name and skips physical value
+binding for the parent-reference member.
+
+| `@PartitionKey`
+| Covered
+| Basic-value binding marks the value as a partition key.
+
+| `@RowId`
+| Covered
+| Primary table binding applies the table row-id value.
+
+| `@TimeZoneStorage`
+| Binding support present; test-only gap
+| Basic-value binding applies the storage strategy, but focused mapping-state
+assertions are still needed in the new pipeline tests.
+
+| `@TimeZoneColumn`
+| Binding support present; test-only gap
+| Basic-value binding applies the time-zone column name, SQL type, table, and
+insert/update flags, but focused mapping-state assertions are still needed in
+the new pipeline tests.
+
+| `@CreationTimestamp`
+| Covered
+| Basic attribute binding installs a value generator.
+
+| `@UpdateTimestamp`
+| Covered
+| Basic attribute binding installs a value generator.
+
+| generated values
+| Covered
+| Basic attribute binding installs value generators for `@ValueGenerationType`
+annotations and applies `@GeneratedColumn` generated-as DDL.
+
+| `@Struct`
+| Intentionally deferred
+| Nice-to-have ORM 9 coverage; needs a dedicated aggregate/UDT binding note.
+
+| `@View`
+| Metadata coverage present; test/binder verification needed
+| Categorization records synchronized table names and table binding has view
+table-reference support.  Needs focused tests before marking closed.
+
+| hierarchical package metadata
+| Design question
+| Open question: should mappings defined on package `com.acme` apply to
 `com.acme.model`?  If so, should `PackageDetails` expose its parent package?
 
-XML parity and XSD coverage:
+| `@LazyGroup` in XSD
+| XML/XSD covered; test-only gap
+| Mapping XSD and XML annotation descriptors exist.  Needs focused XML test.
 
-* `@LazyGroup` in XSD
-* `@ListIndexBase` in XSD
-* `@Mutability` in XSD
-* `@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` for secondary tables in XSD
+| `@ListIndexBase` in XSD
+| XML/XSD covered
+| Mapping XSD and XML processing support exist.
 
-XML/dynamic-model-only vocabulary:
+| `@Mutability` in XSD
+| XML/XSD covered; test-only gap
+| Mapping XSD and annotation descriptors exist; basic binding supports
+`@Mutability`.
 
-* `<mapped-superclass/>` support in dynamic models
-* `@Abstract`
-* `@Extends`
-* `@CollectionClassification`
-* `@Target`
-+
-`org.hibernate.annotations.Target` exists, but is deprecated.  We need to decide
-whether to repurpose it for XML/dynamic-model use or define a replacement.
+| `@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` for secondary tables in XSD
+| XML-source gap
+| Entity-level custom SQL metadata exists.  Secondary-table XML custom SQL needs
+source processing and binding support.
 
-Resolved or covered locally:
+| `<mapped-superclass/>` support in dynamic models
+| XML-source gap
+| XML processing explicitly leaves this as an open dynamic-model question.
+
+| `@Abstract`
+| XML/dynamic covered; test-only gap
+| XML-only descriptor exists.
+
+| `@Extends`
+| XML/dynamic covered; test-only gap
+| XML-only descriptor exists.
+
+| `@CollectionClassification`
+| XML/dynamic covered
+| XML-only descriptor, XSD, XML processing, and dynamic-model tests exist.
+
+| `@Target`
+| XML/dynamic covered
+| XML-only descriptor and XML attribute processing exist; this is distinct from
+deprecated `org.hibernate.annotations.Target`.
+|===
+
+== Removed Annotation Vestiges
+
+`@SelectBeforeUpdate` was removed as a Hibernate annotation and should not be
+treated as an annotation coverage item for the new pipeline.
+
+Remaining vestiges are legacy/XML/runtime mapping contracts:
+
+* `org.hibernate.mapping.PersistentClass#setSelectBeforeUpdate(boolean)` and
+  `hasSelectBeforeUpdate()`
+* `org.hibernate.boot.jaxb.mapping.spi.JaxbEntity#isSelectBeforeUpdate()`
+* `org.hibernate.boot.jaxb.hbm.spi.EntityInfo#isSelectBeforeUpdate()`
+* `org.hibernate.boot.model.source.spi.EntitySource#isSelectBeforeUpdate()`
+* persister/runtime reads of the resulting mapping flag
+
+Parity/removal plan:
+
+1. Audit whether JPA `orm.xml` should retain any `select-before-update`
+   vocabulary.  If not, remove it from mapping XSD/JAXB processing rather than
+   carrying it into the new source model.
+2. Treat HBM `select-before-update` as legacy-only.  If HBM support is removed
+   from the ORM 9 boot-model path, remove the HBM source contract vestige as
+   part of that cleanup.
+3. After XML/HBM source decisions are settled, remove or deprecate the
+   `PersistentClass` flag and persister plumbing if no supported source can
+   set it.
+4. Until then, do not add new categorization/binding support for a removed
+   annotation; any remaining work belongs to XML/source compatibility or
+   mapping-model cleanup.
+
+Done:
 
 * `@SecondaryRow`
 * `@SoftDelete`

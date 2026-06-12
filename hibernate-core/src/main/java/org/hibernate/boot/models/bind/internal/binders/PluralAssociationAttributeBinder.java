@@ -7,6 +7,7 @@ package org.hibernate.boot.models.bind.internal.binders;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.models.bind.internal.sources.AnySource;
 import org.hibernate.boot.models.bind.internal.sources.CollectionSource;
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
@@ -169,9 +170,12 @@ class PluralAssociationAttributeBinder {
 		collection.setElement( element );
 		if ( collection instanceof org.hibernate.mapping.Map map ) {
 			CollectionIndexBinder.bindMapKey(
+					ownerType,
+					ownerBinding,
 					source,
 					map,
 					table,
+					modelBinders,
 					bindingOptions,
 					bindingState,
 					bindingContext
@@ -201,6 +205,7 @@ class PluralAssociationAttributeBinder {
 				collection,
 				source.associationJoinColumns(),
 				ForeignKeySource.from( source.joinTable() ),
+				resolveOnDeleteAction(),
 				source.joinTable() == null ? new jakarta.persistence.UniqueConstraint[0] : source.joinTable().uniqueConstraints(),
 				source.joinTable() == null ? new jakarta.persistence.Index[0] : source.joinTable().indexes()
 		) );
@@ -250,9 +255,12 @@ class PluralAssociationAttributeBinder {
 		property.setCascade( anySource.cascades() );
 		if ( collection instanceof org.hibernate.mapping.Map map ) {
 			CollectionIndexBinder.bindMapKey(
+					ownerType,
+					ownerBinding,
 					source,
 					map,
 					table,
+					modelBinders,
 					bindingOptions,
 					bindingState,
 					bindingContext
@@ -282,6 +290,7 @@ class PluralAssociationAttributeBinder {
 				collection,
 				source.associationJoinColumns(),
 				ForeignKeySource.from( joinTable ),
+				resolveOnDeleteAction(),
 				joinTable == null ? new jakarta.persistence.UniqueConstraint[0] : joinTable.uniqueConstraints(),
 				joinTable == null ? new jakarta.persistence.Index[0] : joinTable.indexes()
 		) );
@@ -328,6 +337,7 @@ class PluralAssociationAttributeBinder {
 		element.setReferenceToPrimaryKey( referenceToPrimaryKey );
 		element.setTypeName( target.entityName() );
 		element.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
+		applyOnDelete( element );
 
 		bindJoinColumns(
 				inverseJoinColumns,
@@ -353,6 +363,18 @@ class PluralAssociationAttributeBinder {
 				ForeignKeySource.inverseFrom( source.joinTable() )
 		) );
 		return element;
+	}
+
+	private org.hibernate.annotations.OnDeleteAction resolveOnDeleteAction() {
+		final OnDelete onDelete = attributeMetadata.getMember().getDirectAnnotationUsage( OnDelete.class );
+		return onDelete == null ? null : onDelete.action();
+	}
+
+	private void applyOnDelete(ManyToOne value) {
+		final OnDelete onDelete = attributeMetadata.getMember().getDirectAnnotationUsage( OnDelete.class );
+		if ( onDelete != null ) {
+			value.setOnDeleteAction( onDelete.action() );
+		}
 	}
 
 	private void bindJoinColumns(

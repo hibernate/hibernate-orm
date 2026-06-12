@@ -61,6 +61,8 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
+import jakarta.persistence.Fetch;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
@@ -132,6 +134,24 @@ public class ElementCollectionBindingTests {
 				},
 				scope.getRegistry(),
 				SetOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testJpaFetchOverridesElementCollectionFetchTypeAndBatchSize(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( JpaFetchElementCollectionOwner.class.getName() );
+					final Collection collection = (Collection) entityBinding.getProperty( "labels" ).getValue();
+
+					assertThat( collection.isLazy() ).isFalse();
+					assertThat( collection.getFetchMode() ).isEqualTo( org.hibernate.FetchMode.JOIN );
+					assertThat( collection.getBatchSize() ).isEqualTo( 11 );
+				},
+				scope.getRegistry(),
+				JpaFetchElementCollectionOwner.class
 		);
 	}
 
@@ -983,6 +1003,17 @@ public class ElementCollectionBindingTests {
 				options = "collection table options"
 		)
 		@Column(name = "label")
+		private Set<String> labels;
+	}
+
+	@Entity(name="JpaFetchElementCollectionOwner")
+	@Table(name="jpa_fetch_element_collection_owners")
+	public static class JpaFetchElementCollectionOwner {
+		@Id
+		private Integer id;
+		@ElementCollection(fetch = FetchType.LAZY)
+		@CollectionTable(name = "jpa_fetch_element_collection_labels")
+		@Fetch(type = FetchType.EAGER, batchSize = 11)
 		private Set<String> labels;
 	}
 

@@ -209,7 +209,10 @@ class InversePluralAssociationBinder {
 			return;
 		}
 
-		final CollectionSource source = CollectionSource.oneToMany( inverseBinding.attributeMetadata().getMember() );
+		final CollectionSource source = CollectionSource.oneToMany(
+				inverseBinding.attributeMetadata().getMember(),
+				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+		);
 		final MapKey mapKey = source.mapKey();
 		final Value mapKeyValue = mapKey == null || mapKey.name().isEmpty()
 				? targetTypeBinder.getTypeBinding().getIdentifier()

@@ -78,8 +78,10 @@ This audit is against the Jakarta Persistence API version used by the build:
 
 | JPA 4.0 consumption audit
 | `@Fetch`
-| Verify descriptor, categorization/source, binding, XML synthesis, and focused
-tests for each annotation.
+| Covered for graphless static mapping metadata: to-one and collection fetch
+type are bound, and collection batch size is bound.  Graph/subgraph
+contribution remains a follow-up to collect and pass into named entity graph
+creation.
 
 | JPA jar descriptor gaps
 | `@PreInsert`, `@PostInsert`, `@PreDelete`, `@PostDelete`, `@PreMerge`,
@@ -414,17 +416,19 @@ annotation type in the JPA API jar has a descriptor.
 | `@Fetch`
 | association/member
 | yes
-| descriptor present; JPA fetch-profile override consumption needs audit
+| graphless static mapping support present for to-one and collection fetch type;
+collection batch size binding present; graph/subgraph contribution needs to be
+collected and passed to the JPA named graph creator
 | XML/source support present
-| needed
-| binding gap
+| focused bind tests exist
+| covered
 
 | `@Fetch.Fetches`
 | container
 | yes
 | repeatable/container
 | XML/source support present
-| verify through `@Fetch`
+| verified through `@Fetch`
 | not applicable/nested
 
 | `@FieldResult`
@@ -2703,7 +2707,8 @@ are verified through the matching singular override.
 1. Add focused tests for JPA and Hibernate annotations currently marked
    `test-only gap`, starting with low-risk table/entity/attribute mapping
    effects that already appear to have source or binder support.
-2. Audit and close the remaining JPA 4.0 binding gap for `@Fetch`.
+2. Collect JPA `@Fetch(graph=...)` contributions and pass them into the JPA
+   named graph creator.
 3. Implement the remaining Hibernate low-risk binding gaps in small groups:
    native generators, query cache layout, and custom loaders.
 4. Add a single new-pipeline dialect override resolution point and convert

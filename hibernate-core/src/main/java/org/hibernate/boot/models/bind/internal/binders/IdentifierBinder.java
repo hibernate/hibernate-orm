@@ -255,7 +255,8 @@ public class IdentifierBinder {
 				idAttribute.getMember(),
 				type.getClassDetails().getClassName(),
 				idAttribute.getName(),
-				null
+				null,
+				context.getBootstrapContext().getModelsContext()
 		);
 
 		final EntityTypeBinder targetTypeBinder = (EntityTypeBinder) state.getTypeBinder(
@@ -466,6 +467,6 @@ public class IdentifierBinder {
 	}
 
 	private FetchType effectiveFetchType(ToOneSource source) {
-		return source.fetchType() == FetchType.LAZY ? FetchType.LAZY : options.getDefaultToOneFetchType();
+		return source.effectiveFetchType( options.getDefaultToOneFetchType() );
 	}
 }

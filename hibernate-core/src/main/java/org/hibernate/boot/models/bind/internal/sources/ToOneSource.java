@@ -15,9 +15,11 @@ import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Fetch;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
@@ -89,20 +91,25 @@ public record ToOneSource(
 		OneToOne oneToOne,
 
 		/// The path-based association override currently active for this source, if any.
-		AssociationOverride associationOverride) {
+		AssociationOverride associationOverride,
+
+		/// The models context used to resolve repeatable annotations.
+		ModelsContext modelsContext) {
 	/// Creates a source from a member and optional path-based association override.
 	public static ToOneSource create(
 			MemberDetails member,
 			String ownerClassName,
 			String propertyName,
-			AssociationOverride associationOverride) {
+			AssociationOverride associationOverride,
+			ModelsContext modelsContext) {
 		return new ToOneSource(
 				member,
 				ownerClassName,
 				propertyName,
 				member.getDirectAnnotationUsage( jakarta.persistence.ManyToOne.class ),
 				member.getDirectAnnotationUsage( OneToOne.class ),
-				associationOverride
+				associationOverride,
+				modelsContext
 		);
 	}
 
@@ -126,6 +133,30 @@ public record ToOneSource(
 	/// The fetch style declared by the active association annotation.
 	public FetchType fetchType() {
 		return manyToOne != null ? manyToOne.fetch() : oneToOne.fetch();
+	}
+
+	/// The effective fetch style requested by graphless JPA `@Fetch`, if present,
+	/// or by the active association annotation.
+	public FetchType effectiveFetchType(FetchType defaultToOneFetchType) {
+		final Fetch fetch = graphlessFetch();
+		if ( fetch != null && fetch.type() != FetchType.DEFAULT ) {
+			return fetch.type();
+		}
+		return fetchType() == FetchType.LAZY ? FetchType.LAZY : defaultToOneFetchType;
+	}
+
+	private Fetch graphlessFetch() {
+		if ( modelsContext == null ) {
+			final Fetch fetch = member.getDirectAnnotationUsage( Fetch.class );
+			return fetch != null && StringHelper.isEmpty( fetch.graph() ) && fetch.subgraph().length == 0 ? fetch : null;
+		}
+		final Fetch[] fetches = member.getRepeatedAnnotationUsages( Fetch.class, modelsContext );
+		for ( Fetch fetch : fetches ) {
+			if ( StringHelper.isEmpty( fetch.graph() ) && fetch.subgraph().length == 0 ) {
+				return fetch;
+			}
+		}
+		return null;
 	}
 
 	/// The optionality declared by the active association annotation.

@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CompositeTypeRegistration;
 import org.hibernate.annotations.ConverterRegistration;
@@ -138,7 +139,14 @@ public class GlobalRegistrationBindingTests {
 							.isEqualTo( "globalConstructorMapping" );
 					final var entityGraph = metadataCollector.getNamedEntityGraph( "globalGraph" );
 					assertThat( entityGraph.entityName() ).isEqualTo( "GlobalRegistrationEntity" );
+					assertThat( entityGraph.source() ).isEqualTo( NamedEntityGraphDefinition.Source.JPA );
 					assertThat( entityGraph.graphCreator() ).isNotNull();
+					assertThat( entityGraph.graphCreator().getClass().getSimpleName() ).isEqualTo( "NamedGraphCreatorJpa" );
+					final var parsedEntityGraph = metadataCollector.getNamedEntityGraph( "globalParsedGraph" );
+					assertThat( parsedEntityGraph.entityName() ).isEqualTo( "GlobalRegistrationEntity" );
+					assertThat( parsedEntityGraph.source() ).isEqualTo( NamedEntityGraphDefinition.Source.PARSED );
+					assertThat( parsedEntityGraph.graphCreator().getClass().getSimpleName() )
+							.isEqualTo( "NamedGraphCreatorParsed" );
 					assertThat( metadataCollector.getFilterDefinition( "globalFilter" ).getDefaultFilterCondition() )
 							.isEqualTo( "name = :name" );
 					assertThat( metadataCollector.getFilterDefinition( "globalFilter" ).getParameterNames() )
@@ -260,6 +268,7 @@ public class GlobalRegistrationBindingTests {
 	)
 	@org.hibernate.annotations.NamedQuery(name = "globalHibernateQuery", query = "from GlobalRegistrationEntity")
 	@NamedEntityGraph(name = "globalGraph", attributeNodes = @NamedAttributeNode("id"))
+	@org.hibernate.annotations.NamedEntityGraph(name = "globalParsedGraph", graph = "parent")
 	@FilterDef(name = "globalFilter", defaultCondition = "name = :name", parameters = @ParamDef(name = "name", type = String.class))
 	@FetchProfile(
 			name = "globalFetchProfile",

@@ -85,22 +85,25 @@ table-reference support.  Needs focused tests before marking closed.
 `com.acme.model`?  If so, should `PackageDetails` expose its parent package?
 
 | `@LazyGroup` in XSD
-| XML/XSD covered; test-only gap
-| Mapping XSD and XML annotation descriptors exist.  Needs focused XML test.
+| Covered
+| Mapping XSD and XML source processing create `@LazyGroup`; focused XML test
+verifies the annotation model.
 
 | `@ListIndexBase` in XSD
-| XML/XSD covered
-| Mapping XSD and XML processing support exist.
+| Covered
+| Mapping XSD and XML source processing create `@ListIndexBase`; focused XML
+test verifies the annotation model.
 
 | `@Mutability` in XSD
-| XML/XSD covered; test-only gap
-| Mapping XSD and annotation descriptors exist; basic binding supports
-`@Mutability`.
+| Covered
+| Mapping XSD and XML source processing create `@Mutability`; focused XML test
+verifies the annotation model.
 
 | `@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` for secondary tables in XSD
-| XML-source gap
-| Entity-level custom SQL metadata exists.  Secondary-table XML custom SQL needs
-source processing and binding support.
+| Covered
+| Secondary-table XML custom SQL creates table-scoped repeatable
+`@SQLInsert`, `@SQLUpdate`, and `@SQLDelete` usages; focused XML test verifies
+the annotation model.
 
 | `<mapped-superclass/>` support in dynamic models
 | XML-source gap

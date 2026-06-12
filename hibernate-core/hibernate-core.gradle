@@ -165,7 +165,7 @@ xjc {
             xjcPlugins('inheritance', 'simplify')
         }
         mapping {
-            xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-8.0.xsd' )
+            xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-9.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/mapping-bindings.xjb' )
             xjcPlugins('inheritance', 'simplify')
         }

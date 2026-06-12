@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.models.AvailableResources;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.ManagedTypeInheritanceState;
 import org.hibernate.boot.models.categorize.internal.CategorizationContextImpl;
-import org.hibernate.boot.models.source.AvailableResources;
 import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.models.source;
+package org.hibernate.boot.pipeline.internal.source;
 
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;

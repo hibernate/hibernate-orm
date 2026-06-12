@@ -14,7 +14,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
-import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;

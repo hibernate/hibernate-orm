@@ -15,9 +15,9 @@ import org.hibernate.StatementObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.orchestration.ResolvedMetadata;
-import org.hibernate.boot.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.settings.SettingsResolver;
+import org.hibernate.boot.pipeline.internal.ResolvedMetadata;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
@@ -485,7 +485,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 							metadata.getMetadataBuildingOptions().getServiceRegistry()
 					)
 			);
-			return org.hibernate.boot.orchestration.SessionFactoryBuilder.build(
+			return org.hibernate.boot.pipeline.internal.SessionFactoryBuilder.build(
 					sessionFactorySettings,
 					resolvedMetadata,
 					metadata.getMetadataBuildingOptions().getServiceRegistry()

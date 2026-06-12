@@ -2,12 +2,13 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.settings;
+package org.hibernate.boot.pipeline.internal.settings;
 
 import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.CacheRegionDefinition;
+import org.hibernate.boot.models.bind.BindingSettings;
 
 import jakarta.persistence.FetchType;
 
@@ -55,7 +56,7 @@ public record ResolvedMappingSettings(
 		/// as `hibernate.classcache.*` and `hibernate.collectioncache.*`.
 		///
 		/// The list is defensively copied by the canonical constructor.
-		List<CacheRegionDefinition> cacheRegionDefinitions) {
+		List<CacheRegionDefinition> cacheRegionDefinitions) implements BindingSettings {
 
 	public ResolvedMappingSettings(
 			boolean xmlMappingEnabled,

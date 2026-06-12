@@ -12,4 +12,4 @@
 /// raw configuration values forward for later bootstrap stages.
 ///
 /// @author Steve Ebersole
-package org.hibernate.boot.settings;
+package org.hibernate.boot.pipeline.internal.settings;

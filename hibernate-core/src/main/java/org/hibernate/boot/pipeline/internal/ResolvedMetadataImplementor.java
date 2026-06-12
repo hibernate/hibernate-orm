@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.orchestration.internal;
+package org.hibernate.boot.pipeline.internal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +11,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.orchestration.ResolvedMetadata;
 import org.hibernate.boot.spi.AbstractDelegatingMetadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
-import org.hibernate.boot.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import static java.lang.String.join;

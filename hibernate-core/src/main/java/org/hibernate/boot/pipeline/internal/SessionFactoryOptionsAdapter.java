@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.orchestration.internal;
+package org.hibernate.boot.pipeline.internal;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.settings.ResolvedSessionFactorySettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedSessionFactorySettings;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 
 /// **Temporary** adapter from the PoC's resolved factory settings to ORM's legacy

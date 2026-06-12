@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;

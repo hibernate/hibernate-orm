@@ -70,7 +70,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			return null;
 		}
 		else {
-			return org.hibernate.boot.orchestration.SessionFactoryBootstrap.build(
+			return org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.build(
 					persistenceUnitDescriptor,
 					wrap( map )
 			);
@@ -202,7 +202,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map<?,?> map) {
 		JPA_LOGGER.startingCreateContainerEntityManagerFactory( info.getPersistenceUnitName() );
-		return org.hibernate.boot.orchestration.SessionFactoryBootstrap.build(
+		return org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.build(
 				new PersistenceUnitInfoDescriptor( info ),
 				wrap( map )
 		);
@@ -218,7 +218,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public void generateSchema(PersistenceUnitInfo info, Map<?,?> map) {
 		JPA_LOGGER.startingGenerateSchemaForPuiName( info.getPersistenceUnitName() );
-		org.hibernate.boot.orchestration.SessionFactoryBootstrap.generateSchema(
+		org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.generateSchema(
 				new PersistenceUnitInfoDescriptor( info ),
 				wrap( map )
 		);
@@ -239,7 +239,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			return false;
 		}
 		else {
-			org.hibernate.boot.orchestration.SessionFactoryBootstrap.generateSchema(
+			org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.generateSchema(
 					persistenceUnitDescriptor,
 					wrap( map )
 			);
@@ -250,7 +250,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public boolean generateSchema(@Nonnull PersistenceConfiguration persistenceConfiguration) {
 		JPA_LOGGER.startingGenerateSchema( persistenceConfiguration.name() );
-		org.hibernate.boot.orchestration.SessionFactoryBootstrap.generateSchema( persistenceConfiguration );
+		org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.generateSchema( persistenceConfiguration );
 		return true;
 	}
 
@@ -288,7 +288,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@Override @Nonnull
 	public EntityManagerFactory createEntityManagerFactory(@Nonnull PersistenceConfiguration configuration) {
-		return org.hibernate.boot.orchestration.SessionFactoryBootstrap.build( configuration );
+		return org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap.build( configuration );
 	}
 
 	@Override

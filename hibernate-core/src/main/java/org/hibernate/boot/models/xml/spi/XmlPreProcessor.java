@@ -5,7 +5,7 @@
 package org.hibernate.boot.models.xml.spi;
 
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.models.source.AvailableResources;
+import org.hibernate.boot.models.AvailableResources;
 import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
 
 /**

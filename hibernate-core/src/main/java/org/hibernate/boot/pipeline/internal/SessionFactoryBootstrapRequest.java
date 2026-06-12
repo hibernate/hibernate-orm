@@ -2,15 +2,15 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.orchestration;
+package org.hibernate.boot.pipeline.internal;
 
 import java.util.Objects;
 
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.models.source.BootstrapSourceContributions;
-import org.hibernate.boot.settings.ResolvedBootstrapSettings;
-import org.hibernate.boot.settings.ResolvedMappingSettings;
-import org.hibernate.boot.settings.ResolvedSessionFactorySettings;
+import org.hibernate.boot.pipeline.internal.source.MappingSourceContributions;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedSessionFactorySettings;
 import org.hibernate.service.ServiceRegistry;
 
 /// Resolved inputs for one-shot SessionFactory bootstrap.
@@ -20,7 +20,8 @@ import org.hibernate.service.ServiceRegistry;
 public record SessionFactoryBootstrapRequest(
 		ResolvedBootstrapSettings bootstrapSettings,
 		ResolvedMappingSettings mappingSettings,
-		BootstrapSourceContributions sourceContributions,
+		MappingSourceContributions sourceContributions,
+		MetadataCustomizations metadataCustomizations,
 		ResolvedSessionFactorySettings sessionFactorySettings,
 		ServiceRegistry serviceRegistry,
 		SessionFactoryObserver[] additionalSessionFactoryObservers) {
@@ -31,6 +32,7 @@ public record SessionFactoryBootstrapRequest(
 		Objects.requireNonNull( sourceContributions );
 		Objects.requireNonNull( sessionFactorySettings );
 		Objects.requireNonNull( serviceRegistry );
+		metadataCustomizations = metadataCustomizations == null ? MetadataCustomizations.NONE : metadataCustomizations;
 		additionalSessionFactoryObservers = additionalSessionFactoryObservers == null
 				? new SessionFactoryObserver[0]
 				: additionalSessionFactoryObservers.clone();

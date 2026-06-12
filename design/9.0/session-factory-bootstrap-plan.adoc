@@ -53,12 +53,12 @@ First, a few assumptions we will be working under...
 == Current Bootstrap Entry-Point Status
 
 This branch has moved the main JPA provider entry points onto
-`org.hibernate.boot.orchestration.SessionFactoryBootstrap`, but several older
+`org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap`, but several older
 paths remain deliberately alive.
 
 === Canonical Path On This Branch
 
-`org.hibernate.boot.orchestration.SessionFactoryBootstrap` is currently the
+`org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap` is currently the
 canonical one-shot bootstrap facade for the new pipeline.
 
 It has entry-point adapters for:
@@ -195,7 +195,7 @@ metadata is built.  `MetadataImpl#getSessionFactoryBuilder()` creates the
 default builder through `SessionFactoryBuilderService` and still honors
 `SessionFactoryBuilderFactory` service-provider replacement.
 +
-The new `org.hibernate.boot.orchestration.SessionFactoryBuilder` is an internal
+The new `org.hibernate.boot.pipeline.internal.SessionFactoryBuilder` is an internal
 pipeline component with the same conceptual target but not the same API role.
 The public `org.hibernate.boot.SessionFactoryBuilder` cannot be folded into it
 without a compatibility plan for public builder methods and builder-factory
@@ -240,9 +240,13 @@ subsequent `Metadata -> SessionFactory` step.
 Native `MetadataSources` migration should start from source/resource products:
 `AvailableResources.from(MetadataSources, AvailableResourcesContext)` already
 adapts the current native accumulator, including already-bound XML mapping
-documents.  A future `BootstrapSourceContributions` adapter only makes sense
-after `MetadataSources` retains XML source declarations instead of immediately
-binding them.
+documents.  The replacement user-facing native API is
+`org.hibernate.boot.HibernateBootstrap`, which collects source declarations,
+settings, and metadata-build customizations before building a `SessionFactory`
+or performing schema generation through the new pipeline.  A future
+`MetadataSources` to `MappingSourceContributions` adapter only makes sense after
+`MetadataSources` retains XML source declarations instead of immediately binding
+them.
 
 The default `MetadataBuilderImpl#build()` path now uses that native source
 adapter and `MetadataResolver`, then returns the resolved-backed metadata view.
@@ -510,9 +514,9 @@ This is the main proving ground for the binding work.
 === ResolvedSessionFactorySettings
 
 This is now prototyped as
-link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/ResolvedSessionFactorySettings.java[`ResolvedSessionFactorySettings`]
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/settings/ResolvedSessionFactorySettings.java[`ResolvedSessionFactorySettings`]
 and
-link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/SessionFactorySettingsResolver.java[`SessionFactorySettingsResolver`].
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/settings/SessionFactorySettingsResolver.java[`SessionFactorySettingsResolver`].
 
 `SessionFactoryOptions` is very large and mixes resolved values, service
 references, JPA/native defaults, and raw setting interpretation.  A resolver
@@ -538,7 +542,7 @@ default catalog, and default schema.  It should continue to grow one setting at
 a time as `SessionFactoryBuilder` needs them.
 
 The PoC also has a temporary
-link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/internal/SessionFactoryOptionsAdapter.java[`SessionFactoryOptionsAdapter`].
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/SessionFactoryOptionsAdapter.java[`SessionFactoryOptionsAdapter`].
 It adapts `ResolvedSessionFactorySettings` to ORM's existing
 `SessionFactoryOptions` interface, but only for audited methods.  Unsupported
 methods throw immediately so new dependencies are documented before being added.
@@ -1268,7 +1272,7 @@ important design point is that `ResolvedSessionFactorySettings` should grow by
 consumer bucket, not by blindly mirroring every method in the legacy interface.
 
 That first adapter slice now exists as
-link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/internal/SessionFactoryOptionsAdapter.java[`SessionFactoryOptionsAdapter`].
+link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/SessionFactoryOptionsAdapter.java[`SessionFactoryOptionsAdapter`].
 It supports only the methods used by the direct `SessionFactoryImpl`
 constructor path identified above.  The PoC `SessionFactoryBuilder` creates the
 adapter and can find the existing `BootstrapContext` from the in-flight metadata
@@ -2442,12 +2446,12 @@ Success criteria:
 
 The current metadata collector resolver is:
 
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/SettingsResolver.java[`SettingsResolver`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/BootstrapSettingsResolver.java[`BootstrapSettingsResolver`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/MappingSettingsResolver.java[`MappingSettingsResolver`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/settings/SessionFactorySettingsResolver.java[`SessionFactorySettingsResolver`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/MetadataResolver.java[`MetadataResolver`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/orchestration/ResolvedMetadata.java[`ResolvedMetadata`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/settings/SettingsResolver.java[`SettingsResolver`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/settings/BootstrapSettingsResolver.java[`BootstrapSettingsResolver`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/settings/MappingSettingsResolver.java[`MappingSettingsResolver`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/settings/SessionFactorySettingsResolver.java[`SessionFactorySettingsResolver`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/MetadataResolver.java[`MetadataResolver`]
+* link:../../hibernate-core/src/main/java/org/hibernate/boot/pipeline/internal/ResolvedMetadata.java[`ResolvedMetadata`]
 
 Settings resolution is a separate target:
 
@@ -2469,7 +2473,7 @@ configuration values / JPA inputs
 .MetadataResolver
 [source]
 ----
-ResolvedBootstrapSettings + BootstrapSourceContributions + ServiceRegistry
+ResolvedBootstrapSettings + MappingSourceContributions + ServiceRegistry
     -> MetadataBuildingContext
     -> AvailableResources
     -> CategorizedDomainModel (*)

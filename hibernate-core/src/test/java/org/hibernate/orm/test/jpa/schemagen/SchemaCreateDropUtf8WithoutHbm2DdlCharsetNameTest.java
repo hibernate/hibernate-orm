@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.boot.orchestration.SessionFactoryBootstrap;
+import org.hibernate.boot.pipeline.internal.SessionFactoryBootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;

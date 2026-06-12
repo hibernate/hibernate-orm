@@ -18,7 +18,7 @@
 /// as the `ClassDetailsRegistry` or `AnnotationDescriptorRegistry`; those
 /// are categorization services exposed through [org.hibernate.boot.models.categorize.spi.CategorizationContext].
 ///
-/// @see org.hibernate.boot.models.source.AvailableResources
+/// @see org.hibernate.boot.models.AvailableResources
 /// @see org.hibernate.boot.models.categorize.spi.DomainModelCategorizer
 /// @see org.hibernate.boot.models.categorize.spi.CategorizedDomainModel
 ///

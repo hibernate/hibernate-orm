@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.CacheRegionDefinition.CacheRegionType;
-import org.hibernate.boot.settings.ResolvedMappingSettings;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 
 import org.junit.jupiter.api.Test;
 

@@ -46,7 +46,7 @@ Replace the current implicit sequence with explicit intermediate products:
 [source]
 ----
 JpaBootstrapSettings
-BootstrapSourceContributions
+MappingSourceContributions
 AvailableResources
 CategorizedDomainModel
 ResolvedMetadata
@@ -57,7 +57,7 @@ The intended flow is:
 [source]
 ----
 PersistenceUnitDescriptor / HibernatePersistenceConfiguration
-    -> BootstrapSourceContributions
+    -> MappingSourceContributions
     -> AvailableResources
     -> DomainModelCategorizer
     -> BindingCoordinator / MetadataResolver
@@ -99,7 +99,7 @@ Inputs:
 
 Output:
 
-* `BootstrapSourceContributions`: source contributions after entry-point source discovery, including scanner results, not yet categorized
+* `MappingSourceContributions`: source contributions after entry-point source discovery, including scanner results, not yet categorized
 
 == AvailableResources
 
@@ -112,9 +112,8 @@ It should contain:
 * XML bindings
 
 Dynamic model names/classes are discovered during XML processing rather than
-stored as separate `AvailableResources` buckets.  Extra query imports should be
-represented explicitly by the caller/test infrastructure rather than folded into
-`AvailableResources`.
+stored as separate `AvailableResources` buckets.  Extra query imports are
+represented explicitly so they are not folded into class or XML source buckets.
 
 It should not contain merged settings.
 
@@ -285,7 +284,7 @@ The original next slice was:
 [source]
 ----
 PersistenceUnitDescriptor / HibernatePersistenceConfiguration
-    -> BootstrapSourceContributions
+    -> MappingSourceContributions
     -> AvailableResources
     -> DomainModelCategorizer
 ----

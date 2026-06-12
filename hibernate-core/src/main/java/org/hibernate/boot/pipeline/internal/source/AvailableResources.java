@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.models.source;
+package org.hibernate.boot.pipeline.internal.source;
 
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.PersistenceConfiguration;
@@ -12,8 +12,8 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.settings.ResolvedMappingSettings;
-import org.hibernate.boot.settings.SettingsResolver;
+import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -22,23 +22,14 @@ import org.hibernate.models.spi.ClassDetails;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/// Model resources available to categorization.
-///
-/// The record separates the source material into three buckets:
-///
-/// * class details for explicitly visible managed classes and dynamic model types
-/// * class details for package metadata, represented by {@code package-info}
-///   class details
-/// * already-bound XML mapping documents
-///
-/// The canonical constructor accepts nullable collections for convenience; the
-/// accessor methods expose them as empty collections.
+/// Pipeline implementation of [org.hibernate.boot.models.AvailableResources].
 ///
 /// @apiNote Hibernate hbm.xml bindings are intentionally ignored here. 9.0 will
 /// drop support for them altogether.
@@ -48,7 +39,8 @@ import java.util.Map;
 public record AvailableResources(
 		Collection<ClassDetails> managedClassDetails,
 		Collection<ClassDetails> packageDetails,
-		Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings) {
+		Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings)
+		implements org.hibernate.boot.models.AvailableResources {
 
 	@Nonnull
 	public Collection<ClassDetails> managedClassDetails() {
@@ -144,7 +136,7 @@ public record AvailableResources(
 	/// Creates available resources from Hibernate's JPA
 	/// {@link HibernatePersistenceConfiguration} extension.
 	///
-	/// The configuration is first adapted to [BootstrapSourceContributions], which
+	/// The configuration is first adapted to [MappingSourceContributions], which
 	/// includes archive scanning based on [HibernatePersistenceConfiguration#rootUrl()]
 	/// and [HibernatePersistenceConfiguration#jarFileUrls()].
 	///
@@ -166,7 +158,7 @@ public record AvailableResources(
 	/// Creates available resources from Hibernate's JPA
 	/// {@link HibernatePersistenceConfiguration} extension.
 	///
-	/// The configuration is first adapted to [BootstrapSourceContributions], which
+	/// The configuration is first adapted to [MappingSourceContributions], which
 	/// includes archive scanning based on [HibernatePersistenceConfiguration#rootUrl()]
 	/// and [HibernatePersistenceConfiguration#jarFileUrls()].
 	///
@@ -179,7 +171,7 @@ public record AvailableResources(
 			ResolvedMappingSettings mappingSettings) {
 		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration );
 		return from(
-				BootstrapSourceContributions.from(
+				MappingSourceContributions.from(
 						persistenceConfiguration,
 						bootstrapSettings,
 						mappingSettings,
@@ -200,7 +192,7 @@ public record AvailableResources(
 	/// @param context Context used to resolve model details and load resources
 	/// @param mappingSettings Resolved mapping settings used during source collection
 	public static AvailableResources from(
-			BootstrapSourceContributions sourceContributions,
+			MappingSourceContributions sourceContributions,
 			AvailableResourcesContext context,
 			ResolvedMappingSettings mappingSettings) {
 		final var classLoading = context.getClassLoaderService();
@@ -233,23 +225,30 @@ public record AvailableResources(
 
 		final var xmlBindings = new ArrayList<Binding<JaxbEntityMappingsImpl>>();
 		if ( mappingSettings.xmlMappingEnabled() ) {
-			sourceContributions.mappingFiles().forEach( (mappingFile) -> {
-				try (var mappingFileStream = classLoading.locateResourceStream( mappingFile )) {
+			sourceContributions.mappingResources().forEach( (mappingResource) -> {
+				try (var mappingFileStream = classLoading.locateResourceStream( mappingResource )) {
 					xmlBindings.add( mappingFileBinder.bind(
 							mappingFileStream,
-							new Origin( SourceType.RESOURCE, mappingFile )
+							new Origin( SourceType.RESOURCE, mappingResource )
 					) );
 				}
 				catch (IOException e) {
-					throw new RuntimeException( "Error accessing mapping file - " + mappingFile, e );
+					throw new RuntimeException( "Error accessing mapping resource - " + mappingResource, e );
 				}
 			} );
 			sourceContributions.mappingFileUris().forEach( (mappingFileUri) -> {
 				xmlBindings.add( bindMappingFile( mappingFileUri, mappingFileBinder ) );
 			} );
+			sourceContributions.mappingFileUrls().forEach( (mappingFileUrl) -> {
+				xmlBindings.add( bindMappingFile( mappingFileUrl, mappingFileBinder ) );
+			} );
 		}
 
-		return new AvailableResources( managedClassDetails, packageDetailsList, xmlBindings );
+		return new AvailableResources(
+				managedClassDetails,
+				packageDetailsList,
+				xmlBindings
+		);
 	}
 
 	/// Creates available resources from JPA {@link PersistenceConfiguration}.
@@ -366,5 +365,11 @@ public record AvailableResources(
 		catch (MalformedURLException e) {
 			throw new RuntimeException( "Error accessing mapping file - " + mappingFile, e );
 		}
+	}
+
+	private static Binding<JaxbEntityMappingsImpl> bindMappingFile(
+			URL mappingFile,
+			MappingBinder mappingFileBinder) {
+		return org.hibernate.boot.jaxb.internal.UrlXmlSource.fromUrl( mappingFile, mappingFileBinder );
 	}
 }

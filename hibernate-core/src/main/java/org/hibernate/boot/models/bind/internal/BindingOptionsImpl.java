@@ -8,8 +8,8 @@ import java.lang.annotation.Annotation;
 import java.util.EnumSet;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.models.bind.BindingSettings;
 import org.hibernate.boot.models.bind.spi.QuotedIdentifierTarget;
-import org.hibernate.boot.settings.ResolvedMappingSettings;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -47,12 +47,12 @@ public class BindingOptionsImpl implements BindingOptions {
 
 	public BindingOptionsImpl(
 			MetadataBuildingContext metadataBuildingContext,
-			ResolvedMappingSettings mappingSettings) {
+			BindingSettings bindingSettings) {
 		this(
 				metadataBuildingContext,
-				mappingSettings.createImplicitDiscriminatorsForJoinedInheritance(),
-				mappingSettings.ignoreExplicitDiscriminatorsForJoinedInheritance(),
-				mappingSettings.defaultToOneFetchType()
+				bindingSettings.createImplicitDiscriminatorsForJoinedInheritance(),
+				bindingSettings.ignoreExplicitDiscriminatorsForJoinedInheritance(),
+				bindingSettings.defaultToOneFetchType()
 		);
 	}
 

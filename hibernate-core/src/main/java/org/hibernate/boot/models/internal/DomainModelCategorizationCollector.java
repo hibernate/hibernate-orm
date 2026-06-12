@@ -134,7 +134,7 @@ public class DomainModelCategorizationCollector {
 
 	private static boolean isConverter(ClassDetails classDetails) {
 		return classDetails.getClassName() != null && classDetails.isImplementor( AttributeConverter.class )
-			|| classDetails.hasDirectAnnotationUsage( Converter.class );
+			&& !classDetails.isAbstract() || classDetails.hasDirectAnnotationUsage( Converter.class );
 	}
 
 	private static boolean isLifecycleEventHandler(ClassDetails classDetails) {

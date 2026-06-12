@@ -1142,6 +1142,8 @@ Both {micrometer}[Micrometer] and {smallrye-metrics}[SmallRye Metrics] are capab
 ====
 To use the Micrometer integration, the application must include `org.hibernate.orm:hibernate-micrometer` on the classpath,
 as well as an appropriate version of `io.micrometer:micrometer-core`.
+
+This version of Hibernate ORM was tested with Micrometer {micrometerVersion}.
 ====
 
 [[jfr]]

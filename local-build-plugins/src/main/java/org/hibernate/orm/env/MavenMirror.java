@@ -12,6 +12,10 @@ import org.gradle.api.artifacts.repositories.RepositoryContentDescriptor;
  * Configures Maven Central or a mirror of it, based on the {@code MAVEN_MIRROR} environment
  * variable or system property. Optionally supports authentication via
  * {@code MAVEN_MIRROR_USERNAME} and {@code MAVEN_MIRROR_PASSWORD}.
+ * <p>
+ * When using a mirror, set {@code MAVEN_CENTRAL_FALLBACK} to {@code true} to also add
+ * {@code mavenCentral()} after the mirror — useful when mirrors lag behind on freshly
+ * published artifacts.
  *
  * @see <a href="https://blog.gradle.org/maven-central-mirror">Gradle Maven Central Mirror</a>
  */
@@ -56,6 +60,9 @@ public class MavenMirror {
 					} );
 				}
 			} );
+			if ( "true".equalsIgnoreCase( resolve( "MAVEN_CENTRAL_FALLBACK" ) ) ) {
+				repositories.mavenCentral();
+			}
 			return true;
 		}
 		else {

@@ -17,8 +17,13 @@ import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionIdMutability;
 import org.hibernate.annotations.CollectionIdType;
+import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.SQLOrder;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.boot.models.bind.internal.binders.CascadeBinder;
@@ -299,6 +304,10 @@ public record CollectionSource(
 	}
 
 	public FetchType fetchType() {
+		final org.hibernate.annotations.Fetch hibernateFetch = hibernateFetch();
+		if ( hibernateFetch != null && hibernateFetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
+			return FetchType.EAGER;
+		}
 		final Fetch fetch = graphlessFetch();
 		if ( fetch != null && fetch.type() != FetchType.DEFAULT ) {
 			return fetch.type();
@@ -330,6 +339,10 @@ public record CollectionSource(
 		return null;
 	}
 
+	public org.hibernate.annotations.Fetch hibernateFetch() {
+		return member.getDirectAnnotationUsage( org.hibernate.annotations.Fetch.class );
+	}
+
 	/// Whether the collection element value should be modeled as a component.
 	///
 	/// The source member can express embeddable-element intent in two ways: through the
@@ -356,6 +369,33 @@ public record CollectionSource(
 	/// Hibernate SQL order fragment declared for ordered sets/maps.
 	public SQLOrder sqlOrder() {
 		return member.getDirectAnnotationUsage( SQLOrder.class );
+	}
+
+	public SQLRestriction sqlRestriction() {
+		return member.getDirectAnnotationUsage( SQLRestriction.class );
+	}
+
+	public SQLRestriction associatedTypeRestriction() {
+		if ( nature == Nature.ELEMENT_COLLECTION ) {
+			return null;
+		}
+		return elementType.determineRawClass().getDirectAnnotationUsage( SQLRestriction.class );
+	}
+
+	public SQLJoinTableRestriction sqlJoinTableRestriction() {
+		return member.getDirectAnnotationUsage( SQLJoinTableRestriction.class );
+	}
+
+	public Filter[] filters() {
+		return member.getRepeatedAnnotationUsages( Filter.class, modelsContext );
+	}
+
+	public FilterJoinTable[] filterJoinTables() {
+		return member.getRepeatedAnnotationUsages( FilterJoinTable.class, modelsContext );
+	}
+
+	public FetchProfileOverride[] fetchProfileOverrides() {
+		return member.getRepeatedAnnotationUsages( FetchProfileOverride.class, modelsContext );
 	}
 
 	/// Hibernate comparator declaration for sorted sets/maps.

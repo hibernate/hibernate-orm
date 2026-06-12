@@ -13,6 +13,12 @@ import org.hibernate.boot.models.bind.internal.binders.CascadeBinder;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingState;
+import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.annotations.JoinColumnsOrFormulas;
+import org.hibernate.annotations.JoinFormula;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.PropertyRef;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -141,6 +147,10 @@ public record ToOneSource(
 	/// The effective fetch style requested by graphless JPA `@Fetch`, if present,
 	/// or by the active association annotation.
 	public FetchType effectiveFetchType(FetchType defaultToOneFetchType) {
+		final org.hibernate.annotations.Fetch hibernateFetch = hibernateFetch();
+		if ( hibernateFetch != null && hibernateFetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
+			return FetchType.EAGER;
+		}
 		final Fetch fetch = graphlessFetch();
 		if ( fetch != null && fetch.type() != FetchType.DEFAULT ) {
 			return fetch.type();
@@ -160,6 +170,10 @@ public record ToOneSource(
 			}
 		}
 		return null;
+	}
+
+	public org.hibernate.annotations.Fetch hibernateFetch() {
+		return member.getDirectAnnotationUsage( org.hibernate.annotations.Fetch.class );
 	}
 
 	/// The optionality declared by the active association annotation.
@@ -215,6 +229,31 @@ public record ToOneSource(
 		return joinColumns();
 	}
 
+	/// Resolves value-side join columns and formulas.
+	public List<JoinColumnOrFormulaSource> valueJoinColumnsOrFormulas(JoinTable joinTable) {
+		if ( joinTable != null ) {
+			return listJoinColumnSources( joinTable.inverseJoinColumns() );
+		}
+
+		final JoinColumnsOrFormulas joinColumnsOrFormulasAnn = member.getDirectAnnotationUsage( JoinColumnsOrFormulas.class );
+		if ( joinColumnsOrFormulasAnn != null ) {
+			return listJoinColumnOrFormulaSources( joinColumnsOrFormulasAnn.value() );
+		}
+
+		final JoinColumnOrFormula[] joinColumnOrFormulas =
+				member.getRepeatedAnnotationUsages( JoinColumnOrFormula.class, modelsContext );
+		if ( joinColumnOrFormulas.length > 0 ) {
+			return listJoinColumnOrFormulaSources( joinColumnOrFormulas );
+		}
+
+		final JoinFormula joinFormula = member.getDirectAnnotationUsage( JoinFormula.class );
+		if ( joinFormula != null ) {
+			return List.of( JoinColumnOrFormulaSource.formula( joinFormula ) );
+		}
+
+		return listJoinColumnSources( joinColumns() );
+	}
+
 	/// Resolves foreign-key metadata for the value-side columns.
 	public ForeignKeySource valueForeignKeySource(JoinTable joinTable) {
 		if ( joinTable != null ) {
@@ -252,7 +291,19 @@ public record ToOneSource(
 		final PrimaryKeyJoinColumn primaryKeyJoinColumnAnn = member.getDirectAnnotationUsage( PrimaryKeyJoinColumn.class );
 		return primaryKeyJoinColumnAnn == null
 				? List.of()
-				: List.of( JoinColumnJpaAnnotation.toJoinColumn( primaryKeyJoinColumnAnn, modelsContext ) );
+			: List.of( JoinColumnJpaAnnotation.toJoinColumn( primaryKeyJoinColumnAnn, modelsContext ) );
+	}
+
+	public NotFound notFound() {
+		return member.getDirectAnnotationUsage( NotFound.class );
+	}
+
+	public PropertyRef propertyRef() {
+		return member.getDirectAnnotationUsage( PropertyRef.class );
+	}
+
+	public FetchProfileOverride[] fetchProfileOverrides() {
+		return member.getRepeatedAnnotationUsages( FetchProfileOverride.class, modelsContext );
 	}
 
 	/// Whether a join table annotation carries any meaningful source information.
@@ -273,6 +324,35 @@ public record ToOneSource(
 		return result;
 	}
 
+	private static List<JoinColumnOrFormulaSource> listJoinColumnSources(List<JoinColumn> joinColumns) {
+		if ( joinColumns.isEmpty() ) {
+			return List.of();
+		}
+		final ArrayList<JoinColumnOrFormulaSource> result = new ArrayList<>( joinColumns.size() );
+		for ( JoinColumn joinColumn : joinColumns ) {
+			result.add( JoinColumnOrFormulaSource.column( joinColumn ) );
+		}
+		return result;
+	}
+
+	private static List<JoinColumnOrFormulaSource> listJoinColumnSources(JoinColumn[] joinColumns) {
+		return listJoinColumnSources( listJoinColumns( joinColumns ) );
+	}
+
+	private static List<JoinColumnOrFormulaSource> listJoinColumnOrFormulaSources(
+			JoinColumnOrFormula[] joinColumnsOrFormulas) {
+		final ArrayList<JoinColumnOrFormulaSource> result = new ArrayList<>( joinColumnsOrFormulas.length );
+		for ( JoinColumnOrFormula joinColumnOrFormula : joinColumnsOrFormulas ) {
+			if ( StringHelper.isNotEmpty( joinColumnOrFormula.formula().value() ) ) {
+				result.add( JoinColumnOrFormulaSource.formula( joinColumnOrFormula.formula() ) );
+			}
+			else {
+				result.add( JoinColumnOrFormulaSource.column( joinColumnOrFormula.column() ) );
+			}
+		}
+		return result;
+	}
+
 	private List<JoinColumn> listPrimaryKeyJoinColumns(PrimaryKeyJoinColumn[] joinColumns) {
 		if ( joinColumns.length == 0 ) {
 			return List.of();
@@ -282,5 +362,19 @@ public record ToOneSource(
 			result.add( JoinColumnJpaAnnotation.toJoinColumn( joinColumn, modelsContext ) );
 		}
 		return result;
+	}
+
+	public record JoinColumnOrFormulaSource(JoinColumn column, JoinFormula formula) {
+		static JoinColumnOrFormulaSource column(JoinColumn column) {
+			return new JoinColumnOrFormulaSource( column, null );
+		}
+
+		static JoinColumnOrFormulaSource formula(JoinFormula formula) {
+			return new JoinColumnOrFormulaSource( null, formula );
+		}
+
+		public String referencedColumnName() {
+			return formula == null ? column.referencedColumnName() : formula.referencedColumnName();
+		}
 	}
 }

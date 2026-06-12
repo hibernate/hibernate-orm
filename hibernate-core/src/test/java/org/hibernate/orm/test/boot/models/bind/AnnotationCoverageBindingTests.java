@@ -34,12 +34,22 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.annotations.EmbeddableInstantiator;
 import org.hibernate.annotations.FractionalSeconds;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterJoinTable;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
@@ -50,6 +60,8 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdClass;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLocking;
@@ -57,7 +69,11 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.PartitionKey;
+import org.hibernate.annotations.PropertyRef;
 import org.hibernate.annotations.RowId;
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.annotations.SQLOrder;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
@@ -529,6 +545,95 @@ public class AnnotationCoverageBindingTests {
 				OnDeleteOwner.class,
 				OnDeleteParent.class,
 				OnDeleteTarget.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testAssociationAndJoinAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass ownerBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( AssociationJoinOwner.class.getName() );
+					final BasicValue formulaCode = (BasicValue) ownerBinding.getProperty( "formulaCode" ).getValue();
+					final ManyToOne eagerTarget = (ManyToOne) ownerBinding.getProperty( "eagerTarget" ).getValue();
+					final ManyToOne missingTarget = (ManyToOne) ownerBinding.getProperty( "missingTarget" ).getValue();
+					final ManyToOne propertyRefTarget = (ManyToOne) ownerBinding.getProperty( "propertyRefTarget" ).getValue();
+					final ManyToOne formulaTarget = (ManyToOne) ownerBinding.getProperty( "formulaTarget" ).getValue();
+					final ManyToOne directFormulaTarget = (ManyToOne) ownerBinding.getProperty( "directFormulaTarget" )
+							.getValue();
+					final org.hibernate.mapping.Collection targets = context.getMetadataCollector()
+							.getCollectionBinding( AssociationJoinOwner.class.getName() + ".targets" );
+					final org.hibernate.mapping.FetchProfile fetchProfile =
+							context.getMetadataCollector().getFetchProfile( "association-join-coverage" );
+
+					assertThat( ownerBinding.getWhere() ).isEqualTo( "owner_deleted = false" );
+					assertThat( ownerBinding.getFilters() )
+							.singleElement()
+							.satisfies( (filter) -> {
+								assertThat( filter.getName() ).isEqualTo( "associationJoinCoverage" );
+								assertThat( filter.getCondition() ).isEqualTo( "owner_active = true" );
+							} );
+
+					assertThat( formulaCode.getColumn() ).isInstanceOf( org.hibernate.mapping.Formula.class );
+					assertThat( ( (org.hibernate.mapping.Formula) formulaCode.getColumn() ).getFormula() )
+							.isEqualTo( "upper(code)" );
+
+					assertThat( eagerTarget.getFetchMode() ).isEqualTo( org.hibernate.FetchMode.JOIN );
+					assertThat( eagerTarget.isLazy() ).isFalse();
+					assertThat( missingTarget.getNotFoundAction() ).isEqualTo( NotFoundAction.IGNORE );
+					assertThat( propertyRefTarget.getReferencedPropertyName() ).isEqualTo( "code" );
+					assertThat( propertyRefTarget.isReferenceToPrimaryKey() ).isFalse();
+					assertThat( formulaTarget.getSelectables() )
+							.anySatisfy( (selectable) -> {
+								assertThat( selectable ).isInstanceOf( org.hibernate.mapping.Formula.class );
+								assertThat( ( (org.hibernate.mapping.Formula) selectable ).getFormula() )
+										.isEqualTo( "formula_target_id" );
+							} );
+					assertThat( directFormulaTarget.getSelectables() )
+							.anySatisfy( (selectable) -> {
+								assertThat( selectable ).isInstanceOf( org.hibernate.mapping.Formula.class );
+								assertThat( ( (org.hibernate.mapping.Formula) selectable ).getFormula() )
+										.isEqualTo( "direct_formula_target_id" );
+							} );
+
+					assertThat( targets.getFetchMode() ).isEqualTo( org.hibernate.FetchMode.JOIN );
+					assertThat( targets.isLazy() ).isFalse();
+					assertThat( targets.getOrderBy() ).isEqualTo( "target_code desc" );
+					assertThat( targets.getManyToManyWhere() )
+							.isEqualTo( "(target_deleted = false) and (target_visible = true)" );
+					assertThat( targets.getWhere() ).isEqualTo( "link_visible = true" );
+					assertThat( targets.getManyToManyFilters() )
+							.singleElement()
+							.satisfies( (filter) -> {
+								assertThat( filter.getName() ).isEqualTo( "associationJoinCoverage" );
+								assertThat( filter.getCondition() ).isEqualTo( "target_active = true" );
+							} );
+					assertThat( targets.getFilters() )
+							.singleElement()
+							.satisfies( (filter) -> {
+								assertThat( filter.getName() ).isEqualTo( "associationJoinCoverage" );
+								assertThat( filter.getCondition() ).isEqualTo( "link_active = true" );
+							} );
+
+					assertThat( fetchProfile ).isNotNull();
+					assertThat( fetchProfile.getFetches() )
+							.anySatisfy( (fetch) -> {
+								assertThat( fetch.getEntity() ).isEqualTo( AssociationJoinOwner.class.getName() );
+								assertThat( fetch.getAssociation() ).isEqualTo( "eagerTarget" );
+								assertThat( fetch.getMethod() ).isEqualTo( FetchMode.JOIN );
+								assertThat( fetch.getType() ).isEqualTo( FetchType.EAGER );
+							} )
+							.anySatisfy( (fetch) -> {
+								assertThat( fetch.getEntity() ).isEqualTo( AssociationJoinOwner.class.getName() );
+								assertThat( fetch.getAssociation() ).isEqualTo( "targets" );
+								assertThat( fetch.getMethod() ).isEqualTo( FetchMode.JOIN );
+								assertThat( fetch.getType() ).isEqualTo( FetchType.EAGER );
+							} );
+				},
+				scope.getRegistry(),
+				AssociationJoinOwner.class,
+				AssociationJoinTarget.class
 		);
 	}
 
@@ -1222,5 +1327,78 @@ public class AnnotationCoverageBindingTests {
 		@Id
 		@Column(name = "id")
 		private Integer id;
+	}
+
+	@Entity(name = "AssociationJoinOwner")
+	@Table(name = "association_join_owners")
+	@FilterDef(name = "associationJoinCoverage", defaultCondition = "active = true")
+	@Filter(name = "associationJoinCoverage", condition = "owner_active = true")
+	@SQLRestriction("owner_deleted = false")
+	@FetchProfile(name = "association-join-coverage")
+	public static class AssociationJoinOwner {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@Column(name = "code")
+		private String code;
+
+		@Formula("upper(code)")
+		private String formulaCode;
+
+		@jakarta.persistence.ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "eager_target_id")
+		@Fetch(FetchMode.JOIN)
+		@FetchProfileOverride(profile = "association-join-coverage")
+		private AssociationJoinTarget eagerTarget;
+
+		@jakarta.persistence.ManyToOne
+		@JoinColumn(name = "missing_target_id")
+		@NotFound(action = NotFoundAction.IGNORE)
+		private AssociationJoinTarget missingTarget;
+
+		@jakarta.persistence.ManyToOne
+		@JoinColumn(name = "target_code", referencedColumnName = "code")
+		@PropertyRef("code")
+		private AssociationJoinTarget propertyRefTarget;
+
+		@jakarta.persistence.ManyToOne
+		@JoinColumnOrFormula(formula = @JoinFormula(value = "formula_target_id", referencedColumnName = "id"))
+		private AssociationJoinTarget formulaTarget;
+
+		@jakarta.persistence.ManyToOne
+		@JoinFormula(value = "direct_formula_target_id", referencedColumnName = "id")
+		private AssociationJoinTarget directFormulaTarget;
+
+		@ManyToMany
+		@JoinTable(
+				name = "association_join_owner_targets",
+				joinColumns = @JoinColumn(name = "owner_id"),
+				inverseJoinColumns = @JoinColumn(name = "target_id")
+		)
+		@Fetch(FetchMode.JOIN)
+		@FetchProfileOverride(profile = "association-join-coverage")
+		@Filter(name = "associationJoinCoverage", condition = "target_active = true")
+		@FilterJoinTable(name = "associationJoinCoverage", condition = "link_active = true")
+		@SQLRestriction("target_visible = true")
+		@SQLJoinTableRestriction("link_visible = true")
+		@SQLOrder("target_code desc")
+		private Set<AssociationJoinTarget> targets;
+	}
+
+	@Entity(name = "AssociationJoinTarget")
+	@Table(name = "association_join_targets")
+	@SQLRestriction("target_deleted = false")
+	public static class AssociationJoinTarget {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@NaturalId
+		@Column(name = "code", unique = true)
+		private String code;
+
+		@Column(name = "kind")
+		private String kind;
 	}
 }

@@ -378,6 +378,28 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			) );
 		}
 
+		final MethodDetails preInsertMethod = listener.getPreInsertMethod();
+		if ( preInsertMethod != null ) {
+			final Method callbackMethod = findCallbackMethod( listenerClass, preInsertMethod, methodArgumentType );
+			callbackDefinitions.add( createCallbackDefinition(
+					listenerClass,
+					callbackMethod,
+					style,
+					CallbackType.PRE_INSERT
+			) );
+		}
+
+		final MethodDetails postInsertMethod = listener.getPostInsertMethod();
+		if ( postInsertMethod != null ) {
+			final Method callbackMethod = findCallbackMethod( listenerClass, postInsertMethod, methodArgumentType );
+			callbackDefinitions.add( createCallbackDefinition(
+					listenerClass,
+					callbackMethod,
+					style,
+					CallbackType.POST_INSERT
+			) );
+		}
+
 		final MethodDetails preUpdateMethod = listener.getPreUpdateMethod();
 		if ( preUpdateMethod != null ) {
 			final Method callbackMethod = findCallbackMethod( listenerClass, preUpdateMethod, methodArgumentType );
@@ -400,6 +422,28 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			) );
 		}
 
+		final MethodDetails preUpsertMethod = listener.getPreUpsertMethod();
+		if ( preUpsertMethod != null ) {
+			final Method callbackMethod = findCallbackMethod( listenerClass, preUpsertMethod, methodArgumentType );
+			callbackDefinitions.add( createCallbackDefinition(
+					listenerClass,
+					callbackMethod,
+					style,
+					CallbackType.PRE_UPSERT
+			) );
+		}
+
+		final MethodDetails postUpsertMethod = listener.getPostUpsertMethod();
+		if ( postUpsertMethod != null ) {
+			final Method callbackMethod = findCallbackMethod( listenerClass, postUpsertMethod, methodArgumentType );
+			callbackDefinitions.add( createCallbackDefinition(
+					listenerClass,
+					callbackMethod,
+					style,
+					CallbackType.POST_UPSERT
+			) );
+		}
+
 		final MethodDetails preRemoveMethod = listener.getPreRemoveMethod();
 		if ( preRemoveMethod != null ) {
 			final Method callbackMethod = findCallbackMethod( listenerClass, preRemoveMethod, methodArgumentType );
@@ -419,6 +463,39 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 					callbackMethod,
 					style,
 					CallbackType.POST_REMOVE
+			) );
+		}
+
+		final MethodDetails preDeleteMethod = listener.getPreDeleteMethod();
+		if ( preDeleteMethod != null ) {
+			final Method callbackMethod = findCallbackMethod( listenerClass, preDeleteMethod, methodArgumentType );
+			callbackDefinitions.add( createCallbackDefinition(
+					listenerClass,
+					callbackMethod,
+					style,
+					CallbackType.PRE_DELETE
+			) );
+		}
+
+		final MethodDetails postDeleteMethod = listener.getPostDeleteMethod();
+		if ( postDeleteMethod != null ) {
+			final Method callbackMethod = findCallbackMethod( listenerClass, postDeleteMethod, methodArgumentType );
+			callbackDefinitions.add( createCallbackDefinition(
+					listenerClass,
+					callbackMethod,
+					style,
+					CallbackType.POST_DELETE
+			) );
+		}
+
+		final MethodDetails preMergeMethod = listener.getPreMergeMethod();
+		if ( preMergeMethod != null ) {
+			final Method callbackMethod = findCallbackMethod( listenerClass, preMergeMethod, methodArgumentType );
+			callbackDefinitions.add( createCallbackDefinition(
+					listenerClass,
+					callbackMethod,
+					style,
+					CallbackType.PRE_MERGE
 			) );
 		}
 

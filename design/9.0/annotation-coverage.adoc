@@ -59,11 +59,11 @@ This audit is against the Jakarta Persistence API version used by the build:
 * `JpaAnnotations` is not exhaustive for every annotation type in the
   `jakarta.persistence-api` jar.  Comparing against the `4.0.0-M4` jar found
   100 registered JPA annotation descriptors and 18 additional annotation types
-  not currently registered.  The missing annotations are injection/bootstrap,
-  query-package, static metamodel, and new lifecycle callback annotations.
-* The core mapping vocabulary has broad categorization and binding coverage,
-  but several rows still need focused mapping-state assertions before they can
-  be marked `covered`.
+  not currently registered.  Of those descriptor gaps, only the new lifecycle
+  callback annotations are in scope for the boot-model pipeline.
+* The core mapping vocabulary has focused mapping-state assertions for the
+  basic table, column, discriminator, identifier, secondary-table, LOB,
+  inheritance, version, access, and cacheability surface.
 * The most important JPA 4.0 follow-up is to verify whether the new 4.0
   annotations are fully consumed by categorization/binding, not merely visible
   through descriptors or XML synthesis.
@@ -82,44 +82,45 @@ This audit is against the Jakarta Persistence API version used by the build:
 tests for each annotation.
 
 | JPA jar descriptor gaps
-| `@PersistenceAgent`, `@PersistenceAgents`, `@PersistenceContext`,
-`@PersistenceContexts`, `@PersistenceProperty`, `@PersistenceUnit`,
-`@PersistenceUnits`, `@PreInsert`, `@PostInsert`, `@PreDelete`,
-`@PostDelete`, `@PreMerge`, `@PreUpsert`, `@PostUpsert`,
-`@jakarta.persistence.query.JakartaQuery`,
-`@jakarta.persistence.query.NativeQuery`,
-`@jakarta.persistence.query.QueryOptions`, `@StaticMetamodel`
-| Decide whether `JpaAnnotations` should be exhaustive for the JPA jar or
-explicitly limited to boot-model mapping annotations.  The lifecycle callback
-annotations are the most likely boot-model parity gaps.
+| `@PreInsert`, `@PostInsert`, `@PreDelete`, `@PostDelete`, `@PreMerge`,
+`@PreUpsert`, `@PostUpsert`
+| Covered: descriptors and lifecycle callback categorization/binding support
+are present.  Other JPA jar-only annotations from the inventory are out of
+scope for this boot-model coverage audit.
 
-| Core mapping test gaps
+| Core mapping coverage
 | `@Access`, `@Basic`, `@Cacheable`, `@Column`, `@DiscriminatorColumn`,
 `@DiscriminatorValue`, `@GeneratedValue`, `@Inheritance`, `@Lob`,
 `@SecondaryTable`, `@Table`, `@Version`
-| Add focused model-binding assertions where the pipeline already appears to
-have support.
+| Covered: focused model-binding assertions exist for core table, column,
+basic, discriminator, generated identifier, secondary-table, LOB, inheritance,
+version, and cacheability mapping state.
 
-| Association and collection test gaps
+| Association and collection coverage
 | `@JoinColumn`, `@JoinTable`, `@ManyToOne`, `@OneToOne`, `@OneToMany`,
 `@ManyToMany`, `@MapKey`, `@MapKeyColumn`, `@MapKeyJoinColumn`,
 `@OrderBy`, `@OrderColumn`
-| Continue asserting `org.hibernate.mapping` state for each association and
-collection shape.
+| Covered: focused mapping-state assertions exist for to-one associations,
+plural associations, join columns, join tables, map keys, map-key columns,
+map-key join columns, order columns, and association/collection order-by.
 
-| Global registration test gaps
+| Global registration coverage
 | `@NamedQuery`, `@NamedNativeQuery`, `@NamedStoredProcedureQuery`,
 `@NamedEntityGraph`, `@SqlResultSetMapping`, `@SequenceGenerator`,
 `@TableGenerator`, `@Converter`
-| Existing global registration tests cover much of this group; expand them to
-new statement forms and helper annotations where needed.
+| Covered: focused metadata-collector assertions exist for named HQL/native
+queries, named mutation statements, named stored procedures, named entity
+graphs, SQL result-set mappings, sequence/table generator parameters, converters,
+and query hints on named query registrations.
 
 | Container/helper annotations
 | Repeatable containers, result mapping members, callback methods, enum member
 values, `@ForeignKey`, `@Index`, `@UniqueConstraint`, `@QueryHint`,
 `@StoredProcedureParameter`
-| Verify through the owning annotation rather than as independent mapping
-annotations.
+| Covered: helper annotations are verified through their owning annotations;
+focused assertions exist for result-set mapping members, callback methods, enum
+member values, foreign keys, table indexes, unique constraints, query hints, and
+stored procedure parameters.
 |===
 
 == JPA Annotation Matrix
@@ -181,18 +182,18 @@ annotation type in the JPA API jar has a descriptor.
 | `@Basic`
 | member
 | yes
-| basic-value source/binding present
+| basic-value optionality and lazy-property binding present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@Cacheable`
 | type
 | yes
 | entity cacheability support appears present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@CheckConstraint`
 | helper on table/column/join annotations
@@ -215,15 +216,15 @@ annotation type in the JPA API jar has a descriptor.
 | yes
 | column binding present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@ColumnResult`
 | result-set mapping helper
 | yes
 | result-set mapping registration present
 | XML/source support present
-| covered by registration tests
+| focused owner tests exist
 | covered
 
 | `@ColumnResult.ColumnResults`
@@ -237,10 +238,10 @@ annotation type in the JPA API jar has a descriptor.
 | `@ConstructorResult`
 | result-set mapping helper
 | yes
-| result-set mapping registration appears present
+| result-set mapping registration present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused owner tests exist
+| covered
 
 | `@ConstructorResult.ConstructorResults`
 | container
@@ -277,18 +278,18 @@ annotation type in the JPA API jar has a descriptor.
 | `@DiscriminatorColumn`
 | type
 | yes
-| inheritance/discriminator binding appears present
+| inheritance/discriminator binding present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@DiscriminatorValue`
 | type
 | yes
-| discriminator value binding appears present
+| discriminator value binding present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@Discoverable`
 | annotation type
@@ -357,10 +358,10 @@ annotation type in the JPA API jar has a descriptor.
 | `@EntityResult`
 | result-set mapping helper
 | yes
-| result-set mapping registration appears present
+| result-set mapping registration present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused owner tests exist
+| covered
 
 | `@EntityResult.EntityResults`
 | container
@@ -429,26 +430,26 @@ annotation type in the JPA API jar has a descriptor.
 | `@FieldResult`
 | result-set mapping helper
 | yes
-| result-set mapping registration appears present
+| result-set mapping registration present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused owner tests exist
+| covered
 
 | `@ForeignKey`
 | helper
 | yes
 | consumed through join/table annotations
 | XML/source support present
-| verify through owning annotations
+| verified through owning annotations
 | not applicable/nested
 
 | `@GeneratedValue`
 | id member
 | yes
-| generated identifier binding present
+| generated identifier binding present for basic ids
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@Id`
 | member
@@ -471,7 +472,7 @@ annotation type in the JPA API jar has a descriptor.
 | yes
 | consumed through table annotations
 | XML/source support present
-| verify through owning annotations
+| verified through owning annotations
 | not applicable/nested
 
 | `@Inheritance`
@@ -479,8 +480,8 @@ annotation type in the JPA API jar has a descriptor.
 | yes
 | inheritance strategy binding present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@JoinColumn`
 | member/helper
@@ -509,10 +510,10 @@ annotation type in the JPA API jar has a descriptor.
 | `@Lob`
 | member
 | yes
-| basic-value LOB binding appears present
+| basic-value and property LOB binding present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@ManyToMany`
 | member
@@ -823,7 +824,7 @@ annotation type in the JPA API jar has a descriptor.
 | yes
 | consumed through named query registrations
 | XML/source support present
-| verify through owning annotations
+| verified through owning annotations
 | not applicable/nested
 
 | `@SecondaryTable`
@@ -831,8 +832,8 @@ annotation type in the JPA API jar has a descriptor.
 | yes
 | secondary table binding present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@SecondaryTables`
 | type
@@ -879,7 +880,7 @@ annotation type in the JPA API jar has a descriptor.
 | yes
 | consumed through named stored procedure registration
 | XML/source support present
-| verify through `@NamedStoredProcedureQuery`
+| verified through `@NamedStoredProcedureQuery`
 | not applicable/nested
 
 | `@Table`
@@ -887,8 +888,8 @@ annotation type in the JPA API jar has a descriptor.
 | yes
 | primary table binding present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@TableGenerator`
 | type/member
@@ -927,7 +928,7 @@ annotation type in the JPA API jar has a descriptor.
 | yes
 | consumed through table annotations
 | XML/source support present
-| verify through owning annotations
+| verified through owning annotations
 | not applicable/nested
 
 | `@Version`
@@ -935,8 +936,8 @@ annotation type in the JPA API jar has a descriptor.
 | yes
 | version binding present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 |===
 
 == Hibernate Initial Findings
@@ -2703,13 +2704,9 @@ are verified through the matching singular override.
    `test-only gap`, starting with low-risk table/entity/attribute mapping
    effects that already appear to have source or binder support.
 2. Audit and close the remaining JPA 4.0 binding gap for `@Fetch`.
-3. Decide whether `JpaAnnotations` should register every annotation in the JPA
-   API jar.  If so, add descriptors for the injection/bootstrap,
-   query-package, static metamodel, and new lifecycle callback annotations
-   listed under JPA jar descriptor gaps.
-4. Implement the remaining Hibernate low-risk binding gaps in small groups:
+3. Implement the remaining Hibernate low-risk binding gaps in small groups:
    native generators, query cache layout, and custom loaders.
-5. Add a single new-pipeline dialect override resolution point and convert
+4. Add a single new-pipeline dialect override resolution point and convert
    direct annotation lookups for override-capable annotations to use it.
-6. Revisit audit/changelog descriptors and binding once state-management support
+5. Revisit audit/changelog descriptors and binding once state-management support
    has a dedicated design slice.

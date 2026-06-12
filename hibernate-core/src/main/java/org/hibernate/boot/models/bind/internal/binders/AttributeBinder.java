@@ -29,8 +29,11 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import jakarta.persistence.Access;
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.ExcludedFromVersioning;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Lob;
 
 import static org.hibernate.boot.models.AttributeNature.ANY;
 import static org.hibernate.boot.models.AttributeNature.BASIC;
@@ -231,6 +234,8 @@ public class AttributeBinder {
 		bindOptimisticLocking( member, binding, basicValue, bindingOptions, bindingState, bindingContext );
 
 		processColumn( member, binding, basicValue, primaryTable, bindingOptions, bindingState, bindingContext );
+		applyBasicFetch( member, binding );
+		binding.setLob( member.hasDirectAnnotationUsage( Lob.class ) );
 
 		BasicValueBinder.bindBasicValue(
 				BasicValueSource.attribute( member ),
@@ -242,6 +247,11 @@ public class AttributeBinder {
 		);
 
 		return basicValue;
+	}
+
+	private static void applyBasicFetch(MemberDetails member, Property property) {
+		final Basic basic = member.getDirectAnnotationUsage( Basic.class );
+		property.setLazy( basic != null && basic.fetch() == FetchType.LAZY );
 	}
 
 	public static void bindImplicitJavaType(

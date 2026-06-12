@@ -24,6 +24,7 @@ import org.hibernate.annotations.TypeRegistration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.jpa.SpecHints;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.ValueAccess;
@@ -44,9 +45,12 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -58,11 +62,20 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedStatement;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
+import jakarta.persistence.QueryHint;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.TableGenerator;
 
+import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.buildCategorizedDomainModel;
+import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
+import static org.hibernate.id.OptimizableGenerator.INITIAL_PARAM;
+import static org.hibernate.id.enhanced.SequenceStyleGenerator.SEQUENCE_PARAM;
+import static org.hibernate.id.enhanced.TableGenerator.SEGMENT_COLUMN_PARAM;
+import static org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM;
+import static org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM;
+import static org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /// Tests that persistence-unit scoped registrations collected during
@@ -77,34 +90,55 @@ public class GlobalRegistrationBindingTests {
 				(context) -> {
 					final var metadataCollector = context.getMetadataCollector();
 
-					assertThat( metadataCollector.getIdentifierGenerator( "global_seq" ).getStrategy() )
-							.isEqualTo( SequenceStyleGenerator.class.getName() );
-					assertThat( metadataCollector.getIdentifierGenerator( "global_table" ).getStrategy() )
+					final var sequenceGenerator = metadataCollector.getIdentifierGenerator( "global_seq" );
+					assertThat( sequenceGenerator.getStrategy() ).isEqualTo( SequenceStyleGenerator.class.getName() );
+					assertThat( sequenceGenerator.getParameters() )
+							.containsEntry( SEQUENCE_PARAM, "global_sequence" )
+							.containsEntry( INITIAL_PARAM, "7" )
+							.containsEntry( INCREMENT_PARAM, "13" );
+					final var tableGenerator = metadataCollector.getIdentifierGenerator( "global_table" );
+					assertThat( tableGenerator.getStrategy() )
 							.isEqualTo( org.hibernate.id.enhanced.TableGenerator.class.getName() );
+					assertThat( tableGenerator.getParameters() )
+							.containsEntry( TABLE_PARAM, "global_id_table" )
+							.containsEntry( SEGMENT_COLUMN_PARAM, "segment_name" )
+							.containsEntry( SEGMENT_VALUE_PARAM, "global_segment" )
+							.containsEntry( VALUE_COLUMN_PARAM, "next_value" )
+							.containsEntry( INITIAL_PARAM, "4" )
+							.containsEntry( INCREMENT_PARAM, "17" );
 
 					assertThat( metadataCollector.getAttributeConverterManager()
 							.findRegisteredConversion( GlobalConverted.class ) ).isNotNull();
 					assertThat( metadataCollector.getAttributeConverterManager()
 							.findRegisteredConversion( PlainConverted.class ) ).isNotNull();
 
-					assertThat( metadataCollector.getNamedHqlQueryMapping( "globalJpaQuery" ).getHqlString() )
-							.isEqualTo( "from GlobalRegistrationEntity" );
+					final var jpaQuery = metadataCollector.getNamedHqlQueryMapping( "globalJpaQuery" );
+					assertThat( jpaQuery.getHqlString() ).isEqualTo( "from GlobalRegistrationEntity" );
+					assertThat( jpaQuery.getHints() ).containsEntry( "global.query.hint", "jpa-query" );
 					assertThat( metadataCollector.getNamedHqlQueryMapping( "globalJpaStatement" ).getHqlString() )
 							.isEqualTo( "update GlobalRegistrationEntity set id = id" );
 					assertThat( metadataCollector.getNamedHqlQueryMapping( "globalHibernateQuery" ).getHqlString() )
 							.isEqualTo( "from GlobalRegistrationEntity" );
-					assertThat( metadataCollector.getNamedNativeQueryMapping( "globalNativeQuery" ).getSqlQueryString() )
-							.isEqualTo( "select * from global_registration_entities" );
+					final var nativeQuery = metadataCollector.getNamedNativeQueryMapping( "globalNativeQuery" );
+					assertThat( nativeQuery.getSqlQueryString() ).isEqualTo( "select * from global_registration_entities" );
+					assertThat( nativeQuery.getHints() ).containsEntry( "global.query.hint", "native-query" );
 					assertThat( metadataCollector.getNamedNativeQueryMapping( "globalNativeStatement" ).getSqlQueryString() )
 							.isEqualTo( "update global_registration_entities set id = id" );
 					assertThat( metadataCollector.getNamedNativeQueryMapping( "globalMappedNativeQuery" ).getResultSetMappingName() )
 							.isEqualTo( "globalIdMapping" );
-					assertThat( metadataCollector.getNamedProcedureCallMapping( "globalProcedure" ).getProcedureName() )
-							.isEqualTo( "global_registration_procedure" );
-					assertThat( metadataCollector.getResultSetMapping( "globalIdMapping" ).getRegistrationName() )
-							.isEqualTo( "globalIdMapping" );
-					assertThat( metadataCollector.getNamedEntityGraph( "globalGraph" ).entityName() )
-							.isEqualTo( "GlobalRegistrationEntity" );
+					final var procedure = metadataCollector.getNamedProcedureCallMapping( "globalProcedure" );
+					assertThat( procedure.getProcedureName() ).isEqualTo( "global_registration_procedure" );
+					assertThat( procedure.getHints() ).containsEntry( SpecHints.HINT_SPEC_QUERY_TIMEOUT, "2500" );
+					final var resultSetMapping = metadataCollector.getResultSetMapping( "globalIdMapping" );
+					assertThat( resultSetMapping.getRegistrationName() ).isEqualTo( "globalIdMapping" );
+					assertThat( resultSetMapping.getLocation() ).isNull();
+					assertThat( metadataCollector.getResultSetMapping( "globalEntityMapping" ).getRegistrationName() )
+							.isEqualTo( "globalEntityMapping" );
+					assertThat( metadataCollector.getResultSetMapping( "globalConstructorMapping" ).getRegistrationName() )
+							.isEqualTo( "globalConstructorMapping" );
+					final var entityGraph = metadataCollector.getNamedEntityGraph( "globalGraph" );
+					assertThat( entityGraph.entityName() ).isEqualTo( "GlobalRegistrationEntity" );
+					assertThat( entityGraph.graphCreator() ).isNotNull();
 					assertThat( metadataCollector.getFilterDefinition( "globalFilter" ).getDefaultFilterCondition() )
 							.isEqualTo( "name = :name" );
 					assertThat( metadataCollector.getFilterDefinition( "globalFilter" ).getParameterNames() )
@@ -143,13 +177,59 @@ public class GlobalRegistrationBindingTests {
 		);
 	}
 
+	@Test
+	void testSqlResultSetMappingHelperAnnotationCapture() {
+		final var categorizedModel = buildCategorizedDomainModel( GlobalRegistrationEntity.class, PlainConverter.class );
+		final var mappings = categorizedModel.getGlobalRegistrations().getSqlResultSetMappingRegistrations();
+
+		final var columnMapping = mappings.get( "globalIdMapping" ).configuration();
+		assertThat( columnMapping.columns() ).singleElement().satisfies( (columnResult) -> {
+			assertThat( columnResult.name() ).isEqualTo( "id" );
+			assertThat( columnResult.type() ).isEqualTo( Integer.class );
+		} );
+
+		final var entityMapping = mappings.get( "globalEntityMapping" ).configuration();
+		assertThat( entityMapping.entities() ).singleElement().satisfies( (entityResult) -> {
+			assertThat( entityResult.entityClass() ).isEqualTo( GlobalRegistrationEntity.class );
+			assertThat( entityResult.fields() ).singleElement().satisfies( (fieldResult) -> {
+				assertThat( fieldResult.name() ).isEqualTo( "id" );
+				assertThat( fieldResult.column() ).isEqualTo( "entity_id" );
+			} );
+		} );
+
+		final var constructorMapping = mappings.get( "globalConstructorMapping" ).configuration();
+		assertThat( constructorMapping.classes() ).singleElement().satisfies( (constructorResult) -> {
+			assertThat( constructorResult.targetClass() ).isEqualTo( GlobalProjection.class );
+			assertThat( constructorResult.columns() ).singleElement().satisfies( (columnResult) -> {
+				assertThat( columnResult.name() ).isEqualTo( "projection_id" );
+				assertThat( columnResult.type() ).isEqualTo( Integer.class );
+			} );
+		} );
+	}
+
 	@Entity(name = "GlobalRegistrationEntity")
 	@jakarta.persistence.Table(name = "global_registration_entities")
-	@SequenceGenerator(name = "global_seq", sequenceName = "global_sequence")
-	@TableGenerator(name = "global_table", table = "global_id_table")
-	@NamedQuery(name = "globalJpaQuery", query = "from GlobalRegistrationEntity")
+	@SequenceGenerator(name = "global_seq", sequenceName = "global_sequence", initialValue = 7, allocationSize = 13)
+	@TableGenerator(
+			name = "global_table",
+			table = "global_id_table",
+			pkColumnName = "segment_name",
+			pkColumnValue = "global_segment",
+			valueColumnName = "next_value",
+			initialValue = 3,
+			allocationSize = 17
+	)
+	@NamedQuery(
+			name = "globalJpaQuery",
+			query = "from GlobalRegistrationEntity",
+			hints = @QueryHint(name = "global.query.hint", value = "jpa-query")
+	)
 	@NamedStatement(name = "globalJpaStatement", statement = "update GlobalRegistrationEntity set id = id")
-	@NamedNativeQuery(name = "globalNativeQuery", query = "select * from global_registration_entities")
+	@NamedNativeQuery(
+			name = "globalNativeQuery",
+			query = "select * from global_registration_entities",
+			hints = @QueryHint(name = "global.query.hint", value = "native-query")
+	)
 	@NamedNativeStatement(name = "globalNativeStatement", statement = "update global_registration_entities set id = id")
 	@NamedNativeQuery(
 			name = "globalMappedNativeQuery",
@@ -160,9 +240,24 @@ public class GlobalRegistrationBindingTests {
 			name = "globalProcedure",
 			procedureName = "global_registration_procedure",
 			parameters = @StoredProcedureParameter(name = "name", mode = ParameterMode.IN, type = String.class),
-			resultSetMappings = "globalIdMapping"
+			resultSetMappings = "globalIdMapping",
+			hints = @QueryHint(name = SpecHints.HINT_SPEC_QUERY_TIMEOUT, value = "2500")
 	)
 	@SqlResultSetMapping(name = "globalIdMapping", columns = @ColumnResult(name = "id", type = Integer.class))
+	@SqlResultSetMapping(
+			name = "globalEntityMapping",
+			entities = @EntityResult(
+					entityClass = GlobalRegistrationEntity.class,
+					fields = @FieldResult(name = "id", column = "entity_id")
+			)
+	)
+	@SqlResultSetMapping(
+			name = "globalConstructorMapping",
+			classes = @ConstructorResult(
+					targetClass = GlobalProjection.class,
+					columns = @ColumnResult(name = "projection_id", type = Integer.class)
+			)
+	)
 	@org.hibernate.annotations.NamedQuery(name = "globalHibernateQuery", query = "from GlobalRegistrationEntity")
 	@NamedEntityGraph(name = "globalGraph", attributeNodes = @NamedAttributeNode("id"))
 	@FilterDef(name = "globalFilter", defaultCondition = "name = :name", parameters = @ParamDef(name = "name", type = String.class))
@@ -211,6 +306,9 @@ public class GlobalRegistrationBindingTests {
 	}
 
 	public record PlainConverted(String value) {
+	}
+
+	public record GlobalProjection(Integer id) {
 	}
 
 	@Converter(autoApply = true)

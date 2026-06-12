@@ -11,13 +11,20 @@ import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
 
+import jakarta.persistence.PostDelete;
+import jakarta.persistence.PostInsert;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PostUpsert;
+import jakarta.persistence.PreDelete;
+import jakarta.persistence.PreInsert;
+import jakarta.persistence.PreMerge;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.PreUpsert;
 
 /// Categorized JPA lifecycle callback descriptor.
 ///
@@ -40,11 +47,22 @@ public class JpaEventListener {
 	private final MethodDetails prePersistMethod;
 	private final MethodDetails postPersistMethod;
 
+	private final MethodDetails preInsertMethod;
+	private final MethodDetails postInsertMethod;
+
 	private final MethodDetails preRemoveMethod;
 	private final MethodDetails postRemoveMethod;
 
+	private final MethodDetails preDeleteMethod;
+	private final MethodDetails postDeleteMethod;
+
+	private final MethodDetails preMergeMethod;
+
 	private final MethodDetails preUpdateMethod;
 	private final MethodDetails postUpdateMethod;
+
+	private final MethodDetails preUpsertMethod;
+	private final MethodDetails postUpsertMethod;
 
 	private final MethodDetails postLoadMethod;
 
@@ -54,19 +72,33 @@ public class JpaEventListener {
 			ClassDetails listenerClass,
 			MethodDetails prePersistMethod,
 			MethodDetails postPersistMethod,
+			MethodDetails preInsertMethod,
+			MethodDetails postInsertMethod,
 			MethodDetails preRemoveMethod,
 			MethodDetails postRemoveMethod,
+			MethodDetails preDeleteMethod,
+			MethodDetails postDeleteMethod,
+			MethodDetails preMergeMethod,
 			MethodDetails preUpdateMethod,
 			MethodDetails postUpdateMethod,
+			MethodDetails preUpsertMethod,
+			MethodDetails postUpsertMethod,
 			MethodDetails postLoadMethod) {
 		this.consumerType = consumerType;
 		this.listenerClass = listenerClass;
 		this.prePersistMethod = prePersistMethod;
 		this.postPersistMethod = postPersistMethod;
+		this.preInsertMethod = preInsertMethod;
+		this.postInsertMethod = postInsertMethod;
 		this.preRemoveMethod = preRemoveMethod;
 		this.postRemoveMethod = postRemoveMethod;
+		this.preDeleteMethod = preDeleteMethod;
+		this.postDeleteMethod = postDeleteMethod;
+		this.preMergeMethod = preMergeMethod;
 		this.preUpdateMethod = preUpdateMethod;
 		this.postUpdateMethod = postUpdateMethod;
+		this.preUpsertMethod = preUpsertMethod;
+		this.postUpsertMethod = postUpsertMethod;
 		this.postLoadMethod = postLoadMethod;
 	}
 
@@ -90,6 +122,16 @@ public class JpaEventListener {
 		return postPersistMethod;
 	}
 
+	/// Callback method for {@link PreInsert}, or {@code null} when none is declared.
+	public MethodDetails getPreInsertMethod() {
+		return preInsertMethod;
+	}
+
+	/// Callback method for {@link PostInsert}, or {@code null} when none is declared.
+	public MethodDetails getPostInsertMethod() {
+		return postInsertMethod;
+	}
+
 	/// Callback method for {@link PreRemove}, or {@code null} when none is declared.
 	public MethodDetails getPreRemoveMethod() {
 		return preRemoveMethod;
@@ -100,6 +142,21 @@ public class JpaEventListener {
 		return postRemoveMethod;
 	}
 
+	/// Callback method for {@link PreDelete}, or {@code null} when none is declared.
+	public MethodDetails getPreDeleteMethod() {
+		return preDeleteMethod;
+	}
+
+	/// Callback method for {@link PostDelete}, or {@code null} when none is declared.
+	public MethodDetails getPostDeleteMethod() {
+		return postDeleteMethod;
+	}
+
+	/// Callback method for {@link PreMerge}, or {@code null} when none is declared.
+	public MethodDetails getPreMergeMethod() {
+		return preMergeMethod;
+	}
+
 	/// Callback method for {@link PreUpdate}, or {@code null} when none is declared.
 	public MethodDetails getPreUpdateMethod() {
 		return preUpdateMethod;
@@ -108,6 +165,16 @@ public class JpaEventListener {
 	/// Callback method for {@link PostUpdate}, or {@code null} when none is declared.
 	public MethodDetails getPostUpdateMethod() {
 		return postUpdateMethod;
+	}
+
+	/// Callback method for {@link PreUpsert}, or {@code null} when none is declared.
+	public MethodDetails getPreUpsertMethod() {
+		return preUpsertMethod;
+	}
+
+	/// Callback method for {@link PostUpsert}, or {@code null} when none is declared.
+	public MethodDetails getPostUpsertMethod() {
+		return postUpsertMethod;
 	}
 
 	/// Callback method for {@link PostLoad}, or {@code null} when none is declared.
@@ -128,10 +195,17 @@ public class JpaEventListener {
 			JaxbEntityListenerImpl jaxbMapping) {
 		final MutableObject<MethodDetails> prePersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postPersistMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> preInsertMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> postInsertMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> preRemoveMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postRemoveMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> preDeleteMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> postDeleteMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> preMergeMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> preUpdateMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postUpdateMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> preUpsertMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> postUpsertMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postLoadMethod = new MutableObject<>();
 
 		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
@@ -140,10 +214,20 @@ public class JpaEventListener {
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				prePersistMethod.set( methodDetails );
 			}
-			else if ( jaxbMapping.getPostPersist().getMethodName() != null
+			else if ( jaxbMapping.getPostPersist() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPostPersist().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postPersistMethod.set( methodDetails );
+			}
+			else if ( jaxbMapping.getPreInsert() != null
+					&& methodDetails.getName().equals( jaxbMapping.getPreInsert().getMethodName() )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				preInsertMethod.set( methodDetails );
+			}
+			else if ( jaxbMapping.getPostInsert() != null
+					&& methodDetails.getName().equals( jaxbMapping.getPostInsert().getMethodName() )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				postInsertMethod.set( methodDetails );
 			}
 			else if ( jaxbMapping.getPreRemove() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPreRemove().getMethodName() )
@@ -155,6 +239,21 @@ public class JpaEventListener {
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postRemoveMethod.set( methodDetails );
 			}
+			else if ( jaxbMapping.getPreDelete() != null
+					&& methodDetails.getName().equals( jaxbMapping.getPreDelete().getMethodName() )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				preDeleteMethod.set( methodDetails );
+			}
+			else if ( jaxbMapping.getPostDelete() != null
+					&& methodDetails.getName().equals( jaxbMapping.getPostDelete().getMethodName() )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				postDeleteMethod.set( methodDetails );
+			}
+			else if ( jaxbMapping.getPreMerge() != null
+					&& methodDetails.getName().equals( jaxbMapping.getPreMerge().getMethodName() )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				preMergeMethod.set( methodDetails );
+			}
 			else if ( jaxbMapping.getPreUpdate() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPreUpdate().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
@@ -164,6 +263,16 @@ public class JpaEventListener {
 					&& methodDetails.getName().equals( jaxbMapping.getPostUpdate().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postUpdateMethod.set( methodDetails );
+			}
+			else if ( jaxbMapping.getPreUpsert() != null
+					&& methodDetails.getName().equals( jaxbMapping.getPreUpsert().getMethodName() )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				preUpsertMethod.set( methodDetails );
+			}
+			else if ( jaxbMapping.getPostUpsert() != null
+					&& methodDetails.getName().equals( jaxbMapping.getPostUpsert().getMethodName() )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				postUpsertMethod.set( methodDetails );
 			}
 			else if ( jaxbMapping.getPostLoad() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPostLoad().getMethodName() )
@@ -177,10 +286,17 @@ public class JpaEventListener {
 				listenerClassDetails,
 				prePersistMethod.get(),
 				postPersistMethod.get(),
+				preInsertMethod.get(),
+				postInsertMethod.get(),
 				preRemoveMethod.get(),
 				postRemoveMethod.get(),
+				preDeleteMethod.get(),
+				postDeleteMethod.get(),
+				preMergeMethod.get(),
 				preUpdateMethod.get(),
 				postUpdateMethod.get(),
+				preUpsertMethod.get(),
+				postUpsertMethod.get(),
 				postLoadMethod.get()
 		);
 
@@ -192,10 +308,17 @@ public class JpaEventListener {
 	private static void errorIfEmpty(JpaEventListener jpaEventListener) {
 		if ( jpaEventListener.prePersistMethod == null
 				&& jpaEventListener.postPersistMethod == null
+				&& jpaEventListener.preInsertMethod == null
+				&& jpaEventListener.postInsertMethod == null
 				&& jpaEventListener.preRemoveMethod == null
 				&& jpaEventListener.postRemoveMethod == null
+				&& jpaEventListener.preDeleteMethod == null
+				&& jpaEventListener.postDeleteMethod == null
+				&& jpaEventListener.preMergeMethod == null
 				&& jpaEventListener.preUpdateMethod == null
 				&& jpaEventListener.postUpdateMethod == null
+				&& jpaEventListener.preUpsertMethod == null
+				&& jpaEventListener.postUpsertMethod == null
 				&& jpaEventListener.postLoadMethod == null ) {
 			throw new ModelsException( "Mapping for entity-listener specified no callback methods - " + jpaEventListener.listenerClass.getClassName() );
 		}
@@ -205,10 +328,17 @@ public class JpaEventListener {
 	public static JpaEventListener from(JpaEventListenerStyle consumerType, ClassDetails listenerClassDetails) {
 		final MutableObject<MethodDetails> prePersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postPersistMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> preInsertMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> postInsertMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> preRemoveMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postRemoveMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> preDeleteMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> postDeleteMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> preMergeMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> preUpdateMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postUpdateMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> preUpsertMethod = new MutableObject<>();
+		final MutableObject<MethodDetails> postUpsertMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postLoadMethod = new MutableObject<>();
 
 		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
@@ -220,6 +350,14 @@ public class JpaEventListener {
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postPersistMethod.set( methodDetails );
 			}
+			else if ( methodDetails.hasDirectAnnotationUsage( PreInsert.class )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				preInsertMethod.set( methodDetails );
+			}
+			else if ( methodDetails.hasDirectAnnotationUsage( PostInsert.class )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				postInsertMethod.set( methodDetails );
+			}
 			else if ( methodDetails.hasDirectAnnotationUsage( PreRemove.class )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				preRemoveMethod.set( methodDetails );
@@ -228,6 +366,18 @@ public class JpaEventListener {
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postRemoveMethod.set( methodDetails );
 			}
+			else if ( methodDetails.hasDirectAnnotationUsage( PreDelete.class )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				preDeleteMethod.set( methodDetails );
+			}
+			else if ( methodDetails.hasDirectAnnotationUsage( PostDelete.class )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				postDeleteMethod.set( methodDetails );
+			}
+			else if ( methodDetails.hasDirectAnnotationUsage( PreMerge.class )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				preMergeMethod.set( methodDetails );
+			}
 			else if ( methodDetails.hasDirectAnnotationUsage( PreUpdate.class )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				preUpdateMethod.set( methodDetails );
@@ -235,6 +385,14 @@ public class JpaEventListener {
 			else if ( methodDetails.hasDirectAnnotationUsage( PostUpdate.class )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postUpdateMethod.set( methodDetails );
+			}
+			else if ( methodDetails.hasDirectAnnotationUsage( PreUpsert.class )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				preUpsertMethod.set( methodDetails );
+			}
+			else if ( methodDetails.hasDirectAnnotationUsage( PostUpsert.class )
+					&& matchesSignature( consumerType, methodDetails ) ) {
+				postUpsertMethod.set( methodDetails );
 			}
 			else if ( methodDetails.hasDirectAnnotationUsage( PostLoad.class )
 					&& matchesSignature( consumerType, methodDetails ) ) {
@@ -247,10 +405,17 @@ public class JpaEventListener {
 				listenerClassDetails,
 				prePersistMethod.get(),
 				postPersistMethod.get(),
+				preInsertMethod.get(),
+				postInsertMethod.get(),
 				preRemoveMethod.get(),
 				postRemoveMethod.get(),
+				preDeleteMethod.get(),
+				postDeleteMethod.get(),
+				preMergeMethod.get(),
 				preUpdateMethod.get(),
 				postUpdateMethod.get(),
+				preUpsertMethod.get(),
+				postUpsertMethod.get(),
 				postLoadMethod.get()
 		);
 		errorIfEmpty( jpaEventListener );

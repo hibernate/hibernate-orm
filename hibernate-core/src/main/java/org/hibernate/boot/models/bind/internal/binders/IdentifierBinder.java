@@ -16,6 +16,8 @@ import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.boot.models.AttributeNature;
+import org.hibernate.boot.model.internal.GeneratorBinder;
+import org.hibernate.boot.model.internal.GeneratorStrategies;
 import org.hibernate.boot.models.categorize.spi.AggregatedKeyMapping;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.BasicKeyMapping;
@@ -38,9 +40,11 @@ import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 
+import static jakarta.persistence.GenerationType.AUTO;
 import static org.hibernate.boot.models.bind.internal.binders.AttributeBinder.bindPropertyAccessor;
 
 /// Binds the root identifier shape for an entity hierarchy.
@@ -414,7 +418,25 @@ public class IdentifierBinder {
 				state,
 				context
 		);
+		applyGeneratedValue( basicValue, member );
 		return basicValue;
+	}
+
+	private void applyGeneratedValue(BasicValue idValue, MemberDetails member) {
+		final GeneratedValue generatedValue = member.getDirectAnnotationUsage( GeneratedValue.class );
+		if ( generatedValue == null ) {
+			return;
+		}
+
+		final var generationType = generatedValue.strategy() == null ? AUTO : generatedValue.strategy();
+		GeneratorBinder.makeIdGenerator(
+				idValue,
+				member,
+				GeneratorStrategies.generatorStrategy( generationType, generatedValue.generator(), member.getType() ),
+				generatedValue.generator(),
+				state.getMetadataBuildingContext(),
+				null
+		);
 	}
 
 	private Property createProperty(String name, org.hibernate.mapping.Value value, MemberDetails member) {

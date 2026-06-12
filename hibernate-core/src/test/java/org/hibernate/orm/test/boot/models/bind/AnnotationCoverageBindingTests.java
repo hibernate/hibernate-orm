@@ -44,20 +44,29 @@ import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Basic;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.CheckConstraint;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -66,13 +75,18 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumeratedValue;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.ExcludedFromVersioning;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
@@ -272,6 +286,57 @@ public class AnnotationCoverageBindingTests {
 
 	@Test
 	@ServiceRegistry
+	void testCoreMappingAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( CoreMappingRoot.class.getName() );
+					final PersistentClass subtypeBinding = context.getMetadataCollector()
+							.getEntityBinding( CoreMappingSubtype.class.getName() );
+					final Join secondaryTable = entityBinding.getSecondaryTable( "core_mapping_details" );
+					final Property name = entityBinding.getProperty( "name" );
+					final Property notes = entityBinding.getProperty( "notes" );
+
+					assertThat( entityBinding.getTable().getName() ).isEqualTo( "core_mapping_roots" );
+					assertThat( secondaryTable ).isNotNull();
+					assertThat( entityBinding.getDiscriminatorValue() ).isEqualTo( "ROOT" );
+					assertThat( subtypeBinding.getDiscriminatorValue() ).isEqualTo( "SUB" );
+					assertThat( entityBinding.getDiscriminator() ).isInstanceOf( BasicValue.class );
+					assertThat( ( (org.hibernate.mapping.Column)
+							( (BasicValue) entityBinding.getDiscriminator() ).getColumn() ).getName() )
+							.isEqualTo( "kind" );
+					assertThat( entityBinding.isVersioned() ).isTrue();
+					assertThat( entityBinding.getVersion().getName() ).isEqualTo( "version" );
+					assertThat( column( entityBinding.getVersion() ).getName() ).isEqualTo( "version" );
+
+					assertThat( name.getPropertyAccessorName() ).isEqualTo( "field" );
+					assertThat( name.isOptional() ).isFalse();
+					assertThat( name.isLazy() ).isTrue();
+					assertThat( column( name ).getName() ).isEqualTo( "name" );
+					assertThat( column( name ).getLength() ).isEqualTo( 128 );
+					assertThat( column( name ).isNullable() ).isFalse();
+
+					assertThat( notes.isLazy() ).isTrue();
+					assertThat( notes.isLob() ).isTrue();
+					assertThat( ( (BasicValue) notes.getValue() ).isLob() ).isTrue();
+					assertThat( notes.getValue().getTable() ).isSameAs( secondaryTable.getTable() );
+					assertThat( column( notes ).getName() ).isEqualTo( "notes" );
+
+					assertThat( entityBinding.getIdentifier().createGenerator(
+							context.getMetadata().getDatabase().getDialect(),
+							entityBinding,
+							entityBinding.getIdentifierProperty(),
+							new GeneratorSettingsImpl( context.getMetadata() )
+					) ).isInstanceOf( SequenceStyleGenerator.class );
+				},
+				scope.getRegistry(),
+				CoreMappingRoot.class,
+				CoreMappingSubtype.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testAssociationOnDeleteCoverage(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -294,6 +359,40 @@ public class AnnotationCoverageBindingTests {
 				OnDeleteParent.class,
 				OnDeleteTarget.class
 		);
+	}
+
+	@Entity(name = "CoreMappingRoot")
+	@Table(name = "core_mapping_roots")
+	@SecondaryTable(name = "core_mapping_details")
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	@DiscriminatorColumn(name = "kind", discriminatorType = DiscriminatorType.STRING, length = 16)
+	@DiscriminatorValue("ROOT")
+	public static class CoreMappingRoot {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		@Column(name = "id")
+		private Long id;
+
+		@Access(AccessType.FIELD)
+		@Basic(optional = false, fetch = FetchType.LAZY)
+		@Column(name = "name", nullable = false, length = 128)
+		private String name;
+
+		@Lob
+		@Basic(fetch = FetchType.LAZY)
+		@Column(name = "notes", table = "core_mapping_details")
+		private String notes;
+
+		@Version
+		@Column(name = "version")
+		private int version;
+	}
+
+	@Entity(name = "CoreMappingSubtype")
+	@DiscriminatorValue("SUB")
+	public static class CoreMappingSubtype extends CoreMappingRoot {
+		@Column(name = "description")
+		private String description;
 	}
 
 	@Entity(name = "CoverageEntity")

@@ -8,9 +8,16 @@ import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PostDelete;
+import jakarta.persistence.PostInsert;
+import jakarta.persistence.PostUpsert;
+import jakarta.persistence.PreDelete;
+import jakarta.persistence.PreInsert;
+import jakarta.persistence.PreMerge;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.PreUpsert;
 import org.hibernate.boot.models.categorize.spi.AllMemberConsumer;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
@@ -33,10 +40,17 @@ public class LifecycleCallbackCollector implements AllMemberConsumer {
 
 	private MethodDetails prePersist;
 	private MethodDetails postPersist;
+	private MethodDetails preInsert;
+	private MethodDetails postInsert;
 	private MethodDetails preUpdate;
 	private MethodDetails postUpdate;
+	private MethodDetails preUpsert;
+	private MethodDetails postUpsert;
 	private MethodDetails preRemove;
 	private MethodDetails postRemove;
+	private MethodDetails preDelete;
+	private MethodDetails postDelete;
+	private MethodDetails preMerge;
 	private MethodDetails postLoad;
 
 	public LifecycleCallbackCollector(ClassDetails managedTypeDetails) {
@@ -59,6 +73,14 @@ public class LifecycleCallbackCollector implements AllMemberConsumer {
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			postPersist = apply( methodDetails, PostPersist.class, managedTypeDetails, postPersist );
 		}
+		else if ( methodDetails.hasDirectAnnotationUsage( PreInsert.class )
+				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
+			preInsert = apply( methodDetails, PreInsert.class, managedTypeDetails, preInsert );
+		}
+		else if ( methodDetails.hasDirectAnnotationUsage( PostInsert.class )
+				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
+			postInsert = apply( methodDetails, PostInsert.class, managedTypeDetails, postInsert );
+		}
 		else if ( methodDetails.hasDirectAnnotationUsage( PreRemove.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			preRemove = apply( methodDetails, PreRemove.class, managedTypeDetails, preRemove );
@@ -67,6 +89,18 @@ public class LifecycleCallbackCollector implements AllMemberConsumer {
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			postRemove = apply( methodDetails, PostRemove.class, managedTypeDetails, postRemove );
 		}
+		else if ( methodDetails.hasDirectAnnotationUsage( PreDelete.class )
+				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
+			preDelete = apply( methodDetails, PreDelete.class, managedTypeDetails, preDelete );
+		}
+		else if ( methodDetails.hasDirectAnnotationUsage( PostDelete.class )
+				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
+			postDelete = apply( methodDetails, PostDelete.class, managedTypeDetails, postDelete );
+		}
+		else if ( methodDetails.hasDirectAnnotationUsage( PreMerge.class )
+				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
+			preMerge = apply( methodDetails, PreMerge.class, managedTypeDetails, preMerge );
+		}
 		else if ( methodDetails.hasDirectAnnotationUsage( PreUpdate.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			preUpdate = apply( methodDetails, PreUpdate.class, managedTypeDetails, preUpdate );
@@ -74,6 +108,14 @@ public class LifecycleCallbackCollector implements AllMemberConsumer {
 		else if ( methodDetails.hasDirectAnnotationUsage( PostUpdate.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
 			postUpdate = apply( methodDetails, PostUpdate.class, managedTypeDetails, postUpdate );
+		}
+		else if ( methodDetails.hasDirectAnnotationUsage( PreUpsert.class )
+				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
+			preUpsert = apply( methodDetails, PreUpsert.class, managedTypeDetails, preUpsert );
+		}
+		else if ( methodDetails.hasDirectAnnotationUsage( PostUpsert.class )
+				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
+			postUpsert = apply( methodDetails, PostUpsert.class, managedTypeDetails, postUpsert );
 		}
 		else if ( methodDetails.hasDirectAnnotationUsage( PostLoad.class )
 				&& matchesSignature( JpaEventListenerStyle.CALLBACK, methodDetails ) ) {
@@ -104,20 +146,34 @@ public class LifecycleCallbackCollector implements AllMemberConsumer {
 	public JpaEventListener resolve() {
 		if ( prePersist != null
 				|| postPersist != null
+				|| preInsert != null
+				|| postInsert != null
 				|| preUpdate != null
 				|| postUpdate != null
+				|| preUpsert != null
+				|| postUpsert != null
 				|| preRemove != null
 				|| postRemove != null
+				|| preDelete != null
+				|| postDelete != null
+				|| preMerge != null
 				|| postLoad != null ) {
 			return new JpaEventListener(
 					JpaEventListenerStyle.CALLBACK,
 					managedTypeDetails,
 					prePersist,
 					postPersist,
+					preInsert,
+					postInsert,
 					preRemove,
 					postRemove,
+					preDelete,
+					postDelete,
+					preMerge,
 					preUpdate,
 					postUpdate,
+					preUpsert,
+					postUpsert,
 					postLoad
 			);
 		}

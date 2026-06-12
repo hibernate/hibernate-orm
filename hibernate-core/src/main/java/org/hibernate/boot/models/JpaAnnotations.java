@@ -91,13 +91,20 @@ import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToOneJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PostDeleteJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PostInsertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostLoadJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostPersistJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostRemoveJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostUpdateJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PostUpsertJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PreDeleteJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PreInsertJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PreMergeJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrePersistJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PreRemoveJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PreUpdateJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PreUpsertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.QueryHintJpaAnnotation;
@@ -186,13 +193,20 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.PostDelete;
+import jakarta.persistence.PostInsert;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PostUpsert;
+import jakarta.persistence.PreDelete;
+import jakarta.persistence.PreInsert;
+import jakarta.persistence.PreMerge;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.PreUpsert;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.QueryHint;
@@ -754,9 +768,23 @@ public interface JpaAnnotations {
 			false
 	);
 
+	OrmAnnotationDescriptor<PostInsert,PostInsertJpaAnnotation> POST_INSERT = new OrmAnnotationDescriptor<>(
+			PostInsert.class,
+			PostInsertJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
 	OrmAnnotationDescriptor<PostPersist,PostPersistJpaAnnotation> POST_PERSIST = new OrmAnnotationDescriptor<>(
 			PostPersist.class,
 			PostPersistJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	OrmAnnotationDescriptor<PostDelete,PostDeleteJpaAnnotation> POST_DELETE = new OrmAnnotationDescriptor<>(
+			PostDelete.class,
+			PostDeleteJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
@@ -775,9 +803,37 @@ public interface JpaAnnotations {
 			false
 	);
 
+	OrmAnnotationDescriptor<PostUpsert,PostUpsertJpaAnnotation> POST_UPSERT = new OrmAnnotationDescriptor<>(
+			PostUpsert.class,
+			PostUpsertJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	OrmAnnotationDescriptor<PreInsert,PreInsertJpaAnnotation> PRE_INSERT = new OrmAnnotationDescriptor<>(
+			PreInsert.class,
+			PreInsertJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	OrmAnnotationDescriptor<PreMerge,PreMergeJpaAnnotation> PRE_MERGE = new OrmAnnotationDescriptor<>(
+			PreMerge.class,
+			PreMergeJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
 	OrmAnnotationDescriptor<PrePersist,PrePersistJpaAnnotation> PRE_PERSIST = new OrmAnnotationDescriptor<>(
 			PrePersist.class,
 			PrePersistJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	OrmAnnotationDescriptor<PreDelete,PreDeleteJpaAnnotation> PRE_DELETE = new OrmAnnotationDescriptor<>(
+			PreDelete.class,
+			PreDeleteJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);
@@ -792,6 +848,13 @@ public interface JpaAnnotations {
 	OrmAnnotationDescriptor<PreUpdate,PreUpdateJpaAnnotation> PRE_UPDATE = new OrmAnnotationDescriptor<>(
 			PreUpdate.class,
 			PreUpdateJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	OrmAnnotationDescriptor<PreUpsert,PreUpsertJpaAnnotation> PRE_UPSERT = new OrmAnnotationDescriptor<>(
+			PreUpsert.class,
+			PreUpsertJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);

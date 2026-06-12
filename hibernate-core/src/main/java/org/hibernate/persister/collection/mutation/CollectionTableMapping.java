@@ -4,21 +4,18 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import org.hibernate.action.queue.spi.meta.CollectionTableDescriptor;
+import org.hibernate.action.queue.spi.meta.TableKeyDescriptor;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.sql.model.TableMapping;
+
+import java.util.Objects;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionTableMapping implements TableMapping {
-	private final String tableName;
+public class CollectionTableMapping extends CollectionTableDescriptor implements TableMapping {
 	private final String[] spaces;
-	private final boolean isJoinTable;
-	private final boolean isInverse;
-	private final MutationDetails insertDetails;
-	private final MutationDetails updateDetails;
-	private final boolean cascadeDeleteEnabled;
-	private final MutationDetails deleteAllDetails;
-	private final MutationDetails deleteRowDetails;
 
 //	ForeignKeyDescriptor collectionKey;
 //	private final ForeignKeyDescriptor elementFk;
@@ -34,15 +31,43 @@ public class CollectionTableMapping implements TableMapping {
 			boolean cascadeDeleteEnabled,
 			MutationDetails deleteAllDetails,
 			MutationDetails deleteRowDetails) {
-		this.tableName = tableName;
+		this(
+				tableName,
+				null,
+				spaces,
+				isJoinTable,
+				isInverse,
+				insertDetails,
+				updateDetails,
+				cascadeDeleteEnabled,
+				deleteAllDetails,
+				deleteRowDetails
+		);
+	}
+
+	public CollectionTableMapping(
+			String tableName,
+			NavigableRole navigableRole,
+			String[] spaces,
+			boolean isJoinTable,
+			boolean isInverse,
+			MutationDetails insertDetails,
+			MutationDetails updateDetails,
+			boolean cascadeDeleteEnabled,
+			MutationDetails deleteAllDetails,
+			MutationDetails deleteRowDetails) {
+		super(
+				tableName,
+				navigableRole,
+				isJoinTable,
+				isInverse,
+				cascadeDeleteEnabled,
+				insertDetails,
+				updateDetails,
+				deleteRowDetails,
+				deleteAllDetails
+		);
 		this.spaces = spaces;
-		this.isJoinTable = isJoinTable;
-		this.isInverse = isInverse;
-		this.insertDetails = insertDetails;
-		this.updateDetails = updateDetails;
-		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
-		this.deleteAllDetails = deleteAllDetails;
-		this.deleteRowDetails = deleteRowDetails;
 	}
 
 	/**
@@ -50,15 +75,25 @@ public class CollectionTableMapping implements TableMapping {
 	 * based on an existing collection table mapping.
 	 */
 	public CollectionTableMapping(CollectionTableMapping baseMapping, String tableName) {
-		this.tableName = tableName;
-		this.spaces = appendSpace( baseMapping.spaces, tableName );
-		this.isJoinTable = baseMapping.isJoinTable;
-		this.isInverse = baseMapping.isInverse;
-		this.insertDetails = baseMapping.insertDetails;
-		this.updateDetails = baseMapping.updateDetails;
-		this.cascadeDeleteEnabled = baseMapping.cascadeDeleteEnabled;
-		this.deleteAllDetails = baseMapping.deleteAllDetails;
-		this.deleteRowDetails = baseMapping.deleteRowDetails;
+		this( baseMapping, tableName, appendSpace( baseMapping.spaces, tableName ) );
+	}
+
+	public CollectionTableMapping(
+			CollectionTableMapping baseMapping,
+			String tableName,
+			String[] spaces) {
+		this(
+				tableName,
+				baseMapping.navigableRole(),
+				spaces,
+				baseMapping.isJoinTable(),
+				baseMapping.isInverse(),
+				baseMapping.getInsertDetails(),
+				baseMapping.getUpdateDetails(),
+				baseMapping.isCascadeDeleteEnabled(),
+				baseMapping.getDeleteDetails(),
+				baseMapping.getDeleteRowDetails()
+		);
 	}
 
 	private static String[] appendSpace(String[] baseSpaces, String newSpace) {
@@ -75,7 +110,7 @@ public class CollectionTableMapping implements TableMapping {
 
 	@Override
 	public String getTableName() {
-		return tableName;
+		return name();
 	}
 
 	public String[] getSpaces() {
@@ -84,7 +119,7 @@ public class CollectionTableMapping implements TableMapping {
 
 	@Override
 	public boolean containsTableName(String tableName) {
-		if ( this.tableName.equals( tableName ) ) {
+		if ( getTableName().equals( tableName ) ) {
 			return true;
 		}
 		for ( String space : spaces ) {
@@ -102,8 +137,24 @@ public class CollectionTableMapping implements TableMapping {
 		return null;
 	}
 
+	public void initializeDescriptor(
+			boolean isSelfReferential,
+			boolean hasUniqueConstraints,
+			TableKeyDescriptor keyDescriptor) {
+		initializeGraphDetails(
+				isSelfReferential,
+				hasUniqueConstraints,
+				keyDescriptor
+		);
+	}
+
+	public boolean hasDescriptorDetails() {
+		return hasGraphDetails();
+	}
+
+	@Override
 	public boolean isJoinTable() {
-		return isJoinTable;
+		return super.isJoinTable();
 	}
 
 	@Override
@@ -118,7 +169,7 @@ public class CollectionTableMapping implements TableMapping {
 
 	@Override
 	public boolean isInverse() {
-		return isInverse;
+		return super.isInverse();
 	}
 
 	@Override
@@ -129,25 +180,43 @@ public class CollectionTableMapping implements TableMapping {
 
 	@Override
 	public MutationDetails getInsertDetails() {
-		return insertDetails;
+		return insertDetails();
 	}
 
 	@Override
 	public MutationDetails getUpdateDetails() {
-		return updateDetails;
+		return updateDetails();
 	}
 
 	@Override
 	public boolean isCascadeDeleteEnabled() {
-		return cascadeDeleteEnabled;
+		return cascadeDeleteEnabled();
 	}
 
 	@Override
 	public MutationDetails getDeleteDetails() {
-		return deleteAllDetails;
+		return deleteAllDetails();
 	}
 
 	public MutationDetails getDeleteRowDetails() {
-		return deleteRowDetails;
+		return deleteDetails();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( this == object ) {
+			return true;
+		}
+		else if ( !(object instanceof CollectionTableMapping that) ) {
+			return false;
+		}
+		else {
+			return getTableName().equals( that.getTableName() );
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( getTableName() );
 	}
 }

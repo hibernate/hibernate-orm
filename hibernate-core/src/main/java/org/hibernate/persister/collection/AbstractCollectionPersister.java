@@ -246,8 +246,6 @@ public abstract class AbstractCollectionPersister
 	private PluralAttributeMapping attributeMapping;
 	private volatile Set<String> affectingFetchProfiles;
 
-	private CollectionTableDescriptor collectionTableDescriptor;
-
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
 			@Nullable CollectionDataAccess cacheAccessStrategy,
@@ -504,7 +502,12 @@ public abstract class AbstractCollectionPersister
 			getNamedQueryMemento( collectionBootDescriptor.getMetadata() );
 		}
 
-		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, getTableName(), getCollectionSpaces() );
+		tableMapping = buildCollectionTableMapping(
+				collectionBootDescriptor,
+				navigableRole,
+				getTableName(),
+				getCollectionSpaces()
+		);
 
 		cascadeDeleteEnabled =
 				key.isCascadeDeleteEnabled()
@@ -730,11 +733,13 @@ public abstract class AbstractCollectionPersister
 		// Build collection table descriptor
 		// For one-to-many collections, this represents the element entity's table
 		// For other collection types, this represents the collection table
-		collectionTableDescriptor = buildCollectionTableDescriptor(
-				tableMapping,
-				attributeMapping,
-				factory
-		);
+		if ( !tableMapping.hasDescriptorDetails() ) {
+			initializeCollectionTableDescriptor(
+					tableMapping,
+					attributeMapping,
+					factory
+			);
+		}
 
 		logStaticSQL();
 	}
@@ -1657,7 +1662,10 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public CollectionTableDescriptor getCollectionTableDescriptor() {
-		return collectionTableDescriptor;
+		if ( !tableMapping.hasDescriptorDetails() ) {
+			throw new AssertionFailure( "Collection table descriptor was not initialized" );
+		}
+		return tableMapping;
 	}
 
 	@Override
@@ -1685,7 +1693,7 @@ public abstract class AbstractCollectionPersister
 		consumer.accept( tableMapping );
 	}
 
-	private static CollectionTableDescriptor buildCollectionTableDescriptor(
+	private static void initializeCollectionTableDescriptor(
 			CollectionTableMapping tableMapping,
 			PluralAttributeMapping attributeMapping,
 			SessionFactoryImplementor factory) {
@@ -1705,18 +1713,9 @@ public abstract class AbstractCollectionPersister
 			isSelfReferential = false;
 			hasUniqueKeys = false;
 		}
-		return new CollectionTableDescriptor(
-				qualifiedTableName,
-				attributeMapping.getNavigableRole(),
-				tableMapping.isJoinTable(),
-				tableMapping.isInverse(),
+		tableMapping.initializeDescriptor(
 				isSelfReferential,
 				hasUniqueKeys,
-				tableMapping.isCascadeDeleteEnabled(),
-				tableMapping.getInsertDetails(),
-				tableMapping.getUpdateDetails(),
-				tableMapping.getDeleteRowDetails(),
-				tableMapping.getDeleteDetails(),
 				buildTableKeyDescriptor( attributeMapping )
 		);
 	}
@@ -1730,10 +1729,12 @@ public abstract class AbstractCollectionPersister
 
 	private static CollectionTableMapping buildCollectionTableMapping(
 			Collection collectionBootDescriptor,
+			NavigableRole navigableRole,
 			String qualifiedTableName,
 			String[] spaces) {
 		return new CollectionTableMapping(
 				qualifiedTableName,
+				navigableRole,
 				spaces,
 				!collectionBootDescriptor.isOneToMany(),
 				collectionBootDescriptor.isInverse(),

@@ -16,6 +16,9 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.SharedSessionContract;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.ColumnDefault;
@@ -24,6 +27,8 @@ import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.EmbeddedColumnNaming;
@@ -31,6 +36,7 @@ import org.hibernate.annotations.EmbeddableInstantiator;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GeneratedColumn;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -42,14 +48,22 @@ import org.hibernate.annotations.MapKeyMutability;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdClass;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.PartitionKey;
 import org.hibernate.annotations.RowId;
+import org.hibernate.annotations.SecondaryRow;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
@@ -57,10 +71,12 @@ import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.View;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -91,6 +107,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Basic;
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.CheckConstraint;
@@ -194,6 +211,65 @@ public class AnnotationCoverageBindingTests {
 				scope.getRegistry(),
 				EntityKnobRoot.class,
 				EntityKnobSubtype.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testEntityTableAndHierarchyAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( EntityTableHierarchyRoot.class.getName() );
+					final PersistentClass subtypeBinding = context.getMetadataCollector()
+							.getEntityBinding( EntityTableHierarchySubtype.class.getName() );
+					final RootClass subselectBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( EntityTableHierarchySubselect.class.getName() );
+					final RootClass viewBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( EntityTableHierarchyView.class.getName() );
+					final Join secondaryTable = entityBinding.getSecondaryTable( "entity_table_hierarchy_details" );
+
+					assertThat( entityBinding.getBatchSize() ).isEqualTo( 23 );
+					assertThat( entityBinding.isMutable() ).isFalse();
+					assertThat( entityBinding.isCached() ).isTrue();
+					assertThat( entityBinding.getCacheRegionName() ).isEqualTo( "entity-table-hierarchy" );
+					assertThat( entityBinding.getCacheConcurrencyStrategy() ).isEqualToIgnoringCase( "read-write" );
+					assertThat( entityBinding.isLazyPropertiesCacheable() ).isFalse();
+					assertThat( entityBinding.getNaturalIdCacheRegionName() ).isEqualTo( "entity-table-hierarchy-natural-id" );
+					assertThat( entityBinding.getOptimisticLockStyle() ).isEqualTo( OptimisticLockStyle.DIRTY );
+					assertThat( entityBinding.getSynchronizedTables() ).containsExactlyInAnyOrder( "sync_alpha", "sync_beta" );
+					assertThat( entityBinding.getProperty( "code" ).isNaturalIdentifier() ).isTrue();
+
+					assertThat( secondaryTable ).isNotNull();
+					assertThat( secondaryTable.isOptional() ).isFalse();
+					assertThat( secondaryTable.isInverse() ).isTrue();
+					assertThat( entityBinding.getProperty( "excluded" ).isOptimisticLocked() ).isFalse();
+
+					assertThat( entityBinding.getDiscriminator() ).isInstanceOf( BasicValue.class );
+					assertThat( ( (BasicValue) entityBinding.getDiscriminator() ).getColumn().getText() )
+							.isEqualTo( "case when code is null then 'ROOT' else 'ROOT' end" );
+					assertThat( entityBinding.isForceDiscriminator() ).isTrue();
+					assertThat( entityBinding.isDiscriminatorInsertable() ).isFalse();
+					assertThat( subtypeBinding.getDiscriminatorValue() ).isEqualTo( "SUB" );
+
+					assertThat( entityBinding.getSoftDeleteColumn().getName() ).isEqualTo( "active_flag" );
+					assertThat( entityBinding.getSoftDeleteColumn().isNullable() ).isFalse();
+
+					assertThat( subselectBinding.getTable().getSubselect() )
+							.isEqualTo( "select id, code from entity_table_hierarchy_roots" );
+					assertThat( subselectBinding.getTable().isSubselect() ).isTrue();
+					assertThat( subselectBinding.getSynchronizedTables() ).containsExactly( "entity_table_hierarchy_roots" );
+
+					assertThat( viewBinding.getTable().isView() ).isTrue();
+					assertThat( viewBinding.getTable().getViewQuery() )
+							.isEqualTo( "select id, code from entity_table_hierarchy_roots" );
+					assertThat( viewBinding.getSynchronizedTables() ).containsExactly( "entity_table_hierarchy_roots" );
+				},
+				scope.getRegistry(),
+				EntityTableHierarchyRoot.class,
+				EntityTableHierarchySubtype.class,
+				EntityTableHierarchySubselect.class,
+				EntityTableHierarchyView.class
 		);
 	}
 
@@ -572,6 +648,70 @@ public class AnnotationCoverageBindingTests {
 
 	public static class EntityKnobNaturalId {
 		private String tenant;
+		private String code;
+	}
+
+	@Entity(name = "EntityTableHierarchyRoot")
+	@Table(name = "entity_table_hierarchy_roots")
+	@SecondaryTable(name = "entity_table_hierarchy_details")
+	@SecondaryRow(table = "entity_table_hierarchy_details", optional = false, owned = false)
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	@DiscriminatorFormula("case when code is null then 'ROOT' else 'ROOT' end")
+	@DiscriminatorOptions(force = true, insert = false)
+	@BatchSize(size = 23)
+	@Immutable
+	@Cacheable
+	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "entity-table-hierarchy", includeLazy = false)
+	@NaturalIdCache(region = "entity-table-hierarchy-natural-id")
+	@OptimisticLocking(type = OptimisticLockType.DIRTY)
+	@SoftDelete(strategy = SoftDeleteType.ACTIVE, columnName = "active_flag")
+	@Synchronize({ "sync_alpha", "sync_beta" })
+	public static class EntityTableHierarchyRoot {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@NaturalId
+		@Column(name = "code")
+		private String code;
+
+		@Column(name = "details", table = "entity_table_hierarchy_details")
+		private String details;
+
+		@org.hibernate.annotations.OptimisticLock(excluded = true)
+		@Column(name = "excluded")
+		private String excluded;
+	}
+
+	@Entity(name = "EntityTableHierarchySubtype")
+	@DiscriminatorValue("SUB")
+	public static class EntityTableHierarchySubtype extends EntityTableHierarchyRoot {
+		@Column(name = "description")
+		private String description;
+	}
+
+	@Entity(name = "EntityTableHierarchySubselect")
+	@Subselect("select id, code from entity_table_hierarchy_roots")
+	@Synchronize("entity_table_hierarchy_roots")
+	public static class EntityTableHierarchySubselect {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@Column(name = "code")
+		private String code;
+	}
+
+	@Entity(name = "EntityTableHierarchyView")
+	@Table(name = "entity_table_hierarchy_view")
+	@View(query = "select id, code from entity_table_hierarchy_roots")
+	@Synchronize("entity_table_hierarchy_roots")
+	public static class EntityTableHierarchyView {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@Column(name = "code")
 		private String code;
 	}
 

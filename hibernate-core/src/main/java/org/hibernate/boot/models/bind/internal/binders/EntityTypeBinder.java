@@ -236,7 +236,6 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		processCaching( classDetails, getBindingState(), getBindingContext() );
 		processFilters( classDetails, getBindingState(), getBindingContext() );
 		processJpaEventListeners( getManagedType(), getBindingState(), getBindingContext() );
-		CustomMappingBinder.callTypeBinders( classDetails, binding, getBindingState(), getBindingContext() );
 	}
 
 	/// Bind the root identifier and retain its local binding state.
@@ -716,6 +715,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 
 		bindCacheable( getManagedType(), getTypeBinding(), modelBinders, getOptions(), getBindingState(), getBindingContext() );
+		CustomMappingBinder.callTypeBinders(
+				getManagedType().getClassDetails(),
+				binding,
+				getBindingState(),
+				getBindingContext()
+		);
 
 		super.prepareBinding( modelBinders );
 	}
@@ -965,8 +970,17 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	private void processRowManagement(
 			EntityTypeMetadata managedType,
 			PersistentClass typeBinding) {
+		if ( typeBinding instanceof RootClass rootClass ) {
+			rootClass.setMutable( managedType.isMutable() );
+		}
 		typeBinding.setDynamicInsert( managedType.isDynamicInsert() );
 		typeBinding.setDynamicUpdate( managedType.isDynamicUpdate() );
+		if ( managedType.getBatchSize() >= 0 ) {
+			typeBinding.setBatchSize( managedType.getBatchSize() );
+		}
+		for ( String synchronizedTableName : managedType.getSynchronizedTableNames() ) {
+			typeBinding.addSynchronizedTable( synchronizedTableName );
+		}
 	}
 
 	private void processConcreteProxy(

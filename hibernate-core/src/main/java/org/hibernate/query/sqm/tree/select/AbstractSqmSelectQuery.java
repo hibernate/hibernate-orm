@@ -260,7 +260,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRootList()
 	 */
 	@Nonnull
-	public List<JpaRoot<?>> getRootList() {
+	public List<Root<?>> getRootList() {
 		return new ArrayList<>( getQuerySpec().getRootList() );
 	}
 

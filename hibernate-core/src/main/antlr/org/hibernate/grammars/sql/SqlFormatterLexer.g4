@@ -131,6 +131,7 @@ CONTINUE    : [cC][oO][nN][tT][iI][nN][uU][eE];
 TRANSACTIONAL: [tT][rR][aA][nN][sS][aA][cC][tT][iI][oO][nN][aA][lL];
 GLOBAL      : [gG][lL][oO][bB][aA][lL];
 TEMPORARY   : [tT][eE][mM][pP][oO][rR][aA][rR][yY];
+INTERVAL    : [iI][nN][tT][eE][rR][vV][aA][lL];
 
 // Quoted identifiers - preserve exact quoting style
 DOUBLE_QUOTED_IDENTIFIER
@@ -186,8 +187,7 @@ IDENTIFIER
 
 // Whitespace - we need to preserve it for formatting context
 WS
-    : [ \t\r\n]+
-    ;
+    : [ \t\r\n]+ -> skip;
 
 // Catch-all for any other characters
 OTHER

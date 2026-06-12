@@ -1042,6 +1042,10 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	// Converters
 
 	public void collectConverter(ClassDetails converterClassDetails) {
+		if ( converterClassDetails.isAbstract() ) {
+			return;
+		}
+
 		if ( jpaConverters == null ) {
 			jpaConverters = new HashSet<>();
 		}
@@ -1061,7 +1065,9 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 				final var converterType =
 						getClassDetailsRegistry()
 								.resolveClassDetails( converterClassName );
-				jpaConverters.add( new ConverterRegistration( converterType, jaxbConverter.isAutoApply() ) );
+				if ( !converterType.isAbstract() ) {
+					jpaConverters.add( new ConverterRegistration( converterType, jaxbConverter.isAutoApply() ) );
+				}
 			} );
 		}
 	}

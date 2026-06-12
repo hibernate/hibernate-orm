@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.criteria.spi;
 
-import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -25,6 +24,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.TypedQueryReference;
@@ -198,6 +198,14 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			@Nonnull TypedQueryReference<T> reference,
 			@Nonnull Consumer<CriteriaQuery<T>> augmentation) {
 		return criteriaBuilder.augment( reference, augmentation );
+	}
+
+	@Override
+	public @Nonnull <T> TypedQueryReference<T> augment(
+			@Nonnull TypedQueryReference<?> reference,
+			@Nonnull Class<T> augmentedResultType,
+			@Nonnull Consumer<CriteriaQuery<T>> augmentation) {
+		return criteriaBuilder.augment( reference, augmentedResultType, augmentation );
 	}
 
 	@Nonnull
@@ -4162,5 +4170,25 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaXmlTableFunction xmlTable(Expression<String> xpath, Expression<?> xmlDocument) {
 		return criteriaBuilder.xmlTable( xpath, xmlDocument );
+	}
+
+	@Override
+	public <C extends Comparable<? super C>> Expression<C> least(C x, Expression<C> y) {
+		return criteriaBuilder.least( x, y );
+	}
+
+	@Override
+	public <C extends Comparable<? super C>> Expression<C> least(Expression<C> x, Expression<C> y) {
+		return criteriaBuilder.least( x, y );
+	}
+
+	@Override
+	public <C extends Comparable<? super C>> Expression<C> greatest(C x, Expression<C> y) {
+		return criteriaBuilder.greatest( x, y );
+	}
+
+	@Override
+	public <C extends Comparable<? super C>> Expression<C> greatest(Expression<C> x, Expression<C> y) {
+		return criteriaBuilder.greatest( x, y );
 	}
 }

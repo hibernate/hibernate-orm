@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+    <package>org.hibernate.jpa.test.metamodel</package>
+    <entity name="CompositeIdEntity" metadata-complete="true">
+        <table name="CompositeIdEntity"/>
+        <attributes>
+            <embedded-id name="originalId">
+                <target>CompositeIdEntity.originalId</target>
+            </embedded-id>
+            <basic name="data">
+                <target>String</target>
+            </basic>
+        </attributes>
+    </entity>
+
+    <embeddable name="CompositeIdEntity.originalId" metadata-complete="true">
+        <attributes>
+            <basic name="id1">
+                <column name="id1"/>
+                <target>Integer</target>
+            </basic>
+            <basic name="id2">
+                <column name="id2"/>
+                <target>Integer</target>
+            </basic>
+        </attributes>
+    </embeddable>
+</entity-mappings>

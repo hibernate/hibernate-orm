@@ -4,8 +4,12 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.Writer;
+import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
 
@@ -16,6 +20,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.proxy.NClobProxy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 import static org.hibernate.type.descriptor.java.DataHelper.extractString;
@@ -147,22 +152,105 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 			return null;
 		}
 		else {
+			final ResourceRegistry resourceRegistry = options.getResourceRegistry();
 			final LobCreator lobCreator = options.getLobCreator();
+
+			final NClob result;
 			if ( value instanceof NClob clob ) {
-				return lobCreator.wrap( clob );
+				result = lobCreator.wrap( clob );
 			}
 			else if ( value instanceof String string ) {
-				return lobCreator.createNClob( string );
+				result = lobCreator.createNClob( string );
 			}
 			else if ( value instanceof Reader reader ) {
-				return lobCreator.createNClob( extractString( reader ) );
+				result = lobCreator.createNClob( extractString( reader ) );
 			}
 			else if ( value instanceof CharacterStream stream ) {
-				return lobCreator.createNClob( stream.asReader(), stream.getLength() );
+				result = lobCreator.createNClob( stream.asReader(), stream.getLength() );
 			}
 			else {
 				throw unknownWrap( value.getClass() );
 			}
+			final ReleasableNClob releasableClob = new ReleasableNClob( resourceRegistry, result );
+			resourceRegistry.register( releasableClob );
+			return result;
+		}
+	}
+
+	public record ReleasableNClob(ResourceRegistry resourceRegistry, NClob nClob) implements NClob {
+
+		@Override
+		public long length() throws SQLException {
+			return nClob.length();
+		}
+
+		@Override
+		public String getSubString(long pos, int length) throws SQLException {
+			return nClob.getSubString( pos, length );
+		}
+
+		@Override
+		public Reader getCharacterStream() throws SQLException {
+			return nClob.getCharacterStream();
+		}
+
+		@Override
+		public InputStream getAsciiStream() throws SQLException {
+			return nClob.getAsciiStream();
+		}
+
+		@Override
+		public long position(String searchstr, long start) throws SQLException {
+			return nClob.position( searchstr, start );
+		}
+
+		@Override
+		public long position(Clob searchstr, long start) throws SQLException {
+			return nClob.position( searchstr, start );
+		}
+
+		@Override
+		public int setString(long pos, String str) throws SQLException {
+			return nClob.setString( pos, str );
+		}
+
+		@Override
+		public int setString(long pos, String str, int offset, int len) throws SQLException {
+			return nClob.setString( pos, str, offset, len );
+		}
+
+		@Override
+		public OutputStream setAsciiStream(long pos) throws SQLException {
+			return nClob.setAsciiStream( pos );
+		}
+
+		@Override
+		public Writer setCharacterStream(long pos) throws SQLException {
+			return nClob.setCharacterStream( pos );
+		}
+
+		@Override
+		public void truncate(long len) throws SQLException {
+			nClob.truncate( len );
+		}
+
+		@Override
+		public void free() throws SQLException {
+			try {
+				doFree();
+			}
+			finally {
+				resourceRegistry.release( this );
+			}
+		}
+
+		public void doFree() throws SQLException {
+			nClob.free();
+		}
+
+		@Override
+		public Reader getCharacterStream(long pos, long length) throws SQLException {
+			return nClob.getCharacterStream( pos, length );
 		}
 	}
 }

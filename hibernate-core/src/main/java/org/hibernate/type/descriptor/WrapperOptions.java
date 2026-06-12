@@ -4,10 +4,12 @@
  */
 package org.hibernate.type.descriptor;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -135,4 +137,16 @@ public interface WrapperOptions {
 	 * @since 7.0
 	 */
 	FormatMapper getJsonFormatMapper();
+
+	/**
+	 * Obtain the resource registry.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	default ResourceRegistry getResourceRegistry() {
+		return getSession().getJdbcCoordinator()
+				.getLogicalConnection()
+				.getResourceRegistry();
+	}
 }

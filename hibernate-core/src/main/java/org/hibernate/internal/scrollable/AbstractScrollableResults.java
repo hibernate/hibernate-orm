@@ -93,6 +93,9 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResults<
 			rowReader.finishUp( rowProcessingState );
 			jdbcValues.finishUp( persistenceContext );
 			getPersistenceContext().getJdbcCoordinator().afterStatementExecution();
+			if ( !getPersistenceContext().isTransactionInProgress() ) {
+				getPersistenceContext().getJdbcCoordinator().getLogicalConnection().afterTransaction();
+			}
 			closed = true;
 		}
 		// noop if already closed

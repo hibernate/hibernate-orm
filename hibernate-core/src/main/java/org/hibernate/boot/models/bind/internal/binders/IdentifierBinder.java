@@ -27,10 +27,12 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -201,11 +203,11 @@ public class IdentifierBinder {
 				columns.add( column );
 			}
 			else if ( idAttribute.getNature() == AttributeNature.TO_ONE ) {
-				final ManyToOne manyToOne = bindToOneIdentifier( idAttribute, table, type, typeBinding, columns );
-				final Property rootProperty = createProperty( idAttribute.getName(), manyToOne, member );
+				final ToOne toOne = bindToOneIdentifier( idAttribute, table, type, typeBinding, columns );
+				final Property rootProperty = createProperty( idAttribute.getName(), toOne, member );
 				typeBinding.addProperty( rootProperty );
 
-				final Property componentProperty = createProperty( idAttribute.getName(), manyToOne, member );
+				final Property componentProperty = createProperty( idAttribute.getName(), toOne, member );
 				componentProperty.setInsertable( false );
 				componentProperty.setUpdatable( false );
 				idValue.addProperty( componentProperty );
@@ -229,7 +231,7 @@ public class IdentifierBinder {
 		);
 	}
 
-	private ManyToOne bindToOneIdentifier(
+	private ToOne bindToOneIdentifier(
 			AttributeMetadata idAttribute,
 			Table table,
 			EntityTypeMetadata type,
@@ -241,12 +243,6 @@ public class IdentifierBinder {
 				idAttribute.getName(),
 				null
 		);
-		if ( source.isInverseOneToOne() ) {
-			throw new UnsupportedOperationException(
-					"Association identifiers are only implemented for owning to-one attributes - "
-							+ typeBinding.getEntityName() + "." + idAttribute.getName()
-			);
-		}
 
 		final EntityTypeBinder targetTypeBinder = (EntityTypeBinder) state.getTypeBinder(
 				source.targetClassDetails( context )
@@ -255,6 +251,17 @@ public class IdentifierBinder {
 			throw new org.hibernate.MappingException(
 					"Could not resolve local type binding for association identifier target entity - "
 							+ source.targetClassDetails( context ).getClassName()
+			);
+		}
+		if ( source.isInverseOneToOne() ) {
+			return bindInverseOneToOneIdentifier(
+					idAttribute,
+					source,
+					table,
+					type,
+					typeBinding,
+					targetTypeBinder,
+					identifierColumns
 			);
 		}
 
@@ -284,6 +291,44 @@ public class IdentifierBinder {
 				identifierColumns
 		) );
 		return manyToOne;
+	}
+
+	private OneToOne bindInverseOneToOneIdentifier(
+			AttributeMetadata idAttribute,
+			ToOneSource source,
+			Table table,
+			EntityTypeMetadata type,
+			RootClass typeBinding,
+			EntityTypeBinder targetTypeBinder,
+			List<org.hibernate.mapping.Column> identifierColumns) {
+		final OneToOne oneToOne = new OneToOne(
+				state.getMetadataBuildingContext(),
+				table,
+				typeBinding
+		);
+		oneToOne.setPropertyName( idAttribute.getName() );
+		oneToOne.setReferencedEntityName( targetTypeBinder.getTypeBinding().getEntityName() );
+		oneToOne.setReferenceToPrimaryKey( true );
+		oneToOne.setTypeName( targetTypeBinder.getTypeBinding().getEntityName() );
+		oneToOne.setTypeUsingReflection( type.getClassDetails().getClassName(), idAttribute.getName() );
+		oneToOne.setLazy( effectiveFetchType( source ) == FetchType.LAZY );
+		oneToOne.setConstrained( true );
+		oneToOne.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
+		oneToOne.setMappedByProperty( source.oneToOne().mappedBy() );
+
+		final Property property = createProperty( idAttribute.getName(), oneToOne, idAttribute.getMember() );
+		property.setOptional( false );
+		state.addAssociationIdentifierBinding( new AssociationIdentifierBinding(
+				type,
+				typeBinding,
+				property,
+				oneToOne,
+				targetTypeBinder,
+				List.of(),
+				source.valueForeignKeySource( null ),
+				identifierColumns
+		) );
+		return oneToOne;
 	}
 
 	private Table bindAssociationIdentifierTable(

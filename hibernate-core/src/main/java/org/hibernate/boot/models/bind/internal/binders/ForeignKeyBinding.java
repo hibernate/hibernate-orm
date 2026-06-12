@@ -5,8 +5,8 @@
 package org.hibernate.boot.models.bind.internal.binders;
 
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
-import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.ToOne;
 
 /// Pending foreign-key binding for an association value.
 ///
@@ -19,6 +19,6 @@ import org.hibernate.mapping.PersistentClass;
 /// @author Steve Ebersole
 public record ForeignKeyBinding(
 		PersistentClass ownerBinding,
-		ManyToOne value,
+		ToOne value,
 		ForeignKeySource foreignKeySource) {
 }

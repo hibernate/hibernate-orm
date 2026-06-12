@@ -333,6 +333,10 @@ public class AttributeBinder {
 		// todo : implicit column
 		final var columnAnn = member.getDirectAnnotationUsage( Column.class );
 		final var column = ColumnBinder.bindColumn( ColumnSource.from( columnAnn ), property::getName );
+		final var arrayAnn = member.getDirectAnnotationUsage( org.hibernate.annotations.Array.class );
+		if ( arrayAnn != null ) {
+			column.setArrayLength( arrayAnn.length() );
+		}
 
 		var tableName = columnAnn == null ? "" : columnAnn.table();
 		if ( "".equals( tableName ) || tableName == null ) {

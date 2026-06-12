@@ -964,30 +964,73 @@ collected and passed to the JPA named graph creator
 | Annotations
 | Next action
 
-| Descriptor/source gaps
-| `@Audited`, `@Audited.Excluded`, `@Audited.Table`,
-`@Audited.SecondaryTable`, `@Audited.SecondaryTables`,
-`@Audited.CollectionTable`, `@Changelog`, `@Changelog.ChangesetId`,
-`@Changelog.Timestamp`, `@Changelog.ModifiedEntities`
-| Defer to audit/changelog support.  Add descriptors only when the new pipeline
-is ready to bind audit/changelog metadata.
+| Polymorphic association coverage
+| `@Any`, `@AnyDiscriminator`, `@AnyDiscriminatorValue`,
+`@AnyKeyJavaClass`, `@AnyKeyJavaType`, `@AnyKeyJdbcType`,
+`@AnyKeyJdbcTypeCode`, `@ManyToAny`
+| Covered.  Focused bind tests cover singular and plural any associations,
+including discriminator values and key type customizations.
 
-| Covered low-risk bindings
-| `@ConcreteProxy`, `@EmbeddedColumnNaming`, `@EmbeddedTable`, `@LazyGroup`,
-`@MapKeyCompositeType`, `@MapKeyMutability`, `@NaturalIdClass`,
-`@TargetEmbeddable`, `@TypeBinderType`
-| Binder support and focused model-binding assertions exist.
+| Collection shape and collection-id coverage
+| `@Array`, `@Bag`, `@CollectionId`, `@CollectionIdJavaClass`,
+`@CollectionIdJavaType`, `@CollectionIdJdbcType`,
+`@CollectionIdJdbcTypeCode`, `@CollectionIdMutability`,
+`@CollectionIdType`, `@CollectionType`, `@ListIndexBase`,
+`@ListIndexJavaType`, `@ListIndexJdbcType`, `@ListIndexJdbcTypeCode`,
+`@SortComparator`, `@SortNatural`
+| Covered.  Focused collection binding tests cover SQL-array column length,
+collection classification, id-bag id value metadata, list index metadata,
+custom collection type, and sorting.
 
-| Remaining low-risk binding candidates
-| `@HQLSelect`, `@NativeGenerator`, `@QueryCacheLayout`, `@SQLSelect`
-| Cross-check legacy binder behavior and add focused bind tests before or with
-implementation.
+| Basic value, column, and type coverage
+| `@AttributeAccessor`, `@ColumnTransformer`, `@CompositeType`,
+`@EmbeddableInstantiator`, `@JavaType`, `@JdbcType`, `@JdbcTypeCode`,
+`@MapKeyJavaType`, `@MapKeyJdbcType`, `@MapKeyJdbcTypeCode`,
+`@MapKeyType`, `@Mutability`, `@Nationalized`, `@TimeZoneColumn`,
+`@TimeZoneStorage`, `@Type`
+| Mostly test-only, with XML parity noted for `@Mutability`.  Add focused
+basic, embeddable, and map-key assertions against `org.hibernate.mapping`
+state.
 
-| XML/source follow-up
-| `@LazyGroup`, `@ListIndexBase`, `@Mutability`, secondary-table
-`@SQLInsert`, `@SQLUpdate`, `@SQLDelete`
+| Entity, table, and hierarchy coverage
+| `@BatchSize`, `@Cache`, `@Check`, `@DiscriminatorFormula`,
+`@DiscriminatorOptions`, `@Immutable`, `@NaturalId`, `@NaturalIdCache`,
+`@OptimisticLock`, `@OptimisticLocking`, `@SecondaryRow`, `@SoftDelete`,
+`@Subselect`, `@Synchronize`, `@View`
+| Mostly test-only.  Close with entity/table mapping assertions; keep
+`@Check` and `@DiscriminatorFormula` aligned with the dialect-override slice.
+
+| Association and join coverage
+| `@Fetch`, `@FetchProfileOverride`, `@Filter`, `@FilterJoinTable`,
+`@Formula`, `@JoinColumnOrFormula`, `@JoinFormula`, `@NotFound`,
+`@PropertyRef`, `@SQLJoinTableRestriction`, `@SQLOrder`, `@SQLRestriction`
+| Mostly test-only, except `@FetchProfileOverride` needs categorization/source
+audit.  Add focused association/collection tests for observable join, formula,
+filter, restriction, ordering, and fetch behavior.
+
+| Global registrations and named objects
+| `@CollectionTypeRegistration`, `@CompositeTypeRegistration`,
+`@ConverterRegistration`, `@EmbeddableInstantiatorRegistration`,
+`@FetchProfile`, `@FilterDef`, `@GenericGenerator`, `@Imported`,
+`@JavaTypeRegistration`, `@JdbcTypeRegistration`, `@NamedEntityGraph`,
+`@NamedNativeQuery`, `@NamedQuery`, `@TypeRegistration`,
+`@UuidGenerator`
+| Mostly test-only.  Expand global-registration and identifier-generator
+tests, verifying registration metadata rather than bootstrap success alone.
+
+| Custom SQL, custom loaders, and query layout
+| `@HQLSelect`, `@NativeGenerator`, `@QueryCacheLayout`, `@SQLDelete`,
+`@SQLDeleteAll`, `@SQLDeletes`, `@SQLInsert`, `@SQLInserts`,
+`@SQLSelect`, `@SQLUpdate`, `@SQLUpdates`
+| Real binding/XML gaps plus tests.  Audit legacy behavior, implement missing
+`@HQLSelect`, `@SQLSelect`, `@NativeGenerator`, `@QueryCacheLayout`, and
+secondary-table custom SQL container handling, then assert mapping state.
+
+| XML/source parity
+| XML `@LazyGroup`, XML `@ListIndexBase`, XML `@Mutability`, secondary-table
+XML `@SQLInsert`, `@SQLUpdate`, `@SQLDelete`
 | Add XML processing tests where backing descriptors already exist; implement
-secondary-table custom SQL XML processing separately.
+secondary-table custom SQL XML processing with the custom-SQL slice.
 
 | Dialect override families
 | `@DialectOverride.Check`, `@DialectOverride.SQLOrder`,
@@ -1010,6 +1053,16 @@ such as `@IdGeneratorType`, `@AttributeBinderType`, `@TypeBinderType`,
 | Verify through the owning annotation or extension mechanism rather than as
 independent mapping annotations.  `@AttributeBinderType` and `@TypeBinderType`
 now have focused extension-mechanism tests in the new binding pipeline.
+
+| Deferred state-management and aggregate areas
+| `@Audited`, `@Audited.Excluded`, `@Audited.Table`,
+`@Audited.SecondaryTable`, `@Audited.SecondaryTables`,
+`@Audited.CollectionTable`, `@Changelog`, `@Changelog.ChangesetId`,
+`@Changelog.Timestamp`, `@Changelog.ModifiedEntities`, `@Struct`,
+`@Temporal`, `@Temporal.HistoryPartitioning`, `@Temporal.HistoryTable`,
+`@Temporal.Excluded`
+| Keep deferred unless we explicitly start the audit/changelog,
+state-management temporal, or aggregate/UDT design slices.
 |===
 
 == Hibernate Annotation Matrix
@@ -1035,8 +1088,8 @@ observed support from work still needing binder/test confirmation.
 | any association source/binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@AnyDiscriminator`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1044,8 +1097,8 @@ observed support from work still needing binder/test confirmation.
 | any discriminator source/binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@AnyDiscriminatorImplicitValues`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1062,8 +1115,8 @@ observed support from work still needing binder/test confirmation.
 | any discriminator value source present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@AnyDiscriminatorValues`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1080,8 +1133,8 @@ observed support from work still needing binder/test confirmation.
 | any key Java-class source present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@AnyKeyJavaType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1089,8 +1142,8 @@ observed support from work still needing binder/test confirmation.
 | any key Java-type source/binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@AnyKeyJdbcType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1098,8 +1151,8 @@ observed support from work still needing binder/test confirmation.
 | any key JDBC-type binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@AnyKeyJdbcTypeCode`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -1107,17 +1160,17 @@ observed support from work still needing binder/test confirmation.
 | any key JDBC-type-code binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@Array`
 | `FIELD`, `METHOD`
 | yes
-| array collection classification present
-| not audited yet
+| SQL-array column length binding present
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@AttributeAccessor`
 | `METHOD`, `FIELD`
@@ -1195,10 +1248,10 @@ observed support from work still needing binder/test confirmation.
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | collection classification present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@BatchSize`
 | `TYPE`, `METHOD`, `FIELD`
@@ -1285,73 +1338,73 @@ observed support from work still needing binder/test confirmation.
 | `METHOD`, `FIELD`
 | yes
 | id-bag binding present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind tests
+| covered
 
 | `@CollectionIdJavaClass`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | id-bag Java-class source present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@CollectionIdJavaType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | id-bag Java-type binding present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@CollectionIdJdbcType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | id-bag JDBC-type binding present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@CollectionIdJdbcTypeCode`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | id-bag JDBC-type-code binding present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@CollectionIdMutability`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | id-bag mutability binding present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@CollectionIdType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | id-bag type binding present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@CollectionType`
 | `FIELD`, `METHOD`, `ANNOTATION_TYPE`
 | yes
-| collection type support appears present
-| not audited yet
+| local collection type binding present
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@CollectionTypeRegistration`
 | `TYPE`, `PACKAGE`, `ANNOTATION_TYPE`
@@ -1851,38 +1904,38 @@ observed support from work still needing binder/test confirmation.
 | `@ListIndexBase`
 | unspecified
 | yes
-| list index binding appears present
-| XML descriptor/source present; focused test needed
+| list index base binding present
+| XML descriptor/source present
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@ListIndexJavaType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | list index Java-type binding present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@ListIndexJdbcType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | list index JDBC-type binding present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@ListIndexJdbcTypeCode`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
 | yes
 | list index JDBC-type-code binding present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@ManyToAny`
 | `METHOD`, `FIELD`
@@ -1890,8 +1943,8 @@ observed support from work still needing binder/test confirmation.
 | many-to-any source/binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@MapKeyCompositeType`
 | unspecified
@@ -2187,8 +2240,8 @@ observed support from work still needing binder/test confirmation.
 | collection sort support appears present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@SortNatural`
 | `METHOD`, `FIELD`
@@ -2196,8 +2249,8 @@ observed support from work still needing binder/test confirmation.
 | collection sort support appears present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@SqlFragmentAlias`
 | no target
@@ -2702,12 +2755,15 @@ are verified through the matching singular override.
 
 == Follow-Up Slices
 
-1. Add focused tests for JPA and Hibernate annotations currently marked
-   `test-only gap`, starting with low-risk table/entity/attribute mapping
-   effects that already appear to have source or binder support.
-2. Implement the remaining Hibernate low-risk binding gaps in small groups:
-   native generators, query cache layout, and custom loaders.
-3. Add a single new-pipeline dialect override resolution point and convert
+1. Close Hibernate test-only gaps by bucket: polymorphic associations,
+   collection shape/id metadata, basic value/type metadata, entity/table
+   metadata, association/join metadata, and global registrations.
+2. Implement the remaining Hibernate binding gaps in small groups: custom SQL
+   and loaders, native generators, query cache layout, and fetch-profile
+   overrides.
+3. Close XML/source parity gaps for annotations whose backing descriptors and
+   binders already exist.
+4. Add a single new-pipeline dialect override resolution point and convert
    direct annotation lookups for override-capable annotations to use it.
-5. Revisit audit/changelog descriptors and binding once state-management support
-   has a dedicated design slice.
+5. Revisit audit/changelog, temporal state-management, and aggregate/UDT
+   descriptors and binding only once those areas have dedicated design slices.

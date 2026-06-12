@@ -14,6 +14,7 @@ import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.AnyKeyJavaType;
+import org.hibernate.annotations.AnyKeyJdbcType;
 import org.hibernate.annotations.AnyKeyJdbcTypeCode;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -36,6 +37,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -280,6 +282,26 @@ public class AnyAssociationTests {
 
 	@Test
 	@ServiceRegistry
+	void testAnyKeyJdbcType(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( JdbcTypeKeyHolder.class.getName() );
+					final org.hibernate.mapping.Any value = (org.hibernate.mapping.Any) entityBinding.getProperty( "target" )
+							.getValue();
+					final BasicValue key = value.getKeyDescriptor();
+
+					assertThat( key.resolve().getJdbcType() )
+							.isInstanceOf( CustomAnyKeyJdbcType.class );
+				},
+				scope.getRegistry(),
+				JdbcTypeKeyHolder.class,
+				TargetOne.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testAnyKeyJavaType(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
@@ -444,6 +466,26 @@ public class AnyAssociationTests {
 				},
 				scope.getRegistry(),
 				JdbcTypeCodeKeyManyHolder.class,
+				TargetOne.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testManyToAnyKeyJavaType(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( JavaTypeKeyManyHolder.class.getName() );
+					final Collection collection = (Collection) entityBinding.getProperty( "targets" ).getValue();
+					final org.hibernate.mapping.Any element = (org.hibernate.mapping.Any) collection.getElement();
+					final BasicValue key = element.getKeyDescriptor();
+
+					assertThat( key.resolve().getDomainJavaType() )
+							.isInstanceOf( AnyIntegerJavaType.class );
+				},
+				scope.getRegistry(),
+				JavaTypeKeyManyHolder.class,
 				TargetOne.class
 		);
 	}
@@ -663,6 +705,19 @@ public class AnyAssociationTests {
 		private Object target;
 	}
 
+	@Entity(name = "JdbcTypeAnyKeyHolder")
+	public static class JdbcTypeKeyHolder {
+		@Id
+		private Integer id;
+
+		@Any
+		@AnyDiscriminatorValue(discriminator = "one", entity = TargetOne.class)
+		@AnyKeyJavaClass(Integer.class)
+		@AnyKeyJdbcType(CustomAnyKeyJdbcType.class)
+		@JoinColumn(name = "target_id")
+		private Object target;
+	}
+
 	@Entity(name = "JavaTypeAnyKeyHolder")
 	public static class JavaTypeKeyHolder {
 		@Id
@@ -809,6 +864,23 @@ public class AnyAssociationTests {
 		private List<Object> targets;
 	}
 
+	@Entity(name = "JavaTypeKeyManyAnyHolder")
+	public static class JavaTypeKeyManyHolder {
+		@Id
+		private Integer id;
+
+		@ManyToAny
+		@JoinTable(
+				name = "java_type_key_many_holder_targets",
+				joinColumns = @JoinColumn(name = "holder_id"),
+				inverseJoinColumns = @JoinColumn(name = "target_id")
+		)
+		@AnyDiscriminatorValue(discriminator = "one", entity = TargetOne.class)
+		@AnyKeyJavaClass(Integer.class)
+		@AnyKeyJavaType(AnyIntegerJavaType.class)
+		private List<Object> targets;
+	}
+
 	@Entity(name = "CompositeKeyManyAnyHolder")
 	public static class CompositeKeyManyHolder {
 		@Id
@@ -917,5 +989,8 @@ public class AnyAssociationTests {
 			}
 			throw unknownWrap( value.getClass() );
 		}
+	}
+
+	public static class CustomAnyKeyJdbcType extends VarcharJdbcType {
 	}
 }

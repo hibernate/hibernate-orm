@@ -43,6 +43,9 @@ is the cleaner replacement candidate.
 
 Replace the current implicit sequence with explicit intermediate products:
 
+Pipeline sketches in this document use the shared notation described in
+link:flow-notation.adoc[`flow-notation.adoc`].
+
 [source]
 ----
 JpaBootstrapSettings

@@ -11,6 +11,9 @@ link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.ado
 The plan works backward from `org.hibernate.internal.SessionFactoryImpl` because
 that constructor is the current runtime boundary.
 
+Pipeline sketches in this document use the shared notation described in
+link:flow-notation.adoc[`flow-notation.adoc`].
+
 == Constructor Boundary
 
 `SessionFactoryImpl` currently accepts three inputs:
@@ -2484,12 +2487,8 @@ ResolvedBootstrapSettings + MappingSourceContributions + ServiceRegistry
 ----
 
 See
-link:session-factory-bootstrap-design.adoc#_flow_notation[`session-factory-bootstrap-design.adoc`]
-for the notation used by these pipeline sketches.  In short, the settings,
-source contributions, and service registry are peer inputs to the resolver; the
-arrowed lines are the ordered products/steps owned by that resolver.  A `(*)`
-marker means the product is retained by the final product.  Inputs and unmarked
-intermediate products do not automatically become part of the final product.
+link:flow-notation.adoc[`flow-notation.adoc`]
+for the notation used by these pipeline sketches.
 
 `ResolvedMetadata` carries the finalized `MetadataImplementor`, the
 `CategorizedDomainModel`, and the `BindingState` used as local binding-phase

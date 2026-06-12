@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -18,21 +19,30 @@ import org.hibernate.annotations.ConverterRegistration;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JdbcTypeRegistration;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.TypeRegistration;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.Generator;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jpa.SpecHints;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.util.uuid.IdGeneratorCreationContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
@@ -111,11 +121,18 @@ public class GlobalRegistrationBindingTests {
 							.containsEntry( VALUE_COLUMN_PARAM, "next_value" )
 							.containsEntry( INITIAL_PARAM, "4" )
 							.containsEntry( INCREMENT_PARAM, "17" );
+					final var genericGenerator = metadataCollector.getIdentifierGenerator(
+							GlobalIdentifierGenerator.class.getName()
+					);
+					assertThat( genericGenerator.getStrategy() ).isEqualTo( GlobalIdentifierGenerator.class.getName() );
+					assertThat( genericGenerator.getParameters() ).containsEntry( "role", "global" );
 
 					assertThat( metadataCollector.getAttributeConverterManager()
 							.findRegisteredConversion( GlobalConverted.class ) ).isNotNull();
 					assertThat( metadataCollector.getAttributeConverterManager()
 							.findRegisteredConversion( PlainConverted.class ) ).isNotNull();
+					assertThat( metadataCollector.getImports() )
+							.containsEntry( "GlobalRegistrationAlias", GlobalRegistrationEntity.class.getName() );
 
 					final var jpaQuery = metadataCollector.getNamedHqlQueryMapping( "globalJpaQuery" );
 					assertThat( jpaQuery.getHqlString() ).isEqualTo( "from GlobalRegistrationEntity" );
@@ -183,9 +200,22 @@ public class GlobalRegistrationBindingTests {
 
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( GlobalRegistrationEntity.class.getName() );
 					assertThat( entityBinding ).isNotNull();
+
+					final RootClass uuidEntityBinding = (RootClass) metadataCollector.getEntityBinding(
+							UuidGeneratedEntity.class.getName()
+					);
+					final BasicValue uuidIdentifier = (BasicValue) uuidEntityBinding.getIdentifier();
+					assertThat( uuidIdentifier.getCustomIdGeneratorCreator() ).isNotNull();
+					final Generator uuidGenerator = uuidIdentifier.getCustomIdGeneratorCreator().createGenerator(
+							new IdGeneratorCreationContext( context.getMetadata(), uuidEntityBinding )
+					);
+					assertThat( uuidGenerator ).isInstanceOf( org.hibernate.id.uuid.UuidGenerator.class );
+					assertThat( ( (org.hibernate.id.uuid.UuidGenerator) uuidGenerator ).getValueGenerator() )
+							.isInstanceOf( StandardRandomStrategy.class );
 				},
 				scope.getRegistry(),
 				GlobalRegistrationEntity.class,
+				UuidGeneratedEntity.class,
 				PlainConverter.class
 		);
 	}
@@ -250,6 +280,7 @@ public class GlobalRegistrationBindingTests {
 
 	@Entity(name = "GlobalRegistrationEntity")
 	@jakarta.persistence.Table(name = "global_registration_entities")
+	@Imported(rename = "GlobalRegistrationAlias")
 	@SequenceGenerator(name = "global_seq", sequenceName = "global_sequence", initialValue = 7, allocationSize = 13)
 	@TableGenerator(
 			name = "global_table",
@@ -260,6 +291,7 @@ public class GlobalRegistrationBindingTests {
 			initialValue = 3,
 			allocationSize = 17
 	)
+	@GenericGenerator(type = GlobalIdentifierGenerator.class, parameters = @Parameter(name = "role", value = "global"))
 	@NamedQuery(
 			name = "globalJpaQuery",
 			query = "from GlobalRegistrationEntity",
@@ -331,6 +363,20 @@ public class GlobalRegistrationBindingTests {
 		@JoinColumn(name = "parent_id")
 		@Fetch(graph = "globalGraph", type = FetchType.EAGER, batchSize = 5, cacheStoreMode = CacheStoreMode.BYPASS)
 		private GlobalRegistrationEntity parent;
+	}
+
+	public static class GlobalIdentifierGenerator implements IdentifierGenerator {
+		@Override
+		public Object generate(SharedSessionContractImplementor session, Object object) {
+			return 1;
+		}
+	}
+
+	@Entity(name = "UuidGeneratedEntity")
+	public static class UuidGeneratedEntity {
+		@Id
+		@UuidGenerator(style = UuidGenerator.Style.RANDOM)
+		private UUID id;
 	}
 
 	public record GlobalConverted(String value) {

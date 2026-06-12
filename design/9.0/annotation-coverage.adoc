@@ -1022,8 +1022,12 @@ Dialect overrides remain tracked in the dialect-override slice.
 `@JavaTypeRegistration`, `@JdbcTypeRegistration`, `@NamedEntityGraph`,
 `@NamedNativeQuery`, `@NamedQuery`, `@TypeRegistration`,
 `@UuidGenerator`
-| Mostly test-only.  Expand global-registration and identifier-generator
-tests, verifying registration metadata rather than bootstrap success alone.
+| Covered for annotation binding.  Focused bind tests verify metadata-collector
+registries for converters, type descriptors, custom user types, collection
+types, embeddable instantiators, filters, fetch profiles, query imports,
+named queries/native queries/statements/procedure calls, SQL result-set
+mappings, named entity graphs, sequence/table/generic generators, and UUID
+identifier generator creation.
 
 | Custom SQL, custom loaders, and query layout
 | `@HQLSelect`, `@NativeGenerator`, `@QueryCacheLayout`, `@SQLDelete`,
@@ -1417,10 +1421,10 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `PACKAGE`, `ANNOTATION_TYPE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@CollectionTypeRegistrations`
 | `TYPE`, `ANNOTATION_TYPE`
@@ -1471,10 +1475,10 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@CompositeTypeRegistrations`
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
@@ -1498,10 +1502,10 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@ConverterRegistrations`
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
@@ -1579,10 +1583,10 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@EmbeddableInstantiatorRegistrations`
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
@@ -1678,10 +1682,10 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `PACKAGE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@FilterDefs`
 | `PACKAGE`, `TYPE`
@@ -1758,11 +1762,11 @@ observed support from work still needing binder/test confirmation.
 | `@GenericGenerator`
 | `METHOD`, `FIELD`, `TYPE`, `PACKAGE`
 | yes
-| generator registration appears present
-| not audited yet
+| generator registration present
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@HQLSelect`
 | `TYPE`, `FIELD`, `METHOD`
@@ -1794,11 +1798,11 @@ observed support from work still needing binder/test confirmation.
 | `@Imported`
 | `TYPE`
 | yes
-| global query import support appears present
+| global query import support present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@Instantiator`
 | `CONSTRUCTOR`
@@ -1822,10 +1826,10 @@ observed support from work still needing binder/test confirmation.
 | `PACKAGE`, `TYPE`, `ANNOTATION_TYPE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@JavaTypeRegistrations`
 | `PACKAGE`, `TYPE`, `ANNOTATION_TYPE`
@@ -1858,10 +1862,10 @@ observed support from work still needing binder/test confirmation.
 | `PACKAGE`, `TYPE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@JdbcTypeRegistrations`
 | `PACKAGE`, `TYPE`
@@ -2020,10 +2024,10 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `PACKAGE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@NamedEntityGraphs`
 | `TYPE`, `PACKAGE`, `ANNOTATION_TYPE`
@@ -2047,10 +2051,10 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `PACKAGE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@NamedQueries`
 | `TYPE`, `PACKAGE`
@@ -2065,10 +2069,10 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `PACKAGE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@Nationalized`
 | `PACKAGE`, `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -2389,10 +2393,10 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@TypeRegistrations`
 | `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
@@ -2415,11 +2419,11 @@ observed support from work still needing binder/test confirmation.
 | `@UuidGenerator`
 | `FIELD`, `METHOD`
 | yes
-| generator support appears present
-| not audited yet
+| generator support present
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind test
+| covered
 
 | `@ValueGenerationType`
 | `ANNOTATION_TYPE`

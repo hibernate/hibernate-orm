@@ -203,6 +203,10 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 
 	@Override
 	@Nonnull
+	ProcedureCallImplementor<R> setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> ProcedureCallImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override

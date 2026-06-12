@@ -355,6 +355,10 @@ public interface NativeQueryImplementor<R>
 
 	@Override
 	@Nonnull
+	NativeQueryImplementor<R> setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> NativeQueryImplementor<R> setParameter(int position, @Nullable P val, @Nonnull Class<P> type);
 
 	@Override

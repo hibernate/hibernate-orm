@@ -25,7 +25,7 @@ freemarker = "2.3.34"
 eclipseJdtCore = "3.46.0"
 
 # Jakarta Libs
-jpa = "4.0.0-M4" # Can be replaced with ${jakartaJpaVersion} / gradle.libs.versions.jpa
+jpa = "4.0.0-M5" # Can be replaced with ${jakartaJpaVersion} / gradle.libs.versions.jpa
 annotation = "3.0.0"
 cdi = "4.1.0"
 inject = "2.0.1"
@@ -69,7 +69,7 @@ xerces = "2.12.2"
 dom4j = "2.2.0"
 javaxMoney = "1.1"
 moneta = "1.4.5"
-persistenceTck="4.0.0-SNAPSHOT"
+persistenceTck="4.0.0-M5"
 
 # JDBC Libs
 h2 = "2.4.240"

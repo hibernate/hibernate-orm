@@ -16,14 +16,21 @@ import org.hibernate.MappingException;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.NaturalIdClass;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.QueryCacheLayout;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -233,12 +240,14 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		final ClassDetails classDetails = getManagedType().getClassDetails();
 		processRowManagement( getManagedType(), getTypeBinding() );
 		processConcreteProxy( classDetails, getTypeBinding() );
-			processNaturalIdClass( classDetails, getTypeBinding(), getBindingContext() );
-			processCaching( classDetails, getBindingState(), getBindingContext() );
-			processSqlRestriction( classDetails );
-			processFilters( classDetails, getBindingState(), getBindingContext() );
-			processJpaEventListeners( getManagedType(), getBindingState(), getBindingContext() );
-		}
+		processNaturalIdClass( classDetails, getTypeBinding(), getBindingContext() );
+		processCaching( classDetails, getBindingState(), getBindingContext() );
+		processQueryCacheLayout( classDetails );
+		processCustomSql( classDetails );
+		processSqlRestriction( classDetails );
+		processFilters( classDetails, getBindingState(), getBindingContext() );
+		processJpaEventListeners( getManagedType(), getBindingState(), getBindingContext() );
+	}
 
 	/// Bind the root identifier and retain its local binding state.
 	///
@@ -985,6 +994,74 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 	}
 
+	private void processCustomSql(ClassDetails classDetails) {
+		final String primaryTableName = binding.getTable().getName();
+		SQLInsert sqlInsert = resolveCustomSqlAnnotation( classDetails, SQLInsert.class, primaryTableName, getBindingContext() );
+		if ( sqlInsert == null ) {
+			sqlInsert = resolveCustomSqlAnnotation( classDetails, SQLInsert.class, "", getBindingContext() );
+		}
+		if ( sqlInsert != null ) {
+			binding.setCustomSqlInsert( org.hibernate.mapping.CustomSqlMapping.customSqlMapping(
+					sqlInsert.sql(),
+					sqlInsert.callable(),
+					sqlInsert.verify(),
+					true
+			) );
+		}
+
+		SQLUpdate sqlUpdate = resolveCustomSqlAnnotation( classDetails, SQLUpdate.class, primaryTableName, getBindingContext() );
+		if ( sqlUpdate == null ) {
+			sqlUpdate = resolveCustomSqlAnnotation( classDetails, SQLUpdate.class, "", getBindingContext() );
+		}
+		if ( sqlUpdate != null ) {
+			binding.setCustomSqlUpdate( org.hibernate.mapping.CustomSqlMapping.customSqlMapping(
+					sqlUpdate.sql(),
+					sqlUpdate.callable(),
+					sqlUpdate.verify(),
+					true
+			) );
+		}
+
+		SQLDelete sqlDelete = resolveCustomSqlAnnotation( classDetails, SQLDelete.class, primaryTableName, getBindingContext() );
+		if ( sqlDelete == null ) {
+			sqlDelete = resolveCustomSqlAnnotation( classDetails, SQLDelete.class, "", getBindingContext() );
+		}
+		if ( sqlDelete != null ) {
+			binding.setCustomSqlDelete( org.hibernate.mapping.CustomSqlMapping.customSqlMapping(
+					sqlDelete.sql(),
+					sqlDelete.callable(),
+					sqlDelete.verify(),
+					true
+			) );
+		}
+
+		final var sqlSelect = classDetails.getDirectAnnotationUsage( SQLSelect.class );
+		if ( sqlSelect != null ) {
+			final String loaderName = binding.getEntityName() + "$SQLSelect";
+			binding.setLoaderName( loaderName );
+			QueryBinder.bindNativeQuery(
+					loaderName,
+					sqlSelect,
+					classDetails,
+					getBindingState().getMetadataBuildingContext()
+			);
+		}
+
+		final var hqlSelect = classDetails.getDirectAnnotationUsage( HQLSelect.class );
+		if ( hqlSelect != null ) {
+			final String loaderName = binding.getEntityName() + "$HQLSelect";
+			binding.setLoaderName( loaderName );
+			QueryBinder.bindQuery( loaderName, hqlSelect, getBindingState().getMetadataBuildingContext() );
+		}
+	}
+
+	private void processQueryCacheLayout(ClassDetails classDetails) {
+		final var queryCacheLayout = classDetails.getDirectAnnotationUsage( QueryCacheLayout.class );
+		if ( queryCacheLayout != null ) {
+			binding.setQueryCacheLayout( queryCacheLayout.layout() );
+		}
+	}
+
 	private void processConcreteProxy(
 			ClassDetails classDetails,
 			PersistentClass typeBinding) {
@@ -1140,10 +1217,110 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private void processSecondaryTable(SecondaryTable secondaryTable) {
-		final Join join = new Join();
-		join.setTable( secondaryTable.binding() );
+		final Join join = findSecondaryTableJoin( secondaryTable );
 		join.setPersistentClass( binding );
 		join.setOptional( secondaryTable.optional() );
 		join.setInverse( !secondaryTable.owned() );
+		processSecondaryTableCustomSql( secondaryTable, join );
+	}
+
+	private Join findSecondaryTableJoin(SecondaryTable secondaryTable) {
+		for ( Join join : binding.getJoins() ) {
+			if ( join.getTable() == secondaryTable.binding() ) {
+				return join;
+			}
+		}
+		throw new MappingException( "Could not locate secondary Table : " + secondaryTable.logicalName().getText() );
+	}
+
+	private void processSecondaryTableCustomSql(SecondaryTable secondaryTable, Join join) {
+		final ClassDetails classDetails = getManagedType().getClassDetails();
+		final String tableName = secondaryTable.binding().getQuotedName();
+		final String logicalTableName = secondaryTable.logicalName().getText();
+		final SQLInsert sqlInsert = resolveCustomSqlAnnotation(
+				classDetails,
+				SQLInsert.class,
+				tableName,
+				logicalTableName,
+				getBindingContext()
+		);
+		if ( sqlInsert != null ) {
+			join.setCustomSqlInsert( org.hibernate.mapping.CustomSqlMapping.customSqlMapping(
+					sqlInsert.sql(),
+					sqlInsert.callable(),
+					sqlInsert.verify(),
+					false
+			) );
+		}
+
+		final SQLUpdate sqlUpdate = resolveCustomSqlAnnotation(
+				classDetails,
+				SQLUpdate.class,
+				tableName,
+				logicalTableName,
+				getBindingContext()
+		);
+		if ( sqlUpdate != null ) {
+			join.setCustomSqlUpdate( org.hibernate.mapping.CustomSqlMapping.customSqlMapping(
+					sqlUpdate.sql(),
+					sqlUpdate.callable(),
+					sqlUpdate.verify(),
+					false
+			) );
+		}
+
+		final SQLDelete sqlDelete = resolveCustomSqlAnnotation(
+				classDetails,
+				SQLDelete.class,
+				tableName,
+				logicalTableName,
+				getBindingContext()
+		);
+		if ( sqlDelete != null ) {
+			join.setCustomSqlDelete( org.hibernate.mapping.CustomSqlMapping.customSqlMapping(
+					sqlDelete.sql(),
+					sqlDelete.callable(),
+					sqlDelete.verify(),
+					false
+			) );
+		}
+	}
+
+	private static <A extends java.lang.annotation.Annotation> A resolveCustomSqlAnnotation(
+			ClassDetails classDetails,
+			Class<A> annotationType,
+			String tableName,
+			BindingContext bindingContext) {
+		return resolveCustomSqlAnnotation( classDetails, annotationType, tableName, tableName, bindingContext );
+	}
+
+	private static <A extends java.lang.annotation.Annotation> A resolveCustomSqlAnnotation(
+			ClassDetails classDetails,
+			Class<A> annotationType,
+			String tableName,
+			String alternateTableName,
+			BindingContext bindingContext) {
+		for ( A annotation : classDetails.getRepeatedAnnotationUsages(
+				annotationType,
+				bindingContext.getBootstrapContext().getModelsContext()
+		) ) {
+			if ( annotation instanceof SQLInsert sqlInsert
+					&& matchesCustomSqlTable( sqlInsert.table(), tableName, alternateTableName ) ) {
+				return annotation;
+			}
+			if ( annotation instanceof SQLUpdate sqlUpdate
+					&& matchesCustomSqlTable( sqlUpdate.table(), tableName, alternateTableName ) ) {
+				return annotation;
+			}
+			if ( annotation instanceof SQLDelete sqlDelete
+					&& matchesCustomSqlTable( sqlDelete.table(), tableName, alternateTableName ) ) {
+				return annotation;
+			}
+		}
+		return null;
+	}
+
+	private static boolean matchesCustomSqlTable(String annotationTable, String tableName, String alternateTableName) {
+		return tableName.equals( annotationTable ) || alternateTableName.equals( annotationTable );
 	}
 }

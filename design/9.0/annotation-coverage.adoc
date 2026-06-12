@@ -1033,15 +1033,17 @@ identifier generator creation.
 | `@HQLSelect`, `@NativeGenerator`, `@QueryCacheLayout`, `@SQLDelete`,
 `@SQLDeleteAll`, `@SQLDeletes`, `@SQLInsert`, `@SQLInserts`,
 `@SQLSelect`, `@SQLUpdate`, `@SQLUpdates`
-| Real binding/XML gaps plus tests.  Audit legacy behavior, implement missing
-`@HQLSelect`, `@SQLSelect`, `@NativeGenerator`, `@QueryCacheLayout`, and
-secondary-table custom SQL container handling, then assert mapping state.
+| Covered for annotation binding.  Focused bind tests verify entity and
+collection custom SQL, repeatable secondary-table custom SQL containers,
+custom SQL/HQL loaders, query cache layout, and native identifier generator
+creator installation.  Secondary-table custom SQL XML and dialect overrides
+remain tracked separately.
 
 | XML/source parity
 | XML `@LazyGroup`, XML `@ListIndexBase`, XML `@Mutability`, secondary-table
 XML `@SQLInsert`, `@SQLUpdate`, `@SQLDelete`
 | Add XML processing tests where backing descriptors already exist; implement
-secondary-table custom SQL XML processing with the custom-SQL slice.
+secondary-table custom SQL XML processing in an XML/source parity slice.
 
 | Dialect override families
 | `@DialectOverride.Check`, `@DialectOverride.SQLOrder`,
@@ -1771,11 +1773,11 @@ observed support from work still needing binder/test confirmation.
 | `@HQLSelect`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| needs binding audit
-| not audited yet
+| entity and collection custom HQL loaders bound
 | n/a
-| needed
-| binding gap
+| n/a
+| focused bind test
+| covered
 
 | `@IdGeneratorType`
 | `ANNOTATION_TYPE`
@@ -2086,11 +2088,11 @@ observed support from work still needing binder/test confirmation.
 | `@NativeGenerator`
 | `METHOD`, `FIELD`, `TYPE`, `PACKAGE`
 | yes
-| needs generator binding audit
-| not audited yet
+| native identifier generator creator installed
 | n/a
-| needed
-| binding gap
+| n/a
+| focused bind test
+| covered
 
 | `@NaturalId`
 | `METHOD`, `FIELD`
@@ -2203,11 +2205,11 @@ observed support from work still needing binder/test confirmation.
 | `@QueryCacheLayout`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| needs binding audit
+| entity and collection query cache layout bound
 | n/a
 | n/a
-| needed
-| binding gap
+| focused bind test
+| covered
 
 | `@RowId`
 | `TYPE`
@@ -2460,20 +2462,20 @@ observed support from work still needing binder/test confirmation.
 | `@SQLDelete`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| entity/collection custom SQL support appears present
+| entity, secondary-table, and collection custom SQL delete bound
 | secondary-table XML gap
 | base override family
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@SQLDeleteAll`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| collection custom SQL support appears present
-| not audited yet
+| collection delete-all custom SQL bound
+| n/a
 | base override family
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@SQLDeletes`
 | `TYPE`
@@ -2481,17 +2483,17 @@ observed support from work still needing binder/test confirmation.
 | repeatable container for secondary-table custom SQL
 | XML gap
 | n/a
-| needed
-| binding gap
+| focused bind test
+| covered
 
 | `@SQLInsert`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| entity/collection custom SQL support appears present
+| entity, secondary-table, and collection custom SQL insert bound
 | secondary-table XML gap
 | base override family
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@SQLInserts`
 | `TYPE`
@@ -2499,8 +2501,8 @@ observed support from work still needing binder/test confirmation.
 | repeatable container for secondary-table custom SQL
 | XML gap
 | n/a
-| needed
-| binding gap
+| focused bind test
+| covered
 
 | `@SQLJoinTableRestriction`
 | `METHOD`, `FIELD`
@@ -2532,20 +2534,20 @@ observed support from work still needing binder/test confirmation.
 | `@SQLSelect`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| needs binding audit
-| not audited yet
+| entity and collection custom SQL loaders bound
+| n/a
 | base override family
-| needed
-| binding gap
+| focused bind test
+| covered
 
 | `@SQLUpdate`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| entity/collection custom SQL support appears present
+| entity, secondary-table, and collection custom SQL update bound
 | secondary-table XML gap
 | base override family
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@SQLUpdates`
 | `TYPE`
@@ -2553,8 +2555,8 @@ observed support from work still needing binder/test confirmation.
 | repeatable container for secondary-table custom SQL
 | XML gap
 | n/a
-| needed
-| binding gap
+| focused bind test
+| covered
 |===
 
 == Dialect Override Matrix

@@ -70,10 +70,16 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.PartitionKey;
 import org.hibernate.annotations.PropertyRef;
+import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.RowId;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLDeleteAll;
+import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
@@ -88,11 +94,14 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.View;
+import org.hibernate.annotations.HQLSelect;
+import org.hibernate.annotations.NativeGenerator;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -158,6 +167,9 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.annotations.CacheLayout.FULL;
+import static org.hibernate.annotations.CacheLayout.SHALLOW;
+import static org.hibernate.annotations.CacheLayout.SHALLOW_WITH_DISCRIMINATOR;
 import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.checkDomainModel;
 
 /**
@@ -579,7 +591,7 @@ public class AnnotationCoverageBindingTests {
 					assertThat( ( (org.hibernate.mapping.Formula) formulaCode.getColumn() ).getFormula() )
 							.isEqualTo( "upper(code)" );
 
-					assertThat( eagerTarget.getFetchMode() ).isEqualTo( org.hibernate.FetchMode.JOIN );
+					assertThat( eagerTarget.getFetchStyle() ).isEqualTo( FetchStyle.JOIN );
 					assertThat( eagerTarget.isLazy() ).isFalse();
 					assertThat( missingTarget.getNotFoundAction() ).isEqualTo( NotFoundAction.IGNORE );
 					assertThat( propertyRefTarget.getReferencedPropertyName() ).isEqualTo( "code" );
@@ -597,7 +609,7 @@ public class AnnotationCoverageBindingTests {
 										.isEqualTo( "direct_formula_target_id" );
 							} );
 
-					assertThat( targets.getFetchMode() ).isEqualTo( org.hibernate.FetchMode.JOIN );
+					assertThat( targets.getFetchStyle() ).isEqualTo( FetchStyle.JOIN );
 					assertThat( targets.isLazy() ).isFalse();
 					assertThat( targets.getOrderBy() ).isEqualTo( "target_code desc" );
 					assertThat( targets.getManyToManyWhere() )
@@ -634,6 +646,82 @@ public class AnnotationCoverageBindingTests {
 				scope.getRegistry(),
 				AssociationJoinOwner.class,
 				AssociationJoinTarget.class
+			);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testCustomSqlLoaderAndQueryLayoutCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass sqlEntity = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( CustomSqlEntity.class.getName() );
+					final RootClass hqlEntity = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( HqlLoaderEntity.class.getName() );
+					final RootClass nativeGeneratedEntity = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( NativeGeneratedEntity.class.getName() );
+					final Join secondary = sqlEntity.getSecondaryTable( "custom_sql_details" );
+					final org.hibernate.mapping.Collection values = context.getMetadataCollector()
+							.getCollectionBinding( CustomSqlEntity.class.getName() + ".values" );
+					final org.hibernate.mapping.Collection hqlValues = context.getMetadataCollector()
+							.getCollectionBinding( CustomSqlEntity.class.getName() + ".hqlValues" );
+
+					assertThat( sqlEntity.getCustomSqlInsert().sql() )
+							.isEqualTo( "insert into custom_sql_entities (name, id) values (?, ?)" );
+					assertThat( sqlEntity.getCustomSqlUpdate().sql() )
+							.isEqualTo( "update custom_sql_entities set name = ? where id = ?" );
+					assertThat( sqlEntity.getCustomSqlDelete().sql() )
+							.isEqualTo( "delete from custom_sql_entities where id = ?" );
+					assertThat( sqlEntity.getQueryCacheLayout() ).isEqualTo( FULL );
+					assertThat( sqlEntity.getLoaderName() ).isEqualTo( CustomSqlEntity.class.getName() + "$SQLSelect" );
+					assertThat( context.getMetadataCollector()
+							.getNamedNativeQueryMapping( sqlEntity.getLoaderName() )
+							.getSqlQueryString() )
+							.isEqualTo( "select * from custom_sql_entities where id = ?" );
+
+					assertThat( secondary.getCustomSqlInsert().sql() )
+							.isEqualTo( "insert into custom_sql_details (detail, entity_id) values (?, ?)" );
+					assertThat( secondary.getCustomSqlUpdate().sql() )
+							.isEqualTo( "update custom_sql_details set detail = ? where entity_id = ?" );
+					assertThat( secondary.getCustomSqlDelete().sql() )
+							.isEqualTo( "delete from custom_sql_details where entity_id = ?" );
+
+					assertThat( hqlEntity.getLoaderName() ).isEqualTo( HqlLoaderEntity.class.getName() + "$HQLSelect" );
+					assertThat( context.getMetadataCollector()
+							.getNamedHqlQueryMapping( hqlEntity.getLoaderName() )
+							.getHqlString() )
+							.isEqualTo( "from HqlLoaderEntity where id = :id" );
+
+					assertThat( values.getCustomSqlInsert().sql() )
+							.isEqualTo( "insert into custom_sql_values (owner_id, value) values (?, ?)" );
+					assertThat( values.getCustomSqlUpdate().sql() )
+							.isEqualTo( "update custom_sql_values set value = ? where owner_id = ? and value = ?" );
+					assertThat( values.getCustomSqlDelete().sql() )
+							.isEqualTo( "delete from custom_sql_values where owner_id = ? and value = ?" );
+					assertThat( values.getCustomSqlDeleteAll().sql() )
+							.isEqualTo( "delete from custom_sql_values where owner_id = ?" );
+					assertThat( values.getQueryCacheLayout() ).isEqualTo( SHALLOW );
+					assertThat( values.getLoaderName() ).isEqualTo( CustomSqlEntity.class.getName() + ".values$SQLSelect" );
+					assertThat( context.getMetadataCollector()
+							.getNamedNativeQueryMapping( values.getLoaderName() )
+							.getSqlQueryString() )
+							.isEqualTo( "select value from custom_sql_values where owner_id = ?" );
+
+					assertThat( hqlValues.getQueryCacheLayout() ).isEqualTo( SHALLOW_WITH_DISCRIMINATOR );
+					assertThat( hqlValues.getLoaderName() )
+							.isEqualTo( CustomSqlEntity.class.getName() + ".hqlValues$HQLSelect" );
+					assertThat( context.getMetadataCollector()
+							.getNamedHqlQueryMapping( hqlValues.getLoaderName() )
+							.getHqlString() )
+							.isEqualTo( "select e from CustomSqlEntity c join c.hqlValues e where c.id = :id" );
+
+					final BasicValue nativeIdentifier = (BasicValue) nativeGeneratedEntity.getIdentifier();
+					assertThat( nativeIdentifier.getCustomIdGeneratorCreator() ).isNotNull();
+				},
+				scope.getRegistry(),
+				CustomSqlEntity.class,
+				HqlLoaderEntity.class,
+				NativeGeneratedEntity.class
 		);
 	}
 
@@ -1326,6 +1414,73 @@ public class AnnotationCoverageBindingTests {
 	public static class OnDeleteTarget {
 		@Id
 		@Column(name = "id")
+		private Integer id;
+	}
+
+	@Entity(name = "CustomSqlEntity")
+	@Table(name = "custom_sql_entities")
+	@SecondaryTable(name = "custom_sql_details")
+	@SQLInsert(sql = "insert into custom_sql_entities (name, id) values (?, ?)")
+	@SQLUpdate(sql = "update custom_sql_entities set name = ? where id = ?")
+	@SQLDelete(sql = "delete from custom_sql_entities where id = ?")
+	@SQLInsert(
+			sql = "insert into custom_sql_details (detail, entity_id) values (?, ?)",
+			table = "custom_sql_details"
+	)
+	@SQLUpdate(
+			sql = "update custom_sql_details set detail = ? where entity_id = ?",
+			table = "custom_sql_details"
+	)
+	@SQLDelete(
+			sql = "delete from custom_sql_details where entity_id = ?",
+			table = "custom_sql_details"
+	)
+	@SQLSelect(sql = "select * from custom_sql_entities where id = ?")
+	@QueryCacheLayout(layout = FULL)
+	public static class CustomSqlEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@Column(name = "name")
+		private String name;
+
+		@Column(name = "detail", table = "custom_sql_details")
+		private String detail;
+
+		@ElementCollection
+		@CollectionTable(name = "custom_sql_values", joinColumns = @JoinColumn(name = "owner_id"))
+		@Column(name = "value")
+		@SQLInsert(sql = "insert into custom_sql_values (owner_id, value) values (?, ?)")
+		@SQLUpdate(sql = "update custom_sql_values set value = ? where owner_id = ? and value = ?")
+		@SQLDelete(sql = "delete from custom_sql_values where owner_id = ? and value = ?")
+		@SQLDeleteAll(sql = "delete from custom_sql_values where owner_id = ?")
+		@SQLSelect(sql = "select value from custom_sql_values where owner_id = ?")
+		@QueryCacheLayout(layout = SHALLOW)
+		private Set<String> values;
+
+		@ElementCollection
+		@CollectionTable(name = "custom_sql_hql_values", joinColumns = @JoinColumn(name = "owner_id"))
+		@Column(name = "value")
+		@HQLSelect(query = "select e from CustomSqlEntity c join c.hqlValues e where c.id = :id")
+		@QueryCacheLayout(layout = SHALLOW_WITH_DISCRIMINATOR)
+		private Set<String> hqlValues;
+	}
+
+	@Entity(name = "HqlLoaderEntity")
+	@Table(name = "hql_loader_entities")
+	@HQLSelect(query = "from HqlLoaderEntity where id = :id")
+	public static class HqlLoaderEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+	}
+
+	@Entity(name = "NativeGeneratedEntity")
+	@Table(name = "native_generated_entities")
+	public static class NativeGeneratedEntity {
+		@Id
+		@NativeGenerator
 		private Integer id;
 	}
 

@@ -38,6 +38,7 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.mapping.BasicValue;
@@ -159,7 +160,7 @@ public class ElementCollectionBindingTests {
 					final Collection collection = (Collection) entityBinding.getProperty( "labels" ).getValue();
 
 					assertThat( collection.isLazy() ).isFalse();
-					assertThat( collection.getFetchMode() ).isEqualTo( org.hibernate.FetchMode.JOIN );
+					assertThat( collection.getFetchStyle() ).isEqualTo( FetchStyle.JOIN );
 					assertThat( collection.getBatchSize() ).isEqualTo( 11 );
 				},
 				scope.getRegistry(),

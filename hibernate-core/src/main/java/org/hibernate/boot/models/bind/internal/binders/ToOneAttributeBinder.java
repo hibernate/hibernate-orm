@@ -25,6 +25,7 @@ import org.hibernate.boot.models.bind.spi.TableReference;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.FetchProfile;
@@ -314,15 +315,23 @@ class ToOneAttributeBinder {
 	private static void applyFetchMode(ToOneSource source, ManyToOne value) {
 		final org.hibernate.annotations.Fetch fetch = source.hibernateFetch();
 		if ( fetch == null ) {
-			value.setFetchMode( value.isLazy() ? org.hibernate.FetchMode.SELECT : org.hibernate.FetchMode.JOIN );
+			value.setFetchStyle( value.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN );
 			return;
 		}
 
-		value.setFetchMode( fetch.value().getHibernateFetchMode() );
+		value.setFetchStyle( fetchStyle( fetch.value() ) );
 		if ( fetch.value() == org.hibernate.annotations.FetchMode.JOIN ) {
 			value.setLazy( false );
 			value.setUnwrapProxy( false );
 		}
+	}
+
+	private static FetchStyle fetchStyle(org.hibernate.annotations.FetchMode fetchMode) {
+		return switch ( fetchMode ) {
+			case JOIN -> FetchStyle.JOIN;
+			case SELECT -> FetchStyle.SELECT;
+			case SUBSELECT -> FetchStyle.SUBSELECT;
+		};
 	}
 
 	private static void applyFetchProfileOverrides(

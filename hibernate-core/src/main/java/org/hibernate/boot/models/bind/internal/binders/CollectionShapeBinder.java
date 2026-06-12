@@ -8,16 +8,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.FetchMode;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
+import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.QueryCacheLayout;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLDeleteAll;
+import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SqlFragmentAlias;
+import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.models.bind.internal.sources.CollectionSource;
 import org.hibernate.boot.models.bind.spi.BindingState;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.CustomSqlMapping;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.List;
 
@@ -37,6 +46,9 @@ class CollectionShapeBinder {
 		applyFetchProfileOverrides( source, collection, bindingState );
 		applyFilters( source, collection, bindingState );
 		applyRestrictions( source, collection );
+		applyCustomSql( source, collection );
+		applyQueryCacheLayout( source, collection );
+		applyCustomLoader( source, collection, bindingState );
 		applyCollectionType( source, collection );
 		switch ( source.classification() ) {
 			case ORDERED_SET, ORDERED_MAP -> applyOrdering( source, collection, bindingState );
@@ -55,13 +67,30 @@ class CollectionShapeBinder {
 		collection.setExtraLazy( false );
 		final var hibernateFetch = source.hibernateFetch();
 		if ( hibernateFetch != null ) {
-			collection.setFetchMode( hibernateFetch.value().getHibernateFetchMode() );
+			applyHibernateFetchStyle( hibernateFetch.value(), collection );
 		}
 		else {
-			collection.setFetchMode( fetchType == FetchType.EAGER ? FetchMode.JOIN : FetchMode.SELECT );
+			collection.setFetchStyle( fetchType == FetchType.EAGER ? FetchStyle.JOIN : FetchStyle.SELECT );
 		}
 		if ( source.batchSize() >= 0 ) {
 			collection.setBatchSize( source.batchSize() );
+		}
+	}
+
+	private static void applyHibernateFetchStyle(
+			org.hibernate.annotations.FetchMode fetchMode,
+			Collection collection) {
+		switch ( fetchMode ) {
+			case JOIN -> {
+				collection.setFetchStyle( FetchStyle.JOIN );
+				collection.setLazy( false );
+			}
+			case SELECT -> collection.setFetchStyle( FetchStyle.SELECT );
+			case SUBSELECT -> {
+				collection.setFetchStyle( FetchStyle.SELECT );
+				collection.setSubselectLoadable( true );
+				collection.getOwner().setSubselectLoadableCollections( true );
+			}
 		}
 	}
 
@@ -192,6 +221,67 @@ class CollectionShapeBinder {
 						+ "' is an association with no join table and may not have a '@SQLJoinTableRestriction'" );
 			}
 			collection.setWhere( joinTableRestriction.value() );
+		}
+	}
+
+	private static void applyCustomSql(CollectionSource source, Collection collection) {
+		final var sqlInsert = source.member().getDirectAnnotationUsage( SQLInsert.class );
+		if ( sqlInsert != null ) {
+			collection.setCustomSqlInsert( customSqlMapping( sqlInsert.sql(), sqlInsert.callable(), sqlInsert.verify() ) );
+		}
+
+		final var sqlUpdate = source.member().getDirectAnnotationUsage( SQLUpdate.class );
+		if ( sqlUpdate != null ) {
+			collection.setCustomSqlUpdate( customSqlMapping( sqlUpdate.sql(), sqlUpdate.callable(), sqlUpdate.verify() ) );
+		}
+
+		final var sqlDelete = source.member().getDirectAnnotationUsage( SQLDelete.class );
+		if ( sqlDelete != null ) {
+			collection.setCustomSqlDelete( customSqlMapping( sqlDelete.sql(), sqlDelete.callable(), sqlDelete.verify() ) );
+		}
+
+		final var sqlDeleteAll = source.member().getDirectAnnotationUsage( SQLDeleteAll.class );
+		if ( sqlDeleteAll != null ) {
+			collection.setCustomSqlDeleteAll( customSqlMapping(
+					sqlDeleteAll.sql(),
+					sqlDeleteAll.callable(),
+					sqlDeleteAll.verify()
+			) );
+		}
+	}
+
+	private static CustomSqlMapping customSqlMapping(
+			String sql,
+			boolean callable,
+			Class<? extends org.hibernate.jdbc.Expectation> expectationClass) {
+		return CustomSqlMapping.customSqlMapping( sql, callable, expectationClass, false );
+	}
+
+	private static void applyQueryCacheLayout(CollectionSource source, Collection collection) {
+		final QueryCacheLayout queryCacheLayout = source.member().getDirectAnnotationUsage( QueryCacheLayout.class );
+		if ( queryCacheLayout != null ) {
+			collection.setQueryCacheLayout( queryCacheLayout.layout() );
+		}
+	}
+
+	private static void applyCustomLoader(CollectionSource source, Collection collection, BindingState bindingState) {
+		final SQLSelect sqlSelect = source.member().getDirectAnnotationUsage( SQLSelect.class );
+		if ( sqlSelect != null ) {
+			final String loaderName = collection.getRole() + "$SQLSelect";
+			collection.setLoaderName( loaderName );
+			QueryBinder.bindNativeQuery(
+					loaderName,
+					sqlSelect,
+					null,
+					bindingState.getMetadataBuildingContext()
+			);
+		}
+
+		final HQLSelect hqlSelect = source.member().getDirectAnnotationUsage( HQLSelect.class );
+		if ( hqlSelect != null ) {
+			final String loaderName = collection.getRole() + "$HQLSelect";
+			collection.setLoaderName( loaderName );
+			QueryBinder.bindQuery( loaderName, hqlSelect, bindingState.getMetadataBuildingContext() );
 		}
 	}
 

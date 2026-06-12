@@ -363,6 +363,16 @@ public record CollectionSource(
 		return member.getDirectAnnotationUsage( SortComparator.class );
 	}
 
+	/// Hibernate base offset declaration for list/array index columns.
+	public org.hibernate.annotations.ListIndexBase listIndexBase() {
+		return member.getDirectAnnotationUsage( org.hibernate.annotations.ListIndexBase.class );
+	}
+
+	/// Hibernate custom collection type declaration.
+	public org.hibernate.annotations.CollectionType collectionType() {
+		return member.getDirectAnnotationUsage( org.hibernate.annotations.CollectionType.class );
+	}
+
 	/// The explicit map-key column source, if one was declared.
 	///
 	/// A missing annotation still represents a meaningful source request for maps:

@@ -4,10 +4,15 @@
  */
 package org.hibernate.boot.models.bind.internal.binders;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hibernate.FetchMode;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.models.bind.internal.sources.CollectionSource;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.List;
 
 import jakarta.persistence.FetchType;
 
@@ -22,11 +27,15 @@ import jakarta.persistence.FetchType;
 class CollectionShapeBinder {
 	static void apply(CollectionSource source, Collection collection, BindingState bindingState) {
 		applyFetching( source, collection );
+		applyCollectionType( source, collection );
 		switch ( source.classification() ) {
 			case ORDERED_SET, ORDERED_MAP -> applyOrdering( source, collection, bindingState );
 			case SORTED_SET, SORTED_MAP -> applySorting( source, collection );
 			default -> {
 			}
+		}
+		if ( collection instanceof List list ) {
+			applyListIndexBase( source, list );
 		}
 	}
 
@@ -60,5 +69,30 @@ class CollectionShapeBinder {
 		if ( sortComparator != null ) {
 			collection.setComparatorClassName( sortComparator.value().getName() );
 		}
+	}
+
+	private static void applyListIndexBase(CollectionSource source, List collection) {
+		final var listIndexBase = source.listIndexBase();
+		if ( listIndexBase != null ) {
+			collection.setBaseIndex( listIndexBase.value() );
+		}
+	}
+
+	private static void applyCollectionType(CollectionSource source, Collection collection) {
+		final var collectionType = source.collectionType();
+		if ( collectionType == null ) {
+			return;
+		}
+
+		collection.setTypeName( collectionType.type().getName() );
+		collection.setTypeParameters( extractParameterMap( collectionType.parameters() ) );
+	}
+
+	private static Map<String, String> extractParameterMap(Parameter[] parameters) {
+		final Map<String, String> result = new HashMap<>();
+		for ( Parameter parameter : parameters ) {
+			result.put( parameter.name(), parameter.value() );
+		}
+		return result;
 	}
 }

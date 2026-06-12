@@ -15,6 +15,7 @@ import java.util.Comparator;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
+import org.hibernate.annotations.Array;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaClass;
@@ -23,6 +24,11 @@ import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionIdMutability;
 import org.hibernate.annotations.CollectionIdType;
+import org.hibernate.annotations.CollectionType;
+import org.hibernate.annotations.ListIndexBase;
+import org.hibernate.annotations.ListIndexJavaType;
+import org.hibernate.annotations.ListIndexJdbcType;
+import org.hibernate.annotations.ListIndexJdbcTypeCode;
 import org.hibernate.annotations.MapKeyCompositeType;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SQLOrder;
@@ -31,6 +37,8 @@ import org.hibernate.annotations.SortNatural;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -38,13 +46,17 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.ValueAccess;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.LongJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.usertype.UserCollectionType;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -207,6 +219,81 @@ public class ElementCollectionBindingTests {
 
 	@Test
 	@ServiceRegistry
+	void testListIndexBaseElementCollection(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ListIndexBaseOwner.class.getName() );
+					final org.hibernate.mapping.List collection = (org.hibernate.mapping.List) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+
+					assertThat( collection.getBaseIndex() ).isEqualTo( 5 );
+				},
+				scope.getRegistry(),
+				ListIndexBaseOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testListIndexJavaTypeElementCollection(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ListIndexJavaTypeOwner.class.getName() );
+					final org.hibernate.mapping.List collection = (org.hibernate.mapping.List) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue index = (BasicValue) collection.getIndex();
+
+					assertThat( index.resolve().getDomainJavaType().getJavaType() ).isEqualTo( Long.class );
+				},
+				scope.getRegistry(),
+				ListIndexJavaTypeOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testListIndexJdbcTypeElementCollection(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ListIndexJdbcTypeOwner.class.getName() );
+					final org.hibernate.mapping.List collection = (org.hibernate.mapping.List) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue index = (BasicValue) collection.getIndex();
+
+					assertThat( index.resolve().getJdbcType().getJdbcTypeCode() ).isEqualTo( Types.INTEGER );
+				},
+				scope.getRegistry(),
+				ListIndexJdbcTypeOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testListIndexJdbcTypeCodeElementCollection(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( ListIndexJdbcTypeCodeOwner.class.getName() );
+					final org.hibernate.mapping.List collection = (org.hibernate.mapping.List) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue index = (BasicValue) collection.getIndex();
+
+					assertThat( index.resolve().getJdbcType().getJdbcTypeCode() ).isEqualTo( Types.SMALLINT );
+				},
+				scope.getRegistry(),
+				ListIndexJdbcTypeCodeOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testImplicitOrderColumnListElementCollection(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -240,6 +327,25 @@ public class ElementCollectionBindingTests {
 				},
 				scope.getRegistry(),
 				BagListOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testCollectionTypeElementCollection(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( CustomCollectionTypeOwner.class.getName() );
+					final Collection collection = (Collection) entityBinding.getProperty( "labels" ).getValue();
+					final CustomCollectionType collectionType = (CustomCollectionType) collection.getCollectionType();
+
+					assertThat( collection.getTypeName() ).isEqualTo( LocalCollectionType.class.getName() );
+					assertThat( collectionType.getUserType() ).isInstanceOf( LocalCollectionType.class );
+					assertThat( ( (LocalCollectionType) collectionType.getUserType() ).strategy ).isEqualTo( "local" );
+				},
+				scope.getRegistry(),
+				CustomCollectionTypeOwner.class
 		);
 	}
 
@@ -437,6 +543,23 @@ public class ElementCollectionBindingTests {
 				},
 				scope.getRegistry(),
 				ArrayOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testSqlArrayLength(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( SqlArrayOwner.class.getName() );
+					final BasicValue tags = (BasicValue) entityBinding.getProperty( "tags" ).getValue();
+					final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) tags.getColumn();
+
+					assertThat( column.getArrayLength() ).isEqualTo( 7 );
+				},
+				scope.getRegistry(),
+				SqlArrayOwner.class
 		);
 	}
 
@@ -1058,6 +1181,70 @@ public class ElementCollectionBindingTests {
 		private List<String> labels;
 	}
 
+	@Entity(name="ListIndexBaseOwner")
+	@Table(name="list_index_base_owners")
+	public static class ListIndexBaseOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "list_index_base_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@OrderColumn(name = "position")
+		@ListIndexBase(5)
+		@Column(name = "label")
+		private List<String> labels;
+	}
+
+	@Entity(name="ListIndexJavaTypeOwner")
+	@Table(name="list_index_java_type_owners")
+	public static class ListIndexJavaTypeOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "list_index_java_type_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@OrderColumn(name = "position")
+		@ListIndexJavaType(LongJavaType.class)
+		@Column(name = "label")
+		private List<String> labels;
+	}
+
+	@Entity(name="ListIndexJdbcTypeOwner")
+	@Table(name="list_index_jdbc_type_owners")
+	public static class ListIndexJdbcTypeOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "list_index_jdbc_type_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@OrderColumn(name = "position")
+		@ListIndexJdbcType(IntegerJdbcType.class)
+		@Column(name = "label")
+		private List<String> labels;
+	}
+
+	@Entity(name="ListIndexJdbcTypeCodeOwner")
+	@Table(name="list_index_jdbc_type_code_owners")
+	public static class ListIndexJdbcTypeCodeOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "list_index_jdbc_type_code_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@OrderColumn(name = "position")
+		@ListIndexJdbcTypeCode(Types.SMALLINT)
+		@Column(name = "label")
+		private List<String> labels;
+	}
+
 	@Entity(name="ImplicitListOwner")
 	@Table(name="implicit_list_owners")
 	public static class ImplicitListOwner {
@@ -1085,6 +1272,88 @@ public class ElementCollectionBindingTests {
 		)
 		@Column(name = "label")
 		private List<String> labels;
+	}
+
+	@Entity(name="CustomCollectionTypeOwner")
+	@Table(name="custom_collection_type_owners")
+	public static class CustomCollectionTypeOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionType(
+				type = LocalCollectionType.class,
+				parameters = @Parameter(name = "strategy", value = "local")
+		)
+		@CollectionTable(
+				name = "custom_collection_type_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@Column(name = "label")
+		private java.util.Collection<String> labels;
+	}
+
+	public static class LocalCollectionType implements UserCollectionType, ParameterizedType {
+		private String strategy;
+
+		@Override
+		public void setParameterValues(Properties parameters) {
+			strategy = parameters.getProperty( "strategy" );
+		}
+
+		@Override
+		public CollectionClassification getClassification() {
+			return CollectionClassification.BAG;
+		}
+
+		@Override
+		public Class<?> getCollectionClass() {
+			return java.util.ArrayList.class;
+		}
+
+		@Override
+		public PersistentCollection<?> instantiate(
+				SharedSessionContractImplementor session,
+				CollectionPersister persister) throws HibernateException {
+			return null;
+		}
+
+		@Override
+		public PersistentCollection<?> wrap(
+				SharedSessionContractImplementor session,
+				Object collection) {
+			return null;
+		}
+
+		@Override
+		public java.util.Iterator<?> getElementsIterator(Object collection) {
+			return java.util.Collections.emptyIterator();
+		}
+
+		@Override
+		public boolean contains(Object collection, Object entity) {
+			return false;
+		}
+
+		@Override
+		public Object indexOf(Object collection, Object entity) {
+			return null;
+		}
+
+		@Override
+		public Object replaceElements(
+				Object original,
+				Object target,
+				CollectionPersister persister,
+				Object owner,
+				java.util.Map copyCache,
+				SharedSessionContractImplementor session) throws HibernateException {
+			return target;
+		}
+
+		@Override
+		public Object instantiate(int anticipatedSize) {
+			return new java.util.ArrayList<>();
+		}
 	}
 
 	@Entity(name="IdBagOwner")
@@ -1286,6 +1555,16 @@ public class ElementCollectionBindingTests {
 		@OrderColumn(name = "position")
 		@Column(name = "label")
 		private String[] labels;
+	}
+
+	@Entity(name="SqlArrayOwner")
+	@Table(name="sql_array_owners")
+	public static class SqlArrayOwner {
+		@Id
+		private Integer id;
+		@Array(length = 7)
+		@Column(name = "tags")
+		private String[] tags;
 	}
 
 	@Entity(name="SqlOrderedSetOwner")

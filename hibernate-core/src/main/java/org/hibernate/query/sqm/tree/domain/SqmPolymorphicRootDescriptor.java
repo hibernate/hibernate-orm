@@ -128,6 +128,11 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 		return true;
 	}
 
+	@Override
+	public boolean hasId() {
+		return false;
+	}
+
 	public Set<EntityDomainType<? extends T>> getImplementors() {
 		return implementors;
 	}

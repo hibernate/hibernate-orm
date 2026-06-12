@@ -112,11 +112,17 @@ public class MetadataResolver {
 			ResolvedMappingSettings mappingSettings,
 			MetadataSources metadataSources,
 			ServiceRegistry serviceRegistry) {
+		final var metadataCustomizations = new MetadataCustomizations(
+				metadataSources.getExtraQueryImports(),
+				null,
+				null,
+				null
+		);
 		final MetadataBuildingContext metadataBuildingContext = createMetadataBuildingContext(
 				serviceRegistry,
 				bootstrapSettings,
 				mappingSettings,
-				MetadataCustomizations.NONE
+				metadataCustomizations
 		);
 		metadataBuildingContext.getBootstrapContext().getTypeConfiguration().scope( metadataBuildingContext );
 		applyTypeContributions( metadataBuildingContext );
@@ -131,7 +137,7 @@ public class MetadataResolver {
 				metadataBuildingContext,
 				mappingSettings,
 				availableResources,
-				MetadataCustomizations.NONE
+				metadataCustomizations
 		);
 	}
 
@@ -142,6 +148,12 @@ public class MetadataResolver {
 			MetadataSources metadataSources,
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions buildingOptions) {
+		final var metadataCustomizations = new MetadataCustomizations(
+				metadataSources.getExtraQueryImports(),
+				null,
+				null,
+				null
+		);
 		final var metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingOptions );
 		final var metadataBuildingContext = new MetadataBuildingContextRootImpl(
 				"orm",
@@ -166,7 +178,7 @@ public class MetadataResolver {
 				metadataBuildingContext,
 				mappingSettings,
 				availableResources,
-				MetadataCustomizations.NONE
+				metadataCustomizations
 		);
 	}
 

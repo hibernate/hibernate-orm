@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import org.hibernate.boot.models.AccessTypePlacementException;
 import org.hibernate.boot.models.categorize.spi.CategorizationContext;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -93,12 +92,10 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 
 		final AccessType attributeAccessType = access.value();
 
-		validateAttributeLevelAccess(
-				memberDetails,
-				attributeAccessType,
-				classDetails,
-				processingContext
-		);
+		if ( ( attributeAccessType == AccessType.FIELD && !memberDetails.isField() )
+				|| ( attributeAccessType == AccessType.PROPERTY && memberDetails.isField() ) ) {
+			return;
+		}
 
 		if ( transiencyChecker.apply( memberDetails ) ) {
 			// the field is @Transient
@@ -106,23 +103,6 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 		}
 
 		memberConsumer.accept( memberDetails.resolveAttributeName(), memberDetails );
-	}
-
-	private void validateAttributeLevelAccess(
-			MemberDetails annotationTarget,
-			AccessType attributeAccessType,
-			ClassDetails classDetails,
-			CategorizationContext processingContext) {
-		// Apply the checks defined in section `2.3.2 Explicit Access Type` of the persistence specification
-
-		// Mainly, it is never legal to:
-		//		1. specify @Access(FIELD) on a getter
-		//		2. specify @Access(PROPERTY) on a field
-
-		if ( ( attributeAccessType == AccessType.FIELD && !annotationTarget.isField() )
-				|| ( attributeAccessType == AccessType.PROPERTY && annotationTarget.isField() ) ) {
-			throw new AccessTypePlacementException( classDetails, annotationTarget );
-		}
 	}
 
 	private void processClassLevelAccess(

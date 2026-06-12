@@ -66,9 +66,7 @@ public class ComponentType extends AbstractType
 	private EmbeddableValuedModelPart mappingModelPart;
 
 	public ComponentType(Component component, int[] originalPropertyOrder) {
-		this( component, originalPropertyOrder,
-				component.getComponentClassName() != null
-						&& !component.getComponentClass().isRecord() );
+		this( component, originalPropertyOrder, !component.isRecord() );
 	}
 
 	public ComponentType(Component component, int[] originalPropertyOrder, boolean mutable) {

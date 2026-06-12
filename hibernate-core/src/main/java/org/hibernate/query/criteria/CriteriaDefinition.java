@@ -453,7 +453,7 @@ public abstract class CriteriaDefinition<R>
 
 	@Override
 	@Nonnull
-	public List<JpaRoot<?>> getRootList() {
+	public List<Root<?>> getRootList() {
 		return query.getRootList();
 	}
 

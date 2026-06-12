@@ -71,6 +71,7 @@ public enum SqmJoinType {
 			case RIGHT -> jakarta.persistence.criteria.JoinType.RIGHT;
 			case LEFT -> jakarta.persistence.criteria.JoinType.LEFT;
 			case INNER -> jakarta.persistence.criteria.JoinType.INNER;
+			case FULL -> jakarta.persistence.criteria.JoinType.FULL;
 			default -> throw new IllegalArgumentException( "Join type has no JPA join type mapping: " + this );
 		};
 	}
@@ -100,6 +101,7 @@ public enum SqmJoinType {
 			case INNER -> INNER;
 			case LEFT -> LEFT;
 			case RIGHT -> RIGHT;
+			case FULL -> FULL;
 		};
 	}
 }

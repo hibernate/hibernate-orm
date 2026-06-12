@@ -221,6 +221,14 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
+	@Nonnull
+	public List<Join<T, ?>> getJoinList() {
+		return joins != null
+				? new ArrayList<>( joins )
+				: new ArrayList<>(1);
+	}
+
+	@Override
 	public boolean hasJoins() {
 		return joins != null && !joins.isEmpty();
 	}

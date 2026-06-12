@@ -9,7 +9,7 @@ package org.hibernate.query.common;
  *
  * @apiNote This enumeration competes with
  *          {@link jakarta.persistence.criteria.JoinType},
- *          adding {@link #FULL} and {@link #CROSS} joins.
+ *          adding the {@link #CROSS} join type.
  *
  * @author Gavin King
  *
@@ -30,6 +30,9 @@ public enum JoinType {
 	 * @see jakarta.persistence.criteria.JoinType#RIGHT
 	 */
 	RIGHT,
+	/**
+	 * @see jakarta.persistence.criteria.JoinType#FULL
+	 */
 	FULL,
 	CROSS
 }

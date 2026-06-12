@@ -47,7 +47,7 @@ public class AntlrBasedSQLFormatterTest {
 		testDMLFixtures();
 	}
 
-	// Utility method to be able to debug a single fixture (uncomment '@Test')
+	// Utility method to be able to debug a single fixture
 	@Test
 	public void testSelectedDmlFixture() {
 		final String id = "";

@@ -53,7 +53,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStatement;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.SequenceGenerator;
@@ -87,10 +89,14 @@ public class GlobalRegistrationBindingTests {
 
 					assertThat( metadataCollector.getNamedHqlQueryMapping( "globalJpaQuery" ).getHqlString() )
 							.isEqualTo( "from GlobalRegistrationEntity" );
+					assertThat( metadataCollector.getNamedHqlQueryMapping( "globalJpaStatement" ).getHqlString() )
+							.isEqualTo( "update GlobalRegistrationEntity set id = id" );
 					assertThat( metadataCollector.getNamedHqlQueryMapping( "globalHibernateQuery" ).getHqlString() )
 							.isEqualTo( "from GlobalRegistrationEntity" );
 					assertThat( metadataCollector.getNamedNativeQueryMapping( "globalNativeQuery" ).getSqlQueryString() )
 							.isEqualTo( "select * from global_registration_entities" );
+					assertThat( metadataCollector.getNamedNativeQueryMapping( "globalNativeStatement" ).getSqlQueryString() )
+							.isEqualTo( "update global_registration_entities set id = id" );
 					assertThat( metadataCollector.getNamedNativeQueryMapping( "globalMappedNativeQuery" ).getResultSetMappingName() )
 							.isEqualTo( "globalIdMapping" );
 					assertThat( metadataCollector.getNamedProcedureCallMapping( "globalProcedure" ).getProcedureName() )
@@ -142,7 +148,9 @@ public class GlobalRegistrationBindingTests {
 	@SequenceGenerator(name = "global_seq", sequenceName = "global_sequence")
 	@TableGenerator(name = "global_table", table = "global_id_table")
 	@NamedQuery(name = "globalJpaQuery", query = "from GlobalRegistrationEntity")
+	@NamedStatement(name = "globalJpaStatement", statement = "update GlobalRegistrationEntity set id = id")
 	@NamedNativeQuery(name = "globalNativeQuery", query = "select * from global_registration_entities")
+	@NamedNativeStatement(name = "globalNativeStatement", statement = "update global_registration_entities set id = id")
 	@NamedNativeQuery(
 			name = "globalMappedNativeQuery",
 			query = "select id as id from global_registration_entities",

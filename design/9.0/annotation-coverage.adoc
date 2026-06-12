@@ -77,9 +77,7 @@ This audit is against the Jakarta Persistence API version used by the build:
 | Next action
 
 | JPA 4.0 consumption audit
-| `@CheckConstraint`, `@EnumeratedValue`, `@Fetch`, `@NamedStatement`,
-`@NamedNativeStatement`, `@EntityListener`, `@ExcludedFromVersioning`,
-`@Discoverable`
+| `@Fetch`
 | Verify descriptor, categorization/source, binding, XML synthesis, and focused
 tests for each annotation.
 
@@ -199,10 +197,10 @@ annotation type in the JPA API jar has a descriptor.
 | `@CheckConstraint`
 | helper on table/column/join annotations
 | yes
-| descriptor/source visibility present; binding consumption needs audit
-| XML/source visibility present
-| needed
-| binding gap
+| table and column binding coverage present
+| XML/source support present
+| focused bind tests exist
+| covered
 
 | `@CollectionTable`
 | member
@@ -293,12 +291,12 @@ annotation type in the JPA API jar has a descriptor.
 | test-only gap
 
 | `@Discoverable`
-| type
+| annotation type
 | yes
-| descriptor present; bootstrap discovery semantics need audit
+| scanner-level support present in `hibernate-scan-jandex`
 | n/a
-| needed
-| categorization gap
+| focused scanner tests exist
+| covered
 
 | `@ElementCollection`
 | member
@@ -343,10 +341,10 @@ annotation type in the JPA API jar has a descriptor.
 | `@EntityListener`
 | listener type
 | yes
-| XML/global listener collection present; annotation use needs audit
+| listener marker visible on resolved listener classes
 | XML/source support present
-| XML tests exist
-| test-only gap
+| focused callback tests exist
+| covered
 
 | `@EntityListeners`
 | type
@@ -383,10 +381,10 @@ annotation type in the JPA API jar has a descriptor.
 | `@EnumeratedValue`
 | enum field
 | yes
-| descriptor present; enum-value binding needs audit
+| enum-value converter binding present
 | n/a
-| needed
-| binding gap
+| focused bind tests exist
+| covered
 
 | `@ExcludeDefaultListeners`
 | type
@@ -407,10 +405,10 @@ annotation type in the JPA API jar has a descriptor.
 | `@ExcludedFromVersioning`
 | member
 | yes
-| descriptor present; optimistic-lock exclusion binding needs audit
+| optimistic-lock exclusion binding present
 | XML/source support needs audit
-| needed
-| binding gap
+| focused bind tests exist
+| covered
 
 | `@Fetch`
 | association/member
@@ -647,17 +645,17 @@ annotation type in the JPA API jar has a descriptor.
 | `@NamedNativeStatement`
 | type
 | yes
-| descriptor/XML collection present; binding to query metadata needs audit
+| named native mutation statement registration and binding present
 | XML/source support present
-| needed
-| binding gap
+| covered by registration tests
+| covered
 
 | `@NamedNativeStatements`
 | type
 | yes
 | repeatable/container
 | XML/source support present
-| verify through `@NamedNativeStatement`
+| verified through `@NamedNativeStatement`
 | not applicable/nested
 
 | `@NamedQuery`
@@ -679,17 +677,17 @@ annotation type in the JPA API jar has a descriptor.
 | `@NamedStatement`
 | type
 | yes
-| descriptor/XML collection present; binding to query metadata needs audit
+| named HQL mutation statement registration and binding present
 | XML/source support present
-| needed
-| binding gap
+| covered by registration tests
+| covered
 
 | `@NamedStatements`
 | type
 | yes
 | repeatable/container
 | XML/source support present
-| verify through `@NamedStatement`
+| verified through `@NamedStatement`
 | not applicable/nested
 
 | `@NamedStoredProcedureQuery`
@@ -2704,10 +2702,7 @@ are verified through the matching singular override.
 1. Add focused tests for JPA and Hibernate annotations currently marked
    `test-only gap`, starting with low-risk table/entity/attribute mapping
    effects that already appear to have source or binder support.
-2. Audit and close JPA 4.0 binding gaps for `@CheckConstraint`,
-   `@EnumeratedValue`, `@Fetch`, `@NamedStatement`,
-   `@NamedNativeStatement`, `@EntityListener`, `@ExcludedFromVersioning`,
-   and `@Discoverable`.
+2. Audit and close the remaining JPA 4.0 binding gap for `@Fetch`.
 3. Decide whether `JpaAnnotations` should register every annotation in the JPA
    API jar.  If so, add descriptors for the injection/bootstrap,
    query-package, static metamodel, and new lifecycle callback annotations

@@ -184,6 +184,9 @@ public class TableBinder {
 				unionBaseTable,
 				bindingState.getMetadataBuildingContext()
 		);
+		applyComment( binding, tableSource );
+		applyOptions( binding, tableSource );
+		applyCheckConstraints( binding, tableSource );
 
 		return new UnionTable( logicalName, superTypeTable, binding, !type.hasSubTypes() );
 	}
@@ -331,6 +334,7 @@ public class TableBinder {
 
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
+		applyCheckConstraints( binding, tableSource );
 
 		return new PhysicalTable(
 				logicalName,
@@ -419,6 +423,7 @@ public class TableBinder {
 
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
+		applyCheckConstraints( binding, tableSource );
 
 		return new PhysicalTable(
 				logicalName,
@@ -546,6 +551,7 @@ public class TableBinder {
 
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
+		applyCheckConstraints( binding, tableSource );
 
 		final Join join = new Join();
 		join.setTable( binding );
@@ -608,6 +614,28 @@ public class TableBinder {
 			if ( StringHelper.isNotEmpty( options ) ) {
 				table.setOptions( options );
 			}
+		}
+	}
+
+	private void applyCheckConstraints(Table table, TableSource tableSource) {
+		if ( tableSource == null ) {
+			return;
+		}
+
+		final jakarta.persistence.CheckConstraint[] checkConstraints = tableSource.checkConstraints();
+		if ( checkConstraints == null ) {
+			return;
+		}
+
+		for ( jakarta.persistence.CheckConstraint checkConstraint : checkConstraints ) {
+			if ( StringHelper.isEmpty( checkConstraint.constraint() ) ) {
+				continue;
+			}
+			table.addCheck( new org.hibernate.mapping.CheckConstraint(
+					StringHelper.nullIfEmpty( checkConstraint.name() ),
+					checkConstraint.constraint(),
+					StringHelper.nullIfEmpty( checkConstraint.options() )
+			) );
 		}
 	}
 

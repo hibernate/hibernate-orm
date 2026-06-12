@@ -40,6 +40,7 @@ import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.binder.TypeBinder;
+import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -56,10 +57,15 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumeratedValue;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.ExcludedFromVersioning;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -89,11 +95,34 @@ public class AnnotationCoverageBindingTests {
 					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
 							.getEntityBinding( CoverageEntity.class.getName() );
 					final BasicValue tenant = (BasicValue) entityBinding.getProperty( "tenant" ).getValue();
+					final BasicValue status = (BasicValue) entityBinding.getProperty( "status" ).getValue();
 					final Component details = (Component) entityBinding.getProperty( "details" ).getValue();
+					final org.hibernate.mapping.Collection codes = context.getMetadataCollector()
+							.getCollectionBinding( CoverageEntity.class.getName() + ".codes" );
 
 					assertThat( entityBinding.getTable().getRowId() ).isEqualTo( "ROWID" );
+					assertThat( entityBinding.getTable().getChecks() )
+							.extracting( org.hibernate.mapping.CheckConstraint::getName )
+							.containsExactly( "ck_coverage_table" );
 					assertThat( tenant.isPartitionKey() ).isTrue();
+					assertThat( entityBinding.getProperty( "tenant" ).isOptimisticLocked() ).isFalse();
+					assertThat( ( (org.hibernate.mapping.Column) tenant.getColumn() ).getCheckConstraints() )
+							.extracting( org.hibernate.mapping.CheckConstraint::getConstraint )
+							.containsExactly( "tenant_id <> ''" );
+					assertThat( status.resolve().getValueConverter() )
+							.isInstanceOf( EnumeratedValueConverter.class );
+					final EnumeratedValueConverter<CoverageStatus, String> statusConverter =
+							(EnumeratedValueConverter<CoverageStatus, String>) status.resolve().getValueConverter();
+					assertThat( statusConverter.toRelationalValue( CoverageStatus.ACTIVE ) )
+							.isEqualTo( "A" );
 					assertThat( details.getParentProperty() ).isEqualTo( "owner" );
+					assertThat( codes.getCollectionTable().getChecks() )
+							.extracting( org.hibernate.mapping.CheckConstraint::getConstraint )
+							.containsExactly( "code is not null" );
+					assertThat( ( (org.hibernate.mapping.Column) ( (BasicValue) codes.getElement() ).getColumn() )
+							.getCheckConstraints() )
+							.extracting( org.hibernate.mapping.CheckConstraint::getName )
+							.containsExactly( "ck_coverage_code_column" );
 				},
 				scope.getRegistry(),
 				CoverageEntity.class
@@ -268,7 +297,10 @@ public class AnnotationCoverageBindingTests {
 	}
 
 	@Entity(name = "CoverageEntity")
-	@Table(name = "coverage_entities")
+	@Table(
+			name = "coverage_entities",
+			check = @CheckConstraint(name = "ck_coverage_table", constraint = "tenant_id is not null")
+	)
 	@RowId("ROWID")
 	public static class CoverageEntity {
 		@Id
@@ -276,11 +308,36 @@ public class AnnotationCoverageBindingTests {
 		private Integer id;
 
 		@PartitionKey
-		@Column(name = "tenant_id")
+		@ExcludedFromVersioning
+		@Column(name = "tenant_id", check = @CheckConstraint(constraint = "tenant_id <> ''"))
 		private String tenant;
 
 		@Embedded
 		private CoverageDetails details;
+
+		@Enumerated(EnumType.STRING)
+		@Column(name = "status_code")
+		private CoverageStatus status;
+
+		@ElementCollection
+		@CollectionTable(
+				name = "coverage_entity_codes",
+				check = @CheckConstraint(name = "ck_coverage_codes", constraint = "code is not null")
+		)
+		@Column(name = "code", check = @CheckConstraint(name = "ck_coverage_code_column", constraint = "length(code) > 0"))
+		private Set<String> codes;
+	}
+
+	public enum CoverageStatus {
+		ACTIVE("A"),
+		INACTIVE("I");
+
+		@EnumeratedValue
+		private final String code;
+
+		CoverageStatus(String code) {
+			this.code = code;
+		}
 	}
 
 	@Embeddable

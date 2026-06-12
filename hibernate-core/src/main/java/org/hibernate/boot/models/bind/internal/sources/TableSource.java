@@ -6,6 +6,7 @@ package org.hibernate.boot.models.bind.internal.sources;
 
 import org.hibernate.internal.util.StringHelper;
 
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.SecondaryTable;
@@ -50,6 +51,8 @@ public interface TableSource {
 
 	String options();
 
+	CheckConstraint[] checkConstraints();
+
 	record JpaTableSource(jakarta.persistence.Table table) implements TableSource {
 		@Override
 		public String name() {
@@ -74,6 +77,11 @@ public interface TableSource {
 		@Override
 		public String options() {
 			return table.options();
+		}
+
+		@Override
+		public CheckConstraint[] checkConstraints() {
+			return table.check();
 		}
 	}
 
@@ -102,6 +110,11 @@ public interface TableSource {
 		public String options() {
 			return joinTable.options();
 		}
+
+		@Override
+		public CheckConstraint[] checkConstraints() {
+			return joinTable.check();
+		}
 	}
 
 	record SecondaryTableSource(SecondaryTable secondaryTable) implements TableSource {
@@ -129,6 +142,11 @@ public interface TableSource {
 		public String options() {
 			return secondaryTable.options();
 		}
+
+		@Override
+		public CheckConstraint[] checkConstraints() {
+			return secondaryTable.check();
+		}
 	}
 
 	record CollectionTableSource(CollectionTable collectionTable) implements TableSource {
@@ -155,6 +173,11 @@ public interface TableSource {
 		@Override
 		public String options() {
 			return collectionTable.options();
+		}
+
+		@Override
+		public CheckConstraint[] checkConstraints() {
+			return collectionTable.check();
 		}
 	}
 }

@@ -80,6 +80,7 @@ public class ColumnBinder {
 		result.setLength( columnSource == null ? lengthByDefault : columnSource.length( lengthByDefault ) );
 		result.setPrecision( columnSource == null ? precisionByDefault : columnSource.precision( precisionByDefault ) );
 		result.setScale( columnSource == null ? scaleByDefault : columnSource.scale( scaleByDefault ) );
+		applyCheckConstraints( result, columnSource );
 		return result;
 	}
 
@@ -95,6 +96,28 @@ public class ColumnBinder {
 	}
 
 	private ColumnBinder() {
+	}
+
+	private static void applyCheckConstraints(Column column, ColumnSource columnSource) {
+		if ( columnSource == null ) {
+			return;
+		}
+
+		final jakarta.persistence.CheckConstraint[] checkConstraints = columnSource.checkConstraints();
+		if ( checkConstraints == null ) {
+			return;
+		}
+
+		for ( jakarta.persistence.CheckConstraint checkConstraint : checkConstraints ) {
+			if ( StringHelper.isEmpty( checkConstraint.constraint() ) ) {
+				continue;
+			}
+			column.addCheckConstraint( new org.hibernate.mapping.CheckConstraint(
+					StringHelper.nullIfEmpty( checkConstraint.name() ),
+					checkConstraint.constraint(),
+					StringHelper.nullIfEmpty( checkConstraint.options() )
+			) );
+		}
 	}
 
 	static DiscriminatorType bindDiscriminatorColumn(

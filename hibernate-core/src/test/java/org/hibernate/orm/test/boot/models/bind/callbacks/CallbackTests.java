@@ -19,6 +19,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.EntityListener;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.buildCategorizedDomainModel;
 import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.checkDomainModel;
@@ -73,6 +75,9 @@ public class CallbackTests {
 
 		final IdentifiableTypeMetadata superMapping = rootMapping.getSuperType();
 		assertThat( superMapping.getHierarchyJpaEventListeners() ).hasSize( 1 );
+		assertThat( superMapping.getHierarchyJpaEventListeners().get( 0 ).getCallbackClass()
+				.getDirectAnnotationUsage( EntityListener.class ) )
+				.isNotNull();
 		final String callbackClassName = superMapping.getHierarchyJpaEventListeners()
 				.get( 0 )
 				.getCallbackClass()

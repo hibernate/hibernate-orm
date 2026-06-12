@@ -30,6 +30,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.Column;
+import jakarta.persistence.ExcludedFromVersioning;
 
 import static org.hibernate.boot.models.AttributeNature.ANY;
 import static org.hibernate.boot.models.AttributeNature.BASIC;
@@ -266,6 +267,10 @@ public class AttributeBinder {
 				property.setOptimisticLocked( false );
 				return;
 			}
+		}
+		if ( member.hasDirectAnnotationUsage( ExcludedFromVersioning.class ) ) {
+			property.setOptimisticLocked( false );
+			return;
 		}
 
 		property.setOptimisticLocked( true );

@@ -90,7 +90,8 @@ class ToOneAttributeBinder {
 				member,
 				ownerType.getClassDetails().getClassName(),
 				attributeMetadata.getName(),
-				null
+				null,
+				bindingContext.getBootstrapContext().getModelsContext()
 		);
 		if ( source.isInverseOneToOne() ) {
 			return bindInverseOneToOne( source, property );
@@ -124,7 +125,13 @@ class ToOneAttributeBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final ToOneSource source = ToOneSource.create( member, ownerClassName, propertyName, associationOverride );
+		final ToOneSource source = ToOneSource.create(
+				member,
+				ownerClassName,
+				propertyName,
+				associationOverride,
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
 		if ( source.isInverseOneToOne() ) {
 			throw new UnsupportedOperationException( "Inverse @OneToOne is not yet implemented" );
 		}
@@ -483,7 +490,7 @@ class ToOneAttributeBinder {
 	static List<JoinColumn> resolveJoinColumns(
 			MemberDetails member,
 			AssociationOverride associationOverride) {
-		return ToOneSource.create( member, "", "", associationOverride ).joinColumns();
+		return ToOneSource.create( member, "", "", associationOverride, null ).joinColumns();
 	}
 
 	private static List<JoinColumn> listJoinColumns(JoinColumn[] joinColumns) {
@@ -539,7 +546,7 @@ class ToOneAttributeBinder {
 	}
 
 	private static FetchType effectiveFetchType(ToOneSource source, BindingOptions bindingOptions) {
-		return source.fetchType() == FetchType.LAZY ? FetchType.LAZY : bindingOptions.getDefaultToOneFetchType();
+		return source.effectiveFetchType( bindingOptions.getDefaultToOneFetchType() );
 	}
 
 	private record TargetEntityBinding(

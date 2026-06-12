@@ -25,12 +25,16 @@ import org.hibernate.boot.models.bind.internal.binders.CascadeBinder;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Fetch;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -135,7 +139,10 @@ public record CollectionSource(
 		CollectionTable collectionTable,
 
 		/// The `@JoinTable` annotation declared on an association-valued plural member.
-		JoinTable joinTable) {
+		JoinTable joinTable,
+
+		/// The models context used to resolve repeatable annotations.
+		ModelsContext modelsContext) {
 	/// Source-level plural mapping nature.
 	public enum Nature {
 		/// A value collection declared with `@ElementCollection`.
@@ -157,7 +164,7 @@ public record CollectionSource(
 	/// That is exactly the sort of logic that becomes easier to reason about if the
 	/// upstream mapping model stores source facts directly instead of asking each binder
 	/// to inspect Java collection classes and annotations independently.
-	public static CollectionSource elementCollection(MemberDetails member) {
+	public static CollectionSource elementCollection(MemberDetails member, ModelsContext modelsContext) {
 		final CollectionClassification classification = determineClassification( member );
 
 		return new CollectionSource(
@@ -169,27 +176,28 @@ public record CollectionSource(
 						? member.getMapKeyType()
 						: null,
 				member.getDirectAnnotationUsage( CollectionTable.class ),
-				null
+				null,
+				modelsContext
 		);
 	}
 
 	/// Creates a collection source for an owning many-to-many association member.
-	public static CollectionSource manyToMany(MemberDetails member) {
-		return association( Nature.MANY_TO_MANY, member );
+	public static CollectionSource manyToMany(MemberDetails member, ModelsContext modelsContext) {
+		return association( Nature.MANY_TO_MANY, member, modelsContext );
 	}
 
 	/// Creates a collection source for an owning one-to-many association member.
-	public static CollectionSource oneToMany(MemberDetails member) {
-		return association( Nature.ONE_TO_MANY, member );
+	public static CollectionSource oneToMany(MemberDetails member, ModelsContext modelsContext) {
+		return association( Nature.ONE_TO_MANY, member, modelsContext );
 	}
 
 	/// Creates a collection source for a heterogeneous many-to-any association member.
-	public static CollectionSource manyToAny(MemberDetails member) {
-		return association( Nature.MANY_TO_ANY, member );
+	public static CollectionSource manyToAny(MemberDetails member, ModelsContext modelsContext) {
+		return association( Nature.MANY_TO_ANY, member, modelsContext );
 	}
 
-	private static CollectionSource association(Nature nature, MemberDetails member) {
-		final CollectionSource source = elementCollection( member );
+	private static CollectionSource association(Nature nature, MemberDetails member, ModelsContext modelsContext) {
+		final CollectionSource source = elementCollection( member, modelsContext );
 		return new CollectionSource(
 				nature,
 				source.classification,
@@ -197,7 +205,8 @@ public record CollectionSource(
 				source.elementType,
 				source.mapKeyType,
 				null,
-				member.getDirectAnnotationUsage( JoinTable.class )
+				member.getDirectAnnotationUsage( JoinTable.class ),
+				modelsContext
 		);
 	}
 
@@ -271,6 +280,10 @@ public record CollectionSource(
 		return member.getDirectAnnotationUsage( ManyToAny.class );
 	}
 
+	private ElementCollection elementCollection() {
+		return member.getDirectAnnotationUsage( ElementCollection.class );
+	}
+
 	/// Aggregates the JPA cascade and mapping defaults for association-valued plural mappings.
 	public EnumSet<CascadeType> cascades(BindingState bindingState) {
 		return switch ( nature ) {
@@ -283,6 +296,38 @@ public record CollectionSource(
 
 	public boolean orphanRemoval() {
 		return nature == Nature.ONE_TO_MANY && oneToMany().orphanRemoval();
+	}
+
+	public FetchType fetchType() {
+		final Fetch fetch = graphlessFetch();
+		if ( fetch != null && fetch.type() != FetchType.DEFAULT ) {
+			return fetch.type();
+		}
+		return switch ( nature ) {
+			case MANY_TO_MANY -> manyToMany().fetch();
+			case ONE_TO_MANY -> oneToMany().fetch();
+			case MANY_TO_ANY -> manyToAny().fetch();
+			case ELEMENT_COLLECTION -> elementCollection().fetch();
+		};
+	}
+
+	public int batchSize() {
+		final Fetch fetch = graphlessFetch();
+		return fetch == null ? -1 : fetch.batchSize();
+	}
+
+	private Fetch graphlessFetch() {
+		if ( modelsContext == null ) {
+			final Fetch fetch = member.getDirectAnnotationUsage( Fetch.class );
+			return fetch != null && fetch.graph().isEmpty() && fetch.subgraph().length == 0 ? fetch : null;
+		}
+		final Fetch[] fetches = member.getRepeatedAnnotationUsages( Fetch.class, modelsContext );
+		for ( Fetch fetch : fetches ) {
+			if ( fetch.graph().isEmpty() && fetch.subgraph().length == 0 ) {
+				return fetch;
+			}
+		}
+		return null;
 	}
 
 	/// Whether the collection element value should be modeled as a component.

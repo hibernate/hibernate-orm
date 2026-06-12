@@ -25,6 +25,8 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Fetch;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -70,6 +72,26 @@ public class ToOneAssociationTests {
 				scope.getRegistry(),
 				Parent.class,
 				ManyToOneOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testJpaFetchOverridesToOneFetchType(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( JpaFetchManyToOneOwner.class.getName() );
+
+					final ManyToOne lazyValue = (ManyToOne) entityBinding.getProperty( "lazyParent" ).getValue();
+					assertThat( lazyValue.isLazy() ).isTrue();
+
+					final ManyToOne eagerValue = (ManyToOne) entityBinding.getProperty( "eagerParent" ).getValue();
+					assertThat( eagerValue.isLazy() ).isFalse();
+				},
+				scope.getRegistry(),
+				Parent.class,
+				JpaFetchManyToOneOwner.class
 		);
 	}
 
@@ -1248,6 +1270,19 @@ public class ToOneAssociationTests {
 		private Integer id;
 		@jakarta.persistence.ManyToOne
 		private Parent parent;
+	}
+
+	@Entity(name="JpaFetchManyToOneOwner")
+	@Table(name="jpa_fetch_many_to_one_owners")
+	public static class JpaFetchManyToOneOwner {
+		@Id
+		private Integer id;
+		@jakarta.persistence.ManyToOne(fetch = FetchType.EAGER)
+		@Fetch(type = FetchType.LAZY)
+		private Parent lazyParent;
+		@jakarta.persistence.ManyToOne(fetch = FetchType.LAZY)
+		@Fetch(type = FetchType.EAGER)
+		private Parent eagerParent;
 	}
 
 	@Entity(name="CascadeManyToOneOwner")

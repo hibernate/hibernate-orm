@@ -22,6 +22,8 @@ import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
+import org.hibernate.boot.model.NamedGraphCreator;
+import org.hibernate.boot.model.internal.NamedGraphCreators;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConfigurationParameterImpl;
@@ -704,37 +706,50 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 
 	public void collectNamedEntityGraphRegistrations(ClassDetails classDetails) {
 		for ( NamedEntityGraph usage : classDetails.getRepeatedAnnotationUsages( NamedEntityGraph.class, modelsContext ) ) {
-			collectNamedEntityGraphRegistration( graphName( classDetails, usage ), jpaEntityName( classDetails ), usage );
+			final String jpaEntityName = jpaEntityName( classDetails );
+			collectNamedEntityGraphRegistration(
+					graphName( classDetails, usage ),
+					jpaEntityName,
+					NamedEntityGraphDefinition.Source.JPA,
+					NamedGraphCreators.jpa( usage, jpaEntityName, modelsContext )
+			);
 		}
 		for ( org.hibernate.annotations.NamedEntityGraph usage : classDetails.getRepeatedAnnotationUsages(
 				org.hibernate.annotations.NamedEntityGraph.class,
 				modelsContext
 		) ) {
-			collectNamedEntityGraphRegistration( usage.name(), null, usage );
+			final String jpaEntityName = jpaEntityName( classDetails );
+			collectNamedEntityGraphRegistration(
+					graphName( jpaEntityName, usage ),
+					jpaEntityName,
+					NamedEntityGraphDefinition.Source.PARSED,
+					NamedGraphCreators.parsed( classDetails.toJavaClass(), usage )
+			);
 		}
 	}
 
 	private void collectNamedEntityGraphRegistration(
 			String name,
 			String entityName,
-			Annotation configuration) {
+			NamedEntityGraphDefinition.Source source,
+			NamedGraphCreator graphCreator) {
 		if ( namedEntityGraphRegistrations == null ) {
 			namedEntityGraphRegistrations = new HashMap<>();
 		}
 		namedEntityGraphRegistrations.put( name, new NamedEntityGraphDefinition(
 				name,
 				entityName,
-				configuration instanceof NamedEntityGraph ? NamedEntityGraphDefinition.Source.JPA : NamedEntityGraphDefinition.Source.PARSED,
-				(entityDomainClassResolver, entityDomainNameResolver, serviceRegistry) -> {
-					throw new UnsupportedOperationException(
-							"Named entity graph creation is deferred to ORM runtime integration - " + name
-					);
-				}
+				source,
+				graphCreator
 		) );
 	}
 
 	private static String graphName(ClassDetails classDetails, NamedEntityGraph graph) {
 		return isNotEmpty( graph.name() ) ? graph.name() : jpaEntityName( classDetails );
+	}
+
+	private static String graphName(String jpaEntityName, org.hibernate.annotations.NamedEntityGraph graph) {
+		return isNotEmpty( graph.name() ) ? graph.name() : jpaEntityName;
 	}
 
 	private static String jpaEntityName(ClassDetails classDetails) {

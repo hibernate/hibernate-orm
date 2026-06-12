@@ -78,7 +78,10 @@ class ElementCollectionAttributeBinder {
 	}
 
 	Collection bind(Property property) {
-		final CollectionSource source = CollectionSource.elementCollection( attributeMetadata.getMember() );
+		final CollectionSource source = CollectionSource.elementCollection(
+				attributeMetadata.getMember(),
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
 		final CollectionTable collectionTable = source.collectionTable();
 		final Table table = bindCollectionTable( collectionTable );
 		final Collection collection = createCollection( source );

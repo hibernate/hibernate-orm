@@ -71,7 +71,10 @@ class PluralAssociationAttributeBinder {
 	}
 
 	Collection bindManyToMany(Property property) {
-		final CollectionSource source = CollectionSource.manyToMany( attributeMetadata.getMember() );
+		final CollectionSource source = CollectionSource.manyToMany(
+				attributeMetadata.getMember(),
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
 		final ManyToMany manyToMany = source.manyToMany();
 		if ( manyToMany != null && StringHelper.isNotEmpty( manyToMany.mappedBy() ) ) {
 			return bindInverseManyToMany( source, manyToMany.mappedBy(), property );
@@ -80,7 +83,10 @@ class PluralAssociationAttributeBinder {
 	}
 
 	Collection bindOneToMany(Property property) {
-		final CollectionSource source = CollectionSource.oneToMany( attributeMetadata.getMember() );
+		final CollectionSource source = CollectionSource.oneToMany(
+				attributeMetadata.getMember(),
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
 		final OneToMany oneToMany = source.oneToMany();
 		if ( oneToMany != null && StringHelper.isNotEmpty( oneToMany.mappedBy() ) ) {
 			return bindInverseOneToMany( source, oneToMany.mappedBy(), property );
@@ -89,7 +95,10 @@ class PluralAssociationAttributeBinder {
 	}
 
 	Collection bindManyToAny(Property property) {
-		final CollectionSource source = CollectionSource.manyToAny( attributeMetadata.getMember() );
+		final CollectionSource source = CollectionSource.manyToAny(
+				attributeMetadata.getMember(),
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
 		return bindManyToAny( source, property );
 	}
 

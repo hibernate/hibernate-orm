@@ -4,9 +4,12 @@
  */
 package org.hibernate.boot.models.bind.internal.binders;
 
+import org.hibernate.FetchMode;
 import org.hibernate.boot.models.bind.internal.sources.CollectionSource;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.mapping.Collection;
+
+import jakarta.persistence.FetchType;
 
 /// Applies collection-shape metadata after the concrete collection mapping exists.
 ///
@@ -18,11 +21,22 @@ import org.hibernate.mapping.Collection;
 /// @author Steve Ebersole
 class CollectionShapeBinder {
 	static void apply(CollectionSource source, Collection collection, BindingState bindingState) {
+		applyFetching( source, collection );
 		switch ( source.classification() ) {
 			case ORDERED_SET, ORDERED_MAP -> applyOrdering( source, collection, bindingState );
 			case SORTED_SET, SORTED_MAP -> applySorting( source, collection );
 			default -> {
 			}
+		}
+	}
+
+	private static void applyFetching(CollectionSource source, Collection collection) {
+		final FetchType fetchType = source.fetchType();
+		collection.setLazy( fetchType == FetchType.LAZY );
+		collection.setExtraLazy( false );
+		collection.setFetchMode( fetchType == FetchType.EAGER ? FetchMode.JOIN : FetchMode.SELECT );
+		if ( source.batchSize() >= 0 ) {
+			collection.setBatchSize( source.batchSize() );
 		}
 	}
 

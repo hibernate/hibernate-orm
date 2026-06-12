@@ -283,7 +283,8 @@ public class ComponentBinder {
 				member,
 				componentType.getClassName(),
 				attributeName,
-				associationOverride
+				associationOverride,
+				context.getBootstrapContext().getModelsContext()
 		);
 		if ( source.isInverseOneToOne() ) {
 			throw new UnsupportedOperationException(
@@ -370,7 +371,7 @@ public class ComponentBinder {
 	}
 
 	private FetchType effectiveFetchType(ToOneSource source) {
-		return source.fetchType() == FetchType.LAZY ? FetchType.LAZY : options.getDefaultToOneFetchType();
+		return source.effectiveFetchType( options.getDefaultToOneFetchType() );
 	}
 
 	private Property createProperty(String name, org.hibernate.mapping.Value value, MemberDetails member) {

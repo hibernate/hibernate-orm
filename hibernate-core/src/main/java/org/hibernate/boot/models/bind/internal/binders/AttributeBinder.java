@@ -332,6 +332,13 @@ public class AttributeBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			@SuppressWarnings("unused") BindingContext bindingContext) {
+		final var formulaAnn = member.getDirectAnnotationUsage( org.hibernate.annotations.Formula.class );
+		if ( formulaAnn != null ) {
+			basicValue.setTable( primaryTable );
+			basicValue.addFormula( new org.hibernate.mapping.Formula( formulaAnn.value() ) );
+			return null;
+		}
+
 		// todo : implicit column
 		final var columnAnn = member.getDirectAnnotationUsage( Column.class );
 		final var column = ColumnBinder.bindColumn( ColumnSource.from( columnAnn ), property::getName );

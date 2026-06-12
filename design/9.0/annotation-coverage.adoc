@@ -1009,9 +1009,11 @@ Dialect overrides remain tracked in the dialect-override slice.
 | `@Fetch`, `@FetchProfileOverride`, `@Filter`, `@FilterJoinTable`,
 `@Formula`, `@JoinColumnOrFormula`, `@JoinFormula`, `@NotFound`,
 `@PropertyRef`, `@SQLJoinTableRestriction`, `@SQLOrder`, `@SQLRestriction`
-| Mostly test-only, except `@FetchProfileOverride` needs categorization/source
-audit.  Add focused association/collection tests for observable join, formula,
-filter, restriction, ordering, and fetch behavior.
+| Covered for annotation binding.  Focused bind tests cover Hibernate fetch
+modes, member-level fetch-profile overrides, entity and collection filters,
+join-table filters, basic formulas, join formulas, not-found handling,
+property refs, SQL restrictions, join-table restrictions, and SQL ordering.
+Dialect overrides remain tracked in the dialect-override slice.
 
 | Global registrations and named objects
 | `@CollectionTypeRegistration`, `@CompositeTypeRegistration`,
@@ -1612,20 +1614,20 @@ observed support from work still needing binder/test confirmation.
 | `@Fetch`
 | `METHOD`, `FIELD`
 | yes
-| association fetch support appears present
-| not audited yet
+| to-one and collection binding applies Hibernate fetch modes
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind tests
+| covered
 
 | `@FetchProfile`
 | `TYPE`, `PACKAGE`
 | yes
 | global registration present
-| not audited yet
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind tests
+| covered
 
 | `@FetchProfile.FetchOverride`
 | `TYPE`, `PACKAGE`
@@ -1639,11 +1641,11 @@ observed support from work still needing binder/test confirmation.
 | `@FetchProfileOverride`
 | `METHOD`, `FIELD`
 | yes
-| dialect-specific fetch-profile override source needs audit
-| not audited yet
+| to-one and collection binding contribute member overrides to named fetch profiles
 | n/a
-| needed
-| categorization gap
+| n/a
+| focused bind tests
+| covered
 
 | `@FetchProfileOverrides`
 | `METHOD`, `FIELD`
@@ -1666,11 +1668,11 @@ observed support from work still needing binder/test confirmation.
 | `@Filter`
 | `TYPE`, `METHOD`, `FIELD`
 | yes
-| filter binding appears present
-| not audited yet
+| entity and collection binding apply named filters
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind tests
+| covered
 
 | `@FilterDef`
 | `TYPE`, `PACKAGE`
@@ -1693,11 +1695,11 @@ observed support from work still needing binder/test confirmation.
 | `@FilterJoinTable`
 | `TYPE`, `METHOD`, `FIELD`
 | yes
-| join-table filter support appears present
-| not audited yet
+| collection binding applies join-table filters
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind tests
+| covered
 
 | `@FilterJoinTables`
 | `TYPE`, `METHOD`, `FIELD`
@@ -1720,11 +1722,11 @@ observed support from work still needing binder/test confirmation.
 | `@Formula`
 | `METHOD`, `FIELD`
 | yes
-| formula binding appears present
-| not audited yet
+| basic-value binding applies formula selectables
+| n/a
 | base override family
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@FractionalSeconds`
 | `METHOD`, `FIELD`
@@ -1873,11 +1875,11 @@ observed support from work still needing binder/test confirmation.
 | `@JoinColumnOrFormula`
 | `METHOD`, `FIELD`
 | yes
-| join-column/formula source appears present
-| not audited yet
+| to-one binding consumes formula-valued join sources
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind tests
+| covered
 
 | `@JoinColumnsOrFormulas`
 | `METHOD`, `FIELD`
@@ -1891,11 +1893,11 @@ observed support from work still needing binder/test confirmation.
 | `@JoinFormula`
 | `METHOD`, `FIELD`
 | yes
-| join-formula source appears present
-| not audited yet
+| to-one binding consumes direct and nested join formulas
+| n/a
 | base override family
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@LazyGroup`
 | `METHOD`, `FIELD`
@@ -2116,11 +2118,11 @@ observed support from work still needing binder/test confirmation.
 | `@NotFound`
 | `METHOD`, `FIELD`
 | yes
-| association support appears present
-| not audited yet
+| to-one binding applies not-found action
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind tests
+| covered
 
 | `@OnDelete`
 | `METHOD`, `FIELD`, `TYPE`
@@ -2188,11 +2190,11 @@ observed support from work still needing binder/test confirmation.
 | `@PropertyRef`
 | `FIELD`, `METHOD`, `ANNOTATION_TYPE`
 | yes
-| association support appears present
+| to-one binding applies explicit referenced property
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@QueryCacheLayout`
 | `TYPE`, `FIELD`, `METHOD`
@@ -2499,29 +2501,29 @@ observed support from work still needing binder/test confirmation.
 | `@SQLJoinTableRestriction`
 | `METHOD`, `FIELD`
 | yes
-| join-table restriction support appears present
-| not audited yet
+| collection binding applies join-table restriction
 | n/a
-| needed
-| test-only gap
+| n/a
+| focused bind tests
+| covered
 
 | `@SQLOrder`
 | `METHOD`, `FIELD`
 | yes
-| collection ordering support appears present
-| not audited yet
+| collection binding applies SQL order fragment
+| n/a
 | base override family
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@SQLRestriction`
 | `TYPE`, `METHOD`, `FIELD`
 | yes
-| restriction support appears present
-| not audited yet
+| entity and collection binding apply SQL restrictions
+| n/a
 | base override family
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@SQLSelect`
 | `TYPE`, `FIELD`, `METHOD`

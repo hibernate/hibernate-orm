@@ -18,6 +18,7 @@ import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.NaturalIdClass;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.SqlFragmentAlias;
@@ -232,11 +233,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		final ClassDetails classDetails = getManagedType().getClassDetails();
 		processRowManagement( getManagedType(), getTypeBinding() );
 		processConcreteProxy( classDetails, getTypeBinding() );
-		processNaturalIdClass( classDetails, getTypeBinding(), getBindingContext() );
-		processCaching( classDetails, getBindingState(), getBindingContext() );
-		processFilters( classDetails, getBindingState(), getBindingContext() );
-		processJpaEventListeners( getManagedType(), getBindingState(), getBindingContext() );
-	}
+			processNaturalIdClass( classDetails, getTypeBinding(), getBindingContext() );
+			processCaching( classDetails, getBindingState(), getBindingContext() );
+			processSqlRestriction( classDetails );
+			processFilters( classDetails, getBindingState(), getBindingContext() );
+			processJpaEventListeners( getManagedType(), getBindingState(), getBindingContext() );
+		}
 
 	/// Bind the root identifier and retain its local binding state.
 	///
@@ -1051,6 +1053,21 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 		final boolean cacheable = cacheableAnn.value();
 		binding.setCached( cacheable );
+	}
+
+	private void processSqlRestriction(ClassDetails classDetails) {
+		final SQLRestriction restriction = classDetails.getDirectAnnotationUsage( SQLRestriction.class );
+		if ( restriction == null ) {
+			return;
+		}
+
+		if ( !( binding instanceof RootClass rootClass ) ) {
+			throw new AnnotationException( "Entity class '" + classDetails.getName()
+					+ "' specifies an '@SQLRestriction' but it is a subclass in an entity inheritance hierarchy"
+					+ " (only a root class may specify a restriction)" );
+		}
+
+		rootClass.setWhere( restriction.value() );
 	}
 
 	private void processFilters(ClassDetails classDetails, BindingState state, BindingContext context) {

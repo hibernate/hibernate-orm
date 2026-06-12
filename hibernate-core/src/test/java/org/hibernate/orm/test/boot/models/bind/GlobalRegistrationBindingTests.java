@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -45,12 +46,15 @@ import org.hibernate.usertype.UserType;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
+import jakarta.persistence.Fetch;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.FieldResult;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -142,6 +146,7 @@ public class GlobalRegistrationBindingTests {
 					assertThat( entityGraph.source() ).isEqualTo( NamedEntityGraphDefinition.Source.JPA );
 					assertThat( entityGraph.graphCreator() ).isNotNull();
 					assertThat( entityGraph.graphCreator().getClass().getSimpleName() ).isEqualTo( "NamedGraphCreatorJpa" );
+					verifyJpaFetchGraphContribution( entityGraph );
 					final var parsedEntityGraph = metadataCollector.getNamedEntityGraph( "globalParsedGraph" );
 					assertThat( parsedEntityGraph.entityName() ).isEqualTo( "GlobalRegistrationEntity" );
 					assertThat( parsedEntityGraph.source() ).isEqualTo( NamedEntityGraphDefinition.Source.PARSED );
@@ -213,6 +218,34 @@ public class GlobalRegistrationBindingTests {
 				assertThat( columnResult.type() ).isEqualTo( Integer.class );
 			} );
 		} );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static void verifyJpaFetchGraphContribution(NamedEntityGraphDefinition entityGraph) {
+		final List<?> fetchContributions = readField( entityGraph.graphCreator(), "fetchContributions" );
+		assertThat( fetchContributions ).singleElement().satisfies( (contribution) -> {
+			assertThat( (String) readField( contribution, "graphName" ) ).isEqualTo( "globalGraph" );
+			assertThat( (String) readField( contribution, "attributeName" ) ).isEqualTo( "parent" );
+			assertThat( (String[]) readField( contribution, "subgraphNames" ) ).isEmpty();
+			assertThat( (List<Object>) readField( contribution, "options" ) )
+					.contains(
+							FetchType.EAGER,
+							CacheStoreMode.BYPASS,
+							new jakarta.persistence.BatchSize( 5 )
+					);
+		} );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> T readField(Object target, String fieldName) {
+		try {
+			final var field = target.getClass().getDeclaredField( fieldName );
+			field.setAccessible( true );
+			return (T) field.get( target );
+		}
+		catch (IllegalAccessException | NoSuchFieldException e) {
+			throw new AssertionError( e );
+		}
 	}
 
 	@Entity(name = "GlobalRegistrationEntity")
@@ -296,6 +329,7 @@ public class GlobalRegistrationBindingTests {
 		private Integer id;
 		@ManyToOne
 		@JoinColumn(name = "parent_id")
+		@Fetch(graph = "globalGraph", type = FetchType.EAGER, batchSize = 5, cacheStoreMode = CacheStoreMode.BYPASS)
 		private GlobalRegistrationEntity parent;
 	}
 

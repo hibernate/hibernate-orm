@@ -40,6 +40,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
@@ -157,6 +158,28 @@ public class ToOneAssociationTests {
 				scope.getRegistry(),
 				Parent.class,
 				OneToOneOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testOwningOneToOnePrimaryKeyJoinColumn(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( PrimaryKeyJoinColumnOneToOneOwner.class.getName() );
+					final ManyToOne value = (ManyToOne) entityBinding.getProperty( "parent" ).getValue();
+
+					assertThat( value.isLogicalOneToOne() ).isTrue();
+					assertThat( value.isReferenceToPrimaryKey() ).isTrue();
+					assertThat( value.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "parent_pk" );
+					assertThat( entityBinding.getTable().getForeignKeyCollection() ).hasSize( 1 );
+				},
+				scope.getRegistry(),
+				Parent.class,
+				PrimaryKeyJoinColumnOneToOneOwner.class
 		);
 	}
 
@@ -1312,6 +1335,16 @@ public class ToOneAssociationTests {
 		private Integer id;
 		@OneToOne(optional = false)
 		@JoinColumn(name = "parent_fk")
+		private Parent parent;
+	}
+
+	@Entity(name="PrimaryKeyJoinColumnOneToOneOwner")
+	@Table(name="primary_key_join_column_one_to_one_owners")
+	public static class PrimaryKeyJoinColumnOneToOneOwner {
+		@Id
+		private Integer id;
+		@OneToOne(optional = false)
+		@PrimaryKeyJoinColumn(name = "parent_pk", referencedColumnName = "id")
 		private Parent parent;
 	}
 

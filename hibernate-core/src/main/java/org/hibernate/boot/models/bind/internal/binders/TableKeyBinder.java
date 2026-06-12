@@ -4,6 +4,11 @@
  */
 package org.hibernate.boot.models.bind.internal.binders;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
@@ -18,6 +23,10 @@ import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.models.ModelsException;
+
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumns;
 
 /// Binds table keys that depend on an already-bound entity hierarchy identifier.
 ///
@@ -60,7 +69,11 @@ public class TableKeyBinder {
 
 	private void bindJoinedSubclassKey(JoinedSubclass joinedSubclass) {
 		final IdentifierBinding rootIdentifierBinding = resolveIdentifierBinding();
-		final DependantValue key = createDependentKeyValue( joinedSubclass.getTable(), rootIdentifierBinding );
+		final DependantValue key = createDependentKeyValue(
+				joinedSubclass.getTable(),
+				rootIdentifierBinding,
+				primaryKeyJoinColumns()
+		);
 		joinedSubclass.setKey( key );
 		createPrimaryKey( joinedSubclass.getTable(), key );
 		bindingState.addTableForeignKeyBinding( new TableForeignKeyBinding(
@@ -181,6 +194,13 @@ public class TableKeyBinder {
 	}
 
 	private DependantValue createDependentKeyValue(Table table, IdentifierBinding identifierBinding) {
+		return createDependentKeyValue( table, identifierBinding, List.of() );
+	}
+
+	private DependantValue createDependentKeyValue(
+			Table table,
+			IdentifierBinding identifierBinding,
+			List<JoinColumn> joinColumns) {
 		final DependantValue key = new DependantValue(
 				bindingState.getMetadataBuildingContext(),
 				table,
@@ -188,10 +208,51 @@ public class TableKeyBinder {
 		);
 		key.setNullable( false );
 		key.setUpdateable( false );
-		for ( Column identifierColumn : identifierBinding.columns() ) {
-			key.addColumn( copyKeyColumn( identifierColumn ), true, false );
+		final var orderedJoinColumns = ToOneAttributeBinder.orderJoinColumns(
+				joinColumns,
+				identifierBinding.columns(),
+				entityBinder.getManagedType().getClassDetails().getClassName(),
+				table.getName()
+		);
+		for ( int i = 0; i < identifierBinding.columns().size(); i++ ) {
+			final Column identifierColumn = identifierBinding.columns().get( i );
+			key.addColumn(
+					orderedJoinColumns.isEmpty()
+							? copyKeyColumn( identifierColumn )
+							: bindKeyColumn( table, identifierColumn, orderedJoinColumns.get( i ) ),
+					true,
+					false
+			);
 		}
 		return key;
+	}
+
+	private List<JoinColumn> primaryKeyJoinColumns() {
+		final var classDetails = entityBinder.getManagedType().getClassDetails();
+		final var primaryKeyJoinColumns = classDetails.getDirectAnnotationUsage( PrimaryKeyJoinColumns.class );
+		if ( primaryKeyJoinColumns != null ) {
+			return primaryKeyJoinColumns( primaryKeyJoinColumns.value() );
+		}
+
+		final PrimaryKeyJoinColumn[] repeatableColumns = classDetails.getRepeatedAnnotationUsages(
+				PrimaryKeyJoinColumn.class,
+				entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+		);
+		return primaryKeyJoinColumns( repeatableColumns );
+	}
+
+	private List<JoinColumn> primaryKeyJoinColumns(PrimaryKeyJoinColumn[] primaryKeyJoinColumns) {
+		if ( primaryKeyJoinColumns.length == 0 ) {
+			return List.of();
+		}
+		final var result = new ArrayList<JoinColumn>( primaryKeyJoinColumns.length );
+		Arrays.stream( primaryKeyJoinColumns ).forEach( (primaryKeyJoinColumn) -> result.add(
+				JoinColumnJpaAnnotation.toJoinColumn(
+						primaryKeyJoinColumn,
+						entityBinder.getBindingContext().getBootstrapContext().getModelsContext()
+				)
+		) );
+		return result;
 	}
 
 	private DependantValue createDependentKeyValue(

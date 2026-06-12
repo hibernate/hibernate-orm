@@ -64,9 +64,8 @@ This audit is against the Jakarta Persistence API version used by the build:
 * The core mapping vocabulary has focused mapping-state assertions for the
   basic table, column, discriminator, identifier, secondary-table, LOB,
   inheritance, version, access, and cacheability surface.
-* The most important JPA 4.0 follow-up is to verify whether the new 4.0
-  annotations are fully consumed by categorization/binding, not merely visible
-  through descriptors or XML synthesis.
+* The JPA modeling annotations in scope for the boot-model pipeline have
+  descriptor/source support and focused categorization/binding coverage.
 
 == JPA Priority Buckets
 
@@ -79,9 +78,8 @@ This audit is against the Jakarta Persistence API version used by the build:
 | JPA 4.0 consumption audit
 | `@Fetch`
 | Covered for graphless static mapping metadata: to-one and collection fetch
-type are bound, and collection batch size is bound.  Graph/subgraph
-contribution remains a follow-up to collect and pass into named entity graph
-creation.
+type are bound, collection batch size is bound, and graph/subgraph
+contributions are collected and passed into JPA named entity graph creation.
 
 | JPA jar descriptor gaps
 | `@PreInsert`, `@PostInsert`, `@PreDelete`, `@PostDelete`, `@PreMerge`,
@@ -417,7 +415,7 @@ annotation type in the JPA API jar has a descriptor.
 | association/member
 | yes
 | graphless static mapping support present for to-one and collection fetch type;
-collection batch size binding present; graph/subgraph contribution needs to be
+collection batch size binding present; graph/subgraph contributions are
 collected and passed to the JPA named graph creator
 | XML/source support present
 | focused bind tests exist
@@ -810,10 +808,10 @@ collected and passed to the JPA named graph creator
 | `@PrimaryKeyJoinColumn`
 | type/member
 | yes
-| primary-key join binding appears present
+| primary-key join binding present for joined-subclass keys and owning to-one associations
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@PrimaryKeyJoinColumns`
 | type/member
@@ -924,8 +922,8 @@ collected and passed to the JPA named graph creator
 | yes
 | persistent attribute exclusion present
 | XML/source support present
-| focused assertions needed
-| test-only gap
+| focused bind tests exist
+| covered
 
 | `@UniqueConstraint`
 | table helper
@@ -2707,11 +2705,9 @@ are verified through the matching singular override.
 1. Add focused tests for JPA and Hibernate annotations currently marked
    `test-only gap`, starting with low-risk table/entity/attribute mapping
    effects that already appear to have source or binder support.
-2. Collect JPA `@Fetch(graph=...)` contributions and pass them into the JPA
-   named graph creator.
-3. Implement the remaining Hibernate low-risk binding gaps in small groups:
+2. Implement the remaining Hibernate low-risk binding gaps in small groups:
    native generators, query cache layout, and custom loaders.
-4. Add a single new-pipeline dialect override resolution point and convert
+3. Add a single new-pipeline dialect override resolution point and convert
    direct annotation lookups for override-capable annotations to use it.
 5. Revisit audit/changelog descriptors and binding once state-management support
    has a dedicated design slice.

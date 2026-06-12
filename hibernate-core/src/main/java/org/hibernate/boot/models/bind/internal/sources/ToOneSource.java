@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.hibernate.boot.models.bind.internal.binders.CascadeBinder;
+import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.internal.util.StringHelper;
@@ -25,6 +26,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumns;
 
 /// Source-model facts for an owning to-one association value.
 ///
@@ -237,7 +240,19 @@ public record ToOneSource(
 		}
 
 		final JoinColumn joinColumnAnn = member.getDirectAnnotationUsage( JoinColumn.class );
-		return joinColumnAnn == null ? List.of() : List.of( joinColumnAnn );
+		if ( joinColumnAnn != null ) {
+			return List.of( joinColumnAnn );
+		}
+
+		final PrimaryKeyJoinColumns primaryKeyJoinColumnsAnn = member.getDirectAnnotationUsage( PrimaryKeyJoinColumns.class );
+		if ( primaryKeyJoinColumnsAnn != null ) {
+			return listPrimaryKeyJoinColumns( primaryKeyJoinColumnsAnn.value() );
+		}
+
+		final PrimaryKeyJoinColumn primaryKeyJoinColumnAnn = member.getDirectAnnotationUsage( PrimaryKeyJoinColumn.class );
+		return primaryKeyJoinColumnAnn == null
+				? List.of()
+				: List.of( JoinColumnJpaAnnotation.toJoinColumn( primaryKeyJoinColumnAnn, modelsContext ) );
 	}
 
 	/// Whether a join table annotation carries any meaningful source information.
@@ -255,6 +270,17 @@ public record ToOneSource(
 		}
 		final ArrayList<JoinColumn> result = new ArrayList<>( joinColumns.length );
 		result.addAll( Arrays.asList( joinColumns ) );
+		return result;
+	}
+
+	private List<JoinColumn> listPrimaryKeyJoinColumns(PrimaryKeyJoinColumn[] joinColumns) {
+		if ( joinColumns.length == 0 ) {
+			return List.of();
+		}
+		final ArrayList<JoinColumn> result = new ArrayList<>( joinColumns.length );
+		for ( PrimaryKeyJoinColumn joinColumn : joinColumns ) {
+			result.add( JoinColumnJpaAnnotation.toJoinColumn( joinColumn, modelsContext ) );
+		}
 		return result;
 	}
 }

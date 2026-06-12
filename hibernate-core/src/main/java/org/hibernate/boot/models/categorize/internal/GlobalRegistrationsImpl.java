@@ -711,7 +711,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 					graphName( classDetails, usage ),
 					jpaEntityName,
 					NamedEntityGraphDefinition.Source.JPA,
-					NamedGraphCreators.jpa( usage, jpaEntityName, modelsContext )
+					NamedGraphCreators.jpa( usage, jpaEntityName, classDetails, modelsContext )
 			);
 		}
 		for ( org.hibernate.annotations.NamedEntityGraph usage : classDetails.getRepeatedAnnotationUsages(

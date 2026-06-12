@@ -119,7 +119,8 @@ Additionally, this `ConnectionProvider` will pick up the following Hibernate-spe
 
 [IMPORTANT]
 ====
-To use the Oracle Universal Connection Pool (aka UCP) integration, the application must include the `hibernate-ucp` module jar (as well as its dependencies) on the classpath.
+To use the Oracle Universal Connection Pool (aka UCP) integration, the application must include the `hibernate-ucp` module jar on the classpath,
+as well as appropriate versions of `com.oracle.database.jdbc:ucp17` and `com.oracle.database.jdbc:ojdbc17`.
 ====
 
 Hibernate also provides support for applications using https://docs.oracle.com/en/database/oracle/oracle-database/26/jjucp/intro.html[Oracle Universal Connection Pool].

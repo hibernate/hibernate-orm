@@ -110,6 +110,10 @@ public interface MutationQueryImplementor<T>
 
 	@Override
 	@Nonnull
+	MutationQueryImplementor<T> setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> MutationQueryImplementor<T> setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override

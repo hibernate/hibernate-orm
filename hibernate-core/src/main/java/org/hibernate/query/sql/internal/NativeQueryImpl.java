@@ -1784,6 +1784,13 @@ public class NativeQueryImpl<R>
 
 	@Override
 	@Nonnull
+	public NativeQueryImplementor<R> setParameters(@Nonnull Object... arguments) {
+		super.setParameters( arguments );
+		return this;
+	}
+
+	@Override
+	@Nonnull
 	public <P> NativeQueryImplementor<R> setParameter(int position, @Nullable P value, @Nonnull Class<P> javaTypeClass) {
 		super.setParameter( position, value, javaTypeClass );
 		return this;

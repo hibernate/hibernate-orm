@@ -6,6 +6,7 @@ package org.hibernate.boot.models.bind.internal.binders;
 
 import java.lang.reflect.InvocationTargetException;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
@@ -183,6 +184,7 @@ public class AttributeBinder {
 		}
 
 		applyNaturalId( attributeMetadata, binding );
+		applyLazyGroup( attributeMetadata, binding );
 	}
 
 	public Property getBinding() {
@@ -210,6 +212,14 @@ public class AttributeBinder {
 		}
 		property.setNaturalIdentifier( true );
 		property.setUpdatable( naturalIdAnn.mutable() );
+	}
+
+	private void applyLazyGroup(AttributeMetadata attributeMetadata, Property property) {
+		final var lazyGroupAnn = attributeMetadata.getMember().getDirectAnnotationUsage( LazyGroup.class );
+		if ( lazyGroupAnn == null ) {
+			return;
+		}
+		property.setLazyGroup( lazyGroupAnn.value() );
 	}
 
 	private BasicValue createBasicValue(Table primaryTable) {

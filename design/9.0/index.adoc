@@ -78,6 +78,16 @@ eventually move into `orm-integration-notes.adoc` if they turn out to require
 mapping-model API changes, but they should start here when the local prototype
 story is still unclear.
 
+link:annotation-coverage.adoc[`annotation-coverage.adoc`]
+
+This is the annotation coverage audit for the boot-model pipeline.  It tracks
+runtime annotation descriptors, categorization and binding support, XML/source
+support, focused tests, and known gaps for `jakarta.persistence` and
+`org.hibernate.annotations`.
+
+Use this document when checking whether an annotation is visible to the new
+pipeline and whether binding support has been proven with mapping-state tests.
+
 == How To Choose
 
 If the question is "what should the final bootstrap architecture look like?",
@@ -97,3 +107,6 @@ If the question is "what ORM mapping API change would make this cleaner?", use
 
 If the question is "what mapping support is still missing?", use
 `remaining-binding-gaps.adoc`.
+
+If the question is "is this annotation covered by the new pipeline?", use
+`annotation-coverage.adoc`.

@@ -23,11 +23,13 @@ import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionIdMutability;
 import org.hibernate.annotations.CollectionIdType;
+import org.hibernate.annotations.MapKeyCompositeType;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 
+import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.mapping.BasicValue;
@@ -36,10 +38,12 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.LongJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -676,6 +680,28 @@ public class ElementCollectionBindingTests {
 
 	@Test
 	@ServiceRegistry
+	void testMapKeyCompositeTypeElementCollection(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( CompositeTypeMapKeyOwner.class.getName() );
+					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) entityBinding.getProperty( "labels" )
+							.getValue();
+					final Component key = (Component) collection.getIndex();
+
+					assertThat( key.getTypeName() ).isEqualTo( CompositeLabelKeyUserType.class.getName() );
+					assertThat( key.getComponentClassName() ).isEqualTo( CompositeLabelKeyEmbeddable.class.getName() );
+					assertThat( key.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "key_code", "key_region" );
+				},
+				scope.getRegistry(),
+				CompositeTypeMapKeyOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
 	void testTemporalMapKeyElementCollection(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -825,6 +851,26 @@ public class ElementCollectionBindingTests {
 				},
 				scope.getRegistry(),
 				EmbeddableMapOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testEmbeddableMapValueElementCollectionAttributeOverride(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( OverrideEmbeddableMapValueOwner.class.getName() );
+					final org.hibernate.mapping.Map collection = (org.hibernate.mapping.Map) entityBinding.getProperty( "addresses" )
+							.getValue();
+					final Component element = (Component) collection.getElement();
+
+					assertThat( element.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "value_street", "value_postal_code" );
+				},
+				scope.getRegistry(),
+				OverrideEmbeddableMapValueOwner.class
 		);
 	}
 
@@ -1428,6 +1474,111 @@ public class ElementCollectionBindingTests {
 		@MapKeyEnumerated(EnumType.STRING)
 		@Column(name = "label")
 		private Map<Object, String> labels;
+	}
+
+	@Entity(name="CompositeTypeMapKeyOwner")
+	@Table(name="composite_type_map_key_owners")
+	public static class CompositeTypeMapKeyOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "composite_type_map_key_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@MapKeyCompositeType(CompositeLabelKeyUserType.class)
+		@AttributeOverride(name = "key.code", column = @Column(name = "key_code"))
+		@AttributeOverride(name = "key.region", column = @Column(name = "key_region"))
+		@Column(name = "label")
+		private Map<CompositeLabelKeyDomain, String> labels;
+	}
+
+	public record CompositeLabelKeyDomain(String code, String region) implements Serializable {
+	}
+
+	@Embeddable
+	public static class CompositeLabelKeyEmbeddable {
+		private String code;
+		private String region;
+	}
+
+	public static class CompositeLabelKeyUserType implements CompositeUserType<CompositeLabelKeyDomain> {
+		@Override
+		public Object getPropertyValue(CompositeLabelKeyDomain component, int property) throws HibernateException {
+			return property == 0 ? component.code() : component.region();
+		}
+
+		@Override
+		public CompositeLabelKeyDomain instantiate(ValueAccess values) {
+			return new CompositeLabelKeyDomain(
+					values.getValue( 0, String.class ),
+					values.getValue( 1, String.class )
+			);
+		}
+
+		@Override
+		public Class<?> embeddable() {
+			return CompositeLabelKeyEmbeddable.class;
+		}
+
+		@Override
+		public Class<CompositeLabelKeyDomain> returnedClass() {
+			return CompositeLabelKeyDomain.class;
+		}
+
+		@Override
+		public boolean equals(CompositeLabelKeyDomain x, CompositeLabelKeyDomain y) {
+			return java.util.Objects.equals( x, y );
+		}
+
+		@Override
+		public int hashCode(CompositeLabelKeyDomain x) {
+			return java.util.Objects.hashCode( x );
+		}
+
+		@Override
+		public CompositeLabelKeyDomain deepCopy(CompositeLabelKeyDomain value) {
+			return value;
+		}
+
+		@Override
+		public boolean isMutable() {
+			return false;
+		}
+
+		@Override
+		public Serializable disassemble(CompositeLabelKeyDomain value) {
+			return value;
+		}
+
+		@Override
+		public CompositeLabelKeyDomain assemble(Serializable cached, Object owner) {
+			return (CompositeLabelKeyDomain) cached;
+		}
+
+		@Override
+		public CompositeLabelKeyDomain replace(
+				CompositeLabelKeyDomain detached,
+				CompositeLabelKeyDomain managed,
+				Object owner) {
+			return detached;
+		}
+	}
+
+	@Entity(name="OverrideEmbeddableMapValueOwner")
+	@Table(name="override_embeddable_map_value_owners")
+	public static class OverrideEmbeddableMapValueOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "override_map_value_owner_addresses",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@MapKeyColumn(name = "address_key")
+		@AttributeOverride(name = "value.line1", column = @Column(name = "value_street"))
+		@AttributeOverride(name = "value.zipCode", column = @Column(name = "value_postal_code"))
+		private Map<String, Address> addresses;
 	}
 
 	@Entity(name="TemporalMapKeyOwner")

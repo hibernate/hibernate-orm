@@ -65,5 +65,6 @@ public class VersionBinder {
 		);
 		// force it to be non-nullable
 		column.setNullable( false );
+		CustomMappingBinder.callAttributeBinders( memberDetails, typeBinding, property, bindingState, bindingContext );
 	}
 }

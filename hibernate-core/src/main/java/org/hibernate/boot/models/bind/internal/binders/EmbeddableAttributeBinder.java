@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.bind.internal.binders;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.ComponentSource;
@@ -76,7 +77,7 @@ class EmbeddableAttributeBinder {
 				ownerBinding
 		);
 		component.setEmbedded( true );
-		component.setComponentClassName( member.getType().determineRawClass().getClassName() );
+		component.setComponentClassName( componentSource.componentType().getClassName() );
 		component.setTable( componentTable );
 		component.setTypeUsingReflection( ownerType.getClassDetails().getClassName(), attributeMetadata.getName() );
 
@@ -98,8 +99,8 @@ class EmbeddableAttributeBinder {
 	}
 
 	private Table resolveComponentTable(MemberDetails attributeMember) {
-		final Table[] result = { primaryTable };
-		visitColumnSources( attributeMember.getType().determineRawClass(), "", (path, member) -> {
+		final Table[] result = { resolveExplicitEmbeddedTable( attributeMember ) };
+		visitColumnSources( componentSource.componentType(), "", (path, member) -> {
 			if ( member.hasDirectAnnotationUsage( jakarta.persistence.ManyToOne.class )
 					|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToOne.class ) ) {
 				ToOneAttributeBinder.resolveJoinColumns( member, resolveAssociationOverride( path, member ) ).forEach( (joinColumn) -> {
@@ -118,9 +119,36 @@ class EmbeddableAttributeBinder {
 		return result[0];
 	}
 
+	private Table resolveExplicitEmbeddedTable(MemberDetails attributeMember) {
+		final EmbeddedTable embeddedTable = attributeMember.getDirectAnnotationUsage( EmbeddedTable.class );
+		if ( embeddedTable == null ) {
+			return primaryTable;
+		}
+
+		final Identifier identifier = Identifier.toIdentifier( embeddedTable.value() );
+		final TableReference tableReference = bindingState.getTableByName( identifier.getCanonicalName() );
+		if ( tableReference == null ) {
+			throw new MappingException( String.format( Locale.ROOT,
+					"Could not resolve @EmbeddedTable table `%s` for %s.%s",
+					embeddedTable.value(),
+					attributeMember.getDeclaringType().getName(),
+					attributeMetadata.getName()
+			) );
+		}
+		return tableReference.binding();
+	}
+
 	private void applyTable(MemberDetails attributeMember, String tableName, Table[] result) {
 		final Identifier identifier = Identifier.toIdentifier( tableName );
 		final TableReference tableReference = bindingState.getTableByName( identifier.getCanonicalName() );
+		if ( tableReference == null ) {
+			throw new MappingException( String.format( Locale.ROOT,
+					"Could not resolve table `%s` for embeddable attribute %s.%s",
+					tableName,
+					attributeMember.getDeclaringType().getName(),
+					attributeMetadata.getName()
+			) );
+		}
 		final Table table = tableReference.binding();
 		if ( result[0] != primaryTable && result[0] != table ) {
 			throw new MappingException( String.format( Locale.ROOT,
@@ -139,9 +167,11 @@ class EmbeddableAttributeBinder {
 		componentType.forEachPersistableMember( (member) -> {
 			final String attributeName = member.resolveAttributeName();
 			final String path = pathPrefix + attributeName;
+			final org.hibernate.models.spi.ClassDetails nestedComponentType =
+					ComponentSource.resolveEmbeddableType( member, bindingContext, false );
 			if ( member.hasDirectAnnotationUsage( jakarta.persistence.Embedded.class )
-					|| member.getType().determineRawClass().hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class ) ) {
-				visitColumnSources( member.getType().determineRawClass(), path + ".", consumer );
+					|| nestedComponentType.hasDirectAnnotationUsage( jakarta.persistence.Embeddable.class ) ) {
+				visitColumnSources( nestedComponentType, path + ".", consumer );
 			}
 			else {
 				consumer.accept( path, member );

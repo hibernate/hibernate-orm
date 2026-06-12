@@ -7,6 +7,7 @@ package org.hibernate.boot.models.bind.internal.binders;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDelete;
 import org.hibernate.boot.models.bind.internal.sources.BasicValueSource;
 import org.hibernate.boot.models.bind.internal.sources.ColumnSource;
 import org.hibernate.boot.models.bind.internal.sources.CollectionSource;
@@ -93,9 +94,12 @@ class ElementCollectionAttributeBinder {
 		collection.setElement( element );
 		if ( collection instanceof org.hibernate.mapping.Map map ) {
 			CollectionIndexBinder.bindMapKey(
+					ownerType,
+					ownerBinding,
 					source,
 					map,
 					table,
+					modelBinders,
 					bindingOptions,
 					bindingState,
 					bindingContext
@@ -140,6 +144,7 @@ class ElementCollectionAttributeBinder {
 				collection,
 				joinColumns,
 				ForeignKeySource.from( collectionTable ),
+				resolveOnDeleteAction(),
 				collectionTable == null ? new UniqueConstraint[0] : collectionTable.uniqueConstraints(),
 				collectionTable == null ? new Index[0] : collectionTable.indexes()
 		) );
@@ -229,6 +234,11 @@ class ElementCollectionAttributeBinder {
 			return entityType;
 		}
 		return ownerType.getHierarchy().getRoot();
+	}
+
+	private org.hibernate.annotations.OnDeleteAction resolveOnDeleteAction() {
+		final OnDelete onDelete = attributeMetadata.getMember().getDirectAnnotationUsage( OnDelete.class );
+		return onDelete == null ? null : onDelete.action();
 	}
 
 }

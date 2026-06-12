@@ -80,8 +80,9 @@ public class SimpleBindingCoordinatorTests {
 					final Column softDeleteColumn = entityBinding.getSoftDeleteColumn();
 					assertThat( softDeleteColumn ).isNotNull();
 					assertThat( softDeleteColumn.getName() ).isEqualTo( "ACTIVE" );
-					assertThat( entityBinding.getFilters() ).hasSize( 1 );
-					assertThat( entityBinding.getFilters().get( 0 ).getCondition() ).isEqualTo( "name = :name" );
+					assertThat( entityBinding.getFilters() )
+							.extracting( filter -> filter.getCondition() )
+							.containsExactlyInAnyOrder( "name = :name", "tenantKey = :tenantId" );
 					assertThat( entityBinding.getCacheRegionName() ).isEqualTo( "my-region" );
 					assertThat( entityBinding.getCacheConcurrencyStrategy() )
 							.isEqualTo( CacheConcurrencyStrategy.READ_ONLY.toAccessType().getExternalName() );

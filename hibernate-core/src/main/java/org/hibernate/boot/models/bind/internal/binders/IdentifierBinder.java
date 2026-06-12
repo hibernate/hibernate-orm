@@ -121,6 +121,7 @@ public class IdentifierBinder {
 		typeBinding.setDeclaredIdentifierProperty( idProperty );
 
 		final org.hibernate.mapping.Column column = bindIdColumn( idAttributeMember, idAttribute::getName, idValue, table );
+		CustomMappingBinder.callAttributeBinders( idAttributeMember, typeBinding, idProperty, state, context );
 
 		return new IdentifierBinding(
 				typeMetadata,
@@ -153,6 +154,13 @@ public class IdentifierBinder {
 		);
 		typeBinding.setIdentifierProperty( idProperty );
 		typeBinding.setDeclaredIdentifierProperty( idProperty );
+		CustomMappingBinder.callAttributeBinders(
+				aggregatedKeyMapping.getAttribute().getMember(),
+				typeBinding,
+				idProperty,
+				state,
+				context
+		);
 
 		final List<org.hibernate.mapping.Column> columns = bindComponentIdentifierProperties(
 				type,
@@ -193,6 +201,7 @@ public class IdentifierBinder {
 				final BasicValue basicValue = createBasicIdValue( table, member );
 				final Property rootProperty = createProperty( idAttribute.getName(), basicValue, member );
 				typeBinding.addProperty( rootProperty );
+				CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
 
 				final Property componentProperty = createProperty( idAttribute.getName(), basicValue, member );
 				componentProperty.setInsertable( false );
@@ -206,6 +215,7 @@ public class IdentifierBinder {
 				final ToOne toOne = bindToOneIdentifier( idAttribute, table, type, typeBinding, columns );
 				final Property rootProperty = createProperty( idAttribute.getName(), toOne, member );
 				typeBinding.addProperty( rootProperty );
+				CustomMappingBinder.callAttributeBinders( member, typeBinding, rootProperty, state, context );
 
 				final Property componentProperty = createProperty( idAttribute.getName(), toOne, member );
 				componentProperty.setInsertable( false );

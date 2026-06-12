@@ -5,12 +5,19 @@
 package org.hibernate.orm.test.boot.models.bind.tenancy;
 
 import org.hibernate.annotations.TenantId;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.InitCommand;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.boot.models.bind.internal.binders.TenantIdBinder;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.Test;
 
@@ -35,9 +42,12 @@ public class SimpleTenancyTests {
 				(context) -> {
 					var metadataCollector = context.getMetadataCollector();
 
-					assertThat( metadataCollector.getFilterDefinition( TenantIdBinder.FILTER_NAME ) ).isNotNull();
+					final var filterDefinition = metadataCollector.getFilterDefinition( TenantIdBinder.FILTER_NAME );
+					assertThat( filterDefinition ).isNotNull();
+					assertThat( filterDefinition.isAppliedToLoadByKey() ).isTrue();
 
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( ProtectedEntity.class.getName() );
+					assertTenantFilter( entityBinding, "tenant = :tenantId" );
 					final Property tenantProperty = entityBinding.getProperty( "tenant" );
 					final BasicValue value = (BasicValue) tenantProperty.getValue();
 					final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) value.getColumn();
@@ -61,9 +71,12 @@ public class SimpleTenancyTests {
 				(context) -> {
 					var metadataCollector = context.getMetadataCollector();
 
-					assertThat( metadataCollector.getFilterDefinition( TenantIdBinder.FILTER_NAME ) ).isNotNull();
+					final var filterDefinition = metadataCollector.getFilterDefinition( TenantIdBinder.FILTER_NAME );
+					assertThat( filterDefinition ).isNotNull();
+					assertThat( filterDefinition.isAppliedToLoadByKey() ).isTrue();
 
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( ProtectedEntityWithColumn.class.getName() );
+					assertTenantFilter( entityBinding, "customer = :tenantId" );
 					final Property tenantProperty = entityBinding.getProperty( "tenant" );
 					final BasicValue value = (BasicValue) tenantProperty.getValue();
 					final org.hibernate.mapping.Column column = (org.hibernate.mapping.Column) value.getColumn();
@@ -78,6 +91,35 @@ public class SimpleTenancyTests {
 				scope.getRegistry(),
 				ProtectedEntityWithColumn.class
 		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.tenancy.SimpleTenancyTests$RlsDialect"
+	))
+	void testTenancyRegistersRowLevelSecurity(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadata = context.getMetadata();
+					final var table = metadata.getEntityBinding( ProtectedEntityWithStringTenant.class.getName() )
+							.getTable();
+
+					assertThat( table.getInitCommands( null ) )
+							.extracting( command -> command.initCommands()[0] )
+							.containsExactly( "rls:protected_entity:tenant_id:SESSION" );
+				},
+				scope.getRegistry(),
+				ProtectedEntityWithStringTenant.class
+		);
+	}
+
+	private static void assertTenantFilter(PersistentClass entityBinding, String expectedCondition) {
+		assertThat( entityBinding.getFilters() ).hasSize( 1 );
+		final var filter = entityBinding.getFilters().get( 0 );
+		assertThat( filter.getName() ).isEqualTo( TenantIdBinder.FILTER_NAME );
+		assertThat( filter.getCondition() ).isEqualTo( expectedCondition );
+		assertThat( filter.useAutoAliasInjection() ).isTrue();
 	}
 
 	enum Tenant { ACME, SPACELY }
@@ -107,5 +149,44 @@ public class SimpleTenancyTests {
 		@Enumerated(EnumType.STRING)
 		@Column(name = "customer")
 		private Tenant tenant;
+	}
+
+	@Entity(name = "ProtectedEntity")
+	@Table(name = "protected_entity")
+	public static class ProtectedEntityWithStringTenant {
+		@Id
+		private Integer id;
+
+		private String name;
+
+		@TenantId
+		@Column(name = "tenant_id")
+		private String tenant;
+	}
+
+	public static class RlsDialect extends H2Dialect {
+		@Override
+		public RowLevelSecurity getRowLevelSecurity() {
+			return new TestRowLevelSecurity();
+		}
+	}
+
+	public static class TestRowLevelSecurity implements RowLevelSecurity {
+		@Override
+		public boolean supportsRowLevelSecurity() {
+			return true;
+		}
+
+		@Override
+		public void addTenantIdTableInitCommands(
+				InFlightMetadataCollector collector,
+				org.hibernate.mapping.Table table,
+				org.hibernate.mapping.Column tenantIdentifierColumn,
+				Metadata metadata,
+				TenantIdentifierSource tenantIdentifierSource) {
+			table.addInitCommand( ignored -> new InitCommand(
+					"rls:" + table.getName() + ":" + tenantIdentifierColumn.getName() + ":" + tenantIdentifierSource
+			) );
+		}
 	}
 }

@@ -1,0 +1,2720 @@
+= Annotation Coverage Audit
+:toc:
+
+This document tracks runtime annotation coverage for annotations declared in
+`jakarta.persistence` and `org.hibernate.annotations`.  It intentionally
+excludes `org.hibernate.annotations.processing`, which belongs to compile-time
+processor coverage rather than native bootstrap/model-building coverage.
+
+The goal is to make the new categorization/binding pipeline auditable at the
+annotation level: whether an annotation is visible to the source model, whether
+categorization or binding consumes it, whether XML/source support exists where
+relevant, whether `DialectOverride` is honored, and whether focused tests assert
+the resulting `org.hibernate.mapping` state.
+
+== Classification
+
+`covered`::
+The new pipeline has descriptor, categorization/binding support, and focused
+tests.
+
+`test-only gap`::
+The annotation appears to be handled or partially handled, but still needs a
+focused model-binding assertion before it can be closed.
+
+`categorization gap`::
+The annotation is visible to the source model, but categorization does not yet
+route it into the right metadata shape.
+
+`binding gap`::
+The annotation is visible and may be categorized, but binding does not yet apply
+the expected `org.hibernate.mapping` effect.
+
+`XML/source gap`::
+The annotation has a corresponding XML/source vocabulary item that is not yet
+processed into the new annotation model.
+
+`dialect-override gap`::
+The override annotation has descriptor support, but the new pipeline has not
+yet been verified to resolve the effective annotation for the active dialect.
+
+`deferred`::
+The annotation belongs to a larger feature area that should be handled in its
+own slice rather than folded into low-risk binding parity.
+
+`not applicable/nested`::
+The annotation is a repeatable container, nested helper, meta-annotation, or
+annotation member value consumed through another annotation.
+
+== JPA Initial Findings
+
+This audit is against the Jakarta Persistence API version used by the build:
+`jakarta.persistence-api` `4.0.0-M4`.
+
+* `JpaAnnotations` has descriptors for the JPA mapping annotations consumed by
+  the model pipeline, including newer JPA 4.0 annotations such as
+  `@CheckConstraint`, `@EnumeratedValue`, `@Fetch`, `@NamedStatement`,
+  `@NamedNativeStatement`, `@EntityListener`, `@ExcludedFromVersioning`, and
+  `@Discoverable`.
+* `JpaAnnotations` is not exhaustive for every annotation type in the
+  `jakarta.persistence-api` jar.  Comparing against the `4.0.0-M4` jar found
+  100 registered JPA annotation descriptors and 18 additional annotation types
+  not currently registered.  The missing annotations are injection/bootstrap,
+  query-package, static metamodel, and new lifecycle callback annotations.
+* The core mapping vocabulary has broad categorization and binding coverage,
+  but several rows still need focused mapping-state assertions before they can
+  be marked `covered`.
+* The most important JPA 4.0 follow-up is to verify whether the new 4.0
+  annotations are fully consumed by categorization/binding, not merely visible
+  through descriptors or XML synthesis.
+
+== JPA Priority Buckets
+
+[cols="1,3,3", options="header"]
+|===
+| Bucket
+| Annotations
+| Next action
+
+| JPA 4.0 consumption audit
+| `@CheckConstraint`, `@EnumeratedValue`, `@Fetch`, `@NamedStatement`,
+`@NamedNativeStatement`, `@EntityListener`, `@ExcludedFromVersioning`,
+`@Discoverable`
+| Verify descriptor, categorization/source, binding, XML synthesis, and focused
+tests for each annotation.
+
+| JPA jar descriptor gaps
+| `@PersistenceAgent`, `@PersistenceAgents`, `@PersistenceContext`,
+`@PersistenceContexts`, `@PersistenceProperty`, `@PersistenceUnit`,
+`@PersistenceUnits`, `@PreInsert`, `@PostInsert`, `@PreDelete`,
+`@PostDelete`, `@PreMerge`, `@PreUpsert`, `@PostUpsert`,
+`@jakarta.persistence.query.JakartaQuery`,
+`@jakarta.persistence.query.NativeQuery`,
+`@jakarta.persistence.query.QueryOptions`, `@StaticMetamodel`
+| Decide whether `JpaAnnotations` should be exhaustive for the JPA jar or
+explicitly limited to boot-model mapping annotations.  The lifecycle callback
+annotations are the most likely boot-model parity gaps.
+
+| Core mapping test gaps
+| `@Access`, `@Basic`, `@Cacheable`, `@Column`, `@DiscriminatorColumn`,
+`@DiscriminatorValue`, `@GeneratedValue`, `@Inheritance`, `@Lob`,
+`@SecondaryTable`, `@Table`, `@Version`
+| Add focused model-binding assertions where the pipeline already appears to
+have support.
+
+| Association and collection test gaps
+| `@JoinColumn`, `@JoinTable`, `@ManyToOne`, `@OneToOne`, `@OneToMany`,
+`@ManyToMany`, `@MapKey`, `@MapKeyColumn`, `@MapKeyJoinColumn`,
+`@OrderBy`, `@OrderColumn`
+| Continue asserting `org.hibernate.mapping` state for each association and
+collection shape.
+
+| Global registration test gaps
+| `@NamedQuery`, `@NamedNativeQuery`, `@NamedStoredProcedureQuery`,
+`@NamedEntityGraph`, `@SqlResultSetMapping`, `@SequenceGenerator`,
+`@TableGenerator`, `@Converter`
+| Existing global registration tests cover much of this group; expand them to
+new statement forms and helper annotations where needed.
+
+| Container/helper annotations
+| Repeatable containers, result mapping members, callback methods, enum member
+values, `@ForeignKey`, `@Index`, `@UniqueConstraint`, `@QueryHint`,
+`@StoredProcedureParameter`
+| Verify through the owning annotation rather than as independent mapping
+annotations.
+|===
+
+== JPA Annotation Matrix
+
+This matrix covers annotations currently registered in `JpaAnnotations`.  It is
+therefore an audit of the current model registry, not yet a guarantee that every
+annotation type in the JPA API jar has a descriptor.
+
+[cols="2,2,1,2,2,1,2", options="header"]
+|===
+| Annotation
+| Scope
+| Descriptor
+| Pipeline status
+| XML/source
+| Tests
+| Classification
+
+| `@Access`
+| type/member
+| yes
+| access resolution support present
+| XML defaults/member access present
+| focused bind tests exist
+| covered
+
+| `@AssociationOverride`
+| type/member
+| yes
+| embeddable association override support present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@AssociationOverrides`
+| type/member
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@AssociationOverride`
+| not applicable/nested
+
+| `@AttributeOverride`
+| type/member
+| yes
+| embeddable, collection element, map key/value override support present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@AttributeOverrides`
+| type/member
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@AttributeOverride`
+| not applicable/nested
+
+| `@Basic`
+| member
+| yes
+| basic-value source/binding present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@Cacheable`
+| type
+| yes
+| entity cacheability support appears present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@CheckConstraint`
+| helper on table/column/join annotations
+| yes
+| descriptor/source visibility present; binding consumption needs audit
+| XML/source visibility present
+| needed
+| binding gap
+
+| `@CollectionTable`
+| member
+| yes
+| element-collection table binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@Column`
+| member/helper
+| yes
+| column binding present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@ColumnResult`
+| result-set mapping helper
+| yes
+| result-set mapping registration present
+| XML/source support present
+| covered by registration tests
+| covered
+
+| `@ColumnResult.ColumnResults`
+| container
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@ColumnResult`
+| not applicable/nested
+
+| `@ConstructorResult`
+| result-set mapping helper
+| yes
+| result-set mapping registration appears present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@ConstructorResult.ConstructorResults`
+| container
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@ConstructorResult`
+| not applicable/nested
+
+| `@Convert`
+| member/type
+| yes
+| converter binding present for basic, embeddable, collection element, and map key/value paths
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@Converts`
+| member/type
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@Convert`
+| not applicable/nested
+
+| `@Converter`
+| type
+| yes
+| converter registration present
+| n/a
+| covered by registration tests
+| covered
+
+| `@DiscriminatorColumn`
+| type
+| yes
+| inheritance/discriminator binding appears present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@DiscriminatorValue`
+| type
+| yes
+| discriminator value binding appears present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@Discoverable`
+| type
+| yes
+| descriptor present; bootstrap discovery semantics need audit
+| n/a
+| needed
+| categorization gap
+
+| `@ElementCollection`
+| member
+| yes
+| element-collection binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@Embeddable`
+| type
+| yes
+| embeddable categorization/binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@Embedded`
+| member
+| yes
+| embedded component binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@EmbeddedId`
+| member
+| yes
+| aggregated identifier binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@Entity`
+| type
+| yes
+| entity categorization/binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@EntityListener`
+| listener type
+| yes
+| XML/global listener collection present; annotation use needs audit
+| XML/source support present
+| XML tests exist
+| test-only gap
+
+| `@EntityListeners`
+| type
+| yes
+| entity listener categorization and callback binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@EntityResult`
+| result-set mapping helper
+| yes
+| result-set mapping registration appears present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@EntityResult.EntityResults`
+| container
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@EntityResult`
+| not applicable/nested
+
+| `@Enumerated`
+| member
+| yes
+| enum basic and map-key binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@EnumeratedValue`
+| enum field
+| yes
+| descriptor present; enum-value binding needs audit
+| n/a
+| needed
+| binding gap
+
+| `@ExcludeDefaultListeners`
+| type
+| yes
+| listener hierarchy support present
+| XML/source support present
+| focused callback tests exist
+| covered
+
+| `@ExcludeSuperclassListeners`
+| type
+| yes
+| listener hierarchy support present
+| XML/source support present
+| focused callback tests exist
+| covered
+
+| `@ExcludedFromVersioning`
+| member
+| yes
+| descriptor present; optimistic-lock exclusion binding needs audit
+| XML/source support needs audit
+| needed
+| binding gap
+
+| `@Fetch`
+| association/member
+| yes
+| descriptor present; JPA fetch-profile override consumption needs audit
+| XML/source support present
+| needed
+| binding gap
+
+| `@Fetch.Fetches`
+| container
+| yes
+| repeatable/container
+| XML/source support present
+| verify through `@Fetch`
+| not applicable/nested
+
+| `@FieldResult`
+| result-set mapping helper
+| yes
+| result-set mapping registration appears present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@ForeignKey`
+| helper
+| yes
+| consumed through join/table annotations
+| XML/source support present
+| verify through owning annotations
+| not applicable/nested
+
+| `@GeneratedValue`
+| id member
+| yes
+| generated identifier binding present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@Id`
+| member
+| yes
+| simple identifier binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@IdClass`
+| type
+| yes
+| non-aggregated identifier binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@Index`
+| table helper
+| yes
+| consumed through table annotations
+| XML/source support present
+| verify through owning annotations
+| not applicable/nested
+
+| `@Inheritance`
+| type
+| yes
+| inheritance strategy binding present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@JoinColumn`
+| member/helper
+| yes
+| association and collection key/index binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@JoinColumns`
+| member/helper
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@JoinColumn`
+| not applicable/nested
+
+| `@JoinTable`
+| member
+| yes
+| association join-table binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@Lob`
+| member
+| yes
+| basic-value LOB binding appears present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@ManyToMany`
+| member
+| yes
+| plural association binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@ManyToOne`
+| member
+| yes
+| to-one association binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@MapKey`
+| member
+| yes
+| borrowed-key map binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@MapKeyClass`
+| member
+| yes
+| explicit map-key Java type handling present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@MapKeyColumn`
+| member
+| yes
+| basic map-key column binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@MapKeyEnumerated`
+| member
+| yes
+| map-key enum binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@MapKeyJoinColumn`
+| member
+| yes
+| association map-key join-column binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@MapKeyJoinColumns`
+| member
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@MapKeyJoinColumn`
+| not applicable/nested
+
+| `@MapKeyTemporal`
+| member
+| yes
+| temporal map-key binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@MappedSuperclass`
+| type
+| yes
+| mapped-superclass categorization/binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@MapsId`
+| member
+| yes
+| derived identifier binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@NamedAttributeNode`
+| entity graph helper
+| yes
+| consumed through named entity graph registration
+| XML/source support present
+| verify through `@NamedEntityGraph`
+| not applicable/nested
+
+| `@NamedEntityGraph`
+| type
+| yes
+| named entity graph registration present
+| XML/source support present
+| covered by registration tests
+| covered
+
+| `@NamedEntityGraphs`
+| type
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@NamedEntityGraph`
+| not applicable/nested
+
+| `@NamedNativeQuery`
+| type
+| yes
+| named native query registration present
+| XML/source support present
+| covered by registration tests
+| covered
+
+| `@NamedNativeQueries`
+| type
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@NamedNativeQuery`
+| not applicable/nested
+
+| `@NamedNativeStatement`
+| type
+| yes
+| descriptor/XML collection present; binding to query metadata needs audit
+| XML/source support present
+| needed
+| binding gap
+
+| `@NamedNativeStatements`
+| type
+| yes
+| repeatable/container
+| XML/source support present
+| verify through `@NamedNativeStatement`
+| not applicable/nested
+
+| `@NamedQuery`
+| type
+| yes
+| named query registration present
+| XML/source support present
+| covered by registration tests
+| covered
+
+| `@NamedQueries`
+| type
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@NamedQuery`
+| not applicable/nested
+
+| `@NamedStatement`
+| type
+| yes
+| descriptor/XML collection present; binding to query metadata needs audit
+| XML/source support present
+| needed
+| binding gap
+
+| `@NamedStatements`
+| type
+| yes
+| repeatable/container
+| XML/source support present
+| verify through `@NamedStatement`
+| not applicable/nested
+
+| `@NamedStoredProcedureQuery`
+| type
+| yes
+| named procedure registration present
+| XML/source support present
+| covered by registration tests
+| covered
+
+| `@NamedStoredProcedureQueries`
+| type
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@NamedStoredProcedureQuery`
+| not applicable/nested
+
+| `@NamedSubgraph`
+| entity graph helper
+| yes
+| consumed through named entity graph registration
+| XML/source support present
+| verify through `@NamedEntityGraph`
+| not applicable/nested
+
+| `@OneToMany`
+| member
+| yes
+| plural association binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@OneToOne`
+| member
+| yes
+| to-one association binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@OrderBy`
+| member
+| yes
+| collection order-by binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@OrderColumn`
+| member
+| yes
+| list index binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@PostLoad`
+| callback method
+| yes
+| lifecycle callback binding present
+| XML/source support present
+| focused callback tests exist
+| covered
+
+| `@PostPersist`
+| callback method
+| yes
+| lifecycle callback binding present
+| XML/source support present
+| focused callback tests exist
+| covered
+
+| `@PostRemove`
+| callback method
+| yes
+| lifecycle callback binding present
+| XML/source support present
+| focused callback tests exist
+| covered
+
+| `@PostUpdate`
+| callback method
+| yes
+| lifecycle callback binding present
+| XML/source support present
+| focused callback tests exist
+| covered
+
+| `@PrePersist`
+| callback method
+| yes
+| lifecycle callback binding present
+| XML/source support present
+| focused callback tests exist
+| covered
+
+| `@PreRemove`
+| callback method
+| yes
+| lifecycle callback binding present
+| XML/source support present
+| focused callback tests exist
+| covered
+
+| `@PreUpdate`
+| callback method
+| yes
+| lifecycle callback binding present
+| XML/source support present
+| focused callback tests exist
+| covered
+
+| `@PrimaryKeyJoinColumn`
+| type/member
+| yes
+| primary-key join binding appears present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@PrimaryKeyJoinColumns`
+| type/member
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@PrimaryKeyJoinColumn`
+| not applicable/nested
+
+| `@QueryHint`
+| named query helper
+| yes
+| consumed through named query registrations
+| XML/source support present
+| verify through owning annotations
+| not applicable/nested
+
+| `@SecondaryTable`
+| type
+| yes
+| secondary table binding present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@SecondaryTables`
+| type
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@SecondaryTable`
+| not applicable/nested
+
+| `@SequenceGenerator`
+| type/member
+| yes
+| identifier generator registration present
+| XML/source support present
+| covered by registration tests
+| covered
+
+| `@SequenceGenerators`
+| type/member
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@SequenceGenerator`
+| not applicable/nested
+
+| `@SqlResultSetMapping`
+| type
+| yes
+| result-set mapping registration present
+| XML/source support present
+| covered by registration tests
+| covered
+
+| `@SqlResultSetMappings`
+| type
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@SqlResultSetMapping`
+| not applicable/nested
+
+| `@StoredProcedureParameter`
+| named procedure helper
+| yes
+| consumed through named stored procedure registration
+| XML/source support present
+| verify through `@NamedStoredProcedureQuery`
+| not applicable/nested
+
+| `@Table`
+| type
+| yes
+| primary table binding present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@TableGenerator`
+| type/member
+| yes
+| identifier generator registration present
+| XML/source support present
+| covered by registration tests
+| covered
+
+| `@TableGenerators`
+| type/member
+| yes
+| repeatable/container
+| XML/source support present
+| verified through `@TableGenerator`
+| not applicable/nested
+
+| `@Temporal`
+| member
+| yes
+| temporal basic and map-key binding present
+| XML/source support present
+| focused bind tests exist
+| covered
+
+| `@Transient`
+| member
+| yes
+| persistent attribute exclusion present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+
+| `@UniqueConstraint`
+| table helper
+| yes
+| consumed through table annotations
+| XML/source support present
+| verify through owning annotations
+| not applicable/nested
+
+| `@Version`
+| member
+| yes
+| version binding present
+| XML/source support present
+| focused assertions needed
+| test-only gap
+|===
+
+== Hibernate Initial Findings
+
+* `HibernateAnnotations` covers most runtime Hibernate annotations.
+* `Audited`, `Audited.*`, `Changelog`, and `Changelog.*` are not registered in
+  the new annotation descriptor registry.  Legacy binder support exists, but
+  new-pipeline support should be deferred to a state-management/audit slice.
+* `DialectOverrideAnnotations` registers the override annotation descriptors and
+  `DialectOverrider` supplies matching logic.  The new pipeline still needs a
+  central effective-annotation lookup, or an explicit decision that each binder
+  must resolve dialect overrides at the point of use.
+* Several annotations have descriptor support and legacy binder support, but no
+  verified new-pipeline binding assertion yet.  These are the best candidates
+  for low-risk parity slices.
+
+== Hibernate Priority Buckets
+
+[cols="1,3,3", options="header"]
+|===
+| Bucket
+| Annotations
+| Next action
+
+| Descriptor/source gaps
+| `@Audited`, `@Audited.Excluded`, `@Audited.Table`,
+`@Audited.SecondaryTable`, `@Audited.SecondaryTables`,
+`@Audited.CollectionTable`, `@Changelog`, `@Changelog.ChangesetId`,
+`@Changelog.Timestamp`, `@Changelog.ModifiedEntities`
+| Defer to audit/changelog support.  Add descriptors only when the new pipeline
+is ready to bind audit/changelog metadata.
+
+| Covered low-risk bindings
+| `@ConcreteProxy`, `@EmbeddedColumnNaming`, `@EmbeddedTable`, `@LazyGroup`,
+`@MapKeyCompositeType`, `@MapKeyMutability`, `@NaturalIdClass`,
+`@TargetEmbeddable`, `@TypeBinderType`
+| Binder support and focused model-binding assertions exist.
+
+| Remaining low-risk binding candidates
+| `@HQLSelect`, `@NativeGenerator`, `@QueryCacheLayout`, `@SQLSelect`
+| Cross-check legacy binder behavior and add focused bind tests before or with
+implementation.
+
+| XML/source follow-up
+| `@LazyGroup`, `@ListIndexBase`, `@Mutability`, secondary-table
+`@SQLInsert`, `@SQLUpdate`, `@SQLDelete`
+| Add XML processing tests where backing descriptors already exist; implement
+secondary-table custom SQL XML processing separately.
+
+| Dialect override families
+| `@DialectOverride.Check`, `@DialectOverride.SQLOrder`,
+`@DialectOverride.ColumnDefault`, `@DialectOverride.GeneratedColumn`,
+`@DialectOverride.DiscriminatorFormula`, `@DialectOverride.Formula`,
+`@DialectOverride.JoinFormula`, `@DialectOverride.SQLRestriction`,
+`@DialectOverride.Filters`, `@DialectOverride.FilterDefs`,
+`@DialectOverride.SQLSelect`, `@DialectOverride.SQLInsert`,
+`@DialectOverride.SQLUpdate`, `@DialectOverride.SQLDelete`,
+`@DialectOverride.SQLDeleteAll`
+| Add/identify a model-pipeline effective-annotation helper and test each
+observable override family against two dialects.
+
+| Container/helper annotations
+| Repeatable containers such as `@Checks`, `@Filters`, `@SQLInserts`,
+`@SQLUpdates`, `@SQLDeletes`, `@TypeRegistrations`, and metadata annotations
+such as `@IdGeneratorType`, `@AttributeBinderType`, `@TypeBinderType`,
+`@ValueGenerationType`, `@DialectOverride.Version`,
+`@DialectOverride.OverridesAnnotation`
+| Verify through the owning annotation or extension mechanism rather than as
+independent mapping annotations.  `@AttributeBinderType` and `@TypeBinderType`
+now have focused extension-mechanism tests in the new binding pipeline.
+|===
+
+== Hibernate Annotation Matrix
+
+This matrix is an initial audit.  `Descriptor` means the annotation has an entry
+in the new annotation descriptor registry.  `Pipeline status` distinguishes
+observed support from work still needing binder/test confirmation.
+
+[cols="2,2,1,2,2,2,1,2", options="header"]
+|===
+| Annotation
+| Target
+| Descriptor
+| Pipeline status
+| XML/source
+| Dialect override
+| Tests
+| Classification
+
+| `@Any`
+| `METHOD`, `FIELD`
+| yes
+| any association source/binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@AnyDiscriminator`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| any discriminator source/binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@AnyDiscriminatorImplicitValues`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| consumed with `@AnyDiscriminator`
+| not audited yet
+| n/a
+| n/a
+| not applicable/nested
+
+| `@AnyDiscriminatorValue`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| any discriminator value source present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@AnyDiscriminatorValues`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| repeatable container
+| not audited yet
+| n/a
+| n/a
+| not applicable/nested
+
+| `@AnyKeyJavaClass`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| any key Java-class source present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@AnyKeyJavaType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| any key Java-type source/binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@AnyKeyJdbcType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| any key JDBC-type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@AnyKeyJdbcTypeCode`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| any key JDBC-type-code binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Array`
+| `FIELD`, `METHOD`
+| yes
+| array collection classification present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@AttributeAccessor`
+| `METHOD`, `FIELD`
+| yes
+| XML/common attribute processing present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@AttributeBinderType`
+| `ANNOTATION_TYPE`
+| yes
+| extension runner present
+| n/a
+| n/a
+| via extension tests
+| not applicable/nested
+
+| `@Audited`
+| `PACKAGE`, `TYPE`, `FIELD`, `METHOD`, `ANNOTATION_TYPE`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| needed
+| deferred
+
+| `@Audited.Excluded`
+| `FIELD`, `METHOD`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| needed
+| deferred
+
+| `@Audited.Table`
+| `TYPE`, `PACKAGE`, `ANNOTATION_TYPE`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| needed
+| deferred
+
+| `@Audited.SecondaryTable`
+| `TYPE`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| needed
+| deferred
+
+| `@Audited.SecondaryTables`
+| `TYPE`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| n/a
+| deferred
+
+| `@Audited.CollectionTable`
+| `FIELD`, `METHOD`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| needed
+| deferred
+
+| `@Bag`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| collection classification present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@BatchSize`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| entity/collection support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Cache`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| cache-region metadata present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Changelog`
+| `TYPE`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| needed
+| deferred
+
+| `@Changelog.ChangesetId`
+| `METHOD`, `FIELD`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| needed
+| deferred
+
+| `@Changelog.Timestamp`
+| `METHOD`, `FIELD`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| needed
+| deferred
+
+| `@Changelog.ModifiedEntities`
+| `METHOD`, `FIELD`
+| no
+| legacy only; descriptor/source gap
+| n/a
+| n/a
+| needed
+| deferred
+
+| `@Check`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| table/check support appears present
+| not audited yet
+| base override family
+| needed
+| test-only gap
+
+| `@Checks`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@Collate`
+| `METHOD`, `FIELD`
+| yes
+| local basic/embeddable column binding added
+| not audited yet
+| n/a
+| focused bind test
+| covered
+
+| `@CollectionId`
+| `METHOD`, `FIELD`
+| yes
+| id-bag binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CollectionIdJavaClass`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| id-bag Java-class source present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CollectionIdJavaType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| id-bag Java-type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CollectionIdJdbcType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| id-bag JDBC-type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CollectionIdJdbcTypeCode`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| id-bag JDBC-type-code binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CollectionIdMutability`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| id-bag mutability binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CollectionIdType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| id-bag type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CollectionType`
+| `FIELD`, `METHOD`, `ANNOTATION_TYPE`
+| yes
+| collection type support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CollectionTypeRegistration`
+| `TYPE`, `PACKAGE`, `ANNOTATION_TYPE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CollectionTypeRegistrations`
+| `TYPE`, `ANNOTATION_TYPE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@ColumnDefault`
+| `FIELD`, `METHOD`
+| yes
+| local basic/embeddable column binding added
+| not audited yet
+| base override family
+| focused bind test
+| covered
+
+| `@ColumnTransformer`
+| `FIELD`, `METHOD`
+| yes
+| column-transformer support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@ColumnTransformers`
+| `FIELD`, `METHOD`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@CompositeType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| composite type support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CompositeTypeRegistration`
+| `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@CompositeTypeRegistrations`
+| `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@ConcreteProxy`
+| `TYPE`
+| yes
+| entity metadata binder coverage added
+| n/a
+| n/a
+| focused bind tests
+| covered
+
+| `@ConverterRegistration`
+| `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@ConverterRegistrations`
+| `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@CreationTimestamp`
+| `FIELD`, `METHOD`
+| yes
+| binding coverage present
+| not audited yet
+| n/a
+| focused bind tests
+| covered
+
+| `@CurrentTimestamp`
+| `FIELD`, `METHOD`, `ANNOTATION_TYPE`
+| yes
+| binding coverage present
+| not audited yet
+| n/a
+| focused bind tests
+| covered
+
+| `@DiscriminatorFormula`
+| `TYPE`
+| yes
+| discriminator formula support appears present
+| not audited yet
+| base override family
+| needed
+| test-only gap
+
+| `@DiscriminatorOptions`
+| `TYPE`
+| yes
+| discriminator options support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@DynamicInsert`
+| `TYPE`
+| yes
+| entity metadata binder coverage added
+| n/a
+| n/a
+| focused bind tests
+| covered
+
+| `@DynamicUpdate`
+| `TYPE`
+| yes
+| entity metadata binder coverage added
+| n/a
+| n/a
+| focused bind tests
+| covered
+
+| `@EmbeddableInstantiator`
+| `TYPE`, `FIELD`, `METHOD`, `ANNOTATION_TYPE`
+| yes
+| embeddable support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@EmbeddableInstantiatorRegistration`
+| `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@EmbeddableInstantiatorRegistrations`
+| `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@EmbeddedColumnNaming`
+| `METHOD`, `FIELD`
+| yes
+| component binding applies naming patterns to embedded basic columns, including nested and collection-element embeddables
+| covered by `AnnotationCoverageBindingTests`
+| n/a
+| yes
+| covered
+
+| `@EmbeddedTable`
+| `METHOD`, `FIELD`
+| yes
+| embedded attribute binding resolves the named table and routes the component property to the matching secondary join
+| covered by `EmbeddableBindingTests`
+| n/a
+| yes
+| covered
+
+| `@Fetch`
+| `METHOD`, `FIELD`
+| yes
+| association fetch support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@FetchProfile`
+| `TYPE`, `PACKAGE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@FetchProfile.FetchOverride`
+| `TYPE`, `PACKAGE`
+| no
+| nested member of `@FetchProfile`
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@FetchProfileOverride`
+| `METHOD`, `FIELD`
+| yes
+| dialect-specific fetch-profile override source needs audit
+| not audited yet
+| n/a
+| needed
+| categorization gap
+
+| `@FetchProfileOverrides`
+| `METHOD`, `FIELD`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@FetchProfiles`
+| `TYPE`, `PACKAGE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@Filter`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| filter binding appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@FilterDef`
+| `TYPE`, `PACKAGE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@FilterDefs`
+| `PACKAGE`, `TYPE`
+| yes
+| repeatable container
+| n/a
+| base override family
+| n/a
+| not applicable/nested
+
+| `@FilterJoinTable`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| join-table filter support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@FilterJoinTables`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@Filters`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| repeatable container
+| n/a
+| base override family
+| n/a
+| not applicable/nested
+
+| `@Formula`
+| `METHOD`, `FIELD`
+| yes
+| formula binding appears present
+| not audited yet
+| base override family
+| needed
+| test-only gap
+
+| `@FractionalSeconds`
+| `METHOD`, `FIELD`
+| yes
+| local basic/embeddable column binding added
+| not audited yet
+| n/a
+| focused bind test
+| covered
+
+| `@Generated`
+| `FIELD`, `METHOD`
+| yes
+| binding coverage present
+| not audited yet
+| n/a
+| focused bind tests
+| covered
+
+| `@GeneratedColumn`
+| `FIELD`, `METHOD`
+| yes
+| binding coverage present
+| not audited yet
+| base override family
+| focused bind tests
+| covered
+
+| `@GenericGenerator`
+| `METHOD`, `FIELD`, `TYPE`, `PACKAGE`
+| yes
+| generator registration appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@HQLSelect`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| needs binding audit
+| not audited yet
+| n/a
+| needed
+| binding gap
+
+| `@IdGeneratorType`
+| `ANNOTATION_TYPE`
+| yes
+| generator meta-annotation
+| n/a
+| n/a
+| via generator tests
+| not applicable/nested
+
+| `@Immutable`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| entity/attribute support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Imported`
+| `TYPE`
+| yes
+| global query import support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@Instantiator`
+| `CONSTRUCTOR`
+| yes
+| instantiator support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@JavaType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| basic-value Java type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@JavaTypeRegistration`
+| `PACKAGE`, `TYPE`, `ANNOTATION_TYPE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@JavaTypeRegistrations`
+| `PACKAGE`, `TYPE`, `ANNOTATION_TYPE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@JdbcType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| basic-value JDBC type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@JdbcTypeCode`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| basic-value JDBC type-code binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@JdbcTypeRegistration`
+| `PACKAGE`, `TYPE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@JdbcTypeRegistrations`
+| `PACKAGE`, `TYPE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@JoinColumnOrFormula`
+| `METHOD`, `FIELD`
+| yes
+| join-column/formula source appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@JoinColumnsOrFormulas`
+| `METHOD`, `FIELD`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@JoinFormula`
+| `METHOD`, `FIELD`
+| yes
+| join-formula source appears present
+| not audited yet
+| base override family
+| needed
+| test-only gap
+
+| `@LazyGroup`
+| `METHOD`, `FIELD`
+| yes
+| local property binding coverage added
+| XML descriptor/source present; focused test needed
+| n/a
+| focused bind tests
+| covered
+
+| `@ListIndexBase`
+| unspecified
+| yes
+| list index binding appears present
+| XML descriptor/source present; focused test needed
+| n/a
+| needed
+| test-only gap
+
+| `@ListIndexJavaType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| list index Java-type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@ListIndexJdbcType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| list index JDBC-type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@ListIndexJdbcTypeCode`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| list index JDBC-type-code binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@ManyToAny`
+| `METHOD`, `FIELD`
+| yes
+| many-to-any source/binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@MapKeyCompositeType`
+| unspecified
+| yes
+| map-key binding creates a component index and applies the custom `CompositeUserType`
+| covered by `ElementCollectionBindingTests`
+| n/a
+| yes
+| covered
+
+| `@MapKeyJavaType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| map-key Java-type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@MapKeyJdbcType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| map-key JDBC-type binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@MapKeyJdbcTypeCode`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| map-key JDBC-type-code binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@MapKeyMutability`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| map-key mutability binding coverage added
+| not audited yet
+| n/a
+| focused bind tests
+| covered
+
+| `@MapKeyType`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| map-key type support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Mutability`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`, `TYPE`
+| yes
+| mutability support appears present
+| XML descriptor/source present; focused test needed
+| n/a
+| needed
+| test-only gap
+
+| `@NamedEntityGraph`
+| `TYPE`, `PACKAGE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@NamedEntityGraphs`
+| `TYPE`, `PACKAGE`, `ANNOTATION_TYPE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@NamedNativeQueries`
+| `TYPE`, `PACKAGE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@NamedNativeQuery`
+| `TYPE`, `PACKAGE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@NamedQueries`
+| `TYPE`, `PACKAGE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@NamedQuery`
+| `TYPE`, `PACKAGE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Nationalized`
+| `PACKAGE`, `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| basic-value support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@NativeGenerator`
+| `METHOD`, `FIELD`, `TYPE`, `PACKAGE`
+| yes
+| needs generator binding audit
+| not audited yet
+| n/a
+| needed
+| binding gap
+
+| `@NaturalId`
+| `METHOD`, `FIELD`
+| yes
+| natural-id attribute binding present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@NaturalIdCache`
+| `TYPE`
+| yes
+| natural-id cache support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@NaturalIdClass`
+| `TYPE`
+| yes
+| entity metadata binder coverage added
+| n/a
+| n/a
+| focused bind tests
+| covered
+
+| `@NotFound`
+| `METHOD`, `FIELD`
+| yes
+| association support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@OnDelete`
+| `METHOD`, `FIELD`, `TYPE`
+| yes
+| binding coverage present
+| not audited yet
+| n/a
+| focused bind tests
+| covered
+
+| `@OptimisticLock`
+| `METHOD`, `FIELD`
+| yes
+| attribute binding present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@OptimisticLocking`
+| `TYPE`
+| yes
+| entity metadata support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@ParamDef`
+| no target
+| yes
+| nested value of `@FilterDef`
+| n/a
+| n/a
+| via filter-def tests
+| not applicable/nested
+
+| `@Parameter`
+| no target
+| yes
+| nested value of generator/type annotations
+| n/a
+| n/a
+| via owner tests
+| not applicable/nested
+
+| `@Parent`
+| `METHOD`, `FIELD`
+| yes
+| binding coverage present
+| n/a
+| n/a
+| focused bind tests
+| covered
+
+| `@PartitionKey`
+| `METHOD`, `FIELD`
+| yes
+| binding coverage present
+| n/a
+| n/a
+| focused bind tests
+| covered
+
+| `@PropertyRef`
+| `FIELD`, `METHOD`, `ANNOTATION_TYPE`
+| yes
+| association support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@QueryCacheLayout`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| needs binding audit
+| n/a
+| n/a
+| needed
+| binding gap
+
+| `@RowId`
+| `TYPE`
+| yes
+| binding coverage present
+| n/a
+| n/a
+| focused bind tests
+| covered
+
+| `@SecondaryRow`
+| `TYPE`
+| yes
+| secondary-row support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@SecondaryRows`
+| `TYPE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@SoftDelete`
+| `PACKAGE`, `TYPE`, `FIELD`, `METHOD`, `ANNOTATION_TYPE`
+| yes
+| soft-delete support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@SortComparator`
+| `METHOD`, `FIELD`
+| yes
+| collection sort support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@SortNatural`
+| `METHOD`, `FIELD`
+| yes
+| collection sort support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@SqlFragmentAlias`
+| no target
+| yes
+| nested value of SQL restriction/filter annotations
+| n/a
+| n/a
+| via owner tests
+| not applicable/nested
+
+| `@Struct`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| intentionally deferred aggregate/UDT area
+| not audited yet
+| n/a
+| needed
+| deferred
+
+| `@Subselect`
+| `TYPE`
+| yes
+| table source support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@Synchronize`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| synchronized-table support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+
+| `@TargetEmbeddable`
+| unspecified
+| yes
+| component source resolves targeted embeddable type for embedded attributes and embeddable collection elements
+| covered by `AnnotationCoverageBindingTests`
+| n/a
+| yes
+| covered
+
+| `@Temporal`
+| `PACKAGE`, `TYPE`, `FIELD`, `METHOD`, `ANNOTATION_TYPE`
+| yes
+| temporal/history support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Temporal.HistoryPartitioning`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| nested temporal annotation
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Temporal.HistoryTable`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| nested temporal annotation
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Temporal.Excluded`
+| `FIELD`, `METHOD`
+| yes
+| nested temporal annotation
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@TenantId`
+| `METHOD`, `FIELD`
+| yes
+| binding coverage present
+| n/a
+| n/a
+| focused bind tests
+| covered
+
+| `@TimeZoneColumn`
+| `FIELD`, `METHOD`
+| yes
+| basic-value support present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@TimeZoneStorage`
+| `FIELD`, `METHOD`
+| yes
+| basic-value support present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@Type`
+| `METHOD`, `FIELD`, `ANNOTATION_TYPE`
+| yes
+| custom type support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@TypeBinderType`
+| `ANNOTATION_TYPE`
+| yes
+| extension runner present
+| n/a
+| n/a
+| via extension tests
+| not applicable/nested
+
+| `@TypeRegistration`
+| `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
+| yes
+| global registration present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@TypeRegistrations`
+| `TYPE`, `ANNOTATION_TYPE`, `PACKAGE`
+| yes
+| repeatable container
+| n/a
+| n/a
+| n/a
+| not applicable/nested
+
+| `@UpdateTimestamp`
+| `FIELD`, `METHOD`
+| yes
+| binding coverage present
+| not audited yet
+| n/a
+| focused bind tests
+| covered
+
+| `@UuidGenerator`
+| `FIELD`, `METHOD`
+| yes
+| generator support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@ValueGenerationType`
+| `ANNOTATION_TYPE`
+| yes
+| binding coverage present for basic attributes
+| n/a
+| n/a
+| focused bind tests
+| covered
+
+| `@View`
+| `TYPE`
+| yes
+| table/view support appears present
+| n/a
+| n/a
+| needed
+| test-only gap
+|===
+
+== SQL And Custom Loader Annotations
+
+[cols="2,2,1,2,2,2,1,2", options="header"]
+|===
+| Annotation
+| Target
+| Descriptor
+| Pipeline status
+| XML/source
+| Dialect override
+| Tests
+| Classification
+
+| `@SQLDelete`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| entity/collection custom SQL support appears present
+| secondary-table XML gap
+| base override family
+| needed
+| test-only gap
+
+| `@SQLDeleteAll`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| collection custom SQL support appears present
+| not audited yet
+| base override family
+| needed
+| test-only gap
+
+| `@SQLDeletes`
+| `TYPE`
+| yes
+| repeatable container for secondary-table custom SQL
+| XML gap
+| n/a
+| needed
+| binding gap
+
+| `@SQLInsert`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| entity/collection custom SQL support appears present
+| secondary-table XML gap
+| base override family
+| needed
+| test-only gap
+
+| `@SQLInserts`
+| `TYPE`
+| yes
+| repeatable container for secondary-table custom SQL
+| XML gap
+| n/a
+| needed
+| binding gap
+
+| `@SQLJoinTableRestriction`
+| `METHOD`, `FIELD`
+| yes
+| join-table restriction support appears present
+| not audited yet
+| n/a
+| needed
+| test-only gap
+
+| `@SQLOrder`
+| `METHOD`, `FIELD`
+| yes
+| collection ordering support appears present
+| not audited yet
+| base override family
+| needed
+| test-only gap
+
+| `@SQLRestriction`
+| `TYPE`, `METHOD`, `FIELD`
+| yes
+| restriction support appears present
+| not audited yet
+| base override family
+| needed
+| test-only gap
+
+| `@SQLSelect`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| needs binding audit
+| not audited yet
+| base override family
+| needed
+| binding gap
+
+| `@SQLUpdate`
+| `TYPE`, `FIELD`, `METHOD`
+| yes
+| entity/collection custom SQL support appears present
+| secondary-table XML gap
+| base override family
+| needed
+| test-only gap
+
+| `@SQLUpdates`
+| `TYPE`
+| yes
+| repeatable container for secondary-table custom SQL
+| XML gap
+| n/a
+| needed
+| binding gap
+|===
+
+== Dialect Override Matrix
+
+`DialectOverride` support should be verified by asking the new pipeline for the
+effective base annotation for the active dialect.  Container/helper annotations
+are verified through the matching singular override.
+
+[cols="2,2,1,2,2", options="header"]
+|===
+| Annotation
+| Overrides
+| Descriptor
+| Pipeline status
+| Classification
+
+| `@DialectOverride.Version`
+| helper value
+| yes
+| consumed by override matching
+| not applicable/nested
+
+| `@DialectOverride.Check`
+| `@Check`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.Checks`
+| container for `@DialectOverride.Check`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.SQLOrder`
+| `@SQLOrder`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.SQLOrders`
+| container for `@DialectOverride.SQLOrder`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.ColumnDefault`
+| `@ColumnDefault`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.ColumnDefaults`
+| container for `@DialectOverride.ColumnDefault`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.GeneratedColumn`
+| `@GeneratedColumn`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.GeneratedColumns`
+| container for `@DialectOverride.GeneratedColumn`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.DiscriminatorFormula`
+| `@DiscriminatorFormula`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.DiscriminatorFormulas`
+| container for `@DialectOverride.DiscriminatorFormula`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.Formula`
+| `@Formula`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.Formulas`
+| container for `@DialectOverride.Formula`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.JoinFormula`
+| `@JoinFormula`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.JoinFormulas`
+| container for `@DialectOverride.JoinFormula`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.SQLRestriction`
+| `@SQLRestriction`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.SQLRestrictions`
+| container for `@DialectOverride.SQLRestriction`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.Filters`
+| `@Filters`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.FilterOverrides`
+| container for `@DialectOverride.Filters`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.FilterDefs`
+| `@FilterDefs`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.FilterDefOverrides`
+| container for `@DialectOverride.FilterDefs`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.SQLSelect`
+| `@SQLSelect`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.SQLSelects`
+| container for `@DialectOverride.SQLSelect`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.SQLInsert`
+| `@SQLInsert`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.SQLInserts`
+| container for `@DialectOverride.SQLInsert`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.SQLUpdate`
+| `@SQLUpdate`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.SQLUpdates`
+| container for `@DialectOverride.SQLUpdate`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.SQLDelete`
+| `@SQLDelete`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.SQLDeletes`
+| container for `@DialectOverride.SQLDelete`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.SQLDeleteAll`
+| `@SQLDeleteAll`
+| yes
+| effective annotation lookup needed
+| dialect-override gap
+
+| `@DialectOverride.SQLDeleteAlls`
+| container for `@DialectOverride.SQLDeleteAll`
+| yes
+| verify through singular override
+| not applicable/nested
+
+| `@DialectOverride.OverridesAnnotation`
+| meta-annotation
+| no
+| JDK annotation only; no ORM descriptor needed unless XML/source synthesis needs it
+| not applicable/nested
+|===
+
+== Follow-Up Slices
+
+1. Add focused tests for JPA and Hibernate annotations currently marked
+   `test-only gap`, starting with low-risk table/entity/attribute mapping
+   effects that already appear to have source or binder support.
+2. Audit and close JPA 4.0 binding gaps for `@CheckConstraint`,
+   `@EnumeratedValue`, `@Fetch`, `@NamedStatement`,
+   `@NamedNativeStatement`, `@EntityListener`, `@ExcludedFromVersioning`,
+   and `@Discoverable`.
+3. Decide whether `JpaAnnotations` should register every annotation in the JPA
+   API jar.  If so, add descriptors for the injection/bootstrap,
+   query-package, static metamodel, and new lifecycle callback annotations
+   listed under JPA jar descriptor gaps.
+4. Implement the remaining Hibernate low-risk binding gaps in small groups:
+   native generators, query cache layout, and custom loaders.
+5. Add a single new-pipeline dialect override resolution point and convert
+   direct annotation lookups for override-capable annotations to use it.
+6. Revisit audit/changelog descriptors and binding once state-management support
+   has a dedicated design slice.

@@ -334,7 +334,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				}
 
 			}
-			getJdbcValuesSourceProcessingState().finishUp( false );
+			getJdbcValuesSourceProcessingState().finishUp();
 		}
 		finally {
 			persistenceContext.afterLoad();

@@ -148,7 +148,7 @@ public class MultiNaturalIdLoadingBatcher {
 			int size) {
 		final var subSelectFetchableKeysHandler =
 				session.getLoadQueryInfluencers()
-					.hasSubselectLoadableCollections( entityDescriptor.getEntityPersister() )
+					.hasSubselectLoadableAttributes( entityDescriptor.getEntityPersister() )
 						? SubselectFetch.createRegistrationHandler(
 								session.getPersistenceContext().getBatchFetchQueue(),
 								sqlSelect,

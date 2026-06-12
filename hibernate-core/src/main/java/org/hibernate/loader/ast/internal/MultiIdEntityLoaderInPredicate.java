@@ -162,7 +162,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			JdbcParametersList jdbcParameters,
 			JdbcParameterBindings jdbcParameterBindings) {
 		final var batchFetchQueue = session.getPersistenceContext().getBatchFetchQueue();
-		return session.getLoadQueryInfluencers().hasSubselectLoadableCollections( getLoadable().getEntityPersister() )
+		return session.getLoadQueryInfluencers().hasSubselectLoadableAttributes( getLoadable().getEntityPersister() )
 				? createRegistrationHandler( batchFetchQueue, sqlAst, jdbcParameters, jdbcParameterBindings )
 				: null;
 	}

@@ -130,7 +130,7 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 				try {
 					currentRow = getRowReader().readRow( getRowProcessingState() );
 					getRowProcessingState().finishRowProcessing( true );
-					getJdbcValuesSourceProcessingState().finishUp( false );
+					getJdbcValuesSourceProcessingState().finishUp();
 				}
 				finally {
 					persistenceContext.afterLoad();

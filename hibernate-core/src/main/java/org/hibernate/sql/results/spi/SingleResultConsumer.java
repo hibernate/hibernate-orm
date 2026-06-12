@@ -51,7 +51,7 @@ public class SingleResultConsumer<T> implements ResultsConsumer<T, T> {
 			rowProcessingState.finishRowProcessing( true );
 			jdbcValuesSourceProcessingState.registerSubselects();
 			rowReader.finishUp( rowProcessingState );
-			jdbcValuesSourceProcessingState.finishUp( true );
+			jdbcValuesSourceProcessingState.finishUp();
 			return result;
 		}
 		catch (RuntimeException e) {

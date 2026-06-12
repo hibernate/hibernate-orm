@@ -11,6 +11,11 @@ update.
 
 == Bootstrap Design and Plan
 
+link:flow-notation.adoc[`flow-notation.adoc`]
+
+This is the shared syntax reference for compact resolver and pipeline sketches
+used by the bootstrap design notes.
+
 link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`]
 
 This is the main end-state design note for building a `SessionFactory` /

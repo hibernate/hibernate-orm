@@ -55,56 +55,8 @@ bootstrap work itself.
 
 === Flow Notation
 
-Pipeline sketches in this document use a simple convention:
-
-.Resolver or builder slice
-[source]
-----
-InputA
-InputB
-InputC
-    -> Product1
-    -> Product2 (*)
-    -> Product3
-----
-
-The unindented names are inputs to the resolver or builder that owns the slice.
-They are peers, not an ordered pipeline.  The indented `->` lines are the
-ordered products or steps created within that slice.  The final arrow is the
-gross target returned by that resolver or builder.
-
-A `(*)` marker means the product is retained by, or aggregated into, the final
-gross product.  Unmarked intermediate products are phase-local, consumed while
-producing later steps, or represented only indirectly.
-
-For example:
-
-.MetadataResolver
-[source]
-----
-ResolvedBootstrapSettings
-MappingSourceContributions
-ServiceRegistry
-    -> AvailableResources
-    -> CategorizedDomainModel (*)
-    -> BindingState (*)
-    -> MetadataCollector
-    -> MetadataImplementor (*)
-    -> ResolvedMetadata
-----
-
-means that `MetadataResolver` receives already-resolved settings, normalized
-source contributions, and a service registry.  It then builds available source
-resources, categorizes the domain model, binds that model through
-`BindingState`, writes completed metadata contributions through
-`MetadataCollector`, finalizes ORM's current `MetadataImplementor`, and returns
-`ResolvedMetadata`.
-
-The notation does not mean every intermediate product belongs in the final
-result.  Some products are phase-local implementation details.  For instance,
-`ResolvedBootstrapSettings` is an input to metadata resolution, not part of
-`ResolvedMetadata`; `MetadataCollector` is used to produce the finalized
-metadata, but is not itself retained by `ResolvedMetadata`.
+Pipeline sketches in this document use the shared notation described in
+link:flow-notation.adoc[`flow-notation.adoc`].
 
 == Entry Points
 

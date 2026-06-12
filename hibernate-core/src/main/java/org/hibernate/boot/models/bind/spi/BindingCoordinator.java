@@ -13,6 +13,8 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedNativeStatement;
+import jakarta.persistence.NamedStatement;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
@@ -248,12 +250,21 @@ public class BindingCoordinator {
 	private void processNamedQueries(GlobalRegistrations globalRegistrations) {
 		globalRegistrations.getNamedQueryRegistrations().values().forEach( (registration) -> {
 			if ( registration.isJpa() ) {
-				QueryBinder.bindQuery(
-						(jakarta.persistence.NamedQuery) registration.getConfiguration(),
-						bindingState.getMetadataBuildingContext(),
-						false,
-						null
-				);
+				if ( registration.getConfiguration() instanceof NamedStatement statement ) {
+					QueryBinder.bindStatement(
+							statement,
+							bindingState.getMetadataBuildingContext(),
+							null
+					);
+				}
+				else {
+					QueryBinder.bindQuery(
+							(jakarta.persistence.NamedQuery) registration.getConfiguration(),
+							bindingState.getMetadataBuildingContext(),
+							false,
+							null
+					);
+				}
 			}
 			else {
 				QueryBinder.bindQuery(
@@ -265,12 +276,21 @@ public class BindingCoordinator {
 		} );
 		globalRegistrations.getNamedNativeQueryRegistrations().values().forEach( (registration) -> {
 			if ( registration.isJpa() ) {
-				QueryBinder.bindNativeQuery(
-						(jakarta.persistence.NamedNativeQuery) registration.getConfiguration(),
-						bindingState.getMetadataBuildingContext(),
-						null,
-						false
-				);
+				if ( registration.getConfiguration() instanceof NamedNativeStatement statement ) {
+					QueryBinder.bindNativeStatement(
+							statement,
+							bindingState.getMetadataBuildingContext(),
+							null
+					);
+				}
+				else {
+					QueryBinder.bindNativeQuery(
+							(jakarta.persistence.NamedNativeQuery) registration.getConfiguration(),
+							bindingState.getMetadataBuildingContext(),
+							null,
+							false
+					);
+				}
 			}
 			else {
 				QueryBinder.bindNativeQuery(

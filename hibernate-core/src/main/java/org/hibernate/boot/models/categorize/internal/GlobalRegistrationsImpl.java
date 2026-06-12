@@ -83,7 +83,9 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStatement;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SequenceGenerator;
@@ -639,6 +641,12 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 		for ( NamedStoredProcedureQuery usage : annotationTarget.getRepeatedAnnotationUsages( NamedStoredProcedureQuery.class, modelsContext ) ) {
 			collectNamedQueryRegistration( usage.name(), NamedQueryRegistration.Kind.CALLABLE, true, usage );
+		}
+		for ( NamedStatement usage : annotationTarget.getRepeatedAnnotationUsages( NamedStatement.class, modelsContext ) ) {
+			collectNamedQueryRegistration( usage.name(), NamedQueryRegistration.Kind.HQL, true, usage );
+		}
+		for ( NamedNativeStatement usage : annotationTarget.getRepeatedAnnotationUsages( NamedNativeStatement.class, modelsContext ) ) {
+			collectNamedQueryRegistration( usage.name(), NamedQueryRegistration.Kind.NATIVE, true, usage );
 		}
 		for ( org.hibernate.annotations.NamedQuery usage : annotationTarget.getRepeatedAnnotationUsages(
 				org.hibernate.annotations.NamedQuery.class,

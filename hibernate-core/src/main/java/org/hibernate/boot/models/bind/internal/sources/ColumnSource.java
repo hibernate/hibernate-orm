@@ -6,6 +6,7 @@ package org.hibernate.boot.models.bind.internal.sources;
 
 import org.hibernate.internal.util.StringHelper;
 
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
@@ -68,6 +69,10 @@ public interface ColumnSource {
 
 	String table();
 
+	default CheckConstraint[] checkConstraints() {
+		return new CheckConstraint[0];
+	}
+
 	record JpaColumnSource(jakarta.persistence.Column column) implements ColumnSource {
 		@Override
 		public String name() {
@@ -112,6 +117,11 @@ public interface ColumnSource {
 		@Override
 		public String table() {
 			return column.table();
+		}
+
+		@Override
+		public CheckConstraint[] checkConstraints() {
+			return column.check();
 		}
 	}
 
@@ -160,6 +170,11 @@ public interface ColumnSource {
 		public String table() {
 			return joinColumn.table();
 		}
+
+		@Override
+		public CheckConstraint[] checkConstraints() {
+			return joinColumn.check();
+		}
 	}
 
 	record MapKeyColumnSource(MapKeyColumn mapKeyColumn) implements ColumnSource {
@@ -207,6 +222,11 @@ public interface ColumnSource {
 		public String table() {
 			return mapKeyColumn.table();
 		}
+
+		@Override
+		public CheckConstraint[] checkConstraints() {
+			return mapKeyColumn.check();
+		}
 	}
 
 	record MapKeyJoinColumnSource(MapKeyJoinColumn mapKeyJoinColumn) implements ColumnSource {
@@ -253,6 +273,11 @@ public interface ColumnSource {
 		@Override
 		public String table() {
 			return mapKeyJoinColumn.table();
+		}
+
+		@Override
+		public CheckConstraint[] checkConstraints() {
+			return mapKeyJoinColumn.check();
 		}
 	}
 

@@ -95,3 +95,15 @@ Such changes typically do not impact programs using a relational schema managed 
 == Changes in Dependencies
 
 This section describes changes to dependencies used by Hibernate ORM.
+
+[[dependency-changes-provided]]
+=== Integration module dependencies are now provided
+
+Several integration modules no longer pull their external library as a transitive runtime dependency.
+Applications using these modules must now explicitly add the corresponding library to their classpath:
+
+- `hibernate-micrometer`: add `io.micrometer:micrometer-core`
+- `hibernate-c3p0`: add `com.mchange:c3p0`
+- `hibernate-hikaricp`: add `com.zaxxer:HikariCP`
+- `hibernate-agroal`: add `io.agroal:agroal-pool`
+- `hibernate-ucp`: add `com.oracle.database.jdbc:ucp17` and `com.oracle.database.jdbc:ojdbc17`

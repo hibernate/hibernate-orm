@@ -63,11 +63,10 @@ test {
             "vehicle"                                        : "standalone",
             "user.dir"                                       : userdir,
             "db.supports.sequence"                           : "true",
-            "Insert_Jpa_Purchase_Order"                      : "INSERT INTO PURCHASE_ORDER(ID, TOTAL, DESCRIPTION) VALUES(?, ?, null)",
+            "Insert_Jpa_Purchase_Order"                      : "INSERT INTO PURCHASE_ORDER(ID, TOTAL) VALUES(?, ?)",
             "Select_Jpa_Purchase_Order"                      : "SELECT ID, TOTAL FROM PURCHASE_ORDER WHERE ID=?",
             "log.file.location"                              : tckLogs,
             "jdbc.db"                                        : "postgresql",
-            "hibernate.show_sql"                             : "true"
     ]
 
     testLogging {

@@ -344,6 +344,7 @@ public abstract class AbstractEntityPersister
 	private final boolean hasFormulaProperties;
 	protected final int batchSize;
 	private final boolean hasSubselectLoadableCollections;
+	private final boolean hasSubselectLoadableAttributes;
 	private final boolean hasPartitionedSelectionMapping;
 	private final boolean hasCollectionNotReferencingPK;
 	protected final String rowIdName;
@@ -544,6 +545,7 @@ public abstract class AbstractEntityPersister
 						? factoryOptions.getDefaultBatchFetchSize()
 						: persistentClass.getBatchSize();
 		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections();
+		hasSubselectLoadableAttributes = persistentClass.hasSubselectLoadableAttributes();
 		hasPartitionedSelectionMapping = persistentClass.hasPartitionedSelectionMapping();
 		hasCollectionNotReferencingPK = persistentClass.hasCollectionNotReferencingPK();
 
@@ -5092,6 +5094,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean hasSubselectLoadableCollections() {
 		return hasSubselectLoadableCollections;
+	}
+
+	@Override
+	public boolean hasSubselectLoadableAttributes() {
+		return hasSubselectLoadableAttributes;
 	}
 
 	@Override

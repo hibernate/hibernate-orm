@@ -267,8 +267,11 @@ public class OutputsImpl implements ProcedureOutputs {
 				return results;
 			}
 			finally {
+				if ( results.size() > 1 ) {
+					jdbcValuesSourceProcessingState.registerSubselects();
+				}
 				rowReader.finishUp( rowProcessingState );
-				jdbcValuesSourceProcessingState.finishUp( results.size() > 1 );
+				jdbcValuesSourceProcessingState.finishUp();
 			}
 		}
 		finally {

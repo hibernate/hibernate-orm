@@ -311,6 +311,11 @@ public sealed class Subclass extends PersistentClass
 			|| getSuperclass().hasSubselectLoadableCollections();
 	}
 
+	public boolean hasSubselectLoadableAttributes() {
+		return super.hasSubselectLoadableAttributes()
+			|| getSuperclass().hasSubselectLoadableAttributes();
+	}
+
 	@Override
 	public Component getIdentifierMapper() {
 		return superclass.getIdentifierMapper();

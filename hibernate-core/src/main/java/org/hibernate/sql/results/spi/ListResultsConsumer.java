@@ -166,7 +166,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				jdbcValuesSourceProcessingState.registerSubselects();
 			}
 			rowReader.finishUp( rowProcessingState );
-			jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
+			jdbcValuesSourceProcessingState.finishUp();
 			return transformList( rowProcessingState, results );
 		}
 		catch (RuntimeException e) {

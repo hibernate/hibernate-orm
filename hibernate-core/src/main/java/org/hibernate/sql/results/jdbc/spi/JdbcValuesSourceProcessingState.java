@@ -62,5 +62,5 @@ public interface JdbcValuesSourceProcessingState {
 
 	void registerSubselects();
 
-	void finishUp(boolean registerSubselects);
+	void finishUp();
 }

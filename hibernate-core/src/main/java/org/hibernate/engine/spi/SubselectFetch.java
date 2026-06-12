@@ -137,7 +137,7 @@ public class SubselectFetch {
 		@Override
 		public void addKey(EntityHolder holder) {
 			if ( batchFetchQueue.getSession().getLoadQueryInfluencers()
-					.hasSubselectLoadableCollections( holder.getDescriptor(), appliedGraph ) ) {
+					.hasSubselectLoadableAttributes( holder.getDescriptor(), appliedGraph ) ) {
 				final var path = castNonNull( holder.getEntityInitializer() ).getNavigablePath();
 				final var querySpec = loadingSqlAst.getQuerySpec();
 				final var subselectFetch = subselectFetches.computeIfAbsent(

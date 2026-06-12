@@ -1335,6 +1335,7 @@ public class ModelBinder {
 			case SUBSELECT:
 				binding.setSubselectLoadable( true );
 				binding.getOwner().setSubselectLoadableCollections( true );
+				binding.getOwner().setSubselectLoadableAttributes( true );
 				break;
 		}
 	}

@@ -11,24 +11,6 @@ changes, but they first need a clear local prototype story.
 
 NOTE: This gap analysis is based on an older version of ORM code, probably even pre-8.0.  The analysis will need to be performed again.
 
-== Association Identifiers and Derived Identifiers
-
-Known remaining gaps:
-
-* Inverse `@OneToOne` association identifiers.
-+
-`IdClass` association identifiers currently support owning to-one attributes.
-The inverse `@OneToOne(mappedBy = ...)` case still fails explicitly.  This likely
-belongs near the inverse to-one association phase, because the identifier value
-needs to be reconciled with the owning-side property after members and table keys
-exist.
-+
-Prototype touchpoints:
-+
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/IdentifierBinder.java[`IdentifierBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/InverseToOneAssociationBinder.java[`InverseToOneAssociationBinder`]
-* link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/bind/id/SimpleIdTests.java[`SimpleIdTests`]
-
 == Annotation and XML Coverage
 
 These are annotation and XML coverage items that have not yet been promoted into

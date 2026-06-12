@@ -22,7 +22,10 @@ import org.hibernate.mapping.Table;
 ///
 /// The [#columns()] list is intentionally ordered.  Table keys, association
 /// identifiers, derived identifiers, and implicit join columns all need the
-/// identifier column order selected while binding the root hierarchy id.
+/// identifier column order selected while binding the root hierarchy id.  The
+/// list remains live through the association-identifier phase because
+/// association-valued `IdClass` attributes contribute their columns after the
+/// initial identifier component is created.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -34,7 +37,4 @@ public record IdentifierBinding(
 		Property property,
 		Table table,
 		List<Column> columns) {
-	public IdentifierBinding {
-		columns = List.copyOf( columns );
-	}
 }

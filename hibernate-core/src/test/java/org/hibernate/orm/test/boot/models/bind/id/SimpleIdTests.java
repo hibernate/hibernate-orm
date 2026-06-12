@@ -443,7 +443,7 @@ public class SimpleIdTests {
 				MapsIdParent.class,
 				JoinTableAssociationIdChild.class
 		) )
-				.hasMessageContaining( "must have same number of columns as the referenced primary key" );
+				.hasMessageContaining( "Unable to match join column referencedColumnName to target identifier column" );
 	}
 
 	@Test
@@ -474,15 +474,28 @@ public class SimpleIdTests {
 
 	@Test
 	@ServiceRegistry
-	void testInverseOneToOneAssociationIdFails(ServiceRegistryScope scope) {
-		assertThatThrownBy( () -> checkDomainModel(
+	void testInverseOneToOneAssociationId(ServiceRegistryScope scope) {
+		checkDomainModel(
 				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( InverseOneToOneAssociationIdChild.class.getName() );
+					final Component identifier = (Component) entityBinding.getIdentifier();
+					final org.hibernate.mapping.OneToOne parent = (org.hibernate.mapping.OneToOne)
+							identifier.getProperty( "parent" ).getValue();
+
+					assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "parent_parent_id", "child_id" );
+					assertThat( parent.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "parent_parent_id" );
+					assertThat( parent.getMappedByProperty() ).isEqualTo( "parent" );
+					assertThat( parent.isConstrained() ).isTrue();
 				},
 				scope.getRegistry(),
 				InverseOneToOneAssociationIdParent.class,
 				InverseOneToOneAssociationIdChild.class
-		) ).isInstanceOf( UnsupportedOperationException.class )
-				.hasMessageContaining( "Association identifiers are only implemented for owning to-one attributes" );
+		);
 	}
 
 	@Test

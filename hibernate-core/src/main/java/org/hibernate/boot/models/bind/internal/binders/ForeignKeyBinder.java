@@ -8,6 +8,7 @@ import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.ToOne;
 
 /// Creates physical foreign-key constraints for pending association and table keys.
 ///
@@ -40,12 +41,12 @@ class ForeignKeyBinder {
 	}
 
 	private void bindForeignKey(ForeignKeyBinding foreignKeyBinding) {
-		final ManyToOne value = foreignKeyBinding.value();
+		final ToOne value = foreignKeyBinding.value();
 		if ( value.isReferenceToPrimaryKey() ) {
 			value.createForeignKey();
 		}
-		else {
-			value.createPropertyRefConstraints(
+		else if ( value instanceof ManyToOne manyToOne ) {
+			manyToOne.createPropertyRefConstraints(
 					entityBinder.getBindingState().getMetadataBuildingContext()
 							.getMetadataCollector()
 							.getEntityBindingMap()
@@ -60,7 +61,7 @@ class ForeignKeyBinder {
 		applyForeignKeySource( foreignKey, tableForeignKeyBinding.foreignKeySource() );
 	}
 
-	private void applyForeignKeySource(ManyToOne value, ForeignKeySource foreignKeySource) {
+	private void applyForeignKeySource(ToOne value, ForeignKeySource foreignKeySource) {
 		if ( foreignKeySource == null ) {
 			return;
 		}
@@ -87,7 +88,7 @@ class ForeignKeyBinder {
 		}
 	}
 
-	private ForeignKey findForeignKey(ManyToOne value) {
+	private ForeignKey findForeignKey(ToOne value) {
 		for ( ForeignKey foreignKey : value.getTable().getForeignKeyCollection() ) {
 			if ( value.getReferencedEntityName().equals( foreignKey.getReferencedEntityName() ) ) {
 				return foreignKey;

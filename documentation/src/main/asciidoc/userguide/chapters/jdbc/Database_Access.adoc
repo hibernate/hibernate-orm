@@ -52,7 +52,8 @@ NOTE: Not all properties apply to all situations. For example, if you are provid
 
 [IMPORTANT]
 ====
-To use the c3p0 integration, the application must include the `hibernate-c3p0` module jar (as well as its dependencies) on the classpath.
+To use the c3p0 integration, the application must include the `hibernate-c3p0` module jar on the classpath,
+as well as an appropriate version of `com.mchange:c3p0`.
 ====
 
 Hibernate also provides support for applications to use https://www.mchange.com/projects/c3p0/[c3p0] connection pooling.

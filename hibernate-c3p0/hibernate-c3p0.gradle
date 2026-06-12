@@ -12,9 +12,10 @@ description = 'Integration for c3p0 Connection pooling into Hibernate ORM'
 
 dependencies {
     implementation project( ':hibernate-core' )
-    implementation libs.c3p0
+    compileOnly libs.c3p0
 
     testImplementation project( ':hibernate-testing' )
+    testRuntimeOnly libs.c3p0
     testImplementation libs.jakarta.validation
     testImplementation libs.test.validator
 }

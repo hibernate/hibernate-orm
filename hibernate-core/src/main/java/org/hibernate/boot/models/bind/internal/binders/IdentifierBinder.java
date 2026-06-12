@@ -424,6 +424,15 @@ public class IdentifierBinder {
 	}
 
 	private void applyGeneratedValue(BasicValue idValue, MemberDetails member) {
+		if ( GeneratorBinder.createIdGeneratorFromGeneratorAnnotation(
+				idValue,
+				member,
+				state.getMetadataBuildingContext(),
+				idValue.getTable().getName() + "." + member.getName()
+		) ) {
+			return;
+		}
+
 		final GeneratedValue generatedValue = member.getDirectAnnotationUsage( GeneratedValue.class );
 		if ( generatedValue == null ) {
 			return;

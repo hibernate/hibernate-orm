@@ -80,8 +80,6 @@ public class BasicAttributeProcessing {
 		XmlAnnotationHelper.applyNationalized( jaxbBasic.getNationalized(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyGenerated( jaxbBasic.getGenerated(), memberDetails, xmlDocumentContext );
 
-		// todo : ...
-
 		return memberDetails;
 	}
 }

@@ -18,6 +18,7 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AttributeAccessorAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.LazyGroupAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapsIdJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OnDeleteAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
@@ -53,20 +54,26 @@ public class CommonAttributeProcessing {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final String attributeAccessor = jaxbAttribute.getAttributeAccessor();
-		if ( attributeAccessor == null ) {
-			return;
+		if ( attributeAccessor != null ) {
+			final AttributeAccessorAnnotation accessorAnn = (AttributeAccessorAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.ATTRIBUTE_ACCESSOR,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+
+			final ClassDetails strategyClassDetails = xmlDocumentContext
+					.getModelBuildingContext()
+					.getClassDetailsRegistry()
+					.resolveClassDetails( attributeAccessor );
+			accessorAnn.strategy( strategyClassDetails.toJavaClass() );
 		}
 
-		final AttributeAccessorAnnotation accessorAnn = (AttributeAccessorAnnotation) memberDetails.applyAnnotationUsage(
-				HibernateAnnotations.ATTRIBUTE_ACCESSOR,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-
-		final ClassDetails strategyClassDetails = xmlDocumentContext
-				.getModelBuildingContext()
-				.getClassDetailsRegistry()
-				.resolveClassDetails( attributeAccessor );
-		accessorAnn.strategy( strategyClassDetails.toJavaClass() );
+		if ( StringHelper.isNotEmpty( jaxbAttribute.getLazyGroup() ) ) {
+			final LazyGroupAnnotation lazyGroup = (LazyGroupAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.LAZY_GROUP,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			lazyGroup.value( jaxbAttribute.getLazyGroup() );
+		}
 	}
 
 	public static void applyOptionality(

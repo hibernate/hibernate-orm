@@ -992,7 +992,7 @@ custom collection type, and sorting.
 column transformers, component type/instantiator customizations, basic
 Java/JDBC/custom type metadata, map-key Java/JDBC/custom type metadata,
 mutability, nationalization, and time-zone storage.  XML `@Mutability`
-remains tracked in XML/source parity.
+is covered in XML/source parity.
 
 | Entity, table, and hierarchy coverage
 | `@BatchSize`, `@Cache`, `@Check`, `@DiscriminatorFormula`,
@@ -1036,14 +1036,14 @@ identifier generator creation.
 | Covered for annotation binding.  Focused bind tests verify entity and
 collection custom SQL, repeatable secondary-table custom SQL containers,
 custom SQL/HQL loaders, query cache layout, and native identifier generator
-creator installation.  Secondary-table custom SQL XML and dialect overrides
-remain tracked separately.
+creator installation.  Secondary-table custom SQL XML is covered in
+XML/source parity; dialect overrides remain tracked separately.
 
 | XML/source parity
 | XML `@LazyGroup`, XML `@ListIndexBase`, XML `@Mutability`, secondary-table
 XML `@SQLInsert`, `@SQLUpdate`, `@SQLDelete`
-| Add XML processing tests where backing descriptors already exist; implement
-secondary-table custom SQL XML processing in an XML/source parity slice.
+| Covered.  Focused XML-source tests verify lazy-group, list-index-base,
+mutability, and secondary-table custom SQL annotation creation from mapping XML.
 
 | Dialect override families
 | `@DialectOverride.Check`, `@DialectOverride.SQLOrder`,
@@ -1909,9 +1909,9 @@ observed support from work still needing binder/test confirmation.
 | `METHOD`, `FIELD`
 | yes
 | local property binding coverage added
-| XML descriptor/source present; focused test needed
+| XML descriptor/source covered
 | n/a
-| focused bind tests
+| focused bind and XML-source tests
 | covered
 
 | `@ListIndexBase`
@@ -1920,7 +1920,7 @@ observed support from work still needing binder/test confirmation.
 | list index base binding present
 | XML descriptor/source present
 | n/a
-| focused bind test
+| focused bind and XML-source tests
 | covered
 
 | `@ListIndexJavaType`
@@ -2017,9 +2017,9 @@ observed support from work still needing binder/test confirmation.
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`, `TYPE`
 | yes
 | basic-value mutability binding present
-| XML descriptor/source present; XML-focused test tracked separately
+| XML descriptor/source covered
 | n/a
-| focused bind test
+| focused bind and XML-source tests
 | covered
 
 | `@NamedEntityGraph`
@@ -2463,9 +2463,9 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `FIELD`, `METHOD`
 | yes
 | entity, secondary-table, and collection custom SQL delete bound
-| secondary-table XML gap
+| secondary-table XML covered
 | base override family
-| focused bind test
+| focused bind and XML-source tests
 | covered
 
 | `@SQLDeleteAll`
@@ -2481,27 +2481,27 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`
 | yes
 | repeatable container for secondary-table custom SQL
-| XML gap
+| secondary-table XML covered
 | n/a
-| focused bind test
+| focused bind and XML-source tests
 | covered
 
 | `@SQLInsert`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
 | entity, secondary-table, and collection custom SQL insert bound
-| secondary-table XML gap
+| secondary-table XML covered
 | base override family
-| focused bind test
+| focused bind and XML-source tests
 | covered
 
 | `@SQLInserts`
 | `TYPE`
 | yes
 | repeatable container for secondary-table custom SQL
-| XML gap
+| secondary-table XML covered
 | n/a
-| focused bind test
+| focused bind and XML-source tests
 | covered
 
 | `@SQLJoinTableRestriction`
@@ -2544,18 +2544,18 @@ observed support from work still needing binder/test confirmation.
 | `TYPE`, `FIELD`, `METHOD`
 | yes
 | entity, secondary-table, and collection custom SQL update bound
-| secondary-table XML gap
+| secondary-table XML covered
 | base override family
-| focused bind test
+| focused bind and XML-source tests
 | covered
 
 | `@SQLUpdates`
 | `TYPE`
 | yes
 | repeatable container for secondary-table custom SQL
-| XML gap
+| secondary-table XML covered
 | n/a
-| focused bind test
+| focused bind and XML-source tests
 | covered
 |===
 
@@ -2774,9 +2774,7 @@ are verified through the matching singular override.
 2. Implement the remaining Hibernate binding gaps in small groups: custom SQL
    and loaders, native generators, query cache layout, and fetch-profile
    overrides.
-3. Close XML/source parity gaps for annotations whose backing descriptors and
-   binders already exist.
-4. Add a single new-pipeline dialect override resolution point and convert
+3. Add a single new-pipeline dialect override resolution point and convert
    direct annotation lookups for override-capable annotations to use it.
-5. Revisit audit/changelog, temporal state-management, and aggregate/UDT
+4. Revisit audit/changelog, temporal state-management, and aggregate/UDT
    descriptors and binding only once those areas have dedicated design slices.

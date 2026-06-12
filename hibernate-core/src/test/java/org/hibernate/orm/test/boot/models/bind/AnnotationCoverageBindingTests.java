@@ -9,39 +9,59 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.time.Instant;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.EmbeddedColumnNaming;
+import org.hibernate.annotations.EmbeddableInstantiator;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GeneratedColumn;
+import org.hibernate.annotations.JavaType;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.MapKeyJavaType;
+import org.hibernate.annotations.MapKeyJdbcType;
+import org.hibernate.annotations.MapKeyJdbcTypeCode;
 import org.hibernate.annotations.MapKeyMutability;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdClass;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.PartitionKey;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.TargetEmbeddable;
+import org.hibernate.annotations.TimeZoneColumn;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
@@ -54,7 +74,17 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.AbstractClassJavaType;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.usertype.UserType;
 
 import org.junit.jupiter.api.Test;
 
@@ -187,6 +217,71 @@ public class AnnotationCoverageBindingTests {
 				},
 				scope.getRegistry(),
 				MemberShapingEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testBasicValueColumnAndTypeAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( BasicValueTypeCoverageEntity.class.getName() );
+					final BasicValue javaTyped = (BasicValue) entityBinding.getProperty( "javaTyped" ).getValue();
+					final BasicValue jdbcTyped = (BasicValue) entityBinding.getProperty( "jdbcTyped" ).getValue();
+					final BasicValue jdbcCodeTyped = (BasicValue) entityBinding.getProperty( "jdbcCodeTyped" ).getValue();
+					final BasicValue customTyped = (BasicValue) entityBinding.getProperty( "customTyped" ).getValue();
+					final BasicValue mutableValue = (BasicValue) entityBinding.getProperty( "mutableValue" ).getValue();
+					final BasicValue nationalized = (BasicValue) entityBinding.getProperty( "nationalized" ).getValue();
+					final BasicValue zoned = (BasicValue) entityBinding.getProperty( "zoned" ).getValue();
+					final Component composite = (Component) entityBinding.getProperty( "composite" ).getValue();
+					final Component instantiated = (Component) entityBinding.getProperty( "instantiated" ).getValue();
+					final org.hibernate.mapping.Map javaKeyed = (org.hibernate.mapping.Map) context.getMetadataCollector()
+							.getCollectionBinding( BasicValueTypeCoverageEntity.class.getName() + ".javaKeyed" );
+					final org.hibernate.mapping.Map jdbcKeyed = (org.hibernate.mapping.Map) context.getMetadataCollector()
+							.getCollectionBinding( BasicValueTypeCoverageEntity.class.getName() + ".jdbcKeyed" );
+					final org.hibernate.mapping.Map jdbcCodeKeyed = (org.hibernate.mapping.Map) context.getMetadataCollector()
+							.getCollectionBinding( BasicValueTypeCoverageEntity.class.getName() + ".jdbcCodeKeyed" );
+					final org.hibernate.mapping.Map customKeyed = (org.hibernate.mapping.Map) context.getMetadataCollector()
+							.getCollectionBinding( BasicValueTypeCoverageEntity.class.getName() + ".customKeyed" );
+
+					assertThat( column( entityBinding.getProperty( "transformed" ) ).getCustomRead() )
+							.isEqualTo( "lower(transformed)" );
+					assertThat( column( entityBinding.getProperty( "transformed" ) ).getCustomWrite() )
+							.isEqualTo( "upper(?)" );
+
+					assertThat( javaTyped.resolve().getDomainJavaType() ).isInstanceOf( LocalStringJavaType.class );
+					assertThat( jdbcTyped.resolve().getJdbcType() ).isInstanceOf( LocalStringJdbcType.class );
+					assertThat( jdbcCodeTyped.resolve().getJdbcType().getJdbcTypeCode() ).isEqualTo( SqlTypes.INTEGER );
+					final CustomType<?> customType = (CustomType<?>) customTyped.resolve().getLegacyResolvedBasicType();
+					assertThat( customType.getUserType() ).isInstanceOf( LocalStringUserType.class );
+					assertThat( ( (LocalStringUserType) customType.getUserType() ).strategy ).isEqualTo( "basic" );
+					assertThat( mutableValue.getExplicitMutabilityPlanAccess()
+							.apply( context.getMetadataCollector().getTypeConfiguration() ) )
+							.isInstanceOf( MutableIntegerMutabilityPlan.class );
+
+					assertThat( nationalized.isNationalized() ).isTrue();
+					assertThat( zoned.getTimeZoneStorageType() ).isEqualTo( TimeZoneStorageType.COLUMN );
+					assertThat( column( entityBinding.getProperty( "zoned" ) ).getName() ).isEqualTo( "zoned_tz" );
+					assertThat( entityBinding.getProperty( "zoned" ).isUpdatable() ).isFalse();
+
+					assertThat( composite.getTypeName() ).isEqualTo( LocalCompositeUserType.class.getName() );
+					assertThat( instantiated.getCustomInstantiator() ).isEqualTo( LocalInstantiator.class );
+
+					assertThat( ( (BasicValue) javaKeyed.getIndex() ).resolve().getDomainJavaType() )
+							.isInstanceOf( LocalStringJavaType.class );
+					assertThat( ( (BasicValue) jdbcKeyed.getIndex() ).resolve().getJdbcType() )
+							.isInstanceOf( LocalStringJdbcType.class );
+					assertThat( ( (BasicValue) jdbcCodeKeyed.getIndex() ).resolve().getJdbcType().getJdbcTypeCode() )
+							.isEqualTo( SqlTypes.INTEGER );
+					final CustomType<?> mapKeyType = (CustomType<?>) ( (BasicValue) customKeyed.getIndex() )
+							.resolve()
+							.getLegacyResolvedBasicType();
+					assertThat( mapKeyType.getUserType() ).isInstanceOf( LocalStringUserType.class );
+					assertThat( ( (LocalStringUserType) mapKeyType.getUserType() ).strategy ).isEqualTo( "map-key" );
+				},
+				scope.getRegistry(),
+				BasicValueTypeCoverageEntity.class
 		);
 	}
 
@@ -518,6 +613,234 @@ public class AnnotationCoverageBindingTests {
 		@Override
 		public Integer assemble(Serializable cached, SharedSessionContract session) {
 			return (Integer) cached;
+		}
+	}
+
+	@Entity(name = "BasicValueTypeCoverageEntity")
+	@Table(name = "basic_value_type_coverage_entities")
+	public static class BasicValueTypeCoverageEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@Column(name = "transformed")
+		@ColumnTransformer(read = "lower(transformed)", write = "upper(?)")
+		private String transformed;
+
+		@Column(name = "java_typed")
+		@JavaType(LocalStringJavaType.class)
+		private String javaTyped;
+
+		@Column(name = "jdbc_typed")
+		@JdbcType(LocalStringJdbcType.class)
+		private String jdbcTyped;
+
+		@Column(name = "jdbc_code_typed")
+		@JdbcTypeCode(SqlTypes.INTEGER)
+		private String jdbcCodeTyped;
+
+		@Column(name = "custom_typed")
+		@Type(
+				value = LocalStringUserType.class,
+				parameters = @Parameter(name = "strategy", value = "basic")
+		)
+		private String customTyped;
+
+		@Column(name = "mutable_value")
+		@org.hibernate.annotations.Mutability(MutableIntegerMutabilityPlan.class)
+		private Integer mutableValue;
+
+		@Column(name = "nationalized")
+		@Nationalized
+		private String nationalized;
+
+		@Column(name = "zoned")
+		@TimeZoneStorage(TimeZoneStorageType.COLUMN)
+		@TimeZoneColumn(name = "zoned_tz", updatable = false)
+		private OffsetDateTime zoned;
+
+		@Embedded
+		@CompositeType(LocalCompositeUserType.class)
+		private LocalCompositeDomain composite;
+
+		@Embedded
+		@EmbeddableInstantiator(LocalInstantiator.class)
+		private LocalInstantiatedValue instantiated;
+
+		@ElementCollection
+		@CollectionTable(name = "basic_value_type_java_keyed")
+		@MapKeyColumn(name = "map_key")
+		@MapKeyJavaType(LocalStringJavaType.class)
+		private Map<String, String> javaKeyed;
+
+		@ElementCollection
+		@CollectionTable(name = "basic_value_type_jdbc_keyed")
+		@MapKeyColumn(name = "map_key")
+		@MapKeyJdbcType(LocalStringJdbcType.class)
+		private Map<String, String> jdbcKeyed;
+
+		@ElementCollection
+		@CollectionTable(name = "basic_value_type_jdbc_code_keyed")
+		@MapKeyColumn(name = "map_key")
+		@MapKeyJdbcTypeCode(SqlTypes.INTEGER)
+		private Map<String, String> jdbcCodeKeyed;
+
+		@ElementCollection
+		@CollectionTable(name = "basic_value_type_custom_keyed")
+		@MapKeyColumn(name = "map_key")
+		@MapKeyType(
+				value = LocalStringUserType.class,
+				parameters = @Parameter(name = "strategy", value = "map-key")
+		)
+		private Map<String, String> customKeyed;
+	}
+
+	public static class LocalStringJavaType extends AbstractClassJavaType<String> implements BasicJavaType<String> {
+		public LocalStringJavaType() {
+			super( String.class );
+		}
+
+		@Override
+		public org.hibernate.type.descriptor.jdbc.JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
+			return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.VARCHAR );
+		}
+
+		@Override
+		public String fromString(CharSequence string) {
+			return string == null ? null : string.toString();
+		}
+
+		@Override
+		public <X> X unwrap(String value, Class<X> type, WrapperOptions options) {
+			return type.isInstance( value ) ? type.cast( value ) : null;
+		}
+
+		@Override
+		public <X> String wrap(X value, WrapperOptions options) {
+			return value == null ? null : value.toString();
+		}
+	}
+
+	public static class LocalStringJdbcType extends VarcharJdbcType {
+	}
+
+	public static class LocalStringUserType implements UserType<String>, ParameterizedType {
+		private String strategy;
+
+		@Override
+		public void setParameterValues(Properties parameters) {
+			strategy = parameters.getProperty( "strategy" );
+		}
+
+		@Override
+		public int getSqlType() {
+			return SqlTypes.VARCHAR;
+		}
+
+		@Override
+		public Class<String> returnedClass() {
+			return String.class;
+		}
+
+		@Override
+		public String deepCopy(String value) {
+			return value;
+		}
+
+		@Override
+		public boolean isMutable() {
+			return false;
+		}
+	}
+
+	public record LocalCompositeDomain(@Column(name = "composite_name") String name) {
+	}
+
+	@Embeddable
+	public static class LocalCompositeEmbeddable {
+		@Column(name = "composite_name")
+		private String name;
+	}
+
+	public static class LocalCompositeUserType implements CompositeUserType<LocalCompositeDomain> {
+		@Override
+		public Object getPropertyValue(LocalCompositeDomain component, int property) throws org.hibernate.HibernateException {
+			return component.name();
+		}
+
+		@Override
+		public LocalCompositeDomain instantiate(ValueAccess values) {
+			return new LocalCompositeDomain( values.getValue( 0, String.class ) );
+		}
+
+		@Override
+		public Class<?> embeddable() {
+			return LocalCompositeEmbeddable.class;
+		}
+
+		@Override
+		public Class<LocalCompositeDomain> returnedClass() {
+			return LocalCompositeDomain.class;
+		}
+
+		@Override
+		public boolean equals(LocalCompositeDomain x, LocalCompositeDomain y) {
+			return Objects.equals( x, y );
+		}
+
+		@Override
+		public int hashCode(LocalCompositeDomain x) {
+			return Objects.hashCode( x );
+		}
+
+		@Override
+		public LocalCompositeDomain deepCopy(LocalCompositeDomain value) {
+			return value;
+		}
+
+		@Override
+		public boolean isMutable() {
+			return false;
+		}
+
+		@Override
+		public Serializable disassemble(LocalCompositeDomain value) {
+			return value == null ? null : value.name();
+		}
+
+		@Override
+		public LocalCompositeDomain assemble(Serializable cached, Object owner) {
+			return cached == null ? null : new LocalCompositeDomain( (String) cached );
+		}
+
+		@Override
+		public LocalCompositeDomain replace(LocalCompositeDomain detached, LocalCompositeDomain managed, Object owner) {
+			return detached;
+		}
+	}
+
+	@Embeddable
+	public static class LocalInstantiatedValue {
+		@Column(name = "instantiated_value")
+		private String value;
+	}
+
+	public static class LocalInstantiator implements org.hibernate.metamodel.spi.EmbeddableInstantiator {
+		@Override
+		public Object instantiate(ValueAccess values) {
+			final LocalInstantiatedValue result = new LocalInstantiatedValue();
+			result.value = values.getValue( 0, String.class );
+			return result;
+		}
+
+		@Override
+		public boolean isInstance(Object object) {
+			return object instanceof LocalInstantiatedValue;
+		}
+
+		@Override
+		public boolean isSameClass(Object object) {
+			return object != null && object.getClass().equals( LocalInstantiatedValue.class );
 		}
 	}
 

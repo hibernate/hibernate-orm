@@ -30,11 +30,13 @@ import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
 import org.hibernate.annotations.MapKeyMutability;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.PartitionKey;
 import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.AnyKeyJavaType;
 import org.hibernate.annotations.AnyKeyJdbcType;
 import org.hibernate.annotations.AnyKeyJdbcTypeCode;
@@ -711,18 +713,28 @@ public class BasicValueBinder {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		if ( source.kind() != BasicValueSource.Kind.COLLECTION_ID ) {
-			return;
-		}
-
-		final var typeAnn = source.member().getDirectAnnotationUsage( CollectionIdType.class );
+		final Annotation typeAnn = switch ( source.kind() ) {
+			case COLLECTION_ID -> source.member().getDirectAnnotationUsage( CollectionIdType.class );
+			case MAP_KEY -> source.member().getDirectAnnotationUsage( MapKeyType.class );
+			default -> source.member().getDirectAnnotationUsage( Type.class );
+		};
 		if ( typeAnn == null ) {
 			return;
 		}
 
-		basicValue.setExplicitTypeParams( extractParameterMap( typeAnn.parameters() ) );
 		basicValue.setTypeAnnotation( typeAnn );
-		basicValue.setExplicitCustomType( typeAnn.value() );
+		if ( typeAnn instanceof CollectionIdType collectionIdType ) {
+			basicValue.setExplicitTypeParams( extractParameterMap( collectionIdType.parameters() ) );
+			basicValue.setExplicitCustomType( collectionIdType.value() );
+		}
+		else if ( typeAnn instanceof MapKeyType mapKeyType ) {
+			basicValue.setExplicitTypeParams( extractParameterMap( mapKeyType.parameters() ) );
+			basicValue.setExplicitCustomType( mapKeyType.value() );
+		}
+		else if ( typeAnn instanceof Type type ) {
+			basicValue.setExplicitTypeParams( extractParameterMap( type.parameters() ) );
+			basicValue.setExplicitCustomType( type.value() );
+		}
 	}
 
 	private static Map<String, String> extractParameterMap(org.hibernate.annotations.Parameter[] parameters) {

@@ -5,6 +5,8 @@
 package org.hibernate.boot.models.bind.internal.binders;
 
 import java.lang.reflect.InvocationTargetException;
+
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Mutability;
@@ -337,6 +339,7 @@ public class AttributeBinder {
 		if ( arrayAnn != null ) {
 			column.setArrayLength( arrayAnn.length() );
 		}
+		applyColumnTransformer( member, property, column );
 
 		var tableName = columnAnn == null ? "" : columnAnn.table();
 		if ( "".equals( tableName ) || tableName == null ) {
@@ -352,6 +355,36 @@ public class AttributeBinder {
 		basicValue.getTable().addColumn( column );
 
 		return column;
+	}
+
+	private static void applyColumnTransformer(
+			MemberDetails member,
+			Property property,
+			org.hibernate.mapping.Column column) {
+		final var transformerAnn = member.getDirectAnnotationUsage( org.hibernate.annotations.ColumnTransformer.class );
+		if ( transformerAnn == null ) {
+			return;
+		}
+
+		final String targetColumnName = transformerAnn.forColumn();
+		if ( targetColumnName != null
+				&& !targetColumnName.isBlank()
+				&& !targetColumnName.equals( column.getName() ) ) {
+			return;
+		}
+
+		final String writeExpression = transformerAnn.write();
+		if ( writeExpression != null
+				&& !writeExpression.isBlank()
+				&& org.hibernate.internal.util.StringHelper.count( writeExpression, '?' ) != 1 ) {
+			throw new AnnotationException(
+					"Write expression in '@ColumnTransformer' for property '" + property.getName()
+							+ "' and column '" + column.getName() + "' must contain exactly one placeholder character ('?')"
+			);
+		}
+
+		column.setResolvedCustomRead( transformerAnn.read().isBlank() ? null : transformerAnn.read() );
+		column.setCustomWrite( writeExpression == null || writeExpression.isBlank() ? null : writeExpression );
 	}
 
 }

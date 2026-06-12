@@ -14,9 +14,12 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CompositeTypeRegistration;
 import org.hibernate.annotations.ConverterRegistration;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JdbcTypeRegistration;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.TypeRegistration;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -40,15 +43,22 @@ import org.hibernate.usertype.UserType;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.ColumnResult;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.TableGenerator;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,8 +91,23 @@ public class GlobalRegistrationBindingTests {
 							.isEqualTo( "from GlobalRegistrationEntity" );
 					assertThat( metadataCollector.getNamedNativeQueryMapping( "globalNativeQuery" ).getSqlQueryString() )
 							.isEqualTo( "select * from global_registration_entities" );
+					assertThat( metadataCollector.getNamedNativeQueryMapping( "globalMappedNativeQuery" ).getResultSetMappingName() )
+							.isEqualTo( "globalIdMapping" );
+					assertThat( metadataCollector.getNamedProcedureCallMapping( "globalProcedure" ).getProcedureName() )
+							.isEqualTo( "global_registration_procedure" );
+					assertThat( metadataCollector.getResultSetMapping( "globalIdMapping" ).getRegistrationName() )
+							.isEqualTo( "globalIdMapping" );
 					assertThat( metadataCollector.getNamedEntityGraph( "globalGraph" ).entityName() )
 							.isEqualTo( "GlobalRegistrationEntity" );
+					assertThat( metadataCollector.getFilterDefinition( "globalFilter" ).getDefaultFilterCondition() )
+							.isEqualTo( "name = :name" );
+					assertThat( metadataCollector.getFilterDefinition( "globalFilter" ).getParameterNames() )
+							.containsExactly( "name" );
+					assertThat( metadataCollector.getFetchProfile( "globalFetchProfile" ).getFetches() )
+							.anySatisfy( (fetch) -> {
+								assertThat( fetch.getEntity() ).isEqualTo( GlobalRegistrationEntity.class.getName() );
+								assertThat( fetch.getAssociation() ).isEqualTo( "parent" );
+							} );
 
 					final var typeConfiguration = metadataCollector.getTypeConfiguration();
 					assertThat( typeConfiguration.getJavaTypeRegistry().findDescriptor( GlobalJavaTypeDomain.class ) )
@@ -118,8 +143,28 @@ public class GlobalRegistrationBindingTests {
 	@TableGenerator(name = "global_table", table = "global_id_table")
 	@NamedQuery(name = "globalJpaQuery", query = "from GlobalRegistrationEntity")
 	@NamedNativeQuery(name = "globalNativeQuery", query = "select * from global_registration_entities")
+	@NamedNativeQuery(
+			name = "globalMappedNativeQuery",
+			query = "select id as id from global_registration_entities",
+			resultSetMapping = "globalIdMapping"
+	)
+	@NamedStoredProcedureQuery(
+			name = "globalProcedure",
+			procedureName = "global_registration_procedure",
+			parameters = @StoredProcedureParameter(name = "name", mode = ParameterMode.IN, type = String.class),
+			resultSetMappings = "globalIdMapping"
+	)
+	@SqlResultSetMapping(name = "globalIdMapping", columns = @ColumnResult(name = "id", type = Integer.class))
 	@org.hibernate.annotations.NamedQuery(name = "globalHibernateQuery", query = "from GlobalRegistrationEntity")
 	@NamedEntityGraph(name = "globalGraph", attributeNodes = @NamedAttributeNode("id"))
+	@FilterDef(name = "globalFilter", defaultCondition = "name = :name", parameters = @ParamDef(name = "name", type = String.class))
+	@FetchProfile(
+			name = "globalFetchProfile",
+			fetchOverrides = @FetchProfile.FetchOverride(
+					entity = GlobalRegistrationEntity.class,
+					association = "parent"
+			)
+	)
 	@ConverterRegistration(domainType = GlobalConverted.class, converter = GlobalConverter.class, autoApply = true)
 	@JavaTypeRegistration(javaType = GlobalJavaTypeDomain.class, descriptorClass = GlobalJavaType.class)
 	@JdbcTypeRegistration(registrationCode = GlobalJdbcType.CODE, value = GlobalJdbcType.class)
@@ -137,6 +182,9 @@ public class GlobalRegistrationBindingTests {
 	public static class GlobalRegistrationEntity {
 		@Id
 		private Integer id;
+		@ManyToOne
+		@JoinColumn(name = "parent_id")
+		private GlobalRegistrationEntity parent;
 	}
 
 	public record GlobalConverted(String value) {

@@ -29,28 +29,6 @@ Prototype touchpoints:
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/InverseToOneAssociationBinder.java[`InverseToOneAssociationBinder`]
 * link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/bind/id/SimpleIdTests.java[`SimpleIdTests`]
 
-== Global Registrations and Named Objects
-
-Known remaining gaps:
-
-* XML entity graph collection/binding should distinguish two cases:
-+
-Entity-level XML graphs are processed into annotation usages on `ClassDetails`.
-Those annotation usages are collected, but the collected graph definition still
-uses a placeholder runtime creator.  If XML ever grows root-level graph
-declarations, they would need the same explicit root-level collection path as
-named queries.
-* Runtime graph creator integration for collected named entity graphs.
-
-Prototype touchpoints:
-
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/internal/DomainModelCategorizationCollector.java[`DomainModelCategorizationCollector`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/GlobalRegistrations.java[`GlobalRegistrations`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/categorize/spi/NamedQueryRegistration.java[`NamedQueryRegistration`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/BindingCoordinator.java[`BindingCoordinator`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/spi/MetadataCollector.java[`MetadataCollector`]
-
-
 == Annotation and XML Coverage
 
 These are annotation and XML coverage items that have not yet been promoted into

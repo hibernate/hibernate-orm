@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Imported;
@@ -86,6 +87,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.AttributeConverter;
 
@@ -652,6 +654,18 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 	}
 
+	public void collectSqlResultSetMappingRegistrations(AnnotationTarget annotationTarget) {
+		for ( SqlResultSetMapping usage : annotationTarget.getRepeatedAnnotationUsages( SqlResultSetMapping.class, modelsContext ) ) {
+			if ( sqlResultSetMappingRegistrations == null ) {
+				sqlResultSetMappingRegistrations = new HashMap<>();
+			}
+			sqlResultSetMappingRegistrations.put(
+					usage.name(),
+					new SqlResultSetMappingRegistration( usage.name(), usage )
+			);
+		}
+	}
+
 	private void collectNamedQueryRegistration(
 			String name,
 			NamedQueryRegistration.Kind kind,
@@ -742,6 +756,24 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 				) );
 			}
 			fetchProfileRegistrations.add( new FetchProfileRegistration( jaxbFetchProfile.getName(), fetchOverrides ) );
+		}
+	}
+
+	public void collectFetchProfiles(AnnotationTarget annotationTarget) {
+		for ( FetchProfile usage : annotationTarget.getRepeatedAnnotationUsages( FetchProfile.class, modelsContext ) ) {
+			if ( fetchProfileRegistrations == null ) {
+				fetchProfileRegistrations = new ArrayList<>();
+			}
+
+			final List<FetchProfileRegistration.FetchOverride> fetchOverrides = new ArrayList<>();
+			for ( FetchProfile.FetchOverride fetchOverride : usage.fetchOverrides() ) {
+				fetchOverrides.add( new FetchProfileRegistration.FetchOverride(
+						fetchOverride.entity().getName(),
+						fetchOverride.association(),
+						fetchOverride.mode().name()
+				) );
+			}
+			fetchProfileRegistrations.add( new FetchProfileRegistration( usage.name(), fetchOverrides ) );
 		}
 	}
 

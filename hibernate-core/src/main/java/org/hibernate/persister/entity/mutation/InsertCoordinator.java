@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import java.util.function.Consumer;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 
@@ -34,4 +36,23 @@ public interface InsertCoordinator extends MutationCoordinator {
 			Object id,
 			Object[] values,
 			SharedSessionContractImplementor session);
+
+	default boolean canBatchGeneratedIdentityInserts() {
+		return false;
+	}
+
+	/**
+	 * Enqueue an insert into the open JDBC batch and register a consumer
+	 * to receive the generated identifier when the batch is later flushed.
+	 * <p>
+	 * The consumer is invoked in {@code addBatch} order during the batch's
+	 * {@link java.sql.PreparedStatement#executeBatch executeBatch} call.
+	 */
+	default void insertDeferred(
+			Object entity,
+			Object[] values,
+			Consumer<Object> generatedIdConsumer,
+			SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException( "Generated identity inserts are not batchable" );
+	}
 }

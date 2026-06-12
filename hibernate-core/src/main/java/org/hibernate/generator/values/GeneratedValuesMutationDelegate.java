@@ -69,6 +69,15 @@ public interface GeneratedValuesMutationDelegate {
 	boolean supportsRowId();
 
 	/**
+	 * Returns {@code true} if this delegate supports retrieving generated
+	 * values after a JDBC {@link java.sql.Statement#executeBatch batched execution}
+	 * via {@link PreparedStatement#getGeneratedKeys()}.
+	 */
+	default boolean supportsBatching() {
+		return false;
+	}
+
+	/**
 	 * Retrieve the {@linkplain JdbcValuesMappingProducer mapping producer} used to read the generated values.
 	 */
 	JdbcValuesMappingProducer getGeneratedValuesMappingProducer();

@@ -5,6 +5,7 @@
 package org.hibernate.boot.models.bind.internal.binders;
 
 import java.util.Map;
+import java.util.HashMap;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
@@ -69,23 +70,36 @@ class CollectionIdBinder {
 			BasicValue id,
 			CollectionSource source,
 			BindingState bindingState) {
-		if ( collectionId.generatorImplementation() != IdentifierGenerator.class ) {
-			throw new UnsupportedOperationException(
-					"@CollectionId#generatorImplementation is not yet implemented - "
-							+ source.member().getName()
+		final Class<? extends IdentifierGenerator> generatorImplementation = collectionId.generatorImplementation();
+		final String generator = collectionId.generator();
+		if ( generatorImplementation != IdentifierGenerator.class && !generator.isEmpty() ) {
+			throw new MappingException(
+					"@CollectionId#generatorImplementation and @CollectionId#generator are mutually exclusive - "
+							+ source.member()
 			);
 		}
 
-		final String generator = collectionId.generator();
 		checkLegalCollectionIdStrategy( generator );
 		GeneratorBinder.makeIdGenerator(
 				id,
 				source.member(),
-				generator,
+				generatorImplementation == IdentifierGenerator.class ? generator : generatorImplementation.getName(),
 				generatorName( generator ),
 				bindingState.getMetadataBuildingContext(),
-				Map.<String, IdentifierGeneratorDefinition>of()
+				localGenerators( source, bindingState )
 		);
+	}
+
+	private static Map<String, IdentifierGeneratorDefinition> localGenerators(
+			CollectionSource source,
+			BindingState bindingState) {
+		final HashMap<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>();
+		GeneratorBinder.visitIdGeneratorDefinitions(
+				source.member(),
+				generator -> localGenerators.put( generator.getName(), generator ),
+				bindingState.getMetadataBuildingContext()
+		);
+		return localGenerators;
 	}
 
 	private static String generatorName(String generator) {

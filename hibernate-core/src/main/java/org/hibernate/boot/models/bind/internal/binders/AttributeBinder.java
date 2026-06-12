@@ -27,6 +27,7 @@ import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
+import jakarta.persistence.Access;
 import jakarta.persistence.Column;
 
 import static org.hibernate.boot.models.AttributeNature.ANY;
@@ -189,7 +190,13 @@ public class AttributeBinder {
 	}
 
 	public static void bindPropertyAccessor(MemberDetails member, Property property) {
-		property.setPropertyAccessorName( member.isField() ? "field" : "property" );
+		final Access access = member.getDirectAnnotationUsage( Access.class );
+		if ( access != null ) {
+			property.setPropertyAccessorName( access.value() == jakarta.persistence.AccessType.FIELD ? "field" : "property" );
+		}
+		else {
+			property.setPropertyAccessorName( member.isField() ? "field" : "property" );
+		}
 	}
 
 	public Table getTable() {

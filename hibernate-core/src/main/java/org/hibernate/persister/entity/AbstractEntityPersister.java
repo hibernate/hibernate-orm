@@ -3492,6 +3492,9 @@ public abstract class AbstractEntityPersister
 	public final void postInstantiate(PersistentClass bootEntityDescriptor) throws MappingException {
 
 		tableMappings = buildTableMappings( bootEntityDescriptor );
+		if ( discriminatorMapping == null ) {
+			discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
+		}
 
 		final List<AttributeMapping> insertGeneratedAttributes =
 				hasInsertGeneratedProperties()

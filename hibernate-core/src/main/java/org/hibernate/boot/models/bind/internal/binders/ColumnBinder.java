@@ -129,6 +129,7 @@ public class ColumnBinder {
 							bindingState
 					) );
 			applyOptions( column, columnSource );
+			value.getTable().addColumn( column );
 		}
 		return discriminatorType;
 	}

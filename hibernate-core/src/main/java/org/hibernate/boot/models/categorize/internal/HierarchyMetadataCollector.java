@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.MappingException;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
@@ -125,6 +126,15 @@ public class HierarchyMetadataCollector {
 		}
 
 		final AttributeMetadata idAttribute = (AttributeMetadata) collectedIdAttributes;
+		if ( idAttribute == null ) {
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Entity `%s` did not define an identifier",
+							entityHierarchy.getRoot().getEntityName()
+					)
+			);
+		}
 
 		if ( idAttribute.getNature() == AttributeNature.BASIC ) {
 			return new BasicKeyMappingImpl( idAttribute );

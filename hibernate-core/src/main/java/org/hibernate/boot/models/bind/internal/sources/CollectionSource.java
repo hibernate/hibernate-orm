@@ -15,6 +15,8 @@ import org.hibernate.annotations.CollectionIdJavaClass;
 import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.annotations.CollectionIdMutability;
+import org.hibernate.annotations.CollectionIdType;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SortComparator;
@@ -237,7 +239,9 @@ public record CollectionSource(
 				|| member.hasDirectAnnotationUsage( CollectionIdJavaClass.class )
 				|| member.hasDirectAnnotationUsage( CollectionIdJavaType.class )
 				|| member.hasDirectAnnotationUsage( CollectionIdJdbcType.class )
-				|| member.hasDirectAnnotationUsage( CollectionIdJdbcTypeCode.class );
+				|| member.hasDirectAnnotationUsage( CollectionIdJdbcTypeCode.class )
+				|| member.hasDirectAnnotationUsage( CollectionIdMutability.class )
+				|| member.hasDirectAnnotationUsage( CollectionIdType.class );
 	}
 
 	private static boolean isSorted(MemberDetails member, Class<?> collectionType) {

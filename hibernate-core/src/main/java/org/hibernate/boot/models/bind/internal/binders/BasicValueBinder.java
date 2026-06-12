@@ -5,10 +5,14 @@
 package org.hibernate.boot.models.bind.internal.binders;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.annotations.CollectionIdMutability;
+import org.hibernate.annotations.CollectionIdType;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -38,6 +42,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
@@ -80,11 +85,13 @@ public class BasicValueBinder {
 		bindConversion( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindJavaType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindJdbcType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
+		bindMutability( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindLob( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindNationalized( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindEnumerated( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindTemporalPrecision( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 		bindTimeZoneStorage( source.member(), property, basicValue, bindingOptions, bindingState, bindingContext );
+		bindCustomType( source, property, basicValue, bindingOptions, bindingState, bindingContext );
 	}
 
 	public static void bindConversion(
@@ -333,6 +340,73 @@ public class BasicValueBinder {
 						: null;
 			} );
 		}
+	}
+
+	public static void bindMutability(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( source.kind() != BasicValueSource.Kind.COLLECTION_ID ) {
+			return;
+		}
+
+		final var mutabilityAnn = source.member().getDirectAnnotationUsage( CollectionIdMutability.class );
+		if ( mutabilityAnn == null ) {
+			return;
+		}
+
+		final var mutabilityClass = mutabilityAnn.value();
+		basicValue.setExplicitMutabilityPlanAccess( (typeConfiguration) -> instantiateMutabilityPlan(
+				source.member(),
+				mutabilityClass
+		) );
+	}
+
+	private static MutabilityPlan<?> instantiateMutabilityPlan(
+			MemberDetails member,
+			Class<? extends MutabilityPlan<?>> mutabilityClass) {
+		try {
+			return mutabilityClass.getConstructor().newInstance();
+		}
+		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			final ModelsException modelsException = new ModelsException(
+					"Error instantiating local @CollectionIdMutability - " + member.getName()
+			);
+			modelsException.addSuppressed( e );
+			throw modelsException;
+		}
+	}
+
+	public static void bindCustomType(
+			BasicValueSource source,
+			Property property,
+			BasicValue basicValue,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( source.kind() != BasicValueSource.Kind.COLLECTION_ID ) {
+			return;
+		}
+
+		final var typeAnn = source.member().getDirectAnnotationUsage( CollectionIdType.class );
+		if ( typeAnn == null ) {
+			return;
+		}
+
+		basicValue.setExplicitTypeParams( extractParameterMap( typeAnn.parameters() ) );
+		basicValue.setTypeAnnotation( typeAnn );
+		basicValue.setExplicitCustomType( typeAnn.value() );
+	}
+
+	private static Map<String, String> extractParameterMap(org.hibernate.annotations.Parameter[] parameters) {
+		final Map<String, String> result = new HashMap<>();
+		for ( org.hibernate.annotations.Parameter parameter : parameters ) {
+			result.put( parameter.name(), parameter.value() );
+		}
+		return result;
 	}
 
 	public static void bindNationalized(

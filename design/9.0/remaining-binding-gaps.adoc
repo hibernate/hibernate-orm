@@ -29,25 +29,6 @@ Prototype touchpoints:
 * link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/InverseToOneAssociationBinder.java[`InverseToOneAssociationBinder`]
 * link:../../hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/bind/id/SimpleIdTests.java[`SimpleIdTests`]
 
-== Collection Long Tail
-
-Known remaining gaps:
-
-* `@CollectionId#generatorImplementation`.
-* `@CollectionIdType` and `@CollectionIdMutability`.
-* Local member-level generator declarations for id-bags, if categorization does
-  not already expose them as global registrations.
-* Inverse `ID_BAG` plural associations, if upstream considers them valid source
-  mappings.
-
-Prototype touchpoints:
-
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/CollectionIdBinder.java[`CollectionIdBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/ElementCollectionAttributeBinder.java[`ElementCollectionAttributeBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/PluralAssociationAttributeBinder.java[`PluralAssociationAttributeBinder`]
-* link:../../hibernate-core/src/main/java/org/hibernate/boot/models/bind/internal/binders/CollectionShapeBinder.java[`CollectionShapeBinder`]
-
-
 == Global Registrations and Named Objects
 
 Known remaining gaps:

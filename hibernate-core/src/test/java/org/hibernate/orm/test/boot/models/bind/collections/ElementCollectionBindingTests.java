@@ -4,8 +4,11 @@
  */
 package org.hibernate.orm.test.boot.models.bind.collections;
 
+import java.io.Serializable;
+import java.sql.Types;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Date;
 import java.util.Comparator;
@@ -15,16 +18,30 @@ import java.util.SortedSet;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaClass;
+import org.hibernate.annotations.CollectionIdJavaType;
+import org.hibernate.annotations.CollectionIdJdbcType;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.annotations.CollectionIdMutability;
+import org.hibernate.annotations.CollectionIdType;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 
+import org.hibernate.SharedSessionContract;
+import org.hibernate.id.IncrementGenerator;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.descriptor.java.LongJavaType;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
+import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -53,6 +70,7 @@ import jakarta.persistence.MapKeyJoinColumns;
 import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.TemporalType;
@@ -227,6 +245,151 @@ public class ElementCollectionBindingTests {
 				},
 				scope.getRegistry(),
 				IdBagOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testIdBagElementCollectionWithGeneratorImplementation(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( IdBagGeneratorImplementationOwner.class.getName() );
+					final org.hibernate.mapping.IdentifierBag collection = (org.hibernate.mapping.IdentifierBag) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue identifier = (BasicValue) collection.getIdentifier();
+
+					assertThat( identifier.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "label_row_id" );
+					assertThat( identifier.getCustomIdGeneratorCreator() ).isNotNull();
+				},
+				scope.getRegistry(),
+				IdBagGeneratorImplementationOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testIdBagElementCollectionWithLocalSequenceGenerator(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( IdBagLocalSequenceGeneratorOwner.class.getName() );
+					final org.hibernate.mapping.IdentifierBag collection = (org.hibernate.mapping.IdentifierBag) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue identifier = (BasicValue) collection.getIdentifier();
+
+					assertThat( identifier.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "label_row_id" );
+					assertThat( identifier.getCustomIdGeneratorCreator() ).isNotNull();
+				},
+				scope.getRegistry(),
+				IdBagLocalSequenceGeneratorOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testIdBagElementCollectionWithCollectionIdJavaType(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( IdBagCollectionIdJavaTypeOwner.class.getName() );
+					final org.hibernate.mapping.IdentifierBag collection = (org.hibernate.mapping.IdentifierBag) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue identifier = (BasicValue) collection.getIdentifier();
+
+					assertThat( identifier.resolve().getDomainJavaType().getJavaType() ).isEqualTo( Long.class );
+				},
+				scope.getRegistry(),
+				IdBagCollectionIdJavaTypeOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testIdBagElementCollectionWithCollectionIdJdbcType(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( IdBagCollectionIdJdbcTypeOwner.class.getName() );
+					final org.hibernate.mapping.IdentifierBag collection = (org.hibernate.mapping.IdentifierBag) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue identifier = (BasicValue) collection.getIdentifier();
+
+					assertThat( identifier.resolve().getJdbcType().getJdbcTypeCode() ).isEqualTo( Types.INTEGER );
+				},
+				scope.getRegistry(),
+				IdBagCollectionIdJdbcTypeOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testIdBagElementCollectionWithCollectionIdJdbcTypeCode(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( IdBagCollectionIdJdbcTypeCodeOwner.class.getName() );
+					final org.hibernate.mapping.IdentifierBag collection = (org.hibernate.mapping.IdentifierBag) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue identifier = (BasicValue) collection.getIdentifier();
+
+					assertThat( identifier.resolve().getJdbcType().getJdbcTypeCode() ).isEqualTo( Types.SMALLINT );
+				},
+				scope.getRegistry(),
+				IdBagCollectionIdJdbcTypeCodeOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testIdBagElementCollectionWithCollectionIdMutability(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( IdBagCollectionIdMutabilityOwner.class.getName() );
+					final org.hibernate.mapping.IdentifierBag collection = (org.hibernate.mapping.IdentifierBag) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue identifier = (BasicValue) collection.getIdentifier();
+
+					assertThat( identifier.resolve().getMutabilityPlan() )
+							.isInstanceOf( MutableIntegerMutabilityPlan.class );
+					assertThat( identifier.resolve().getMutabilityPlan().isMutable() ).isTrue();
+				},
+				scope.getRegistry(),
+				IdBagCollectionIdMutabilityOwner.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testIdBagElementCollectionWithCollectionIdType(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final PersistentClass entityBinding = context.getMetadataCollector()
+							.getEntityBinding( IdBagCollectionIdTypeOwner.class.getName() );
+					final org.hibernate.mapping.IdentifierBag collection = (org.hibernate.mapping.IdentifierBag) entityBinding
+							.getProperty( "labels" )
+							.getValue();
+					final BasicValue identifier = (BasicValue) collection.getIdentifier();
+					final CustomType<?> customType = (CustomType<?>) identifier.resolve().getLegacyResolvedBasicType();
+
+					assertThat( customType.getUserType() ).isInstanceOf( IntegerCollectionIdUserType.class );
+					assertThat( ( (IntegerCollectionIdUserType) customType.getUserType() ).strategy )
+							.isEqualTo( "collection-id" );
+					assertThat( identifier.resolve().getDomainJavaType().getJavaType() ).isEqualTo( Integer.class );
+				},
+				scope.getRegistry(),
+				IdBagCollectionIdTypeOwner.class
 		);
 	}
 
@@ -861,6 +1024,176 @@ public class ElementCollectionBindingTests {
 		@CollectionIdJavaClass(idType = Integer.class)
 		@Column(name = "label")
 		private java.util.Collection<String> labels;
+	}
+
+	@Entity(name="IdBagGeneratorImplementationOwner")
+	@Table(name="idbag_generator_impl_owners")
+	public static class IdBagGeneratorImplementationOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "idbag_generator_impl_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@CollectionId(generatorImplementation = IncrementGenerator.class, column = @Column(name = "label_row_id"))
+		@CollectionIdJavaClass(idType = Integer.class)
+		@Column(name = "label")
+		private java.util.Collection<String> labels;
+	}
+
+	@Entity(name="IdBagLocalSequenceGeneratorOwner")
+	@Table(name="idbag_local_sequence_generator_owners")
+	public static class IdBagLocalSequenceGeneratorOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "idbag_local_sequence_generator_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@SequenceGenerator(name = "local_label_sequence", sequenceName = "local_label_sequence")
+		@CollectionId(generator = "local_label_sequence", column = @Column(name = "label_row_id"))
+		@CollectionIdJavaClass(idType = Integer.class)
+		@Column(name = "label")
+		private java.util.Collection<String> labels;
+	}
+
+	@Entity(name="IdBagCollectionIdJavaTypeOwner")
+	@Table(name="idbag_collection_id_java_type_owners")
+	public static class IdBagCollectionIdJavaTypeOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "idbag_collection_id_java_type_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@CollectionId(generator = "increment", column = @Column(name = "label_row_id"))
+		@CollectionIdJavaType(LongJavaType.class)
+		@Column(name = "label")
+		private java.util.Collection<String> labels;
+	}
+
+	@Entity(name="IdBagCollectionIdJdbcTypeOwner")
+	@Table(name="idbag_collection_id_jdbc_type_owners")
+	public static class IdBagCollectionIdJdbcTypeOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "idbag_collection_id_jdbc_type_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@CollectionId(generator = "increment", column = @Column(name = "label_row_id"))
+		@CollectionIdJavaClass(idType = Integer.class)
+		@CollectionIdJdbcType(IntegerJdbcType.class)
+		@Column(name = "label")
+		private java.util.Collection<String> labels;
+	}
+
+	@Entity(name="IdBagCollectionIdJdbcTypeCodeOwner")
+	@Table(name="idbag_collection_id_jdbc_type_code_owners")
+	public static class IdBagCollectionIdJdbcTypeCodeOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "idbag_collection_id_jdbc_type_code_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@CollectionId(generator = "increment", column = @Column(name = "label_row_id"))
+		@CollectionIdJavaClass(idType = Integer.class)
+		@CollectionIdJdbcTypeCode(Types.SMALLINT)
+		@Column(name = "label")
+		private java.util.Collection<String> labels;
+	}
+
+	@Entity(name="IdBagCollectionIdMutabilityOwner")
+	@Table(name="idbag_collection_id_mutability_owners")
+	public static class IdBagCollectionIdMutabilityOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "idbag_collection_id_mutability_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@CollectionId(generator = "increment", column = @Column(name = "label_row_id"))
+		@CollectionIdJavaClass(idType = Integer.class)
+		@CollectionIdMutability(MutableIntegerMutabilityPlan.class)
+		@Column(name = "label")
+		private java.util.Collection<String> labels;
+	}
+
+	@Entity(name="IdBagCollectionIdTypeOwner")
+	@Table(name="idbag_collection_id_type_owners")
+	public static class IdBagCollectionIdTypeOwner {
+		@Id
+		private Integer id;
+		@ElementCollection
+		@CollectionTable(
+				name = "idbag_collection_id_type_owner_labels",
+				joinColumns = @JoinColumn(name = "owner_id", referencedColumnName = "id")
+		)
+		@CollectionId(generator = "increment", column = @Column(name = "label_row_id"))
+		@CollectionIdType(
+				value = IntegerCollectionIdUserType.class,
+				parameters = @Parameter(name = "strategy", value = "collection-id")
+		)
+		@Column(name = "label")
+		private java.util.Collection<String> labels;
+	}
+
+	public static class MutableIntegerMutabilityPlan implements MutabilityPlan<Integer> {
+		@Override
+		public boolean isMutable() {
+			return true;
+		}
+
+		@Override
+		public Integer deepCopy(Integer value) {
+			return value;
+		}
+
+		@Override
+		public Serializable disassemble(Integer value, SharedSessionContract session) {
+			return value;
+		}
+
+		@Override
+		public Integer assemble(Serializable cached, SharedSessionContract session) {
+			return (Integer) cached;
+		}
+	}
+
+	public static class IntegerCollectionIdUserType implements UserType<Integer>, ParameterizedType {
+		private String strategy;
+
+		@Override
+		public void setParameterValues(Properties parameters) {
+			strategy = parameters.getProperty( "strategy" );
+		}
+
+		@Override
+		public int getSqlType() {
+			return Types.INTEGER;
+		}
+
+		@Override
+		public Class<Integer> returnedClass() {
+			return Integer.class;
+		}
+
+		@Override
+		public Integer deepCopy(Integer value) {
+			return value;
+		}
+
+		@Override
+		public boolean isMutable() {
+			return false;
+		}
 	}
 
 	@Entity(name="ArrayOwner")

@@ -215,6 +215,13 @@ public class NativeMutationOrSelectionQueryImpl
 
 	@Override
 	@Nonnull
+	public NativeMutationOrSelectionQueryImpl setParameters(@Nonnull Object... arguments) {
+		super.setParameters( arguments );
+		return this;
+	}
+
+	@Override
+	@Nonnull
 	public <P> NativeMutationOrSelectionQueryImpl setParameter(int position, @Nullable P value, @Nonnull Class<P> type) {
 		super.setParameter( position, value, type );
 		return this;

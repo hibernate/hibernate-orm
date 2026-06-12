@@ -228,6 +228,10 @@ public interface MutationQuery extends CommonQueryContract, Statement {
 
 	@Override
 	@Nonnull
+	MutationQuery setParameters(@Nonnull Object... arguments);
+
+	@Override
+	@Nonnull
 	<P> MutationQuery setParameter(int position, @Nullable P value, @Nonnull Class<P> type);
 
 	@Override

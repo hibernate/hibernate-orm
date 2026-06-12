@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.View;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
@@ -23,13 +24,13 @@ import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.bind.internal.BindingHelper;
 import org.hibernate.boot.models.bind.internal.InLineView;
 import org.hibernate.boot.models.bind.internal.PhysicalTable;
+import org.hibernate.boot.models.bind.internal.PhysicalView;
 import org.hibernate.boot.models.bind.internal.sources.ForeignKeySource;
 import org.hibernate.boot.models.bind.internal.sources.TableSource;
 import org.hibernate.boot.models.bind.internal.UnionTable;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
-import org.hibernate.boot.models.bind.spi.PhysicalTableReference;
 import org.hibernate.boot.models.bind.spi.QuotedIdentifierTarget;
 import org.hibernate.boot.models.bind.spi.TableReference;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
@@ -94,6 +95,7 @@ public class TableBinder {
 		final jakarta.persistence.Table tableAnn = typeClassDetails.getDirectAnnotationUsage( jakarta.persistence.Table.class );
 		final JoinTable joinTableAnn = typeClassDetails.getDirectAnnotationUsage( JoinTable.class );
 		final Subselect subselectAnn = typeClassDetails.getDirectAnnotationUsage( Subselect.class );
+		final View viewAnn = typeClassDetails.getDirectAnnotationUsage( View.class );
 
 		if ( tableAnn != null && joinTableAnn != null ) {
 			throw new AnnotationPlacementException( "Illegal combination of @Table and @JoinTable on " + typeClassDetails.getName() );
@@ -104,6 +106,9 @@ public class TableBinder {
 		if ( joinTableAnn != null && subselectAnn != null ) {
 			throw new AnnotationPlacementException( "Illegal combination of @JoinTable and @Subselect on " + typeClassDetails.getName() );
 		}
+		if ( subselectAnn != null && viewAnn != null ) {
+			throw new AnnotationPlacementException( "Illegal combination of @Subselect and @View on " + typeClassDetails.getName() );
+		}
 
 		final TableReference tableReference;
 
@@ -111,7 +116,7 @@ public class TableBinder {
 			assert subselectAnn == null;
 
 			if ( hierarchyRelation == EntityHierarchy.HierarchyRelation.ROOT ) {
-				tableReference = bindPhysicalTable( type, TableSource.from( tableAnn ), true );
+				tableReference = bindPhysicalTable( type, TableSource.from( tableAnn ), true, viewAnn );
 			}
 			else {
 				tableReference = bindUnionTable( type, TableSource.from( tableAnn ) );
@@ -119,14 +124,14 @@ public class TableBinder {
 		}
 		else if ( type.getHierarchy().getInheritanceType() == InheritanceType.SINGLE_TABLE ) {
 			if ( hierarchyRelation == EntityHierarchy.HierarchyRelation.ROOT ) {
-				tableReference = normalTableDetermination( type, subselectAnn, TableSource.from( tableAnn ) );
+				tableReference = normalTableDetermination( type, subselectAnn, TableSource.from( tableAnn ), viewAnn );
 			}
 			else {
 				tableReference = null;
 			}
 		}
 		else {
-			tableReference = normalTableDetermination( type, subselectAnn, TableSource.from( joinTableAnn ) );
+			tableReference = normalTableDetermination( type, subselectAnn, TableSource.from( joinTableAnn ), viewAnn );
 		}
 
 		if ( tableReference != null ) {
@@ -143,14 +148,15 @@ public class TableBinder {
 	private TableReference normalTableDetermination(
 			EntityTypeMetadata type,
 			Subselect subselectAnn,
-			TableSource tableSource) {
+			TableSource tableSource,
+			View viewAnn) {
 		final TableReference tableReference;
 		if ( subselectAnn != null ) {
 			tableReference = bindVirtualTable( type, subselectAnn );
 		}
 		else {
 			// either an explicit or implicit @Table
-			tableReference = bindPhysicalTable( type, tableSource, true );
+			tableReference = bindPhysicalTable( type, tableSource, true, viewAnn );
 		}
 		return tableReference;
 	}
@@ -224,7 +230,7 @@ public class TableBinder {
 
 					@Override
 					public MetadataBuildingContext getBuildingContext() {
-						throw new UnsupportedOperationException( "Not (yet) implemented" );
+						return bindingState.getMetadataBuildingContext();
 					}
 				}
 		);
@@ -243,19 +249,27 @@ public class TableBinder {
 		);
 	}
 
-	private PhysicalTableReference bindPhysicalTable(
+	private TableReference bindPhysicalTable(
 			EntityTypeMetadata type,
 			TableSource tableSource,
 			boolean isPrimary) {
+		return bindPhysicalTable( type, tableSource, isPrimary, null );
+	}
+
+	private TableReference bindPhysicalTable(
+			EntityTypeMetadata type,
+			TableSource tableSource,
+			boolean isPrimary,
+			View viewAnn) {
 		if ( tableSource != null ) {
-			return bindExplicitPhysicalTable( type, tableSource, isPrimary );
+			return bindExplicitPhysicalTable( type, tableSource, isPrimary, viewAnn );
 		}
 		else {
-			return bindImplicitPhysicalTable( type, isPrimary );
+			return bindImplicitPhysicalTable( type, isPrimary, viewAnn );
 		}
 	}
 
-	private PhysicalTable bindImplicitPhysicalTable(EntityTypeMetadata type, boolean isPrimary) {
+	private TableReference bindImplicitPhysicalTable(EntityTypeMetadata type, boolean isPrimary, View viewAnn) {
 		final Identifier logicalName = determineLogicalName( type, null );
 		final Identifier logicalSchemaName = bindingOptions.getDefaultSchemaName();
 		final Identifier logicalCatalogName = bindingOptions.getDefaultCatalogName();
@@ -271,8 +285,10 @@ public class TableBinder {
 		);
 
 		applyComment( binding, null );
+		applyView( binding, viewAnn );
 
-		return new PhysicalTable(
+		return createPhysicalTableReference(
+				viewAnn,
 				logicalName,
 				logicalCatalogName,
 				logicalSchemaName,
@@ -306,10 +322,11 @@ public class TableBinder {
 		);
 	}
 
-	private PhysicalTable bindExplicitPhysicalTable(
+	private TableReference bindExplicitPhysicalTable(
 			EntityTypeMetadata type,
 			TableSource tableSource,
-			boolean isPrimary) {
+			boolean isPrimary,
+			View viewAnn) {
 		final Identifier logicalName = determineLogicalName( type, tableSource );
 		final Identifier logicalSchemaName = resolveDatabaseIdentifier(
 				tableSource.schema(),
@@ -335,14 +352,53 @@ public class TableBinder {
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
 		applyCheckConstraints( binding, tableSource );
+		applyView( binding, viewAnn );
 
-		return new PhysicalTable(
+		return createPhysicalTableReference(
+				viewAnn,
 				logicalName,
 				logicalCatalogName,
 				logicalSchemaName,
 				physicalNamingStrategy.toPhysicalTableName( logicalName, jdbcEnvironment ),
 				logicalCatalogName == null ? null : physicalNamingStrategy.toPhysicalCatalogName( logicalCatalogName, jdbcEnvironment ),
 				logicalSchemaName == null ? null : physicalNamingStrategy.toPhysicalSchemaName( logicalSchemaName, jdbcEnvironment ),
+				binding
+		);
+	}
+
+	private static void applyView(Table binding, View viewAnn) {
+		if ( viewAnn != null ) {
+			binding.setViewQuery( viewAnn.query() );
+		}
+	}
+
+	private static TableReference createPhysicalTableReference(
+			View viewAnn,
+			Identifier logicalName,
+			Identifier logicalCatalogName,
+			Identifier logicalSchemaName,
+			Identifier physicalName,
+			Identifier physicalCatalogName,
+			Identifier physicalSchemaName,
+			Table binding) {
+		if ( viewAnn != null ) {
+			return new PhysicalView(
+					logicalName,
+					logicalCatalogName,
+					logicalSchemaName,
+					physicalName,
+					physicalCatalogName,
+					physicalSchemaName,
+					binding
+			);
+		}
+		return new PhysicalTable(
+				logicalName,
+				logicalCatalogName,
+				logicalSchemaName,
+				physicalName,
+				physicalCatalogName,
+				physicalSchemaName,
 				binding
 		);
 	}

@@ -999,8 +999,11 @@ remains tracked in XML/source parity.
 `@DiscriminatorOptions`, `@Immutable`, `@NaturalId`, `@NaturalIdCache`,
 `@OptimisticLock`, `@OptimisticLocking`, `@SecondaryRow`, `@SoftDelete`,
 `@Subselect`, `@Synchronize`, `@View`
-| Mostly test-only.  Close with entity/table mapping assertions; keep
-`@Check` and `@DiscriminatorFormula` aligned with the dialect-override slice.
+| Covered for annotation binding.  Focused bind tests cover entity batch size,
+cache and natural-id cache regions, table checks, discriminator formula/options,
+immutability, natural-id attributes, optimistic-lock metadata, secondary-row
+options, soft delete, subselects, synchronized tables, and database views.
+Dialect overrides remain tracked in the dialect-override slice.
 
 | Association and join coverage
 | `@Fetch`, `@FetchProfileOverride`, `@Filter`, `@FilterJoinTable`,
@@ -1258,11 +1261,11 @@ observed support from work still needing binder/test confirmation.
 | `@BatchSize`
 | `TYPE`, `METHOD`, `FIELD`
 | yes
-| entity/collection support appears present
+| entity/collection support present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@Cache`
 | `TYPE`, `METHOD`, `FIELD`
@@ -1270,8 +1273,8 @@ observed support from work still needing binder/test confirmation.
 | cache-region metadata present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@Changelog`
 | `TYPE`
@@ -1312,11 +1315,11 @@ observed support from work still needing binder/test confirmation.
 | `@Check`
 | `TYPE`, `METHOD`, `FIELD`
 | yes
-| table/check support appears present
+| table/check support present
 | not audited yet
 | base override family
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@Checks`
 | `TYPE`, `METHOD`, `FIELD`
@@ -1528,20 +1531,20 @@ observed support from work still needing binder/test confirmation.
 | `@DiscriminatorFormula`
 | `TYPE`
 | yes
-| discriminator formula support appears present
+| discriminator formula support present
 | not audited yet
 | base override family
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@DiscriminatorOptions`
 | `TYPE`
 | yes
-| discriminator options support appears present
+| discriminator options support present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@DynamicInsert`
 | `TYPE`
@@ -1780,11 +1783,11 @@ observed support from work still needing binder/test confirmation.
 | `@Immutable`
 | `TYPE`, `METHOD`, `FIELD`
 | yes
-| entity/attribute support appears present
+| entity/attribute support present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@Imported`
 | `TYPE`
@@ -2089,17 +2092,17 @@ observed support from work still needing binder/test confirmation.
 | natural-id attribute binding present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@NaturalIdCache`
 | `TYPE`
 | yes
-| natural-id cache support appears present
+| natural-id cache support present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@NaturalIdClass`
 | `TYPE`
@@ -2134,17 +2137,17 @@ observed support from work still needing binder/test confirmation.
 | attribute binding present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@OptimisticLocking`
 | `TYPE`
 | yes
-| entity metadata support appears present
+| entity metadata support present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@ParamDef`
 | no target
@@ -2212,11 +2215,11 @@ observed support from work still needing binder/test confirmation.
 | `@SecondaryRow`
 | `TYPE`
 | yes
-| secondary-row support appears present
+| secondary-row support present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@SecondaryRows`
 | `TYPE`
@@ -2230,11 +2233,11 @@ observed support from work still needing binder/test confirmation.
 | `@SoftDelete`
 | `PACKAGE`, `TYPE`, `FIELD`, `METHOD`, `ANNOTATION_TYPE`
 | yes
-| soft-delete support appears present
+| soft-delete support present
 | not audited yet
 | n/a
-| needed
-| test-only gap
+| focused bind tests
+| covered
 
 | `@SortComparator`
 | `METHOD`, `FIELD`
@@ -2275,20 +2278,20 @@ observed support from work still needing binder/test confirmation.
 | `@Subselect`
 | `TYPE`
 | yes
-| table source support appears present
+| table source support present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@Synchronize`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| synchronized-table support appears present
+| synchronized-table support present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 
 | `@TargetEmbeddable`
 | unspecified
@@ -2428,11 +2431,11 @@ observed support from work still needing binder/test confirmation.
 | `@View`
 | `TYPE`
 | yes
-| table/view support appears present
+| table/view support present
 | n/a
 | n/a
-| needed
-| test-only gap
+| focused bind test
+| covered
 |===
 
 == SQL And Custom Loader Annotations

@@ -169,6 +169,29 @@ where salary >= 50000;
 
 @@@@ FIXTURE @@@@
 === ID ===
+select_between
+
+=== SQL ===
+select * from employee e where e.salary between (select avg(salary) * 0.8 from employee e2 where e2.department_id =
+e.department_id and something = true) and (select avg(salary) * 1.2 + 5000 from employee e3 where e3.department_id = e.department_id);
+
+
+=== EXPECTED ===
+select *
+from employee e
+where e.salary between (
+    select avg(salary) * 0.8
+    from employee e2
+    where e2.department_id = e.department_id
+        and something = true
+) and (
+    select avg(salary) * 1.2 + 5000
+    from employee e3
+    where e3.department_id = e.department_id
+);
+
+@@@@ FIXTURE @@@@
+=== ID ===
 insert_basic
 
 === SQL ===
@@ -291,6 +314,35 @@ where dept_id = 3;
 
 @@@@ FIXTURE @@@@
 === ID ===
+update_many
+
+=== SQL ===
+update empl e set f1 = 1,f2 = 1,f3 = 1,f4 = 1,f5 = 1,f6 = 1,f7 = 1,f8 = 1,f9 = 1,f10 = 1,f11 = 1,
+f12 = 1,f13 = 1,f14 = 1,f15 = 1,f16 = 1 where e.dept_id=3;
+
+=== EXPECTED ===
+update empl e
+set
+    f1 = 1,
+    f2 = 1,
+    f3 = 1,
+    f4 = 1,
+    f5 = 1,
+    f6 = 1,
+    f7 = 1,
+    f8 = 1,
+    f9 = 1,
+    f10 = 1,
+    f11 = 1,
+    f12 = 1,
+    f13 = 1,
+    f14 = 1,
+    f15 = 1,
+    f16 = 1
+where e.dept_id = 3;
+
+@@@@ FIXTURE @@@@
+=== ID ===
 update_from
 
 === SQL ===
@@ -323,15 +375,43 @@ where role = 'developer';
 update_case
 
 === SQL ===
-update orders set status = case when shipped_at is not null then 'SHIPPED' else 'PENDING' end;
+update orders set status = case when shipped_at is not null then 'SHIPPED'
+when return_date is not null and date_add(return_date, interval 30 day) > curdate() then 'DELIVERED' else 'PENDING' end
+,other_field = some_function_call();
 
 === EXPECTED ===
 update orders
 set status =
     case
         when shipped_at is not null then 'SHIPPED'
+        when return_date is not null
+            and date_add(return_date, interval 30 day) > curdate() then 'DELIVERED'
         else 'PENDING'
-    end;
+    end,
+    other_field = some_function_call();
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update_nested_case
+
+=== SQL ===
+update orders set status = case when shipped_at is not null then 'SHIPPED'
+when return_date is not null then case when date_add(return_date, interval 30 day) > curdate() then 'DELIVERED'
+else 'TRIAL' end else 'PENDING' end,other_field = some_function_call();
+
+=== EXPECTED ===
+update orders
+set status =
+    case
+        when shipped_at is not null then 'SHIPPED'
+        when return_date is not null then
+            case
+                when date_add(return_date, interval 30 day) > curdate() then 'DELIVERED'
+                else 'TRIAL'
+            end
+        else 'PENDING'
+    end,
+    other_field = some_function_call();
 
 @@@@ FIXTURE @@@@
 === ID ===

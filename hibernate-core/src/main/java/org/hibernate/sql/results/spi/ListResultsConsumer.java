@@ -35,10 +35,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 	/**
-	 * Let's be reasonable, a row estimate greater than 1M rows is probably either a mis-estimation or bug,
-	 * so let's set 2^20 which is a bit above 1M as maximum collection size.
+	 * Let's be reasonable, a row estimate greater than 8k rows is probably either a mis-estimation or bug,
+	 * so let's set 2^13 which is a bit above 8k as maximum collection size.
 	 */
-	private static final int INITIAL_COLLECTION_SIZE_LIMIT = 1 << 20;
+	private static final int INITIAL_COLLECTION_SIZE_LIMIT = 1 << 13;
 
 	private static final ListResultsConsumer<?> NEVER_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.NEVER );
 	private static final ListResultsConsumer<?> ALLOW_DE_DUP_CONSUMER = new ListResultsConsumer<>( UniqueSemantic.ALLOW );

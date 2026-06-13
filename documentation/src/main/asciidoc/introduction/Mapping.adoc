@@ -911,15 +911,8 @@ class Person {
 }
 ----
 
-We also need to add Jackson or an implementation of JSONB—for example, Yasson—to our runtime classpath.
-To use Jackson 2 we could add this line to our Gradle build:
-
-[source,groovy]
-----
-runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:{jacksonVersion}'
-----
-
-To use Jackson 3 we could add this line to our Gradle build:
+We also need to add Jackson or an implementation of JSONB--for example, Yasson--to our runtime classpath.
+To use Jackson we could add this line to our Gradle build:
 
 [source,groovy]
 ----

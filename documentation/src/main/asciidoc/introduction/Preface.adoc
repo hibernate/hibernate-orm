@@ -1,8 +1,9 @@
 [[preface]]
 == Preface
 
-:persistence: https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
-:data: https://jakarta.ee/specifications/data/1.0/jakarta-data-1.0
+:persistence: https://jakarta.ee/specifications/persistence/4.0/jakarta-persistence-spec-4.0-M4.pdf
+:data: https://jakarta.ee/specifications/data/1.1/jakarta-data-1.1-m3.pdf
+:query: https://jakarta.ee/specifications/query/1.0/jakarta-query-1.0-m2.pdf
 
 Hibernate 6 was a major redesign of the world's most popular and feature-rich ORM solution.
 The redesign touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and the query language.

@@ -98,11 +98,11 @@ A popular alternative to Agroal is {hikaricp}[HikariCP].
 Integration with HikariCP is provided by the module `org.hibernate.orm:hibernate-hikaricp`.
 Its settings are enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/HikariCPSettings.html[`HikariCPSettings`].
 
-.Container-managed datasources
-****
+[NOTE]
+====
 In a container environment, you usually don't need to configure a connection pool through Hibernate.
 Instead, you'll use a container-managed datasource, as we saw in <<basic-configuration-settings>>.
-****
+====
 
 A related important setting is the default JDBC fetch size.
 

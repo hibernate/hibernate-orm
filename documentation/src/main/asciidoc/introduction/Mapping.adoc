@@ -24,7 +24,9 @@ This is a somewhat tedious topic, and so we don't want to spend too many words o
 Instead, we'll quickly skim the most important mapping annotations.
 
 [[case-convention]]
-.Hibernate SQL case convention
+.*Read more: Hibernate SQL case convention*
+[%collapsible]
+====
 ****
 Computers have had lowercase letters for rather a long time now.
 Most developers learned long ago that text written in MixedCase, camelCase, or even snake_case is easier to read than text written in SHOUTYCASE.
@@ -42,6 +44,7 @@ Now, there's no way we can force you to follow this convention, even if we wishe
 Hell, you can easily write a `PhysicalNamingStrategy` which makes table and column names ALL UGLY AND SHOUTY LIKE THIS IF YOU PREFER.
 But, _by default_, it's the convention Hibernate follows, and it's frankly a pretty reasonable one.
 ****
+====
 
 [[mapping-inheritance]]
 === Mapping entity inheritance hierarchies
@@ -743,7 +746,10 @@ This is usually all you need to do to make use of large object types in Hibernat
 
 JPA provides a `@Lob` annotation which specifies that a field should be persisted as a `BLOB` or `CLOB`.
 
-.Semantics of the `@Lob` annotation
+[[lob-semantics]]
+.*Read more: Semantics of the `@Lob` annotation*
+[%collapsible]
+====
 ****
 What the spec actually says is that the field should be persisted
 
@@ -755,6 +761,7 @@ It's quite unclear what this means, and the spec goes on to say that
 
 which doesn't help much.
 ****
+====
 
 Hibernate interprets this annotation in what we think is the most reasonable way.
 In Hibernate, an attribute annotated `@Lob` will be written to JDBC using the `setClob()` or `setBlob()` method of `PreparedStatement`, and will be read from JDBC using the `getClob()` or `getBlob()` method of `ResultSet`.
@@ -781,9 +788,11 @@ String text;
 This is particularly true for PostgreSQL.
 
 [%unbreakable]
-[WARNING]
+.*Read more: PostgreSQL and `@Lob`*
+[%collapsible]
 // .PostgreSQL `BYTEA` and `TEXT`
 ====
+****
 Unfortunately, the driver for PostgreSQL doesn't allow `BYTEA` or `TEXT` columns to be read via the JDBC LOB APIs.
 
 This limitation of the Postgres driver has resulted in a whole cottage industry of bloggers and stackoverflow question-answerers recommending convoluted ways to hack the Hibernate `Dialect` for Postgres to allow an attribute annotated `@Lob` to be written using `setString()` and read using `getString()`.
@@ -795,6 +804,7 @@ Conclusion:
 - on PostgreSQL, `@Lob` always means the `OID` type,
 - `@Lob` should never be used to map columns of type `BYTEA` or `TEXT`, and
 - please don't believe everything you read on stackoverflow.
+****
 ====
 
 Finally, as an alternative, Hibernate lets you declare an attribute of type `java.sql.Blob` or `java.sql.Clob`.

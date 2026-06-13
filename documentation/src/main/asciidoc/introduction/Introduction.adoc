@@ -45,18 +45,24 @@ Just because you're using Hibernate for persistence doesn't mean you have to use
 
 Let's underline the important point here: the goal of ORM is _not_ to hide SQL or the relational model.
 After all, Hibernate's query language is link:{doc-query-language-url}[nothing more than an object-oriented dialect of ANSI SQL].
+On the other hand, Hibernate does help smooth over many of the differences between relational databases and SQL dialects.
 
-.Is Hibernate a "leaky abstraction"?
+.*Read more: Is Hibernate a "leaky abstraction"?*
+[%collapsible]
+====
 ****
 Hibernate--and ORM in general--has been accused of being a _leaky abstraction_, that is, of failing to completely hide the underlying relational database.
 Is this true?
+
 Well, as you can guess from what we've already said, the short answer is: yes, _and that's a good thing._
+
 Of course, whether you consider an abstraction "leaky" depends on what you think it's trying to abstract.
 Hibernate successfully abstracts many things: variations between dialects of SQL, messy interactions with JDBC, SQL object naming conventions, and so on.
 But it doesn't even attempt to pretend there's anything other than a relational data model underlying all this.
 The simple reason is performance. It's just not possible to <<tuning-and-performance,achieve acceptable performance>> in data access without acknowledging the nature of the underlying persistent representation.
 We're old enough to have seen multiple generations of developer relearn this lesson by experience.
 ****
+====
 
 Developers often ask about the relationship between Hibernate and JPA, so let's take a short detour into some history.
 
@@ -64,8 +70,12 @@ Developers often ask about the relationship between Hibernate and JPA, so let's 
 === Hibernate and JPA
 
 Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of link:{persistence}[this specification].
+In recent years, the Hibernate team has led the efforts to modernize the Jakarta EE persistence specifications, culminating in the release of this three-headed hellhound: Persistence 4.0, Query 1.0, and Data 1.1.
 
-.The early history of Hibernate and JPA
+[[history]]
+.*Read more: The early history of Hibernate and JPA*
+[%collapsible]
+====
 ****
 The Hibernate project began in 2001, when Gavin King's frustration with Entity Beans in EJB 2 boiled over.
 It quickly overtook other open source and commercial contenders to become the most popular persistence solution for Java, and the book _Hibernate in Action_, written with Christian Bauer, was an influential bestseller.
@@ -78,8 +88,7 @@ Later, members of the TopLink team got involved, and the Java Persistence API ev
 Over the intervening two decades, _many_ talented people have contributed to the development of Hibernate.
 We're all especially grateful to Steve, who has led the project for many years, since Gavin stepped back to focus on other work.
 ****
-
-More recently, the Hibernate team has led the efforts to modernize the Jakarta EE persistence specifications, culminating in the release of this three-headed hellhound: Persistence 4.0, Query 1.0, and Data 1.1.
+====
 
 We can think of Hibernate in terms of four basic elements:
 
@@ -368,14 +377,19 @@ This makes them very important objects indeed!
 Given how much weight an entity already bears due to its very nature, we need to think carefully before weighing it down with too many additional responsibilities.
 
 [[entity-logic]]
-.What sort of logic belongs in an entity?
+.*Read more: Rich and anemic entities*
+[%collapsible]
+====
 ****
 There exists an extensive online literature which posits that there are _rich domain models_, where entities have methods implementing interesting business logic, and _anemic domain models_, where the entities are pure data holders, and that a developer should hold an opinion that one or the other of these sorts of domain model is "better".
 
 We do not hold any such opinion, and if you ask us for one, we will most likely suddenly discover somewhere else we need to be.
 
 A more interesting question is not _how much_ logic belongs in the entity class, but _what sort_ of logic belongs there.
-We think the answer is that an entity should never implement technical concerns, and should never obtain references to framework objects.
+****
+====
+
+We think that an entity should never implement technical concerns, and should never obtain references to framework objects.
 Nor should it hold extra mutable state which is not very directly related to its role in representing persistent state.
 For example:
 
@@ -388,14 +402,13 @@ One way to summarize this is:
 
 Later, we'll discuss various ways to <<managing-transactions,manage transactions>>, <<callbacks,send event notifications>>, and <<organizing-persistence,query the database>>.
 Such code will always be external to the entity itself.
-****
-
-In keeping with our commitment to anti-dogmatism, we would like to add the following important caveat to the discussion in the previous callout.
 
 [[active-record]]
-.Active Record
+.*Read more: Active Record*
+[%collapsible]
+====
 ****
-The discussion <<entity-logic,above>> expresses our "traditional" approach--which lay behind the design of Hibernate, of JPA, and of Jakarta Data--where entity classes are plain Java objects without dependence on framework code.
+The discussion above expresses our "traditional" approach--which lay behind the design of Hibernate, of JPA, and of Jakarta Data--where entity classes are plain Java objects without dependence on framework code.
 An alternative approach is the Active Record pattern, as exemplified by link:https://quarkus.io/guides/hibernate-orm-panache[Panache].
 In Active Record, entity types inherit framework objects, and persistence operations are located directly on the entities.
 You can think of this as merging the roles of entity and DAO/Repository into a single object.
@@ -405,6 +418,7 @@ We must therefore slightly modify the prescription we've given above: in an Acti
 
 But the basic principle remains intact: an entity does not do orchestration, it does not manage transactions, it does not obtain references to _other_ sorts of framework object, and it does not hold mutable state unrelated to its persistent state.
 ****
+====
 
 For now, we're going to assume that entities are implemented as plain Java classes.
 
@@ -425,7 +439,9 @@ The new JPA 4 `EntityAgent` interface offers a way to interact with Hibernate _w
 In Hibernate, every `EntityAgent` is also an instance of the much older interface <<stateless-sessions,`StatelessSession`>>, and so we sometimes call an instance of `EntityAgent` a "stateless session".
 The programming model for stateless sessions is somewhat different.
 
-.Stateless sessions
+.*Read more: Stateless sessions*
+[%collapsible]
+====
 ****
 Among our biggest regrets is that we didn't give enough love to `StatelessSession` twenty years ago.
 Sure, a stateful session is in some sense more powerful, or at least more magical.
@@ -446,6 +462,7 @@ So, finally, let us state for the record: we messed up here.
 Hibernate is all about _object/relational mapping;_ persistence contexts are something extra on top.
 You don't have to use stateful sessions, and you're not doing anything wrong if you decide to use stateless sessions instead.
 ****
+====
 
 A key decision for any new project is which of these programming models to take as a baseline.
 Fortunately, the two models aren't mutually exclusive.
@@ -460,11 +477,13 @@ In a real program, persistence logic like the code shown above is usually interl
 - implementing the rules of the business domain, or
 - for interacting with the user.
 
-Therefore, many developers quickly—even _too quickly_, in our opinion—reach for ways to isolate the persistence logic into some sort of separate architectural layer.
+Therefore, many developers quickly--even _too quickly_, in our opinion--reach for ways to isolate the persistence logic into some sort of separate architectural layer.
 For decades, there was no clearly "best" way to implement a persistence layer based on Hibernate, and frameworks which intended to simplify life for the developer seemed to us to actually make things worse.
 With link:{data}[Jakarta Data 1.1], as implemented by <<generator,Hibernate Processor>>, the situation has changed, and the easiest way to write a persistence layer is now very clear.
 
-.Why we changed our mind about repositories
+.*Read more: Why we changed our mind about repositories*
+[%collapsible]
+====
 ****
 At the time we wrote _An Introduction to Hibernate 6_, we were frustrated with the limitations of popular frameworks which claimed to simplify the use of JPA by wrapping and hiding the `EntityManager`.
 In our considered opinion, such frameworks typically made JPA harder to use, sometimes misleading users into misuse of the technology.
@@ -474,6 +493,7 @@ Jakarta Data--as realized by Hibernate Data Repositories--offers a clean but ver
 
 Unlike other repository frameworks, Hibernate Data Repositories offers something that plain JPA simply doesn’t have: full compile-time type safety for your queries. To learn more, please refer to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories].
 ****
+====
 
 For now, let's see how we could rewrite our <<main-hibernate,earlier code>> using a repository.
 
@@ -581,6 +601,15 @@ In Quarkus, WildFly, or any Jakarta EE container, https://www.cdi-spec.org[CDI] 
 [IMPORTANT]
 Notice that we registered the repository interface with the persistence unit via `managedClass()`.
 // If we had used `persistence.xml` to configure Hibernate, we would have listed it as a `<class>`.
+
+One very nice aspect of this code, which we wish to draw your attention to, is that session and transaction management is handled by generic "framework" code, just as we already recommended above.
+In this case, we're using the `runInTransaction()` method of `EntityManagerFactor`.
+But you might prefer to use something else, for example:
+
+- in a container environment like Jakarta EE or Quarkus, _container-managed transactions_ and _container-managed persistence contexts_, or
+- something you write yourself.
+
+The important thing is that calls like `createEntityManager()` and `getTransaction().begin()` don't belong in regular program logic, because it's tricky and tedious to get the error handling correct.
 
 Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.
 

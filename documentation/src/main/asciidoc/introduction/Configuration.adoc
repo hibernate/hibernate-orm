@@ -35,14 +35,14 @@ Here we'll focus on the first two options.
 
 :hibernate-quarkus: https://quarkus.io/guides/hibernate-orm
 
-.Hibernate in containers
-****
+[NOTE]
+====
 Actually, the last option is extremely popular, since every major Java application server and microservice framework comes with built-in support for Hibernate.
 Such container environments typically also feature facilities to automatically manage the lifecycle of an `EntityManager` or `Session` and its association with container-managed transactions.
 
 To learn how to configure Hibernate in such a container environment, you'll need to refer to the documentation of your chosen container.
 For Quarkus, here's the {hibernate-quarkus}[relevant documentation].
-****
+====
 
 If you're using Hibernate outside of a container environment,
 you'll need to:
@@ -191,10 +191,10 @@ The `<persistence-unit>` element defines a named _persistence unit_, that is:
 
 Each `<class>` element specifies the fully-qualified name of an entity class.
 
-.Scanning for entity classes
-****
+[TIP]
+====
 In some container environments, for example, in any EE container, the `<class>` elements are unnecessary, since the container will scan the archive for annotated classes, and automatically recognize any class annotated `@Entity`.
-****
+====
 
 Each `<property>` element specifies a _configuration property_ and its value.
 Note that:
@@ -268,12 +268,15 @@ SessionFactory sessionFactory =
 :native-bootstrap: {doc-user-guide-url}#bootstrap-native
 :boot: {doc-javadoc-url}/org/hibernate/boot/package-summary.html
 
-.Advanced configuration options
+.*Read more: Advanced configuration options*
+[%collapsible]
+====
 ****
 Actually, these APIs are very simple facades resting on the much more powerful--but also more complex--APIs defined in the package `org.hibernate.boot`.
 This API is useful if you have very advanced requirements, for example, if you're writing a framework or implementing a container.
 You'll find more information in the {native-bootstrap}[User Guide], and in the {boot}[package-level documentation] of `org.hibernate.boot`.
 ****
+====
 
 [[entity-discovery]]
 === Entity discovery

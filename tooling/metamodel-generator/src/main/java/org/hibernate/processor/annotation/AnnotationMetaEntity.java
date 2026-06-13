@@ -1907,34 +1907,27 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			boolean isNative) {
 		final var value = getAnnotationValue( mirror );
 		if ( value != null && value.getValue() instanceof String queryString ) {
+			final var validate = shouldValidateStaticQueryMethod( method );
 			final var methodReturnType =
 					unwrappedReturnTypeIfPossible( method, memberMethodType( method ).getReturnType() );
 			final var queryReturnType =
-					staticQueryReturnType( method, methodReturnType, mirror, value, queryString );
+					staticQueryReturnType( method, methodReturnType, mirror, value, queryString, validate );
 			if ( queryReturnType != null ) {
 				final var paramNames = staticQueryParameterNames( method );
 				final var paramTypes = parameterTypes( method );
-				final TypeElement entity;
-				if ( isNative ) {
-					entity = null;
-					if ( !repository || method.isDefault() ) {
-						validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
+				final var returnType = queryReturnType.validationReturnType;
+				final var entityType =
+						isNative ? null : querySelectionEntity( method, returnType, mirror, queryString, validate );
+				if ( validate ) {
+					final var type = entityType == null ? returnType : entityType.asType();
+					checkParameters( method, type, paramNames, paramTypes, mirror, value, queryString, isNative );
+					if ( isNative ) {
+						validateSql( method, mirror, queryString, paramNames, value );
 					}
-				}
-				else {
-					entity = querySelectionEntity( method, queryReturnType.validationReturnType, mirror, queryString );
-				}
-				final var validationReturnType = entity == null ? queryReturnType.validationReturnType : entity.asType();
-				final var processedQuery =
-						staticQueryValidationString( validationReturnType, mirror, queryString );
-				checkParameters( method, validationReturnType,
-						paramNames, paramTypes, mirror, value, queryString, isNative );
-				if ( isNative ) {
-					validateSql( method, mirror, queryString, paramNames, value );
-				}
-				else {
-					validateHql( method, validationReturnType,
-							mirror, value, processedQuery, paramNames, paramTypes );
+					else {
+						final var processedQuery = staticQueryValidationString( type, mirror, queryString );
+						validateHql( method, type, mirror, value, processedQuery, paramNames, paramTypes );
+					}
 				}
 				if ( canBindReferenceArguments( queryString, isNative, paramNames, paramTypes ) ) {
 					final var referenceParamNames = queryParameterNames( paramNames, paramTypes );
@@ -1947,12 +1940,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									method.getSimpleName().toString(),
 									queryReturnType.statement,
 									isNative,
-									entity == null
+									entityType == null
 											? queryReturnType.resultTypeName
-											: entity.getQualifiedName().toString(),
-									entity == null
+											: entityType.getQualifiedName().toString(),
+									entityType == null
 											? queryReturnType.resultTypeClass
-											: entity.getQualifiedName().toString(),
+											: entityType.getQualifiedName().toString(),
 									paramTypes,
 									referenceParamNames,
 									referenceParamTypes,
@@ -1962,6 +1955,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 		}
+	}
+
+	/**
+	 * For a repository method validation is done during generation of
+	 * the {@code _Repo} class, and we don't need to duplicate it for
+	 * the {@code Repo_} class which contains only static references.
+	 */
+	private boolean shouldValidateStaticQueryMethod(ExecutableElement method) {
+		return !repositoryQueryMetamodel
+			|| method.isDefault(); //TODO: is this necessary?
 	}
 
 	private String staticQueryValidationString(
@@ -1985,17 +1988,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			TypeMirror methodReturnType,
 			AnnotationMirror mirror,
 			AnnotationValue value,
-			String queryString) {
+			String queryString,
+			boolean validate) {
 		final var statement = isMutationStatement( queryString );
 		return switch ( methodReturnType.getKind() ) {
 			case VOID -> statement
 					? new StaticQueryReturnType( true, null, null, methodReturnType )
-					: illegalStaticQueryReturnType( method, mirror, value );
+					: illegalStaticQueryReturnType( method, mirror, value, validate );
 			case BOOLEAN, BYTE, SHORT, INT, LONG, CHAR, FLOAT, DOUBLE -> {
 				if ( statement ) {
 					yield switch ( methodReturnType.getKind() ) {
 						case BOOLEAN, INT, LONG -> new StaticQueryReturnType( true, null, null, methodReturnType );
-						default -> illegalStaticQueryReturnType( method, mirror, value );
+						default -> illegalStaticQueryReturnType( method, mirror, value, validate );
 					};
 				}
 				else {
@@ -2012,7 +2016,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				else {
 					final var queryResultType = staticQueryResultType( (DeclaredType) methodReturnType );
-					resultType( method, queryResultType, mirror, value );
+					if ( validate ) {
+						resultType( method, queryResultType, mirror, value );
+					}
 					yield new StaticQueryReturnType( false,
 							typeAsString( queryResultType ),
 							returnTypeClass( queryResultType ),
@@ -2026,18 +2032,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						returnTypeClass( queryResultType ),
 						queryResultType );
 			}
-			default -> illegalStaticQueryReturnType( method, mirror, value );
+			default -> illegalStaticQueryReturnType( method, mirror, value, validate );
 		};
 	}
 
 	private @Nullable StaticQueryReturnType illegalStaticQueryReturnType(
 			ExecutableElement method,
 			AnnotationMirror mirror,
-			AnnotationValue value) {
-		message( method, mirror, value,
-				"static query method must return a referenceable query result type,"
-				+ " or a legal mutation result type: 'void', 'boolean', 'int', or 'long'",
-				Diagnostic.Kind.ERROR );
+			AnnotationValue value,
+			boolean validate) {
+		if ( validate ) {
+			message( method, mirror, value,
+					"static query method must return a referenceable query result type,"
+					+ " or a legal mutation result type: 'void', 'boolean', 'int', or 'long'",
+					Diagnostic.Kind.ERROR );
+		}
 		return null;
 	}
 
@@ -3114,9 +3123,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeMirror returnType,
 			AnnotationMirror query,
 			String queryString) {
+		return querySelectionEntity( method, returnType, query, queryString, true );
+	}
+
+	private @Nullable TypeElement querySelectionEntity(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			AnnotationMirror query,
+			String queryString,
+			boolean validate) {
 		final var explicitMethodSelect = hasSelectAnnotation( method );
 		if ( returnType == null ) {
-			if ( explicitMethodSelect ) {
+			if ( validate && explicitMethodSelect ) {
 				message( method, query,
 						"'@Select' requires a concrete query result type",
 						Diagnostic.Kind.ERROR );
@@ -3124,7 +3142,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return null;
 		}
 		if ( isMutationStatement( queryString ) ) {
-			if ( explicitMethodSelect ) {
+			if ( validate && explicitMethodSelect ) {
 				message( method, query,
 						"'@Select' may not be used on a mutation query",
 						Diagnostic.Kind.ERROR );
@@ -3136,7 +3154,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		if ( returnType.getKind() == TypeKind.DECLARED
 				&& containsAnnotation( ((DeclaredType) returnType).asElement(), ENTITY ) ) {
-			if ( explicitMethodSelect ) {
+			if ( validate && explicitMethodSelect ) {
 				message( method, query,
 						"'@Select' may not be used on a '@Query' method that returns entity type '" + returnType + "'",
 						Diagnostic.Kind.ERROR );
@@ -3144,7 +3162,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return null;
 		}
 		if ( hasSelectClause( queryString ) ) {
-			if ( explicitMethodSelect ) {
+			if ( validate && explicitMethodSelect ) {
 				message( method, query,
 						"'@Select' may not be used on a '@Query' method with an explicit SELECT clause",
 						Diagnostic.Kind.ERROR );
@@ -3152,7 +3170,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return null;
 		}
 		final var entity = querySelectionEntity( queryString );
-		if ( entity == null ) {
+		if ( validate && entity == null ) {
 			message( method, query,
 					"repository method has no well-defined entity type",
 					Diagnostic.Kind.ERROR );

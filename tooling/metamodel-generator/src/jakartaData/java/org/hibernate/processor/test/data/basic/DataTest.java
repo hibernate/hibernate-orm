@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -164,16 +165,27 @@ class DataTest {
 			);
 			assertFalse( task.call() );
 		}
-		final String messages = diagnostics.getDiagnostics()
+		final var errorMessages = diagnostics.getDiagnostics()
 				.stream()
 				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
 				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
-				.collect( Collectors.joining( "\n" ) );
+				.toList();
+		final String messages = errorMessages.stream().collect( Collectors.joining( "\n" ) );
 
 		assertTrue( messages.contains(
 				"positional query parameters must be numbered sequentially starting at ?1" ) );
 		assertTrue( messages.contains(
 				"query parameters must be either all named or all positional" ) );
+		assertEquals( 1, countMessagesContaining( errorMessages,
+				"positional query parameters must be numbered sequentially starting at ?1" ) );
+		assertEquals( 1, countMessagesContaining( errorMessages,
+				"query parameters must be either all named or all positional" ) );
+	}
+
+	private static long countMessagesContaining(List<String> messages, String text) {
+		return messages.stream()
+				.filter( message -> message.contains( text ) )
+				.count();
 	}
 
 	private static File sourceFile(Class<?> type) {

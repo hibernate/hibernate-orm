@@ -461,7 +461,10 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append( "\tvar _reference = _builder.augment(" );
 			createQueryReference( declaration );
 			declaration
-					.append( ", _query -> {\n\t" );
+					.append( ", " )
+					// Never null because this is called only when useAugmentedQuery() is true
+					.append( annotationMetaEntity.importType( selection.resultTypeName() ) )
+					.append( ".class, _query -> {\n\t" );
 		}
 		else {
 			declaration

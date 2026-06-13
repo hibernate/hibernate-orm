@@ -1914,18 +1914,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( queryReturnType != null ) {
 				final var paramNames = staticQueryParameterNames( method );
 				final var paramTypes = parameterTypes( method );
-				if ( isNative && ( !repository || method.isDefault() ) ) {
-					validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
+				final TypeElement entity;
+				if ( isNative ) {
+					entity = null;
+					if ( !repository || method.isDefault() ) {
+						validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
+					}
 				}
-				final var querySelection =
-						!isNative && ( annotationTypeMatches( mirror, JD_QUERY )
-								|| annotationTypeMatches( mirror, JAKARTA_QUERY ) )
-								? querySelection( method, queryReturnType.validationReturnType, mirror, queryString )
-								: null;
-				final var validationReturnType =
-						querySelection == null
-								? queryReturnType.validationReturnType
-								: querySelection.entity().asType();
+				else {
+					entity = querySelectionEntity( method, queryReturnType.validationReturnType, mirror, queryString );
+				}
+				final var validationReturnType = entity == null ? queryReturnType.validationReturnType : entity.asType();
 				final var processedQuery =
 						staticQueryValidationString( validationReturnType, mirror, queryString );
 				checkParameters( method, validationReturnType,
@@ -1948,8 +1947,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									method.getSimpleName().toString(),
 									queryReturnType.statement,
 									isNative,
-									queryReturnType.resultTypeName,
-									queryReturnType.resultTypeClass,
+									entity == null
+											? queryReturnType.resultTypeName
+											: entity.getQualifiedName().toString(),
+									entity == null
+											? queryReturnType.resultTypeClass
+											: entity.getQualifiedName().toString(),
 									paramTypes,
 									referenceParamNames,
 									referenceParamTypes,
@@ -3106,7 +3109,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private record SelectedAttribute(String path, TypeMirror type) {
 	}
 
-	private @Nullable QuerySelection querySelection(
+	private @Nullable TypeElement querySelectionEntity(
 			ExecutableElement method,
 			@Nullable TypeMirror returnType,
 			AnnotationMirror query,
@@ -3155,8 +3158,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					Diagnostic.Kind.ERROR );
 			return null;
 		}
-		final var resultSelection = resultSelection( method, returnType, entity, true );
-		return resultSelection == null ? null : new QuerySelection( resultSelection, entity );
+		return entity;
 	}
 
 	private @Nullable TypeElement querySelectionEntity(String queryString) {
@@ -3218,9 +3220,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			builder.append( identifier.getText() );
 		}
 		return builder.toString();
-	}
-
-	private record QuerySelection(ResultSelection resultSelection, TypeElement entity) {
 	}
 
 	private static boolean isRecordReturn(TypeMirror returnType) {
@@ -4359,15 +4358,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			validateNativeQueryHasNoDynamicAugmentation( method, mirror, paramTypes );
 		}
 
-		final var querySelection =
-				!isNative && annotationTypeMatches( mirror, JD_QUERY )
-						? querySelection( method, returnType, mirror, queryString )
-						: null;
-		final var validationReturnType =
-				querySelection == null
-						? returnType
-						: querySelection.entity().asType();
-
+		final TypeElement entity;
+		final ResultSelection querySelection;
+		if ( isNative ) {
+			entity = null;
+			querySelection = null;
+		}
+		else {
+			entity = querySelectionEntity( method, returnType, mirror, queryString );
+			querySelection =
+					returnType == null || entity == null
+							? null
+							: resultSelection( method, returnType, entity, true );
+		}
+		final var validationReturnType = entity == null ? returnType : entity.asType();
 		// now check that the query has a parameter for every method parameter
 		checkParameters( method, validationReturnType, paramNames, paramTypes, mirror, value, queryString, isNative );
 
@@ -4427,10 +4431,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						sessionType[0],
 						sessionType[1],
 						orderBys,
-						querySelection == null ? null : querySelection.resultSelection(),
-						querySelection == null
-								? null
-								: querySelection.entity().getQualifiedName().toString(),
+						querySelection,
+						entity == null ? null : entity.getQualifiedName().toString(),
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
 						fullReturnType( method ),

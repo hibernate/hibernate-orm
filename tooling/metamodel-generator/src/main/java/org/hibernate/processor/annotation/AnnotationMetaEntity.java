@@ -7,6 +7,7 @@ package org.hibernate.processor.annotation;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
+import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -1928,9 +1929,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								? querySelection( method, queryReturnType.validationReturnType, mirror, queryString )
 								: null;
 				final var validationReturnType =
-						querySelection == null || primaryEntity == null
+						querySelection == null
 								? queryReturnType.validationReturnType
-								: primaryEntity.asType();
+								: querySelection.entity().asType();
 				final var processedQuery =
 						staticQueryValidationString( validationReturnType, mirror, queryString );
 				checkParameters( method, validationReturnType,
@@ -3112,7 +3113,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private record SelectedAttribute(String path, TypeMirror type) {
 	}
 
-	private @Nullable ResultSelection querySelection(
+	private @Nullable QuerySelection querySelection(
 			ExecutableElement method,
 			@Nullable TypeMirror returnType,
 			AnnotationMirror query,
@@ -3154,13 +3155,79 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			return null;
 		}
-		if ( primaryEntity == null ) {
+		final var entity = querySelectionEntity( queryString );
+		if ( entity == null ) {
 			message( method, query,
-					"repository method returns a projection, so the repository must have a well-defined primary entity type",
+					"repository method has no well-defined entity type",
 					Diagnostic.Kind.ERROR );
 			return null;
 		}
-		return resultSelection( method, returnType, primaryEntity, true );
+		final var resultSelection = resultSelection( method, returnType, entity, true );
+		return resultSelection == null ? null : new QuerySelection( resultSelection, entity );
+	}
+
+	private @Nullable TypeElement querySelectionEntity(String queryString) {
+		final var rootEntityName = queryRootEntityName( queryString );
+		if ( rootEntityName != null ) {
+			final var rootEntity = entityTypeForEntityName( rootEntityName );
+			if ( rootEntity != null ) {
+				return rootEntity;
+			}
+		}
+		return primaryEntity;
+	}
+
+	private @Nullable TypeElement entityTypeForEntityName(String entityName) {
+		final var qualifiedName = context.qualifiedNameForEntityName( entityName );
+		final var typeElement =
+				context.getElementUtils()
+						.getTypeElement( qualifiedName == null ? entityName : qualifiedName );
+		return typeElement != null
+			&& containsAnnotation( typeElement, ENTITY )
+				? typeElement
+				: null;
+	}
+
+	private static @Nullable String queryRootEntityName(String hql) {
+		try {
+			final var hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
+			final var hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
+			hqlParser.removeErrorListeners();
+			final var selectStatement = hqlParser.statement().selectStatement();
+			if ( selectStatement == null ) {
+				return null;
+			}
+			final var orderedQueries = selectStatement.queryExpression().orderedQuery();
+			if ( orderedQueries.size() != 1
+					|| !( orderedQueries.get( 0 ) instanceof HqlParser.QuerySpecExpressionContext querySpec ) ) {
+				return null;
+			}
+			final var fromClause = querySpec.query().fromClause();
+			if ( fromClause == null || fromClause.entityWithJoins().size() != 1 ) {
+				return null;
+			}
+			final var fromRoot = fromClause.entityWithJoins( 0 ).fromRoot();
+			return fromRoot instanceof HqlParser.RootEntityContext rootEntity
+					? entityName( rootEntity.entityName() )
+					: null;
+		}
+		catch (RuntimeException ignored) {
+			return null;
+		}
+	}
+
+	private static String entityName(HqlParser.EntityNameContext entityName) {
+		final var builder = new StringBuilder();
+		for ( var identifier : entityName.identifier() ) {
+			if ( !builder.isEmpty() ) {
+				builder.append( '.' );
+			}
+			builder.append( identifier.getText() );
+		}
+		return builder.toString();
+	}
+
+	private record QuerySelection(ResultSelection resultSelection, TypeElement entity) {
 	}
 
 	private static boolean isRecordReturn(TypeMirror returnType) {
@@ -4305,9 +4372,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						? querySelection( method, returnType, mirror, queryString )
 						: null;
 		final var validationReturnType =
-				querySelection == null || primaryEntity == null
+				querySelection == null
 						? returnType
-						: primaryEntity.asType();
+						: querySelection.entity().asType();
 
 		// now check that the query has a parameter for every method parameter
 		checkParameters( method, validationReturnType, paramNames, paramTypes, mirror, value, queryString, isNative );
@@ -4368,10 +4435,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						sessionType[0],
 						sessionType[1],
 						orderBys,
-						querySelection,
-						querySelection == null || primaryEntity == null
+						querySelection == null ? null : querySelection.resultSelection(),
+						querySelection == null
 								? null
-								: primaryEntity.getQualifiedName().toString(),
+								: querySelection.entity().getQualifiedName().toString(),
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
 						fullReturnType( method ),

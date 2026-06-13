@@ -3181,9 +3181,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private @Nullable TypeElement entityTypeForEntityName(String entityName) {
 		final var qualifiedName = context.qualifiedNameForEntityName( entityName );
-		final var typeElement =
-				context.getElementUtils()
-						.getTypeElement( qualifiedName == null ? entityName : qualifiedName );
+		final var typeElement = entityType( qualifiedName == null ? entityName : qualifiedName );
+		if ( typeElement != null || entityName.indexOf( '.' ) >= 0 ) {
+			return typeElement;
+		}
+		else {
+			final var packageName = getPackageName();
+			return packageName.isEmpty() ? null : entityType( qualify( packageName, entityName ) );
+		}
+	}
+
+	private @Nullable TypeElement entityType(String qualifiedName) {
+		final var typeElement = context.getElementUtils().getTypeElement( qualifiedName );
 		return typeElement != null
 			&& containsAnnotation( typeElement, ENTITY )
 				? typeElement

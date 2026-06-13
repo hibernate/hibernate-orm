@@ -300,6 +300,7 @@ It's the job of the rest of this Short Guide to make all this crystal clear.
 ----
 import org.hibernate.example.*;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceConfiguration;
 
 import static java.lang.System.out;
@@ -309,6 +310,9 @@ import static org.hibernate.cfg.JdbcSettings.*;
 
 EntityManagerFactory factory =
         new PersistenceConfiguration("Bookshelf")
+                // all associations should be lazy by default
+                .defaultToOneFetchType(FetchType.LAZY)
+                // register the entity class
                 .managedClass(Book.class)
                 // use H2 in-memory database
                 .property(JDBC_URL, "jdbc:h2:mem:db1")
@@ -552,6 +556,9 @@ We could simplify our <<main-hibernate,`main()`>> method as follows:
 
 EntityManagerFactory factory =
         new PersistenceConfiguration("Bookshelf")
+                // all associations should be lazy by default
+                .defaultToOneFetchType(FetchType.LAZY)
+                // register the entity class
                 .managedClass(Book.class)
                 // register the repository interface!
                 .managedClass(Library.class)

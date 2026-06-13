@@ -158,6 +158,8 @@ Sticking to the JPA-standard approach, we would provide a file named `persistenc
         <class>org.hibernate.example.Book</class>
         <class>org.hibernate.example.Author</class>
 
+        <default-to-one-fetch-type>LAZY</default-to-one-fetch-type>
+
         <properties>
             <!-- PostgreSQL -->
             <property name="jakarta.persistence.jdbc.url"
@@ -190,6 +192,9 @@ The `<persistence-unit>` element defines a named _persistence unit_, that is:
 - a set of default configuration settings, which may be augmented or overridden at runtime.
 
 Each `<class>` element specifies the fully-qualified name of an entity class.
+
+The `<default-to-one-fetch-type>` element specifies that many-to-one and one-to-one associations default to <<proxies-and-lazy-fetching,lazy fetching>>.
+We strongly recommend this setting.
 
 [TIP]
 ====
@@ -228,6 +233,9 @@ The `PersistenceConfiguration` class allows full programmatic control over creat
 ----
 EntityManagerFactory entityManagerFactory =
         new PersistenceConfiguration("Bookshop")
+            // all associations should be lazy by default
+            .defaultToOneFetchType(FetchType.LAZY)
+            // register the entity classes
             .managedClass(Book.class)
             .managedClass(Author.class)
             // PostgreSQL
@@ -245,12 +253,18 @@ EntityManagerFactory entityManagerFactory =
             .createEntityManagerFactory();
 ----
 
+The `defaultToOneFetchType()` method specifies that many-to-one and one-to-one associations default to <<proxies-and-lazy-fetching,lazy fetching>>.
+We strongly recommend this setting.
+
 The specification gives JPA implementors like Hibernate explicit permission to extend this class, and so Hibernate offers the link:{doc-javadoc-url}org/hibernate/jpa/HibernatePersistenceConfiguration.html[`HibernatePersistenceConfiguration`], which lets us obtain a `SessionFactory` without any need for a cast.footnote:[Alternatively, the venerable class link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] offers similar functionality.]
 
 [source,java]
 ----
 SessionFactory sessionFactory =
         new HibernatePersistenceConfiguration("Bookshop")
+            // all associations should be lazy by default
+            .defaultToOneFetchType(FetchType.LAZY)
+            // register the entity classes
             .managedClass(Book.class)
             .managedClass(Author.class)
             // PostgreSQL

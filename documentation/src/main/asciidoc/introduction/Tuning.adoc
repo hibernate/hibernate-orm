@@ -555,7 +555,7 @@ class Book {
 }
 ----
 
-This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs <<load-access,lookup by natural id>>.
+This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs <<load-by-natural-id,lookup by natural id>>.
 
 [NOTE]
 ====

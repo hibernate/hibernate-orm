@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @CompilationTest
 class StaticQueryTest {
 	@Test
-	@WithClasses({ Book.class, Library.class })
+	@WithClasses({ Book.class, Library.class, NotARepo.class })
 	void testStaticQueryReferenceMethods() throws ReflectiveOperationException {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Library.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );
@@ -70,5 +70,28 @@ class StaticQueryTest {
 		assertEquals( List.of(), statementReference.getParameterTypes() );
 		assertEquals( List.of(), statementReference.getParameterNames() );
 		assertEquals( List.of(), statementReference.getArguments() );
+	}
+
+	@Test
+	@WithClasses({ Book.class, NotARepo.class })
+	void nonRepositoryProjectionQueryReferenceUsesExplicitRootEntity() throws ReflectiveOperationException {
+		final var metamodel = TestUtil.getMetaModelSourceAsString( NotARepo.class );
+		assertTrue( metamodel.contains( "TypedQueryReference<Book> summaries()" ) );
+		assertTrue( metamodel.contains( "Book.class" ) );
+
+		final Method books = getMethodFromMetamodelFor( NotARepo.class, "books" );
+		final ParameterizedType booksType = (ParameterizedType) books.getGenericReturnType();
+		assertEquals( TypedQueryReference.class, booksType.getRawType() );
+		assertEquals( Book.class, booksType.getActualTypeArguments()[0] );
+
+		final Method summaries = getMethodFromMetamodelFor( NotARepo.class, "summaries" );
+		final ParameterizedType summariesType = (ParameterizedType) summaries.getGenericReturnType();
+		assertEquals( TypedQueryReference.class, summariesType.getRawType() );
+		assertEquals( Book.class, summariesType.getActualTypeArguments()[0] );
+
+		final TypedQueryReference<?> summariesReference =
+				(TypedQueryReference<?>) summaries.invoke( null );
+		assertEquals( NotARepo.class.getName() + "#summaries()", summariesReference.getName() );
+		assertEquals( Book.class, summariesReference.getResultType() );
 	}
 }

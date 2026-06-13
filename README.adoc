@@ -6,7 +6,7 @@ image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?style=for-
 image:https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jvm-repo-rebuild/reproducible-central/master/content/org/hibernate/orm/hibernate-core/badge.json&style=for-the-badge[Reproducible Builds,link=https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/content/org/hibernate/orm/hibernate-core/README.md]
 image:https://testpilot.oracle.com/ords/testpilot/badges/github/hibernate/hibernate-orm[Oracle Test Pilot,link=https://testpilot.oracle.com/]
 
-Hibernate ORM is a powerful object/relational mapping solution for Java, and makes it easy to develop persistence logic for applications, libraries, and frameworks.
+Hibernate ORM is a powerful object/relational mapping solution for Java, the de facto standard implementation of the https://www.oracle.com/java/technologies/persistence-jsp.html[Java Persistence API] (now also known as https://jakarta.ee/specifications/persistence/4.0/[Jakarta Persistence]), https://jakarta.ee/specifications/query/1.0/[Jakarta Query], and https://jakarta.ee/specifications/data/1.1/[Jakarta Data].
 
 Hibernate exposes relational data in a natural and type safe form,
 
@@ -14,6 +14,7 @@ Hibernate exposes relational data in a natural and type safe form,
 - letting the program easily **synchronize changes** made in memory with the database,
 - respecting the ACID properties of **transactions**,
 - automatically handling *temporal data* and *audit logging*,
+- taking care of *multi-tenancy* and *row-level security*,
 - and allowing **performance optimizations** to be made after the basic persistence logic has already been written.
 
 Hibernate is the best way for a program written in Java to take advantage of the power of the relational model, and of the expressivity of SQL, without sacrificing performance or code reuse.

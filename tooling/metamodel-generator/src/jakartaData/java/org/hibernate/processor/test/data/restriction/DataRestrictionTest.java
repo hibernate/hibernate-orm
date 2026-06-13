@@ -71,6 +71,24 @@ class DataRestrictionTest {
 	}
 
 	@Test
+	@WithClasses({
+			DataRestrictionBook.class,
+			DataRestrictionPublisher.class,
+			ExplicitQueryRestrictionRepository.class
+	})
+	void queryRootEntitySupportsProjectionRestrictionsWithoutPrimaryEntity() {
+		final String repository = getMetaModelSourceAsString( ExplicitQueryRestrictionRepository.class, true );
+		System.out.println( repository );
+
+		assertTrue( repository.contains(
+				"List<Summary> books(@Nonnull Restriction<DataRestrictionBook> restriction)" ) );
+		assertTrue( repository.contains(
+				"var _entity = (Root<DataRestrictionBook>) _query.getRootList().get(0);" ) );
+		assertTrue( repository.contains( "restriction.apply(_query, _entity);" ) );
+		assertTrue( repository.contains( "_builder.construct(Summary.class" ) );
+	}
+
+	@Test
 	void invalidAutomaticDeleteUsesMeaningfulDiagnostics() throws Exception {
 		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 		final var compiler = ToolProvider.getSystemJavaCompiler();

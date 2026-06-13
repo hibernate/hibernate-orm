@@ -9,19 +9,26 @@ import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
+import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+import java.util.Locale;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMethodFromMetamodelFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaFileObject;
+import javax.tools.ToolProvider;
 
 @CompilationTest
 class StaticQueryTest {
@@ -93,5 +100,38 @@ class StaticQueryTest {
 				(TypedQueryReference<?>) summaries.invoke( null );
 		assertEquals( NotARepo.class.getName() + "#summaries()", summariesReference.getName() );
 		assertEquals( Book.class, summariesReference.getResultType() );
+	}
+
+	@Test
+	void nonRepositoryNativeStaticQueryReferenceWithRestrictionCompiles() throws Exception {
+		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+		final var compiler = ToolProvider.getSystemJavaCompiler();
+		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, null ) ) {
+			final var sourceFiles = List.of(
+					sourceFile( Book.class ),
+					sourceFile( InvalidNativeStaticQuery.class )
+			);
+			final var task = compiler.getTask(
+					null,
+					fileManager,
+					diagnostics,
+					List.of(
+							"-d",
+							TestUtil.getOutBaseDir( StaticQueryTest.class ).getAbsolutePath(),
+							"-processor",
+							HibernateProcessor.class.getName()
+					),
+					null,
+					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
+			);
+			assertTrue( task.call() );
+		}
+	}
+
+	private static File sourceFile(Class<?> type) {
+		return new File(
+				TestUtil.getSourceBaseDir( type ),
+				type.getName().replace( '.', File.separatorChar ) + ".java"
+		);
 	}
 }

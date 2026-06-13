@@ -99,7 +99,6 @@ public final class Context {
 	private boolean dataEventPackageAvailable;
 
 	// keep track of all classes for which model have been generated
-	private final Set<Metamodel> generatedModelClasses = new HashSet<>();
 	private final Set<String> generatedClassNames = new HashSet<>();
 
 	// keep track of which named queries have been checked
@@ -392,7 +391,6 @@ public final class Context {
 	}
 
 	void markGenerated(Metamodel metamodel) {
-		generatedModelClasses.add( metamodel );
 		generatedClassNames.add( getFullyQualifiedClassName( metamodel ) );
 	}
 
@@ -432,7 +430,7 @@ public final class Context {
 		return persistenceUnitDefaultAccessType;
 	}
 
-	public void setPersistenceUnitDefaultAccessType(AccessType persistenceUnitDefaultAccessType) {
+	public void setPersistenceUnitDefaultAccessType(@Nullable AccessType persistenceUnitDefaultAccessType) {
 		this.persistenceUnitDefaultAccessType = persistenceUnitDefaultAccessType;
 	}
 

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import static java.nio.charset.Charset.defaultCharset;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -119,11 +120,12 @@ class DataRestrictionTest {
 			);
 			assertFalse( task.call() );
 		}
-		final String messages = diagnostics.getDiagnostics()
+		final var errorMessages = diagnostics.getDiagnostics()
 				.stream()
 				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
 				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
-				.collect( Collectors.joining( "\n" ) );
+				.toList();
+		final String messages = errorMessages.stream().collect( Collectors.joining( "\n" ) );
 
 		assertTrue( messages.contains(
 				"parameter of type 'jakarta.data.Limit' is not allowed on an automatic '@Delete' method" ) );
@@ -145,6 +147,51 @@ class DataRestrictionTest {
 		assertTrue( messages.contains(
 				"'@NativeQuery' methods may not declare Order or Sort parameters or '@OrderBy'; "
 						+ "native SQL cannot be augmented with ordering" ) );
+		assertEquals( 1, countMessagesContaining( errorMessages,
+				"'@NativeQuery' methods may not declare Restriction or Range parameters" ) );
+		assertEquals( 1, countMessagesContaining( errorMessages,
+				"'@NativeQuery' methods may not declare Order or Sort parameters or '@OrderBy'" ) );
+	}
+
+	@Test
+	void nonRepositoryNativeQueryWithRestrictionUsesSingleDiagnostic() throws Exception {
+		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+		final var compiler = ToolProvider.getSystemJavaCompiler();
+		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
+			final var sourceFiles = List.of(
+					sourceFile( DataRestrictionPublisher.class ),
+					sourceFile( DataRestrictionBook.class ),
+					sourceFile( InvalidNativeStaticQuery.class )
+			);
+			final var task = compiler.getTask(
+					null,
+					fileManager,
+					diagnostics,
+					List.of(
+							"-d",
+							TestUtil.getOutBaseDir( DataRestrictionTest.class ).getAbsolutePath(),
+							"-processor",
+							HibernateProcessor.class.getName()
+					),
+					null,
+					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
+			);
+			assertFalse( task.call() );
+		}
+		final var errorMessages = diagnostics.getDiagnostics()
+				.stream()
+				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
+				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
+				.toList();
+
+		assertEquals( 1, countMessagesContaining( errorMessages,
+				"'@NativeQuery' methods may not declare Restriction or Range parameters" ) );
+	}
+
+	private static long countMessagesContaining(List<String> messages, String text) {
+		return messages.stream()
+				.filter( message -> message.contains( text ) )
+				.count();
 	}
 
 	private static File sourceFile(Class<?> type) {

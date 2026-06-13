@@ -39,7 +39,9 @@ class SelectionTest {
 	void generatedRepositorySupportsSelectAndFirst() {
 		final String repository = getMetaModelSourceAsString( SelectionRepository.class, true );
 		final String normalizedRepository = repository.replaceAll( "\\s+", " " );
+		final String queryMetamodel = getMetaModelSourceAsString( SelectionRepository.class );
 		System.out.println( repository );
+		System.out.println( queryMetamodel );
 		assertMetamodelClassGeneratedFor( SelectionBook.class );
 		assertMetamodelClassGeneratedFor( SelectionRepository.class, true );
 
@@ -74,17 +76,25 @@ class SelectionTest {
 		assertFalse( repository.contains( ".setCacheRetrieveMode(CacheRetrieveMode.BYPASS)" ) );
 		assertFalse( repository.contains( ".setHint(\"hint\", \"1\")" ) );
 		assertTrue( repository.contains(
-				"var _reference = _builder.augment(SelectionRepository_.queryTitlesByStatus(status), _query -> {" ) );
+				"var _reference = _builder.augment(SelectionRepository_.queryTitlesByStatus(status), String.class, _query -> {" ) );
 		assertTrue( repository.contains(
-				"var _reference = _builder.augment(SelectionRepository_.queryTitlesWithStringFallback(minPages, status), _query -> {" ) );
+				"var _reference = _builder.augment(SelectionRepository_.queryTitlesWithStringFallback(minPages, status), String.class, _query -> {" ) );
 		assertFalse( repository.contains( ".setParameter(\"status\", status)" ) );
 		assertFalse( repository.contains( ".setParameter(\"minPages\", minPages)" ) );
 		assertTrue( repository.contains(
-				"var _reference = _builder.augment(SelectionRepository_.queryRenamedByStatus(status), _query -> {" ) );
+				"var _reference = _builder.augment(SelectionRepository_.queryRenamedByStatus(status), QueryRenamed.class, _query -> {" )
+				|| repository.contains(
+						"var _reference = _builder.augment(SelectionRepository_.queryRenamedByStatus(status), SelectionRepository.QueryRenamed.class, _query -> {" ) );
 		assertTrue( normalizedRepository.contains(
 				"_query.select(_builder.construct(QueryRenamed.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages)));" )
 				|| normalizedRepository.contains(
 						"_query.select(_builder.construct(SelectionRepository.QueryRenamed.class, _entity.get(SelectionBook_.title), _entity.get(SelectionBook_.pages)));" ) );
+		assertTrue( queryMetamodel.contains(
+				"TypedQueryReference<SelectionBook> queryTitlesByStatus(SelectionStatus status)" ) );
+		assertTrue( queryMetamodel.contains(
+				"TypedQueryReference<SelectionBook> queryTitlesWithStringFallback(int minPages, SelectionStatus status)" ) );
+		assertTrue( queryMetamodel.contains(
+				"TypedQueryReference<SelectionBook> queryRenamedByStatus(SelectionStatus status)" ) );
 	}
 
 	@Test

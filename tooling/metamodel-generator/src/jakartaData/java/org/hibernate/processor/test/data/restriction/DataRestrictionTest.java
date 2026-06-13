@@ -78,14 +78,20 @@ class DataRestrictionTest {
 	})
 	void queryRootEntitySupportsProjectionRestrictionsWithoutPrimaryEntity() {
 		final String repository = getMetaModelSourceAsString( ExplicitQueryRestrictionRepository.class, true );
+		final String queryMetamodel = getMetaModelSourceAsString( ExplicitQueryRestrictionRepository.class );
 		System.out.println( repository );
+		System.out.println( queryMetamodel );
 
 		assertTrue( repository.contains(
 				"List<Summary> books(@Nonnull Restriction<DataRestrictionBook> restriction)" ) );
 		assertTrue( repository.contains(
+				"var _reference = _builder.augment(ExplicitQueryRestrictionRepository_.books(), Summary.class, _query -> {" ) );
+		assertTrue( repository.contains(
 				"var _entity = (Root<DataRestrictionBook>) _query.getRootList().get(0);" ) );
 		assertTrue( repository.contains( "restriction.apply(_query, _entity);" ) );
 		assertTrue( repository.contains( "_builder.construct(Summary.class" ) );
+		assertTrue( queryMetamodel.contains( "TypedQueryReference<DataRestrictionBook> books()" ) );
+		assertTrue( queryMetamodel.contains( "DataRestrictionBook.class" ) );
 	}
 
 	@Test

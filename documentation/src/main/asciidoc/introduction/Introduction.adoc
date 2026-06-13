@@ -201,11 +201,15 @@ dependencies {
     // Hibernate Processor
     annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
 
-    // Hibernate Validator
+    // Jakarta Data support (optional)
+    implementation 'jakarta.data:jakarta.data-api:1.1.0-M3'
+    implementation 'jakarta.data:jakarta.data-stateful:1.1.0-M3'
+
+    // Hibernate Validator (optional)
     implementation 'org.hibernate.validator:hibernate-validator:9.0.1.Final'
     implementation 'org.glassfish.expressly:expressly:6.0.0'
 
-    // Agroal connection pool
+    // Agroal connection pool (optional)
     runtimeOnly 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
 
     // logging via Log4j
@@ -291,7 +295,7 @@ import jakarta.persistence.PersistenceConfiguration;
 
 import static java.lang.System.out;
 import static jakarta.persistence.SchemaManagementAction.CREATE;
-import static jakarta.persistence.Persistence.ConnectionProperties.*;
+import static jakarta.persistence.PersistenceConfiguration.*;
 import static org.hibernate.cfg.JdbcSettings.*;
 
 EntityManagerFactory factory =
@@ -342,9 +346,9 @@ void main() {
 }
 ----
 
-This code introduces two very central APIs:
+This code introduces two very central interfaces:
 
-- the `EntityManager`, which in Hibernate is also an instance of link:{doc-javadoc-url}org/hibernate/SessionFactory.html[`SessionFactory`], and
+- the `EntityManagerFactory`, which in Hibernate is also an instance of link:{doc-javadoc-url}org/hibernate/SessionFactory.html[`SessionFactory`], and
 - a mysterious `manager` object, which in JPA an instance of `EntityManager`, and in Hibernate is also an instance of link:{doc-javadoc-url}org/hibernate/Session.html[`Session`].
 
 In this Guide, we call each instance of `EntityManager` a "session".
@@ -414,10 +418,10 @@ In the code we just saw, we've used a _stateful session_.
 Later, we'll learn about the idea of a <<persistence-contexts,_persistence context_>>.
 Oversimplifying for now, you can think of it as a cache of data which has been read in the current transaction.
 Thus, in the architecture of Hibernate, it's sometimes called the _first-level cache_.
-Each stateful session -- that is every JPA <<hibernate-and-jpa,`EntityManager`>> -- has its own persistence context.
+Each stateful session -- that is, every JPA <<hibernate-and-jpa,`EntityManager`>> -- has its own persistence context.
 
 But stateful sessions are not the only possibility.
-The JPA 4 `EntityAgent` interface offers a way to interact with Hibernate _without_ going through a persistence context.
+The new JPA 4 `EntityAgent` interface offers a way to interact with Hibernate _without_ going through a persistence context.
 In Hibernate, every `EntityAgent` is also an instance of the much older interface <<stateless-sessions,`StatelessSession`>>, and so we sometimes call an instance of `EntityAgent` a "stateless session".
 The programming model for stateless sessions is somewhat different.
 
@@ -449,7 +453,7 @@ This is a friendly competition, where the two APIs are designed to complement ea
 Even if we decide to use stateful ``EntityManager``s most of the time, we can still use an `EntityAgent` wherever it's more convenient.
 
 [[organizing-persistence]]
-=== Organizing persistence logic
+=== Repositories
 
 In a real program, persistence logic like the code shown above is usually interleaved with other sorts of code, including logic:
 
@@ -477,7 +481,7 @@ For now, let's see how we could rewrite our <<main-hibernate,earlier code>> usin
 [source,java]
 .`Library.java`
 ----
-package org.example;
+package org.hibernate.example;
 
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
@@ -516,7 +520,7 @@ public interface Library {
 
 Notice that the `@Repository` programming model lets us freely choose between:
 
-- implementation a repository method by hand, and calling the `EntityManager` or `EntityAgent` directly, or
+- implementing a repository method by hand, and calling the `EntityManager` or `EntityAgent` directly, or
 - having the implementation generated for us.
 
 We could simplify our <<main-hibernate,`main()`>> method as follows:
@@ -573,6 +577,10 @@ In Quarkus, WildFly, or any Jakarta EE container, https://www.cdi-spec.org[CDI] 
 
 [source,java]
 @Inject Library library;
+
+[IMPORTANT]
+Notice that we registered the repository interface with the persistence unit via `managedClass()`.
+// If we had used `persistence.xml` to configure Hibernate, we would have listed it as a `<class>`.
 
 Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.
 

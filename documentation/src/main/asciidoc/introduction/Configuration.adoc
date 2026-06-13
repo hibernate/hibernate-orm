@@ -1,5 +1,9 @@
+
 [[configuration]]
 == Configuration and bootstrap
+
+:data: https://jakarta.ee/specifications/data/1.1/jakarta-data-1.1-m3.pdf
+:persistence: https://jakarta.ee/specifications/persistence/4.0/jakarta-persistence-spec-4.0-M4.pdf
 
 We would love to make this section short.
 Unfortunately, there are several distinct ways to configure and bootstrap Hibernate, and we're going to have to describe at least two of them in detail.
@@ -15,13 +19,15 @@ The five basic ways to obtain an instance of Hibernate are shown in the followin
 | Using the standard JPA-defined  `PersistenceConfiguration` class
 | Usually chosen when portability between JPA implementations is important, but programmatic control is desired.
 
-| Using link:{doc-javadoc-url}org/hibernate/jpa/HibernatePersistenceConfiguration.html[`HibernatePersistenceConfiguration`] or the older link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] class to construct a `SessionFactory`
+| Using link:{doc-javadoc-url}org/hibernate/jpa/HibernatePersistenceConfiguration.html[`HibernatePersistenceConfiguration`]
+// or the older link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] class
+to construct a `SessionFactory`
 | When portability between JPA implementations is not important, this option adds some convenience and saves a typecast.
 
 | Using the more complex APIs defined in link:{doc-javadoc-url}org/hibernate/boot/package-summary.html[`org.hibernate.boot`]
 | Used primarily by framework integrators, this option is outside the scope of this document.
 
-| By letting the container take care of the bootstrap process and of injecting the `SessionFactory` or `EntityManagerFactory`
+| By letting the container take care of the bootstrap process and of injecting the `EntityManagerFactory` or `SessionFactory`
 | Used in a container environment like WildFly or Quarkus.
 |===
 
@@ -70,6 +76,7 @@ driver for your database.
 | DB2                       | `com.ibm.db2:jcc:{version}`
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:{version}`
 | Oracle                    | `com.oracle.database.jdbc:ojdbc17:{version}`
+| Informix                  | `com.informix.jdbc.IfxDriver:{version}`
 | H2                        | `com.h2database:h2:{version}`
 | HSQLDB                    | `org.hsqldb:hsqldb:{version}`
 | MongoDB                   | The JDBC driver is bundled with the dialect mentioned in <<optional-dependencies>>
@@ -106,7 +113,10 @@ Optionally, you might also add any of the following additional features:
 or `org.slf4j:slf4j-jdk14`
 | A JDBC connection pool, for example, {agroal}[Agroal] | `org.hibernate.orm:hibernate-agroal`
 | The {generator}[Hibernate Processor], especially if you're using Jakarta Data or the JPA criteria query API | `org.hibernate.orm:hibernate-processor`
-| The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
+| {data}[Jakarta Data] stateless and stateful repository support |
+`jakarta.data:jakarta.data-api` +
+and `jakarta.data:jakarta.data-stateful`
+// | The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
 | {validator}[Hibernate Validator], an implementation of {bean-validation}[Bean Validation] |
 `org.hibernate.validator:hibernate-validator` +
 and `org.glassfish.expressly:expressly`
@@ -116,21 +126,16 @@ and `org.ehcache:ehcache`
 and `com.github.ben-manes.caffeine:jcache`
 | Distributed second-level cache support via {infinispan}[Infinispan] | `org.infinispan:infinispan-hibernate-cache-v60`
 // | SCRAM authentication support for PostgreSQL | `com.ongres.scram:client:2.1`
-| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson 2], {jackson3}[Jackson 3] or {yasson}[Yasson] |
-`com.fasterxml.jackson.core:jackson-databind`, `tools.jackson.core:jackson-databind` +
+| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] |
+`tools.jackson.core:jackson-databind` +
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 | <<envers,Envers>>, deprecated since Hibernate ORM 8.0, for auditing historical data | `org.hibernate.orm:hibernate-envers`
 | <<jfr,Hibernate JFR>>, for monitoring via Java Flight Recorder | `org.hibernate.orm:hibernate-jfr`
 | Hibernate Jandex integration, for <<entity-discovery,entity discovery>> | `org.hibernate.orm:hibernate-scan-jandex`
 | link:{doc-dialect-url}#community-dialects[Community dialects] | `org.hibernate.orm:hibernate-community-dialects`
-| link:{doc-dialect-url}#third-party-dialects[Third-party dialects]
-|
-https://github.com/mongodb/mongo-hibernate/[MongoDB]: `org.mongodb:mongodb-hibernate:{version}`
-
-https://github.com/GoogleCloudPlatform/google-cloud-spanner-hibernate[Google Spanner]: `com.google.cloud:google-cloud-spanner-hibernate-dialect:{version}`
-
-Where `{version}` is the version of the third-party dialect compatible with the version of Hibernate ORM you are using. See the dialect's own documentation for more information. The https://hibernate.org/orm/releases/#compatibility-matrix[compatibility matrix on the Hibernate website] may also be of help.
+| https://github.com/mongodb/mongo-hibernate/[MongoDB] dialect | `org.mongodb:mongodb-hibernate`
+| https://github.com/GoogleCloudPlatform/google-cloud-spanner-hibernate[Google Spanner] dialect | `com.google.cloud:google-cloud-spanner-hibernate-dialect`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
@@ -145,8 +150,8 @@ Sticking to the JPA-standard approach, we would provide a file named `persistenc
 ----
 <persistence xmlns="http://java.sun.com/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
-             version="2.0">
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_4_0.xsd"
+             version="4.0">
 
     <persistence-unit name="org.hibernate.example">
 
@@ -217,7 +222,7 @@ EntityManagerFactory entityManagerFactory =
 [[configuration-api]]
 === Programmatic configuration using JPA API
 
-The new `PersistenceConfiguration` class allows full programmatic control over creation of the `EntityManagerFactory`.
+The `PersistenceConfiguration` class allows full programmatic control over creation of the `EntityManagerFactory`.
 
 [source,java]
 ----
@@ -230,18 +235,17 @@ EntityManagerFactory entityManagerFactory =
             // Credentials
             .property(PersistenceConfiguration.JDBC_USER, user)
             .property(PersistenceConfiguration.JDBC_PASSWORD, password)
-            // Automatic schema export
-            .property(PersistenceConfiguration.SCHEMAGEN_DATABASE_ACTION,
-                    Action.SPEC_ACTION_DROP_AND_CREATE)
             // SQL statement logging
             .property(JdbcSettings.SHOW_SQL, true)
             .property(JdbcSettings.FORMAT_SQL, true)
             .property(JdbcSettings.HIGHLIGHT_SQL, true)
+            // Automatic schema export
+            .schemaManagementDatabaseAction(SchemaManagementAction.DROP_AND_CREATE)
             // Create a new EntityManagerFactory
             .createEntityManagerFactory();
 ----
 
-The specification gives JPA implementors like Hibernate explicit permission to extend this class, and so Hibernate offers the link:{doc-javadoc-url}org/hibernate/jpa/HibernatePersistenceConfiguration.html[`HibernatePersistenceConfiguration`], which lets us obtain a `SessionFactory` without any need for a cast.
+The specification gives JPA implementors like Hibernate explicit permission to extend this class, and so Hibernate offers the link:{doc-javadoc-url}org/hibernate/jpa/HibernatePersistenceConfiguration.html[`HibernatePersistenceConfiguration`], which lets us obtain a `SessionFactory` without any need for a cast.footnote:[Alternatively, the venerable class link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] offers similar functionality.]
 
 [source,java]
 ----
@@ -253,15 +257,13 @@ SessionFactory sessionFactory =
             .jdbcUrl("jdbc:postgresql://localhost/example")
             // Credentials
             .jdbcCredentials(user, password)
-            // Automatic schema export
-            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
             // SQL statement logging
             .showSql(true, true, true)
+            // Automatic schema export
+            .schemaManagementDatabaseAction(SchemaManagementAction.DROP_AND_CREATE)
             // Create a new SessionFactory
             .createEntityManagerFactory();
 ----
-
-Alternatively, the venerable class link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] offers similar functionality.
 
 :native-bootstrap: {doc-user-guide-url}#bootstrap-native
 :boot: {doc-javadoc-url}/org/hibernate/boot/package-summary.html
@@ -292,10 +294,10 @@ SessionFactory sessionFactory =
             .jdbcUrl("jdbc:postgresql://localhost/example")
             // Credentials
             .jdbcCredentials(user, password)
-            // Automatic schema export
-            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
             // SQL statement logging
             .showSql(true, true, true)
+            // Automatic schema export
+            .schemaManagementDatabaseAction(SchemaManagementAction.DROP_AND_CREATE)
             // Create a new SessionFactory
             .createEntityManagerFactory();
 ----
@@ -324,7 +326,8 @@ hibernate.highlight_sql=true
 [[basic-configuration-settings]]
 === Basic configuration settings
 
-The `PersistenceConfiguration` class declares `static final` constants holding the names of all configuration properties defined by the specification itself, for example, `JDBC_URL` holds the property name `"jakarta.persistence.jdbc.driver"`.
+The inner interfaces of the `Persistence` class -- which, for convenience, are inherited by `PersistenceConfiguration` -- declare `static final` constants holding the names of all configuration properties defined by the specification itself.
+For example, `Persistence.ConnectionProperties.JDBC_URL` holds the property name `"jakarta.persistence.jdbc.driver"`.
 
 Similarly, the class link:{doc-javadoc-url}org/hibernate/cfg/AvailableSettings.html[`AvailableSettings`] enumerates all the configuration properties understood by Hibernate.
 
@@ -333,7 +336,7 @@ Instead, we'll mention the ones you need to get started, and come back to some o
 
 [TIP]
 ====
-Hibernate has many—too many—switches and toggles.
+Hibernate has many--too many--switches and toggles.
 Please don't go crazy messing about with these settings; most of them are rarely needed, and many only exist to provide backward compatibility with older versions of Hibernate.
 With rare exception, the default behavior of every one of these settings was carefully chosen to be _the behavior we recommend_.
 ====
@@ -424,10 +427,7 @@ In this case, Hibernate obtains pooled JDBC database connections from a containe
 [[automatic-schema-export]]
 === Automatic schema export
 
-You can have Hibernate infer your database schema from the mapping
-annotations you've specified in your Java code, and export the schema at
-initialization time by specifying one or more of the following configuration
-properties:
+You can have Hibernate infer your database schema from the mapping annotations you've specified in your Java code, and export the schema at initialization time by specifying one or more of the following configuration properties:
 
 .Schema management settings
 [%breakable,cols="50,~"]
@@ -487,7 +487,7 @@ sessionFactory.getSchemaManager().create(true);
 
 To see the generated SQL as it's sent to the database, you have two options.
 
-One way is to set the property `hibernate.show_sql` to `true`, and Hibernate will log SQL directly to the console.
+One way is to set the property `hibernate.show_sql` to `true`, so that Hibernate logs SQL directly to the console.
 You can make the output much more readable by enabling formatting or highlighting.
 These settings really help when troubleshooting the generated SQL statements.
 

@@ -1,11 +1,14 @@
 [[generator]]
 == Compile-time tooling
 
+:generator: https://hibernate.org/orm/processor/
+:generator-guide: {doc-user-guide-url}#tooling-modelgen
+
 The _static metamodel generator_ is a standard part of JPA.
 // It's an annotation processor that produces a statically-typed metamodel of the entity classes in a Java program.
 We've actually already seen its handiwork in the code examples <<main-hibernate,earlier>>: it's the author of the class `Book_`, which contains the static metamodel of the <<book,entity class>> `Book`.
 
-Hibernate comes with an annotation processor which does much more than just this.
+Hibernate comes with an {generator}[annotation processor] which does much more than just this.
 It's capable of automatically generating:
 
 - <<static-metamodel,JPA metamodel>> classes, as we've already seen,
@@ -14,11 +17,10 @@ It's capable of automatically generating:
 - implementations of <<static-or-instance,repository interfaces>>, including link:{doc-data-repositories-url}#repository-interfaces[Jakarta Data repositories].
 
 [[metamodel-generator]]
-.Hibernate Processor
+.*Read more: The changing role of Hibernate Processor*
+[%collapsible]
+====
 ****
-
-:generator: https://hibernate.org/orm/processor/
-:generator-guide: {doc-user-guide-url}#tooling-modelgen
 
 {generator}[Hibernate Processor], the annotation processor formerly known as the Metamodel Generator, began its life as a code generator for what JPA calls a https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2#a6072[_static metamodel_].
 That is, it produces a typed model of the persistent classes in our program, giving us a type safe way to refer to their attributes in Java code.
@@ -43,6 +45,7 @@ Today, it even contains a link:{doc-data-repositories-url}[complete implementati
 
 Now, you still don't have to use the Hibernate Processor with Hibernate—the APIs we just mentioned still also accept plain strings—but we find that it works well with Gradle and integrates smoothly with our IDE, and the advantage in type-safety is compelling.
 ****
+====
 
 [TIP]
 ====
@@ -66,41 +69,49 @@ Here's an example of the sort of code that's generated for an entity class, as m
 [source,java]
 .Generated Code
 ----
+/**
+ * Static metamodel for {@link org.example.Book}
+ **/
 @StaticMetamodel(Book.class)
 public abstract class Book_ {
 
-    /**
-     * @see org.example.Book#isbn
-     **/
+	/**
+	 * Static metamodel type for {@link org.example.Book}
+	 **/
+	public static volatile EntityType<Book> class_;
+
+	/**
+	 * Static metamodel for attribute {@link org.example.Book#isbn}
+	 **/
     public static volatile SingularAttribute<Book, String> isbn;
 
     /**
-     * @see org.example.Book#text
+     * Static metamodel for attribute {@link org.example.Book#text}
      **/
     public static volatile SingularAttribute<Book, String> text;
 
     /**
-     * @see org.example.Book#title
+     * Static metamodel for attribute {@link org.example.Book#title}
      **/
     public static volatile SingularAttribute<Book, String> title;
 
     /**
-     * @see org.example.Book#type
+     * Static metamodel for attribute {@link org.example.Book#type}
      **/
     public static volatile SingularAttribute<Book, Type> type;
 
     /**
-     * @see org.example.Book#publicationDate
+     * Static metamodel for attribute {@link org.example.Book#publicationDate}
      **/
     public static volatile SingularAttribute<Book, LocalDate> publicationDate;
 
     /**
-     * @see org.example.Book#publisher
+     * Static metamodel for attribute {@link org.example.Book#publisher}
      **/
     public static volatile SingularAttribute<Book, Publisher> publisher;
 
     /**
-     * @see org.example.Book#authors
+     * Static metamodel for attribute {@link org.example.Book#authors}
      **/
     public static volatile SetAttribute<Book, Author> authors;
 
@@ -182,7 +193,7 @@ public static volatile TypedQueryReference<Book> _findBooksByTitle_;
 
 [TIP]
 ====
-Actually, Hibernate Processor doesn't require that such annotations be applied to the entity class itself, as we <<organizing-persistence,already saw earlier>>.
+Actually, Hibernate Processor doesn't require that such annotations be applied to the entity class itself.
 ====
 
 We've already been using metamodel references like `Book_.authors` and `Book.AUTHORS` in the previous chapters.
@@ -191,7 +202,17 @@ So now let's see what else Hibernate Processor can do for us.
 [[finders-queries-repositories]]
 === Finder methods, query methods, and repositories
 
-Automatic generation of _finder methods_ and _query methods_ is a relatively new feature of Hibernate Processor--originally introduced as an experiment--which ultimately grew into a whole new way to use Hibernate.
+Automatic generation of _finder methods_ and _query methods_ is a relatively new feature of Hibernate Processor--originally introduced as an experiment--which ultimately grew into a whole new way to use Hibernate and, eventually, a whole new Jakarta specification.
+
+[IMPORTANT]
+====
+The rest of this chapter is optional.
+If you're happy with the approach taken by Jakarta Data, you're welcome to skip it completely, and move on to <<tuning-and-performance>>.
+
+The functionality we’re about to describe was developed before Jakarta Data took on its current shape, and directly triggered the apocalypse which lead to the final form of the specification. Therefore, there’s massive overlap between the functionality described in this chapter, and the functionality available via the Jakarta Data annotations.
+
+For information about the Jakarta Data-centric version of this functionality, please refer to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories].
+====
 
 We're going to meet three different kinds of generated method:
 
@@ -204,25 +225,20 @@ We're also going to see two ways that these methods can be called:
 - as static methods of a generated abstract class, or
 - as <<static-or-instance,instance methods of an interface>> with a generated implementation which may even be <<cdi-bean-injection,injected>>.
 
-Back in <<organizing-persistence>>, we walked you through a few different ways to organize your code with the help of Hibernate Processor.
-That journey terminated at the idea of a repository, but we emphasized that you aren't required to stay all the way to the end of the line.
+Back in <<organizing-persistence>>, we showed you how to organize persistence logic using a Jakarta Data repository.
 Repositories are a sweet spot for many users, but they might not be your sweet spot, and that's OK.
 Hibernate Processor is perfectly happy to generate `static` implementations of `@HQL`, `@SQL`, and `@Find` methods, eliminating the need to inject or instantiate a repository object.
 
-.Hibernate Processor and Jakarta Data
-****
-// For many years we've followed a three-step process: implement, learn from experience, and then standardize.
+// [IMPORTANT]
+// ====
+// // For many years we've followed a three-step process: implement, learn from experience, and then standardize.
+// //
+// The functionality we're about to describe was developed before Jakarta Data took on its current shape, and directly triggered the apocalypse which lead to the final form of the specification.
+// Therefore, there's massive overlap between the functionality described in this chapter, and the functionality available via the Jakarta Data annotations.
+// On the other hand, Jakarta Data can't do _everything_ described below.
 //
-The functionality we're about to describe was developed before Jakarta Data took on its current shape, and directly triggered the apocalypse which lead to the final form of the specification.
-Therefore, there's massive overlap between the functionality described in this chapter, and the functionality available via the Jakarta Data annotations.
-On the other hand, Jakarta Data can't do _everything_ described below, and in particular it doesn't yet come with built-in support for stateful persistence contexts or reactive sessions.
-// We are currently working hard to standardize these capabilities, but writing great specifications takes time.
-
-We've therefore opted _not_ to rewrite this chapter in a Jakarta Data-centric way, and instead refer you to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories] for information about the standard Jakarta Data APIs.
-
-As Jakarta Data matures, even more of this functionality might be made obsolete, at least in the form described here.
-We're working hard to make that happen.
-****
+// We've therefore opted _not_ to rewrite this chapter in a Jakarta Data-centric way, and instead refer you to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories] for information about the standard Jakarta Data APIs.
+// ====
 
 [CAUTION]
 ====
@@ -303,11 +319,11 @@ public abstract class Queries_ {
 
     /**
      * Execute the query {@value #FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type}.
-     *  
+     *
      * @see org.example.Queries#findBooksByTitleAndType(String,Type)
      **/
     public static List<Book> findBooksByTitleAndType(@Nonnull EntityManager entityManager, String title, Type type) {
-        return entityManager.createQuery(FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type, Book.class)
+		return entityManager.createQuery(FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type, Book.class)
                 .setParameter("title", title)
                 .setParameter("type", type)
                 .getResultList();
@@ -328,14 +344,14 @@ If we want to explicitly specify the name and type of this parameter, we may dec
 ----
 interface Queries {
     @HQL("where title like :title and type = :type")
-    List<Book> findBooksByTitleAndType(StatelessSession session, String title, String type);
+    List<Book> findBooksByTitleAndType(EntityAgent agent, String title, String type);
 }
 ----
 
 Hibernate Processor defaults to using `EntityManager` as the session type, but other types are allowed:
 
-- `Session`,
-- `StatelessSession`, or
+- `EntityAgent`,
+- `Session` or `StatelessSession`, or
 - `Mutiny.Session` or `Mutiny.StatelessSession` from Hibernate Reactive.
 
 The real value of all this is in the checks which can now be done at compile time.
@@ -401,7 +417,7 @@ public class _Queries implements Queries {
 
     /**
      * Execute the query {@value #FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type}.
-     * 
+     *
      * @see org.example.Queries#findBooksByTitleAndType(String,Type)
      **/
     @Override
@@ -866,20 +882,20 @@ A finder method must return an entity type like `Book`, or a list of the entity 
 As you might expect, for a reactive session, all query methods and finder methods must return `Uni`.
 ====
 
-[[query-validator]]
-=== An alternative approach
-
-:query-validator: https://github.com/hibernate/query-validator/
-
-What if you just don't like the ideas we've presented in this chapter, preferring to call the `Session` or `EntityManager` directly, but you still want compile-time validation for HQL?
-Or what if you _do_ like the ideas, but you're working on a huge existing codebase full of code you don't want to change?
-
-Well, there's a solution for you, too.
-The {query-validator}[Query Validator] is a separate annotation processor that's capable of type-checking HQL strings, not only in annotations, but even when they occur as arguments to `createQuery()`, `createSelectionQuery()`, or `createMutationQuery()`. It's even able to check calls to `setParameter()`, with some restrictions.
-
-The Query Validator works in `javac`, Gradle, Maven, and the Eclipse Java Compiler.
-
-[CAUTION]
-====
-Unlike Hibernate Processor, which is a completely bog-standard Java annotation processor based on only standard Java APIs, the Query Validator makes use of internal compiler APIs in `javac` and `ecj`. This means it can't be guaranteed to work in every Java compiler. The current release is known to work in JDK 11 and above, though JDK 15 or above is preferred.
-====
+// [[query-validator]]
+// === An alternative approach
+//
+// :query-validator: https://github.com/hibernate/query-validator/
+//
+// What if you just don't like the ideas we've presented in this chapter, preferring to call the `Session` or `EntityManager` directly, but you still want compile-time validation for HQL?
+// Or what if you _do_ like the ideas, but you're working on a huge existing codebase full of code you don't want to change?
+//
+// Well, there's a solution for you, too.
+// The {query-validator}[Query Validator] is a separate annotation processor that's capable of type-checking HQL strings, not only in annotations, but even when they occur as arguments to `createQuery()`, `createSelectionQuery()`, or `createMutationQuery()`. It's even able to check calls to `setParameter()`, with some restrictions.
+//
+// The Query Validator works in `javac`, Gradle, Maven, and the Eclipse Java Compiler.
+//
+// [CAUTION]
+// ====
+// Unlike Hibernate Processor, which is a completely bog-standard Java annotation processor based on only standard Java APIs, the Query Validator makes use of internal compiler APIs in `javac` and `ecj`. This means it can't be guaranteed to work in every Java compiler. The current release is known to work in JDK 11 and above, though JDK 15 or above is preferred.
+// ====

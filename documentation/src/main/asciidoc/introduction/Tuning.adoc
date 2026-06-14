@@ -98,11 +98,11 @@ A popular alternative to Agroal is {hikaricp}[HikariCP].
 Integration with HikariCP is provided by the module `org.hibernate.orm:hibernate-hikaricp`.
 Its settings are enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/HikariCPSettings.html[`HikariCPSettings`].
 
-.Container-managed datasources
-****
+[NOTE]
+====
 In a container environment, you usually don't need to configure a connection pool through Hibernate.
 Instead, you'll use a container-managed datasource, as we saw in <<basic-configuration-settings>>.
-****
+====
 
 A related important setting is the default JDBC fetch size.
 
@@ -187,9 +187,9 @@ In this section we're going to discuss different ways to avoid such "chatty" int
 
 Hibernate provides several strategies for efficiently fetching associations and avoiding _N+1_ selects:
 
-- _outer join fetching_—where an association is fetched using a `left outer join`,
-- _batch fetching_—where an association is fetched using a subsequent `select` with a batch of primary keys, and
-- _subselect fetching_—where an association is fetched using a subsequent `select` with keys re-queried in a subselect.
+- _outer join fetching_ -- where an association is fetched using a `left outer join`,
+- _batch fetching_ -- where an association is fetched using a subsequent `select` with a batch of primary keys, and
+- _subselect fetching_ -- where an association is fetched using a subsequent `select` with keys re-queried in a subselect.
 
 Of these, you should almost always use outer join fetching.
 But let's consider the alternatives first.
@@ -202,7 +202,8 @@ Consider the following code:
 [source,java]
 ----
 List<Book> books =
-        session.createSelectionQuery("from Book order by isbn", Book.class)
+        entityAgent.createQuery("from Book order by isbn")
+            .ofType(Book.class)
             .getResultList();
 books.forEach(book -> book.getAuthors().forEach(author -> out.println(book.title + " by " + author.name)));
 ----
@@ -276,36 +277,90 @@ Clever, huh?
 Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
 
 .Configuration settings to enable batch and subselect fetching
-[%breakable,cols="32,~,28"]
+// [%breakable,cols="32,~,14,14"]
+[%breakable]
 |===
-| Configuration property name | Property value | Alternatives
+| Configuration property name | Property value | Session option | Fetch option
 
-| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching | `@BatchSize()`, `setFetchBatchSize()`
-| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching | `@Fetch(SUBSELECT)`, `setSubselectFetchingEnabled()`
+| `hibernate.default_batch_fetch_size`
+| A sensible batch size `>1` to enable batch fetching
+| link:{doc-javadoc-url}/org/hibernate/BatchSize.html[`new BatchSize(10)`] | `new BatchSize(10)`
+// | `@Fetch(batchSize=10)`, `@BatchSize(10)`
+| `hibernate.use_subselect_fetch`
+| `true` to enable subselect fetching
+| link:{doc-javadoc-url}/org/hibernate/SessionCreationOption.SubselectFetchMode.html[`SubselectFetchMode.ENABLED`] | link:{doc-javadoc-url}/org/hibernate/FetchMethod.html#BULK_SELECT[`FetchMethod.BULK_SELECT`]
+// | `@Fetch(SUBSELECT)`
 |===
 
-Alternatively, we can enable one or the other in a given session:
+A global setting is a blunt instrument, and typically we need more granular control over fetching.
+One alternative is to enable batch or subselect fetching in a given session, using a session creation option defined by Hibernate:
 
 [source,java]
 ----
-session.setFetchBatchSize(5);
-session.setSubselectFetchingEnabled(true);
+import org.hibernate.BatchSize;
+...
+var entityManager =
+        // create a session with batch fetching enabled
+        entityManagerFactory.createEntityManager(new BatchSize(5));
 ----
-
-[%unbreakable]
-[TIP]
-====
-We may request subselect fetching more selectively by annotating a collection or association with the link:{doc-javadoc-url}/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation.
 [source,java]
 ----
-@ManyToMany @Fetch(SUBSELECT)
-Set<Author> authors;
+import org.hibernate.SessionCreationOption.SubselectFetchMode;
+...
+var entityManager =
+        // create a session with subselect fetching enabled
+        entityManagerFactory.createEntityManager(SubselectFetchMode.ENABLED);
 ----
-Note that `@Fetch(SUBSELECT)` has the same effect as `@Fetch(SELECT)`, except after execution of a HQL or criteria query.
-But after query execution, `@Fetch(SUBSELECT)` is able to much more efficiently fetch associations.
 
-Later, we'll see how we can use <<fetch-profiles,fetch profiles>> to do this even more selectively.
-====
+// [source,java]
+// ----
+// session.setFetchBatchSize(5);
+// session.setSubselectFetchingEnabled(true);
+// ----
+
+But this approach is probably still not granular enough.
+
+Since JPA 4, the best way to make use of batch or subselect fetching is via an <<entity-graph,entity graph>>.
+JPA provides a standard `FetchOption` for batch fetching:
+
+[source,java]
+----
+import jakarta.persistence.BatchSize;
+...
+var graph = entityManager.createEntityGraph(Book.class);
+graph.addAttributeNode(Book_.authors)
+     .addOption(new BatchSize(5));
+Book book = entityManager.find(graph, bookId);
+----
+
+Hibernate defines a custom `FetchOption` which allows more direct choice of association fetching strategy:
+
+[source,java]
+----
+import org.hibernate.FetchMethod;
+....
+var graph = entityManager.createEntityGraph(Book.class);
+graph.addAttributeNode(Book_.authors)
+     .addOption(FetchMethod.BULK_SELECT);
+Book book = entityManager.find(graph, bookId);
+----
+
+Note that link:{doc-javadoc-url}/org/hibernate/FetchMethod.html#BULK_SELECT[`FetchMethod.BULK_SELECT`] has the same effect as `FetchMethod.SELECT`, except after execution of a HQL or criteria query.
+But after query execution, `BULK_SELECT` is able to much more efficiently fetch associations.
+
+
+// [%unbreakable]
+// [TIP]
+// ====
+// We may request subselect fetching even more selectively by annotating a collection or association with the link:{doc-javadoc-url}/org/hibernate/annotations/Fetch.html[`@Fetch`] annotation.
+// [source,java]
+// ----
+// @ManyToMany @Fetch(SUBSELECT)
+// Set<Author> authors;
+// ----
+// Note that `@Fetch(SUBSELECT)` has the same effect as `@Fetch(SELECT)`, except after execution of a HQL or criteria query.
+// But after query execution, `@Fetch(SUBSELECT)` is able to much more efficiently fetch associations.
+// ====
 
 That's all there is to it.
 Too easy, right?
@@ -355,7 +410,8 @@ Here's how we can ask for join fetching in HQL:
 [source,java]
 ----
 List<Book> booksWithJoinFetchedAuthors =
-        session.createSelectionQuery("from Book join fetch authors order by isbn")
+        entityAgent.createQuery("from Book join fetch authors order by isbn")
+            .ofType(Book.class)
             .getResultList();
 ----
 
@@ -370,7 +426,7 @@ book.fetch(Book_.authors);
 query.select(book);
 query.orderBy(builder.asc(book.get(Book_.isbn)));
 List<Book> booksWithJoinFetchedAuthors =
-        session.createSelectionQuery(query).getResultList();
+        entityAgent.createQuery(query).getResultList();
 ----
 
 Either way, a single SQL `select` statement is executed:
@@ -555,7 +611,7 @@ class Book {
 }
 ----
 
-This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs <<load-access,lookup by natural id>>.
+This cache is utilized when the entity is retrieved using one of the operations of `Session` which performs <<load-by-natural-id,lookup by natural id>>.
 
 [NOTE]
 ====
@@ -718,7 +774,9 @@ To cache the results of a query, call `SelectionQuery.setCacheable(true)`:
 
 [source,java]
 ----
-session.createQuery("from Product where discontinued = false")
+entityManager.createQuery("from Product where discontinued = false")
+    .ofType(Product.class)
+    .unwrap(SelectionQuery.class)
     .setCacheable(true)
     .getResultList();
 ----
@@ -728,7 +786,9 @@ Since different queries should have different caching policies, it's common to e
 
 [source,java]
 ----
-session.createQuery("from Product where discontinued = false")
+entityManager.createQuery("from Product where discontinued = false")
+    .ofType(Product.class)
+    .unwrap(SelectionQuery.class)
     .setCacheable(true)
     .setCacheRegion("ProductCatalog")
     .getResultList();
@@ -758,14 +818,14 @@ As is generally the case with any second-level cache, the query cache can break 
 For the most part, the second-level cache is transparent.
 Program logic which interacts with the Hibernate session is unaware of the cache, and is not impacted by changes to caching policies.
 
-At worst, interaction with the cache may be controlled by specifying of an explicit link:{doc-javadoc-url}/org/hibernate/CacheMode.html[`CacheMode`]:
+At worst, interaction with the cache may be controlled by specifying explicit cache modes:
 
-[source,java]
-----
-session.setCacheMode(CacheMode.IGNORE);
-----
-
-Or, using JPA-standard APIs:
+// [source,java]
+// ----
+// session.setCacheMode(CacheMode.IGNORE);
+// ----
+//
+// Or, using JPA-standard APIs:
 
 [source,java]
 ----
@@ -804,30 +864,17 @@ We should select `CacheStoreMode.BYPASS` if we're querying data that doesn't nee
 ====
 It's a good idea to set the `CacheStoreMode` to `BYPASS` just before running a query which returns a large result set full of data that we don't expect to need again soon.
 This saves work, and prevents the newly-read data from pushing out the previously cached data.
-====
-
-In JPA we would use this idiom:
 
 [source,java]
 ----
-entityManager.setCacheStoreMode(CacheStoreMode.BYPASS);
 List<Publisher> allpubs =
         entityManager.createQuery("from Publisher", Publisher.class)
-            .getResultList();
-entityManager.setCacheStoreMode(CacheStoreMode.USE);
-----
-
-But Hibernate has a better way:
-
-[source,java]
-----
-List<Publisher> allpubs =
-        session.createSelectionQuery("from Publisher", Publisher.class)
             .setCacheStoreMode(CacheStoreMode.BYPASS)
             .getResultList();
 ----
+====
 
-A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
+A Hibernate link:{doc-javadoc-url}/org/hibernate/CacheMode.html[`CacheMode`] packages a `CacheRetrieveMode` with a `CacheStoreMode`.
 
 .Hibernate cache modes and JPA equivalents
 [%breakable,cols="30,~"]
@@ -844,7 +891,15 @@ A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
 
 The `REFRESH_SESSION` mode specifies that entity state returned by a query should overwrite state held in the persistence context, just as if `refresh()` had been called.
 
-There's no particular reason to prefer Hibernate's `CacheMode` over the JPA equivalents.
+[source,java]
+----
+List<Publisher> refreshed =
+        entityManager.createQuery("from Publisher", Publisher.class)
+            .addOption(CacheMode.REFRESH_SESSION)
+            .getResultList();
+----
+
+Apart from `REFRESH_SESSION`, there's no particular reason to prefer Hibernate's `CacheMode` over the JPA equivalents.
 This enumeration only exists because Hibernate had cache modes long before they were added to JPA.
 
 [%unbreakable]
@@ -861,10 +916,12 @@ SessionFactory sessionFactory =
             .buildSessionFactory();
 // prime the second-level cache
 sessionFactory.inSession(session -> {
-    session.createSelectionQuery("from Country"))
+    session.createQuery("from Country")
+        .ofType(Country.class)
         .setReadOnly(true)
         .getResultList();
-    session.createSelectionQuery("from Product where discontinued = false"))
+    session.createQuery("from Product where discontinued = false")
+        .ofType(Product.class)
         .setReadOnly(true)
         .getResultList();
 });
@@ -878,11 +935,22 @@ For example, we might need to evict some data that we know to be stale because i
 - via direct JDBC, or
 - by some other program.
 
-The link:{doc-javadoc-url}org/hibernate/Cache.html[`Cache`] interface allows programmatic eviction of cached items.
+The JPA-standard `Cache` interface allows programmatic eviction of cached entities.
 
 [source,java]
 ----
-sessionFactory.getCache().evictEntityData(Book.class, bookId);
+entityManagerFactory.getCache()
+        .evict(Book.class, bookId);
+----
+
+Unfortunately, as we've already observed above, JPA provides a quite poor approximation to Hibernate's very granular and flexible second-level cache architecture.
+The link:{doc-javadoc-url}org/hibernate/Cache.html[`Cache`] interface allows much more control over programmatic eviction of cached items.
+
+[source,java]
+----
+entityManagerFactory.getCache()
+        .unwrap(Cache.class)
+        .evictEntityData(Book.class, bookId);
 ----
 
 [%unbreakable]
@@ -919,27 +987,27 @@ To update many entities at once, use an `update` statement:
 
 [source, hql]
 ----
-session.createMutationQuery(
+entityAgent.createStatement(
         """
         update Book as b
             set b.totalSales =
                 coalesce((select sum(quantity) from OrderItem where book = b), 0)
         """
-        ).executeUpdate();
+        ).execute();
 ----
 
 To insert many entities at once, use `insert ... select`:
 
 [source, hql]
 ----
-session.createMutationQuery(
+entityAgent.createStatement(
         """
         insert into OrderQueue (id, isbn, quantity, customerId)
             select o.id, i.quantity, i.book.isbn, o.customer.id
             from Order o join o.items i
             where o.status = PENDING
         """
-        ).executeUpdate();
+        ).execute();
 ----
 
 For more complicated operations, consider using a stored procedure.
@@ -948,77 +1016,20 @@ For more complicated operations, consider using a stored procedure.
 [[stateless-sessions]]
 === Stateless sessions
 
-An arguably-underappreciated feature of Hibernate is the link:{doc-javadoc-url}org/hibernate/StatelessSession.html[`StatelessSession`] interface, which provides a command-oriented, more bare-metal approach to interacting with the database.
-
-You may obtain a stateless session from the `SessionFactory`:
-
-[source, java, indent=0]
-----
-StatelessSession ss = getSessionFactory().openStatelessSession();
-----
+An arguably underappreciated feature of Hibernate is the ability to program with <<bypass-persistence-context,stateless sessions>>, which provide a command-oriented, more bare-metal approach to interacting with the database.
+This capability has only recently been formalized in the JPA specification via the addition of the `EntityAgent` interface.
 
 A stateless session:
 
 - doesn't have a first-level cache (persistence context), and
 - doesn't implement transactional write-behind or automatic dirty checking, so all operations are executed immediately when they're explicitly called.
 
-For a stateless session, we're always working with detached objects.
-Thus, the programming model is a bit different:
-
-.Important methods of the `StatelessSession`
-[%autowidth.stretch]
-|===
-| Method name and parameters | Effect
-
-| `get(Class, Object)` | Obtain a detached object, given its type and its id, by executing a `select`
-| `fetch(Object)`      | Fetch an association of a detached object
-| `refresh(Object)`    | Refresh the state of a detached object by executing
-a `select`
-| `insert(Object)`     | Immediately `insert` the state of the given transient object into the database
-| `update(Object)`     | Immediately `update` the state of the given detached object in the database
-| `delete(Object)`     | Immediately `delete` the state of the given detached object from the database
-| `upsert(Object)`     | Immediately `insert` or `update` the state of the given detached object using a SQL `merge into` statement
-|===
-
-NOTE: The operations of a stateless session have no corresponding ``CascadeType``s, and so these operations never cascade to associated entity instances.
-
-NOTE: There's no `flush()` operation, and so `update()` is always explicit.
-
-In certain circumstances, this makes stateless sessions easier to work with and simpler to reason about, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
-
-Consider the following fragments:
-
-[source,java]
-----
-var b1 = statelessSession.get(Book.class, isbn);
-var b2 = statelessSession.get(Book.class, isbn);
-assert b1 == b2;  // fails
-----
-[source,java]
-----
-var b1 = statelessSession.get(Book.class, isbn);
-var b2 = statelessSession.get(Book.class, isbn);
-statelessSession.fetch(b1.publisher);
-statelessSession.fetch(b2.publisher);
-assert b1.publisher == b2.publisher;  // fails
-----
-
-In a stateful session, entity instances are canonicalized by primary key, and so we don't usually have two different objects representing a single row.
-No such canonicalization exists across invocations of a stateless session.
-In a stateless session, both the assertions fail.
-
-[%unbreakable]
-[CAUTION]
-====
-If we use `fetch()` in a stateless session, we can very easily obtain two objects representing the same database row!
-====
-
-But there are also some advantages to this model.
+There are some advantages to this model.
 In particular, the absence of a persistence context means that we can safely perform bulk-processing tasks without allocating huge quantities of memory.
-Use of a `StatelessSession` alleviates the need to call:
+Use of a stateless session alleviates the need to call:
 
 - `clear()` or `detach()` to perform first-level cache management, and
-- `setCacheMode()` to bypass interaction with the second-level cache.
+- `setCacheStoreMode()` and `setCacheRetrieveMode()` to bypass interaction with the second-level cache.
 
 [%unbreakable]
 [TIP]
@@ -1049,7 +1060,7 @@ Indeed, the usual practice is to avoid having transactions that span user intera
 
 That said, there _is_ also a place for pessimistic locks, which can sometimes reduce the probability of transaction rollbacks.
 
-Therefore, the `find()`, `lock()`, and `refresh()` methods of the session accept an optional link:{doc-javadoc-url}/org/hibernate/LockMode.html[`LockMode`].
+Therefore, the `get()`, `find()`, `lock()`, and `refresh()` methods accept a link:{doc-javadoc-url}/org/hibernate/LockMode.html[`LockMode`] as an option.
 Here's the simplest way to execute a `select ... for update` in Hibernate:
 
 [source,java]
@@ -1118,10 +1129,13 @@ We may ask Hibernate to collect statistics about its activity by setting this co
 | link:{doc-javadoc-url}org/hibernate/cfg/StatisticsSettings.html#GENERATE_STATISTICS[`hibernate.generate_statistics`] | `true` to enable collection of statistics
 |===
 
-The statistics are exposed by the link:{doc-javadoc-url}org/hibernate/stat/Statistics.html[`Statistics`] object:
+The statistics are exposed by the link:{doc-javadoc-url}org/hibernate/stat/Statistics.html[`Statistics`] object exposed by `SessionFactory`:
 
 [source,java]
 ----
+var sessionFactory =
+        entityManagerfactory.unwrap(SessionFactory.class);
+
 long failedVersionChecks =
         sessionFactory.getStatistics()
             .getOptimisticFailureCount();

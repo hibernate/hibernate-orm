@@ -57,8 +57,8 @@ class Book {
 
 Alternatively, the class may be identified as an entity type by providing an XML-based mapping for the class.
 
-.Mapping entities using XML
-****
+[TIP]
+====
 When XML-based mappings are used, the `<entity>` element is used to declare an entity class:
 
 [source,xml]
@@ -74,11 +74,13 @@ When XML-based mappings are used, the `<entity>` element is used to declare an e
 </entity-mappings>
 ----
 Since the `orm.xml` mapping file format defined by the JPA specification was modelled closely on the annotation-based mappings, it's usually easy to go back and forth between the two options.
-****
+====
 
 We won't have much more to say about XML-based mappings in this Short Guide, since it's not our preferred way to do things.
 
-."Dynamic" models
+.*Read more: "Dynamic" models*
+[%collapsible]
+====
 ****
 :maps: {doc-user-guide-url}#dynamic-model
 :envers: https://hibernate.org/orm/envers/
@@ -91,6 +93,7 @@ Actually, it's a useful capability for a very particular sort of generic code.
 For example, the deprecated {envers}[Hibernate Envers] module is an auditing/versioning system for Hibernate entities.
 Envers makes use of maps to represent its _versioned model_ of the data.
 ****
+====
 
 [[access-type]]
 === Access types
@@ -315,7 +318,7 @@ We may even place a `@SequenceGenerator` or `@TableGenerator` annotation at the 
 package org.example.entities;
 ----
 
-Then any entity in this package which specifies `strategy=SEQUENCE` or `strategy=TABLE` without also explicitly specifying a generator `name` will be assigned a generator based on the package-level annotation.
+Then any entity in this package which specifies `strategy=SEQUENCE` or `strategy=TABLE` without also explicitly specifying a generator `name` is assigned a generator based on the package-level annotation.
 
 [source,java]
 ----
@@ -531,7 +534,8 @@ Hibernate automatically generates a `UNIQUE` constraint on the columns mapped by
 Consider using the natural id attributes to implement <<equals-and-hash>>.
 ====
 
-In cases where the natural id is defined by multiple attributes, Hibernate also offers the link:{doc-javadoc-url}org/hibernate/annotations/NaturalIdClass.html[`@NaturalIdClass`] annotation which acts similarly to the Jakarta Persistence `@IdClass` annotation for <<load-by-natural-id,find operations>> -
+If the natural id is a composite key spanning multiple attributes, a link:{doc-javadoc-url}org/hibernate/annotations/NaturalIdClass.html[`@NaturalIdClass`] may be used.
+This is very similar to the `@IdClass` annotation we <<composite-identifiers,already met>>.
 
 [source,java]
 ----
@@ -543,8 +547,6 @@ class Book {
     ...
 }
 ----
-
-See the link:{doc-user-guide-url}#naturalid[User Guide] for more details about natural ids.
 
 The payoff for doing this extra work, as we will see <<natural-id-cache,much later>>, is that we can take advantage of optimized natural id lookups that make use of the second-level cache.
 
@@ -620,14 +622,25 @@ On the other hand, if a non-primitively-typed attribute cannot be null, use of `
 String middleName; // may be null
 ----
 
+Alternatively, use the Jakarta `@Nonnull` annotation.
+
+[source,java]
+----
+@Nonnull String firstName;
+@Nonnull String lastName;
+String middleName; // may be null
+----
+
 Note that primitively-typed attributes are inferred `NOT NULL` by default.
 
-.How to make a column `not null` in JPA
+.*Read more: Not-null columns*
+[%collapsible]
+====
 ****
-There are two standard ways to add a `NOT NULL` constraint to a mapped column in JPA:
+Until JPA 4, there were two standard ways to add a `NOT NULL` constraint to a mapped column in JPA:
 
-- using `@Basic(optional=false)`, or
-- using `@Column(nullable=false)`.
+1. using `@Basic(optional=false)`, or
+2. using `@Column(nullable=false)`.
 
 You might wonder what the difference is.
 
@@ -647,13 +660,15 @@ Note that:
 
 Therefore, we prefer `@Basic(optional=false)` to `@Column(nullable=false)`.
 
-[TIP]
-====
 But wait!
-An even better solution is to use the `@NotNull` annotation from Bean Validation.
-Just add Hibernate Validator to your project build, as described in <<optional-dependencies>>.
-====
+JPA 4 provides two additional options:
+
+1. Use `@Nonnull` from `jakarta.annotation`, or
+2. use the `@NotNull` constraint from Bean Validation.footnote:[You'll need to add Hibernate Validator to your project build, as described in <<optional-dependencies>>.]
+
+We think that these are easier on the eyes.
 ****
+====
 
 [[enums]]
 === Enumerated types
@@ -662,7 +677,7 @@ We included Java ``enum``s on the list above.
 An enumerated type is considered a sort of basic type, but since most databases don't have a native `ENUM` type, JPA provides a special `@Enumerated` annotation to specify how the enumerated values should be represented in the database:
 
 - by default, an enum is stored as an integer, the value of its `ordinal()` member, but
-- if the attribute is annotated `@Enumerated(STRING)`, it will be stored as a string, the value of its `name()` member.
+- if the attribute is annotated `@Enumerated(STRING)`, it is stored as a string, the value of its `name()` member.
 
 [source,java]
 ----
@@ -717,8 +732,8 @@ So we prefer `@Enumerated(STRING)` for most `enum` attributes.
 An interesting special case arises on PostgreSQL and Oracle.
 
 [[named-enums]]
-.Named enumerated types
-****
+[TIP]
+====
 Some databases support _named_ `ENUM` types, which must be declared using in DDL using:
 
 - `CREATE TYPE ... AS ENUM` on PostgreSQL, or
@@ -737,7 +752,7 @@ Status status;
 ----
 
 Alternatively, you may enable the configuration property link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#PREFER_NATIVE_ENUM_TYPES[`hibernate.type.prefer_native_enum_types`].
-****
+====
 
 The limited set of pre-defined basic attribute types can be stretched a bit further by supplying a _converter_.
 
@@ -756,7 +771,7 @@ There are two ways to apply a converter:
 - the `@Convert` annotation applies an `AttributeConverter` to a particular entity attribute, or
 - the `@Converter` annotation (or, alternatively, the `@ConverterRegistration` annotation) registers an `AttributeConverter` for automatic application to all attributes of a given type.
 
-For example, the following converter will be automatically applied to any attribute of type `EnumSet<DayOfWeek>`, and takes care of persisting the `EnumSet<DayOfWeek>` to a column of type `INTEGER`:
+For example, the following converter is automatically applied to any attribute of type `EnumSet<DayOfWeek>`, and takes care of persisting the `EnumSet<DayOfWeek>` to a column of type `INTEGER`:
 
 [source,java]
 ----
@@ -882,15 +897,15 @@ long currentTimeMillis;
 
 The `@JdbcTypeRegistration` annotation may be used to register a user-written `JdbcType` as the default for a given SQL type code.
 
-.JDBC types and JDBC type codes
-****
+[NOTE]
+====
 The types defined by the JDBC specification are enumerated by the integer type codes in the class `java.sql.Types`.
 Each JDBC type is an abstraction of a commonly-available type in SQL.
 For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on Oracle).
 
 Since Hibernate understands more SQL types than JDBC, there's an extended list of integer type codes in the class link:{doc-javadoc-url}org/hibernate/type/SqlTypes.html[`org.hibernate.type.SqlTypes`].
 For example, `SqlTypes.GEOMETRY` represents the spatial data type `GEOMETRY`.
-****
+====
 
 [discrete]
 ==== AttributeConverter
@@ -1127,7 +1142,9 @@ It's perfectly acceptable to replace a `@ManyToOne` mapping with a basic-typed a
 That said, it's possible to take this idea way too far.
 
 
-.💀 Aggregates 💀
+.*Read more: 💀 Aggregates 💀*
+[%collapsible]
+====
 ****
 It's come to our attention that a vocal group of people advocate that Java entity classes should be broken up into tiny disconnected islands they call "aggregates". An aggregate--at least as a first approximation--corresponds roughly to what we would usually call a parent/child relationship.
 Simple examples of aggregates might be `Order`/`Item`, or `Product`/`Part`.
@@ -1151,9 +1168,10 @@ To put it mildly: this is not how JPA was ever intended to be used.
 
 It's difficult to respond charitably to most of the arguments in favor of this approach, since most of them don't rise above the level of hand-waving at boxes on drawn on whiteboards.
 An argument we _can_ respond to is the concern that transparent lazy fetching can lead to "accidental" fetching of an association and the potential for N+1 selects.
-This is a legit concern, and one we worry about too, but where it's really a problem we have a much better solution: just use a `StatelessSession`, or a Jakarta Data repository, where <<stateless-sessions,association fetching is always an explicit operation>>.
-Indeed, `StatelessSession` even guards against accidental _updates_, since `update()` is always an explicit operation.
+This is a legit concern, and one we worry about too, but where it's really a problem we have a much better solution: just use a `EntityAgent`, or a stateless Jakarta Data repository, where <<stateless-sessions,association fetching is always an explicit operation>>.
+Indeed, `EntityAgent` even guards against accidental _updates_, since `update()` is always an explicit operation.
 ****
+====
 
 Now that we know that associations are actually good and useful, let's see how to model the various kinds of association we might find need to map to a relational data model.
 We begin with the most common association multiplicity.
@@ -1189,7 +1207,7 @@ class Book {
 Here, the `Book` table has a foreign key column holding the identifier of the associated `Publisher`.
 
 [[lazy-problem]]
-[TIP]
+[WARNING]
 // .Almost all associations should be lazy
 ====
 A very unfortunate misfeature of JPA is that `@ManyToOne` associations are fetched eagerly by default.
@@ -1197,6 +1215,7 @@ This is almost never what we want.
 Almost all associations should be lazy.
 The only scenario in which `fetch=EAGER` makes sense is if we think there's always a _very_ high probability that the <<caching-and-fetching,associated object will be found in the second-level cache>>.
 Whenever this isn't the case, remember to explicitly specify `fetch=LAZY`.
+Or, even better, configure Hibernate with a `LAZY` default fetch mode for to-one associations using `<default-to-one-fetch-type>` or `defaultToOneFetchType()`.
 ====
 
 Most of the time, we would like to be able to easily navigate our associations in both directions.
@@ -1268,7 +1287,9 @@ Collection<Book> books;
 We'll see how to map a collection with a persistent order <<ordered-sorted,much later>>.
 
 [[set-vs-list]]
-.`Set`, `List`, or `Collection`?
+.*Read more: Set, List, or Collection?*
+[%collapsible]
+====
 ****
 A one-to-many association mapped to a foreign key can never contain duplicate elements, so `Set` seems like the most semantically correct Java collection type to use here, and so that's the conventional practice in the Hibernate community.
 
@@ -1282,6 +1303,7 @@ In the past, we were perhaps too dogmatic in recommending the use of `Set`.
 Now? I guess we're happy to let you guys decide.
 In hindsight, we could have done more to make clear that this was always a viable option.
 ****
+====
 
 [[one-to-one-fk]]
 === One-to-one (first way)
@@ -1338,8 +1360,8 @@ class Person {
 
 `Person.author` is the unowned side, because it's the side marked `mappedBy`.
 
-.Lazy fetching for one-to-one associations
-****
+[NOTE]
+====
 Notice that we did not declare the unowned end of the association `fetch=LAZY`.
 That's because:
 
@@ -1355,7 +1377,7 @@ On the other hand, if _every_ `Person` was an `Author`, that is, if the associat
 @OneToOne(optional=false, mappedBy = Author_.PERSON, fetch=LAZY)
 Author author;
 ----
-****
+====
 
 This is not the only sort of one-to-one association.
 
@@ -1576,13 +1598,16 @@ Since the number of elements of this array or list is upper bounded by 7, this i
 It's hard to see much value in storing this collection in a separate table.
 
 [%unbreakable]
-.Learning to not hate SQL arrays
+.*Read more: Learning to not hate SQL arrays*
+[%collapsible]
+====
 ****
 For a long time, we thought arrays were a kind of weird and warty thing to add to the relational model, but recently we've come to realize that this view was overly closed-minded.
 Indeed, we might choose to view SQL `ARRAY` types as a generalization of `VARCHAR` and `VARBINARY` to generic "element" types.
 And from this point of view, SQL arrays look quite attractive, at least for certain problems.
 If we're comfortable mapping `byte[]` to `VARBINARY(255)`, why would we shy away from mapping `DayOfWeek[]` to `TINYINT ARRAY[7]`?
 ****
+====
 
 Unfortunately, JPA doesn't define a standard way to map SQL arrays, but here's how we can do it in Hibernate:
 
@@ -1841,8 +1866,8 @@ class Book {
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof Book                   // check type with instanceof, not getClass()
-            && ((Book) other).getIsbn().equals(isbn);  // compare natural ids
+        return other instanceof Book book    // check type with instanceof, not getClass()
+            && book.getIsbn().equals(isbn);  // compare natural ids
     }
     @Override
     public int hashCode() {

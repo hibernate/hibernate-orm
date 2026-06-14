@@ -1,20 +1,37 @@
 [[preface]]
 == Preface
 
-:persistence: https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
-:data: https://jakarta.ee/specifications/data/1.0/jakarta-data-1.0
+:persistence: https://jakarta.ee/specifications/persistence/4.0/jakarta-persistence-spec-4.0-M4.pdf
+:data: https://jakarta.ee/specifications/data/1.1/jakarta-data-1.1-m3.pdf
+:query: https://jakarta.ee/specifications/query/1.0/jakarta-query-1.0-m2.pdf
 
-Hibernate 6 was a major redesign of the world's most popular and feature-rich ORM solution.
+Hibernate 8 is the culmination of six years of sustained effort focused on modernizing the most popular persistence solution for Java.
+Ushering in the new generation of Jakarta specifications--Persistence 4.0, Query 1.0, and Data 1.1--it represents a new state of the art in persistence and object relational mapping.
+No other persistence solution in any programming language comes even close to offering a comparable breadth of features, ease of use, or level of compile time type safety.
+
+.*Read more: A brief recap*
+[%collapsible]
+====
+****
+- Hibernate 6 was a major redesign of the world's most popular and feature-rich ORM solution.
 The redesign touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and the query language.
 This new Hibernate was suddenly more powerful, more robust, more portable, and more type safe.
 
-Hibernate 7 builds on this foundation, adds support for link:{persistence}[JPA 3.2], and introduces https://hibernate.org/repositories/[Hibernate Data Repositories], an implementation of the link:{data}[Jakarta Data specification].
-Taken together, these enhancements yield a level of compile-time type safety--and resulting developer productivity--which was previously impossible.
-Hibernate Data Repositories offers truly seamless integration of the ORM solution with the persistence layer, obsoleting older add-on repository frameworks.
+- Hibernate 7 built on this foundation, adding support for link:{persistence}[JPA 3.2], and introducing https://hibernate.org/repositories/[Hibernate Data Repositories], an implementation of the link:{data}[Jakarta Data specification].
+Taken together, these enhancements yielded a level of compile-time type safety--and resulting developer productivity--which was previously impossible.
+ In its last dying breath, Hibernate 7.4 added an integrated and extensible system for dealing with temporal data and audit logging.
+
+- In the background, plans for JPA 4 were being laid and executed.
+  Jakarta Persistence 4.0 finally makes it possible to access almost the full power of Hibernate via the standard API interfaces and improves the programming model considerably.
+  Jakarta Data 1.1 is now fully integrated with Jakarta Persistence and features powerful enhancements that make it easier than ever to deal with dynamic queries.
+  Jakarta Query 1.0 finally provides a rigorous definition of the query language.
+****
+====
 
 Hibernate ORM and https://hibernate.org/reactive/[Hibernate Reactive] are core components of https://quarkus.io[Quarkus 3], the most exciting new environment for cloud-native development in Java, and Hibernate remains the persistence solution of choice for almost every major Java framework or server.
 
-Unfortunately, the changes in Hibernate 6 also obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
+Unfortunately, all this work also obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
+Indeed, the changes in JPA 4 required significant rewriting of even this document.
 
 This guide is an up-to-date, high-level discussion of the current feature set and recommended usage.
 It does not attempt to cover every feature and should be used in conjunction with other documentation:

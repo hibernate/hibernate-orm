@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.query.SelectionQuery;
@@ -63,7 +64,7 @@ import org.hibernate.query.SelectionQuery;
 ///
 /// @author Gavin King
 public record EnabledFetchProfile(String profileName)
-		implements FindOption, TypedQuery.Option {
+		implements FindOption, TypedQuery.Option, EntityManager.Option {
 
 	/**
 	 * Enable the fetch profile represented by this

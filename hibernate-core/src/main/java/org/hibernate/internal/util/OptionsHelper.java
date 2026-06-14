@@ -93,26 +93,29 @@ public final class OptionsHelper {
 
 
 	/// Applies a runtime-adjustable `option` to the `Session`.
-	public static void applyOption(SessionImplementor entityManager, EntityManager.Option option) {
+	public static void applyOption(SessionImplementor session, EntityManager.Option option) {
 		Objects.requireNonNull( option, "option" );
 
 		if ( option instanceof CacheMode cacheMode ) {
-			entityManager.setCacheMode( cacheMode );
+			session.setCacheMode( cacheMode );
 		}
 		else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
-			entityManager.setCacheRetrieveMode( cacheRetrieveMode );
+			session.setCacheRetrieveMode( cacheRetrieveMode );
 		}
 		else if ( option instanceof CacheStoreMode cacheStoreMode ) {
-			entityManager.setCacheStoreMode( cacheStoreMode );
+			session.setCacheStoreMode( cacheStoreMode );
 		}
 		else if ( option instanceof FlushModeType flushModeType ) {
-			entityManager.setFlushMode( flushModeType );
+			session.setFlushMode( flushModeType );
 		}
 		else if ( option instanceof ReadOnlyMode readOnlyMode ) {
-			entityManager.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
+			session.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
 		}
 		else if ( option instanceof BatchSize batchSize ) {
-			entityManager.setJdbcBatchSize( batchSize.batchSize() );
+			session.setJdbcBatchSize( batchSize.batchSize() );
+		}
+		else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
+			session.enableFetchProfile( enabledFetchProfile.profileName() );
 		}
 	}
 

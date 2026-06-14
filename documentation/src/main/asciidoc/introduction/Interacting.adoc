@@ -29,7 +29,7 @@ StatelessSession session = entityManager.unwrap(StatelessSession.class);
 An instance of `EntityManager` is a _stateful session_.
 It mediates the interaction between your program and the database via operations on a _persistence context_.
 
-In this chapter, we're not going to talk much about `EntityAgent`.
+In this chapter, we're not going to focus on `EntityAgent`.
 We'll come back to <<stateless-sessions,this very useful API>> when we talk about performance.
 What you need to know for now is that a stateless session doesn't have a persistence context.
 
@@ -98,19 +98,30 @@ For this reason Hibernate provides both stateful and stateless sessions.
 === Creating a session
 
 We saw how to obtain an `EntityManagerFactory` in <<configuration-jpa>> and <<configuration-api>>.
-It's quite unsurprising that we may use this object to create an `EntityManager`:
+It's quite unsurprising that we may use this object to create an `EntityManager` or `EntityAgent`:
 
 [source,java]
 ----
 EntityManager entityManager = entityManagerFactory.createEntityManager();
 ----
+[source,java]
+----
+EntityAgent entityAgent = entityManagerFactory.createEntityAgent();
+----
 
-When we're finished with the `EntityManager`, we should explicitly clean it up:
+When we're finished with the `EntityManager` or `EntityAgent`, we must explicitly clean it up:
 
 [source,java]
 ----
 entityManager.close();
 ----
+[source,java]
+----
+entityAgent.close();
+----
+
+[CAUTION]
+Even though an `EntityAgent` is a "stateless" session, the `EntityAgent` itself still holds state which must be cleaned up by calling `close()`!
 
 // On the other hand, if we're starting from a `SessionFactory`, as described in <<configuration-api>>, we may use:
 //
@@ -126,16 +137,32 @@ entityManager.close();
 // session.close();
 // ----
 
-.*Read more: Injecting the `EntityManager`*
+JPA 4 _session creation options_ let us provide some information controlling the behavior of the `EntityManager` or `EntityAgent` in a type safe way.
+
+[source,java]
+----
+EntityManager entityManager =
+        entityManagerFactory.createEntityManager(new BatchSize(20),
+                                                 ReadOnlyMode.READ_ONLY,
+                                                 CacheStoreMode.BYPASS);
+----
+
+Search for implementations of `EntityManager.CreationOption` or `EntityAgent.CreationOption` to find the option types provided by the specification and by Hibernate.
+
+.*Read more: Injecting the `EntityManager` or `EntityAgent`*
 [%collapsible]
 ====
 ****
-If you're writing code for some sort of container environment, you'll probably obtain the `EntityManager` by some sort of dependency injection.
+If you're writing code for some sort of container environment, you'll probably obtain the `EntityManager` or `EntityAgent` by some sort of dependency injection.
 For example, in Java (or Jakarta) EE you would write:
 
 [source,java]
 ----
 @PersistenceContext EntityManager entityManager;
+----
+[source,java]
+----
+@PersistenceAgent EntityAgent entityAgent;
 ----
 
 In Quarkus, injection is handled by CDI:
@@ -144,20 +171,12 @@ In Quarkus, injection is handled by CDI:
 ----
 @Inject EntityManager entityManager;
 ----
-****
-====
-
-JPA 4 _session creation options_ let us provide some information controlling the behavior of the `EntityManager` in a type safe way.
-
 [source,java]
 ----
-EntityManager entityManager =
-        entityManagerFactory.createEntityManager(new BatchSize(20),
-												 ReadOnlyMode.READ_ONLY,
-                                                 CacheStoreMode.BYPASS);
+@Inject EntityAgent entityAgent;
 ----
-
-Search for implementations of `EntityManager.CreationOption` to find the option types provided by the specification and by Hibernate.
+****
+====
 
 Outside a container environment, we'll also have to write code to manage database transactions.
 
@@ -191,12 +210,29 @@ But this code is extremely tedious, so there's a cleaner option:
 [source,java]
 ----
 entityManagerFactory.runInTransaction(entityManager -> {
-    // do the work
+    // do the work in a stateful session
     ...
 });
 ----
 
 When we need to return a value from within the anonymous function, we use `callInTransaction()` instead of `runInTransaction()`.
+
+In case we're using an `EntityAgent`, or if we would like direct access to the `Session` or `StatelessSession` without a type cast, `runInTransaction()` lets us specify the class of session we require:
+
+[source,java]
+----
+entityManagerFactory.runInTransaction(EntityAgent.class, entityAgent -> {
+    // do the work in a stateless session
+    ...
+});
+----
+[source,java]
+----
+entityManagerFactory.runInTransaction(Session.class, session -> {
+    // do the work in a Hibernate session
+    ...
+});
+----
 
 // Using Hibernate's native APIs we can write something very similar:
 // // [source,java]
@@ -864,10 +900,73 @@ var book = entityManager.find(Book.class, isbn, ReadOnlyMode.READ_ONLY);
 
 It's not necessary to dirty-check an entity instance in read-only mode.
 
+[[bypass-persistence-context]]
+=== Operations which bypass the persistence context
+
+When we use an `EntityAgent`, we're always working with detached objects.
+Thus, the programming model is a bit different to what we've just seen.
+The methods for retrieving entities and querying the database are the same -- indeed, they're all declared by a common supertype named `EntityHandler` -- but these operations always return detached objects, and so lazy fetching is an explicit operation.
+And the operations used to update the database are completely different.
+
+.Important methods of the `EntityAgent`
+[%autowidth.stretch]
+|===
+| Method name and parameters | Effect
+
+| `fetch(Object)`      | Fetch an association of a detached object
+| `refresh(Object)`    | Refresh the state of a detached object by executing
+a `select`
+| `insert(Object)`     | Immediately `insert` the state of the given transient object into the database
+| `update(Object)`     | Immediately `update` the state of the given detached object in the database
+| `delete(Object)`     | Immediately `delete` the state of the given detached object from the database
+| `upsert(Object)`     | Immediately `insert` or `update` the state of the given detached object using a SQL `merge into` statement
+|===
+
+NOTE: The operations of a `EntityAgent` have no corresponding ``CascadeType``s, and so these operations never cascade to associated entity instances.
+
+NOTE: There's no `flush()` operation, and so `update()` is always explicit.
+
+Notice that all the operations listed above result in an immediate interaction with the database.
+In certain circumstances, this makes stateless sessions easier to work with and simpler to reason about, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
+
+Consider the following fragments:
+
+[source,java]
+----
+var b1 = statelessSession.get(Book.class, isbn);
+var b2 = statelessSession.get(Book.class, isbn);
+assert b1 == b2;  // fails
+----
+[source,java]
+----
+var b1 = statelessSession.get(Book.class, isbn);
+var b2 = statelessSession.get(Book.class, isbn);
+statelessSession.fetch(b1.publisher);
+statelessSession.fetch(b2.publisher);
+assert b1.publisher == b2.publisher;  // fails
+----
+
+In a stateful session, entity instances are canonicalized by primary key, and so we don't usually have two different objects representing a single row.
+No such canonicalization exists across invocations of a stateless session.
+In a stateless session, both the assertions fail.
+
+[%unbreakable]
+[CAUTION]
+====
+If we use `fetch()` in a stateless session, we can very easily obtain two objects representing the same database row!
+====
+
 [[callbacks]]
 === Lifecycle callbacks and entity listeners
 
-The annotations `@PrePersist`, `@PreRemove`, `@PreUpdate`, `@PostPersist`, `@PostRemove`, `@PostUpdate`, and `@PostLoad` allow an entity to respond to persistence lifecycle operations and maintain its transient internal state.
+Lifecycle callbacks allow the application program to respond to events occurring deep within Hibernate.
+
+- The annotations `@PrePersist`, `@PreRemove`, `@PreMerge`, `@PostPersist`, `@PostRemove`, `@PostMerge`, and `@PostLoad` allow an entity to respond to persistence lifecycle operations and maintain its transient internal state.
+  These events only occur in a stateful session.
+
+- The annotations `@PreInsert`, `@PreUpdate`, `@PreUpsert`, `@PreDelete`, `@PostInsert`,`@PostUpdate`, `@PostUpsert`, and `@PostDelete` allow the application program to be notified of operations executed against the database.
+  These events occur in both stateful and stateless sessions.
+
 For example:
 
 [source,java]
@@ -887,13 +986,23 @@ class Order {
 ----
 
 If we need to interact with technical objects, we can place the lifecycle callback on a separate class, called an _entity listener_.
-The `@EntityListeners` annotation specifies the listeners for a given entity class:
+There are two distinct ways to attach listeners to an entity:
 
+- The `@EntityListeners` annotation specifies one or more listeners for a given entity class:
++
 [source,java]
 ----
 @Entity
 @EntityListeners(OrderEvents.class)
 class Order { ... }
+----
+
+- On the other hand, the newer `@EntityListener` annotation lets a listener be attached to one or more entities without the need to annotate the entities themselves:
++
+[source,java]
+----
+@EntityListener
+class OrderEvents { ... }
 ----
 
 An entity listener may inject CDI beans:

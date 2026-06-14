@@ -292,7 +292,7 @@ class Book {
 }
 ----
 
-.Show DDL
+.*Show DDL*
 [%collapsible%closed]
 ====
 [source,sql]
@@ -319,7 +319,7 @@ class Book {
 }
 ----
 
-.Show DDL
+.*Show DDL*
 [%collapsible%closed]
 ====
 [source,sql]
@@ -346,7 +346,7 @@ class Author {
 }
 ----
 
-.Show DDL
+.*Show DDL*
 [%collapsible%closed]
 ====
 [source,sql]
@@ -368,7 +368,7 @@ Finally, `@JoinTable` may also be used with a <<unidirectional-one-to-many,unidi
 Set<Book> books;
 ----
 
-.Show DDL
+.*Show DDL*
 [%collapsible%closed]
 ====
 [source,sql]
@@ -478,7 +478,7 @@ class Book {
 }
 ----
 
-.Show DDL
+.*Show DDL*
 [%collapsible%closed]
 ====
 [source,sql]
@@ -547,7 +547,7 @@ class Item {
 }
 ----
 
-.Show DDL
+.*Show DDL*
 [%collapsible%closed]
 ====
 [source,sql]

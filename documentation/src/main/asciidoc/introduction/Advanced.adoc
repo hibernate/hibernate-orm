@@ -384,7 +384,7 @@ For even more control, we can open a session with `ALL_CHANGESETS` and write cus
 try (var session = factory.withOptions()
         .atChangeset(AuditLog.ALL_CHANGESETS).open()) {
     // find all documents deleted in a specific changeset
-    var deleted = session.createSelectionQuery(
+    var deleted = session.createQuery(
             "from Document d"
                 + " where changesetId(d) = :csId"
                 + " and modificationType(d) = :type",
@@ -394,7 +394,7 @@ try (var session = factory.withOptions()
         .getResultList();
 
     // count modifications per changeset
-    var counts = session.createSelectionQuery(
+    var counts = session.createQuery(
             "select changesetId(d), count(d)"
                 + " from Document d"
                 + " group by changesetId(d)"

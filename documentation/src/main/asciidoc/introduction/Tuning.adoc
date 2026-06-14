@@ -288,7 +288,7 @@ Both batch fetching and subselect fetching are disabled by default, but we may e
 // | `@Fetch(batchSize=10)`, `@BatchSize(10)`
 | `hibernate.use_subselect_fetch`
 | `true` to enable subselect fetching
-| link:{doc-javadoc-url}/org/hibernate/SessionCreationOption.SubselectFetchMode.html[`SubselectFetchMode.ENABLED`] | link:{doc-javadoc-url}/org/hibernate/FetchMethod.html#BULK_SELECT[`FetchMethod.BULK_SELECT`]
+| link:{doc-javadoc-url}/org/hibernate/SessionCreationOption.BulkSelect.html[`BulkSelect.ENABLED`] | link:{doc-javadoc-url}/org/hibernate/FetchMethod.html#BULK_SELECT[`FetchMethod.BULK_SELECT`]
 // | `@Fetch(SUBSELECT)`
 |===
 
@@ -305,11 +305,11 @@ var entityManager =
 ----
 [source,java]
 ----
-import org.hibernate.SessionCreationOption.SubselectFetchMode;
+import org.hibernate.SessionCreationOption.BulkSelect;
 ...
 var entityManager =
         // create a session with subselect fetching enabled
-        entityManagerFactory.createEntityManager(SubselectFetchMode.ENABLED);
+        entityManagerFactory.createEntityManager(BulkSelect.ENABLED);
 ----
 
 // [source,java]

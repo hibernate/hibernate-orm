@@ -106,19 +106,39 @@ Only unqualified column names like `record_id` in this example are interpreted a
 ====
 
 By default, a new session comes with every filter disabled.
-A filter may be explicitly enabled in a given session by calling link:{doc-javadoc-url}org/hibernate/Session.html#enableFilter(java.lang.String)[`enableFilter()`] and assigning arguments to the parameters of the filter using the returned instance of link:{doc-javadoc-url}org/hibernate/Filter.html[`Filter`].
-You should do this right at the _start_ of the session.
+A filter must be explicitly enabled when the session is created, and arguments must be assigned to its parameters.
+One way to do this is using a session creation option:
 
 [source,java]
 ----
-sessionFactory.inTransaction(session -> {
-    session.enableFilter(example_.FILTER_BY_REGION)
-        .setParameter("region", "es")
-        .validate();
-
+import org.hibernate.SessionCreationOption.EnabledFilter;
+...
+var enabledFilter =
+        new EnabledFilter(example_.FILTER_BY_REGION,
+						  // argument to the filter parameter
+                          Map.of("region", "es"));
+try (var session = factory.createEntityManager(enabledFilter)) {
+    var document =
+            // read the version of the document
+            // effective at the specified instant
+            session.find(Document.class, documentId);
     ...
-});
+}
 ----
+
+// A filter may be explicitly enabled in a given session by calling link:{doc-javadoc-url}org/hibernate/Session.html#enableFilter(java.lang.String)[`enableFilter()`] and assigning arguments to the parameters of the filter using the returned instance of link:{doc-javadoc-url}org/hibernate/Filter.html[`Filter`].
+// You should do this right at the _start_ of the session.
+//
+// [source,java]
+// ----
+// sessionFactory.inTransaction(session -> {
+//     session.enableFilter(example_.FILTER_BY_REGION)
+//         .setParameter("region", "es")
+//         .validate();
+//
+//     ...
+// });
+// ----
 
 Now, any queries executed within the session will have the filter restriction applied.
 Collections annotated `@Filter` will also have their members correctly filtered.

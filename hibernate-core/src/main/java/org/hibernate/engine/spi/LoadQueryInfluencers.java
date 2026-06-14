@@ -5,6 +5,7 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +17,7 @@ import jakarta.persistence.FetchType;
 import org.hibernate.FetchMethod;
 import org.hibernate.Filter;
 import org.hibernate.Internal;
+import org.hibernate.SessionCreationOption;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.graph.GraphSemantic;
@@ -89,6 +91,9 @@ public class LoadQueryInfluencers implements Serializable {
 				enabledFilters = new TreeMap<>();
 			}
 			enabledFilters.put( filterDefinition.getFilterName(), filter );
+		}
+		for ( var enabledFilterOption : options.getEnabledFilterOptions() ) {
+			enableFilter( enabledFilterOption );
 		}
 	}
 
@@ -186,6 +191,26 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public @Nullable Filter getEnabledFilter(@Nonnull String filterName) {
 		return enabledFilters == null ? null : enabledFilters.get( filterName );
+	}
+
+	public Filter enableFilter(SessionCreationOption.EnabledFilter enabledFilterOption) {
+		final var filter = enableFilter( enabledFilterOption.name() );
+		for ( var entry : enabledFilterOption.arguments().entrySet() ) {
+			setFilterParameter( filter, entry.getKey(), entry.getValue() );
+		}
+		return filter;
+	}
+
+	private static void setFilterParameter(Filter filter, String parameterName, Object argument) {
+		if ( argument instanceof Collection<?> argumentList ) {
+			filter.setParameterList( parameterName, argumentList );
+		}
+		else if ( argument instanceof Object[] argumentArray ) {
+			filter.setParameterList( parameterName, argumentArray );
+		}
+		else {
+			filter.setParameter( parameterName, argument );
+		}
 	}
 
 	public Filter enableFilter(@Nonnull String filterName) {

@@ -13,6 +13,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.ReadOnlyMode;
 import org.hibernate.SessionCreationOption;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
@@ -25,6 +28,7 @@ import org.hibernate.type.Type;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -147,6 +151,56 @@ public class EntityHandlerOptionTests {
 
 		try (var em = sf.createEntityManager( SessionCreationOption.SubselectFetchMode.ENABLED)) {
 			assertThat(em.isSubselectFetchingEnabled()).isTrue();
+		}
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = EntityHandlerOptionTests.TestEntity.class)
+	@SessionFactory
+	void testEnabledFilterSession(SessionFactoryScope factoryScope) {
+		var sf = factoryScope.getSessionFactory();
+
+		try {
+			sf.inTransaction( session -> {
+				session.persist( new TestEntity( 1, "included" ) );
+				session.persist( new TestEntity( 2, "excluded" ) );
+			} );
+
+			try (var em = sf.createEntityManager(
+					new SessionCreationOption.EnabledFilter( "nameFilter", Map.of( "name", (Object) "included" ) ) ) ) {
+				assertThat( em.getEnabledFilter( "nameFilter" ).getParameterValue( "name" ) ).isEqualTo( "included" );
+				assertThat( em.createSelectionQuery( "from TestEntity", TestEntity.class ).getResultList() )
+						.extracting( "name" )
+						.containsExactly( "included" );
+			}
+		}
+		finally {
+			factoryScope.dropData();
+		}
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = EntityHandlerOptionTests.TestEntity.class)
+	@SessionFactory
+	void testEnabledFilterStateless(SessionFactoryScope factoryScope) {
+		var sf = factoryScope.getSessionFactory();
+
+		try {
+			sf.inTransaction( session -> {
+				session.persist( new TestEntity( 1, "included" ) );
+				session.persist( new TestEntity( 2, "excluded" ) );
+			} );
+
+			try (var em = sf.createEntityAgent(
+					new SessionCreationOption.EnabledFilter( "nameFilter", Map.of( "name", (Object) "included" ) ) ) ) {
+				assertThat( em.getEnabledFilter( "nameFilter" ).getParameterValue( "name" ) ).isEqualTo( "included" );
+				assertThat( em.createSelectionQuery( "from TestEntity", TestEntity.class ).getResultList() )
+						.extracting( "name" )
+						.containsExactly( "included" );
+			}
+		}
+		finally {
+			factoryScope.dropData();
 		}
 	}
 
@@ -322,8 +376,10 @@ public class EntityHandlerOptionTests {
 		}
 	}
 
-	@Entity
+	@Entity(name = "TestEntity")
 	@Table(name = "test_entity")
+	@FilterDef(name = "nameFilter", parameters = @ParamDef(name = "name", type = String.class))
+	@Filter(name = "nameFilter", condition = "name = :name")
 	public static class TestEntity {
 		@Id
 		private Integer id;

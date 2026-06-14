@@ -202,7 +202,7 @@ Consider the following code:
 [source,java]
 ----
 List<Book> books =
-        entityAgent.createuery("from Book order by isbn")
+        entityAgent.createQuery("from Book order by isbn")
             .ofType(Book.class)
             .getResultList();
 books.forEach(book -> book.getAuthors().forEach(author -> out.println(book.title + " by " + author.name)));

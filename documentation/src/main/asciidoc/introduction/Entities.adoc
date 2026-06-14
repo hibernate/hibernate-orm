@@ -731,6 +731,7 @@ So we prefer `@Enumerated(STRING)` for most `enum` attributes.
 
 An interesting special case arises on PostgreSQL and Oracle.
 
+[[named-enums]]
 [TIP]
 ====
 Some databases support _named_ `ENUM` types, which must be declared using in DDL using:

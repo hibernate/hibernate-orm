@@ -7,7 +7,7 @@ include::{shared-attributes-dir}/filesystem-attributes.adoc[]
 include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 
-= A Short Guide to Hibernate 7
+= A No-Nonsense Guide to Hibern8
 :toc2:
 :toclevels: 3
 :sectanchors:

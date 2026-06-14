@@ -178,7 +178,6 @@ public interface CommonBuilder {
 	/// @return `this`, for method chaining
 	///
 	/// @see org.hibernate.cfg.BatchSettings#STATEMENT_BATCH_SIZE
-	/// @see org.hibernate.BatchSize
 	///
 	/// @since 8.0
 	@Nonnull

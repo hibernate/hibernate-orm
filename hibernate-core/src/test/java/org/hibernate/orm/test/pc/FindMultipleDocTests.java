@@ -56,7 +56,8 @@ public class FindMultipleDocTests {
 					Person.class,
 					List.of(1,2,3),
 					PESSIMISTIC_WRITE,
-					ORDERED
+					ORDERED,
+					new FindMultipleOption.BatchSize( 2 )
 			);
 			//end::pc-find-multiple-example[]
 		} );

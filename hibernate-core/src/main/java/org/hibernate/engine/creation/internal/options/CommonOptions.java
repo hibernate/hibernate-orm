@@ -26,17 +26,18 @@ import java.util.function.UnaryOperator;
 
 import static java.util.Collections.emptyList;
 
-/// Mutable collector for options common to creation of both stateful and stateless sessions.
+/// Mutable collector for options common to creation of both stateful
+/// and stateless sessions.
 ///
-/// Instances are populated by session builders and by the Jakarta Persistence
-/// type-safe creation option support, then consumed through the
-/// [org.hibernate.engine.creation.internal.SessionCreationOptions] contract
-/// when constructing a session.
+/// Instances are populated by session builders and by the Jakarta
+/// Persistence type-safe creation option support, then consumed through
+/// the [org.hibernate.engine.creation.internal.SessionCreationOptions]
+/// contract when constructing a session.
 ///
-/// The constructor initializes the collector with the defaults supplied by the
-/// [SessionFactoryImplementor], but the factory is not retained. Behaviors
-/// which require the factory at consumption time, such as interceptor resolution,
-/// take it explicitly.
+/// The constructor initializes the collector with the defaults supplied
+/// by the [SessionFactoryImplementor], but the factory is not retained.
+/// Behaviors which require the factory at consumption time, such as
+/// interceptor resolution, take it explicitly.
 ///
 /// @since 8.0
 /// @author Steve Ebersole
@@ -55,6 +56,8 @@ public class CommonOptions {
 	protected TimeZone jdbcTimeZone;
 	protected Object temporalIdentifier;
 	protected List<SessionCreationOption.EnabledFilter> enabledFilterOptions;
+	private int defaultBatchFetchSize;
+	private boolean subselectFetchEnabled;
 
 	public CommonOptions(SessionFactoryImplementor sessionFactory) {
 		final var options = sessionFactory.getSessionFactoryOptions();
@@ -63,6 +66,8 @@ public class CommonOptions {
 		connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
 		jdbcTimeZone = options.getJdbcTimeZone();
 		tenantIdentifier = sessionFactory.resolveTenantIdentifier();
+		defaultBatchFetchSize = options.getDefaultBatchFetchSize();
+		subselectFetchEnabled = options.isSubselectFetchEnabled();
 	}
 
 	public StatementInspector getStatementInspector() {
@@ -200,6 +205,22 @@ public class CommonOptions {
 
 	public void atChangeset(Object changesetId) {
 		this.temporalIdentifier = changesetId;
+	}
+
+	public void defaultBatchFetchSize(int defaultBatchFetchSize) {
+		this.defaultBatchFetchSize = defaultBatchFetchSize;
+	}
+
+	public void subselectFetchEnabled(boolean subselectFetchEnabled) {
+		this.subselectFetchEnabled = subselectFetchEnabled;
+	}
+
+	public boolean isSubselectFetchEnabled() {
+		return subselectFetchEnabled;
+	}
+
+	public int getDefaultBatchFetchSize() {
+		return defaultBatchFetchSize;
 	}
 
 	public void enableFilter(SessionCreationOption.EnabledFilter enabledFilter) {

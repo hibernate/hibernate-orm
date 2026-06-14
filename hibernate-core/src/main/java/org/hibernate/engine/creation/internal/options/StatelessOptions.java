@@ -13,13 +13,14 @@ import org.hibernate.internal.util.OptionsHelper;
 
 import java.util.List;
 
-/// Mutable collector for options which apply to stateless
-/// {@linkplain org.hibernate.StatelessSession sessions}.
+/// Mutable collector for options which apply to
+/// [stateless sessions][org.hibernate.StatelessSession].
 ///
-/// Stateless sessions share the common creation options but do not support the
-/// stateful-only knobs represented by [StatefulOptions]. The inherited
-/// [SessionCreationOptions] methods for those stateful-only settings
-/// return the fixed values expected by stateless session construction.
+/// Stateless sessions share the common creation options but do not
+/// support the stateful-only knobs represented by [StatefulOptions].
+/// The inherited [SessionCreationOptions] getter methods for those
+/// unsupported settings return the fixed values expected by stateless
+/// session construction.
 ///
 /// @since 8.0
 /// @author Steve Ebersole
@@ -56,16 +57,6 @@ public class StatelessOptions extends CommonOptions implements SessionCreationOp
 	@Override
 	public FlushMode getInitialSessionFlushMode() {
 		return FlushMode.ALWAYS;
-	}
-
-	@Override
-	public boolean isSubselectFetchEnabled() {
-		return false;
-	}
-
-	@Override
-	public int getDefaultBatchFetchSize() {
-		return -1;
 	}
 
 	@Override

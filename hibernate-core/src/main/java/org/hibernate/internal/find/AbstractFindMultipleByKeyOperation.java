@@ -184,6 +184,19 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 		checkTransactionNeededForLock( session, getLockMode() );
 	}
 
+	public List<T> performFind(
+			List<?> keys,
+			@Nullable GraphSemantic graphSemantic,
+			@Nullable RootGraphImplementor<T> rootGraph) {
+		final var session = getSession();
+		checkFindRequirements( keys, session );
+		return getKeyType() == KeyType.NATURAL
+				? findByNaturalIds( keys, session, graphSemantic, rootGraph )
+				: findByIds( keys, session, graphSemantic, rootGraph );
+	}
+
+	protected abstract SharedSessionContractImplementor getSession();
+
 	private void setCacheMode(CacheMode cacheMode) {
 		cacheStoreMode = cacheMode.getJpaStoreMode();
 		cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
@@ -245,6 +258,20 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 		return naturalIdSynchronization;
 	}
 
+	private List<T> findByIds(
+			List<?> keys,
+			SharedSessionContractImplementor session,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<T> rootGraph) {
+		final var ids = Helper.coerceIds( getEntityDescriptor(), keys, session );
+		return withOptions( session, graphSemantic, rootGraph, () -> {
+			// todo (jpa4) : make sure loading from cache happens inside here
+			final var results = getEntityDescriptor().multiLoad( ids, session, this );
+			//noinspection unchecked
+			return (List<T>) results;
+		} );
+	}
+
 	protected List<T> findByNaturalIds(
 			List<?> keys,
 			SharedSessionContractImplementor session,
@@ -268,6 +295,29 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 			return (List<T>) entityDescriptor.getMultiNaturalIdLoader()
 					.multiLoad( naturalIds, this, session );
 		} );
+	}
+
+	protected List<T> withLoadQueryInfluencers(
+			SharedSessionContractImplementor session,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<T> rootGraph,
+			Supplier<List<T>> action) {
+		final var influencers = session.getLoadQueryInfluencers();
+		final var fetchProfiles =
+				influencers.adjustFetchProfiles( getDisabledFetchProfiles(), getEnabledFetchProfiles() );
+		final var effectiveEntityGraph =
+				rootGraph == null
+						? null
+						: influencers.applyEntityGraph( rootGraph, graphSemantic );
+		try {
+			return action.get();
+		}
+		finally {
+			if ( effectiveEntityGraph != null ) {
+				effectiveEntityGraph.clear();
+			}
+			influencers.setEnabledFetchProfileNames( fetchProfiles );
+		}
 	}
 
 	protected abstract List<T> withOptions(

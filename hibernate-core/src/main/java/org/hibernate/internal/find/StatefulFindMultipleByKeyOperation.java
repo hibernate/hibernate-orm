@@ -14,6 +14,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdSynchronization;
 import org.hibernate.ReadOnlyMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -46,17 +47,9 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 		this.loadAccessContext = loadAccessContext;
 	}
 
-	public List<T> performFind(
-			List<?> keys,
-			@Nullable GraphSemantic graphSemantic,
-			@Nullable RootGraphImplementor<T> rootGraph) {
-		final var session = loadAccessContext.getSession();
-		checkFindRequirements( keys, session );
-		// todo (natural-id-class) : these impls are temporary
-		//		longer term, move the logic here as much of it can be shared
-		return getKeyType() == KeyType.NATURAL
-				? findByNaturalIds( keys, session, graphSemantic, rootGraph )
-				: findByIds( keys, graphSemantic, rootGraph );
+	@Override
+	protected SessionImplementor getSession() {
+		return loadAccessContext.getSession();
 	}
 
 	@Override
@@ -65,28 +58,22 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 			GraphSemantic graphSemantic,
 			RootGraphImplementor<T> rootGraph,
 			Supplier<List<T>> action) {
-		final var session = loadAccessContext.getSession();
-		final var influencers = session.getLoadQueryInfluencers();
-		final var fetchProfiles = influencers.adjustFetchProfiles( getDisabledFetchProfiles(), getEnabledFetchProfiles() );
-		final var effectiveEntityGraph = rootGraph == null
-				? null
-				: influencers.applyEntityGraph( rootGraph, graphSemantic );
-
+		final var session = getSession();
 		final var readOnly = session.isDefaultReadOnly();
-		session.setDefaultReadOnly( getReadOnlyMode() == ReadOnlyMode.READ_ONLY );
-
 		final var cacheMode = session.getCacheMode();
-		session.setCacheMode( getCacheMode() );
-
 		try {
-			return action.get();
+			return withLoadQueryInfluencers( session, graphSemantic, rootGraph, () -> {
+				session.setDefaultReadOnly( getReadOnlyMode() == ReadOnlyMode.READ_ONLY );
+				session.setCacheMode( getCacheMode() );
+				try {
+					return action.get();
+				}
+				finally {
+					loadAccessContext.delayedAfterCompletion();
+				}
+			} );
 		}
 		finally {
-			loadAccessContext.delayedAfterCompletion();
-			if ( effectiveEntityGraph != null ) {
-				effectiveEntityGraph.clear();
-			}
-			influencers.setEnabledFetchProfileNames( fetchProfiles );
 			session.setDefaultReadOnly( readOnly );
 			session.setCacheMode( cacheMode );
 		}
@@ -104,17 +91,6 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 //				.getNaturalIdResolutions()
 //				.findCachedIdByNaturalId( normalizedNaturalIdValue, getEntityDescriptor() );
 //	}
-
-	private List<T> findByIds(
-			List<?> keys,
-			GraphSemantic graphSemantic,
-			RootGraphImplementor<T> rootGraph) {
-		final var session = loadAccessContext.getSession();
-		final var ids = Helper.coerceIds( getEntityDescriptor(),keys, session );
-		//noinspection unchecked
-		return withOptions( session, graphSemantic, rootGraph,
-				() -> (List<T>) getEntityDescriptor().multiLoad( ids, session, this ) );
-	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

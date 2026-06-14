@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.persistence.EntityHandler;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaStatement;
@@ -13,8 +14,6 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Incubating;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.specification.internal.MutationSpecificationImpl;
@@ -75,13 +74,7 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 * Finalize the building and create the {@linkplain MutationQuery} instance.
 	 */
 	@Override
-	MutationQuery createQuery(Session session);
-
-	/**
-	 * Finalize the building and create the {@linkplain MutationQuery} instance.
-	 */
-	@Override
-	MutationQuery createQuery(StatelessSession session);
+	MutationQuery createQuery(EntityHandler entityHandler);
 
 	@Override
 	CriteriaStatement<T> buildCriteria(CriteriaBuilder builder);

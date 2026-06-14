@@ -6,15 +6,13 @@ package org.hibernate.query.specification.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityHandler;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.StatelessSession;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
@@ -69,19 +67,9 @@ public class ProjectionSpecificationImpl<T> implements ProjectionSpecification<T
 	}
 
 	@Override
-	public SelectionQuery<Object[]> createQuery(Session session) {
-		return session.createSelectionQuery( buildCriteria( session.getCriteriaBuilder() ) );
-	}
-
-	@Override
-	public SelectionQuery<Object[]> createQuery(StatelessSession session) {
-		return session.createSelectionQuery( buildCriteria( session.getCriteriaBuilder() ) );
-	}
-
-	@Override
-	public SelectionQuery<Object[]> createQuery(EntityManager entityManager) {
-		return entityManager.unwrap( SharedSessionContract.class )
-				.createQuery( buildCriteria( entityManager.getCriteriaBuilder() ) );
+	public SelectionQuery<Object[]> createQuery(EntityHandler entityHandler) {
+		return entityHandler.unwrap( SharedSessionContract.class )
+				.createQuery( buildCriteria( entityHandler.getCriteriaBuilder() ) );
 	}
 
 	@Override

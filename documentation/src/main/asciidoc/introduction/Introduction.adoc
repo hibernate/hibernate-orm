@@ -64,7 +64,7 @@ We're old enough to have seen multiple generations of developer relearn this les
 ****
 ====
 
-Developers often ask about the relationship between Hibernate and JPA, so let's take a short detour into some history.
+Developers often ask about the relationship between Hibernate and JPA, so let's bite that cookie first.
 
 [[hibernate-and-jpa]]
 === Hibernate and JPA
@@ -96,7 +96,7 @@ We can think of Hibernate in terms of four basic elements:
 - a _native API_ exposing the full set of available functionality, centered around the interfaces link:{doc-javadoc-url}org/hibernate/SessionFactory.html[`SessionFactory`], which extends `EntityManagerFactory`,
 link:{doc-javadoc-url}org/hibernate/StatelessSession.html[`StatelessSession`], which extends `EntityAgent`, and link:{doc-javadoc-url}org/hibernate/Session.html[`Session`], which extends `EntityManager`,
 - a set of link:{doc-javadoc-url}org/hibernate/annotations/package-summary.html[_mapping annotations_] which augment the O/R mapping annotations defined by JPA, and which may be used with the JPA-defined interfaces, or with the native API, and
-- <<metamodel-generator,Hibernate Processor>>, which is responsible for generating the _static metamodel_ and implementations of Jakarta Data repositories.
+- finally, <<metamodel-generator,Hibernate Processor>>, which is responsible for generating the _static metamodel_ and implementations of Jakarta Data repositories.
 
 Hibernate also offers a range of SPIs for frameworks and libraries which extend or integrate with Hibernate, but we're not interested in any of that stuff here.
 
@@ -104,10 +104,10 @@ image::images/api-overview.png[API overview,width=700,align="center"]
 
 Before JPA 4, many teams chose to write their program in terms of `Session` and `SessionFactory`, to take advantage of the larger feature set accessible via these APIs.
 Other teams chose to maximize portability to other implementations of JPA by, wherever reasonable, writing code in terms of  `EntityManager` and `EntityManagerFactory`, falling back to the native APIs only where necessary.
-But JPA 4 changes the tradeoff significantly.
+JPA 4 tips the balance quite far in favor of the standard JPA APIs.
 
 [IMPORTANT]
-As of Jakarta Persistence 4.0, we feel that there is no longer much advantage to be had from the use of `Session` and `SessionFactory`.
+As of Jakarta Persistence 4.0, we feel that there's no longer much advantage to be had from the direct use of `Session` and `SessionFactory`, at least not most of the time.
 New code can be written in terms of the standard `EntityManager` and `EntityManagerFactory` interfaces, and a broad range of Hibernate-specific extensions are made available as JPA _option objects_.
 
 Whichever path you take, you will use the JPA-defined mapping annotations most of the time, and the Hibernate-defined annotations for more advanced mapping problems.
@@ -179,7 +179,8 @@ Responsibility for transaction and session management, and for recovery from cer
 // Whereas we would never want to inject a CDI https://jakarta.ee/specifications/cdi/3.0/apidocs/[event publisher] into an entity object, it's perfectly fine to inject them in an entity listener.
 // ====
 
-We're going to <<organizing-persistence,come back soon>> to the thorny question of how this persistence logic should be organized, and how it should fit into the rest of the system.
+We're going to <<organizing-persistence,come back soon>> and describe one good way to organize persistence logic, but we will emphasize that it's not the only way.
+But first, we want to make sure you can at least run Hibernate.
 
 [[hello-hibernate]]
 === Hello, Hibernate
@@ -204,10 +205,10 @@ repositories {
 }
 
 dependencies {
-    // the GOAT ORM
+    // the GOAT ORM (required)
     implementation 'org.hibernate.orm:hibernate-core:{fullVersion}'
 
-    // Hibernate Processor
+    // Hibernate Processor (strongly recommended)
     annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
 
     // Jakarta Data support (optional)
@@ -221,10 +222,10 @@ dependencies {
     // Agroal connection pool (optional)
     runtimeOnly 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
 
-    // logging via Log4j
+    // logging via Log4j (recommended)
     runtimeOnly 'org.apache.logging.log4j:log4j-core:2.26.0'
 
-    // H2 database
+    // H2 database (or JDBC driver of choice)
     runtimeOnly 'com.h2database:h2:2.4.240'
 }
 ----
@@ -292,7 +293,7 @@ class Book {
 
 Finally, let's see code which <<configuration,configures>> and instantiates Hibernate and asks it to <<interacting,persist and query>> the entity.
 Don't worry if this makes no sense at all right now.
-It's the job of the rest of this Short Guide to make all this crystal clear.
+It's the job of the rest of this guide to make all this crystal clear as we go along.
 
 [[main-hibernate]]
 [source,java]
@@ -364,10 +365,10 @@ This code introduces two very central interfaces:
 - the `EntityManagerFactory`, which in Hibernate is also an instance of link:{doc-javadoc-url}org/hibernate/SessionFactory.html[`SessionFactory`], and
 - a mysterious `manager` object, which in JPA an instance of `EntityManager`, and in Hibernate is also an instance of link:{doc-javadoc-url}org/hibernate/Session.html[`Session`].
 
-In this Guide, we call each instance of `EntityManager` a "session".
+In this guide, we call each instance of `EntityManager` a _session_.
 
 In practice, we never access the database directly from a `main()` method.
-So now let's talk about how to organize persistence logic in a real system.
+So now let's now return to the question of how to organize persistence logic in a real system.
 
 [[domain-model]]
 === Entities
@@ -424,12 +425,15 @@ But the basic principle remains intact: an entity does not do orchestration, it 
 ****
 ====
 
-For now, we're going to assume that entities are implemented as plain Java classes.
+From now on, we're going to assume that entities are implemented as plain Java classes.
+
+An entity can't persist itself.
+For that we need a session.
 
 [[stateful-and-stateless-sessions]]
 === Stateful and stateless sessions
 
-It should be very clear from the example code <<hello-hibernate,above>>, that the session is also a very important object.
+It should be very clear from the example code <<main-hibernate,above>>, that the session is also a very important object.
 It exposes basic operations like `persist()` and `createQuery()`, and so it's our first port of call when we want to <<interacting,interact with the database>> via Hibernate.
 In the code we just saw, we've used a _stateful session_.
 
@@ -440,7 +444,7 @@ Each stateful session -- that is, every JPA <<hibernate-and-jpa,`EntityManager`>
 
 But stateful sessions are not the only possibility.
 The new JPA 4 `EntityAgent` interface offers a way to interact with Hibernate _without_ going through a persistence context.
-In Hibernate, every `EntityAgent` is also an instance of the much older interface <<stateless-sessions,`StatelessSession`>>, and so we sometimes call an instance of `EntityAgent` a "stateless session".
+In Hibernate, every `EntityAgent` is also an instance of the much older interface <<stateless-sessions,`StatelessSession`>>, and so we often call an instance of `EntityAgent` a _stateless session_.
 The programming model for stateless sessions is somewhat different.
 
 .*Read more: Stateless sessions*
@@ -463,7 +467,8 @@ A significant minority of developers find working with a persistence context fru
 // We promise to make sure there are stateless sessions in Jakarta Persistence 4.
 
 So, finally, let us state for the record: we messed up here.
-Hibernate is all about _object/relational mapping;_ persistence contexts are something extra on top.
+Hibernate is all about _object/relational mapping;_ persistence contexts are something extra.
+They're like the salsa verde in a Mexican dish--delicious, but optional--not like the green curry in a bowl of kaeng khiao wan.
 You don't have to use stateful sessions, and you're not doing anything wrong if you decide to use stateless sessions instead.
 ****
 ====
@@ -472,6 +477,22 @@ A key decision for any new project is which of these programming models to take 
 Fortunately, the two models aren't mutually exclusive.
 This is a friendly competition, where the two APIs are designed to complement each other.
 Even if we decide to use stateful ``EntityManager``s most of the time, we can still use an `EntityAgent` wherever it's more convenient.
+
+=== Managing sessions and transactions
+
+One very nice aspect of the code we <<main-hibernate,just saw>>, which we wish to draw your attention to, is that session and transaction management is handled by generic "framework" code, just as we already recommended above.
+
+Later, we'll discuss the traps we can fall into when we write custom code to manage <<persistence-contexts,sessions>> and <<managing-transactions,transactions>>.
+It's certainly not impossible to get these concerns right, but it's easy enough to get them wrong, especially if we starting getting too creative.
+Since we know that you, dear reader, are nothing if not creative, we encourage you to let your container or framework take care of this stuff.
+
+In our code, we used the <<managing-transactions,`runInTransaction()`>> method of `EntityManagerFactor`.
+But you might prefer to use something else, for example:
+
+- in a container environment like Jakarta EE or Quarkus, _container-managed transactions_ and _container-managed persistence contexts_, or
+- something you write yourself.
+
+The important thing is that calls like `createEntityManager()` and `getTransaction().begin()` don't belong in regular program logic, because it's tricky and tedious to get the error handling correct.
 
 [[organizing-persistence]]
 === Repositories
@@ -609,15 +630,6 @@ In Quarkus, WildFly, or any Jakarta EE container, https://www.cdi-spec.org[CDI] 
 Notice that we registered the repository interface with the persistence unit via `managedClass()`.
 // If we had used `persistence.xml` to configure Hibernate, we would have listed it as a `<class>`.
 
-One very nice aspect of this code, which we wish to draw your attention to, is that session and transaction management is handled by generic "framework" code, just as we already recommended above.
-In this case, we're using the `runInTransaction()` method of `EntityManagerFactor`.
-But you might prefer to use something else, for example:
-
-- in a container environment like Jakarta EE or Quarkus, _container-managed transactions_ and _container-managed persistence contexts_, or
-- something you write yourself.
-
-The important thing is that calls like `createEntityManager()` and `getTransaction().begin()` don't belong in regular program logic, because it's tricky and tedious to get the error handling correct.
-
 Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.
 
 [[testing]]
@@ -693,11 +705,11 @@ If we're using `PersistenceConfiguration` to configure Hibernate, we could write
 
 [source,java]
 ----
-configuration.property(Persistence.SchemaManagementProperties.SCHEMAGEN_LOAD_SCRIPT_SOURCE,
+configuration.property(PersistenceConfiguration.SCHEMAGEN_LOAD_SCRIPT_SOURCE,
 						"/org/example/test-data.sql");
 ----
 
-The SQL script will be executed every time `export()` or `truncate()` is called.
+The SQL script is executed every time `create()`, `populate()`, or `truncate()` is called.
 
 [TIP]
 ====

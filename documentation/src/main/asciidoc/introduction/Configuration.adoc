@@ -130,7 +130,7 @@ and `com.github.ben-manes.caffeine:jcache`
 `tools.jackson.core:jackson-databind` +
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
-| <<envers,Envers>>, deprecated since Hibernate ORM 8.0, for auditing historical data | `org.hibernate.orm:hibernate-envers`
+// | <<envers,Envers>>, deprecated since Hibernate ORM 8.0, for auditing historical data | `org.hibernate.orm:hibernate-envers`
 | <<jfr,Hibernate JFR>>, for monitoring via Java Flight Recorder | `org.hibernate.orm:hibernate-jfr`
 | Hibernate Jandex integration, for <<entity-discovery,entity discovery>> | `org.hibernate.orm:hibernate-scan-jandex`
 | link:{doc-dialect-url}#community-dialects[Community dialects] | `org.hibernate.orm:hibernate-community-dialects`
@@ -192,14 +192,10 @@ The `<persistence-unit>` element defines a named _persistence unit_, that is:
 - a set of default configuration settings, which may be augmented or overridden at runtime.
 
 Each `<class>` element specifies the fully qualified name of an entity class.
+In some container environments, for example, in any EE container, the `<class>` elements are unnecessary, as we explain <<entity-discovery,below>>.
 
 The `<default-to-one-fetch-type>` element specifies that many-to-one and one-to-one associations default to <<proxies-and-lazy-fetching,lazy fetching>>.
 As <<lazy-problem,explained later>>, we strongly recommend this setting in all new code.
-
-[TIP]
-====
-In some container environments, for example, in any EE container, the `<class>` elements are unnecessary, since the container will scan the archive for annotated classes, and automatically recognize any class annotated `@Entity`.
-====
 
 Each `<property>` element specifies a _configuration property_ and its value.
 Note that:
@@ -212,7 +208,7 @@ We may obtain an `EntityManagerFactory` by calling `Persistence.createEntityMana
 [source,java]
 ----
 EntityManagerFactory entityManagerFactory =
-    Persistence.createEntityManagerFactory("org.hibernate.example");
+        Persistence.createEntityManagerFactory("org.hibernate.example");
 ----
 
 If necessary, we may override configuration properties specified in `persistence.xml`:
@@ -220,8 +216,8 @@ If necessary, we may override configuration properties specified in `persistence
 [source,java]
 ----
 EntityManagerFactory entityManagerFactory =
-    Persistence.createEntityManagerFactory("org.hibernate.example",
-            Map.of(AvailableSettings.JAKARTA_JDBC_PASSWORD, password));
+        Persistence.createEntityManagerFactory("org.hibernate.example",
+                Map.of(AvailableSettings.JAKARTA_JDBC_PASSWORD, password));
 ----
 
 [[configuration-api]]

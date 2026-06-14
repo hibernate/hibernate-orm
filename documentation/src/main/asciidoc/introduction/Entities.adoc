@@ -318,7 +318,7 @@ We may even place a `@SequenceGenerator` or `@TableGenerator` annotation at the 
 package org.example.entities;
 ----
 
-Then any entity in this package which specifies `strategy=SEQUENCE` or `strategy=TABLE` without also explicitly specifying a generator `name` will be assigned a generator based on the package-level annotation.
+Then any entity in this package which specifies `strategy=SEQUENCE` or `strategy=TABLE` without also explicitly specifying a generator `name` is assigned a generator based on the package-level annotation.
 
 [source,java]
 ----
@@ -534,7 +534,7 @@ Hibernate automatically generates a `UNIQUE` constraint on the columns mapped by
 Consider using the natural id attributes to implement <<equals-and-hash>>.
 ====
 
-If the natural id is a composite key spanning multiple attributes, the link:{doc-javadoc-url}org/hibernate/annotations/NaturalIdClass.html[`@NaturalIdClass`] may be used.
+If the natural id is a composite key spanning multiple attributes, a link:{doc-javadoc-url}org/hibernate/annotations/NaturalIdClass.html[`@NaturalIdClass`] may be used.
 This is very similar to the `@IdClass` annotation we <<composite-identifiers,already met>>.
 
 [source,java]
@@ -622,10 +622,21 @@ On the other hand, if a non-primitively-typed attribute cannot be null, use of `
 String middleName; // may be null
 ----
 
+Alternatively, use the Jakarta `@Nonnull` annotation.
+
+[source,java]
+----
+@Nonnull String firstName;
+@Nonnull String lastName;
+String middleName; // may be null
+----
+
 Note that primitively-typed attributes are inferred `NOT NULL` by default.
 
-=== Not-null columns
-
+.*Read more: Not-null columns*
+[%collapsible]
+====
+****
 Until JPA 4, there were two standard ways to add a `NOT NULL` constraint to a mapped column in JPA:
 
 1. using `@Basic(optional=false)`, or
@@ -656,6 +667,8 @@ JPA 4 provides two additional options:
 2. use the `@NotNull` constraint from Bean Validation.footnote:[You'll need to add Hibernate Validator to your project build, as described in <<optional-dependencies>>.]
 
 We think that these are easier on the eyes.
+****
+====
 
 [[enums]]
 === Enumerated types
@@ -664,7 +677,7 @@ We included Java ``enum``s on the list above.
 An enumerated type is considered a sort of basic type, but since most databases don't have a native `ENUM` type, JPA provides a special `@Enumerated` annotation to specify how the enumerated values should be represented in the database:
 
 - by default, an enum is stored as an integer, the value of its `ordinal()` member, but
-- if the attribute is annotated `@Enumerated(STRING)`, it will be stored as a string, the value of its `name()` member.
+- if the attribute is annotated `@Enumerated(STRING)`, it is stored as a string, the value of its `name()` member.
 
 [source,java]
 ----
@@ -757,7 +770,7 @@ There are two ways to apply a converter:
 - the `@Convert` annotation applies an `AttributeConverter` to a particular entity attribute, or
 - the `@Converter` annotation (or, alternatively, the `@ConverterRegistration` annotation) registers an `AttributeConverter` for automatic application to all attributes of a given type.
 
-For example, the following converter will be automatically applied to any attribute of type `EnumSet<DayOfWeek>`, and takes care of persisting the `EnumSet<DayOfWeek>` to a column of type `INTEGER`:
+For example, the following converter is automatically applied to any attribute of type `EnumSet<DayOfWeek>`, and takes care of persisting the `EnumSet<DayOfWeek>` to a column of type `INTEGER`:
 
 [source,java]
 ----

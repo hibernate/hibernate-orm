@@ -6,9 +6,13 @@
 :query: https://jakarta.ee/specifications/query/1.0/jakarta-query-1.0-m2.pdf
 
 Hibernate 8 is the culmination of six years of sustained effort focused on modernizing the most popular persistence solution for Java.
-Capitalizing on the new generation of Jakarta specifications--Persistence 4.0, Query 1.0, and Data 1.1--it represents a new state of the art in persistence and object relational mapping.
+Ushering in the new generation of Jakarta specifications--Persistence 4.0, Query 1.0, and Data 1.1--it represents a new state of the art in persistence and object relational mapping.
 No other persistence solution in any programming language comes even close to offering a comparable breadth of features, ease of use, or level of compile time type safety.
 
+.*Read more: A brief recap*
+[%collapsible]
+====
+****
 - Hibernate 6 was a major redesign of the world's most popular and feature-rich ORM solution.
 The redesign touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and the query language.
 This new Hibernate was suddenly more powerful, more robust, more portable, and more type safe.
@@ -21,6 +25,8 @@ Taken together, these enhancements yielded a level of compile-time type safety--
   Jakarta Persistence 4.0 finally makes it possible to access almost the full power of Hibernate via the standard API interfaces and improves the programming model considerably.
   Jakarta Data 1.1 is now fully integrated with Jakarta Persistence and features powerful enhancements that make it easier than ever to deal with dynamic queries.
   Jakarta Query 1.0 finally provides a rigorous definition of the query language.
+****
+====
 
 Hibernate ORM and https://hibernate.org/reactive/[Hibernate Reactive] are core components of https://quarkus.io[Quarkus 3], the most exciting new environment for cloud-native development in Java, and Hibernate remains the persistence solution of choice for almost every major Java framework or server.
 

@@ -12,7 +12,6 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FindMultipleOption;
@@ -49,7 +48,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 
 	private KeyType keyType = KeyType.IDENTIFIER;
 
-	private BatchSize batchSize;
+	private FindMultipleOption.BatchSize batchSize;
 	private FindMultipleOption.SessionCheckMode sessionCheckMode = FindMultipleOption.SessionCheckMode.DISABLED;
 	private FindMultipleOption.RemovalsMode removalsMode = FindMultipleOption.RemovalsMode.REPLACE;
 	private FindMultipleOption.OrderingMode orderingMode = FindMultipleOption.OrderingMode.ORDERED;
@@ -70,7 +69,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 
 	private NaturalIdSynchronization naturalIdSynchronization;
 
-	@SuppressWarnings("PatternVariableHidesField")
+	@SuppressWarnings({ "PatternVariableHidesField", "removal" })
 	public AbstractFindMultipleByKeyOperation(
 			@Nonnull EntityPersister entityDescriptor,
 			@Nullable LockOptions defaultLockOptions,
@@ -104,7 +103,10 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 				if ( option instanceof KeyType keyType ) {
 					this.keyType = keyType;
 				}
-				else if ( option instanceof BatchSize batchSize ) {
+				else if ( option instanceof org.hibernate.BatchSize batchSize ) {
+					this.batchSize = new FindMultipleOption.BatchSize( batchSize.batchSize() );
+				}
+				else if ( option instanceof FindMultipleOption.BatchSize batchSize ) {
 					this.batchSize = batchSize;
 				}
 				else if ( option instanceof FindMultipleOption.SessionCheckMode sessionCheckMode ) {
@@ -288,7 +290,7 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 	public AbstractFindMultipleByKeyOperation(
 			EntityPersister entityDescriptor,
 			KeyType keyType,
-			BatchSize batchSize,
+			FindMultipleOption.BatchSize batchSize,
 			FindMultipleOption.SessionCheckMode sessionCheckMode,
 			FindMultipleOption.RemovalsMode removalsMode,
 			FindMultipleOption.OrderingMode orderingMode,

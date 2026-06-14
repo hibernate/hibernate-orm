@@ -16,14 +16,14 @@ import java.util.List;
 
 import static java.util.Collections.addAll;
 
-/// Mutable collector for options which only apply to stateful
-/// {@linkplain org.hibernate.Session sessions}.
+/// Mutable collector for options which only apply to
+/// [stateful sessions][org.hibernate.Session].
 ///
-/// This extends [CommonOptions] with stateful-session concerns such as
-/// flush mode, transaction auto-join, auto-close/auto-clear, identifier rollback,
-/// batch/subselect fetching, and custom [listeners][SessionEventListener].
-/// The same object is later exposed as [SessionCreationOptions] to the
-/// stateful session constructor.
+/// This extends [CommonOptions] with stateful session concerns such as
+/// flush mode, transaction auto-join, auto-close/auto-clear, identifier
+/// rollback, and custom [listeners][SessionEventListener]. The same
+/// object is later exposed as [SessionCreationOptions] to the stateful
+/// session constructor.
 ///
 /// @since 8.0
 /// @author Steve Ebersole
@@ -33,8 +33,6 @@ public class StatefulOptions extends CommonOptions implements SessionCreationOpt
 	private boolean autoClear;
 	private boolean identifierRollback;
 	private FlushMode flushMode;
-	private int defaultBatchFetchSize;
-	private boolean subselectFetchEnabled;
 
 	// Lazy: defaults are built only when overriding the factory-level listeners.
 	// Need a fresh build for each Session as the listener instances can't be
@@ -46,8 +44,6 @@ public class StatefulOptions extends CommonOptions implements SessionCreationOpt
 		final var options = sessionFactory.getSessionFactoryOptions();
 		autoClose = options.isAutoCloseSessionEnabled();
 		identifierRollback = options.isIdentifierRollbackEnabled();
-		defaultBatchFetchSize = options.getDefaultBatchFetchSize();
-		subselectFetchEnabled = options.isSubselectFetchEnabled();
 	}
 
 	/**
@@ -78,16 +74,6 @@ public class StatefulOptions extends CommonOptions implements SessionCreationOpt
 	@Override
 	public FlushMode getInitialSessionFlushMode() {
 		return flushMode;
-	}
-
-	@Override
-	public boolean isSubselectFetchEnabled() {
-		return subselectFetchEnabled;
-	}
-
-	@Override
-	public int getDefaultBatchFetchSize() {
-		return defaultBatchFetchSize;
 	}
 
 	@Override
@@ -157,13 +143,5 @@ public class StatefulOptions extends CommonOptions implements SessionCreationOpt
 		else {
 			listeners.clear();
 		}
-	}
-
-	public void defaultBatchFetchSize(int defaultBatchFetchSize) {
-		this.defaultBatchFetchSize = defaultBatchFetchSize;
-	}
-
-	public void subselectFetchEnabled(boolean subselectFetchEnabled) {
-		this.subselectFetchEnabled = subselectFetchEnabled;
 	}
 }

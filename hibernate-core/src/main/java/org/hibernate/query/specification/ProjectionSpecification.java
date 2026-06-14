@@ -4,14 +4,12 @@
  */
 package org.hibernate.query.specification;
 
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityHandler;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.specification.internal.ProjectionSpecificationImpl;
@@ -95,14 +93,8 @@ public interface ProjectionSpecification<T> extends QuerySpecification<Object[]>
 	 */
 	<X> Element<X> select(Path<T,X> path);
 
-		@Override
-	SelectionQuery<Object[]> createQuery(Session session);
-
 	@Override
-	SelectionQuery<Object[]> createQuery(StatelessSession session);
-
-	@Override
-	SelectionQuery<Object[]> createQuery(EntityManager entityManager);
+	SelectionQuery<Object[]> createQuery(EntityHandler entityHandler);
 
 	@Override
 	CriteriaQuery<Object[]> buildCriteria(CriteriaBuilder builder);

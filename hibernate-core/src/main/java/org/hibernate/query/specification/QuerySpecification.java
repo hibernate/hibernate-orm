@@ -4,14 +4,13 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.persistence.EntityHandler;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Reference;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.Incubating;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.restriction.Restriction;
 
@@ -23,7 +22,7 @@ import org.hibernate.query.restriction.Restriction;
  * {@linkplain SelectionSpecification#fetch fetching} to be added to
  * a predefined HQL or criteria query.
  * <ul>
- * <li>{@link #createQuery(EntityManager)} obtains an executable
+ * <li>{@link #createQuery(EntityHandler)} obtains an executable
  *     query object associated with the given session.
  * <li>{@link #buildCriteria(CriteriaBuilder)} transforms the
  *     specification to a {@link CommonAbstractCriteria criteria query}.
@@ -57,17 +56,7 @@ public interface QuerySpecification<T> {
 	/**
 	 * Finalize the building and create executable query instance.
 	 */
-	CommonQueryContract createQuery(Session session);
-
-	/**
-	 * Finalize the building and create executable query instance.
-	 */
-	CommonQueryContract createQuery(StatelessSession session);
-
-	/**
-	 * Finalize the building and create executable query instance.
-	 */
-	CommonQueryContract createQuery(EntityManager entityManager);
+	CommonQueryContract createQuery(EntityHandler entityHandler);
 
 	/**
 	 * Build a {@link CommonAbstractCriteria criteria query}

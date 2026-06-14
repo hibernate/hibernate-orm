@@ -8,11 +8,8 @@ import jakarta.persistence.FindOption;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
-import org.hibernate.KeyType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NaturalIdSynchronization;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -22,16 +19,15 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.entity.EntityPersister;
 
-import java.util.HashSet;
-import java.util.function.Supplier;
-
-import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
-import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
-
-/**
- * @author Steve Ebersole
- */
-@SuppressWarnings("unchecked")
+/// Support for loading a single entity by key by either
+/// [id][org.hibernate.KeyType#IDENTIFIER] or
+/// [natural id][org.hibernate.KeyType#NATURAL]
+/// from a [stateless session][org.hibernate.StatelessSession].
+///
+/// @see org.hibernate.StatelessSession#find
+/// @see org.hibernate.KeyType
+///
+/// @author Steve Ebersole
 public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T> {
 	private final StatelessLoadAccessContext loadAccessContext;
 
@@ -51,132 +47,54 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 		this.loadAccessContext = loadAccessContext;
 	}
 
-	@Override
-	protected SharedSessionContractImplementor getEntityHandler() {
+	private StatelessSessionImplementor getSession() {
 		return loadAccessContext.getStatelessSession();
 	}
 
 	@Override
-	public T performFind(Object key) {
-		checkTransactionNeededForLock();
-
-		return withExceptionHandling( key, makeLockOptions(), () -> {
-			if ( getKeyType() == KeyType.NATURAL ) {
-				return findByNaturalId( key );
-			}
-			else {
-				return findById( key );
-			}
-		} );
+	protected SharedSessionContractImplementor getEntityHandler() {
+		return getSession();
 	}
 
-	private T findByNaturalId(Object key) {
-		final var session = loadAccessContext.getStatelessSession();
-
-		performAnyNeededCrossReferenceSynchronizations(
-				getNaturalIdSynchronization() != NaturalIdSynchronization.DISABLED,
-				getEntityDescriptor(),
-				session
-		);
-
-		final var normalizedKey = Helper.coerceNaturalId( getEntityDescriptor(), key );
-
-		final Object cachedResolution = getCachedNaturalIdResolution( normalizedKey, session );
-		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
-			return null;
-		}
-
-		if ( cachedResolution != null ) {
-			return findById( cachedResolution );
-		}
-
-		return withOptions( session, () -> (T) getEntityDescriptor()
-				.getNaturalIdLoader()
-				.load( normalizedKey, this, session ) );
+	@Override
+	protected CacheMode getCacheModeForOptions() {
+		return CacheMode.fromJpaModes( getCacheRetrieveMode(), getCacheStoreMode() );
 	}
 
-	private T withOptions(StatelessSessionImplementor session, Supplier<T> action) {
-		final var persistenceContext = session.getPersistenceContextInternal();
-
-		final var sessionCacheMode = session.getCacheMode();
-		final var cacheMode = CacheMode.fromJpaModes( getCacheRetrieveMode(), getCacheStoreMode() );
-		boolean cacheModeChanged = false;
-		try {
-			if ( cacheMode != null ) {
-				if ( cacheMode != sessionCacheMode ) {
-					session.setCacheMode( cacheMode );
-					cacheModeChanged = true;
-				}
-			}
-
-			final var influencers = session.getLoadQueryInfluencers();
-			HashSet<String> fetchProfiles = null;
-			EffectiveEntityGraph effectiveEntityGraph = null;
-
-			try {
-				fetchProfiles = influencers.adjustFetchProfiles( null, getEnabledFetchProfiles() );
-				effectiveEntityGraph = getRootGraph() == null
-						? null
-						: influencers.applyEntityGraph( getRootGraph(), getGraphSemantic() );
-
-				return action.get();
-			}
-			finally {
-				if ( effectiveEntityGraph != null ) {
-					effectiveEntityGraph.clear();
-				}
-				if ( fetchProfiles != null ) {
-					influencers.setEnabledFetchProfileNames( fetchProfiles );
-				}
-			}
-		}
-		finally {
-			if ( cacheModeChanged ) {
-				// change it back
-				session.setCacheMode( sessionCacheMode );
-			}
-
-			if ( persistenceContext.isLoadFinished() ) {
-				persistenceContext.clear();
-			}
+	@Override
+	protected void afterOptions() {
+		final var persistenceContext = getSession().getPersistenceContextInternal();
+		if ( persistenceContext.isLoadFinished() ) {
+			persistenceContext.clear();
 		}
 	}
 
-	private Object getCachedNaturalIdResolution(
-			Object normalizedNaturalIdValue,
-			StatelessSessionImplementor session) {
-		return session
-				.getPersistenceContextInternal()
-				.getNaturalIdResolutions()
-				.findCachedIdByNaturalId( normalizedNaturalIdValue, getEntityDescriptor() );
-	}
-
-	private T findById(Object key) {
+	@Override
+	protected T findById(Object key) {
 		final Object keyToLoad =
 				Helper.coerceId( getEntityDescriptor(), key,
-						loadAccessContext.getStatelessSession().getFactory() );
+						getSession().getFactory() );
 
-		final var session = loadAccessContext.getStatelessSession();
-
-		final var temporaryPersistenceContext = session.getPersistenceContext();
-			if ( getEntityDescriptor().canReadFromCache() ) {
-				final Object cachedEntity = loadFromSecondLevelCache( key, loadAccessContext );
-				if ( cachedEntity != null ) {
-					if ( temporaryPersistenceContext.isLoadFinished() ) {
-						temporaryPersistenceContext.clear();
-					}
-					//noinspection unchecked
-					return (T) cachedEntity;
+		if ( getEntityDescriptor().canReadFromCache() ) {
+			final Object cachedEntity = loadFromSecondLevelCache( key, loadAccessContext );
+			if ( cachedEntity != null ) {
+				final var temporaryPersistenceContext = getSession().getPersistenceContext();
+				if ( temporaryPersistenceContext.isLoadFinished() ) {
+					temporaryPersistenceContext.clear();
 				}
+				//noinspection unchecked
+				return (T) cachedEntity;
 			}
+		}
 
-		return withOptions( session, ()-> {
+		return withOptions( () -> {
 			final Object result = getEntityDescriptor().load(
 					keyToLoad,
 					null,
 					getNullSafeLockMode(),
-					session
+					getSession()
 			);
+			//noinspection unchecked
 			return (T) result;
 		} );
 	}

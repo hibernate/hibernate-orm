@@ -48,10 +48,13 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import static org.hibernate.Timeouts.WAIT_FOREVER;
+import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
+import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 
-/// Base support for loading a single entity by key (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL]).
+/// Base support for loading a single entity by key
+/// (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL]).
 ///
 /// @see KeyType
 ///
@@ -219,6 +222,114 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 
 	public NaturalIdSynchronization getNaturalIdSynchronization() {
 		return naturalIdSynchronization;
+	}
+
+	@Override
+	public T performFind(Object key) {
+		checkTransactionNeededForLock();
+
+		return withExceptionHandling( key, makeLockOptions(), () -> {
+			if ( getKeyType() == KeyType.NATURAL ) {
+				return findByNaturalId( key );
+			}
+			else {
+				return findById( key );
+			}
+		} );
+	}
+
+	private T findByNaturalId(Object key) {
+		final var session = getEntityHandler();
+
+		performAnyNeededCrossReferenceSynchronizations(
+				getNaturalIdSynchronization() != NaturalIdSynchronization.DISABLED,
+				getEntityDescriptor(),
+				session
+		);
+
+		final var normalizedKey = Helper.coerceNaturalId( getEntityDescriptor(), key );
+
+		final Object cachedResolution = getCachedNaturalIdResolution( normalizedKey );
+		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
+			return null;
+		}
+
+		if ( cachedResolution != null ) {
+			return findById( cachedResolution );
+		}
+
+		return withOptions( () -> {
+			@SuppressWarnings("unchecked")
+			final T loaded = (T) getEntityDescriptor().getNaturalIdLoader()
+					.load( normalizedKey, this, session );
+			return handleNaturalIdLoadResult( loaded );
+		} );
+	}
+
+	protected abstract T findById(Object key);
+
+	protected T handleNaturalIdLoadResult(T loaded) {
+		return loaded;
+	}
+
+	protected Object getCachedNaturalIdResolution(Object normalizedNaturalIdValue) {
+		beforeCachedNaturalIdResolution();
+		return getEntityHandler()
+				.getPersistenceContextInternal()
+				.getNaturalIdResolutions()
+				.findCachedIdByNaturalId( normalizedNaturalIdValue, getEntityDescriptor() );
+	}
+
+	protected void beforeCachedNaturalIdResolution() {
+	}
+
+	protected T withOptions(Supplier<T> action) {
+		final var session = getEntityHandler();
+		final var sessionCacheMode = session.getCacheMode();
+		final var cacheMode = getCacheModeForOptions();
+		boolean cacheModeChanged = false;
+		try {
+			if ( cacheMode != null && cacheMode != sessionCacheMode ) {
+				session.setCacheMode( cacheMode );
+				cacheModeChanged = true;
+			}
+			return withLoadQueryInfluencers( action );
+		}
+		finally {
+			if ( cacheModeChanged ) {
+				session.setCacheMode( sessionCacheMode );
+			}
+			afterOptions();
+		}
+	}
+
+	protected CacheMode getCacheModeForOptions() {
+		return getCacheMode();
+	}
+
+	protected void afterOptions() {
+	}
+
+	private T withLoadQueryInfluencers(Supplier<T> action) {
+		final var influencers = getEntityHandler().getLoadQueryInfluencers();
+		final var fetchProfiles =
+				influencers.adjustFetchProfiles( null, getEnabledFetchProfiles() );
+		final var graph = getRootGraph();
+		final var effectiveEntityGraph =
+				graph == null
+						? null
+						: influencers.applyEntityGraph( graph, getGraphSemantic() );
+		try {
+			return action.get();
+		}
+		finally {
+			if ( effectiveEntityGraph != null ) {
+				effectiveEntityGraph.clear();
+			}
+			if ( fetchProfiles != null ) {
+				influencers.setEnabledFetchProfileNames( fetchProfiles );
+			}
+		}
 	}
 
 

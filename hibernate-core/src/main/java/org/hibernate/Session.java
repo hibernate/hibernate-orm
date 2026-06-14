@@ -485,9 +485,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/// {@inheritDoc}
 	///
-	/// @implNote Note that Hibernate's implementation of this method can
-	/// also be used for loading an entity by its [natural-id][org.hibernate.annotations.NaturalId]
-	/// by passing [KeyType#NATURAL] as a [FindOption] and the natural-id value as the `key` to load.
+	/// The option [KeyType#NATURAL] specifies that the given id should be interpreted as a
+	/// [natural id][org.hibernate.annotations.NaturalId].
 	///
 	/// @param entityType the entity type
 	/// @param id an identifier
@@ -503,17 +502,18 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// associated with the session, that instance is returned. This method never returns an
 	/// uninitialized instance.
 	///
-	/// Every object returned by `findMultiple()` is either an unproxied instance of the
-	/// given entity class, or a fully-fetched proxy object.
+	/// Every object returned by `findMultiple()` is either an unproxied instance of the given
+	/// entity class or a fully fetched proxy object.
 	///
-	/// This method accepts [BatchSize] as an option, allowing control over the number of
-	/// records retrieved in a single database request. The performance impact of setting a batch
-	/// size depends on whether a SQL array may be used to pass the list of identifiers to the
-	/// database:
+	/// This method accepts [FindMultipleOption.BatchSize] as an option, allowing control over
+	/// the number of records retrieved in a single database request. The performance impact of
+	/// setting a batch size depends on whether a SQL array may be used to pass the list of
+	/// identifiers to the database:
 	///
-	///   - for databases which [support standard SQL arrays][org.hibernate.dialect.Dialect#supportsStandardArrays],
-	/// 	a smaller batch size might be extremely inefficient compared to a very large batch size or
-	/// 	no batching at all, but
+	///   - for databases which
+	///     [support standard SQL arrays][org.hibernate.dialect.Dialect#supportsStandardArrays],
+	/// 	a smaller batch size might be extremely inefficient compared to a very large batch
+	///     size or no batching at all, but
 	///   - on the other hand, for databases with no SQL array type, a large batch size results
 	///     in long SQL statements with many JDBC parameters.
 	///
@@ -543,7 +543,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// Every object returned by `findMultiple()` is either an unproxied instance of the
 	/// given entity class, or a fully-fetched proxy object.
 	///
-	/// This method accepts [BatchSize] as an option, allowing control over the number of
+	/// This method accepts [FindMultipleOption.BatchSize] as an option, allowing control over the number of
 	/// records retrieved in a single database request. The performance impact of setting a batch
 	/// size depends on whether a SQL array may be used to pass the list of identifiers to the
 	/// database:

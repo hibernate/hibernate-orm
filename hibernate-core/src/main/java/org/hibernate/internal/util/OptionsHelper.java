@@ -16,7 +16,6 @@ import jakarta.persistence.Statement;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
-import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FlushMode;
@@ -65,11 +64,11 @@ public final class OptionsHelper {
 		else if ( option instanceof FlushModeType flushModeType ) {
 			options.flushMode( FlushMode.fromJpaFlushMode( flushModeType ) );
 		}
-		else if ( option instanceof BatchSize batchSize) {
-			options.jdbcBatchSize( batchSize.batchSize() );
-		}
 		else if ( option instanceof ReadOnlyMode readOnlyMode) {
 			options.readOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
+		}
+		else if ( option instanceof SessionCreationOption.FetchBatchSize fetchBatchSize ) {
+			options.defaultBatchFetchSize( fetchBatchSize.batchSize() );
 		}
 		else if ( option instanceof SessionCreationOption.BulkSelect bulkSelect ) {
 			options.subselectFetchEnabled( bulkSelect == SessionCreationOption.BulkSelect.ENABLED );
@@ -114,9 +113,6 @@ public final class OptionsHelper {
 		else if ( option instanceof ReadOnlyMode readOnlyMode ) {
 			session.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
 		}
-		else if ( option instanceof BatchSize batchSize ) {
-			session.setJdbcBatchSize( batchSize.batchSize() );
-		}
 		else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
 			session.enableFetchProfile( enabledFetchProfile.profileName() );
 		}
@@ -130,11 +126,9 @@ public final class OptionsHelper {
 		addIfNotNull( options, entityManager.getCacheStoreMode() );
 		addIfNotNull( options, entityManager.getFlushMode() );
 		addIfNotNull( options, entityManager.getHibernateFlushMode() );
+//		addIfNotNull( options, new SessionCreationOption.FetchBatchSize( entityManager.getFetchBatchSize() ) );
 		if ( entityManager.isDefaultReadOnly() ) {
 			options.add( ReadOnlyMode.READ_ONLY );
-		}
-		if ( entityManager.getJdbcBatchSize() != null ) {
-			options.add( new BatchSize( entityManager.getJdbcBatchSize() ) );
 		}
 		return options;
 	}
@@ -154,8 +148,11 @@ public final class OptionsHelper {
 		else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 			options.cacheRetrieveMode( cacheRetrieveMode );
 		}
-		else if ( option instanceof BatchSize batchSize) {
-			options.jdbcBatchSize( batchSize.batchSize() );
+		else if ( option instanceof SessionCreationOption.FetchBatchSize fetchBatchSize ) {
+			options.defaultBatchFetchSize( fetchBatchSize.batchSize() );
+		}
+		else if ( option instanceof SessionCreationOption.BulkSelect bulkSelect ) {
+			options.subselectFetchEnabled( bulkSelect == SessionCreationOption.BulkSelect.ENABLED );
 		}
 		else if ( option instanceof SessionCreationOption.TenantId tenantId ) {
 			options.tenantIdentifier( tenantId.value() );
@@ -186,9 +183,6 @@ public final class OptionsHelper {
 		else if ( option instanceof CacheStoreMode cacheStoreMode ) {
 			entityAgent.setCacheStoreMode( cacheStoreMode );
 		}
-		else if ( option instanceof BatchSize batchSize ) {
-			entityAgent.setJdbcBatchSize( batchSize.batchSize() );
-		}
 		else if ( option instanceof CacheMode cacheMode ) {
 			entityAgent.setCacheMode( cacheMode );
 		}
@@ -200,9 +194,6 @@ public final class OptionsHelper {
 		options.add( entityAgent.getCacheMode() );
 		addIfNotNull( options, entityAgent.getCacheRetrieveMode() );
 		addIfNotNull( options, entityAgent.getCacheStoreMode() );
-		if ( entityAgent.getJdbcBatchSize() != null ) {
-			options.add( new BatchSize( entityAgent.getJdbcBatchSize() ) );
-		}
 		return options;
 	}
 

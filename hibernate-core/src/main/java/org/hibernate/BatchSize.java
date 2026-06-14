@@ -4,8 +4,7 @@
  */
 package org.hibernate;
 
-import jakarta.persistence.EntityAgent;
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FindOption;
 
 import java.util.List;
@@ -41,16 +40,15 @@ import java.util.List;
  *
  * @param batchSize The batch size
  *
- * @see Session#findMultiple
- * @see MultiIdentifierLoadAccess#withBatchSize
- * @see jakarta.persistence.EntityManagerFactory#createEntityManager(EntityManager.CreationOption...)
- * @see jakarta.persistence.EntityManagerFactory#createEntityAgent(EntityAgent.CreationOption...)
- * @see EntityManager#addOption(EntityManager.Option)
- * @see EntityAgent#addOption(EntityAgent.Option)
+ * @see Session#findMultiple(Class, List, FindOption...)
+ * @see Session#findMultiple(EntityGraph, List, FindOption...)
  *
  * @since 7.0
  *
  * @author Gavin King
+ *
+ * @deprecated Use {@link FindMultipleOption.BatchSize}.
  */
-public record BatchSize(int batchSize) implements FindOption, EntityManager.Option, EntityAgent.Option {
+@Deprecated(since = "8.0", forRemoval = true)
+public record BatchSize(int batchSize) implements FindMultipleOption {
 }

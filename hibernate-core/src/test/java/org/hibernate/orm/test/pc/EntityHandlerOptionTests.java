@@ -7,7 +7,6 @@ package org.hibernate.orm.test.pc;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -62,40 +61,34 @@ public class EntityHandlerOptionTests {
 	@Test
 	@DomainModel(annotatedClasses = EntityHandlerOptionTests.TestEntity.class)
 	@SessionFactory
-	void testBatchSizeSession(SessionFactoryScope factoryScope) {
+	void testFetchBatchSizeSession(SessionFactoryScope factoryScope) {
 		var sf = factoryScope.getSessionFactory();
+		final int defaultBatchFetchSize = sf.getSessionFactoryOptions().getDefaultBatchFetchSize();
 
 		try (var em = sf.createEntityManager()) {
-			assertThat(em.getJdbcBatchSize()).isNull();
+			assertThat( em.getFetchBatchSize() ).isEqualTo( defaultBatchFetchSize );
 		}
 
-		try (var em = sf.createEntityManager(new BatchSize( 10 ) )) {
-			assertThat(em.getJdbcBatchSize()).isEqualTo(10);
-		}
-
-		try (var em = sf.createEntityManager()) {
-			em.addOption( new BatchSize( 20 ) );
-			assertThat(em.getJdbcBatchSize()).isEqualTo(20);
+		try (var em = sf.createEntityManager( new SessionCreationOption.FetchBatchSize( 10 ) )) {
+			assertThat( em.getFetchBatchSize() ).isEqualTo( 10 );
 		}
 	}
 
 	@Test
 	@DomainModel(annotatedClasses = EntityHandlerOptionTests.TestEntity.class)
 	@SessionFactory
-	void testBatchSizeStateless(SessionFactoryScope factoryScope) {
+	void testFetchBatchSizeStateless(SessionFactoryScope factoryScope) {
 		var sf = factoryScope.getSessionFactory();
+		final int defaultBatchFetchSize = sf.getSessionFactoryOptions().getDefaultBatchFetchSize();
 
 		try (var em = sf.createEntityAgent()) {
-			assertThat(em.getJdbcBatchSize()).isEqualTo(0);
+			assertThat( em.unwrap( StatelessSessionImplementor.class ).getLoadQueryInfluencers().getBatchSize() )
+					.isEqualTo( defaultBatchFetchSize );
 		}
 
-		try (var em = sf.createEntityAgent(new BatchSize( 10 ) )) {
-			assertThat(em.getJdbcBatchSize()).isEqualTo(10);
-		}
-
-		try (var em = sf.createEntityAgent()) {
-			em.addOption( new BatchSize( 20 ) );
-			assertThat(em.getJdbcBatchSize()).isEqualTo(20);
+		try (var em = sf.createEntityAgent( new SessionCreationOption.FetchBatchSize( 10 ) )) {
+			assertThat( em.unwrap( StatelessSessionImplementor.class ).getLoadQueryInfluencers().getBatchSize() )
+					.isEqualTo( 10 );
 		}
 	}
 

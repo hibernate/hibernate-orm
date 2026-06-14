@@ -179,6 +179,9 @@ public class StatelessSessionImpl
 		temporaryPersistenceContext = createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
 		influencers.setTemporalIdentifier( options.getTemporalIdentifier() );
+		for ( var enabledFilterOption : options.getEnabledFilterOptions() ) {
+			influencers.enableFilter( enabledFilterOption );
+		}
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
 		if ( getJdbcBatchSize() == null ) {

@@ -8,35 +8,28 @@ import jakarta.persistence.FindOption;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
-import org.hibernate.KeyType;
 import org.hibernate.LockOptions;
-import org.hibernate.NaturalIdSynchronization;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.ReadOnlyMode;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 
-import java.util.HashSet;
-import java.util.function.Supplier;
-
-import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
-import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
-import static org.hibernate.internal.find.Helper.checkTransactionNeededForLock;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
-/// Support for loading a single entity by key (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL])
-/// from a [[org.hibernate.Session] stateful session].
+/// Support for loading a single entity by key by either
+/// [id][org.hibernate.KeyType#IDENTIFIER] or
+/// [natural id][org.hibernate.KeyType#NATURAL]
+/// from a [stateful session][org.hibernate.Session].
 ///
 /// @see org.hibernate.Session#find
-/// @see KeyType
+/// @see org.hibernate.KeyType
 ///
 /// @author Steve Ebersole
 public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T> {
@@ -61,128 +54,43 @@ public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T>
 		this.loadAccessContext = loadAccessContext;
 	}
 
-	@Override
-	protected SharedSessionContractImplementor getEntityHandler() {
+	private SessionImplementor getSession() {
 		return loadAccessContext.getSession();
 	}
 
 	@Override
-	public T performFind(Object key) {
-		checkTransactionNeededForLock();
-
-		return withExceptionHandling( key, makeLockOptions(), () -> {
-			if ( getKeyType() == KeyType.NATURAL ) {
-				return findByNaturalId( key );
-			}
-			else {
-				return findById( key );
-			}
-		} );
+	protected SharedSessionContractImplementor getEntityHandler() {
+		return getSession();
 	}
 
-	private T findByNaturalId(Object key) {
-		final var session = loadAccessContext.getSession();
-
-		performAnyNeededCrossReferenceSynchronizations(
-				getNaturalIdSynchronization() != NaturalIdSynchronization.DISABLED,
-				getEntityDescriptor(),
-				session
-		);
-
-		final var normalizedKey = Helper.coerceNaturalId( getEntityDescriptor(), key );
-
-		final Object cachedResolution = getCachedNaturalIdResolution( normalizedKey, loadAccessContext );
-		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
-			return null;
-		}
-
-		if ( cachedResolution != null ) {
-			return findById( cachedResolution );
-		}
-
-		return withOptions( loadAccessContext, () -> {
-			@SuppressWarnings("unchecked")
-			final T loaded = (T) getEntityDescriptor().getNaturalIdLoader()
-							.load( normalizedKey, this, session );
-			if ( loaded != null ) {
-				final var persistenceContext = session.getPersistenceContextInternal();
-				final var lazyInitializer = HibernateProxy.extractLazyInitializer( loaded );
-				final var entity = lazyInitializer != null ? lazyInitializer.getImplementation() : loaded;
-				final var entry = persistenceContext.getEntry( entity );
-				assert entry != null;
-				if ( entry.getStatus() == Status.DELETED ) {
-					return null;
-				}
+	@Override
+	protected T handleNaturalIdLoadResult(T loaded) {
+		if ( loaded != null ) {
+			final var lazyInitializer = extractLazyInitializer( loaded );
+			final var entity = lazyInitializer != null ? lazyInitializer.getImplementation() : loaded;
+			final var entry = getSession().getPersistenceContextInternal().getEntry( entity );
+			assert entry != null;
+			if ( entry.getStatus() == Status.DELETED ) {
+				return null;
 			}
-			return loaded;
-		} );
+		}
+		return loaded;
 	}
 
-	private T withOptions(StatefulLoadAccessContext loadAccessContext, Supplier<T> action) {
-		final var session = loadAccessContext.getSession();
-
-		final var sessionCacheMode = session.getCacheMode();
-		final var cacheMode = getCacheMode();
-		boolean cacheModeChanged = false;
-		try {
-			if ( cacheMode != null ) {
-				if ( cacheMode != sessionCacheMode ) {
-					session.setCacheMode( cacheMode );
-					cacheModeChanged = true;
-				}
-			}
-
-			final var influencers = session.getLoadQueryInfluencers();
-			HashSet<String> fetchProfiles = null;
-			EffectiveEntityGraph effectiveEntityGraph = null;
-
-			try {
-				fetchProfiles = influencers.adjustFetchProfiles( null, getEnabledFetchProfiles() );
-				effectiveEntityGraph = getRootGraph() == null
-						? null
-						: influencers.applyEntityGraph( getRootGraph(), getGraphSemantic() );
-
-				return action.get();
-			}
-			finally {
-				if ( effectiveEntityGraph != null ) {
-					effectiveEntityGraph.clear();
-				}
-				if ( fetchProfiles != null ) {
-					influencers.setEnabledFetchProfileNames( fetchProfiles );
-				}
-			}
-		}
-		finally {
-			if ( cacheModeChanged ) {
-				// change it back
-				session.setCacheMode( sessionCacheMode );
-			}
-		}
-	}
-
-	private Object getCachedNaturalIdResolution(
-			Object normalizedNaturalIdValue,
-			StatefulLoadAccessContext loadAccessContext) {
+	@Override
+	protected void beforeCachedNaturalIdResolution() {
 		loadAccessContext.checkOpenOrWaitingForAutoClose();
 		loadAccessContext.pulseTransactionCoordinator();
-
-		return loadAccessContext
-				.getSession()
-				.getPersistenceContextInternal()
-				.getNaturalIdResolutions()
-				.findCachedIdByNaturalId( normalizedNaturalIdValue, getEntityDescriptor() );
 	}
 
-	private T findById(Object key) {
-		return withOptions( loadAccessContext, () -> {
-			final var session = loadAccessContext.getSession();
-
+	@Override
+	protected T findById(Object key) {
+		return withOptions( () -> {
 			Object result;
 			try {
 				result = loadAccessContext.load(
 						LoadEventListener.GET,
-						coerceId( key, session.getFactory() ),
+						coerceId( key, getSession().getFactory() ),
 						getEntityDescriptor().getEntityName(),
 						makeLockOptions(),
 						getReadOnlyMode() == ReadOnlyMode.READ_ONLY

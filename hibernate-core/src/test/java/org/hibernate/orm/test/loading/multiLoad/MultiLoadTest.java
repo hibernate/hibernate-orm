@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -106,6 +107,90 @@ public class MultiLoadTest {
 				assertThat( paramCount, is( 5 ) );
 			}
 		} );
+	}
+
+	@Test
+	public void testStatelessMultiLoadWithBatchSize(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		scope.inStatelessTransaction(session -> {
+			statementInspector.clear();
+
+			final List<SimpleEntity> list = session.findMultiple(
+					SimpleEntity.class,
+					ids( 5 ),
+					CacheMode.IGNORE,
+					new FindMultipleOption.BatchSize( 2 )
+			);
+
+			assertEquals( 5, list.size() );
+			assertEquals( 3, statementInspector.getSqlQueries().size() );
+		} );
+		scope.inStatelessTransaction(session -> {
+			statementInspector.clear();
+
+			final List<SimpleEntity> list = session.getMultiple(
+					SimpleEntity.class,
+					ids( 5 ),
+					CacheMode.IGNORE,
+					new FindMultipleOption.BatchSize( 2 )
+			);
+
+			assertEquals( 5, list.size() );
+			assertEquals( 3, statementInspector.getSqlQueries().size() );
+		} );
+	}
+
+	@Test
+	public void testStatelessFindMultipleWithUnorderedReturn(SessionFactoryScope scope) {
+		scope.inStatelessTransaction(session -> {
+			final List<SimpleEntity> list = session.findMultiple(
+					SimpleEntity.class,
+					List.of( 1, 699, 2 ),
+					FindMultipleOption.OrderingMode.UNORDERED
+			);
+
+			assertEquals( 2, list.size() );
+		} );
+	}
+
+	@Test
+	public void testMultiLoadRejectsExcludeRemovalsWithOrderedReturn(SessionFactoryScope scope) {
+		scope.inTransaction(session ->
+				assertThrows( IllegalArgumentException.class, () -> session.findMultiple(
+						SimpleEntity.class,
+						ids( 3 ),
+						FindMultipleOption.SessionCheckMode.ENABLED,
+						FindMultipleOption.RemovalsMode.EXCLUDE,
+						FindMultipleOption.OrderingMode.ORDERED
+				) )
+		);
+		scope.inTransaction(session ->
+				assertThrows( IllegalArgumentException.class, () -> session.getMultiple(
+						SimpleEntity.class,
+						ids( 3 ),
+						FindMultipleOption.SessionCheckMode.ENABLED,
+						FindMultipleOption.RemovalsMode.EXCLUDE,
+						FindMultipleOption.OrderingMode.ORDERED
+				) )
+		);
+		scope.inStatelessTransaction(session ->
+				assertThrows( IllegalArgumentException.class, () -> session.findMultiple(
+						SimpleEntity.class,
+						ids( 3 ),
+						FindMultipleOption.SessionCheckMode.ENABLED,
+						FindMultipleOption.RemovalsMode.EXCLUDE,
+						FindMultipleOption.OrderingMode.ORDERED
+				) )
+		);
+		scope.inStatelessTransaction(session ->
+				assertThrows( IllegalArgumentException.class, () -> session.getMultiple(
+						SimpleEntity.class,
+						ids( 3 ),
+						FindMultipleOption.SessionCheckMode.ENABLED,
+						FindMultipleOption.RemovalsMode.EXCLUDE,
+						FindMultipleOption.OrderingMode.ORDERED
+				) )
+		);
 	}
 
 	@Test

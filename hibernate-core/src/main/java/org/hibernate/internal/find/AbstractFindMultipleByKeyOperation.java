@@ -25,6 +25,8 @@ import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
@@ -33,8 +35,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static org.hibernate.Timeouts.WAIT_FOREVER;
+import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
 import static org.hibernate.internal.find.Helper.checkTransactionNeededForLock;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 
@@ -240,6 +244,37 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 	public NaturalIdSynchronization getNaturalIdSynchronization() {
 		return naturalIdSynchronization;
 	}
+
+	protected List<T> findByNaturalIds(
+			List<?> keys,
+			SharedSessionContractImplementor session,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<T> rootGraph) {
+		final var entityDescriptor = getEntityDescriptor();
+		final var naturalIdMapping = entityDescriptor.requireNaturalIdMapping();
+		performAnyNeededCrossReferenceSynchronizations(
+				getNaturalIdSynchronization() != NaturalIdSynchronization.DISABLED,
+				entityDescriptor,
+				session
+		);
+		return withOptions( session, graphSemantic, rootGraph, () -> {
+			// normalize the incoming natural-id values and get them in array form as needed
+			// by MultiNaturalIdLoader
+			final Object[] naturalIds = new Object[keys.size()];
+			for ( int i = 0; i < keys.size(); i++ ) {
+				naturalIds[i] = naturalIdMapping.normalizeInput( keys.get( i ) );
+			}
+			//noinspection unchecked
+			return (List<T>) entityDescriptor.getMultiNaturalIdLoader()
+					.multiLoad( naturalIds, this, session );
+		} );
+	}
+
+	protected abstract List<T> withOptions(
+			SharedSessionContractImplementor session,
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<T> rootGraph,
+			Supplier<List<T>> action);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// MultiIdLoadOptions & MultiNaturalIdLoadOptions

@@ -11,6 +11,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.KeyType;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -45,17 +46,11 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 			List<?> keys,
 			@Nullable GraphSemantic graphSemantic,
 			@Nullable RootGraphImplementor<T> rootGraph) {
-		checkFindRequirements( keys, loadAccessContext.getStatelessSession() );
+		final var session = loadAccessContext.getStatelessSession();
+		checkFindRequirements( keys, session );
 		return getKeyType() == KeyType.NATURAL
-				? findByNaturalIds( keys, graphSemantic, rootGraph )
+				? findByNaturalIds( keys, session, graphSemantic, rootGraph )
 				: findByIds( keys, graphSemantic, rootGraph );
-	}
-
-	private List<T> findByNaturalIds(
-			List<?> keys,
-			GraphSemantic graphSemantic,
-			RootGraphImplementor<T> rootGraph) {
-		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 
 	private List<T> findByIds(
@@ -72,11 +67,13 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 		} );
 	}
 
-	private List<T> withOptions(
-			StatelessSessionImplementor session,
+	@Override
+	protected List<T> withOptions(
+			SharedSessionContractImplementor sharedSession,
 			GraphSemantic graphSemantic,
 			RootGraphImplementor<T> rootGraph,
 			Supplier<List<T>> action) {
+		final var session = (StatelessSessionImplementor) sharedSession;
 		final var influencers = session.getLoadQueryInfluencers();
 		final var fetchProfiles = influencers.adjustFetchProfiles( getDisabledFetchProfiles(), getEnabledFetchProfiles() );
 		final var effectiveEntityGraph = rootGraph == null

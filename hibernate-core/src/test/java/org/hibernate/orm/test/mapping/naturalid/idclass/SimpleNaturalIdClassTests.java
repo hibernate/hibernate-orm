@@ -90,6 +90,16 @@ public class SimpleNaturalIdClassTests {
 	}
 
 	@Test
+	void testStatelessFindMultipleBySimple(SessionFactoryScope factoryScope) {
+		factoryScope.inStatelessTransaction( (session) -> {
+			var results = session.findMultiple( User.class, List.of( "steve", "john" ), KeyType.NATURAL );
+			assertThat( results ).hasSize( 2 );
+			assertEquals( 1, results.get( 0 ).id );
+			assertNull( results.get( 1 ) );
+		} );
+	}
+
+	@Test
 	void testFindByClass(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			var result = session.find( SystemUser.class, new SystemUserKey("steve", "ci"), KeyType.NATURAL );
@@ -103,6 +113,19 @@ public class SimpleNaturalIdClassTests {
 			var results = session.findMultiple( SystemUser.class, List.of( new SystemUserKey("steve", "ci") ), KeyType.NATURAL );
 			assertThat( results ).hasSize( 1 );
 			assertEquals( 1,  results.get( 0 ).id );
+		} );
+	}
+
+	@Test
+	void testStatelessGetMultipleByClass(SessionFactoryScope factoryScope) {
+		factoryScope.inStatelessTransaction( (session) -> {
+			var results = session.getMultiple(
+					SystemUser.class,
+					List.of( new SystemUserKey( "steve", "ci" ) ),
+					KeyType.NATURAL
+			);
+			assertThat( results ).hasSize( 1 );
+			assertEquals( 1, results.get( 0 ).id );
 		} );
 	}
 

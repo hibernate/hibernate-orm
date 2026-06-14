@@ -17,6 +17,7 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.ParamDef;
@@ -71,6 +72,7 @@ import org.hibernate.boot.models.categorize.spi.UserTypeRegistration;
 import org.hibernate.boot.models.xml.internal.QueryProcessing;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableHints;
@@ -98,6 +100,7 @@ import jakarta.persistence.AttributeConverter;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.models.JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY;
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.models.xml.internal.QueryProcessing.collectResultClasses;
 import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -112,6 +115,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private final ModelsContext modelsContext;
 	private final ClassDetailsRegistry classDetailsRegistry;
 	private final AnnotationDescriptorRegistry descriptorRegistry;
+	private final Dialect dialect;
 
 	private List<JpaEventListener> jpaEventListeners;
 	private List<ConversionRegistration> converterRegistrations;
@@ -136,16 +140,29 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private List<DatabaseObjectRegistration> databaseObjectRegistrations;
 
 	public GlobalRegistrationsImpl(ModelsContext modelsContext) {
-		this( modelsContext, modelsContext.getClassDetailsRegistry(), modelsContext.getAnnotationDescriptorRegistry() );
+		this( modelsContext, modelsContext.getClassDetailsRegistry(), modelsContext.getAnnotationDescriptorRegistry(), null );
+	}
+
+	public GlobalRegistrationsImpl(ModelsContext modelsContext, Dialect dialect) {
+		this( modelsContext, modelsContext.getClassDetailsRegistry(), modelsContext.getAnnotationDescriptorRegistry(), dialect );
 	}
 
 	public GlobalRegistrationsImpl(
 			ModelsContext modelsContext,
 			ClassDetailsRegistry classDetailsRegistry,
 			AnnotationDescriptorRegistry descriptorRegistry) {
+		this( modelsContext, classDetailsRegistry, descriptorRegistry, null );
+	}
+
+	public GlobalRegistrationsImpl(
+			ModelsContext modelsContext,
+			ClassDetailsRegistry classDetailsRegistry,
+			AnnotationDescriptorRegistry descriptorRegistry,
+			Dialect dialect) {
 		this.modelsContext = modelsContext;
 		this.classDetailsRegistry = classDetailsRegistry;
 		this.descriptorRegistry = descriptorRegistry;
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -1012,11 +1029,24 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	// Filter-defs
 
 	public void collectFilterDefinitions(AnnotationTarget annotationTarget) {
-		annotationTarget.forEachAnnotationUsage( FilterDef.class, modelsContext, (usage) -> collectFilterDefinition(
-				usage.name(),
-				usage.defaultCondition(),
-				extractFilterParameters( usage )
-		) );
+		final FilterDefs filterDefs = dialect == null ? null
+				: getOverridableAnnotation( annotationTarget, FilterDefs.class, dialect, modelsContext );
+		if ( filterDefs != null ) {
+			for ( FilterDef filterDef : filterDefs.value() ) {
+				collectFilterDefinition(
+						filterDef.name(),
+						filterDef.defaultCondition(),
+						extractFilterParameters( filterDef )
+				);
+			}
+		}
+		else {
+			annotationTarget.forEachAnnotationUsage( FilterDef.class, modelsContext, (usage) -> collectFilterDefinition(
+					usage.name(),
+					usage.defaultCondition(),
+					extractFilterParameters( usage )
+			) );
+		}
 	}
 
 	private Map<String, ClassDetails> extractFilterParameters(FilterDef source) {

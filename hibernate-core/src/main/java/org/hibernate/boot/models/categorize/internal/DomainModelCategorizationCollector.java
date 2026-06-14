@@ -16,6 +16,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 
@@ -39,9 +40,10 @@ public class DomainModelCategorizationCollector {
 
 	public DomainModelCategorizationCollector(
 			boolean areIdGeneratorsGlobal,
-			ModelsContext modelsContext) {
+			ModelsContext modelsContext,
+			Dialect dialect) {
 		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
-		this.globalRegistrations = new GlobalRegistrationsImpl( modelsContext );
+		this.globalRegistrations = new GlobalRegistrationsImpl( modelsContext, dialect );
 	}
 
 	public Set<ClassDetails> getRootEntities() {

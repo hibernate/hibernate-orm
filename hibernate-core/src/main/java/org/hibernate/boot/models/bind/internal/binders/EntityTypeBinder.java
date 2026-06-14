@@ -19,6 +19,7 @@ import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.NaturalIdClass;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
@@ -46,6 +47,7 @@ import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.categorize.spi.NaturalIdCacheRegion;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
@@ -77,6 +79,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import static org.hibernate.boot.models.bind.ModelBindingLogging.MODEL_BINDING_LOGGER;
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotationUsages;
 import static org.hibernate.internal.util.StringHelper.coalesce;
 
 /// Binder for binding an entity type to a {@link PersistentClass}.
@@ -817,7 +821,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			BindingContext bindingContext) {
 		final InheritanceType inheritanceType = managedType.getHierarchy().getInheritanceType();
 		final DiscriminatorColumn columnAnn = managedType.getClassDetails().getDirectAnnotationUsage( DiscriminatorColumn.class );
-		final DiscriminatorFormula formulaAnn = managedType.getClassDetails().getDirectAnnotationUsage( DiscriminatorFormula.class );
+		final DiscriminatorFormula formulaAnn = getOverridableAnnotation(
+				managedType.getClassDetails(),
+				DiscriminatorFormula.class,
+				bindingState.getDatabase().getDialect(),
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
 
 		if ( columnAnn != null && formulaAnn != null ) {
 			throw new MappingException( "Entity defined both @DiscriminatorColumn and @DiscriminatorFormula - " + typeBinding.getEntityName() );
@@ -996,9 +1005,21 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 	private void processCustomSql(ClassDetails classDetails) {
 		final String primaryTableName = binding.getTable().getName();
-		SQLInsert sqlInsert = resolveCustomSqlAnnotation( classDetails, SQLInsert.class, primaryTableName, getBindingContext() );
+		SQLInsert sqlInsert = resolveCustomSqlAnnotation(
+				classDetails,
+				SQLInsert.class,
+				primaryTableName,
+				getBindingState().getDatabase().getDialect(),
+				getBindingContext()
+		);
 		if ( sqlInsert == null ) {
-			sqlInsert = resolveCustomSqlAnnotation( classDetails, SQLInsert.class, "", getBindingContext() );
+			sqlInsert = resolveCustomSqlAnnotation(
+					classDetails,
+					SQLInsert.class,
+					"",
+					getBindingState().getDatabase().getDialect(),
+					getBindingContext()
+			);
 		}
 		if ( sqlInsert != null ) {
 			binding.setCustomSqlInsert( org.hibernate.mapping.CustomSqlMapping.customSqlMapping(
@@ -1009,9 +1030,21 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			) );
 		}
 
-		SQLUpdate sqlUpdate = resolveCustomSqlAnnotation( classDetails, SQLUpdate.class, primaryTableName, getBindingContext() );
+		SQLUpdate sqlUpdate = resolveCustomSqlAnnotation(
+				classDetails,
+				SQLUpdate.class,
+				primaryTableName,
+				getBindingState().getDatabase().getDialect(),
+				getBindingContext()
+		);
 		if ( sqlUpdate == null ) {
-			sqlUpdate = resolveCustomSqlAnnotation( classDetails, SQLUpdate.class, "", getBindingContext() );
+			sqlUpdate = resolveCustomSqlAnnotation(
+					classDetails,
+					SQLUpdate.class,
+					"",
+					getBindingState().getDatabase().getDialect(),
+					getBindingContext()
+			);
 		}
 		if ( sqlUpdate != null ) {
 			binding.setCustomSqlUpdate( org.hibernate.mapping.CustomSqlMapping.customSqlMapping(
@@ -1022,9 +1055,21 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			) );
 		}
 
-		SQLDelete sqlDelete = resolveCustomSqlAnnotation( classDetails, SQLDelete.class, primaryTableName, getBindingContext() );
+		SQLDelete sqlDelete = resolveCustomSqlAnnotation(
+				classDetails,
+				SQLDelete.class,
+				primaryTableName,
+				getBindingState().getDatabase().getDialect(),
+				getBindingContext()
+		);
 		if ( sqlDelete == null ) {
-			sqlDelete = resolveCustomSqlAnnotation( classDetails, SQLDelete.class, "", getBindingContext() );
+			sqlDelete = resolveCustomSqlAnnotation(
+					classDetails,
+					SQLDelete.class,
+					"",
+					getBindingState().getDatabase().getDialect(),
+					getBindingContext()
+			);
 		}
 		if ( sqlDelete != null ) {
 			binding.setCustomSqlDelete( org.hibernate.mapping.CustomSqlMapping.customSqlMapping(
@@ -1035,7 +1080,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			) );
 		}
 
-		final var sqlSelect = classDetails.getDirectAnnotationUsage( SQLSelect.class );
+		final var sqlSelect = getOverridableAnnotation(
+				classDetails,
+				SQLSelect.class,
+				getBindingState().getDatabase().getDialect(),
+				getBindingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( sqlSelect != null ) {
 			final String loaderName = binding.getEntityName() + "$SQLSelect";
 			binding.setLoaderName( loaderName );
@@ -1133,7 +1183,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private void processSqlRestriction(ClassDetails classDetails) {
-		final SQLRestriction restriction = classDetails.getDirectAnnotationUsage( SQLRestriction.class );
+		final SQLRestriction restriction = getOverridableAnnotation(
+				classDetails,
+				SQLRestriction.class,
+				getBindingState().getDatabase().getDialect(),
+				getBindingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( restriction == null ) {
 			return;
 		}
@@ -1148,10 +1203,15 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private void processFilters(ClassDetails classDetails, BindingState state, BindingContext context) {
-		final Filter[] filters = classDetails.getRepeatedAnnotationUsages(
-				Filter.class,
+		final Filters filtersContainer = getOverridableAnnotation(
+				classDetails,
+				Filters.class,
+				state.getDatabase().getDialect(),
 				context.getBootstrapContext().getModelsContext()
 		);
+		final Filter[] filters = filtersContainer == null
+				? classDetails.getRepeatedAnnotationUsages( Filter.class, context.getBootstrapContext().getModelsContext() )
+				: filtersContainer.value();
 		if ( filters.length == 0 ) {
 			return;
 		}
@@ -1242,6 +1302,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 				SQLInsert.class,
 				tableName,
 				logicalTableName,
+				getBindingState().getDatabase().getDialect(),
 				getBindingContext()
 		);
 		if ( sqlInsert != null ) {
@@ -1258,6 +1319,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 				SQLUpdate.class,
 				tableName,
 				logicalTableName,
+				getBindingState().getDatabase().getDialect(),
 				getBindingContext()
 		);
 		if ( sqlUpdate != null ) {
@@ -1274,6 +1336,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 				SQLDelete.class,
 				tableName,
 				logicalTableName,
+				getBindingState().getDatabase().getDialect(),
 				getBindingContext()
 		);
 		if ( sqlDelete != null ) {
@@ -1290,8 +1353,9 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			ClassDetails classDetails,
 			Class<A> annotationType,
 			String tableName,
+			Dialect dialect,
 			BindingContext bindingContext) {
-		return resolveCustomSqlAnnotation( classDetails, annotationType, tableName, tableName, bindingContext );
+		return resolveCustomSqlAnnotation( classDetails, annotationType, tableName, tableName, dialect, bindingContext );
 	}
 
 	private static <A extends java.lang.annotation.Annotation> A resolveCustomSqlAnnotation(
@@ -1299,9 +1363,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			Class<A> annotationType,
 			String tableName,
 			String alternateTableName,
+			Dialect dialect,
 			BindingContext bindingContext) {
-		for ( A annotation : classDetails.getRepeatedAnnotationUsages(
+		for ( A annotation : getOverridableAnnotationUsages(
+				classDetails,
 				annotationType,
+				dialect,
 				bindingContext.getBootstrapContext().getModelsContext()
 		) ) {
 			if ( annotation instanceof SQLInsert sqlInsert

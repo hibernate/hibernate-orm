@@ -78,6 +78,7 @@ import jakarta.persistence.TemporalType;
 import static jakarta.persistence.EnumType.ORDINAL;
 import static org.hibernate.annotations.TimeZoneStorageType.AUTO;
 import static org.hibernate.annotations.TimeZoneStorageType.COLUMN;
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 
 /// Applies source-model basic-value details to an `org.hibernate.mapping.BasicValue`.
 ///
@@ -149,7 +150,12 @@ public class BasicValueBinder {
 			return;
 		}
 
-		final GeneratedColumn generatedColumn = source.member().getDirectAnnotationUsage( GeneratedColumn.class );
+		final GeneratedColumn generatedColumn = getOverridableAnnotation(
+				source.member(),
+				GeneratedColumn.class,
+				basicValue.getBuildingContext().getMetadataCollector().getDatabase().getDialect(),
+				basicValue.getBuildingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( generatedColumn == null ) {
 			return;
 		}
@@ -178,7 +184,12 @@ public class BasicValueBinder {
 			return;
 		}
 
-		final ColumnDefault columnDefault = source.member().getDirectAnnotationUsage( ColumnDefault.class );
+		final ColumnDefault columnDefault = getOverridableAnnotation(
+				source.member(),
+				ColumnDefault.class,
+				basicValue.getBuildingContext().getMetadataCollector().getDatabase().getDialect(),
+				basicValue.getBuildingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( columnDefault == null ) {
 			return;
 		}

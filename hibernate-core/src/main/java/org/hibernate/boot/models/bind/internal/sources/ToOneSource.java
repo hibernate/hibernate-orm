@@ -19,6 +19,7 @@ import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.PropertyRef;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -34,6 +35,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
+
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 
 /// Source-model facts for an owning to-one association value.
 ///
@@ -230,7 +233,7 @@ public record ToOneSource(
 	}
 
 	/// Resolves value-side join columns and formulas.
-	public List<JoinColumnOrFormulaSource> valueJoinColumnsOrFormulas(JoinTable joinTable) {
+	public List<JoinColumnOrFormulaSource> valueJoinColumnsOrFormulas(JoinTable joinTable, Dialect dialect) {
 		if ( joinTable != null ) {
 			return listJoinColumnSources( joinTable.inverseJoinColumns() );
 		}
@@ -246,7 +249,12 @@ public record ToOneSource(
 			return listJoinColumnOrFormulaSources( joinColumnOrFormulas );
 		}
 
-		final JoinFormula joinFormula = member.getDirectAnnotationUsage( JoinFormula.class );
+		final JoinFormula joinFormula = getOverridableAnnotation(
+				member,
+				JoinFormula.class,
+				dialect,
+				modelsContext
+		);
 		if ( joinFormula != null ) {
 			return List.of( JoinColumnOrFormulaSource.formula( joinFormula ) );
 		}

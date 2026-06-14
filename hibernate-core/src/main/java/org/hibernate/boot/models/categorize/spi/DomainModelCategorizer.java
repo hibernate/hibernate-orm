@@ -94,7 +94,8 @@ public class DomainModelCategorizer {
 		final ClassDetailsRegistry mutableClassDetailsRegistry = modelsContext.getClassDetailsRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
-				modelsContext
+				modelsContext,
+				metadataBuildingContext.getMetadataCollector().getDatabase().getDialect()
 		);
 
 		final RootMappingDefaults mappingDefaults = rootMappingDefaults( metadataBuildingContext );

@@ -11,12 +11,14 @@ import org.hibernate.AnnotationException;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterJoinTable;
+import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
@@ -32,6 +34,8 @@ import org.hibernate.mapping.List;
 
 import jakarta.persistence.FetchType;
 
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
+
 /// Applies collection-shape metadata after the concrete collection mapping exists.
 ///
 /// `CollectionSource` decides the semantic classification of a plural member.
@@ -45,8 +49,8 @@ class CollectionShapeBinder {
 		applyFetching( source, collection );
 		applyFetchProfileOverrides( source, collection, bindingState );
 		applyFilters( source, collection, bindingState );
-		applyRestrictions( source, collection );
-		applyCustomSql( source, collection );
+		applyRestrictions( source, collection, bindingState );
+		applyCustomSql( source, collection, bindingState );
 		applyQueryCacheLayout( source, collection );
 		applyCustomLoader( source, collection, bindingState );
 		applyCollectionType( source, collection );
@@ -115,7 +119,7 @@ class CollectionShapeBinder {
 
 	private static void applyFilters(CollectionSource source, Collection collection, BindingState bindingState) {
 		final boolean hasAssociationTable = source.joinTable() != null;
-		for ( Filter filter : source.filters() ) {
+		for ( Filter filter : effectiveFilters( source, bindingState ) ) {
 			final String condition = resolveFilterCondition( collection, filter.name(), filter.condition(), bindingState );
 			if ( hasAssociationTable ) {
 				collection.addManyToManyFilter(
@@ -202,9 +206,33 @@ class CollectionShapeBinder {
 		return result.isEmpty() ? null : result;
 	}
 
-	private static void applyRestrictions(CollectionSource source, Collection collection) {
+	private static Filter[] effectiveFilters(CollectionSource source, BindingState bindingState) {
+		final Filters filters = getOverridableAnnotation(
+				source.member(),
+				Filters.class,
+				bindingState.getDatabase().getDialect(),
+				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+		);
+		return filters == null ? source.filters() : filters.value();
+	}
+
+	private static void applyRestrictions(CollectionSource source, Collection collection, BindingState bindingState) {
 		final boolean hasAssociationTable = source.joinTable() != null;
-		final String whereClause = combinedRestriction( source.sqlRestriction(), source.associatedTypeRestriction() );
+		final String whereClause = combinedRestriction(
+				getOverridableAnnotation(
+						source.member(),
+						SQLRestriction.class,
+						bindingState.getDatabase().getDialect(),
+						bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+				),
+				source.associatedTypeRestriction() == null ? null
+						: getOverridableAnnotation(
+								source.elementType().determineRawClass(),
+								SQLRestriction.class,
+								bindingState.getDatabase().getDialect(),
+								bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+						)
+		);
 		if ( whereClause != null ) {
 			if ( hasAssociationTable ) {
 				collection.setManyToManyWhere( whereClause );
@@ -224,23 +252,43 @@ class CollectionShapeBinder {
 		}
 	}
 
-	private static void applyCustomSql(CollectionSource source, Collection collection) {
-		final var sqlInsert = source.member().getDirectAnnotationUsage( SQLInsert.class );
+	private static void applyCustomSql(CollectionSource source, Collection collection, BindingState bindingState) {
+		final var sqlInsert = getOverridableAnnotation(
+				source.member(),
+				SQLInsert.class,
+				bindingState.getDatabase().getDialect(),
+				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( sqlInsert != null ) {
 			collection.setCustomSqlInsert( customSqlMapping( sqlInsert.sql(), sqlInsert.callable(), sqlInsert.verify() ) );
 		}
 
-		final var sqlUpdate = source.member().getDirectAnnotationUsage( SQLUpdate.class );
+		final var sqlUpdate = getOverridableAnnotation(
+				source.member(),
+				SQLUpdate.class,
+				bindingState.getDatabase().getDialect(),
+				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( sqlUpdate != null ) {
 			collection.setCustomSqlUpdate( customSqlMapping( sqlUpdate.sql(), sqlUpdate.callable(), sqlUpdate.verify() ) );
 		}
 
-		final var sqlDelete = source.member().getDirectAnnotationUsage( SQLDelete.class );
+		final var sqlDelete = getOverridableAnnotation(
+				source.member(),
+				SQLDelete.class,
+				bindingState.getDatabase().getDialect(),
+				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( sqlDelete != null ) {
 			collection.setCustomSqlDelete( customSqlMapping( sqlDelete.sql(), sqlDelete.callable(), sqlDelete.verify() ) );
 		}
 
-		final var sqlDeleteAll = source.member().getDirectAnnotationUsage( SQLDeleteAll.class );
+		final var sqlDeleteAll = getOverridableAnnotation(
+				source.member(),
+				SQLDeleteAll.class,
+				bindingState.getDatabase().getDialect(),
+				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( sqlDeleteAll != null ) {
 			collection.setCustomSqlDeleteAll( customSqlMapping(
 					sqlDeleteAll.sql(),
@@ -265,7 +313,12 @@ class CollectionShapeBinder {
 	}
 
 	private static void applyCustomLoader(CollectionSource source, Collection collection, BindingState bindingState) {
-		final SQLSelect sqlSelect = source.member().getDirectAnnotationUsage( SQLSelect.class );
+		final SQLSelect sqlSelect = getOverridableAnnotation(
+				source.member(),
+				SQLSelect.class,
+				bindingState.getDatabase().getDialect(),
+				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( sqlSelect != null ) {
 			final String loaderName = collection.getRole() + "$SQLSelect";
 			collection.setLoaderName( loaderName );
@@ -296,7 +349,12 @@ class CollectionShapeBinder {
 	}
 
 	private static void applyOrdering(CollectionSource source, Collection collection, BindingState bindingState) {
-		final var sqlOrder = source.sqlOrder();
+		final SQLOrder sqlOrder = getOverridableAnnotation(
+				source.member(),
+				SQLOrder.class,
+				bindingState.getDatabase().getDialect(),
+				bindingState.getMetadataBuildingContext().getBootstrapContext().getModelsContext()
+		);
 		if ( sqlOrder != null ) {
 			collection.setOrderBy( sqlOrder.value() );
 			return;

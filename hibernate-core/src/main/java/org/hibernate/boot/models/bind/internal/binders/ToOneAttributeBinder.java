@@ -194,7 +194,10 @@ class ToOneAttributeBinder {
 				bindingState.getMetadataBuildingContext(),
 				associationTable
 		);
-		final List<JoinColumnOrFormulaSource> valueJoinColumns = source.valueJoinColumnsOrFormulas( joinTable );
+		final List<JoinColumnOrFormulaSource> valueJoinColumns = source.valueJoinColumnsOrFormulas(
+				joinTable,
+				bindingState.getDatabase().getDialect()
+		);
 		final PropertyRef propertyRef = source.propertyRef();
 		final boolean referenceToPrimaryKey = propertyRef == null
 				&& referencesPrimaryKeySources( valueJoinColumns, target.identifierColumns() );

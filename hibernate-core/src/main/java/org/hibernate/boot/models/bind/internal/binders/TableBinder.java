@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.Subselect;
@@ -48,6 +49,8 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.SecondaryTable;
+
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotationUsages;
 
 /// Creates and registers table references used by mapping-model binders.
 ///
@@ -285,6 +288,7 @@ public class TableBinder {
 		);
 
 		applyComment( binding, null );
+		applyHibernateChecks( binding, type );
 		applyView( binding, viewAnn );
 
 		return createPhysicalTableReference(
@@ -352,6 +356,7 @@ public class TableBinder {
 		applyComment( binding, tableSource );
 		applyOptions( binding, tableSource );
 		applyCheckConstraints( binding, tableSource );
+		applyHibernateChecks( binding, type );
 		applyView( binding, viewAnn );
 
 		return createPhysicalTableReference(
@@ -477,11 +482,11 @@ public class TableBinder {
 				false
 		);
 
-		applyComment( binding, tableSource );
-		applyOptions( binding, tableSource );
-		applyCheckConstraints( binding, tableSource );
+			applyComment( binding, tableSource );
+			applyOptions( binding, tableSource );
+			applyCheckConstraints( binding, tableSource );
 
-		return new PhysicalTable(
+			return new PhysicalTable(
 				logicalName,
 				logicalCatalogName,
 				logicalSchemaName,
@@ -692,6 +697,25 @@ public class TableBinder {
 					checkConstraint.constraint(),
 					StringHelper.nullIfEmpty( checkConstraint.options() )
 			) );
+		}
+	}
+
+	@SuppressWarnings("removal")
+	private void applyHibernateChecks(Table table, EntityTypeMetadata type) {
+		final Check[] checks = getOverridableAnnotationUsages(
+				type.getClassDetails(),
+				Check.class,
+				bindingState.getDatabase().getDialect(),
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
+		for ( Check check : checks ) {
+			if ( StringHelper.isNotEmpty( check.constraints() ) ) {
+				table.addCheck( new org.hibernate.mapping.CheckConstraint(
+						StringHelper.nullIfEmpty( check.name() ),
+						check.constraints(),
+						null
+				) );
+			}
 		}
 	}
 

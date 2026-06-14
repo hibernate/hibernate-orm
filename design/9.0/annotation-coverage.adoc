@@ -949,9 +949,8 @@ collected and passed to the JPA named graph creator
   the new annotation descriptor registry.  Legacy binder support exists, but
   new-pipeline support should be deferred to a state-management/audit slice.
 * `DialectOverrideAnnotations` registers the override annotation descriptors and
-  `DialectOverrider` supplies matching logic.  The new pipeline still needs a
-  central effective-annotation lookup, or an explicit decision that each binder
-  must resolve dialect overrides at the point of use.
+  `DialectOverrider` supplies matching logic.  The new pipeline has a shared
+  effective-annotation lookup used by the supported override-capable binders.
 * Several annotations have descriptor support and legacy binder support, but no
   verified new-pipeline binding assertion yet.  These are the best candidates
   for low-risk parity slices.
@@ -1003,7 +1002,7 @@ is covered in XML/source parity.
 cache and natural-id cache regions, table checks, discriminator formula/options,
 immutability, natural-id attributes, optimistic-lock metadata, secondary-row
 options, soft delete, subselects, synchronized tables, and database views.
-Dialect overrides remain tracked in the dialect-override slice.
+Dialect overrides for supported base annotations are covered.
 
 | Association and join coverage
 | `@Fetch`, `@FetchProfileOverride`, `@Filter`, `@FilterJoinTable`,
@@ -1013,7 +1012,7 @@ Dialect overrides remain tracked in the dialect-override slice.
 modes, member-level fetch-profile overrides, entity and collection filters,
 join-table filters, basic formulas, join formulas, not-found handling,
 property refs, SQL restrictions, join-table restrictions, and SQL ordering.
-Dialect overrides remain tracked in the dialect-override slice.
+Dialect overrides for supported base annotations are covered.
 
 | Global registrations and named objects
 | `@CollectionTypeRegistration`, `@CompositeTypeRegistration`,
@@ -1037,7 +1036,8 @@ identifier generator creation.
 collection custom SQL, repeatable secondary-table custom SQL containers,
 custom SQL/HQL loaders, query cache layout, and native identifier generator
 creator installation.  Secondary-table custom SQL XML is covered in
-XML/source parity; dialect overrides remain tracked separately.
+XML/source parity; dialect overrides for custom SQL and custom SQL loaders are
+covered.
 
 | XML/source parity
 | XML `@LazyGroup`, XML `@ListIndexBase`, XML `@Mutability`, secondary-table
@@ -1054,8 +1054,10 @@ mutability, and secondary-table custom SQL annotation creation from mapping XML.
 `@DialectOverride.SQLSelect`, `@DialectOverride.SQLInsert`,
 `@DialectOverride.SQLUpdate`, `@DialectOverride.SQLDelete`,
 `@DialectOverride.SQLDeleteAll`
-| Add/identify a model-pipeline effective-annotation helper and test each
-observable override family against two dialects.
+| Covered.  The model pipeline resolves effective dialect-specific annotations
+for supported base families, including checks, column defaults, generated
+columns, discriminator/basic/join formulas, SQL restrictions, filters,
+filter-defs, SQL ordering, custom SQL, and custom SQL loaders.
 
 | Container/helper annotations
 | Repeatable containers such as `@Checks`, `@Filters`, `@SQLInserts`,
@@ -1063,19 +1065,30 @@ observable override family against two dialects.
 such as `@IdGeneratorType`, `@AttributeBinderType`, `@TypeBinderType`,
 `@ValueGenerationType`, `@DialectOverride.Version`,
 `@DialectOverride.OverridesAnnotation`
-| Verify through the owning annotation or extension mechanism rather than as
-independent mapping annotations.  `@AttributeBinderType` and `@TypeBinderType`
-now have focused extension-mechanism tests in the new binding pipeline.
+| Covered: verified through the owning annotation or extension mechanism rather
+than as independent mapping annotations.  `@AttributeBinderType` and
+`@TypeBinderType` have focused extension-mechanism tests in the new binding
+pipeline, and `@IdGeneratorType` is verified through a custom
+identifier-generator meta-annotation.
 
-| Deferred state-management and aggregate areas
+| Constructor instantiation
+| `@Instantiator`
+| Open.  Constructor-target annotations are not currently consumed by the new
+model pipeline; handle separately from `@EmbeddableInstantiator`.
+
+| Struct/aggregate mapping
+| `@Struct`
+| Deferred.  Requires a dedicated aggregate/UDT design and binding slice.
+
+| State management
 | `@Audited`, `@Audited.Excluded`, `@Audited.Table`,
 `@Audited.SecondaryTable`, `@Audited.SecondaryTables`,
 `@Audited.CollectionTable`, `@Changelog`, `@Changelog.ChangesetId`,
-`@Changelog.Timestamp`, `@Changelog.ModifiedEntities`, `@Struct`,
-`@Temporal`, `@Temporal.HistoryPartitioning`, `@Temporal.HistoryTable`,
+`@Changelog.Timestamp`, `@Changelog.ModifiedEntities`, `@Temporal`,
+`@Temporal.HistoryPartitioning`, `@Temporal.HistoryTable`,
 `@Temporal.Excluded`
-| Keep deferred unless we explicitly start the audit/changelog,
-state-management temporal, or aggregate/UDT design slices.
+| Deferred.  Audit/changelog and temporal history annotations need a dedicated
+state-management design and binding slice.
 |===
 
 == Hibernate Annotation Matrix
@@ -1785,7 +1798,7 @@ observed support from work still needing binder/test confirmation.
 | generator meta-annotation
 | n/a
 | n/a
-| via generator tests
+| focused bind test
 | not applicable/nested
 
 | `@Immutable`
@@ -1809,11 +1822,11 @@ observed support from work still needing binder/test confirmation.
 | `@Instantiator`
 | `CONSTRUCTOR`
 | yes
-| instantiator support appears present
+| constructor-target annotation not consumed by the new model pipeline
 | n/a
 | n/a
 | needed
-| test-only gap
+| binding gap
 
 | `@JavaType`
 | `METHOD`, `FIELD`, `ANNOTATION_TYPE`
@@ -2313,38 +2326,38 @@ observed support from work still needing binder/test confirmation.
 | `@Temporal`
 | `PACKAGE`, `TYPE`, `FIELD`, `METHOD`, `ANNOTATION_TYPE`
 | yes
-| temporal/history support appears present
+| intentionally deferred state-management area
 | not audited yet
 | n/a
 | needed
-| test-only gap
+| deferred
 
 | `@Temporal.HistoryPartitioning`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| nested temporal annotation
+| nested temporal state-management annotation
 | not audited yet
 | n/a
 | needed
-| test-only gap
+| deferred
 
 | `@Temporal.HistoryTable`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| nested temporal annotation
+| nested temporal state-management annotation
 | not audited yet
 | n/a
 | needed
-| test-only gap
+| deferred
 
 | `@Temporal.Excluded`
 | `FIELD`, `METHOD`
 | yes
-| nested temporal annotation
+| nested temporal state-management annotation
 | not audited yet
 | n/a
 | needed
-| test-only gap
+| deferred
 
 | `@TenantId`
 | `METHOD`, `FIELD`
@@ -2561,7 +2574,7 @@ observed support from work still needing binder/test confirmation.
 
 == Dialect Override Matrix
 
-`DialectOverride` support should be verified by asking the new pipeline for the
+`DialectOverride` support is verified by asking the new pipeline for the
 effective base annotation for the active dialect.  Container/helper annotations
 are verified through the matching singular override.
 
@@ -2582,8 +2595,8 @@ are verified through the matching singular override.
 | `@DialectOverride.Check`
 | `@Check`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.Checks`
 | container for `@DialectOverride.Check`
@@ -2594,8 +2607,8 @@ are verified through the matching singular override.
 | `@DialectOverride.SQLOrder`
 | `@SQLOrder`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.SQLOrders`
 | container for `@DialectOverride.SQLOrder`
@@ -2606,8 +2619,8 @@ are verified through the matching singular override.
 | `@DialectOverride.ColumnDefault`
 | `@ColumnDefault`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.ColumnDefaults`
 | container for `@DialectOverride.ColumnDefault`
@@ -2618,8 +2631,8 @@ are verified through the matching singular override.
 | `@DialectOverride.GeneratedColumn`
 | `@GeneratedColumn`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.GeneratedColumns`
 | container for `@DialectOverride.GeneratedColumn`
@@ -2630,8 +2643,8 @@ are verified through the matching singular override.
 | `@DialectOverride.DiscriminatorFormula`
 | `@DiscriminatorFormula`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.DiscriminatorFormulas`
 | container for `@DialectOverride.DiscriminatorFormula`
@@ -2642,8 +2655,8 @@ are verified through the matching singular override.
 | `@DialectOverride.Formula`
 | `@Formula`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.Formulas`
 | container for `@DialectOverride.Formula`
@@ -2654,8 +2667,8 @@ are verified through the matching singular override.
 | `@DialectOverride.JoinFormula`
 | `@JoinFormula`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.JoinFormulas`
 | container for `@DialectOverride.JoinFormula`
@@ -2666,8 +2679,8 @@ are verified through the matching singular override.
 | `@DialectOverride.SQLRestriction`
 | `@SQLRestriction`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.SQLRestrictions`
 | container for `@DialectOverride.SQLRestriction`
@@ -2678,8 +2691,8 @@ are verified through the matching singular override.
 | `@DialectOverride.Filters`
 | `@Filters`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.FilterOverrides`
 | container for `@DialectOverride.Filters`
@@ -2690,8 +2703,8 @@ are verified through the matching singular override.
 | `@DialectOverride.FilterDefs`
 | `@FilterDefs`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.FilterDefOverrides`
 | container for `@DialectOverride.FilterDefs`
@@ -2702,8 +2715,8 @@ are verified through the matching singular override.
 | `@DialectOverride.SQLSelect`
 | `@SQLSelect`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.SQLSelects`
 | container for `@DialectOverride.SQLSelect`
@@ -2714,8 +2727,8 @@ are verified through the matching singular override.
 | `@DialectOverride.SQLInsert`
 | `@SQLInsert`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.SQLInserts`
 | container for `@DialectOverride.SQLInsert`
@@ -2726,8 +2739,8 @@ are verified through the matching singular override.
 | `@DialectOverride.SQLUpdate`
 | `@SQLUpdate`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.SQLUpdates`
 | container for `@DialectOverride.SQLUpdate`
@@ -2738,8 +2751,8 @@ are verified through the matching singular override.
 | `@DialectOverride.SQLDelete`
 | `@SQLDelete`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.SQLDeletes`
 | container for `@DialectOverride.SQLDelete`
@@ -2750,8 +2763,8 @@ are verified through the matching singular override.
 | `@DialectOverride.SQLDeleteAll`
 | `@SQLDeleteAll`
 | yes
-| effective annotation lookup needed
-| dialect-override gap
+| effective annotation lookup covered
+| covered
 
 | `@DialectOverride.SQLDeleteAlls`
 | container for `@DialectOverride.SQLDeleteAll`
@@ -2768,13 +2781,8 @@ are verified through the matching singular override.
 
 == Follow-Up Slices
 
-1. Close Hibernate test-only gaps by bucket: polymorphic associations,
-   collection shape/id metadata, basic value/type metadata, entity/table
-   metadata, association/join metadata, and global registrations.
-2. Implement the remaining Hibernate binding gaps in small groups: custom SQL
-   and loaders, native generators, query cache layout, and fetch-profile
-   overrides.
-3. Add a single new-pipeline dialect override resolution point and convert
-   direct annotation lookups for override-capable annotations to use it.
-4. Revisit audit/changelog, temporal state-management, and aggregate/UDT
-   descriptors and binding only once those areas have dedicated design slices.
+1. Add constructor-level `@Instantiator` support once the model pipeline has a
+   constructor annotation source for embeddables.
+2. Revisit `@Struct` as part of a dedicated aggregate/UDT mapping slice.
+3. Revisit audit/changelog and temporal annotations as part of a dedicated
+   state-management slice.

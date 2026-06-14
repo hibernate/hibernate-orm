@@ -45,6 +45,7 @@ import static org.hibernate.boot.models.AttributeNature.MANY_TO_ANY;
 import static org.hibernate.boot.models.AttributeNature.MANY_TO_MANY;
 import static org.hibernate.boot.models.AttributeNature.ONE_TO_MANY;
 import static org.hibernate.boot.models.AttributeNature.TO_ONE;
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
 
 /// Binds one persistent attribute into a Hibernate [Property].
 ///
@@ -331,8 +332,13 @@ public class AttributeBinder {
 			Table primaryTable,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
-			@SuppressWarnings("unused") BindingContext bindingContext) {
-		final var formulaAnn = member.getDirectAnnotationUsage( org.hibernate.annotations.Formula.class );
+			BindingContext bindingContext) {
+		final var formulaAnn = getOverridableAnnotation(
+				member,
+				org.hibernate.annotations.Formula.class,
+				bindingState.getDatabase().getDialect(),
+				bindingContext.getBootstrapContext().getModelsContext()
+		);
 		if ( formulaAnn != null ) {
 			basicValue.setTable( primaryTable );
 			basicValue.addFormula( new org.hibernate.mapping.Formula( formulaAnn.value() ) );

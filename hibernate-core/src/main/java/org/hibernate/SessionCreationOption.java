@@ -63,7 +63,7 @@ public interface SessionCreationOption {
 	/// Allow explicitly enabling or disabling subselect fetching for an EntityManager.
 	///
 	/// @see org.hibernate.cfg.FetchSettings#USE_SUBSELECT_FETCH
-	enum SubselectFetchMode implements EntityManager.CreationOption {
+	enum BulkSelect implements EntityManager.CreationOption {
 		/// Enables subselect fetching.
 		ENABLED,
 		/// Disables subselect fetching.

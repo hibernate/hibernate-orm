@@ -6,6 +6,7 @@ package org.hibernate;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityAgent;
+import org.hibernate.engine.creation.CommonBuilder;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -29,7 +30,8 @@ public interface SessionCreationOption {
 	/// be used when accessing a multi-tenant database.
 	///
 	/// @see SharedSessionContract#getTenantIdentifier()
-	record TenantId(String value)
+	/// @see CommonBuilder#tenantIdentifier(Object)
+	record TenantId(Object value)
 			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 	}
 
@@ -39,6 +41,8 @@ public interface SessionCreationOption {
 	/// [audited][org.hibernate.annotations.Audited] entity data. Instances of
 	/// temporal or audited entities retrieved in the created session represent the
 	/// state effective at the given changeset.
+	///
+	/// @see CommonBuilder#atChangeset(Object)
 	record EffectiveChangeset(Object changesetId)
 			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 	}
@@ -46,6 +50,8 @@ public interface SessionCreationOption {
 	/// Specify the instant for reading [temporal][org.hibernate.annotations.Temporal]
 	/// entity data. Instances of temporal entities retrieved in the created session
 	/// represent the revisions effective at the given instant.
+	///
+	/// @see CommonBuilder#asOf(Instant)
 	record EffectiveAt(Instant instant)
 			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 	}
@@ -55,6 +61,8 @@ public interface SessionCreationOption {
 	///
 	/// @param name The [name][org.hibernate.annotations.FilterDef#name] of the filter
 	/// @param arguments The arguments to the named parameters of the filter
+	///
+	/// @see SharedSessionContract#enableFilter(String)
 	record EnabledFilter(String name, Map<String, ?> arguments)
 			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 		public EnabledFilter {
@@ -62,7 +70,7 @@ public interface SessionCreationOption {
 		}
 	}
 
-	/// Enables batch fetching and Specifies how many entities should be fetched in
+	/// Enables batch fetching and specifies how many entities should be fetched in
 	/// each request to the database.
 	///
 	/// - By default, the batch sizing strategy is determined by the
@@ -93,6 +101,7 @@ public interface SessionCreationOption {
 
 	/// Enables or disables the use of [bulk select][FetchMethod#BULK_SELECT] fetching.
 	///
+	/// @see org.hibernate.Session#setSubselectFetchingEnabled(boolean)
 	/// @see org.hibernate.cfg.FetchSettings#USE_SUBSELECT_FETCH
 	enum BulkSelect
 			implements EntityManager.CreationOption, EntityAgent.CreationOption {

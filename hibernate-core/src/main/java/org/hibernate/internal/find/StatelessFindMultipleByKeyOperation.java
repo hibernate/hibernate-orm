@@ -8,16 +8,12 @@ import jakarta.persistence.FindOption;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
-import org.hibernate.FindMultipleOption;
 import org.hibernate.KeyType;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.List;
@@ -28,7 +24,6 @@ import java.util.function.Supplier;
  */
 public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultipleByKeyOperation<T> {
 
-	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiLoadOptions();
 	@Nonnull
 	private final StatelessLoadAccessContext loadAccessContext;
 
@@ -71,14 +66,10 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 		final var ids = Helper.coerceIds( getEntityDescriptor(), keys, session );
 		return withOptions( session, graphSemantic, rootGraph, () -> {
 			// todo (jpa4) : make sure loading from cache happens inside here
-			final var results = getEntityDescriptor().multiLoad( ids, session, multiLoadOptions( getLockMode() ) );
+			final var results = getEntityDescriptor().multiLoad( ids, session, this );
 			//noinspection unchecked
 			return (List<T>) results;
 		} );
-	}
-
-	private MultiIdLoadOptions multiLoadOptions(LockMode lockMode) {
-		return lockMode == null ? MULTI_ID_LOAD_OPTIONS : new MultiLoadOptions( lockMode );
 	}
 
 	private List<T> withOptions(
@@ -100,53 +91,6 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 				effectiveEntityGraph.clear();
 			}
 			influencers.setEnabledFetchProfileNames( fetchProfiles );
-		}
-	}
-
-	private static final class MultiLoadOptions implements MultiIdLoadOptions {
-		private final  LockOptions lockOptions;
-
-		private MultiLoadOptions() {
-			this.lockOptions = null;
-		}
-
-		private MultiLoadOptions(LockMode lockMode) {
-			this.lockOptions = new LockOptions( lockMode );
-		}
-
-		@Override
-		public FindMultipleOption.SessionCheckMode getSessionCheckMode() {
-			return FindMultipleOption.SessionCheckMode.DISABLED;
-		}
-
-		@Override
-		public boolean isSecondLevelCacheCheckingEnabled() {
-			return true;
-		}
-
-		@Override
-		public Boolean getReadOnly(SessionImplementor session) {
-			return null;
-		}
-
-		@Override
-		public FindMultipleOption.RemovalsMode getRemovalsMode() {
-			return FindMultipleOption.RemovalsMode.REPLACE;
-		}
-
-		@Override
-		public FindMultipleOption.OrderingMode getOrderingMode() {
-			return FindMultipleOption.OrderingMode.ORDERED;
-		}
-
-		@Override
-		public LockOptions getLockOptions() {
-			return lockOptions;
-		}
-
-		@Override
-		public Integer getBatchSize() {
-			return null;
 		}
 	}
 }

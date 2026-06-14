@@ -178,6 +178,8 @@ public class StatelessSessionImpl
 		}
 		temporaryPersistenceContext = createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
+		influencers.setBatchSize( options.getDefaultBatchFetchSize() );
+		influencers.setSubselectFetchEnabled( options.isSubselectFetchEnabled() );
 		influencers.setTemporalIdentifier( options.getTemporalIdentifier() );
 		for ( var enabledFilterOption : options.getEnabledFilterOptions() ) {
 			influencers.enableFilter( enabledFilterOption );

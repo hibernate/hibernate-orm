@@ -19,40 +19,42 @@ import java.util.Map;
 ///
 /// @see ReadOnlyMode
 /// @see FlushMode
-/// @see BatchSize
 /// @see CacheMode
 ///
 /// @since 8.0
 /// @author Steve Ebersole
 @Incubating
 public interface SessionCreationOption {
-	/// Specifies the tenant-id which should be used when creating a Session or StatelessSession.
+	/// Specifies the [tenant id][org.hibernate.annotations.TenantId] which should
+	/// be used when accessing a multi-tenant database.
 	///
 	/// @see SharedSessionContract#getTenantIdentifier()
-	record TenantId(String value) implements EntityManager.CreationOption, EntityAgent.CreationOption {
+	record TenantId(String value)
+			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 	}
 
-	/// Specify the [changeset id][org.hibernate.cfg.StateManagementSettings#CHANGESET_ID_SUPPLIER]
+	/// Specify the
+	/// [changeset id][org.hibernate.cfg.StateManagementSettings#CHANGESET_ID_SUPPLIER]
 	/// for reading [temporal][org.hibernate.annotations.Temporal] or
-	/// [audited][org.hibernate.annotations.Audited]/ entity data.
-	/// Instances of temporal  or audited entities retrieved in/ the session represent the state
-	/// effective at the given changeset.
-	record EffectiveChangeset(Object changesetId) implements EntityManager.CreationOption, EntityAgent.CreationOption {
+	/// [audited][org.hibernate.annotations.Audited] entity data. Instances of
+	/// temporal or audited entities retrieved in the created session represent the
+	/// state effective at the given changeset.
+	record EffectiveChangeset(Object changesetId)
+			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 	}
 
-	/// Specify the instant for reading [temporal][org.hibernate.annotations.Temporal] entity data.
-	/// Instances of temporal entities retrieved in the created session represent the
-	/// revisions effective at the given instant.
-	record EffectiveAt(Instant instant) implements EntityManager.CreationOption, EntityAgent.CreationOption {
+	/// Specify the instant for reading [temporal][org.hibernate.annotations.Temporal]
+	/// entity data. Instances of temporal entities retrieved in the created session
+	/// represent the revisions effective at the given instant.
+	record EffectiveAt(Instant instant)
+			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 	}
 
-	/**
-	 * Specifies that the named {@linkplain org.hibernate.annotations.FilterDef filter}
-	 * should be enabled with the given arguments to its parameters.
-	 *
-	 * @param name The {@linkplain org.hibernate.annotations.FilterDef#name name } of the filter
-	 * @param arguments The arguments to the named parameters of the filter
-	 */
+	/// Specifies that the named [filter][org.hibernate.annotations.FilterDef]
+	/// should be enabled with the given arguments to its parameters.
+	///
+	/// @param name The [name][org.hibernate.annotations.FilterDef#name] of the filter
+	/// @param arguments The arguments to the named parameters of the filter
 	record EnabledFilter(String name, Map<String, ?> arguments)
 			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 		public EnabledFilter {
@@ -60,10 +62,40 @@ public interface SessionCreationOption {
 		}
 	}
 
-	/// Allow explicitly enabling or disabling subselect fetching for an EntityManager.
+	/// Enables batch fetching and Specifies how many entities should be fetched in
+	/// each request to the database.
+	///
+	/// - By default, the batch sizing strategy is determined by the
+	///   [SQL Dialect][org.hibernate.dialect.Dialect#getBatchLoadSizingStrategy],
+	///   but
+	/// - if some `batchSize>1` is specified as an argument to this method, then that
+	///   batch size will be used.
+	///
+	/// If an explicit batch size is set manually, care should be taken to not exceed
+	/// the capabilities of the underlying database.
+	///
+	/// The performance impact of setting a batch size depends on whether a SQL array
+	///  may be used to pass the list of identifiers to the database:
+	///
+	/// - for databases which support standard SQL arrays, a smaller batch size might
+	///   be extremely inefficient compared to a very large batch size or no batching
+	///   at all, but
+	/// - on the other hand, for databases with no SQL array type, a large batch size
+	///   results in long SQL statements with many JDBC parameters.
+	///
+	/// @param batchSize The batch size
+	///
+	/// @see Session#setFetchBatchSize(int)
+	/// @see org.hibernate.cfg.FetchSettings#DEFAULT_BATCH_FETCH_SIZE
+	record FetchBatchSize(int batchSize)
+			implements EntityManager.CreationOption, EntityAgent.CreationOption {
+	}
+
+	/// Enables or disables the use of [bulk select][FetchMethod#BULK_SELECT] fetching.
 	///
 	/// @see org.hibernate.cfg.FetchSettings#USE_SUBSELECT_FETCH
-	enum BulkSelect implements EntityManager.CreationOption {
+	enum BulkSelect
+			implements EntityManager.CreationOption, EntityAgent.CreationOption {
 		/// Enables subselect fetching.
 		ENABLED,
 		/// Disables subselect fetching.

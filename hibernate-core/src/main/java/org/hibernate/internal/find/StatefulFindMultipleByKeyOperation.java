@@ -7,7 +7,6 @@ package org.hibernate.internal.find;
 import jakarta.persistence.FindOption;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.FindMultipleOption;
 import org.hibernate.KeyType;
@@ -116,18 +115,18 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 		}
 	}
 
-	private Object getCachedNaturalIdResolution(
-			Object normalizedNaturalIdValue,
-			StatefulLoadAccessContext loadAccessContext) {
-		loadAccessContext.checkOpenOrWaitingForAutoClose();
-		loadAccessContext.pulseTransactionCoordinator();
-
-		return loadAccessContext
-				.getSession()
-				.getPersistenceContextInternal()
-				.getNaturalIdResolutions()
-				.findCachedIdByNaturalId( normalizedNaturalIdValue, getEntityDescriptor() );
-	}
+//	private Object getCachedNaturalIdResolution(
+//			Object normalizedNaturalIdValue,
+//			StatefulLoadAccessContext loadAccessContext) {
+//		loadAccessContext.checkOpenOrWaitingForAutoClose();
+//		loadAccessContext.pulseTransactionCoordinator();
+//
+//		return loadAccessContext
+//				.getSession()
+//				.getPersistenceContextInternal()
+//				.getNaturalIdResolutions()
+//				.findCachedIdByNaturalId( normalizedNaturalIdValue, getEntityDescriptor() );
+//	}
 
 	private List<T> findByIds(
 			List<?> keys,
@@ -152,7 +151,7 @@ public class StatefulFindMultipleByKeyOperation<T> extends AbstractFindMultipleB
 			@Nonnull EntityPersister entityDescriptor,
 			@Nonnull StatefulLoadAccessContext loadAccessContext,
 			KeyType keyType,
-			BatchSize batchSize,
+			FindMultipleOption.BatchSize batchSize,
 			FindMultipleOption.SessionCheckMode sessionCheckMode,
 			FindMultipleOption.RemovalsMode removalsMode,
 			FindMultipleOption.OrderingMode orderingMode,

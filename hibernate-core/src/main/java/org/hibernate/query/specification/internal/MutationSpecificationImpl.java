@@ -6,7 +6,7 @@ package org.hibernate.query.specification.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityHandler;
 import jakarta.persistence.Statement;
 import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
@@ -15,9 +15,7 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.AssertionFailure;
-import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.internal.MutationQueryImpl;
@@ -180,16 +178,6 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 		return this;
 	}
 
-	@Override
-	public MutationQueryImplementor<T> createQuery(Session session) {
-		return createQuery( (SharedSessionContract) session );
-	}
-
-	@Override
-	public MutationQueryImplementor<T> createQuery(StatelessSession session) {
-		return createQuery( (SharedSessionContract) session );
-	}
-
 	public MutationQueryImplementor<T> createQuery(SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final var buildResult = build( sessionImpl.getFactory().getQueryEngine() );
@@ -265,8 +253,8 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, J
 	}
 
 	@Override
-	public MutationQueryImplementor<T> createQuery(EntityManager entityManager) {
-		return createQuery( (SharedSessionContract) entityManager );
+	public MutationQueryImplementor<T> createQuery(EntityHandler entityHandler) {
+		return createQuery( (SharedSessionContract) entityHandler );
 	}
 
 	@Override

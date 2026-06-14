@@ -5,7 +5,7 @@
 package org.hibernate.query.specification.internal;
 
 import jakarta.annotation.Nullable;
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityHandler;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
@@ -13,9 +13,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.annotation.Nonnull;
 import org.hibernate.QueryException;
-import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
@@ -204,16 +202,6 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 		querySpec.getOrderByClause().addSortSpecification( sortSpecification );
 	}
 
-	@Override
-	public SelectionQuery<T> createQuery(Session session) {
-		return createQuery( (SharedSessionContract) session );
-	}
-
-	@Override
-	public SelectionQuery<T> createQuery(StatelessSession session) {
-		return createQuery( (SharedSessionContract) session );
-	}
-
 	public SelectionQueryImplementor<T> createQuery(SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final var buildResult = build( sessionImpl.getFactory().getQueryEngine() );
@@ -292,8 +280,8 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	}
 
 	@Override
-	public SelectionQuery<T> createQuery(EntityManager entityManager) {
-		return createQuery( (SharedSessionContract) entityManager );
+	public SelectionQuery<T> createQuery(EntityHandler entityHandler) {
+		return createQuery( (SharedSessionContract) entityHandler );
 	}
 
 	@Override

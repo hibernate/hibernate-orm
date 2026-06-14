@@ -6,14 +6,12 @@ package org.hibernate.query.specification.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityHandler;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.StatelessSession;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.specification.QuerySpecification;
@@ -44,19 +42,9 @@ public class CountProjectionSpecificationImpl<T> implements SimpleProjectionSpec
 	}
 
 	@Override
-	public SelectionQuery<Long> createQuery(Session session) {
-		return session.createSelectionQuery( buildCriteria( session.getCriteriaBuilder() ) );
-	}
-
-	@Override
-	public SelectionQuery<Long> createQuery(StatelessSession session) {
-		return session.createSelectionQuery( buildCriteria( session.getCriteriaBuilder() ) );
-	}
-
-	@Override
-	public SelectionQuery<Long> createQuery(EntityManager entityManager) {
-		return entityManager.unwrap( SharedSessionContract.class )
-				.createQuery( buildCriteria( entityManager.getCriteriaBuilder() ) );
+	public SelectionQuery<Long> createQuery(EntityHandler entityHandler) {
+		return entityHandler.unwrap( SharedSessionContract.class )
+				.createQuery( buildCriteria( entityHandler.getCriteriaBuilder() ) );
 	}
 
 	@Override

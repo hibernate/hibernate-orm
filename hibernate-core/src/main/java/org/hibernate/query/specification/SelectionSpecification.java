@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.specification;
 
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityHandler;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -12,8 +12,6 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.Incubating;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
@@ -167,13 +165,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	SelectionSpecification<T> augment(Augmentation<T> augmentation);
 
 	@Override
-	SelectionQuery<T> createQuery(Session session);
-
-	@Override
-	SelectionQuery<T> createQuery(StatelessSession session);
-
-	@Override
-	SelectionQuery<T> createQuery(EntityManager entityManager);
+	SelectionQuery<T> createQuery(EntityHandler entityHandler);
 
 	/**
 	 * Build a {@link CriteriaQuery criteria query}

@@ -149,7 +149,7 @@ public class EntityHandlerOptionTests {
 			assertThat(em.isSubselectFetchingEnabled()).isFalse();
 		}
 
-		try (var em = sf.createEntityManager( SessionCreationOption.SubselectFetchMode.ENABLED)) {
+		try (var em = sf.createEntityManager(SessionCreationOption.BulkSelect.ENABLED)) {
 			assertThat(em.isSubselectFetchingEnabled()).isTrue();
 		}
 	}

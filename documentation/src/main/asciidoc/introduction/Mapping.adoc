@@ -747,7 +747,7 @@ This is usually all you need to do to make use of large object types in Hibernat
 JPA provides a `@Lob` annotation which specifies that a field should be persisted as a `BLOB` or `CLOB`.
 
 [[lob-semantics]]
-.*Read more: Semantics of the `@Lob` annotation*
+.*Read more: Semantics of the @Lob annotation*
 [%collapsible]
 ====
 ****
@@ -788,7 +788,7 @@ String text;
 This is particularly true for PostgreSQL.
 
 [%unbreakable]
-.*Read more: PostgreSQL and `@Lob`*
+.*Read more: PostgreSQL and @Lob*
 [%collapsible]
 // .PostgreSQL `BYTEA` and `TEXT`
 ====

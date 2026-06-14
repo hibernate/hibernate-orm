@@ -148,7 +148,7 @@ EntityManager entityManager =
 
 Search for implementations of `EntityManager.CreationOption` or `EntityAgent.CreationOption` to find the option types provided by the specification and by Hibernate.
 
-.*Read more: Injecting the `EntityManager` or `EntityAgent`*
+.*Read more: Injecting the EntityManager or EntityAgent*
 [%collapsible]
 ====
 ****

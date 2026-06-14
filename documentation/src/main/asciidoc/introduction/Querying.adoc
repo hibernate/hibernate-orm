@@ -345,42 +345,43 @@ String title =
 ----
 
 However, in general, there isn't enough information in the JDBC `ResultSetMetaData` to infer the mapping of columns to entity objects.
-So for more complicated cases, you'll need to use the `@SqlResultSetMapping` annotation to define a named mapping, and pass the name to `createNativeQuery()`. This gets fairly messy, so we don't want to hurt your eyes by showing you an example of it.
+So for more complicated cases, you'll need to use the `@SqlResultSetMapping` annotation to define a named mapping, and pass the name to `createNativeQuery()`.
+This gets fairly messy, so we don't want to hurt your eyes by showing you an example of it.
 
-By default, Hibernate doesn't flush the session before execution of a native query.
-That's because the session is unaware of which modifications held in memory would affect the results of the query.
-
-So if there are any unflushed changes to ``Book``s, this query might return stale data:
-
-[source,java]
-----
-List<Book> books =
-        entityAgent.createNativeQuery("select * from Books", Book.class)
-                   .getResultList();
-----
-
-There's two ways to ensure the persistence context is flushed before this query is executed.
-
-Either, we could simply force a flush by calling `flush()` or by setting the flush mode to `FLUSH`:
-
-[source,java]
-----
-List<Book> books =
-        entityAgent.createNativeQuery("select * from Books", Book.class)
-                   .setQueryFlushMode(FLUSH)
-                   .getResultList();
-----
-
-Or, alternatively, we could tell Hibernate which modified state affects the results of the query:
-
-[source,java]
-----
-List<Book> books =
-        entityAgent.createNativeQuery("select * from Books", Book.class)
-                   .unwrap(SelectionQuery.class)
-                   .addSynchronizedEntityClass(Book.class)
-                   .getResultList();
-----
+// By default, Hibernate doesn't flush the session before execution of a native query.
+// That's because the session is unaware of which modifications held in memory would affect the results of the query.
+//
+// So if there are any unflushed changes to ``Book``s, this query might return stale data:
+//
+// [source,java]
+// ----
+// List<Book> books =
+//         entityAgent.createNativeQuery("select * from Books", Book.class)
+//                    .getResultList();
+// ----
+//
+// There's two ways to ensure the persistence context is flushed before this query is executed.
+//
+// Either, we could simply force a flush by calling `flush()` or by setting the flush mode to `FLUSH`:
+//
+// [source,java]
+// ----
+// List<Book> books =
+//         entityAgent.createNativeQuery("select * from Books", Book.class)
+//                    .setQueryFlushMode(FLUSH)
+//                    .getResultList();
+// ----
+//
+// Or, alternatively, we could tell Hibernate which modified state affects the results of the query:
+//
+// [source,java]
+// ----
+// List<Book> books =
+//         entityAgent.createNativeQuery("select * from Books", Book.class)
+//                    .unwrap(SelectionQuery.class)
+//                    .addSynchronizedEntityClass(Book.class)
+//                    .getResultList();
+// ----
 
 [TIP]
 ====

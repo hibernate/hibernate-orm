@@ -47,7 +47,7 @@ Let's underline the important point here: the goal of ORM is _not_ to hide SQL o
 After all, Hibernate's query language is link:{doc-query-language-url}[nothing more than an object-oriented dialect of ANSI SQL].
 On the other hand, Hibernate does help smooth over many of the differences between relational databases and SQL dialects.
 
-.*Read more: Is Hibernate a "leaky abstraction"?*
+.*Read more: Is Hibernate a leaky abstraction?*
 [%collapsible]
 ====
 ****

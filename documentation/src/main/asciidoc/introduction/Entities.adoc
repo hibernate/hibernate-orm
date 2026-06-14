@@ -1287,7 +1287,7 @@ Collection<Book> books;
 We'll see how to map a collection with a persistent order <<ordered-sorted,much later>>.
 
 [[set-vs-list]]
-.*Read more: `Set`, `List`, or `Collection`?*
+.*Read more: Set, List, or Collection?*
 [%collapsible]
 ====
 ****

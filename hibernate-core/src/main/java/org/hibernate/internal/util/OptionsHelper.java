@@ -71,8 +71,8 @@ public final class OptionsHelper {
 		else if ( option instanceof ReadOnlyMode readOnlyMode) {
 			options.readOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
 		}
-		else if ( option instanceof SessionCreationOption.SubselectFetchMode subselectFetchMode ) {
-			options.subselectFetchEnabled( subselectFetchMode == SessionCreationOption.SubselectFetchMode.ENABLED );
+		else if ( option instanceof SessionCreationOption.BulkSelect bulkSelect ) {
+			options.subselectFetchEnabled( bulkSelect == SessionCreationOption.BulkSelect.ENABLED );
 		}
 		else if ( option instanceof SessionCreationOption.TenantId tenantId ) {
 			options.tenantIdentifier( tenantId.value() );

@@ -1531,7 +1531,7 @@ If you enable this profile:
 
 [source,java]
 ----
-session.enableFetchProfile("org.hibernate.defaultProfile");
+entityManager.addOption(new EnabledFetchProfile("org.hibernate.defaultProfile"));
 ----
 
 Then ``outer join``s for such associations will _automatically_ be added to every HQL or criteria query.

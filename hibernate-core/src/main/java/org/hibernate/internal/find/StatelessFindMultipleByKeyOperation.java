@@ -8,7 +8,6 @@ import jakarta.persistence.FindOption;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
-import org.hibernate.KeyType;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -42,29 +41,9 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 		this.loadAccessContext = loadAccessContext;
 	}
 
-	public List<T> performFind(
-			List<?> keys,
-			@Nullable GraphSemantic graphSemantic,
-			@Nullable RootGraphImplementor<T> rootGraph) {
-		final var session = loadAccessContext.getStatelessSession();
-		checkFindRequirements( keys, session );
-		return getKeyType() == KeyType.NATURAL
-				? findByNaturalIds( keys, session, graphSemantic, rootGraph )
-				: findByIds( keys, graphSemantic, rootGraph );
-	}
-
-	private List<T> findByIds(
-			List<?> keys,
-			GraphSemantic graphSemantic,
-			RootGraphImplementor<T> rootGraph) {
-		var session = loadAccessContext.getStatelessSession();
-		final var ids = Helper.coerceIds( getEntityDescriptor(), keys, session );
-		return withOptions( session, graphSemantic, rootGraph, () -> {
-			// todo (jpa4) : make sure loading from cache happens inside here
-			final var results = getEntityDescriptor().multiLoad( ids, session, this );
-			//noinspection unchecked
-			return (List<T>) results;
-		} );
+	@Override
+	protected StatelessSessionImplementor getSession() {
+		return loadAccessContext.getStatelessSession();
 	}
 
 	@Override
@@ -73,21 +52,6 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 			GraphSemantic graphSemantic,
 			RootGraphImplementor<T> rootGraph,
 			Supplier<List<T>> action) {
-		final var session = (StatelessSessionImplementor) sharedSession;
-		final var influencers = session.getLoadQueryInfluencers();
-		final var fetchProfiles = influencers.adjustFetchProfiles( getDisabledFetchProfiles(), getEnabledFetchProfiles() );
-		final var effectiveEntityGraph = rootGraph == null
-				? null
-				: influencers.applyEntityGraph( rootGraph, graphSemantic );
-
-		try {
-			return action.get();
-		}
-		finally {
-			if ( effectiveEntityGraph != null ) {
-				effectiveEntityGraph.clear();
-			}
-			influencers.setEnabledFetchProfileNames( fetchProfiles );
-		}
+		return withLoadQueryInfluencers( sharedSession, graphSemantic, rootGraph, action );
 	}
 }

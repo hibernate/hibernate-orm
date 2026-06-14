@@ -83,6 +83,16 @@ eventually move into `orm-integration-notes.adoc` if they turn out to require
 mapping-model API changes, but they should start here when the local prototype
 story is still unclear.
 
+link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`]
+
+This is the design note for making aggregate-valued embeddables such as SQL
+`STRUCT` / UDT, JSON, XML, and aggregate arrays explicit in the mapping model,
+runtime model, binder, and extractor architecture.
+
+Use this document when aggregate support exposes pressure on `Component`,
+`AggregateColumn`, `AggregateComponentSecondPass`, runtime embeddable mappings,
+or dialect aggregate read/write/extraction handling.
+
 link:annotation-coverage.adoc[`annotation-coverage.adoc`]
 
 This is the annotation coverage audit for the boot-model pipeline.  It tracks
@@ -109,6 +119,9 @@ If the question is "how does the model-binding pipeline work?", read
 
 If the question is "what ORM mapping API change would make this cleaner?", use
 `orm-integration-notes.adoc`.
+
+If the question is "how should aggregate embeddables be modeled long-term?", use
+`aggregate-mapping-design.adoc`.
 
 If the question is "what mapping support is still missing?", use
 `remaining-binding-gaps.adoc`.

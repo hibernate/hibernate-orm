@@ -1071,14 +1071,21 @@ than as independent mapping annotations.  `@AttributeBinderType` and
 pipeline, and `@IdGeneratorType` is verified through a custom
 identifier-generator meta-annotation.
 
-| Constructor instantiation
-| `@Instantiator`
-| Open.  Constructor-target annotations are not currently consumed by the new
-model pipeline; handle separately from `@EmbeddableInstantiator`.
+| @(Embeddable)Instantiator
+| `@Instantiator`, `@EmbeddableInstantiator`
+| Deferred until hibernate-models exposes constructor annotation targets
+(https://github.com/hibernate/hibernate-models/issues/243[hibernate-models#243],
+planned for 1.3.0).  `@EmbeddableInstantiator` has binding coverage today, but
+should be revisited in this slice so both embeddable-instantiation annotations
+are sourced through hibernate-models rather than reflection/ad hoc lookup.
 
 | Struct/aggregate mapping
 | `@Struct`
-| Deferred.  Requires a dedicated aggregate/UDT design and binding slice.
+| Partially covered.  Singular embedded `@Struct` mappings are bound to an
+aggregate column and UDT metadata in the new pipeline.  Plural, array, and
+deeper nested aggregate parity is intentionally deferred until the aggregate
+mapping model, runtime model, binder, and extractor design is revisited; see
+link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`].
 
 | State management
 | `@Audited`, `@Audited.Excluded`, `@Audited.Table`,
@@ -1588,7 +1595,7 @@ observed support from work still needing binder/test confirmation.
 | `@EmbeddableInstantiator`
 | `TYPE`, `FIELD`, `METHOD`, `ANNOTATION_TYPE`
 | yes
-| component custom instantiator binding present
+| component custom instantiator binding present; follow-up to make sourcing model-driven with constructor support
 | not audited yet
 | n/a
 | focused bind test
@@ -2290,11 +2297,11 @@ observed support from work still needing binder/test confirmation.
 | `@Struct`
 | `TYPE`, `FIELD`, `METHOD`
 | yes
-| intentionally deferred aggregate/UDT area
-| not audited yet
+| singular embedded aggregate binding present
 | n/a
-| needed
-| deferred
+| n/a
+| focused bind test
+| covered
 
 | `@Subselect`
 | `TYPE`
@@ -2781,8 +2788,13 @@ are verified through the matching singular override.
 
 == Follow-Up Slices
 
-1. Add constructor-level `@Instantiator` support once the model pipeline has a
-   constructor annotation source for embeddables.
-2. Revisit `@Struct` as part of a dedicated aggregate/UDT mapping slice.
+1. Add constructor-level `@Instantiator` support after hibernate-models 1.3.0
+   exposes constructor annotation targets
+   (https://github.com/hibernate/hibernate-models/issues/243[hibernate-models#243]),
+   and revisit `@EmbeddableInstantiator` in the same slice so embeddable
+   instantiation metadata is sourced consistently through hibernate-models.
+2. Revisit plural, array, and deeper nested `@Struct` / aggregate parity after
+   the aggregate mapping design direction is settled; see
+   link:aggregate-mapping-design.adoc[`aggregate-mapping-design.adoc`].
 3. Revisit audit/changelog and temporal annotations as part of a dedicated
    state-management slice.

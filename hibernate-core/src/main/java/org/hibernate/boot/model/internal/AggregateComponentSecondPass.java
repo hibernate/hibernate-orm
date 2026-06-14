@@ -25,6 +25,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.Value;
@@ -41,6 +42,8 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 public class AggregateComponentSecondPass implements SecondPass {
 
 	private final PropertyHolder propertyHolder;
+	private final Table table;
+	private final String path;
 	private final Component component;
 	private final ClassDetails componentClassDetails;
 	private final String propertyName;
@@ -53,6 +56,24 @@ public class AggregateComponentSecondPass implements SecondPass {
 			String propertyName,
 			MetadataBuildingContext context) {
 		this.propertyHolder = propertyHolder;
+		this.table = propertyHolder.getTable();
+		this.path = propertyHolder.getPath();
+		this.component = component;
+		this.componentClassDetails = componentClassDetails;
+		this.propertyName = propertyName;
+		this.context = context;
+	}
+
+	public AggregateComponentSecondPass(
+			Table table,
+			String path,
+			Component component,
+			ClassDetails componentClassDetails,
+			String propertyName,
+			MetadataBuildingContext context) {
+		this.propertyHolder = null;
+		this.table = table;
+		this.path = path;
 		this.component = component;
 		this.componentClassDetails = componentClassDetails;
 		this.propertyName = propertyName;
@@ -61,7 +82,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-		validateComponent( component, qualify( propertyHolder.getPath(), propertyName ), isAggregateArray() );
+		validateComponent( component, qualify( path, propertyName ), isAggregateArray() );
 
 		final var metadataCollector = context.getMetadataCollector();
 		final var typeConfiguration = metadataCollector.getTypeConfiguration();
@@ -77,7 +98,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 		final AggregateColumn aggregateColumn = component.getAggregateColumn();
 
 		ensureInitialized( metadataCollector, aggregateColumn );
-		validateSupportedColumnTypes( propertyHolder.getPath(), component );
+		validateSupportedColumnTypes( path, component );
 
 		final QualifiedName structName = component.getStructName();
 		final boolean addAuxiliaryObjects;
@@ -177,7 +198,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 			subColumn.setCustomRead( customReadExpression );
 		}
 
-		propertyHolder.getTable().getColumns().removeAll( aggregatedColumns );
+		table.getColumns().removeAll( aggregatedColumns );
 	}
 
 	private static void validateComponent(Component component, String basePath, boolean inArray) {

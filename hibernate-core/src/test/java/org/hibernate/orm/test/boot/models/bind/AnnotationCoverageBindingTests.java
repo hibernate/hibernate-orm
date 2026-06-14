@@ -88,6 +88,7 @@ import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.Struct;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TargetEmbeddable;
@@ -106,11 +107,14 @@ import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -128,6 +132,7 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.util.uuid.IdGeneratorCreationContext;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -397,6 +402,42 @@ public class AnnotationCoverageBindingTests {
 				},
 				scope.getRegistry(),
 				BasicValueTypeCoverageEntity.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry(settings = @Setting(
+			name = JdbcSettings.DIALECT,
+			value = "org.hibernate.orm.test.boot.models.bind.AnnotationCoverageBindingTests$StructAggregateDialect"
+	))
+	void testStructAggregateAnnotationCoverage(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector()
+							.getEntityBinding( StructAggregateEntity.class.getName() );
+					final Component component = (Component) entityBinding.getProperty( "publisher" ).getValue();
+
+					assertThat( component.getStructName().render() ).isEqualTo( "publisher_type" );
+					assertThat( component.getStructColumnNames() ).containsExactly( "code", "name" );
+					assertThat( component.getAggregateColumn() ).isNotNull();
+					assertThat( component.getAggregateColumn().getName() ).isEqualTo( "publisher_info" );
+					assertThat( component.getAggregateColumn().getSqlTypeCode() ).isEqualTo( SqlTypes.STRUCT );
+					assertThat( component.getAggregateColumn().getSqlType() ).isEqualTo( "publisher_type" );
+					assertThat( entityBinding.getTable().getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.contains( "publisher_info" )
+							.doesNotContain( "name", "code" );
+
+					final var userDefinedType = context.getMetadata().getDatabase()
+							.getDefaultNamespace()
+							.locateUserDefinedType( context.getMetadata().getDatabase().toIdentifier( "publisher_type" ) );
+					assertThat( userDefinedType ).isNotNull();
+					assertThat( userDefinedType.getColumns() )
+							.extracting( org.hibernate.mapping.Column::getName )
+							.containsExactly( "code", "name" );
+				},
+				scope.getRegistry(),
+				StructAggregateEntity.class
 		);
 	}
 
@@ -1119,6 +1160,28 @@ public class AnnotationCoverageBindingTests {
 		private Map<String, String> customKeyed;
 	}
 
+	@Entity(name = "StructAggregateEntity")
+	@Table(name = "struct_aggregate_entities")
+	public static class StructAggregateEntity {
+		@Id
+		@Column(name = "id")
+		private Integer id;
+
+		@Embedded
+		@Column(name = "publisher_info")
+		private StructPublisher publisher;
+	}
+
+	@Embeddable
+	@Struct(name = "publisher_type", attributes = { "code", "name" })
+	public static class StructPublisher {
+		@Column(name = "name", columnDefinition = "varchar(255)")
+		private String name;
+
+		@Column(name = "code", columnDefinition = "varchar(32)")
+		private String code;
+	}
+
 	public static class LocalStringJavaType extends AbstractClassJavaType<String> implements BasicJavaType<String> {
 		public LocalStringJavaType() {
 			super( String.class );
@@ -1602,6 +1665,44 @@ public class AnnotationCoverageBindingTests {
 		@Override
 		public EnumSet<EventType> getEventTypes() {
 			return EnumSet.of( EventType.INSERT );
+		}
+	}
+
+	public static class StructAggregateDialect extends H2Dialect {
+		private static final AggregateSupport AGGREGATE_SUPPORT = new AggregateSupportImpl() {
+			@Override
+			public String aggregateComponentCustomReadExpression(
+					String template,
+					String placeholder,
+					String aggregateParentReadExpression,
+					String columnExpression,
+					int aggregateColumnTypeCode,
+					SqlTypedMapping column,
+					TypeConfiguration typeConfiguration) {
+				final String readExpression = aggregateParentReadExpression + "." + columnExpression;
+				return template == null || template.isEmpty()
+						? readExpression
+						: template.replace( placeholder, readExpression );
+			}
+
+			@Override
+			public String aggregateComponentAssignmentExpression(
+					String aggregateParentAssignmentExpression,
+					String columnExpression,
+					int aggregateColumnTypeCode,
+					org.hibernate.mapping.Column column) {
+				return aggregateParentAssignmentExpression + "." + columnExpression;
+			}
+		};
+
+		@Override
+		public boolean supportsUserDefinedTypes() {
+			return true;
+		}
+
+		@Override
+		public AggregateSupport getAggregateSupport() {
+			return AGGREGATE_SUPPORT;
 		}
 	}
 

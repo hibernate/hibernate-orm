@@ -86,7 +86,7 @@ public class ComponentBinder {
 		validateEmbeddedTablePlacement( source );
 		applyComponentCustomizations( component, source.sourceMember(), source.componentType() );
 		applyColumnNamingPattern( component, source.sourceMember() );
-		return bindProperties(
+		final List<Column> columns = bindProperties(
 				ownerType,
 				ownerBinding,
 				source.componentType(),
@@ -104,6 +104,8 @@ public class ComponentBinder {
 				nullableByDefault,
 				updatable
 		);
+		AggregateComponentBinder.processAggregate( ownerBinding, source, component, table, state );
+		return columns;
 	}
 
 	List<Column> bindBasicProperties(

@@ -8,6 +8,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityAgent;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 /// Declares various for [session][EntityManager.CreationOption] and
 /// [stateless session][EntityAgent.CreationOption] creation options.
@@ -42,6 +44,20 @@ public interface SessionCreationOption {
 	/// Instances of temporal entities retrieved in the created session represent the
 	/// revisions effective at the given instant.
 	record EffectiveAt(Instant instant) implements EntityManager.CreationOption, EntityAgent.CreationOption {
+	}
+
+	/**
+	 * Specifies that the named {@linkplain org.hibernate.annotations.FilterDef filter}
+	 * should be enabled with the given arguments to its parameters.
+	 *
+	 * @param name The {@linkplain org.hibernate.annotations.FilterDef#name name } of the filter
+	 * @param arguments The arguments to the named parameters of the filter
+	 */
+	record EnabledFilter(String name, Map<String, ?> arguments)
+			implements EntityManager.CreationOption, EntityAgent.CreationOption {
+		public EnabledFilter {
+			arguments = new HashMap<>( arguments );
+		}
 	}
 
 	/// Allow explicitly enabling or disabling subselect fetching for an EntityManager.

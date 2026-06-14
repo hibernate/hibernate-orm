@@ -89,6 +89,9 @@ public final class OptionsHelper {
 		else if ( option instanceof Interceptor interceptor ) {
 			options.interceptor( interceptor );
 		}
+		else if ( option instanceof SessionCreationOption.EnabledFilter enabledFilter ) {
+			options.enableFilter( enabledFilter );
+		}
 	}
 
 
@@ -168,6 +171,9 @@ public final class OptionsHelper {
 		}
 		else if ( option instanceof Interceptor interceptor ) {
 			options.interceptor( interceptor );
+		}
+		else if ( option instanceof SessionCreationOption.EnabledFilter enabledFilter ) {
+			options.enableFilter( enabledFilter );
 		}
 	}
 

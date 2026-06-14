@@ -10,6 +10,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Interceptor;
+import org.hibernate.SessionCreationOption;
 import org.hibernate.StatementObserver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EmptyInterceptor;
@@ -18,8 +19,12 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.sql.Connection;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
+
+import static java.util.Collections.emptyList;
 
 /// Mutable collector for options common to creation of both stateful and stateless sessions.
 ///
@@ -49,6 +54,7 @@ public class CommonOptions {
 	protected CacheMode cacheMode;
 	protected TimeZone jdbcTimeZone;
 	protected Object temporalIdentifier;
+	protected List<SessionCreationOption.EnabledFilter> enabledFilterOptions;
 
 	public CommonOptions(SessionFactoryImplementor sessionFactory) {
 		final var options = sessionFactory.getSessionFactoryOptions();
@@ -97,6 +103,10 @@ public class CommonOptions {
 
 	public Object getTemporalIdentifier() {
 		return temporalIdentifier;
+	}
+
+	public List<SessionCreationOption.EnabledFilter> getEnabledFilterOptions() {
+		return enabledFilterOptions == null ? emptyList() : enabledFilterOptions;
 	}
 
 	public void connection(Connection connection) {
@@ -190,6 +200,13 @@ public class CommonOptions {
 
 	public void atChangeset(Object changesetId) {
 		this.temporalIdentifier = changesetId;
+	}
+
+	public void enableFilter(SessionCreationOption.EnabledFilter enabledFilter) {
+		if ( enabledFilterOptions == null ) {
+			enabledFilterOptions = new ArrayList<>();
+		}
+		enabledFilterOptions.add( enabledFilter );
 	}
 
 	/// Resolve the interceptor to use for the session being created.

@@ -30,6 +30,7 @@ annotation = "3.0.0"
 cdi = "4.1.0"
 inject = "2.0.1"
 interceptors = "2.2.0"
+concurrency = "3.2.0-M2"
 data = "1.1.0-M3"
 jacc = "3.0.0"
 jaxbApi = "4.0.5"
@@ -61,6 +62,7 @@ mockito = "5.23.0"
 shrinkwrap = "1.2.6"
 shrinkwrapDescriptors = "2.0.0"
 weld = "6.0.4.Final"
+weldJunit = "6.0.0.Beta1"
 wildFlyTxnClient = "3.0.5.Final"
 hibernateValidator = "9.1.1.Final"
 jaxen = "2.0.6"
@@ -69,6 +71,13 @@ dom4j = "2.2.0"
 javaxMoney = "1.1"
 moneta = "1.4.5"
 persistenceTck="4.0.0-SNAPSHOT"
+dataTck = "1.1.0-SNAPSHOT"
+dataTckArquillian = "1.9.2.Final"
+dataTckShrinkwrap = "1.2.6"
+dataTckServlet = "6.1.0-M2"
+dataTckNosql = "1.0.0-b7"
+dataTckCdi = "5.0.0.Beta1"
+sigtest = "2.3"
 
 # JDBC Libs
 h2 = "2.4.240"
@@ -181,7 +190,9 @@ jakarta-jacc = { group = "jakarta.authorization", name = "jakarta.authorization-
 jakarta-cdi = { group = "jakarta.enterprise", name = "jakarta.enterprise.cdi-api", version.ref = "cdi" }
 jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-api", version.ref = "annotation" }
 jakarta-interceptors = { group = "jakarta.interceptor", name = "jakarta.interceptor-api", version.ref = "interceptors" }
+jakarta-concurrency = { group = "jakarta.concurrency", name = "jakarta.concurrency-api", version.ref = "concurrency" }
 jakarta-data = { group = "jakarta.data", name = "jakarta.data-api", version.ref = "data" }
+jakarta-dataStateful = { group = "jakarta.data", name = "jakarta.data.stateful-api", version.ref = "data" }
 jakarta-jsonbApi = { group = "jakarta.json.bind", name = "jakarta.json.bind-api", version.ref = "jsonbApi" }
 jakarta-jsonb = { group = "org.eclipse", name = "yasson", version.ref = "jsonbRuntime" }
 jakarta-inject = { group = "jakarta.inject", name = "jakarta.inject-api", version.ref = "inject" }
@@ -226,6 +237,17 @@ test-dom4j = { group = "org.dom4j", name = "dom4j", version.ref = "dom4j" }
 test-javaxMoney = { group = "javax.money", name = "money-api", version.ref = "javaxMoney" }
 test-moneta = { group = "org.javamoney.moneta", name = "moneta-core", version.ref = "moneta" }
 test-jakartaPersistenceTckTests = { group = "jakarta.persistence", name = "persistence-tck-spec-tests", version.ref = "persistenceTck" }
+test-jakartaDataTck = { group = "jakarta.data", name = "jakarta.data-tck", version.ref = "dataTck" }
+test-jakartaDataApi = { group = "jakarta.data", name = "jakarta.data-api", version.ref = "dataTck" }
+test-jakartaDataStatefulApi = { group = "jakarta.data", name = "jakarta.data.stateful-api", version.ref = "dataTck" }
+test-weldJunit = { group = "org.jboss.weld", name = "weld-junit-jupiter", version.ref = "weldJunit" }
+test-sigtest = { group = "jakarta.tck", name = "sigtest-maven-plugin", version.ref = "sigtest" }
+test-dataTckArquillianCore = { group = "org.jboss.arquillian.junit5", name = "arquillian-junit5-core", version.ref = "dataTckArquillian" }
+test-dataTckArquillianContainerApi = { group = "org.jboss.arquillian.container", name = "arquillian-container-test-api", version.ref = "dataTckArquillian" }
+test-dataTckShrinkwrapApi = { group = "org.jboss.shrinkwrap", name = "shrinkwrap-api", version.ref = "dataTckShrinkwrap" }
+test-dataTckServletApi = { group = "jakarta.servlet", name = "jakarta.servlet-api", version.ref = "dataTckServlet" }
+test-dataTckNosqlApi = { group = "jakarta.nosql", name = "nosql-core", version.ref = "dataTckNosql" }
+test-dataTckCdiApi = { group = "jakarta.cdi", name = "jakarta.cdi-api", version.ref = "dataTckCdi" }
 
 # JDBC
 jdbc-h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }

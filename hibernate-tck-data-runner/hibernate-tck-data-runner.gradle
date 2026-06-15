@@ -1,0 +1,133 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id "local.java-module"
+    id "local.code-quality"
+}
+
+description = 'Hibernate ORM\'s Jakarta Data TCK runner'
+
+repositories {
+    org.hibernate.orm.env.MavenMirror.maybeAddMavenLocal(it)
+    maven {
+        name = "Central Portal Snapshots"
+        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+        content {
+            includeGroup "jakarta.data"
+        }
+    }
+    org.hibernate.orm.env.MavenMirror.maybeAddMavenCentral(it)
+}
+
+// Configuration to resolve the TCK sources jar
+configurations {
+    tckSources {
+        transitive = false
+    }
+}
+
+configurations.testRuntimeClasspath {
+    // arquillian-junit5-container's MethodParameterObserver causes NPEs in standalone mode;
+    exclude group: 'org.jboss.arquillian.junit5', module: 'arquillian-junit5-container'
+}
+
+dependencies {
+    tckSources(variantOf(libs.test.jakartaDataTck) { classifier('sources') })
+
+    testImplementation libs.test.junitJupiterApi
+    testImplementation libs.test.junitJupiterSuiteEngine
+
+    testImplementation libs.test.jakartaDataTck
+    testImplementation libs.test.jakartaDataApi
+    testImplementation libs.test.jakartaDataStatefulApi
+
+    testImplementation libs.test.weldJunit
+    testImplementation libs.test.jbossJta
+    testImplementation libs.test.jbossTxSpi
+
+    testImplementation libs.jakarta.validation
+    testImplementation libs.jakarta.concurrency
+    testImplementation libs.test.dataTckCdiApi
+
+    // Arquillian/ShrinkWrap APIs needed for TCK classes
+    // (TCK test classes use @Deployment with RUNTIME retention, StandaloneExtension extends ArquillianExtension)
+    testImplementation libs.test.dataTckArquillianCore
+    testImplementation libs.test.dataTckArquillianContainerApi
+    testImplementation libs.test.dataTckShrinkwrapApi
+
+    // Compile-only: TCK sources import these but not needed at runtime
+    testCompileOnly libs.test.dataTckServletApi
+    testCompileOnly libs.test.dataTckNosqlApi
+
+    testImplementation project(':hibernate-core')
+    testImplementation project(':hibernate-testing')
+
+    testAnnotationProcessor project(':hibernate-processor')
+}
+
+// Extract TCK sources from the sources jar
+def extractTckSources = tasks.register('extractTckSources', Copy) {
+    from(zipTree(configurations.tckSources.singleFile)) {
+        exclude '**/_AsciiChar.java'
+        exclude '**/_AsciiCharacter.java'
+    }
+    into layout.buildDirectory.dir("tck-sources")
+}
+
+// Add extracted TCK sources as a test source directory
+sourceSets.test.java.srcDir layout.buildDirectory.dir("tck-sources")
+
+tasks.named('compileTestJava') {
+    dependsOn extractTckSources
+    options.compilerArgs += [
+            '-parameters',
+            '-AjakartaDataSortCompliance=true'
+    ]
+}
+
+test {
+    useJUnitPlatform()
+
+    filter {
+        includeTestsMatching "JakartaDataTckTestRunner"
+    }
+
+    maxParallelForks = 1
+
+    def buildDir = project.layout.buildDirectory.get().asFile.absolutePath
+    def userdir = mkdir(buildDir + "/userdir")
+    def tcklogdir = mkdir(buildDir + "/tcklogs")
+    systemProperties = [
+            "jakarta.tck.skip.deployment"                   : "true",
+            "java.util.logging.config.file"                 : "target/test-classes/logging.properties",
+            "user.dir"                                      : userdir,
+            "log.file.location"                             : tcklogdir,
+
+            "hibernate.show_sql"                            : true,
+            "hibernate.format_sql"                          : true,
+            "hibernate.highlight_sql"                       : true,
+
+            "jakarta.persistence.jdbc.driver"               : dbBundle[db]['jdbc.driver'],
+            "jakarta.persistence.jdbc.url"                  : dbBundle[db]['jdbc.url'].replace('_$worker', ''),
+            "jakarta.persistence.jdbc.user"                 : dbBundle[db]['jdbc.user'].replace('_$worker', ''),
+            "jakarta.persistence.jdbc.password"             : dbBundle[db]['jdbc.pass'],
+
+            "hibernate.connection.autocommit"                           : true,
+            "hibernate.allow_update_outside_transaction"                : true,
+            "hibernate.transaction.jta.platform"                        : "org.hibernate.engine.transaction.jta.platform.internal.NarayanaJtaPlatform",
+            "jakarta.persistence.schema-generation.database.action"     : "drop-and-create"
+    ]
+
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = 'full'
+        events "passed", "skipped", "failed"
+    }
+
+    onlyIf {
+        project.hasProperty('rundatatck')
+    }
+}

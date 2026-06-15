@@ -181,6 +181,7 @@ include 'hibernate-reveng'
 project(':hibernate-reveng').projectDir = new File(rootProject.projectDir, "tooling/hibernate-reveng")
 
 include 'hibernate-tck-runner'
+include 'hibernate-tck-data-runner'
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

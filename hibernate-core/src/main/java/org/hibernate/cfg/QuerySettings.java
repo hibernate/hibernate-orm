@@ -310,4 +310,18 @@ public interface QuerySettings {
 	 * By default, this is set to false
 	 */
 	String QUERY_PASS_PROCEDURE_PARAMETER_NAMES = "hibernate.query.pass_procedure_parameter_names";
+
+	/**
+	 * Boolean setting to control whether safe mode validation for HQL and Criteria queries is enabled.
+	 * When safe mode is enabled using unknown functions will result in an exception.
+	 * To use custom functions, you can {@link org.hibernate.boot.model.FunctionContributor contribute them explicitly}
+	 *
+	 * @settingDefault {@code false} (disabled)
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isSafeModeEnabled
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	String SAFE_MODE_ENABLED = "hibernate.query.safe_mode_enabled";
 }

@@ -139,4 +139,6 @@ public interface QueryEngineOptions {
 	String getSessionFactoryName();
 
 	String getUuid();
+
+	boolean isSafeModeEnabled();
 }

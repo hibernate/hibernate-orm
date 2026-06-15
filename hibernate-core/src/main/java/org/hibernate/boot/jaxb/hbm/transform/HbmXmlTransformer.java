@@ -1447,6 +1447,8 @@ public class HbmXmlTransformer {
 		);
 		basic.setOptimisticLock( hbmProp.isOptimisticLock() );
 
+		basic.setGenerated( hbmProp.getGenerated() );
+
 		applyBasicTypeMapping(
 				(BasicValue) propertyInfo.bootModelProperty().getValue(),
 				basic,

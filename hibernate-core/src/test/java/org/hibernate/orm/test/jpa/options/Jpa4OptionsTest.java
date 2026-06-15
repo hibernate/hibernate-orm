@@ -29,6 +29,9 @@ import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
+import org.hibernate.query.CommonQueryContract;
+import org.hibernate.query.QueryOption;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -210,7 +213,10 @@ class Jpa4OptionsTest {
 							.addOption( CacheRetrieveMode.BYPASS )
 							.addOption( CacheStoreMode.BYPASS )
 							.addOption( LockModeType.PESSIMISTIC_READ )
-							.addOption( PessimisticLockScope.EXTENDED );
+							.addOption( PessimisticLockScope.EXTENDED )
+							.addOption( new QueryOption.ResultSetCache( "book-results" ) )
+							.addOption( new QueryOption.JdbcFetchSize( 42 ) )
+							.addOption( new QueryOption.Comment( "book query" ) );
 
 			assertEquals( 1234, query.getTimeout() );
 			assertEquals( QueryFlushMode.NO_FLUSH, query.getQueryFlushMode() );
@@ -219,12 +225,21 @@ class Jpa4OptionsTest {
 			assertEquals( LockModeType.PESSIMISTIC_READ, query.getLockMode() );
 			assertEquals( PessimisticLockScope.EXTENDED, query.getLockScope() );
 
+			final var hibernateQuery = query.unwrap( SelectionQuery.class );
+			assertTrue( hibernateQuery.isCacheable() );
+			assertEquals( "book-results", hibernateQuery.getCacheRegion() );
+			assertEquals( 42, hibernateQuery.getFetchSize() );
+			assertEquals( "book query", hibernateQuery.getComment() );
+
 			assertTrue( query.getOptions().contains( Timeout.milliseconds( 1234 ) ) );
 			assertTrue( query.getOptions().contains( QueryFlushMode.NO_FLUSH ) );
 			assertTrue( query.getOptions().contains( CacheRetrieveMode.BYPASS ) );
 			assertTrue( query.getOptions().contains( CacheStoreMode.BYPASS ) );
 			assertTrue( query.getOptions().contains( LockModeType.PESSIMISTIC_READ ) );
 			assertTrue( query.getOptions().contains( PessimisticLockScope.EXTENDED ) );
+			assertTrue( query.getOptions().contains( new QueryOption.ResultSetCache( "book-results" ) ) );
+			assertTrue( query.getOptions().contains( new QueryOption.JdbcFetchSize( 42 ) ) );
+			assertTrue( query.getOptions().contains( new QueryOption.Comment( "book query" ) ) );
 		} );
 	}
 
@@ -234,13 +249,16 @@ class Jpa4OptionsTest {
 			final var statement =
 					entityManager.createStatement( "delete from Book" )
 							.addOption( Timeout.milliseconds( 2345 ) )
-							.addOption( QueryFlushMode.NO_FLUSH );
+							.addOption( QueryFlushMode.NO_FLUSH )
+							.addOption( new QueryOption.Comment( "delete books" ) );
 
 			assertEquals( 2345, statement.getTimeout() );
 			assertEquals( QueryFlushMode.NO_FLUSH, statement.getQueryFlushMode() );
+			assertEquals( "delete books", ( (CommonQueryContract) statement ).getComment() );
 
 			assertTrue( statement.getOptions().contains( Timeout.milliseconds( 2345 ) ) );
 			assertTrue( statement.getOptions().contains( QueryFlushMode.NO_FLUSH ) );
+			assertTrue( statement.getOptions().contains( new QueryOption.Comment( "delete books" ) ) );
 		} );
 	}
 

@@ -6,6 +6,8 @@ package org.hibernate;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.engine.creation.CommonSharedBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -168,7 +170,19 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 
 	@Override
 	@Nonnull
+	SharedSessionBuilder jdbcBatchSize(int batchSize);
+
+	@Override
+	@Nonnull
 	SharedSessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
+
+	@Override
+	@Nonnull
+	SharedSessionBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode);
+
+	@Override
+	@Nonnull
+	SharedSessionBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	@Nonnull

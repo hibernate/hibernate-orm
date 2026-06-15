@@ -110,4 +110,21 @@ public interface SessionCreationOption {
 		/// Disables subselect fetching.
 		DISABLED
 	}
+
+	/**
+	 * Enables JDBC statement batching and specifies a batch size.
+	 *
+	 * @param batchSize The batch size for JDBC batch updates
+	 *
+	 * @see Session#setJdbcBatchSize(Integer)
+	 * @see org.hibernate.cfg.BatchSettings#STATEMENT_BATCH_SIZE
+	 *
+	 * @apiNote Not defined as an {@link EntityAgent.CreationOption}
+	 * because JDBC batching at the session level results in a sort
+	 * of write-behind behavior which is foreign to the nature of
+	 * the stateless programming model.
+	 */
+	record JdbcBatchSize(int batchSize)
+			implements EntityManager.CreationOption {
+	}
 }

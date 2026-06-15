@@ -6,9 +6,14 @@
              version="1.0">
     <persistence-unit name="cfgxmlpar" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>org.hibernate.orm.test.jpa.pack.cfgxmlpar.Morito</class>
+        <class>org.hibernate.orm.test.jpa.Item</class>
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
-            <property name="hibernate.cfg_xml_file" value="/org/hibernate/orm/test/jpa/pack/cfgxmlpar/hibernate.cfg.xml"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.generate_statistics" value="true"/>
+            <property name="hibernate.test-assertable-setting" value="value"/>
+            <property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory"/>
         </properties>
     </persistence-unit>
 </persistence>

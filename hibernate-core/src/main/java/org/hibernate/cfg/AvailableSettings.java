@@ -10,8 +10,7 @@ import org.hibernate.jpa.SpecHints;
  * <p>
  * The settings defined here may be specified at configuration time:
  * <ul>
- *     <li>in a configuration file, for example, in {@code persistence.xml} or
- *         {@code hibernate.cfg.xml},
+ *     <li>in a configuration file, for example, in {@code persistence.xml},
  *     <li>via {@link Configuration#setProperty(String, String)}, or
  *     <li>via {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder#applySetting(String, Object)}.
  * </ul>
@@ -72,7 +71,10 @@ public interface AvailableSettings
 	// Hibernate settings
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Remove
+	/**
+	 * @deprecated The legacy {@code hibernate.cfg.xml} format is no longer supported.
+	 */
+	@Deprecated(since="9.0", forRemoval = true)
 	String CFG_XML_FILE = "hibernate.cfg_xml_file";
 
 	@Remove

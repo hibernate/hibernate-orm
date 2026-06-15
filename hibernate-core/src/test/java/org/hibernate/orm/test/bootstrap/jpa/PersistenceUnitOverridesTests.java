@@ -5,7 +5,6 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 import jakarta.persistence.spi.PersistenceProvider;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -14,7 +13,6 @@ import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionPro
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.jdbc.DataSourceStub;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -32,6 +30,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
@@ -404,23 +403,13 @@ public class PersistenceUnitOverridesTests {
 
 		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 
-		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
-				info,
-				integrationSettings
-		)) {
-			assertThat( emf.getProperties().get( AvailableSettings.DIALECT ) )
-					.isEqualTo( PersistenceUnitDialect.class.getName() );
-
-			assertThat( emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect() )
-					.isInstanceOf( PersistenceUnitDialect.class );
-
-			assertThat( emf.getMetamodel().entity( MappedEntity.class ) )
-					.isNotNull();
-		}
+		assertThatThrownBy( () -> provider.createContainerEntityManagerFactory( info, integrationSettings ) )
+				.isInstanceOf( jakarta.persistence.PersistenceException.class )
+				.hasMessageContaining( "hibernate.cfg.xml" );
 	}
 
 	@Test
-	public void testIntegrationOverridesOfCfgXml() {
+	public void testIntegrationCannotOverrideCfgXml() {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
 
@@ -439,24 +428,9 @@ public class PersistenceUnitOverridesTests {
 		final Map<String, Object> integrationSettings = ServiceRegistryUtil.createBaseSettings();
 		integrationSettings.put( AvailableSettings.DIALECT, IntegrationDialect.class.getName() );
 
-		try (final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
-				info,
-				integrationSettings
-		)) {
-			assertThat( emf.getProperties().get( AvailableSettings.DIALECT ) )
-					.isEqualTo( IntegrationDialect.class.getName() );
-
-			assertThat( emf.unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect() )
-					.isInstanceOf( IntegrationDialect.class );
-
-			final EntityPersister entityMapping = emf.unwrap( SessionFactoryImplementor.class )
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( MappedEntity.class );
-			assertThat( entityMapping ).isNotNull();
-			assertThat( entityMapping.getCacheAccessStrategy().getAccessType() )
-					.isEqualTo( AccessType.READ_ONLY );
-		}
+		assertThatThrownBy( () -> provider.createContainerEntityManagerFactory( info, integrationSettings ) )
+				.isInstanceOf( jakarta.persistence.PersistenceException.class )
+				.hasMessageContaining( "hibernate.cfg.xml" );
 	}
 
 	public static class PersistenceUnitDialect extends Dialect {

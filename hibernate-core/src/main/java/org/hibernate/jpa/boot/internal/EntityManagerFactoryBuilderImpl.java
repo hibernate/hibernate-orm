@@ -254,22 +254,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 
-	private void setupMappingReferences(MetadataSources metadataSources) {
-		// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
-		//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
-		final var aggregatedConfig =
-				standardServiceRegistry.requireService( CfgXmlAccessService.class )
-						.getAggregatedConfig();
-		if ( aggregatedConfig != null ) {
-			final var mappingReferences = aggregatedConfig.getMappingReferences();
-			if ( mappingReferences != null ) {
-				for ( var mappingReference : mappingReferences ) {
-					mappingReference.apply( metadataSources );
-				}
-			}
-		}
-	}
-
 	private void setupValidation() {
 		final Object validatorFactory = configurationValues.get( JAKARTA_VALIDATION_FACTORY );
 		if ( validatorFactory == null ) {

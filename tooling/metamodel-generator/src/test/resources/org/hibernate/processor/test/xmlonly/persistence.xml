@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence xmlns="http://www.hibernate.org/xsd/orm/configuration"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             version="3.2">
+             version="4.0">
     <persistence-unit name="annotation-processor" transaction-type="JTA">
         <mapping-file>/org/hibernate/processor/test/xmlonly/xmlonly.xml</mapping-file>
     </persistence-unit>

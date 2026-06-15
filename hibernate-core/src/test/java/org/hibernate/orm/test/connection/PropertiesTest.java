@@ -9,7 +9,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -54,7 +53,7 @@ public class PropertiesTest {
 	public void testUsingJakartaJdbUrlSetting() {
 		try (final BootstrapServiceRegistry bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder().build()) {
 			final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new MyStandardServiceRegistryBuilder(
-					bootstrapServiceRegistry, new HashMap<>(), LoadedConfig.baseline() );
+					bootstrapServiceRegistry, new HashMap<>() );
 			standardServiceRegistryBuilder
 					.applySetting( AvailableSettings.JAKARTA_JDBC_URL, ConnectionProviderBuilder.URL )
 					.applySetting( AvailableSettings.JAKARTA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER )
@@ -87,9 +86,8 @@ public class PropertiesTest {
 
 		public MyStandardServiceRegistryBuilder(
 				BootstrapServiceRegistry bootstrapServiceRegistry,
-				Map<String, Object> settings,
-				LoadedConfig loadedConfig) {
-			super( bootstrapServiceRegistry, settings, loadedConfig );
+				Map<String, Object> settings) {
+			super( bootstrapServiceRegistry, settings );
 		}
 	}
 

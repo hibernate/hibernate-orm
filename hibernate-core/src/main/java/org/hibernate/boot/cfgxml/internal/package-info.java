@@ -1,5 +1,5 @@
 /**
- * Implementation of the service for processing and handling {@code cfg.xml} files.
+ * Support for loading configuration properties during bootstrap.
  *
  * @author Steve Ebersole
  */

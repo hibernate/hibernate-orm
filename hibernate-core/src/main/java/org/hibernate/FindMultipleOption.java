@@ -21,14 +21,14 @@ public interface FindMultipleOption extends FindOption {
 	/// - By default, the batch sizing strategy is determined by the
 	///   [SQL Dialect][org.hibernate.dialect.Dialect#getBatchLoadSizingStrategy],
 	///   but
-	/// - if some `batchSize>1` is specified as an argument to this method, then that
-	///   batch size will be used.
+	/// - if some `batchSize>1` is specified using this option, then that batch size
+	///   is used.
 	///
 	/// If an explicit batch size is set manually, care should be taken to not exceed
 	/// the capabilities of the underlying database.
 	///
 	/// The performance impact of setting a batch size depends on whether a SQL array
-	///  may be used to pass the list of identifiers to the database:
+	/// may be used to pass the list of identifiers to the database:
 	///
 	/// - for databases which support standard SQL arrays, a smaller batch size might
 	///   be extremely inefficient compared to a very large batch size or no batching

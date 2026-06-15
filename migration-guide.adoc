@@ -735,3 +735,9 @@ No DDL changes are needed. The default `REV`/`REVTYPE` column names and encoding
 == Changes in Dependencies
 
 This section describes changes to dependencies used by Hibernate ORM.
+
+[[dependency-changes-micrometer]]
+=== Micrometer dependency is now provided
+
+The `hibernate-micrometer` module no longer pulls `io.micrometer:micrometer-core` as a transitive runtime dependency.
+Applications using this module must now explicitly add `io.micrometer:micrometer-core` to their classpath.

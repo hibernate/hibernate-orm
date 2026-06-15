@@ -1152,6 +1152,13 @@ long publisherCacheMissCount =
 Hibernate's statistics enable observability.
 Both {micrometer}[Micrometer] and {smallrye-metrics}[SmallRye Metrics] are capable of exposing these metrics.
 
+[NOTE]
+====
+To use the Micrometer integration, the application must include `org.hibernate.orm:hibernate-micrometer` on the classpath,
+as well as an appropriate version of `io.micrometer:micrometer-core`.
+This version of Hibernate ORM is compatible with Micrometer {micrometerVersion}.
+====
+
 [[jfr]]
 === Using Java Flight Recorder
 

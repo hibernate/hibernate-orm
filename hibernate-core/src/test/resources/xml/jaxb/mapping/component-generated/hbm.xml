@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.jaxb.mapping">
+    <class name="ComponentOwnerEntity" table="comp_gen">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name"/>
+        <component name="component" class="ComponentOwnerEntity$Component">
+            <property name="generated" type="int" generated="always" column="GENED"/>
+        </component>
+    </class>
+</hibernate-mapping>

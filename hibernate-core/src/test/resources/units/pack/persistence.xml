@@ -3,7 +3,7 @@
   ~ SPDX-License-Identifier: Apache-2.0
   ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
-<persistence version="8.0" xmlns="http://www.hibernate.org/xsd/orm/configuration">
+<persistence version="4.0" xmlns="https://jakarta.ee/xml/ns/persistence">
 
     <persistence-unit name="explicit">
         <class>org.hibernate.orm.test.boot.archive.OneEntity</class>

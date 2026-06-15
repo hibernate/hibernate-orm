@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Properties;
@@ -18,6 +17,7 @@ import java.util.zip.ZipEntry;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class NativeMetadataDescriptorTest {
@@ -92,15 +92,12 @@ public class NativeMetadataDescriptorTest {
 	@Test
 	public void testConstructorWithCfgXmlFile(@TempDir File tempDir) throws IOException {
 		File cfgFile = new File(tempDir, "hibernate.cfg.xml");
-		try (FileWriter w = new FileWriter(cfgFile)) {
-			w.write("<?xml version='1.0' encoding='utf-8'?>\n");
-			w.write("<!DOCTYPE hibernate-configuration PUBLIC\n");
-			w.write("  \"-//Hibernate/Hibernate Configuration DTD 3.0//EN\"\n");
-			w.write("  \"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd\">\n");
-			w.write("<hibernate-configuration><session-factory/></hibernate-configuration>\n");
-		}
-		NativeMetadataDescriptor descriptor = new NativeMetadataDescriptor(cfgFile, null, h2Props());
-		assertNotNull(descriptor.getProperties());
+		Files.writeString( cfgFile.toPath(), "<hibernate-configuration/>" );
+
+		assertThrows(
+				UnsupportedOperationException.class,
+				() -> new NativeMetadataDescriptor( cfgFile, null, h2Props() )
+		);
 	}
 
 	@Test

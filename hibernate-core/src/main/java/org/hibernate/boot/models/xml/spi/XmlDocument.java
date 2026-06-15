@@ -6,8 +6,6 @@ package org.hibernate.boot.models.xml.spi;
 
 import jakarta.persistence.AccessType;
 import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterImpl;
@@ -60,10 +58,6 @@ public interface XmlDocument {
 	Map<String, JaxbNamedHqlQueryImpl> getJpaNamedQueries();
 
 	Map<String, JaxbNamedNativeQueryImpl> getJpaNamedNativeQueries();
-
-	Map<String, JaxbHbmNamedQueryType> getHibernateNamedQueries();
-
-	Map<String, JaxbHbmNamedNativeQueryType> getHibernateNamedNativeQueries();
 
 	Map<String, JaxbNamedStoredProcedureQueryImpl> getNamedStoredProcedureQueries();
 

@@ -172,7 +172,9 @@ public class SchemaUpdate {
 		final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder( bsr );
 
 		if ( parsedArgs.cfgXmlFile != null ) {
-			ssrBuilder.configure( parsedArgs.cfgXmlFile );
+			throw new UnsupportedOperationException(
+					"Legacy hibernate.cfg.xml bootstrap is no longer supported; use --properties and mapping files"
+			);
 		}
 
 		if ( parsedArgs.propertiesFile != null ) {

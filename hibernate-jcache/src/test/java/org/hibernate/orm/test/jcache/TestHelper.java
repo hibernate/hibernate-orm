@@ -26,7 +26,11 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jcache.domain.Item;
 import org.hibernate.orm.test.jcache.domain.VersionedItem;
+import org.hibernate.orm.test.jcache.domain.Account;
 import org.hibernate.orm.test.jcache.domain.Event;
+import org.hibernate.orm.test.jcache.domain.HolidayCalendar;
+import org.hibernate.orm.test.jcache.domain.Person;
+import org.hibernate.orm.test.jcache.domain.PhoneNumber;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -105,7 +109,9 @@ public class TestHelper {
 				.applySetting( ConfigSettings.MISSING_CACHE_STRATEGY, missingCacheStrategy )
 				.build();
 		try {
-			return (SessionFactoryImplementor) new MetadataSources( ssr ).buildMetadata().buildSessionFactory();
+			return (SessionFactoryImplementor) addStandardDomainModel( new MetadataSources( ssr ) )
+					.buildMetadata()
+					.buildSessionFactory();
 		}
 		catch (Throwable t) {
 			ssr.close();
@@ -120,7 +126,9 @@ public class TestHelper {
 
 		final StandardServiceRegistry ssr = ssrb.build();
 		try {
-			return (SessionFactoryImplementor) new MetadataSources( ssr ).buildMetadata().buildSessionFactory();
+			return (SessionFactoryImplementor) addStandardDomainModel( new MetadataSources( ssr ) )
+					.buildMetadata()
+					.buildSessionFactory();
 		}
 		catch (Throwable t) {
 			ssr.close();
@@ -130,7 +138,12 @@ public class TestHelper {
 
 	public static StandardServiceRegistryBuilder getStandardServiceRegistryBuilder() {
 		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder()
-				.configure( "hibernate-config/hibernate.cfg.xml" )
+				.applySetting( AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread" )
+				.applySetting( AvailableSettings.USE_QUERY_CACHE, "true" )
+				.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" )
+				.applySetting( AvailableSettings.USE_STRUCTURED_CACHE, "true" )
+				.applySetting( AvailableSettings.CACHE_REGION_FACTORY, "jcache" )
+				.applySetting( AvailableSettings.SHOW_SQL, "true" )
 				.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" )
 				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
@@ -139,6 +152,17 @@ public class TestHelper {
 			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
 		}
 		return ssrb;
+	}
+
+	public static MetadataSources addStandardDomainModel(MetadataSources metadataSources) {
+		return metadataSources
+				.addAnnotatedClass( Event.class )
+				.addAnnotatedClass( Person.class )
+				.addAnnotatedClass( PhoneNumber.class )
+				.addAnnotatedClass( Account.class )
+				.addAnnotatedClass( HolidayCalendar.class )
+				.addAnnotatedClass( Item.class )
+				.addAnnotatedClass( VersionedItem.class );
 	}
 
 	public static void createCache(CacheManager cacheManager, String name) {

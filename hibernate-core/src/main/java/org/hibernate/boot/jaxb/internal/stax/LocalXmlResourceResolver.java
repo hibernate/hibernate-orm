@@ -15,7 +15,6 @@ import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.boot.xsd.XsdDescriptor;
 
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -70,45 +69,6 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			else if ( ConfigXsdSupport.getJPA31().getNamespaceUri().matches( namespace ) ) {
 				return openUrlStream( ConfigXsdSupport.getJPA31() );
 			}
-			else if ( MappingXsdSupport.hibernateMappingXml.getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( MappingXsdSupport.hibernateMappingXml );
-			}
-			else if ( MappingXsdSupport.hbmXml.getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( MappingXsdSupport.hbmXml );
-			}
-			else if ( ConfigXsdSupport.cfgXsd().getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( ConfigXsdSupport.cfgXsd() );
-			}
-		}
-
-		if ( publicID != null || systemID != null ) {
-			JAXB_LOGGER.checkingDtdReferences( publicID, systemID );
-
-			if ( MAPPING_DTD.matches( publicID, systemID ) ) {
-				return openUrlStream( MAPPING_DTD.localSchemaUrl );
-			}
-
-			if ( ALTERNATE_MAPPING_DTD.matches( publicID, systemID ) ) {
-				return openUrlStream( ALTERNATE_MAPPING_DTD.localSchemaUrl );
-			}
-
-			if ( LEGACY_MAPPING_DTD.matches( publicID, systemID ) ) {
-				DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace( LEGACY_MAPPING_DTD.getIdentifierBase(), MAPPING_DTD.getIdentifierBase() );
-				return openUrlStream( MAPPING_DTD.localSchemaUrl );
-			}
-
-			if ( CFG_DTD.matches( publicID, systemID ) ) {
-				return openUrlStream( CFG_DTD.localSchemaUrl );
-			}
-
-			if ( ALTERNATE_CFG_DTD.matches( publicID, systemID ) ) {
-				return openUrlStream( ALTERNATE_CFG_DTD.localSchemaUrl );
-			}
-
-			if ( LEGACY_CFG_DTD.matches( publicID, systemID ) ) {
-				DEPRECATION_LOGGER.recognizedObsoleteHibernateNamespace( LEGACY_CFG_DTD.getIdentifierBase(), CFG_DTD.getIdentifierBase() );
-				return openUrlStream( CFG_DTD.localSchemaUrl );
-			}
 		}
 
 		if ( systemID != null ) {
@@ -152,37 +112,6 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			return null;
 		}
 	}
-
-	public static final DtdDescriptor MAPPING_DTD = new DtdDescriptor(
-			"www.hibernate.org/dtd/hibernate-mapping",
-			"org/hibernate/hibernate-mapping-3.0.dtd"
-	);
-
-	public static final DtdDescriptor ALTERNATE_MAPPING_DTD = new DtdDescriptor(
-			"hibernate.org/dtd/hibernate-mapping",
-			"org/hibernate/hibernate-mapping-3.0.dtd"
-	);
-
-	public static final DtdDescriptor LEGACY_MAPPING_DTD = new DtdDescriptor(
-			"hibernate.sourceforge.net/hibernate-mapping",
-			"org/hibernate/hibernate-mapping-3.0.dtd"
-	);
-
-	public static final DtdDescriptor CFG_DTD = new DtdDescriptor(
-			"www.hibernate.org/dtd/hibernate-configuration",
-			"org/hibernate/hibernate-configuration-3.0.dtd"
-	);
-
-	public static final DtdDescriptor ALTERNATE_CFG_DTD = new DtdDescriptor(
-			"hibernate.org/dtd/hibernate-configuration",
-			"org/hibernate/hibernate-configuration-3.0.dtd"
-	);
-
-	public static final DtdDescriptor LEGACY_CFG_DTD = new DtdDescriptor(
-			"hibernate.sourceforge.net/hibernate-configuration",
-			"org/hibernate/hibernate-configuration-3.0.dtd"
-	);
-
 
 	public static class DtdDescriptor {
 		private final String httpBase;

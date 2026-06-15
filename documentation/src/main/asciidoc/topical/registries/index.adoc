@@ -450,19 +450,14 @@ StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
         .build();
 ----
 
-Or we can tell it to load settings from various files:
+Or we can tell it to load settings from properties file:
 
 [source,java]
 ----
 StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-        .configure()                                          <1>
-        .configure( "com/acme/hibernate.cfg.xml" )            <2>
-        .loadProperties( "com/acme/hibernate.properties" )    <3>
+        .loadProperties( "com/acme/hibernate.properties" )
         .build();
 ----
-<1> loads settings from an XML file (conforming to the Hibernate cfg.xml DTD) via a ClassLoader resource lookup for hibernate.cfg.xml
-<2> loads settings from an XML file (conforming to the Hibernate cfg.xml DTD) via a ClassLoader resource lookup for com/acme/hibernate.cfg.xml
-<3> loads settings from Properties via a ClassLoader resource lookup for com/acme/hibernate.properties
 
 The other methods of interest on `StandardServiceRegistryBuilder` relate to customizing the Services to use.  We can
 either pass in a Service instance to use or the ServiceInitiator to use as already discussed.  There are 2 distinct

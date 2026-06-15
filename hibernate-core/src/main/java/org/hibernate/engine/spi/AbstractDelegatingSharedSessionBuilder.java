@@ -21,7 +21,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
-import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -190,21 +189,21 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 
 	@Override
 	@Nonnull
-	public CommonBuilder jdbcBatchSize(int batchSize) {
+	public SharedSessionBuilder jdbcBatchSize(int batchSize) {
 		delegate.jdbcBatchSize( batchSize );
 		return this;
 	}
 
 	@Override
 	@Nonnull
-	public CommonBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
+	public SharedSessionBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
 		delegate.cacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override
 	@Nonnull
-	public CommonBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
+	public SharedSessionBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
 		delegate.cacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}

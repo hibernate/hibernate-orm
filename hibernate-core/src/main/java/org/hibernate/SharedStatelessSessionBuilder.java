@@ -6,9 +6,12 @@ package org.hibernate;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.engine.creation.CommonSharedBuilder;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -109,7 +112,19 @@ public interface SharedStatelessSessionBuilder extends StatelessSessionBuilder, 
 
 	@Override
 	@Nonnull
+	SharedStatelessSessionBuilder jdbcBatchSize(int batchSize);
+
+	@Override
+	@Nonnull
 	SharedStatelessSessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode);
+
+	@Override
+	@Nonnull
+	SharedStatelessSessionBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode);
+
+	@Override
+	@Nonnull
+	SharedStatelessSessionBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	@Nonnull
@@ -122,4 +137,12 @@ public interface SharedStatelessSessionBuilder extends StatelessSessionBuilder, 
 	@Override
 	@Nonnull
 	SharedStatelessSessionBuilder jdbcTimeZone(@Nullable TimeZone timeZone);
+
+	@Override
+	@Nonnull
+	SharedStatelessSessionBuilder asOf(@Nullable Instant instant);
+
+	@Override
+	@Nonnull
+	SharedStatelessSessionBuilder atChangeset(@Nullable Object changesetId);
 }

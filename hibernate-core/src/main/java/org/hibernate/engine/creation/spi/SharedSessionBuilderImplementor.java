@@ -6,6 +6,8 @@ package org.hibernate.engine.creation.spi;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -13,6 +15,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -27,6 +30,10 @@ import java.util.function.UnaryOperator;
  * @since 7.2
  */
 public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, SessionBuilderImplementor {
+	@Override
+	@Nonnull
+	SessionImplementor open();
+
 	@Override
 	@Nonnull
 	SharedSessionBuilderImplementor interceptor(@Nullable Interceptor interceptor);
@@ -58,6 +65,18 @@ public interface SharedSessionBuilderImplementor extends SharedSessionBuilder, S
 	@Override
 	@Nonnull
 	SharedSessionBuilderImplementor initialCacheMode(@Nonnull CacheMode cacheMode);
+
+	@Override
+	@Nonnull
+	SharedSessionBuilderImplementor jdbcBatchSize(int batchSize);
+
+	@Override
+	@Nonnull
+	SharedSessionBuilderImplementor cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode);
+
+	@Override
+	@Nonnull
+	SharedSessionBuilderImplementor cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode);
 
 	@Override
 	@Nonnull

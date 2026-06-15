@@ -110,14 +110,14 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 
 	@Override
 	@Nonnull
-	public CommonBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
+	public T cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
 		options.cacheStoreMode( cacheStoreMode );
 		return getThis();
 	}
 
 	@Override
 	@Nonnull
-	public CommonBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
+	public T cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
 		options.cacheRetrieveMode( cacheRetrieveMode );
 		return getThis();
 	}

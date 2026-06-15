@@ -21,7 +21,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
-import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -150,21 +149,21 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 
 	@Override
 	@Nonnull
-	public CommonBuilder jdbcBatchSize(int batchSize) {
+	public SessionBuilderImplementor jdbcBatchSize(int batchSize) {
 		delegate.jdbcBatchSize( batchSize );
 		return this;
 	}
 
 	@Override
 	@Nonnull
-	public CommonBuilder cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
+	public SessionBuilderImplementor cacheStoreMode(@Nullable CacheStoreMode cacheStoreMode) {
 		delegate.cacheStoreMode( cacheStoreMode );
 		return this;
 	}
 
 	@Override
 	@Nonnull
-	public CommonBuilder cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
+	public SessionBuilderImplementor cacheRetrieveMode(@Nullable CacheRetrieveMode cacheRetrieveMode) {
 		delegate.cacheRetrieveMode( cacheRetrieveMode );
 		return this;
 	}

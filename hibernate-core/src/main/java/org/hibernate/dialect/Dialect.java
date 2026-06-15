@@ -6699,6 +6699,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support {@code UNIQUE NULLS NOT DISTINCT} constraint
+	 * definitions?
+	 *
+	 * @return {@code true} if null values in unique constraints may be declared
+	 *         not distinct.
+	 */
+	public boolean supportsNullsNotDistinctUniqueConstraints() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect support defining the column list in the CTE header?
 	 * <p>
 	 * Standard syntax: {@code WITH cte (col1, col2) AS ...}

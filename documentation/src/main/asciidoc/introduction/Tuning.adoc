@@ -120,7 +120,7 @@ However, there are a couple of exceptions to this and for the offending drivers 
 | link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#STATEMENT_FETCH_SIZE[`hibernate.jdbc.fetch_size`] | The default JDBC fetch size
 |===
 
-The default fetch size can be overridden for a given query by calling link:{doc-javadoc-url}/org/hibernate/query/SelectionQuery.html#setFetchSize(int)[`setFetchSize()`], but this is rarely necessary.
+The default fetch size can be overridden for a given query by using the link:{doc-javadoc-url}/org/hibernate/query/QueryOption.JdbcFetchSize.html[`JdbcFetchSize`] option, but this is rarely necessary.
 
 [WARNING]
 ====
@@ -770,16 +770,26 @@ The query cache must be enabled explicitly:
 | link:{doc-javadoc-url}org/hibernate/cfg/CacheSettings.html#USE_QUERY_CACHE[`hibernate.cache.use_query_cache`] | `true` to enable the query cache
 |===
 
-To cache the results of a query, call `SelectionQuery.setCacheable(true)`:
+To cache the results of a query, use the link:{doc-javadoc-url}org/hibernate/query/QueryOption.ResultSetCache.html[`ResultSetCache`] option:
 
 [source,java]
 ----
+import org.hibernate.query.QueryOption.ResultSetCache;
+...
 entityManager.createQuery("from Product where discontinued = false")
-    .ofType(Product.class)
-    .unwrap(SelectionQuery.class)
-    .setCacheable(true)
-    .getResultList();
+             .ofType(Product.class)
+             .addOption(new ResultSetCache(null))
+             .getResultList();
 ----
+//
+// [source,java]
+// ----
+// entityManager.createQuery("from Product where discontinued = false")
+//     .ofType(Product.class)
+//     .unwrap(SelectionQuery.class)
+//     .setCacheable(true)
+//     .getResultList();
+// ----
 
 By default, the query result set is stored in a cache region named `default-query-results-region`.
 Since different queries should have different caching policies, it's common to explicitly specify a region name:
@@ -787,11 +797,9 @@ Since different queries should have different caching policies, it's common to e
 [source,java]
 ----
 entityManager.createQuery("from Product where discontinued = false")
-    .ofType(Product.class)
-    .unwrap(SelectionQuery.class)
-    .setCacheable(true)
-    .setCacheRegion("ProductCatalog")
-    .getResultList();
+             .ofType(Product.class)
+             .addOption(new ResultSetCache("all-active-products"))
+             .getResultList();
 ----
 
 A result set is cached together with a _logical timestamp_.
@@ -1143,7 +1151,7 @@ long failedVersionChecks =
 long publisherCacheMissCount =
         sessionFactory.getStatistics()
             .getEntityStatistics(Publisher.class.getName())
-                .getCacheMissCount()
+                .getCacheMissCount();
 ----
 
 :micrometer: https://quarkus.io/guides/micrometer
@@ -1155,7 +1163,7 @@ Both {micrometer}[Micrometer] and {smallrye-metrics}[SmallRye Metrics] are capab
 [[jfr]]
 === Using Java Flight Recorder
 
-Hibernate JFR is a separate module which reports events to link:https://developers.redhat.com/blog/2020/08/25/get-started-with-jdk-flight-recorder-in-openjdk-8u[Java Flight Recorder].
+Hibernate JFR is a separate module that reports events to link:https://developers.redhat.com/blog/2020/08/25/get-started-with-jdk-flight-recorder-in-openjdk-8u[Java Flight Recorder].
 This is different to reporting aggregated <<statistics,metrics>> via a tool like Micrometer, since JFR records information about the timing and duration of each discrete event, along with a stack trace.
 If anything, the information reported by JFR is a little _too_ detailed to make it really useful for performance tuning--it's perhaps more useful for _troubleshooting_.
 
@@ -1182,7 +1190,7 @@ When `hibernate.use_sql_comments` is enabled, the text of the HQL query is prepe
 
 The comment text may be customized:
 
-- by calling `Query.setComment(comment)` or `Query.setHint(AvailableHints.HINT_COMMENT,comment)`, or
+- using the link:{doc-javadoc-url}/org/hibernate/query/QueryOption.Comment.html[`Comment`] option, or
 - via the `@NamedQuery` annotation.
 
 [TIP]

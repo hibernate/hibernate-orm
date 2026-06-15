@@ -315,7 +315,7 @@ When all else fails, and sometimes even before that, we're left with the option 
 [[native-queries]]
 === Native SQL queries
 
-HQL is a powerful language which helps reduce the verbosity of SQL, and significantly increases portability of queries between databases.
+HQL is a powerful language that helps reduce the verbosity of SQL, and significantly increases the portability of queries between databases.
 But ultimately, the true value of ORM is not in avoiding SQL, but in alleviating the pain involved in dealing with SQL result sets once we get them back to our Java program.
 As we said <<introduction,right up front>>, Hibernate's generated SQL is meant to be used in conjunction with handwritten SQL, and native SQL queries are one of the facilities we provide to make that easy.
 

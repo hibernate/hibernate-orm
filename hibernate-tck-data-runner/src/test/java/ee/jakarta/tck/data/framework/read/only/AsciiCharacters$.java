@@ -61,11 +61,11 @@ interface AsciiCharacters$ extends AsciiCharacters {
 	public java.util.List<ee.jakarta.tck.data.framework.read.only.AsciiCharacter> findByNumericValueLessThanEqualAndNumericValueGreaterThanEqual(int max, int min);
 
 	@Override
-	@Query("where numericValue >= ?1 and right(hexadecimal, length(?2)) = ?2 order by '' limit 3")
+	@Query("where numericValue >= ?1 and right(hexadecimal, length(?2)) = ?2 limit 3")
 	public ee.jakarta.tck.data.framework.read.only.AsciiCharacter[] findFirst3ByNumericValueGreaterThanEqualAndHexadecimalEndsWith(int minValue, java.lang.String lastHexDigit, jakarta.data.Sort<ee.jakarta.tck.data.framework.read.only.AsciiCharacter> sort);
 
 	@Override
-	@Query("where left(hexadecimal, length(?1)) = ?1 and isControl = ?2 order by '' limit 1")
+	@Query("where left(hexadecimal, length(?1)) = ?1 and isControl = ?2 limit 1")
 	@OrderBy(value = "id", descending = false)
 	public java.util.Optional<ee.jakarta.tck.data.framework.read.only.AsciiCharacter> findFirstByHexadecimalStartsWithAndIsControlOrderByIdAsc(java.lang.String firstHexDigit, boolean isControlChar);
 

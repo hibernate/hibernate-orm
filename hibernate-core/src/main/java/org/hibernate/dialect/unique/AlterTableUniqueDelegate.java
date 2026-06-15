@@ -79,7 +79,12 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 
 	protected String uniqueConstraintSql(UniqueKey uniqueKey) {
 		final var fragment = new StringBuilder();
-		fragment.append( "unique (" );
+		fragment.append( "unique" );
+		if ( uniqueKey.isNullsNotDistinct()
+				&& dialect.supportsNullsNotDistinctUniqueConstraints() ) {
+			fragment.append( " nulls not distinct" );
+		}
+		fragment.append( " (" );
 		boolean first = true;
 		for ( var column : uniqueKey.getColumns() ) {
 			if ( first ) {

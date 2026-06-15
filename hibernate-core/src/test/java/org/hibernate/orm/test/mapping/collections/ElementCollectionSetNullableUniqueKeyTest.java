@@ -18,7 +18,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -60,18 +63,10 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix treats two nulls as equal, which is why we don't create a unique constraint")
 	void createsUniqueKeyForSetAndPrimaryKeyForOrderedList() {
-		final var metadata = (MetadataImplementor)
-				new MetadataSources( ssr )
-						.addAnnotatedClass( Book.class )
-						.buildMetadata();
-		metadata.orderColumns( true );
-		metadata.validate();
+		final var metadata = buildMetadata( ssr );
+		final var commands = generateCreationCommands( ssr, metadata );
 
-		final List<String> commands =
-				new SchemaCreatorImpl( ssr )
-						.generateCreationCommands( metadata, false );
-
-		final Dialect dialect = metadata.getDatabase().getDialect();
+		final var dialect = metadata.getDatabase().getDialect();
 		final String topicsTableCreateCommand = findCreateTableCommand( dialect, commands, "book_topics" );
 		assertNotNull( topicsTableCreateCommand );
 
@@ -79,6 +74,9 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 				.containsPattern( "\"?book_isbn\"?\\s+[^,]*\\bnot\\s+null\\b" )
 				.doesNotContainPattern( "\\bprimary\\s+key\\b" );
 		assertTrue( hasUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
+		if ( dialect.supportsNullsNotDistinctUniqueConstraints() ) {
+			assertTrue( hasNullsNotDistinctUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
+		}
 
 		final String commentsTableCreateCommand = findCreateTableCommand( dialect, commands, "book_comments" );
 		assertNotNull( commentsTableCreateCommand );
@@ -92,6 +90,53 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 				)
 				.doesNotContainPattern( "\\bunique\\s*\\(\\s*\"?book_isbn\"?\\s*,\\s*\"?comments\"?\\s*\\)" );
 		assertFalse( hasUniqueTupleDefinition( commands, "book_comments", "book_isbn", "comments" ) );
+	}
+
+	@Test
+	void createsNullsNotDistinctUniqueKeyForPostgreSQL15() {
+		final var registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( JdbcSettings.DIALECT, PostgreSQL15Dialect.class )
+				.build();
+		try {
+			final var commands = generateCreationCommands( registry, buildMetadata( registry ) );
+
+			assertTrue( hasUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
+			assertTrue( hasNullsNotDistinctUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
+	void keepsStandardUniqueKeyForPostgreSQL14() {
+		final var registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( JdbcSettings.DIALECT, PostgreSQL14Dialect.class )
+				.build();
+		try {
+			final var commands = generateCreationCommands( registry, buildMetadata( registry ) );
+
+			assertTrue( hasUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
+			assertFalse( hasNullsNotDistinctUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	private static MetadataImplementor buildMetadata(StandardServiceRegistry registry) {
+		final var metadata = (MetadataImplementor)
+				new MetadataSources( registry )
+						.addAnnotatedClass( Book.class )
+						.buildMetadata();
+		metadata.orderColumns( true );
+		metadata.validate();
+		return metadata;
+	}
+
+	private static List<String> generateCreationCommands(StandardServiceRegistry registry, MetadataImplementor metadata) {
+		return new SchemaCreatorImpl( registry )
+				.generateCreationCommands( metadata, false );
 	}
 
 	private static String findCreateTableCommand(Dialect dialect, List<String> commands, String tableName) {
@@ -110,7 +155,8 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 			String tableName,
 			String firstColumn,
 			String secondColumn) {
-		final String uniqueConstraintPattern = "\\bunique\\s*\\(\\s*" + columnPattern( firstColumn )
+		final String uniqueConstraintPattern = "\\bunique(?:\\s+nulls\\s+not\\s+distinct)?\\s*\\(\\s*"
+				+ columnPattern( firstColumn )
 				+ "\\s*,\\s*" + columnPattern( secondColumn ) + "\\s*\\)";
 		final String uniqueIndexPattern = "\\bcreate\\s+unique(?:\\s+\\w+)*\\s+index\\b[^\\(]*\\(\\s*"
 				+ columnPattern( firstColumn ) + "\\s*,\\s*" + columnPattern( secondColumn ) + "\\s*\\)";
@@ -126,8 +172,38 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 		return false;
 	}
 
+	private static boolean hasNullsNotDistinctUniqueTupleDefinition(
+			List<String> commands,
+			String tableName,
+			String firstColumn,
+			String secondColumn) {
+		final String uniqueConstraintPattern = "\\bunique\\s+nulls\\s+not\\s+distinct\\s*\\(\\s*"
+				+ columnPattern( firstColumn ) + "\\s*,\\s*" + columnPattern( secondColumn ) + "\\s*\\)";
+
+		for ( String command : commands ) {
+			final String lowerCaseCommand = command.toLowerCase( Locale.ROOT );
+			if ( lowerCaseCommand.contains( tableName )
+					&& lowerCaseCommand.matches( ".*" + uniqueConstraintPattern + ".*" ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static String columnPattern(String columnName) {
 		return "[\"`\\[]?" + columnName + "[\"`\\]]?";
+	}
+
+	public static class PostgreSQL14Dialect extends PostgreSQLDialect {
+		public PostgreSQL14Dialect() {
+			super( DatabaseVersion.make( 14 ) );
+		}
+	}
+
+	public static class PostgreSQL15Dialect extends PostgreSQLDialect {
+		public PostgreSQL15Dialect() {
+			super( DatabaseVersion.make( 15 ) );
+		}
 	}
 
 	@Entity(name = "Book")

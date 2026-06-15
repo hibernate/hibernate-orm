@@ -1594,6 +1594,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsNullsNotDistinctUniqueConstraints() {
+		return getVersion().isSameOrAfter( 15 );
+	}
+
+	@Override
 	public Exporter<Table> getTableExporter() {
 		return postgresqlTableExporter;
 	}

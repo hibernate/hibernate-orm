@@ -1046,6 +1046,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsNullsNotDistinctUniqueConstraints() {
+		return true;
+	}
+
+	@Override
 	public String rowId(String rowId) {
 		return "_rowid_";
 	}

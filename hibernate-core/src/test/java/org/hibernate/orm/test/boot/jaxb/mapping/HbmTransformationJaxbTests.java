@@ -38,6 +38,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.InheritanceType;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 
@@ -203,6 +204,50 @@ public class HbmTransformationJaxbTests {
 			final JaxbBasicImpl basicAttr = embeddable.getAttributes().getBasicAttributes().get( 0 );
 			assertThat( basicAttr.getName() ).isEqualTo( "generated" );
 			assertThat( basicAttr.getGenerated() ).isEqualTo( GenerationTiming.ALWAYS );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20566" )
+	public void testJoinedSubclassInheritanceStrategy(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/joined-subclass/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl baseEntity = transformed.getEntities().stream()
+					.filter( e -> "JoinedSubclassBase".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( baseEntity.getInheritance() ).isNotNull();
+			assertThat( baseEntity.getInheritance().getStrategy() ).isEqualTo( InheritanceType.JOINED );
+
+			final JaxbEntityImpl childEntity = transformed.getEntities().stream()
+					.filter( e -> "JoinedSubclassChild".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( childEntity.getPrimaryKeyJoinColumns() ).isNotEmpty();
+			assertThat( childEntity.getPrimaryKeyJoinColumns().get( 0 ).getName() ).isEqualTo( "base_id" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20566" )
+	public void testUnionSubclassInheritanceStrategy(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/union-subclass/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl baseEntity = transformed.getEntities().stream()
+					.filter( e -> "UnionSubclassBase".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( baseEntity.getInheritance() ).isNotNull();
+			assertThat( baseEntity.getInheritance().getStrategy() ).isEqualTo( InheritanceType.TABLE_PER_CLASS );
+
+			final JaxbEntityImpl childEntity = transformed.getEntities().stream()
+					.filter( e -> "UnionSubclassChild".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( childEntity.getTable() ).isNotNull();
+			assertThat( childEntity.getTable().getName() ).isEqualTo( "us_child" );
 		} );
 	}
 

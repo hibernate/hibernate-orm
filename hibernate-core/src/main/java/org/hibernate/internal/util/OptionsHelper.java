@@ -70,6 +70,9 @@ public final class OptionsHelper {
 		else if ( option instanceof SessionCreationOption.FetchBatchSize fetchBatchSize ) {
 			options.defaultBatchFetchSize( fetchBatchSize.batchSize() );
 		}
+		else if ( option instanceof SessionCreationOption.JdbcBatchSize jdbcBatchSize ) {
+			options.jdbcBatchSize( jdbcBatchSize.batchSize() );
+		}
 		else if ( option instanceof SessionCreationOption.BulkSelect bulkSelect ) {
 			options.subselectFetchEnabled( bulkSelect == SessionCreationOption.BulkSelect.ENABLED );
 		}

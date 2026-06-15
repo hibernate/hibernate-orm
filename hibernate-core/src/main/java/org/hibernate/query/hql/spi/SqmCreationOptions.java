@@ -44,4 +44,9 @@ public interface SqmCreationOptions {
 	default boolean isPortableIntegerDivisionEnabled() {
 		return false;
 	}
+
+	/**
+	 * @see org.hibernate.cfg.QuerySettings#SAFE_MODE_ENABLED
+	 */
+	default boolean isSafeModeEnabled() { return false; }
 }

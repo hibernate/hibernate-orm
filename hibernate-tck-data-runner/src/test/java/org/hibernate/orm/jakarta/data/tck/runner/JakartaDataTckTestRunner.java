@@ -18,7 +18,9 @@ import org.junit.platform.suite.api.SuiteDisplayName;
 @IncludeTags("standalone & persistence")
 // Tests to challenge:
 @ExcludeClassNamePatterns({
-		// Sort nullable tests - nulls ordering challenges
+		// Sort nullable tests - nulls ordering differences.
+		// This test relies on a new feature that is not yet published in any M* Data releases,
+		// hence not implemented yet.
 		".*StandaloneSortNullableTests",
 })
 public class JakartaDataTckTestRunner {

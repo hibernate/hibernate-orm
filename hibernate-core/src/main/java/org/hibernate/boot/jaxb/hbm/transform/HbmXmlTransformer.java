@@ -457,7 +457,7 @@ public class HbmXmlTransformer {
 			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
 			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferJoinedSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
-			defineInheritance( mappingEntity, InheritanceType.TABLE_PER_CLASS );
+			defineInheritance( mappingEntity, InheritanceType.JOINED );
 		}
 
 		for ( var hbmSubclass : hbmClass.getUnionSubclass() ) {
@@ -465,7 +465,7 @@ public class HbmXmlTransformer {
 			final var mappingSubclassEntity = transformationState.getMappingEntityByName().get( subclassEntityName );
 			final var subclassEntityInfo = transformationState.getEntityInfoByName().get( subclassEntityName );
 			transferUnionSubclass( hbmSubclass, mappingSubclassEntity, subclassEntityInfo );
-			defineInheritance( mappingEntity, InheritanceType.JOINED );
+			defineInheritance( mappingEntity, InheritanceType.TABLE_PER_CLASS );
 		}
 
 		for ( var hbmQuery : hbmClass.getQuery() ) {

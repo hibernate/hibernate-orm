@@ -132,6 +132,39 @@ entityManager.createQuery("from Person where address = :address")
 ----
 ====
 
+[[query-options]]
+=== Query options
+
+The `TypedQuery` and `Statement` interfaces provide a number of operations for controlling execution of a query or statement.
+
+[source,java]
+----
+var recentPublications =
+        entityAgent.createQuery("from Book where year(book) = year(local date)")
+                   .ofType(Book.class)
+                   .setTimeout(Timeout.ms(60_000))
+                   .setQueryFlushMode(QueryFlushMode.NO_FLUSH)
+                   .getResultList();
+----
+
+Even better JPA 4 provides for extension via query options and statement options
+Hibernate defines several useful options in link:{doc-javadoc-url}/org/hibernate/query/QueryOption.html[QueryOption].
+
+[source,java]
+----
+import org.hibernate.ReadOnlyMode;
+import static org.hibernate.query.QueryOption.*;
+...
+var recentPublications =
+        entityAgent.createQuery("from Book where year(book) = year(local date)")
+                   .ofType(Book.class)
+                   .addOption(new ResultSetCache("recent-publications"))
+                   .addOption(new JdbcFetchSize(100))
+                   .addOption(new Comment("Retrieve recent publications"))
+                   .addOption(ReadOnlyMode.READ_ONLY)
+                   .getResultList();
+----
+
 [[auto-flush]]
 === Auto-flush
 
@@ -236,7 +269,7 @@ Execution of a criteria query works almost exactly like execution of HQL.
 | Kind | `EntityHandler` method | Interface | Execution method
 
 | Selection | `createQuery(CriteriaQuery)` | `TypedQuery` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation  |`createStatement(CriteriaStatement)` | `Statement` | `executeUpdate()`
+| Mutation  |`createStatement(CriteriaStatement)` | `Statement` | `execute()`
 |===
 
 For example:
@@ -254,7 +287,7 @@ Update, insert, and delete queries work similarly:
 ----
 CriteriaDelete<Book> delete = builder.createCriteriaDelete(Book.class);
 Root<Book> book = delete.from(Book.class);
-delete.where(builder.year(book.get(Book_.publicationDate)).lt(2000));
+delete.where(book.get(Book_.publicationDate).extract(LocalDateField.YEAR).lt(2000));
 entityManager.createStatement(delete).execute();
 ----
 

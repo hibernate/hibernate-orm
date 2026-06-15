@@ -18,6 +18,9 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
+import org.hibernate.boot.jaxb.mapping.GenerationTiming;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
@@ -184,6 +187,22 @@ public class HbmTransformationJaxbTests {
 			assertThat( id.getGenericGenerator().getName() ).isNotNull();
 			assertThat( id.getGenericGenerator().getName() )
 					.isEqualTo( id.getGeneratedValue().getGenerator() );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20564" )
+	public void testComponentGeneratedPropertyTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/component-generated/hbm.xml", scope, (transformed) -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+			assertThat( transformed.getEmbeddables() ).hasSize( 1 );
+
+			final JaxbEmbeddableImpl embeddable = transformed.getEmbeddables().get( 0 );
+			assertThat( embeddable.getAttributes().getBasicAttributes() ).hasSize( 1 );
+
+			final JaxbBasicImpl basicAttr = embeddable.getAttributes().getBasicAttributes().get( 0 );
+			assertThat( basicAttr.getName() ).isEqualTo( "generated" );
+			assertThat( basicAttr.getGenerated() ).isEqualTo( GenerationTiming.ALWAYS );
 		} );
 	}
 
